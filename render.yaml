@@ -1,10 +1,9 @@
 services:
   - type: web
     name: user-service
-    env: shell
-    buildCommand: apt-get update && apt-get install -y openjdk-17-jdk maven && chmod +x ./mvnw && ./mvnw clean package -DskipTests
-    startCommand: java -jar target/user-service-1.0.0-SNAPSHOT.jar
-    rootDir: backend/user-service
+    env: docker
+    dockerfilePath: ./backend/user-service/Dockerfile
+    dockerContext: ./backend/user-service
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: production
@@ -16,15 +15,14 @@ services:
         generateValue: true
       - key: JWT_EXPIRATION
         value: "86400000"
-      - key: JAVA_VERSION
-        value: "17"
+      - key: PORT
+        value: "8082"
 
   - type: web
     name: audition-service
-    env: shell
-    buildCommand: apt-get update && apt-get install -y openjdk-17-jdk maven && chmod +x ./mvnw && ./mvnw clean package -DskipTests
-    startCommand: java -jar target/audition-service-1.0.0-SNAPSHOT.jar
-    rootDir: backend/audition-service
+    env: docker
+    dockerfilePath: ./backend/audition-service/Dockerfile
+    dockerContext: ./backend/audition-service
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: production
@@ -32,13 +30,14 @@ services:
         fromDatabase:
           name: audition-db
           property: connectionString
+      - key: PORT
+        value: "8081"
 
   - type: web
     name: media-service
-    env: shell
-    buildCommand: apt-get update && apt-get install -y openjdk-17-jdk maven && chmod +x ./mvnw && ./mvnw clean package -DskipTests
-    startCommand: java -jar target/media-service-1.0.0-SNAPSHOT.jar
-    rootDir: backend/media-service
+    env: docker
+    dockerfilePath: ./backend/media-service/Dockerfile
+    dockerContext: ./backend/media-service
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: production
@@ -46,13 +45,14 @@ services:
         fromDatabase:
           name: audition-db
           property: connectionString
+      - key: PORT
+        value: "8083"
 
   - type: web
     name: gateway
-    env: shell
-    buildCommand: apt-get update && apt-get install -y openjdk-17-jdk maven && chmod +x ./mvnw && ./mvnw clean package -DskipTests
-    startCommand: java -jar target/gateway-1.0.0-SNAPSHOT.jar
-    rootDir: backend/gateway
+    env: docker
+    dockerfilePath: ./backend/gateway/Dockerfile
+    dockerContext: ./backend/gateway
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: production
@@ -71,6 +71,8 @@ services:
           name: media-service
           type: web
           property: host
+      - key: PORT
+        value: "8080"
 
 databases:
   - name: audition-db
