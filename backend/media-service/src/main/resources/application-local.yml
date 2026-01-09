@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: media-service
+  
+  datasource:
+    url: jdbc:postgresql://${RAILWAY_DB_HOST:localhost}:${RAILWAY_DB_PORT:5432}/${RAILWAY_DB_NAME:audition_db}
+    username: ${RAILWAY_DB_USER:postgres}
+    password: ${RAILWAY_DB_PASSWORD:}
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: update  # 개발용: 자동 스키마 생성
+    show-sql: true
+
+server:
+  port: 8083
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    root: INFO
+    com.audition.platform: DEBUG
