@@ -44,16 +44,3 @@ logs/
 
 # OS
 Thumbs.db
-
-# Python (prevent Render.com from detecting as Python project)
-*.py
-*.pyc
-__pycache__/
-requirements.txt
-pyproject.toml
-poetry.lock
-Pipfile
-Pipfile.lock
-venv/
-env/
-.venv/
