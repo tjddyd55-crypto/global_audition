@@ -1,0 +1,60 @@
+spring:
+  application:
+    name: audition-service
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5432/audition_db
+    username: audition_user
+    password: audition_pass
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        use_sql_comments: true
+  
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2000ms
+  
+  servlet:
+    multipart:
+      max-file-size: 1024MB
+      max-request-size: 2048MB
+
+server:
+  port: 8081
+
+# JWT 설정
+jwt:
+  secret: your-secret-key-should-be-at-least-256-bits-long-for-hs256-algorithm-change-in-production
+  expiration: 86400000 # 24시간 (밀리초)
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    com.audition.platform: DEBUG
+    org.springframework.web: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE

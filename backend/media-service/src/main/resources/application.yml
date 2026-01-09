@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: media-service
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5432/audition_db
+    username: audition_user
+    password: audition_pass
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+server:
+  port: 8083

@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: media-service
+  
+  datasource:
+    url: ${DATABASE_URL:${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/audition_db}}
+    username: ${PGUSER:${SPRING_DATASOURCE_USERNAME:audition_user}}
+    password: ${PGPASSWORD:${SPRING_DATASOURCE_PASSWORD:audition_pass}}
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
+server:
+  port: ${PORT:8083}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    root: INFO
+    com.audition.platform: INFO
