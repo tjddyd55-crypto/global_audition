@@ -1,0 +1,79 @@
+services:
+  - type: web
+    name: user-service
+    env: shell
+    buildCommand: apt-get update && apt-get install -y openjdk-17-jdk maven && chmod +x ./mvnw && ./mvnw clean package -DskipTests
+    startCommand: java -jar target/user-service-1.0.0-SNAPSHOT.jar
+    rootDir: backend/user-service
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: audition-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRATION
+        value: "86400000"
+      - key: JAVA_VERSION
+        value: "17"
+
+  - type: web
+    name: audition-service
+    env: shell
+    buildCommand: apt-get update && apt-get install -y openjdk-17-jdk maven && chmod +x ./mvnw && ./mvnw clean package -DskipTests
+    startCommand: java -jar target/audition-service-1.0.0-SNAPSHOT.jar
+    rootDir: backend/audition-service
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: audition-db
+          property: connectionString
+
+  - type: web
+    name: media-service
+    env: shell
+    buildCommand: apt-get update && apt-get install -y openjdk-17-jdk maven && chmod +x ./mvnw && ./mvnw clean package -DskipTests
+    startCommand: java -jar target/media-service-1.0.0-SNAPSHOT.jar
+    rootDir: backend/media-service
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: audition-db
+          property: connectionString
+
+  - type: web
+    name: gateway
+    env: shell
+    buildCommand: apt-get update && apt-get install -y openjdk-17-jdk maven && chmod +x ./mvnw && ./mvnw clean package -DskipTests
+    startCommand: java -jar target/gateway-1.0.0-SNAPSHOT.jar
+    rootDir: backend/gateway
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: production
+      - key: USER_SERVICE_URL
+        fromService:
+          name: user-service
+          type: web
+          property: host
+      - key: AUDITION_SERVICE_URL
+        fromService:
+          name: audition-service
+          type: web
+          property: host
+      - key: MEDIA_SERVICE_URL
+        fromService:
+          name: media-service
+          type: web
+          property: host
+
+databases:
+  - name: audition-db
+    databaseName: audition_db
+    user: audition_user
+    plan: free
