@@ -446,7 +446,7 @@ export default function RegisterPage() {
                   min={1800}
                   max={new Date().getFullYear()}
                 />
-                {errors.establishedYear && (
+                {'establishedYear' in errors && errors.establishedYear && (
                   <p className="text-red-500 text-sm mt-1">{errors.establishedYear.message}</p>
                 )}
               </div>
