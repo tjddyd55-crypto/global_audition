@@ -10,16 +10,24 @@ const nextConfig = {
   // Next.js trailing slash 설정 (next-intl과 호환)
   trailingSlash: false,
   
-  // next-intl 환경 변수 설정
+  // 환경 변수 설정 (클라이언트 사이드에서 접근 가능)
   env: {
     NEXT_PUBLIC_LOCALE: process.env.NEXT_PUBLIC_LOCALE || 'ko',
     // next-intl 플러그인이 요구하는 환경 변수 (경고 해결)
     _next_intl_trailing_slash: 'never',
+    // API URL (Railway에서 설정 필요)
+    // Railway → frontend-web → Variables → NEXT_PUBLIC_API_URL=https://gateway-production-72d6.up.railway.app
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://gateway-production-72d6.up.railway.app',
   },
   
   // 성능 최적화
+  // ⚠️ 주의: removeConsole은 [API Client] 로그는 제거하지 않음 (console.error, console.warn)
   compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
+    removeConsole: process.env.NODE_ENV === 'production' 
+      ? {
+          exclude: ['error', 'warn'], // error와 warn은 제거하지 않음 (디버깅용)
+        }
+      : false,
   },
   
   // 개발 모드 최적화

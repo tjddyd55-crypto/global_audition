@@ -1,4 +1,4 @@
-# Frontend (Next.js) Railway 배포 가이드
+# Frontend Railway 배포 가이드
 
 ## 사전 준비
 
@@ -8,194 +8,162 @@
 
 ### 1. Railway에서 서비스 생성
 
-1. **Railway 대시보드 접속**
-   - https://railway.app 접속
-   - 프로젝트 선택 (다른 서비스들이 있는 프로젝트)
+1. Railway 대시보드 접속
+2. 프로젝트 선택 (다른 서비스들이 있는 프로젝트)
+3. "+ New" → "GitHub Repo" 선택
+4. Repository 선택
+5. **Root Directory를 `frontend/web`으로 설정** (중요!)
 
-2. **"+ Create" 버튼 클릭**
+### 2. 환경 변수 설정 (필수!)
 
-3. **"GitHub Repo" 선택**
-
-4. **GitHub 저장소 선택 및 연결**
-   - 저장소 선택
-   - 필요시 권한 부여
-
-5. **서비스 설정**
-   - Service Name: `frontend-web` (또는 원하는 이름)
-   - Root Directory: `frontend/web` ⚠️ **중요!**
-   - Branch: `main` (또는 기본 브랜치)
-
-### 2. 빌드 설정
-
-**Settings → Build & Deploy** 섹션에서:
-
-- **Build Command:**
-  ```
-  npm install && npm run build
-  ```
-
-- **Start Command:**
-  ```
-  npm start
-  ```
-
-- **Watch Paths:** (선택 사항)
-  ```
-  frontend/web/**
-  ```
-
-### 3. 환경 변수 설정
-
-**Settings → Variables** 섹션에서 다음 환경 변수를 추가:
+Railway 대시보드에서 `frontend-web` → "Variables" 탭에서 다음 변수를 설정:
 
 #### 필수 환경 변수
 
 ```bash
-# API Gateway URL (프로덕션)
+# API Gateway URL (백엔드로의 요청 경로)
 NEXT_PUBLIC_API_URL=https://gateway-production-72d6.up.railway.app
-
-# Node 환경
-NODE_ENV=production
-
-# Next.js 포트 (Railway가 자동 설정하지만 명시적으로 설정)
-PORT=3000
 ```
 
-#### 환경 변수 설명
+**⚠️ 중요:**
+- `NEXT_PUBLIC_` 접두사가 필수입니다 (Next.js에서 클라이언트 사이드 환경 변수는 이 접두사가 필요)
+- 빌드 타임에 환경 변수가 하드코딩되므로, 환경 변수를 설정한 후 **재빌드**가 필요합니다
+- Gateway URL은 반드시 HTTPS로 시작해야 합니다
 
-1. **NEXT_PUBLIC_API_URL**
-   - 값: `https://gateway-production-72d6.up.railway.app`
-   - 프론트엔드에서 백엔드 API를 호출하는 URL
-   - **주의:** Gateway URL이 변경되면 이 값도 업데이트 필요
-
-2. **NODE_ENV**
-   - 값: `production`
-   - Next.js 프로덕션 모드 활성화
-
-3. **PORT**
-   - 값: Railway가 자동으로 할당 (보통 3000)
-   - Next.js가 리스닝할 포트
-
-### 4. Railway 자동 설정
-
-- `PORT` - Railway가 자동으로 할당
-- `RAILWAY_ENVIRONMENT` - Railway가 자동 설정
-
-### 5. 배포 방법
-
-#### 방법 1: GitHub 자동 배포 (권장)
-
-1. Railway에서 서비스 생성 후
-2. GitHub 저장소 연결
-3. Root Directory를 `frontend/web`로 설정
-4. 환경 변수 설정
-5. 자동으로 배포 시작
-
-#### 방법 2: Railway CLI 사용
+#### 선택적 환경 변수
 
 ```bash
-cd frontend/web
-railway login
-railway link  # 프로젝트 연결 (첫 배포 시)
-railway up    # 배포
+# 로케일 설정 (기본값: ko)
+NEXT_PUBLIC_LOCALE=ko
 ```
 
-### 6. 배포 확인
+### 3. 배포 설정 확인
 
-#### Health Check
+Railway 대시보드에서:
 
-배포가 완료되면 (보통 3-5분 소요) 다음 URL로 확인:
+1. **Settings** → **Root Directory**: `frontend/web`
+2. **Settings** → **Build Command**: `npm install && npm run build` (자동 감지)
+3. **Settings** → **Start Command**: `npm start` (자동 감지)
 
+### 4. 배포 확인
+
+#### 브라우저 콘솔 확인
+
+1. 프론트엔드 사이트 접속
+2. 브라우저 개발자 도구 (F12) → Console 탭 열기
+3. 다음 로그 확인:
+
+**정상일 경우:**
 ```
-https://[frontend-service-url]
-```
-
-**예상 동작:**
-- Next.js 홈페이지가 표시되어야 함
-- 브라우저 콘솔에서 API 호출이 정상 작동해야 함
-
-#### API 연결 확인
-
-1. 브라우저 개발자 도구(F12) 열기
-2. Network 탭 확인
-3. 페이지 로드 시 `/api/v1/...` 요청이 `https://gateway-production-72d6.up.railway.app`로 전송되는지 확인
-
-### 7. Public URL 확인
-
-배포 완료 후:
-
-1. Railway 대시보드에서 `frontend-web` 서비스 선택
-2. **Settings → Networking** 탭으로 이동
-3. **Generate Domain** 버튼 클릭 (자동 생성된 도메인 사용)
-4. 또는 **Custom Domain** 설정 (도메인이 있는 경우)
-
-**Public URL 예시:**
-```
-https://frontend-web-production-xxxx.up.railway.app
+[API Client] ✅ API Base URL: https://gateway-production-72d6.up.railway.app/api/v1
 ```
 
-### 8. 문제 해결
+**문제가 있을 경우:**
+```
+[API Client] ⚠️ NEXT_PUBLIC_API_URL 환경 변수가 설정되지 않았습니다.
+[API Client] Railway → frontend-web → Variables에서 NEXT_PUBLIC_API_URL을 설정해주세요.
+[API Client] 기본값 사용: https://gateway-production-72d6.up.railway.app
+```
 
-#### 빌드 실패
+#### Network 탭 확인
 
-**문제:** `npm install` 또는 `npm run build` 실패
+1. 브라우저 개발자 도구 → Network 탭
+2. 회원가입 버튼 클릭
+3. `register` 요청 확인:
+
+**정상일 경우:**
+- **Request URL**: `https://gateway-production-72d6.up.railway.app/api/v1/auth/register`
+- **Status**: 200, 201, 또는 400 (서버 응답)
+
+**문제가 있을 경우:**
+- **Request URL**: `https://frontend-web-production-xxxx.up.railway.app/api/v1/auth/register` (자기 자신)
+- **Status**: 404 또는 500
+
+### 5. 문제 해결
+
+#### 문제 1: 요청이 자기 자신(frontend-web)으로 가는 경우
+
+**증상:**
+- Network 탭에서 Request URL이 `https://frontend-web-production-xxxx.up.railway.app/api/v1/...`로 표시됨
+- 404 또는 500 에러 발생
+
+**원인:**
+- `NEXT_PUBLIC_API_URL` 환경 변수가 설정되지 않음
+- 환경 변수를 설정했지만 재빌드하지 않음
 
 **해결:**
-- Railway 로그 확인 (Deployments → 최신 배포 → Logs)
-- `package.json`의 의존성 확인
-- Node.js 버전 확인 (Railway는 자동으로 최신 LTS 버전 사용)
+1. Railway → frontend-web → Variables 확인
+2. `NEXT_PUBLIC_API_URL` 환경 변수 설정:
+   ```
+   NEXT_PUBLIC_API_URL=https://gateway-production-72d6.up.railway.app
+   ```
+3. Railway → frontend-web → Settings → "Redeploy" 클릭 (재빌드)
 
-#### API 연결 실패 (CORS 에러)
+#### 문제 2: CORS 에러 발생
 
-**문제:** 브라우저에서 CORS 에러 발생
+**증상:**
+- 브라우저 콘솔에 `CORS policy` 에러
+- Network 탭에서 요청이 `(blocked:cors)`로 표시됨
+
+**원인:**
+- Gateway의 CORS 설정 문제
 
 **해결:**
-- Gateway의 `application-production.yml`에서 CORS 설정 확인
-- `allowedOrigins`에 프론트엔드 URL 추가 필요할 수 있음
+1. Gateway 서비스의 `application-production.yml`에서 CORS 설정 확인
+2. Gateway Variables에서 `allowedOrigins` 확인:
+   ```
+   allowedOrigins: "*"  # 또는 프론트엔드 URL
+   ```
 
-#### 환경 변수 미적용
+#### 문제 3: 500 Internal Server Error
 
-**문제:** `NEXT_PUBLIC_API_URL`이 적용되지 않음
+**증상:**
+- Network 탭에서 Status가 500
+- 브라우저 콘솔에 상세 에러 메시지 없음
+
+**원인:**
+- 백엔드 서버 문제 (Gateway 또는 User Service)
 
 **해결:**
-- Railway에서 환경 변수 재설정 후 재배포
-- Next.js는 빌드 시 `NEXT_PUBLIC_*` 변수를 포함하므로 환경 변수 변경 후 재빌드 필요
-- **Settings → Variables**에서 변수 확인 후 **Redeploy** 버튼 클릭
+1. Gateway HTTP Logs 확인:
+   - Railway → gateway → Deployments → 최신 배포 → HTTP Logs
+   - POST 요청이 있는지 확인
+2. User Service Logs 확인:
+   - Railway → user-service → Deployments → 최신 배포 → Logs
+   - 에러 메시지 확인
 
-### 9. 재배포
+## 환경 변수 체크리스트
 
-환경 변수나 코드 변경 후:
+배포 전 반드시 확인:
 
-1. GitHub에 푸시하면 자동 재배포
-2. 또는 Railway 대시보드에서 **Deployments → Redeploy** 클릭
+- [ ] `NEXT_PUBLIC_API_URL`이 설정되어 있는가?
+- [ ] Gateway URL이 정확한가? (HTTPS, 끝에 슬래시 없음)
+- [ ] 환경 변수 설정 후 재빌드했는가?
+- [ ] 브라우저 콘솔에서 API Base URL이 올바르게 표시되는가?
+- [ ] Network 탭에서 요청이 Gateway로 가는가?
 
-### 10. 최종 확인 사항
+## 배포 후 확인 사항
 
-- [ ] 프론트엔드 서비스가 정상적으로 배포됨
-- [ ] Public URL로 접속 가능
-- [ ] API 연결 정상 (Network 탭 확인)
-- [ ] 로그인/회원가입 기능 테스트
-- [ ] 오디션 목록 조회 테스트
-- [ ] 기획사 오디션 관리 페이지 접속 테스트
-- [ ] 지원자 채널 관리 페이지 접속 테스트
+1. ✅ 프론트엔드 사이트 접속 가능
+2. ✅ 브라우저 콘솔에서 API Base URL 확인
+3. ✅ 회원가입 시도 후 Network 탭 확인
+4. ✅ Gateway HTTP Logs에 요청이 도달하는지 확인
+5. ✅ User Service Logs에 요청이 처리되는지 확인
 
-## 🎉 완료 후
+## 참고 사항
 
-배포가 완료되었습니다!
+### Next.js 환경 변수 특징
 
-### 최종 서비스 링크
+- `NEXT_PUBLIC_` 접두사가 붙은 환경 변수만 클라이언트 사이드에서 접근 가능
+- 환경 변수는 **빌드 타임**에 하드코딩됨
+- 환경 변수를 변경한 후에는 **반드시 재빌드**해야 함
 
-- **프론트엔드 (메인 사이트):** `https://frontend-web-production-b917.up.railway.app` ✅
-- **API Gateway:** `https://gateway-production-72d6.up.railway.app`
-- **User Service:** `https://user-service-production-7ba1.up.railway.app`
-- **Audition Service:** `https://audition-service-production.up.railway.app`
-- **Media Service:** `https://media-service-production-dff0.up.railway.app`
+### Railway 환경 변수 설정 방법
 
-### 사용자 접속 주소
-
-**실제 이용자가 접속할 주소:**
-```
-https://frontend-web-production-b917.up.railway.app
-```
-
-이 주소로 접속하면 전체 플랫폼을 사용할 수 있습니다.
+1. Railway 대시보드 → 프로젝트 선택
+2. `frontend-web` 서비스 선택
+3. "Variables" 탭 클릭
+4. "+ New Variable" 클릭
+5. Name: `NEXT_PUBLIC_API_URL`, Value: `https://gateway-production-72d6.up.railway.app`
+6. "Add" 클릭
+7. "Redeploy" 클릭 (재빌드)
