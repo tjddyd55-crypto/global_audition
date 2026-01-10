@@ -10,6 +10,7 @@ const nextConfig = {
   // next-intl 환경 변수 설정 (경고 제거용)
   env: {
     NEXT_PUBLIC_LOCALE: process.env.NEXT_PUBLIC_LOCALE || 'ko',
+    _next_intl_trailing_slash: 'never',
   },
   
   // 성능 최적화

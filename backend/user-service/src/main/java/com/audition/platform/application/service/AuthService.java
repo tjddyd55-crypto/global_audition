@@ -112,7 +112,7 @@ public class AuthService {
             }
 
             ApplicantProfile profile = ApplicantProfile.builder()
-                    .userId(savedUser.getId()) // userId 명시적 설정
+                    .userId(savedUser.getId()) // userId 명시적 설정 (필수)
                     .country(request.getCountry().trim().toUpperCase()) // 대문자로 변환 및 공백 제거
                     .city(request.getCity().trim())
                     .birthday(request.getBirthday())
@@ -124,16 +124,39 @@ public class AuthService {
                     .nationality(request.getCountry().trim().toUpperCase()) // 하위 호환성을 위해 country 값 사용
                     .build();
             
-            // User 관계 설정 (참조용, 실제로는 userId만 사용)
+            // User 관계 설정 (참조용, 실제 저장에는 영향 없음)
             profile.setUser(savedUser);
             
+            System.out.println("=== Attempting to Save ApplicantProfile ===");
+            System.out.println("UserId: " + profile.getUserId());
+            System.out.println("Country: " + profile.getCountry());
+            System.out.println("City: " + profile.getCity());
+            System.out.println("Birthday: " + profile.getBirthday());
+            System.out.println("Phone: " + profile.getPhone());
+            System.out.println("Address: " + profile.getAddress());
+            System.out.println("Timezone: " + profile.getTimezone());
+            System.out.println("Languages: " + profile.getLanguages());
+            System.out.println("Gender: " + profile.getGender());
+            
             try {
-                applicantProfileRepository.save(profile);
+                ApplicantProfile savedProfile = applicantProfileRepository.save(profile);
                 System.out.println("=== ApplicantProfile Saved Successfully ===");
-                System.out.println("UserId: " + profile.getUserId());
-                System.out.println("Country: " + profile.getCountry());
-                System.out.println("City: " + profile.getCity());
-                System.out.println("Birthday: " + profile.getBirthday());
+                System.out.println("Saved UserId: " + savedProfile.getUserId());
+            } catch (org.springframework.dao.DataIntegrityViolationException e) {
+                System.err.println("=== DataIntegrityViolationException ===");
+                System.err.println("Error: " + e.getClass().getName());
+                System.err.println("Message: " + e.getMessage());
+                if (e.getCause() != null) {
+                    System.err.println("Cause: " + e.getCause().getClass().getName());
+                    System.err.println("Cause Message: " + e.getCause().getMessage());
+                    if (e.getCause() instanceof java.sql.SQLException) {
+                        java.sql.SQLException sqlEx = (java.sql.SQLException) e.getCause();
+                        System.err.println("SQL State: " + sqlEx.getSQLState());
+                        System.err.println("Error Code: " + sqlEx.getErrorCode());
+                    }
+                }
+                e.printStackTrace();
+                throw new RuntimeException("프로필 저장 중 데이터 무결성 오류가 발생했습니다: " + e.getMessage(), e);
             } catch (Exception e) {
                 System.err.println("=== Failed to Save ApplicantProfile ===");
                 System.err.println("Error: " + e.getClass().getName());
@@ -141,6 +164,12 @@ public class AuthService {
                 if (e.getCause() != null) {
                     System.err.println("Cause: " + e.getCause().getClass().getName());
                     System.err.println("Cause Message: " + e.getCause().getMessage());
+                    if (e.getCause() instanceof java.sql.SQLException) {
+                        java.sql.SQLException sqlEx = (java.sql.SQLException) e.getCause();
+                        System.err.println("SQL State: " + sqlEx.getSQLState());
+                        System.err.println("Error Code: " + sqlEx.getErrorCode());
+                        System.err.println("SQL Error: " + sqlEx.getSQLState() + " (" + sqlEx.getErrorCode() + ")");
+                    }
                 }
                 e.printStackTrace();
                 throw new RuntimeException("프로필 저장 중 오류가 발생했습니다: " + e.getMessage(), e);
@@ -208,7 +237,7 @@ public class AuthService {
             }
 
             BusinessProfile profile = BusinessProfile.builder()
-                    .userId(savedUser.getId()) // userId 명시적 설정
+                    .userId(savedUser.getId()) // userId 명시적 설정 (필수)
                     .companyName(request.getCompanyName().trim())
                     .country(businessCountry) // 대문자로 변환된 값 사용
                     .city(request.getBusinessCity().trim())
@@ -222,15 +251,34 @@ public class AuthService {
                     .verificationStatus(BusinessProfile.VerificationStatus.PENDING) // 기본값: 대기 중
                     .build();
             
-            // User 관계 설정 (참조용, 실제로는 userId만 사용)
+            // User 관계 설정 (참조용, 실제 저장에는 영향 없음)
             profile.setUser(savedUser);
             
+            System.out.println("=== Attempting to Save BusinessProfile ===");
+            System.out.println("UserId: " + profile.getUserId());
+            System.out.println("CompanyName: " + profile.getCompanyName());
+            System.out.println("Country: " + profile.getCountry());
+            System.out.println("City: " + profile.getCity());
+            
             try {
-                businessProfileRepository.save(profile);
+                BusinessProfile savedProfile = businessProfileRepository.save(profile);
                 System.out.println("=== BusinessProfile Saved Successfully ===");
-                System.out.println("UserId: " + profile.getUserId());
-                System.out.println("CompanyName: " + profile.getCompanyName());
-                System.out.println("Country: " + profile.getCountry());
+                System.out.println("Saved UserId: " + savedProfile.getUserId());
+            } catch (org.springframework.dao.DataIntegrityViolationException e) {
+                System.err.println("=== DataIntegrityViolationException ===");
+                System.err.println("Error: " + e.getClass().getName());
+                System.err.println("Message: " + e.getMessage());
+                if (e.getCause() != null) {
+                    System.err.println("Cause: " + e.getCause().getClass().getName());
+                    System.err.println("Cause Message: " + e.getCause().getMessage());
+                    if (e.getCause() instanceof java.sql.SQLException) {
+                        java.sql.SQLException sqlEx = (java.sql.SQLException) e.getCause();
+                        System.err.println("SQL State: " + sqlEx.getSQLState());
+                        System.err.println("Error Code: " + sqlEx.getErrorCode());
+                    }
+                }
+                e.printStackTrace();
+                throw new RuntimeException("프로필 저장 중 데이터 무결성 오류가 발생했습니다: " + e.getMessage(), e);
             } catch (Exception e) {
                 System.err.println("=== Failed to Save BusinessProfile ===");
                 System.err.println("Error: " + e.getClass().getName());
@@ -238,6 +286,11 @@ public class AuthService {
                 if (e.getCause() != null) {
                     System.err.println("Cause: " + e.getCause().getClass().getName());
                     System.err.println("Cause Message: " + e.getCause().getMessage());
+                    if (e.getCause() instanceof java.sql.SQLException) {
+                        java.sql.SQLException sqlEx = (java.sql.SQLException) e.getCause();
+                        System.err.println("SQL State: " + sqlEx.getSQLState());
+                        System.err.println("Error Code: " + sqlEx.getErrorCode());
+                    }
                 }
                 e.printStackTrace();
                 throw new RuntimeException("프로필 저장 중 오류가 발생했습니다: " + e.getMessage(), e);
