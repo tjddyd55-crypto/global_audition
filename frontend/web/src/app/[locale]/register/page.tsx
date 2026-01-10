@@ -206,7 +206,7 @@ export default function RegisterPage() {
                     </option>
                   ))}
                 </select>
-                {errors.country && (
+                {'country' in errors && errors.country && (
                   <p className="text-red-500 text-sm mt-1">{errors.country.message}</p>
                 )}
               </div>
@@ -219,7 +219,7 @@ export default function RegisterPage() {
                   className="w-full px-4 py-2 border rounded-lg"
                   placeholder={t('enterCity')}
                 />
-                {errors.city && (
+                {'city' in errors && errors.city && (
                   <p className="text-red-500 text-sm mt-1">{errors.city.message}</p>
                 )}
               </div>
@@ -232,7 +232,7 @@ export default function RegisterPage() {
                   className="w-full px-4 py-2 border rounded-lg"
                   max={new Date().toISOString().split('T')[0]}
                 />
-                {errors.birthday && (
+                {'birthday' in errors && errors.birthday && (
                   <p className="text-red-500 text-sm mt-1">{errors.birthday.message}</p>
                 )}
               </div>
@@ -320,7 +320,7 @@ export default function RegisterPage() {
                     </option>
                   ))}
                 </select>
-                {errors.businessCountry && (
+                {'businessCountry' in errors && errors.businessCountry && (
                   <p className="text-red-500 text-sm mt-1">{errors.businessCountry.message}</p>
                 )}
               </div>
@@ -333,7 +333,7 @@ export default function RegisterPage() {
                   className="w-full px-4 py-2 border rounded-lg"
                   placeholder={t('enterCity')}
                 />
-                {errors.businessCity && (
+                {'businessCity' in errors && errors.businessCity && (
                   <p className="text-red-500 text-sm mt-1">{errors.businessCity.message}</p>
                 )}
               </div>
@@ -346,7 +346,7 @@ export default function RegisterPage() {
                   className="w-full px-4 py-2 border rounded-lg"
                   placeholder={t('companyName')}
                 />
-                {errors.companyName && (
+                {'companyName' in errors && errors.companyName && (
                   <p className="text-red-500 text-sm mt-1">{errors.companyName.message}</p>
                 )}
               </div>
@@ -359,7 +359,7 @@ export default function RegisterPage() {
                   className="w-full px-4 py-2 border rounded-lg"
                   placeholder={t('legalName')}
                 />
-                {errors.legalName && (
+                {'legalName' in errors && errors.legalName && (
                   <p className="text-red-500 text-sm mt-1">{errors.legalName.message}</p>
                 )}
               </div>
@@ -372,7 +372,7 @@ export default function RegisterPage() {
                   className="w-full px-4 py-2 border rounded-lg"
                   placeholder={t('representativeName')}
                 />
-                {errors.representativeName && (
+                {'representativeName' in errors && errors.representativeName && (
                   <p className="text-red-500 text-sm mt-1">{errors.representativeName.message}</p>
                 )}
               </div>
@@ -385,7 +385,7 @@ export default function RegisterPage() {
                   className="w-full px-4 py-2 border rounded-lg"
                   placeholder={t('businessRegistrationNumber')}
                 />
-                {errors.businessRegistrationNumber && (
+                {'businessRegistrationNumber' in errors && errors.businessRegistrationNumber && (
                   <p className="text-red-500 text-sm mt-1">
                     {errors.businessRegistrationNumber.message}
                   </p>
@@ -439,7 +439,7 @@ export default function RegisterPage() {
                   className="w-full px-4 py-2 border rounded-lg"
                   placeholder={t('website')}
                 />
-                {errors.website && (
+                {'website' in errors && errors.website && (
                   <p className="text-red-500 text-sm mt-1">{errors.website.message}</p>
                 )}
               </div>
@@ -452,7 +452,7 @@ export default function RegisterPage() {
                   className="w-full px-4 py-2 border rounded-lg"
                   placeholder={t('contactEmail')}
                 />
-                {errors.contactEmail && (
+                {'contactEmail' in errors && errors.contactEmail && (
                   <p className="text-red-500 text-sm mt-1">{errors.contactEmail.message}</p>
                 )}
               </div>
@@ -477,7 +477,7 @@ export default function RegisterPage() {
                   min={1800}
                   max={new Date().getFullYear()}
                 />
-                {errors.establishedYear && (
+                {'establishedYear' in errors && errors.establishedYear && (
                   <p className="text-red-500 text-sm mt-1">{errors.establishedYear.message}</p>
                 )}
               </div>
