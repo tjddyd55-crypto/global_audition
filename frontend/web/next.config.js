@@ -7,10 +7,12 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   
-  // next-intl 환경 변수 설정 (경고 제거용)
+  // Next.js trailing slash 설정 (next-intl과 호환)
+  trailingSlash: false,
+  
+  // next-intl 환경 변수 설정
   env: {
     NEXT_PUBLIC_LOCALE: process.env.NEXT_PUBLIC_LOCALE || 'ko',
-    _next_intl_trailing_slash: 'never',
   },
   
   // 성능 최적화

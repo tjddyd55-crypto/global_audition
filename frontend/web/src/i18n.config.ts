@@ -10,9 +10,6 @@ export const routing = defineRouting({
 
   // URL에 언어 코드 포함 여부
   localePrefix: 'always',
-
-  // trailing slash 설정 (기본값: 'never')
-  trailingSlash: 'never',
 })
 
 // 타입 안전한 네비게이션
