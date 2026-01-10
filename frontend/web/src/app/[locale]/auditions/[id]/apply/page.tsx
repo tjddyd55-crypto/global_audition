@@ -1,6 +1,7 @@
 'use client'
 
-import { useParams, useRouter } from '@/i18n.config'
+import { useParams } from 'next/navigation'
+import { useRouter } from '@/i18n.config'
 import { useState } from 'react'
 import ApplicationForm from '@/components/application/ApplicationForm'
 import { useQuery } from '@tanstack/react-query'
@@ -8,7 +9,7 @@ import { auditionApi } from '@/lib/api/auditions'
 import { useTranslations } from 'next-intl'
 
 export default function ApplyPage() {
-  const params = useParams()
+  const params = useParams<{ id: string; locale: string }>()
   const router = useRouter()
   const t = useTranslations('common')
   const auditionId = Number(params.id)
