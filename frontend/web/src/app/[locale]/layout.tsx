@@ -43,16 +43,14 @@ export default async function LocaleLayout({
   // 번역 메시지 로드 (캐싱으로 최적화됨)
   const messages = await getMessages()
 
-  // 루트 레이아웃에서 이미 html/body를 제공하므로 여기서는 제공하지 않음
+  // 루트 레이아웃에서 이미 Providers를 제공하므로 여기서는 중복하지 않음
   return (
     <NextIntlClientProvider messages={messages}>
-      <Providers>
-        <div className={`flex flex-col min-h-screen ${inter.variable}`}>
-          <Header />
-          <main className="flex-grow">{children}</main>
-          <Footer />
-        </div>
-      </Providers>
+      <div className={`flex flex-col min-h-screen ${inter.variable}`}>
+        <Header />
+        <main className="flex-grow">{children}</main>
+        <Footer />
+      </div>
     </NextIntlClientProvider>
   )
 }

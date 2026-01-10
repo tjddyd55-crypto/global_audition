@@ -5,6 +5,7 @@ import com.audition.platform.application.dto.CreateApplicationRequest;
 import com.audition.platform.application.dto.UpdateScreeningResultRequest;
 import com.audition.platform.application.service.ApplicationService;
 import com.audition.platform.domain.entity.Application;
+import com.audition.platform.infrastructure.security.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -56,7 +57,7 @@ public class ApplicationController {
     public ResponseEntity<ApplicationDto> createApplication(
             @RequestBody @Valid CreateApplicationRequest request
     ) {
-        Long userId = 1L; // TODO: 실제 사용자 ID로 변경 (인증에서 가져오기)
+        Long userId = SecurityUtils.getCurrentUserIdOrThrow();
         ApplicationDto created = applicationService.createApplication(userId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
@@ -114,9 +115,19 @@ public class ApplicationController {
     @DeleteMapping("/{id}")
     @Operation(summary = "지원서 삭제")
     public ResponseEntity<Void> deleteApplication(@PathVariable Long id) {
-        Long userId = 1L; // TODO: 실제 사용자 ID로 변경
+        Long userId = SecurityUtils.getCurrentUserIdOrThrow();
         applicationService.deleteApplication(id, userId);
         return ResponseEntity.noContent().build();
+    }
+    
+    @GetMapping("/my")
+    @Operation(summary = "내 지원서 목록", description = "현재 로그인한 지원자의 지원서 목록")
+    public ResponseEntity<Page<ApplicationDto>> getMyApplications(
+            @PageableDefault(size = 20) Pageable pageable
+    ) {
+        Long userId = SecurityUtils.getCurrentUserIdOrThrow();
+        Page<ApplicationDto> applications = applicationService.getUserApplications(userId, pageable);
+        return ResponseEntity.ok(applications);
     }
 
     @GetMapping("/auditions/{auditionId}/results/first-round")

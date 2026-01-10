@@ -127,7 +127,7 @@ class AuditionServiceTest {
         when(auditionMapper.toDto(savedAudition)).thenReturn(dto);
 
         // when
-        AuditionDto result = auditionService.createAudition(request);
+        AuditionDto result = auditionService.createAudition(1L, request);
 
         // then
         assertThat(result).isNotNull();

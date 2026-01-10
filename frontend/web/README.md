@@ -53,8 +53,14 @@ src/
 `.env.local` 파일 생성:
 
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:8081
+# Railway Gateway URL (프로덕션)
+NEXT_PUBLIC_API_URL=https://gateway-production-72d6.up.railway.app
+
+# 로컬 개발 시
+# NEXT_PUBLIC_API_URL=http://localhost:8080
 ```
+
+**참고:** Railway Gateway URL은 실제 배포된 Gateway 서비스 URL로 변경해야 합니다. Railway 대시보드에서 확인할 수 있습니다.
 
 ## 주요 기능
 

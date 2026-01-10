@@ -4,6 +4,7 @@ import com.audition.platform.application.dto.AuditionDto;
 import com.audition.platform.application.dto.CreateAuditionRequest;
 import com.audition.platform.application.dto.UpdateAuditionRequest;
 import com.audition.platform.application.service.AuditionService;
+import com.audition.platform.infrastructure.security.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -14,8 +15,6 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/auditions")
@@ -48,7 +47,8 @@ public class AuditionController {
     public ResponseEntity<AuditionDto> createAudition(
             @RequestBody @Valid CreateAuditionRequest request
     ) {
-        AuditionDto created = auditionService.createAudition(request);
+        Long businessId = SecurityUtils.getCurrentUserIdOrThrow();
+        AuditionDto created = auditionService.createAudition(businessId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
@@ -75,6 +75,16 @@ public class AuditionController {
             @PathVariable Long businessId,
             @PageableDefault(size = 20) Pageable pageable
     ) {
+        Page<AuditionDto> auditions = auditionService.getAuditionsByBusiness(businessId, pageable);
+        return ResponseEntity.ok(auditions);
+    }
+    
+    @GetMapping("/my")
+    @Operation(summary = "내 오디션 목록", description = "현재 로그인한 기획사의 오디션 목록")
+    public ResponseEntity<Page<AuditionDto>> getMyAuditions(
+            @PageableDefault(size = 20) Pageable pageable
+    ) {
+        Long businessId = SecurityUtils.getCurrentUserIdOrThrow();
         Page<AuditionDto> auditions = auditionService.getAuditionsByBusiness(businessId, pageable);
         return ResponseEntity.ok(auditions);
     }

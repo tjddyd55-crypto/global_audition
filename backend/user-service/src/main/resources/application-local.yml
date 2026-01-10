@@ -4,8 +4,8 @@ spring:
   
   datasource:
     url: jdbc:postgresql://${RAILWAY_DB_HOST:localhost}:${RAILWAY_DB_PORT:5432}/${RAILWAY_DB_NAME:audition_db}
-    username: ${RAILWAY_DB_USER:postgres}
-    password: ${RAILWAY_DB_PASSWORD:}
+    username: ${RAILWAY_DB_USER:audition_user}
+    password: ${RAILWAY_DB_PASSWORD:audition_pass}
     driver-class-name: org.postgresql.Driver
   
   jpa:
@@ -33,3 +33,14 @@ logging:
   level:
     root: INFO
     com.audition.platform: DEBUG
+
+# 소셜 로그인 설정 (환경 변수로 설정)
+social:
+  google:
+    client-id: ${GOOGLE_CLIENT_ID:}
+  kakao:
+    client-id: ${KAKAO_CLIENT_ID:}
+  naver:
+    client-id: ${NAVER_CLIENT_ID:}
+  facebook:
+    client-id: ${FACEBOOK_CLIENT_ID:}

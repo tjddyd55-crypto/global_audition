@@ -1,6 +1,8 @@
 import axios from 'axios'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
+// Railway Gateway URL: https://gateway-production-72d6.up.railway.app
+// 로컬 개발: http://localhost:8080
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://gateway-production-72d6.up.railway.app'
 
 export const apiClient = axios.create({
   baseURL: `${API_BASE_URL}/api/v1`,
@@ -31,6 +33,16 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
+    // 에러 로깅 (개발용)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('API Error:', {
+        url: error.config?.url,
+        method: error.config?.method,
+        status: error.response?.status,
+        data: error.response?.data,
+      })
+    }
+    
     if (error.response?.status === 401) {
       // 인증 실패 시 로그인 페이지로 리다이렉트
       if (typeof window !== 'undefined') {

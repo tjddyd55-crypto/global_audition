@@ -43,7 +43,7 @@ public class AuditionService {
         return auditionMapper.toDto(audition);
     }
 
-    public AuditionDto createAudition(CreateAuditionRequest request) {
+    public AuditionDto createAudition(Long businessId, CreateAuditionRequest request) {
         Audition audition = Audition.builder()
                 .title(request.getTitle())
                 .titleEn(request.getTitleEn())
@@ -57,7 +57,7 @@ public class AuditionService {
                 .screeningDate3(request.getScreeningDate3())
                 .bannerUrl(request.getBannerUrl())
                 .status(Audition.AuditionStatus.WRITING)
-                .businessId(1L) // TODO: 실제 사용자 ID로 변경
+                .businessId(businessId)
                 .build();
 
         Audition saved = auditionRepository.save(audition);

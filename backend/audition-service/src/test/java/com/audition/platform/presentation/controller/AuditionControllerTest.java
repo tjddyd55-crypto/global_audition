@@ -118,7 +118,7 @@ class AuditionControllerTest {
                 .title("새 오디션")
                 .build();
 
-        when(auditionService.createAudition(any())).thenReturn(created);
+        when(auditionService.createAudition(any(Long.class), any())).thenReturn(created);
 
         // when & then
         mockMvc.perform(post("/api/v1/auditions")

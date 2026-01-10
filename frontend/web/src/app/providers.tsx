@@ -4,13 +4,17 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useState } from 'react'
 
 export function Providers({ children }: { children: React.ReactNode }) {
+  // QueryClient를 한 번만 생성하여 성능 최적화
   const [queryClient] = useState(
     () =>
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 60 * 1000, // 1분
+            staleTime: 5 * 60 * 1000, // 5분으로 증가 (더 적은 리패치)
+            cacheTime: 10 * 60 * 1000, // 캐시 시간 10분
             refetchOnWindowFocus: false,
+            refetchOnMount: false, // 마운트 시 리패치 비활성화
+            retry: 1, // 재시도 횟수 감소
           },
         },
       })

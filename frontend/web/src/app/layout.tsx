@@ -1,6 +1,7 @@
 // 루트 레이아웃 - Next.js App Router 필수 구조
 // next-intl 미들웨어가 자동으로 /를 /ko로 리다이렉트합니다
 import './globals.css'
+import { Providers } from './providers'
 
 export default function RootLayout({
   children,
@@ -12,7 +13,7 @@ export default function RootLayout({
   return (
     <html suppressHydrationWarning lang="ko">
       <body suppressHydrationWarning>
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   )

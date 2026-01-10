@@ -25,7 +25,6 @@ public class ApplicantProfile {
     private Long userId;
 
     @OneToOne
-    @MapsId
     @JoinColumn(name = "user_id")
     private User user;
 
@@ -38,7 +37,7 @@ public class ApplicantProfile {
     @Column(name = "banner_url")
     private String bannerUrl;
 
-    private String nationality;
+    private String nationality; // 기존 필드 (하위 호환성 유지)
     private String gender;
 
     private LocalDate birthday;
@@ -55,8 +54,26 @@ public class ApplicantProfile {
     @Column(name = "instagram_id")
     private String instagramId;
 
+    // 국제화 필드
+    @Column(length = 2)
+    private String country; // ISO 3166-1 alpha-2 코드 (KR, US, JP 등)
+
+    private String city;
+
+    @Column(length = 50)
+    private String phone; // 국가별 형식 다름
+
+    @Column(columnDefinition = "TEXT")
+    private String address; // 선택적
+
+    @Column(length = 50)
+    private String timezone; // 예: Asia/Seoul, America/New_York
+
+    @Column(length = 500)
+    private String languages; // 쉼표로 구분된 언어 코드 (ko, en, ja 등)
+
     @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
     @LastModifiedDate

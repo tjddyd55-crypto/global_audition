@@ -1,36 +1,53 @@
 'use client'
 
-import Link from 'next/link'
-import { useState } from 'react'
+import { Link } from '@/i18n.config'
+import { useTranslations } from 'next-intl'
+import { useState, memo, useMemo } from 'react'
+import LanguageSwitcher from '@/components/common/LanguageSwitcher'
 
-export default function Header() {
+const Header = memo(function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const t = useTranslations('common')
+  
+  // 메뉴 토글 핸들러 메모이제이션
+  const toggleMenu = useMemo(() => () => setIsMenuOpen(prev => !prev), [])
+  const closeMenu = useMemo(() => () => setIsMenuOpen(false), [])
 
   return (
     <header className="sticky top-0 z-50 bg-white border-b">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <Link href="/" className="text-2xl font-bold text-primary-600">
-            Audition Platform
+            {t('appName')}
           </Link>
 
           {/* Desktop Menu */}
-          <nav className="hidden md:flex space-x-6">
+          <nav className="hidden md:flex items-center space-x-6">
             <Link href="/auditions" className="hover:text-primary-600">
-              오디션
+              {t('auditions')}
             </Link>
             <Link href="/profile" className="hover:text-primary-600">
-              프로필
+              {t('profile')}
+            </Link>
+            <Link href="/channel" className="hover:text-primary-600">
+              채널
+            </Link>
+            <Link href="/auditions/create" className="hover:text-primary-600">
+              공고 작성
             </Link>
             <Link href="/login" className="hover:text-primary-600">
-              로그인
+              {t('login')}
             </Link>
+            <Link href="/register" className="hover:text-primary-600">
+              {t('register')}
+            </Link>
+            <LanguageSwitcher />
           </nav>
 
           {/* Mobile Menu Button */}
           <button
             className="md:hidden"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            onClick={toggleMenu}
             aria-label="메뉴"
           >
             <svg
@@ -64,27 +81,53 @@ export default function Header() {
             <Link
               href="/auditions"
               className="block py-2 hover:text-primary-600"
-              onClick={() => setIsMenuOpen(false)}
+              onClick={closeMenu}
             >
-              오디션
+              {t('auditions')}
             </Link>
             <Link
               href="/profile"
               className="block py-2 hover:text-primary-600"
-              onClick={() => setIsMenuOpen(false)}
+              onClick={closeMenu}
             >
-              프로필
+              {t('profile')}
+            </Link>
+            <Link
+              href="/channel"
+              className="block py-2 hover:text-primary-600"
+              onClick={closeMenu}
+            >
+              채널
+            </Link>
+            <Link
+              href="/auditions/create"
+              className="block py-2 hover:text-primary-600"
+              onClick={closeMenu}
+            >
+              공고 작성
             </Link>
             <Link
               href="/login"
               className="block py-2 hover:text-primary-600"
-              onClick={() => setIsMenuOpen(false)}
+              onClick={closeMenu}
             >
-              로그인
+              {t('login')}
             </Link>
+            <Link
+              href="/register"
+              className="block py-2 hover:text-primary-600"
+              onClick={closeMenu}
+            >
+              {t('register')}
+            </Link>
+            <div className="pt-2">
+              <LanguageSwitcher />
+            </div>
           </nav>
         )}
       </div>
     </header>
   )
-}
+})
+
+export default Header

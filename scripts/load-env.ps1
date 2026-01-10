@@ -1,7 +1,8 @@
 # 환경 변수 로드 스크립트
 # 사용법: . .\scripts\load-env.ps1
 
-$envFile = Join-Path $PSScriptRoot ".." ".env.local"
+$projectRoot = Split-Path -Parent $PSScriptRoot
+$envFile = Join-Path $projectRoot ".env.local"
 
 if (Test-Path $envFile) {
     Write-Host "환경 변수 로드 중: $envFile" -ForegroundColor Green

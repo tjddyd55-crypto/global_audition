@@ -25,7 +25,7 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false)
+    @Column(nullable = true) // 소셜 로그인 사용자는 비밀번호가 없을 수 있음
     private String password;
 
     @Column(nullable = false)
@@ -38,8 +38,16 @@ public class User {
     @Column(name = "profile_image_url")
     private String profileImageUrl;
 
+    // 소셜 로그인 관련 필드
+    @Column(name = "provider")
+    @Enumerated(EnumType.STRING)
+    private Provider provider; // GOOGLE, KAKAO, NAVER, LOCAL
+
+    @Column(name = "provider_id")
+    private String providerId; // 소셜 로그인 제공자의 사용자 ID
+
     @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
     @LastModifiedDate
@@ -52,6 +60,14 @@ public class User {
     public enum UserType {
         APPLICANT,  // 지망생
         BUSINESS    // 기획사
+    }
+
+    public enum Provider {
+        LOCAL,      // 일반 회원가입
+        GOOGLE,     // Google 소셜 로그인
+        KAKAO,      // Kakao 소셜 로그인
+        NAVER,      // Naver 소셜 로그인
+        FACEBOOK    // Facebook 소셜 로그인
     }
 
     public boolean isDeleted() {

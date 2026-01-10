@@ -2,16 +2,24 @@ spring:
   application:
     name: user-service
   
+  # Railway 환경 변수에서 직접 사용
+  # Railway 대시보드에서 다음 변수를 설정하세요:
+  # SPRING_DATASOURCE_URL=jdbc:postgresql://postgres.railway.internal:5432/railway
+  # SPRING_DATASOURCE_USERNAME=postgres
+  # SPRING_DATASOURCE_PASSWORD=실제비밀번호
   datasource:
-    url: ${DATABASE_URL:${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/audition_db}}
-    username: ${PGUSER:${SPRING_DATASOURCE_USERNAME:audition_user}}
-    password: ${PGPASSWORD:${SPRING_DATASOURCE_PASSWORD:audition_pass}}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/audition_db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
   
   jpa:
     hibernate:
       ddl-auto: validate
     show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
 
 server:
   port: ${PORT:8082}
@@ -24,10 +32,14 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: "*"  # 모든 엔드포인트 노출 (프로덕션에서는 health만 권장)
+      base-path: /actuator  # 명시적으로 base-path 설정
   endpoint:
     health:
       show-details: always
+      enabled: true
+  health:
+    enabled: true
 
 logging:
   level:
