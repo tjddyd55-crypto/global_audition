@@ -53,12 +53,14 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,gateway
+        include: "*"  # 모든 엔드포인트 노출 (gateway routes 포함)
       base-path: /actuator
   endpoint:
     health:
       show-details: always
       enabled: true
+    gateway:
+      enabled: true  # Gateway Actuator 엔드포인트 활성화
 
 logging:
   level:
