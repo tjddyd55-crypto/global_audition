@@ -325,7 +325,7 @@ export default function RegisterPage() {
                 className="w-full px-4 py-2 border rounded-lg"
                 placeholder="email@example.com"
               />
-              {errors.email && (
+              {'email' in errors && errors.email && (
                 <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
               )}
             </div>
@@ -352,7 +352,7 @@ export default function RegisterPage() {
               className="w-full px-4 py-2 border rounded-lg"
               placeholder={tAuth('password')}
             />
-            {errors.password && (
+            {'password' in errors && errors.password && (
               <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>
             )}
           </div>
@@ -365,7 +365,7 @@ export default function RegisterPage() {
               className="w-full px-4 py-2 border rounded-lg"
               placeholder="비밀번호를 다시 입력하세요"
             />
-            {errors.confirmPassword && (
+            {'confirmPassword' in errors && errors.confirmPassword && (
               <p className="text-red-500 text-sm mt-1">{errors.confirmPassword.message}</p>
             )}
           </div>
@@ -378,7 +378,7 @@ export default function RegisterPage() {
               className="w-full px-4 py-2 border rounded-lg"
               placeholder={tAuth('name')}
             />
-            {errors.name && (
+            {'name' in errors && errors.name && (
               <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
             )}
           </div>
