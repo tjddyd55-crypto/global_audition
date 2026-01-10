@@ -42,18 +42,7 @@ spring:
           filters:
             - StripPrefix=0
       
-      globalcors:
-        cors-configurations:
-          '[/**]':
-            allowedOrigins: "*"
-            allowedMethods:
-              - GET
-              - POST
-              - PUT
-              - DELETE
-              - OPTIONS
-            allowedHeaders: "*"
-            allowCredentials: true
+      # CORS 설정은 CorsConfig.java에서 처리 (globalcors 설정 제거 - allowCredentials와 allowedOrigins "*" 충돌 해결)
 
 management:
   endpoints:
@@ -72,3 +61,8 @@ logging:
   level:
     root: INFO
     com.audition.platform: INFO
+    org.springframework.cloud.gateway: DEBUG  # Gateway 라우팅 디버깅
+    org.springframework.web.reactive: DEBUG   # WebFlux 에러 디버깅
+    reactor.netty.http.client: DEBUG          # Netty HTTP 클라이언트 디버깅
+    io.netty: DEBUG                           # Netty 상세 디버깅
+    org.springframework.http.server.reactive: DEBUG  # Reactive HTTP 서버 디버깅
