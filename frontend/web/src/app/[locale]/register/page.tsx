@@ -77,15 +77,19 @@ export default function RegisterPage() {
     setIsLoading(true)
     setError(null)
     try {
-      // 언어 배열 처리
-      if (userType === 'APPLICANT' && selectedLanguages.length > 0) {
-        data.languages = selectedLanguages
+      // 언어 배열 처리 - 타입 가드 사용
+      let submitData: RegisterFormData = data
+      if (userType === 'APPLICANT' && selectedLanguages.length > 0 && data.userType === 'APPLICANT') {
+        submitData = {
+          ...data,
+          languages: selectedLanguages,
+        } as RegisterFormData
       }
       
       // 디버깅: 전송 데이터 확인
-      console.log('회원가입 요청 데이터:', data)
+      console.log('회원가입 요청 데이터:', submitData)
       
-      await authApi.register(data)
+      await authApi.register(submitData)
       router.push('/')
     } catch (err: any) {
       console.error('회원가입 오류:', err)
