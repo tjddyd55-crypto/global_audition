@@ -90,7 +90,8 @@ public class AuthService {
             if (request.getBusinessCountry() == null || request.getBusinessCountry().trim().isEmpty()) {
                 throw new RuntimeException("기획사 회원가입 시 국가는 필수입니다");
             }
-            if (!request.getBusinessCountry().matches("^[A-Z]{2}$")) {
+            String businessCountry = request.getBusinessCountry().trim().toUpperCase();
+            if (!businessCountry.matches("^[A-Z]{2}$")) {
                 throw new RuntimeException("국가는 ISO 3166-1 alpha-2 형식이어야 합니다 (예: KR, US, JP). 입력된 값: " + request.getBusinessCountry());
             }
             if (request.getBusinessCity() == null || request.getBusinessCity().trim().isEmpty()) {
@@ -106,16 +107,16 @@ public class AuthService {
             BusinessProfile profile = BusinessProfile.builder()
                     .userId(savedUser.getId()) // userId 명시적 설정
                     .user(savedUser)
-                    .companyName(request.getCompanyName())
-                    .country(request.getBusinessCountry())
-                    .city(request.getBusinessCity())
-                    .businessRegistrationNumber(request.getBusinessRegistrationNumber())
-                    .businessLicenseDocumentUrl(request.getBusinessLicenseDocumentUrl())
-                    .taxId(request.getTaxId())
-                    .address(request.getBusinessAddress())
-                    .website(request.getWebsite())
-                    .contactEmail(request.getContactEmail())
-                    .contactPhone(request.getContactPhone())
+                    .companyName(request.getCompanyName().trim())
+                    .country(businessCountry) // 대문자로 변환된 값 사용
+                    .city(request.getBusinessCity().trim())
+                    .businessRegistrationNumber(request.getBusinessRegistrationNumber().trim())
+                    .businessLicenseDocumentUrl(request.getBusinessLicenseDocumentUrl() != null ? request.getBusinessLicenseDocumentUrl().trim() : null)
+                    .taxId(request.getTaxId() != null ? request.getTaxId().trim() : null)
+                    .address(request.getBusinessAddress() != null ? request.getBusinessAddress().trim() : null)
+                    .website(request.getWebsite() != null ? request.getWebsite().trim() : null)
+                    .contactEmail(request.getContactEmail() != null ? request.getContactEmail().trim() : null)
+                    .contactPhone(request.getContactPhone() != null ? request.getContactPhone().trim() : null)
                     .verificationStatus(BusinessProfile.VerificationStatus.PENDING) // 기본값: 대기 중
                     .build();
             businessProfileRepository.save(profile);

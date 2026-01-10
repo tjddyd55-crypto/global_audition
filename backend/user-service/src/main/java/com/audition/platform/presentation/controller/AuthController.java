@@ -32,12 +32,21 @@ public class AuthController {
             // 요청 데이터 로깅 (디버깅용)
             System.out.println("=== Registration Request ===");
             System.out.println("Email: " + request.getEmail());
+            System.out.println("Name: " + request.getName());
             System.out.println("UserType: " + request.getUserType());
             System.out.println("Country: " + request.getCountry());
+            System.out.println("BusinessCountry: " + request.getBusinessCountry());
             System.out.println("City: " + request.getCity());
+            System.out.println("BusinessCity: " + request.getBusinessCity());
             System.out.println("Birthday: " + request.getBirthday());
+            System.out.println("CompanyName: " + request.getCompanyName());
+            System.out.println("BusinessRegistrationNumber: " + request.getBusinessRegistrationNumber());
             
             AuthResponse response = authService.register(request);
+            System.out.println("=== Registration Success ===");
+            System.out.println("UserId: " + response.getUserId());
+            System.out.println("Email: " + response.getEmail());
+            
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (RuntimeException ex) {
             // 비즈니스 로직 예외는 400 Bad Request로 반환
@@ -48,11 +57,20 @@ public class AuthController {
             
             System.err.println("=== Registration Validation Error ===");
             System.err.println("Message: " + ex.getMessage());
+            System.err.println("Exception Type: " + ex.getClass().getName());
             ex.printStackTrace();
             
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         } catch (Exception ex) {
             // 예상치 못한 예외는 500 Internal Server Error로 반환 (GlobalExceptionHandler에서 처리)
+            System.err.println("=== Registration Unexpected Error ===");
+            System.err.println("Exception Type: " + ex.getClass().getName());
+            System.err.println("Message: " + ex.getMessage());
+            if (ex.getCause() != null) {
+                System.err.println("Cause: " + ex.getCause().getClass().getName());
+                System.err.println("Cause Message: " + ex.getCause().getMessage());
+            }
+            ex.printStackTrace();
             throw ex;
         }
     }
