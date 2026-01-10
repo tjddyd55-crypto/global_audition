@@ -6,6 +6,9 @@ spring:
     name: gateway
   cloud:
     gateway:
+      httpclient:
+        connect-timeout: 10000  # 10초 연결 타임아웃
+        response-timeout: 30s   # 30초 응답 타임아웃
       routes:
         # User Service
         # Railway 환경 변수에서 설정: USER_SERVICE_URL=https://user-service-production-7ba1.up.railway.app
@@ -15,6 +18,9 @@ spring:
             - Path=/api/v1/auth/**
           filters:
             - StripPrefix=0
+          metadata:
+            connect-timeout: 10000
+            response-timeout: 30000
         
         # Audition Service
         # Railway 환경 변수에서 설정: AUDITION_SERVICE_URL=https://audition-service-production.up.railway.app
