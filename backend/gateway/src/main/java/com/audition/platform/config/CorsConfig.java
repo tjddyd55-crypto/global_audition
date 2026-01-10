@@ -14,10 +14,13 @@ public class CorsConfig {
     @Bean
     public CorsWebFilter corsWebFilter() {
         CorsConfiguration corsConfig = new CorsConfiguration();
-        corsConfig.setAllowedOrigins(Arrays.asList("*", "null")); // 모든 origin 허용 (로컬 파일 포함)
+        
+        // Spring Boot 2.4+에서는 setAllowedOriginPatterns 사용 (allowedOrigins "*" 대신)
+        // 이렇게 하면 allowCredentials와 충돌하지 않음
+        corsConfig.setAllowedOriginPatterns(Arrays.asList("*")); // 모든 origin 허용
         corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         corsConfig.setAllowedHeaders(Arrays.asList("*"));
-        corsConfig.setAllowCredentials(false); // "*" origin과 함께 사용할 수 없으므로 false
+        corsConfig.setAllowCredentials(false); // credentials 없이 사용
         corsConfig.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

@@ -30,19 +30,7 @@ spring:
             - Path=/api/v1/videos/**
           filters:
             - StripPrefix=0
-      
-      globalcors:
-        cors-configurations:
-          '[/**]':
-            allowedOrigins: "*"
-            allowedMethods:
-              - GET
-              - POST
-              - PUT
-              - DELETE
-              - OPTIONS
-            allowedHeaders: "*"
-            allowCredentials: true
+      # CORS 설정은 CorsConfig.java에서 처리 (globalcors 설정 제거 - allowCredentials와 allowedOrigins "*" 충돌 해결)
 
 management:
   endpoints:
