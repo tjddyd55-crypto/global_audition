@@ -12,6 +12,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
@@ -83,14 +84,42 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<Map<String, Object>> handleDataIntegrityException(DataIntegrityViolationException ex) {
         Map<String, Object> error = new HashMap<>();
+        
+        System.err.println("=== DataIntegrityViolationException ===");
+        System.err.println("Message: " + ex.getMessage());
+        
+        // Root Cause 추적
+        Throwable rootCause = ex.getRootCause();
+        if (rootCause != null) {
+            System.err.println("Root Cause Type: " + rootCause.getClass().getName());
+            System.err.println("Root Cause Message: " + rootCause.getMessage());
+            
+            if (rootCause instanceof SQLException) {
+                SQLException sqlEx = (SQLException) rootCause;
+                System.err.println("SQL State: " + sqlEx.getSQLState());
+                System.err.println("SQL Error Code: " + sqlEx.getErrorCode());
+                System.err.println("SQL Message: " + sqlEx.getMessage());
+            }
+        }
+        ex.printStackTrace();
+        
         error.put("message", "데이터 무결성 오류: " + ex.getMessage());
-        if (ex.getCause() != null) {
-            error.put("cause", ex.getCause().getMessage());
+        if (rootCause != null) {
+            error.put("rootCause", rootCause.getClass().getName());
+            error.put("rootCauseMessage", rootCause.getMessage());
+            if (rootCause instanceof SQLException) {
+                SQLException sqlEx = (SQLException) rootCause;
+                error.put("sqlState", sqlEx.getSQLState());
+                error.put("sqlErrorCode", sqlEx.getErrorCode());
+                error.put("sqlMessage", sqlEx.getMessage());
+            }
+        } else if (ex.getCause() != null) {
+            error.put("cause", ex.getCause().getClass().getName());
+            error.put("causeMessage", ex.getCause().getMessage());
         }
         error.put("status", HttpStatus.BAD_REQUEST.value());
         error.put("error", "DataIntegrityViolationException");
         
-        ex.printStackTrace();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
@@ -123,10 +152,32 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(TransactionSystemException.class)
     public ResponseEntity<Map<String, Object>> handleTransactionException(TransactionSystemException ex) {
         Map<String, Object> error = new HashMap<>();
+        
+        System.err.println("=== TransactionSystemException ===");
+        System.err.println("Message: " + ex.getMessage());
+        
         Throwable rootCause = ex.getRootCause();
         if (rootCause != null) {
+            System.err.println("Root Cause Type: " + rootCause.getClass().getName());
+            System.err.println("Root Cause Message: " + rootCause.getMessage());
+            
+            if (rootCause instanceof SQLException) {
+                SQLException sqlEx = (SQLException) rootCause;
+                System.err.println("SQL State: " + sqlEx.getSQLState());
+                System.err.println("SQL Error Code: " + sqlEx.getErrorCode());
+                System.err.println("SQL Message: " + sqlEx.getMessage());
+            }
+            
             error.put("message", "트랜잭션 오류: " + rootCause.getMessage());
             error.put("rootCause", rootCause.getClass().getName());
+            error.put("rootCauseMessage", rootCause.getMessage());
+            
+            if (rootCause instanceof SQLException) {
+                SQLException sqlEx = (SQLException) rootCause;
+                error.put("sqlState", sqlEx.getSQLState());
+                error.put("sqlErrorCode", sqlEx.getErrorCode());
+                error.put("sqlMessage", sqlEx.getMessage());
+            }
         } else {
             error.put("message", "트랜잭션 오류: " + ex.getMessage());
         }
@@ -140,23 +191,77 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleException(Exception ex) {
         Map<String, Object> error = new HashMap<>();
-        error.put("message", "서버 오류가 발생했습니다: " + ex.getMessage());
+        
+        // ⚠️ 항상 스택 트레이스 전체 출력 (Railway 로그에서 확인)
+        System.err.println("===========================================");
+        System.err.println("=== UNCAUGHT EXCEPTION ===");
+        System.err.println("Exception Type: " + ex.getClass().getName());
+        System.err.println("Message: " + ex.getMessage());
+        
+        // Cause 체인 전체 출력 (최대 10단계)
+        Throwable cause = ex.getCause();
+        int depth = 0;
+        while (cause != null && depth < 10) {
+            System.err.println("Cause [" + depth + "]: " + cause.getClass().getName());
+            System.err.println("Cause [" + depth + "] Message: " + cause.getMessage());
+            
+            // SQLException 특별 처리
+            if (cause instanceof SQLException) {
+                SQLException sqlEx = (SQLException) cause;
+                System.err.println("SQL State: " + sqlEx.getSQLState());
+                System.err.println("SQL Error Code: " + sqlEx.getErrorCode());
+                System.err.println("SQL Message: " + sqlEx.getMessage());
+            }
+            
+            // 다음 Cause로 이동
+            cause = cause.getCause();
+            depth++;
+        }
+        
+        // Root Cause 추적
+        Throwable rootCause = ex;
+        while (rootCause.getCause() != null) {
+            rootCause = rootCause.getCause();
+        }
+        if (rootCause != ex) {
+            System.err.println("Root Cause Type: " + rootCause.getClass().getName());
+            System.err.println("Root Cause Message: " + rootCause.getMessage());
+        }
+        
+        // 전체 스택 트레이스 출력
+        System.err.println("=== Full Stack Trace ===");
+        ex.printStackTrace();
+        System.err.println("===========================================");
+        
+        // 응답 구성
+        error.put("message", "서버 오류가 발생했습니다: " + (ex.getMessage() != null ? ex.getMessage() : "알 수 없는 오류"));
         error.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
         error.put("error", ex.getClass().getSimpleName());
-        
-        // 로깅
-        ex.printStackTrace();
-        
-        // 항상 상세 정보 포함 (개발 환경)
         error.put("exceptionType", ex.getClass().getName());
         error.put("exceptionMessage", ex.getMessage());
-        if (ex.getCause() != null) {
-            error.put("cause", ex.getCause().getClass().getName() + ": " + ex.getCause().getMessage());
-            if (ex.getCause().getCause() != null) {
-                error.put("rootCause", ex.getCause().getCause().getClass().getName() + ": " + ex.getCause().getCause().getMessage());
+        
+        // Cause 정보 포함
+        Throwable firstCause = ex.getCause();
+        if (firstCause != null) {
+            error.put("cause", firstCause.getClass().getName());
+            error.put("causeMessage", firstCause.getMessage());
+            
+            // SQLException이면 SQL 정보도 포함
+            if (firstCause instanceof SQLException) {
+                SQLException sqlEx = (SQLException) firstCause;
+                error.put("sqlState", sqlEx.getSQLState());
+                error.put("sqlErrorCode", sqlEx.getErrorCode());
+                error.put("sqlMessage", sqlEx.getMessage());
             }
         }
-        // 스택 트레이스의 첫 몇 줄만 포함
+        
+        // Root Cause 정보
+        if (rootCause != ex) {
+            error.put("rootCause", rootCause.getClass().getName());
+            error.put("rootCauseMessage", rootCause.getMessage());
+        }
+        
+        // 스택 트레이스 첫 줄
         StackTraceElement[] stackTrace = ex.getStackTrace();
         if (stackTrace.length > 0) {
             error.put("firstStackTrace", stackTrace[0].toString());
