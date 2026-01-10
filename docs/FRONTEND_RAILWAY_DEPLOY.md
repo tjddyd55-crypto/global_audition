@@ -181,19 +181,21 @@ https://frontend-web-production-xxxx.up.railway.app
 
 ## 🎉 완료 후
 
-배포가 완료되면:
+배포가 완료되었습니다!
 
-1. **프론트엔드 Public URL 메모:**
-   ```
-   https://[frontend-service-url]
-   ```
+### 최종 서비스 링크
 
-2. **최종 서비스 링크 정리:**
-   - **프론트엔드 (메인 사이트):** `https://[frontend-service-url]`
-   - **API Gateway:** `https://gateway-production-72d6.up.railway.app`
-   - **User Service:** `https://user-service-production-7ba1.up.railway.app`
-   - **Audition Service:** `https://audition-service-production.up.railway.app`
-   - **Media Service:** `https://media-service-production-dff0.up.railway.app`
+- **프론트엔드 (메인 사이트):** `https://frontend-web-production-b917.up.railway.app` ✅
+- **API Gateway:** `https://gateway-production-72d6.up.railway.app`
+- **User Service:** `https://user-service-production-7ba1.up.railway.app`
+- **Audition Service:** `https://audition-service-production.up.railway.app`
+- **Media Service:** `https://media-service-production-dff0.up.railway.app`
 
-3. **사용자 접속 주소:**
-   - 실제 이용자가 접속할 주소는 **프론트엔드 Public URL**입니다.
+### 사용자 접속 주소
+
+**실제 이용자가 접속할 주소:**
+```
+https://frontend-web-production-b917.up.railway.app
+```
+
+이 주소로 접속하면 전체 플랫폼을 사용할 수 있습니다.

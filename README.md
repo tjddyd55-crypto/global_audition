@@ -103,6 +103,21 @@ cd frontend/web
 npm test
 ```
 
+## 🚀 배포 (Production)
+
+### Railway 배포
+
+모든 서비스가 Railway에 배포되어 있습니다.
+
+**프로덕션 접속 주소:**
+- **프론트엔드 (메인 사이트):** https://frontend-web-production-b917.up.railway.app ✅
+- **API Gateway:** https://gateway-production-72d6.up.railway.app
+- **User Service:** https://user-service-production-7ba1.up.railway.app
+- **Audition Service:** https://audition-service-production.up.railway.app
+- **Media Service:** https://media-service-production-dff0.up.railway.app
+
+자세한 배포 가이드는 [배포 문서](./docs/FRONTEND_RAILWAY_DEPLOY.md)를 참조하세요.
+
 ## 📄 라이선스
 
 MIT License
