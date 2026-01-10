@@ -8,9 +8,8 @@ docker-compose up -d
 ```
 
 ### 2. 모든 서비스 시작
-```powershell
-.\scripts\start-all-services.ps1
-```
+
+각 서비스를 개별 터미널에서 실행하세요.
 
 또는 개별적으로:
 ```powershell
@@ -49,11 +48,8 @@ npm run dev
 ## 📦 프로덕션 빌드
 
 ### 1. 백엔드 빌드
-```powershell
-.\scripts\deploy.ps1
-```
 
-또는 개별적으로:
+각 서비스를 개별적으로 빌드:
 ```powershell
 cd backend\user-service
 .\mvnw.cmd clean package -DskipTests
@@ -144,21 +140,7 @@ SPRING_CLOUD_GATEWAY_ROUTES[2].URI: http://localhost:8083
 
 ## ✅ Railway 배포 확인
 
-### 1. 스크립트로 확인
-```powershell
-# PowerShell
-.\scripts\check-deployment.ps1 -GatewayUrl "https://your-gateway.railway.app"
-
-# 또는 Batch 파일
-scripts\check-deployment.bat "https://your-gateway.railway.app"
-```
-
-### 2. 브라우저에서 확인
-1. `scripts/test-api.html` 파일을 브라우저에서 열기
-2. Gateway URL 입력
-3. 각 버튼 클릭하여 API 테스트
-
-### 3. 수동 확인
+### 수동 확인
 각 서비스의 Public URL에 `/actuator/health` 추가:
 - `https://your-gateway.railway.app/actuator/health`
 - `https://your-user-service.railway.app/actuator/health`

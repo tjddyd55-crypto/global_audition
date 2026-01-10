@@ -15,8 +15,6 @@ audition-platform/
 │   └── web/             # Next.js 14 웹 애플리케이션
 ├── mobile/              # 모바일 앱
 │   └── app/             # React Native 애플리케이션
-├── shared/              # 공통 리소스
-│   └── types/           # TypeScript 공통 타입 정의
 └── docs/                # 문서
 ```
 
