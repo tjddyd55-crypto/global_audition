@@ -49,6 +49,9 @@ management:
   endpoint:
     health:
       show-details: always
+  health:
+    redis:
+      enabled: false  # Redis Health Indicator 비활성화 (Redis가 없어도 Health Check 통과)
 
 logging:
   level:
