@@ -1,7 +1,7 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import { NextIntlClientProvider } from 'next-intl'
-import { getMessages } from 'next-intl/server'
+import { getMessages, setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 import { routing } from '@/i18n.config'
 import { Providers } from '../providers'
@@ -19,7 +19,11 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: 'Audition Platform',
   description: 'Online audition platform connecting agencies and applicants',
-  viewport: 'width=device-width, initial-scale=1, maximum-scale=1',
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
 }
 
 export function generateStaticParams() {
@@ -39,6 +43,9 @@ export default async function LocaleLayout({
   if (!routing.locales.includes(locale as any)) {
     notFound()
   }
+
+  // 정적 렌더링을 위해 setRequestLocale 호출 (필수)
+  setRequestLocale(locale)
 
   // 번역 메시지 로드 (캐싱으로 최적화됨)
   const messages = await getMessages()

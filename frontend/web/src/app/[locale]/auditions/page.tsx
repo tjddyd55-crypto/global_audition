@@ -1,7 +1,16 @@
-import { getTranslations } from 'next-intl/server'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
 import AuditionList from '@/components/audition/AuditionList'
 
-export default async function AuditionsPage() {
+export default async function AuditionsPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}) {
+  const { locale } = await params
+  
+  // 정적 렌더링을 위해 setRequestLocale 호출 (필수)
+  setRequestLocale(locale)
+  
   const t = await getTranslations('common')
 
   return (

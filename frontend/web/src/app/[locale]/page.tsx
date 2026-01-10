@@ -1,8 +1,17 @@
-import { getTranslations } from 'next-intl/server'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { Link } from '@/i18n.config'
 
 // 서버 컴포넌트로 변경하여 성능 개선
-export default async function HomePage() {
+export default async function HomePage({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}) {
+  const { locale } = await params
+  
+  // 정적 렌더링을 위해 setRequestLocale 호출 (필수)
+  setRequestLocale(locale)
+  
   const t = await getTranslations('home')
   const tCommon = await getTranslations('common')
 
