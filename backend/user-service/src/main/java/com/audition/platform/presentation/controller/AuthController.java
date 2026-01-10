@@ -29,49 +29,109 @@ public class AuthController {
     @Operation(summary = "회원가입")
     public ResponseEntity<?> register(@RequestBody @Valid RegisterRequest request) {
         try {
-            // 요청 데이터 로깅 (디버깅용)
-            System.out.println("=== Registration Request ===");
-            System.out.println("Email: " + request.getEmail());
-            System.out.println("Name: " + request.getName());
-            System.out.println("UserType: " + request.getUserType());
-            System.out.println("Country: " + request.getCountry());
-            System.out.println("BusinessCountry: " + request.getBusinessCountry());
-            System.out.println("City: " + request.getCity());
-            System.out.println("BusinessCity: " + request.getBusinessCity());
-            System.out.println("Birthday: " + request.getBirthday());
-            System.out.println("CompanyName: " + request.getCompanyName());
-            System.out.println("BusinessRegistrationNumber: " + request.getBusinessRegistrationNumber());
+            // 요청 데이터 전체 로깅 (JSON 형식으로)
+            System.out.println("========================================");
+            System.out.println("=== Registration Request (Full JSON) ===");
+            System.out.println("========================================");
+            
+            // ObjectMapper를 사용하여 전체 객체를 JSON으로 출력
+            try {
+                com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                String requestJson = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(request);
+                System.out.println(requestJson);
+            } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+                System.err.println("Failed to serialize request to JSON: " + e.getMessage());
+                // JSON 변환 실패해도 계속 진행
+            }
+            System.out.println("========================================");
+            
+            // 개별 필드 검증 로깅
+            System.out.println("Email: " + (request.getEmail() != null ? request.getEmail() : "NULL"));
+            System.out.println("Password: " + (request.getPassword() != null ? "***" : "NULL"));
+            System.out.println("Name: " + (request.getName() != null ? request.getName() : "NULL"));
+            System.out.println("UserType: " + (request.getUserType() != null ? request.getUserType() : "NULL"));
+            
+            if (request.getUserType() == com.audition.platform.domain.entity.User.UserType.APPLICANT) {
+                System.out.println("[APPLICANT] Country: " + request.getCountry());
+                System.out.println("[APPLICANT] City: " + request.getCity());
+                System.out.println("[APPLICANT] Birthday: " + request.getBirthday());
+                System.out.println("[APPLICANT] Phone: " + request.getPhone());
+                System.out.println("[APPLICANT] Languages: " + request.getLanguages());
+            } else if (request.getUserType() == com.audition.platform.domain.entity.User.UserType.BUSINESS) {
+                System.out.println("[BUSINESS] BusinessCountry: " + request.getBusinessCountry());
+                System.out.println("[BUSINESS] BusinessCity: " + request.getBusinessCity());
+                System.out.println("[BUSINESS] CompanyName: " + request.getCompanyName());
+                System.out.println("[BUSINESS] BusinessRegistrationNumber: " + request.getBusinessRegistrationNumber());
+            }
             
             AuthResponse response = authService.register(request);
+            
+            System.out.println("========================================");
             System.out.println("=== Registration Success ===");
             System.out.println("UserId: " + response.getUserId());
             System.out.println("Email: " + response.getEmail());
+            System.out.println("========================================");
             
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (RuntimeException ex) {
             // 비즈니스 로직 예외는 400 Bad Request로 반환
+            System.err.println("========================================");
+            System.err.println("=== Registration RuntimeException ===");
+            System.err.println("========================================");
+            System.err.println("Exception Type: " + ex.getClass().getName());
+            System.err.println("Message: " + ex.getMessage());
+            if (ex.getCause() != null) {
+                System.err.println("Cause Type: " + ex.getCause().getClass().getName());
+                System.err.println("Cause Message: " + ex.getCause().getMessage());
+            }
+            System.err.println("=== Stack Trace ===");
+            ex.printStackTrace();
+            System.err.println("========================================");
+            
             Map<String, Object> error = new HashMap<>();
             error.put("message", ex.getMessage());
             error.put("status", HttpStatus.BAD_REQUEST.value());
             error.put("error", "ValidationError");
-            
-            System.err.println("=== Registration Validation Error ===");
-            System.err.println("Message: " + ex.getMessage());
-            System.err.println("Exception Type: " + ex.getClass().getName());
-            ex.printStackTrace();
+            error.put("exceptionType", ex.getClass().getName());
             
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         } catch (Exception ex) {
-            // 예상치 못한 예외는 500 Internal Server Error로 반환 (GlobalExceptionHandler에서 처리)
-            System.err.println("=== Registration Unexpected Error ===");
+            // 예상치 못한 예외는 상세 로깅 후 re-throw (GlobalExceptionHandler에서 처리)
+            System.err.println("========================================");
+            System.err.println("=== Registration Exception (500) ===");
+            System.err.println("========================================");
             System.err.println("Exception Type: " + ex.getClass().getName());
-            System.err.println("Message: " + ex.getMessage());
-            if (ex.getCause() != null) {
-                System.err.println("Cause: " + ex.getCause().getClass().getName());
-                System.err.println("Cause Message: " + ex.getCause().getMessage());
+            System.err.println("Message: " + (ex.getMessage() != null ? ex.getMessage() : "null"));
+            
+            Throwable cause = ex.getCause();
+            int depth = 0;
+            while (cause != null && depth < 5) {
+                System.err.println("Cause [" + depth + "] Type: " + cause.getClass().getName());
+                System.err.println("Cause [" + depth + "] Message: " + cause.getMessage());
+                
+                // SQLException의 경우 상세 정보 출력
+                if (cause instanceof java.sql.SQLException) {
+                    java.sql.SQLException sqlEx = (java.sql.SQLException) cause;
+                    System.err.println("SQL State: " + sqlEx.getSQLState());
+                    System.err.println("SQL Error Code: " + sqlEx.getErrorCode());
+                    System.err.println("SQL Message: " + sqlEx.getMessage());
+                }
+                
+                // DataIntegrityViolationException의 경우
+                if (cause instanceof org.springframework.dao.DataIntegrityViolationException) {
+                    org.springframework.dao.DataIntegrityViolationException divEx = (org.springframework.dao.DataIntegrityViolationException) cause;
+                    System.err.println("DataIntegrityViolationException Message: " + divEx.getMessage());
+                }
+                
+                cause = cause.getCause();
+                depth++;
             }
+            
+            System.err.println("=== Full Stack Trace ===");
             ex.printStackTrace();
-            throw ex;
+            System.err.println("========================================");
+            
+            throw ex; // GlobalExceptionHandler에서 처리하도록 re-throw
         }
     }
 

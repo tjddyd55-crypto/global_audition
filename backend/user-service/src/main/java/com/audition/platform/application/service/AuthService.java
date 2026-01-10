@@ -34,11 +34,22 @@ public class AuthService {
     private final SocialLoginService socialLoginService;
 
     public AuthResponse register(RegisterRequest request) {
+        System.out.println("=== AuthService.register() START ===");
+        
         // 이메일 중복 확인
         if (userRepository.existsByEmail(request.getEmail())) {
+            System.err.println("Email already exists: " + request.getEmail());
             throw new RuntimeException("이미 등록된 이메일입니다");
         }
 
+        // 사용자 생성 전 검증
+        System.out.println("Creating User entity...");
+        System.out.println("Email: " + request.getEmail());
+        System.out.println("Password: " + (request.getPassword() != null ? "***" : "NULL"));
+        System.out.println("Name: " + request.getName());
+        System.out.println("UserType: " + request.getUserType());
+        System.out.println("Provider: LOCAL (hardcoded)");
+        
         // 사용자 생성
         User user = User.builder()
                 .email(request.getEmail().trim())
@@ -48,7 +59,22 @@ public class AuthService {
                 .provider(User.Provider.LOCAL) // 일반 회원가입
                 .build();
 
-        User savedUser = userRepository.save(user);
+        System.out.println("Saving User to database...");
+        User savedUser;
+        try {
+            savedUser = userRepository.save(user);
+            System.out.println("User saved successfully, ID: " + savedUser.getId());
+        } catch (Exception e) {
+            System.err.println("=== FAILED to save User ===");
+            System.err.println("Error Type: " + e.getClass().getName());
+            System.err.println("Error Message: " + e.getMessage());
+            if (e.getCause() != null) {
+                System.err.println("Cause Type: " + e.getCause().getClass().getName());
+                System.err.println("Cause Message: " + e.getCause().getMessage());
+            }
+            e.printStackTrace();
+            throw new RuntimeException("사용자 저장 중 오류가 발생했습니다: " + e.getMessage(), e);
+        }
         
         // savedUser의 ID가 null인지 확인
         if (savedUser.getId() == null) {
