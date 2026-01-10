@@ -71,20 +71,67 @@ public class AuthService {
                 languagesStr = String.join(",", request.getLanguages());
             }
 
+            // 빈 문자열을 null로 변환하는 헬퍼
+            String timezoneValue = request.getTimezone();
+            if (timezoneValue != null && timezoneValue.trim().isEmpty()) {
+                timezoneValue = null;
+            } else if (timezoneValue != null) {
+                timezoneValue = timezoneValue.trim();
+            }
+            
+            String phoneValue = request.getPhone();
+            if (phoneValue != null && phoneValue.trim().isEmpty()) {
+                phoneValue = null;
+            } else if (phoneValue != null) {
+                phoneValue = phoneValue.trim();
+            }
+            
+            String addressValue = request.getAddress();
+            if (addressValue != null && addressValue.trim().isEmpty()) {
+                addressValue = null;
+            } else if (addressValue != null) {
+                addressValue = addressValue.trim();
+            }
+            
+            String genderValue = request.getGender();
+            if (genderValue != null && genderValue.trim().isEmpty()) {
+                genderValue = null;
+            } else if (genderValue != null) {
+                genderValue = genderValue.trim();
+            }
+
             ApplicantProfile profile = ApplicantProfile.builder()
                     .userId(savedUser.getId()) // userId 명시적 설정
                     .user(savedUser)
                     .country(request.getCountry().trim().toUpperCase()) // 대문자로 변환 및 공백 제거
                     .city(request.getCity().trim())
                     .birthday(request.getBirthday())
-                    .phone(request.getPhone() != null ? request.getPhone().trim() : null)
-                    .address(request.getAddress() != null ? request.getAddress().trim() : null)
-                    .timezone(request.getTimezone() != null ? request.getTimezone().trim() : null)
+                    .phone(phoneValue)
+                    .address(addressValue)
+                    .timezone(timezoneValue)
                     .languages(languagesStr)
-                    .gender(request.getGender() != null ? request.getGender().trim() : null)
+                    .gender(genderValue)
                     .nationality(request.getCountry().trim().toUpperCase()) // 하위 호환성을 위해 country 값 사용
                     .build();
-            applicantProfileRepository.save(profile);
+            
+            try {
+                applicantProfileRepository.save(profile);
+                System.out.println("=== ApplicantProfile Saved Successfully ===");
+                System.out.println("UserId: " + profile.getUserId());
+                System.out.println("Country: " + profile.getCountry());
+                System.out.println("City: " + profile.getCity());
+                System.out.println("Birthday: " + profile.getBirthday());
+            } catch (Exception e) {
+                System.err.println("=== Failed to Save ApplicantProfile ===");
+                System.err.println("Error: " + e.getClass().getName());
+                System.err.println("Message: " + e.getMessage());
+                if (e.getCause() != null) {
+                    System.err.println("Cause: " + e.getCause().getClass().getName());
+                    System.err.println("Cause Message: " + e.getCause().getMessage());
+                }
+                e.printStackTrace();
+                throw new RuntimeException("프로필 저장 중 오류가 발생했습니다: " + e.getMessage(), e);
+            }
         } else if (request.getUserType() == User.UserType.BUSINESS) {
             // 기획사 필수 필드 검증
             if (request.getBusinessCountry() == null || request.getBusinessCountry().trim().isEmpty()) {
@@ -104,6 +151,49 @@ public class AuthService {
                 throw new RuntimeException("기획사 회원가입 시 사업자 등록번호는 필수입니다");
             }
 
+            // 빈 문자열을 null로 변환
+            String businessAddressValue = request.getBusinessAddress();
+            if (businessAddressValue != null && businessAddressValue.trim().isEmpty()) {
+                businessAddressValue = null;
+            } else if (businessAddressValue != null) {
+                businessAddressValue = businessAddressValue.trim();
+            }
+            
+            String websiteValue = request.getWebsite();
+            if (websiteValue != null && websiteValue.trim().isEmpty()) {
+                websiteValue = null;
+            } else if (websiteValue != null) {
+                websiteValue = websiteValue.trim();
+            }
+            
+            String contactEmailValue = request.getContactEmail();
+            if (contactEmailValue != null && contactEmailValue.trim().isEmpty()) {
+                contactEmailValue = null;
+            } else if (contactEmailValue != null) {
+                contactEmailValue = contactEmailValue.trim();
+            }
+            
+            String contactPhoneValue = request.getContactPhone();
+            if (contactPhoneValue != null && contactPhoneValue.trim().isEmpty()) {
+                contactPhoneValue = null;
+            } else if (contactPhoneValue != null) {
+                contactPhoneValue = contactPhoneValue.trim();
+            }
+            
+            String taxIdValue = request.getTaxId();
+            if (taxIdValue != null && taxIdValue.trim().isEmpty()) {
+                taxIdValue = null;
+            } else if (taxIdValue != null) {
+                taxIdValue = taxIdValue.trim();
+            }
+            
+            String businessLicenseDocumentUrlValue = request.getBusinessLicenseDocumentUrl();
+            if (businessLicenseDocumentUrlValue != null && businessLicenseDocumentUrlValue.trim().isEmpty()) {
+                businessLicenseDocumentUrlValue = null;
+            } else if (businessLicenseDocumentUrlValue != null) {
+                businessLicenseDocumentUrlValue = businessLicenseDocumentUrlValue.trim();
+            }
+
             BusinessProfile profile = BusinessProfile.builder()
                     .userId(savedUser.getId()) // userId 명시적 설정
                     .user(savedUser)
@@ -111,15 +201,32 @@ public class AuthService {
                     .country(businessCountry) // 대문자로 변환된 값 사용
                     .city(request.getBusinessCity().trim())
                     .businessRegistrationNumber(request.getBusinessRegistrationNumber().trim())
-                    .businessLicenseDocumentUrl(request.getBusinessLicenseDocumentUrl() != null ? request.getBusinessLicenseDocumentUrl().trim() : null)
-                    .taxId(request.getTaxId() != null ? request.getTaxId().trim() : null)
-                    .address(request.getBusinessAddress() != null ? request.getBusinessAddress().trim() : null)
-                    .website(request.getWebsite() != null ? request.getWebsite().trim() : null)
-                    .contactEmail(request.getContactEmail() != null ? request.getContactEmail().trim() : null)
-                    .contactPhone(request.getContactPhone() != null ? request.getContactPhone().trim() : null)
+                    .businessLicenseDocumentUrl(businessLicenseDocumentUrlValue)
+                    .taxId(taxIdValue)
+                    .address(businessAddressValue)
+                    .website(websiteValue)
+                    .contactEmail(contactEmailValue)
+                    .contactPhone(contactPhoneValue)
                     .verificationStatus(BusinessProfile.VerificationStatus.PENDING) // 기본값: 대기 중
                     .build();
-            businessProfileRepository.save(profile);
+            
+            try {
+                businessProfileRepository.save(profile);
+                System.out.println("=== BusinessProfile Saved Successfully ===");
+                System.out.println("UserId: " + profile.getUserId());
+                System.out.println("CompanyName: " + profile.getCompanyName());
+                System.out.println("Country: " + profile.getCountry());
+            } catch (Exception e) {
+                System.err.println("=== Failed to Save BusinessProfile ===");
+                System.err.println("Error: " + e.getClass().getName());
+                System.err.println("Message: " + e.getMessage());
+                if (e.getCause() != null) {
+                    System.err.println("Cause: " + e.getCause().getClass().getName());
+                    System.err.println("Cause Message: " + e.getCause().getMessage());
+                }
+                e.printStackTrace();
+                throw new RuntimeException("프로필 저장 중 오류가 발생했습니다: " + e.getMessage(), e);
+            }
         }
 
         // JWT 토큰 생성
