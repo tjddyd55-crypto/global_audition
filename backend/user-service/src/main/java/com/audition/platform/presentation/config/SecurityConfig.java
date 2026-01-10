@@ -25,7 +25,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    @Order(2)  // 나머지 요청은 이 필터 체인 적용
+    @Order(2)  // 나머지 요청은 이 필터 체인 적용 (securityMatcher 없으면 모든 요청에 대해 평가되지만, 첫 번째가 매칭되지 않은 경우에만)
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
