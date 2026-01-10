@@ -54,14 +54,19 @@ const nextConfig = {
     ],
   },
   
-  // API 프록시 설정 (개발 환경)
+  // API 프록시 설정 (개발 환경 전용 - 프로덕션에서는 사용하지 않음)
   async rewrites() {
+    // 프로덕션에서는 프록시를 사용하지 않음 (직접 Gateway URL 사용)
+    if (process.env.NODE_ENV === 'production') {
+      return []
+    }
+    
     return [
       {
         source: '/api/:path*',
         destination: 'http://localhost:8081/api/:path*',
       },
-    ];
+    ]
   },
   
   // 실험적 기능으로 성능 개선
