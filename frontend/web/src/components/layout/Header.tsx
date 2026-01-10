@@ -26,20 +26,14 @@ const Header = memo(function Header() {
             <Link href="/auditions" className="hover:text-primary-600">
               {t('auditions')}
             </Link>
-            <Link href="/profile" className="hover:text-primary-600">
-              {t('profile')}
-            </Link>
             <Link href="/channel" className="hover:text-primary-600">
               채널
             </Link>
-            <Link href="/auditions/create" className="hover:text-primary-600">
-              공고 작성
+            <Link href="/register" className="hover:text-primary-600">
+              {t('register')}
             </Link>
             <Link href="/login" className="hover:text-primary-600">
               {t('login')}
-            </Link>
-            <Link href="/register" className="hover:text-primary-600">
-              {t('register')}
             </Link>
             <LanguageSwitcher />
           </nav>
@@ -86,13 +80,6 @@ const Header = memo(function Header() {
               {t('auditions')}
             </Link>
             <Link
-              href="/profile"
-              className="block py-2 hover:text-primary-600"
-              onClick={closeMenu}
-            >
-              {t('profile')}
-            </Link>
-            <Link
               href="/channel"
               className="block py-2 hover:text-primary-600"
               onClick={closeMenu}
@@ -100,11 +87,11 @@ const Header = memo(function Header() {
               채널
             </Link>
             <Link
-              href="/auditions/create"
+              href="/register"
               className="block py-2 hover:text-primary-600"
               onClick={closeMenu}
             >
-              공고 작성
+              {t('register')}
             </Link>
             <Link
               href="/login"
@@ -112,13 +99,6 @@ const Header = memo(function Header() {
               onClick={closeMenu}
             >
               {t('login')}
-            </Link>
-            <Link
-              href="/register"
-              className="block py-2 hover:text-primary-600"
-              onClick={closeMenu}
-            >
-              {t('register')}
             </Link>
             <div className="pt-2">
               <LanguageSwitcher />
