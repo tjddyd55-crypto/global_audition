@@ -25,7 +25,8 @@ public class ApplicantProfile {
     private Long userId;
 
     @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @PrimaryKeyJoinColumn(name = "user_id", referencedColumnName = "id")
+    @MapsId  // User 관계를 통해 userId를 자동으로 설정
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
 
     @Column(name = "stage_name")

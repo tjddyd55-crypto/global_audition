@@ -137,9 +137,9 @@ public class AuthService {
                 genderValue = genderValue.trim();
             }
 
-            // @PrimaryKeyJoinColumn을 사용하므로 userId를 명시적으로 설정하고, user 관계는 나중에 설정
+            // @MapsId를 사용하므로 user만 설정하면 userId가 자동으로 설정됨
             ApplicantProfile profile = ApplicantProfile.builder()
-                    .userId(savedUser.getId()) // userId를 명시적으로 설정 (필수)
+                    .user(savedUser) // @MapsId가 user.getId()로 userId를 자동 설정
                     .country(request.getCountry().trim().toUpperCase()) // 대문자로 변환 및 공백 제거
                     .city(request.getCity().trim())
                     .birthday(request.getBirthday())
@@ -150,9 +150,6 @@ public class AuthService {
                     .gender(genderValue)
                     .nationality(request.getCountry().trim().toUpperCase()) // 하위 호환성을 위해 country 값 사용
                     .build();
-            
-            // User 관계 설정 (읽기 전용, 실제 저장에는 userId만 사용됨)
-            profile.setUser(savedUser);
             
             System.out.println("=== Attempting to Save ApplicantProfile ===");
             System.out.println("UserId: " + profile.getUserId());
@@ -263,9 +260,9 @@ public class AuthService {
                 businessLicenseDocumentUrlValue = businessLicenseDocumentUrlValue.trim();
             }
 
-            // @PrimaryKeyJoinColumn을 사용하므로 userId를 명시적으로 설정하고, user 관계는 나중에 설정
+            // @MapsId를 사용하므로 user만 설정하면 userId가 자동으로 설정됨
             BusinessProfile profile = BusinessProfile.builder()
-                    .userId(savedUser.getId()) // userId를 명시적으로 설정 (필수)
+                    .user(savedUser) // @MapsId가 user.getId()로 userId를 자동 설정
                     .companyName(request.getCompanyName().trim())
                     .country(businessCountry) // 대문자로 변환된 값 사용
                     .city(request.getBusinessCity().trim())
@@ -278,9 +275,6 @@ public class AuthService {
                     .contactPhone(contactPhoneValue)
                     .verificationStatus(BusinessProfile.VerificationStatus.PENDING) // 기본값: 대기 중
                     .build();
-            
-            // User 관계 설정 (읽기 전용, 실제 저장에는 userId만 사용됨)
-            profile.setUser(savedUser);
             
             System.out.println("=== Attempting to Save BusinessProfile ===");
             System.out.println("UserId: " + profile.getUserId());
@@ -447,9 +441,8 @@ public class AuthService {
                 // 프로필 생성 (APPLICANT인 경우)
                 if (user.getUserType() == User.UserType.APPLICANT) {
                     ApplicantProfile profile = ApplicantProfile.builder()
-                            .userId(user.getId()) // userId 명시적 설정
+                            .user(user) // @MapsId가 user.getId()로 userId를 자동 설정
                             .build();
-                    profile.setUser(user); // User 관계 설정
                     try {
                         applicantProfileRepository.save(profile);
                         System.out.println("=== Social Login ApplicantProfile Saved Successfully ===");
