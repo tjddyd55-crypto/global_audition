@@ -25,6 +25,7 @@ public class ApplicantProfile {
     private Long userId;
 
     @OneToOne
+    @MapsId
     @JoinColumn(name = "user_id")
     private User user;
 

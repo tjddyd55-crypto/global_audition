@@ -49,6 +49,17 @@ public class AuthService {
                 .build();
 
         User savedUser = userRepository.save(user);
+        
+        // savedUser의 ID가 null인지 확인
+        if (savedUser.getId() == null) {
+            System.err.println("=== CRITICAL ERROR: savedUser.getId() is null ===");
+            throw new RuntimeException("사용자 저장 후 ID를 가져올 수 없습니다");
+        }
+        
+        System.out.println("=== User Saved Successfully ===");
+        System.out.println("UserId: " + savedUser.getId());
+        System.out.println("Email: " + savedUser.getEmail());
+        System.out.println("UserType: " + savedUser.getUserType());
 
         // 프로필 생성
         if (request.getUserType() == User.UserType.APPLICANT) {
@@ -101,8 +112,7 @@ public class AuthService {
             }
 
             ApplicantProfile profile = ApplicantProfile.builder()
-                    .userId(savedUser.getId()) // userId 명시적 설정
-                    .user(savedUser)
+                    .user(savedUser) // @MapsId로 userId 자동 매핑
                     .country(request.getCountry().trim().toUpperCase()) // 대문자로 변환 및 공백 제거
                     .city(request.getCity().trim())
                     .birthday(request.getBirthday())
@@ -195,8 +205,7 @@ public class AuthService {
             }
 
             BusinessProfile profile = BusinessProfile.builder()
-                    .userId(savedUser.getId()) // userId 명시적 설정
-                    .user(savedUser)
+                    .user(savedUser) // @MapsId로 userId 자동 매핑
                     .companyName(request.getCompanyName().trim())
                     .country(businessCountry) // 대문자로 변환된 값 사용
                     .city(request.getBusinessCity().trim())
@@ -230,16 +239,48 @@ public class AuthService {
         }
 
         // JWT 토큰 생성
-        String token = jwtTokenProvider.generateToken(savedUser.getId(), savedUser.getUserType().name());
+        String token;
+        try {
+            System.out.println("=== Generating JWT Token ===");
+            System.out.println("UserId: " + savedUser.getId());
+            System.out.println("UserType: " + savedUser.getUserType().name());
+            token = jwtTokenProvider.generateToken(savedUser.getId(), savedUser.getUserType().name());
+            System.out.println("=== JWT Token Generated Successfully ===");
+        } catch (Exception e) {
+            System.err.println("=== Failed to Generate JWT Token ===");
+            System.err.println("Error: " + e.getClass().getName());
+            System.err.println("Message: " + e.getMessage());
+            if (e.getCause() != null) {
+                System.err.println("Cause: " + e.getCause().getClass().getName());
+                System.err.println("Cause Message: " + e.getCause().getMessage());
+            }
+            e.printStackTrace();
+            throw new RuntimeException("JWT 토큰 생성 중 오류가 발생했습니다: " + e.getMessage(), e);
+        }
 
-        return AuthResponse.builder()
-                .token(token)
-                .userId(savedUser.getId())
-                .email(savedUser.getEmail())
-                .name(savedUser.getName())
-                .userType(savedUser.getUserType())
-                .profileImageUrl(savedUser.getProfileImageUrl())
-                .build();
+        try {
+            AuthResponse response = AuthResponse.builder()
+                    .token(token)
+                    .userId(savedUser.getId())
+                    .email(savedUser.getEmail())
+                    .name(savedUser.getName())
+                    .userType(savedUser.getUserType())
+                    .profileImageUrl(savedUser.getProfileImageUrl())
+                    .build();
+            
+            System.out.println("=== Registration Completed Successfully ===");
+            System.out.println("UserId: " + response.getUserId());
+            System.out.println("Email: " + response.getEmail());
+            System.out.println("UserType: " + response.getUserType());
+            
+            return response;
+        } catch (Exception e) {
+            System.err.println("=== Failed to Create AuthResponse ===");
+            System.err.println("Error: " + e.getClass().getName());
+            System.err.println("Message: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("응답 생성 중 오류가 발생했습니다: " + e.getMessage(), e);
+        }
     }
 
     @Transactional(readOnly = true)
@@ -319,10 +360,18 @@ public class AuthService {
                 // 프로필 생성 (APPLICANT인 경우)
                 if (user.getUserType() == User.UserType.APPLICANT) {
                     ApplicantProfile profile = ApplicantProfile.builder()
-                            .userId(user.getId()) // userId 명시적 설정
-                            .user(user)
+                            .user(user) // @MapsId로 userId 자동 매핑
                             .build();
-                    applicantProfileRepository.save(profile);
+                    try {
+                        applicantProfileRepository.save(profile);
+                        System.out.println("=== Social Login ApplicantProfile Saved Successfully ===");
+                    } catch (Exception e) {
+                        System.err.println("=== Failed to Save Social Login ApplicantProfile ===");
+                        System.err.println("Error: " + e.getClass().getName());
+                        System.err.println("Message: " + e.getMessage());
+                        e.printStackTrace();
+                        throw new RuntimeException("소셜 로그인 프로필 저장 중 오류가 발생했습니다: " + e.getMessage(), e);
+                    }
                 }
             } else {
                 // 기존 사용자 - 소셜 로그인 정보 업데이트

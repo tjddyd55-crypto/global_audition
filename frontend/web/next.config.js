@@ -7,11 +7,6 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   
-  // next-intl 환경 변수 설정
-  env: {
-    _next_intl_trailing_slash: 'never',
-  },
-  
   // 성능 최적화
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
