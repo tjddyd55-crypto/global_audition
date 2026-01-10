@@ -14,7 +14,9 @@ export default getRequestConfig(async ({ locale }) => {
   // 캐시에서 먼저 확인
   if (messageCache.has(locale)) {
     return {
+      locale, // locale 반환 필수
       messages: messageCache.get(locale),
+      timeZone: 'Asia/Seoul',
     }
   }
 
@@ -31,6 +33,7 @@ export default getRequestConfig(async ({ locale }) => {
   messageCache.set(locale, messages)
 
   return {
+    locale, // locale 반환 필수 (deprecation 경고 해결)
     messages,
     // 시간대 설정으로 성능 개선
     timeZone: 'Asia/Seoul',

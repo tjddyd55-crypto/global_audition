@@ -13,6 +13,8 @@ const nextConfig = {
   // next-intl 환경 변수 설정
   env: {
     NEXT_PUBLIC_LOCALE: process.env.NEXT_PUBLIC_LOCALE || 'ko',
+    // next-intl 플러그인이 요구하는 환경 변수 (경고 해결)
+    _next_intl_trailing_slash: 'never',
   },
   
   // 성능 최적화
