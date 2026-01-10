@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Profile;
 import java.net.URI;
 
 @Configuration
-@Profile("production")
+@Profile("never")  // 비활성화: 개별 환경 변수 사용 시 필요 없음
 public class DatabaseConfig {
 
     @Value("${DATABASE_URL:}")
