@@ -111,8 +111,9 @@ public class AuthService {
                 genderValue = genderValue.trim();
             }
 
+            // @PrimaryKeyJoinColumn을 사용하므로 userId를 명시적으로 설정하고, user 관계는 나중에 설정
             ApplicantProfile profile = ApplicantProfile.builder()
-                    .userId(savedUser.getId()) // userId 명시적 설정 (필수)
+                    .userId(savedUser.getId()) // userId를 명시적으로 설정 (필수)
                     .country(request.getCountry().trim().toUpperCase()) // 대문자로 변환 및 공백 제거
                     .city(request.getCity().trim())
                     .birthday(request.getBirthday())
@@ -124,7 +125,7 @@ public class AuthService {
                     .nationality(request.getCountry().trim().toUpperCase()) // 하위 호환성을 위해 country 값 사용
                     .build();
             
-            // User 관계 설정 (참조용, 실제 저장에는 영향 없음)
+            // User 관계 설정 (읽기 전용, 실제 저장에는 userId만 사용됨)
             profile.setUser(savedUser);
             
             System.out.println("=== Attempting to Save ApplicantProfile ===");
@@ -236,8 +237,9 @@ public class AuthService {
                 businessLicenseDocumentUrlValue = businessLicenseDocumentUrlValue.trim();
             }
 
+            // @PrimaryKeyJoinColumn을 사용하므로 userId를 명시적으로 설정하고, user 관계는 나중에 설정
             BusinessProfile profile = BusinessProfile.builder()
-                    .userId(savedUser.getId()) // userId 명시적 설정 (필수)
+                    .userId(savedUser.getId()) // userId를 명시적으로 설정 (필수)
                     .companyName(request.getCompanyName().trim())
                     .country(businessCountry) // 대문자로 변환된 값 사용
                     .city(request.getBusinessCity().trim())
@@ -251,7 +253,7 @@ public class AuthService {
                     .verificationStatus(BusinessProfile.VerificationStatus.PENDING) // 기본값: 대기 중
                     .build();
             
-            // User 관계 설정 (참조용, 실제 저장에는 영향 없음)
+            // User 관계 설정 (읽기 전용, 실제 저장에는 userId만 사용됨)
             profile.setUser(savedUser);
             
             System.out.println("=== Attempting to Save BusinessProfile ===");

@@ -24,8 +24,8 @@ public class ApplicantProfile {
     @Column(name = "user_id")
     private Long userId;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @PrimaryKeyJoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
 
     @Column(name = "stage_name")
