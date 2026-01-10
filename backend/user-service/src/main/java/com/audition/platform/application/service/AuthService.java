@@ -112,7 +112,7 @@ public class AuthService {
             }
 
             ApplicantProfile profile = ApplicantProfile.builder()
-                    .user(savedUser) // @MapsId로 userId 자동 매핑
+                    .userId(savedUser.getId()) // userId 명시적 설정
                     .country(request.getCountry().trim().toUpperCase()) // 대문자로 변환 및 공백 제거
                     .city(request.getCity().trim())
                     .birthday(request.getBirthday())
@@ -123,6 +123,9 @@ public class AuthService {
                     .gender(genderValue)
                     .nationality(request.getCountry().trim().toUpperCase()) // 하위 호환성을 위해 country 값 사용
                     .build();
+            
+            // User 관계 설정 (참조용, 실제로는 userId만 사용)
+            profile.setUser(savedUser);
             
             try {
                 applicantProfileRepository.save(profile);
@@ -205,7 +208,7 @@ public class AuthService {
             }
 
             BusinessProfile profile = BusinessProfile.builder()
-                    .user(savedUser) // @MapsId로 userId 자동 매핑
+                    .userId(savedUser.getId()) // userId 명시적 설정
                     .companyName(request.getCompanyName().trim())
                     .country(businessCountry) // 대문자로 변환된 값 사용
                     .city(request.getBusinessCity().trim())
@@ -218,6 +221,9 @@ public class AuthService {
                     .contactPhone(contactPhoneValue)
                     .verificationStatus(BusinessProfile.VerificationStatus.PENDING) // 기본값: 대기 중
                     .build();
+            
+            // User 관계 설정 (참조용, 실제로는 userId만 사용)
+            profile.setUser(savedUser);
             
             try {
                 businessProfileRepository.save(profile);
@@ -360,8 +366,9 @@ public class AuthService {
                 // 프로필 생성 (APPLICANT인 경우)
                 if (user.getUserType() == User.UserType.APPLICANT) {
                     ApplicantProfile profile = ApplicantProfile.builder()
-                            .user(user) // @MapsId로 userId 자동 매핑
+                            .userId(user.getId()) // userId 명시적 설정
                             .build();
+                    profile.setUser(user); // User 관계 설정
                     try {
                         applicantProfileRepository.save(profile);
                         System.out.println("=== Social Login ApplicantProfile Saved Successfully ===");

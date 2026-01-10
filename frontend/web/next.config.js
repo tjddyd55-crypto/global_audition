@@ -7,6 +7,11 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   
+  // next-intl 환경 변수 설정 (경고 제거용)
+  env: {
+    NEXT_PUBLIC_LOCALE: process.env.NEXT_PUBLIC_LOCALE || 'ko',
+  },
+  
   // 성능 최적화
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',

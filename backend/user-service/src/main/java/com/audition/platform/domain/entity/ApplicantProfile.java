@@ -24,9 +24,8 @@ public class ApplicantProfile {
     @Column(name = "user_id")
     private Long userId;
 
-    @OneToOne
-    @MapsId
-    @JoinColumn(name = "user_id")
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
     private User user;
 
     @Column(name = "stage_name")

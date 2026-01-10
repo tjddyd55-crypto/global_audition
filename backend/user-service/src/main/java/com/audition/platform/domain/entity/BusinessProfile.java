@@ -22,9 +22,8 @@ public class BusinessProfile {
     @Column(name = "user_id")
     private Long userId;
 
-    @OneToOne
-    @MapsId
-    @JoinColumn(name = "user_id")
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
     private User user;
 
     @Column(name = "company_name", nullable = false)
