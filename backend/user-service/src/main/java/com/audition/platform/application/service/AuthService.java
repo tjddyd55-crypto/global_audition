@@ -88,12 +88,6 @@ public class AuthService {
             if (request.getCompanyName() == null || request.getCompanyName().trim().isEmpty()) {
                 throw new RuntimeException("기획사 회원가입 시 회사명은 필수입니다");
             }
-            if (request.getLegalName() == null || request.getLegalName().trim().isEmpty()) {
-                throw new RuntimeException("기획사 회원가입 시 법인명은 필수입니다");
-            }
-            if (request.getRepresentativeName() == null || request.getRepresentativeName().trim().isEmpty()) {
-                throw new RuntimeException("기획사 회원가입 시 대표자명은 필수입니다");
-            }
             if (request.getBusinessRegistrationNumber() == null || request.getBusinessRegistrationNumber().trim().isEmpty()) {
                 throw new RuntimeException("기획사 회원가입 시 사업자 등록번호는 필수입니다");
             }
@@ -104,8 +98,6 @@ public class AuthService {
                     .companyName(request.getCompanyName())
                     .country(request.getBusinessCountry())
                     .city(request.getBusinessCity())
-                    .legalName(request.getLegalName())
-                    .representativeName(request.getRepresentativeName())
                     .businessRegistrationNumber(request.getBusinessRegistrationNumber())
                     .businessLicenseDocumentUrl(request.getBusinessLicenseDocumentUrl())
                     .taxId(request.getTaxId())
@@ -113,7 +105,6 @@ public class AuthService {
                     .website(request.getWebsite())
                     .contactEmail(request.getContactEmail())
                     .contactPhone(request.getContactPhone())
-                    .establishedYear(request.getEstablishedYear())
                     .verificationStatus(BusinessProfile.VerificationStatus.PENDING) // 기본값: 대기 중
                     .build();
             businessProfileRepository.save(profile);

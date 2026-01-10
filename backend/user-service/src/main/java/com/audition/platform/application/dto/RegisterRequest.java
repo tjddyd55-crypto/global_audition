@@ -53,10 +53,6 @@ public class RegisterRequest {
 
     private String companyName; // 필수 (기획사) - @NotBlank는 조건부로 검증
 
-    private String legalName; // 필수 (기획사) - @NotBlank는 조건부로 검증
-
-    private String representativeName; // 필수 (기획사) - @NotBlank는 조건부로 검증
-
     private String businessRegistrationNumber; // 필수 (기획사) - @NotBlank는 조건부로 검증
 
     private String businessLicenseDocumentUrl; // 사업자 등록증 파일 URL (업로드 후)
@@ -70,6 +66,4 @@ public class RegisterRequest {
     private String contactEmail; // 선택적
 
     private String contactPhone; // 선택적
-
-    private Integer establishedYear; // 선택적
 }
