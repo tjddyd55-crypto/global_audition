@@ -2,10 +2,15 @@ spring:
   application:
     name: audition-service
   
+  # Railway 환경 변수에서 직접 사용
+  # Railway 대시보드에서 다음 변수를 설정하세요:
+  # SPRING_DATASOURCE_URL=jdbc:postgresql://postgres.railway.internal:5432/railway
+  # SPRING_DATASOURCE_USERNAME=postgres
+  # SPRING_DATASOURCE_PASSWORD=실제비밀번호
   datasource:
-    url: ${DATABASE_URL:${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/audition_db}}
-    username: ${PGUSER:${SPRING_DATASOURCE_USERNAME:audition_user}}
-    password: ${PGPASSWORD:${SPRING_DATASOURCE_PASSWORD:audition_pass}}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/audition_db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
   
   jpa:
