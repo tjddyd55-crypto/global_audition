@@ -82,13 +82,66 @@ export default function RegisterPage() {
   const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true)
     setError(null)
+    
     try {
-      // confirmPassword 제거 및 기획사 경우 username을 email로 매핑
       let submitData: any = { ...data }
       
       // confirmPassword 필드 제거
       if ('confirmPassword' in submitData) {
         delete submitData.confirmPassword
+      }
+      
+      // 지망생인 경우 필수 필드 확인 및 birthday 형식 보장
+      if (userType === 'APPLICANT') {
+        // 필수 필드 확인
+        if (!submitData.country || submitData.country.trim() === '') {
+          setError('국가를 선택해주세요')
+          setIsLoading(false)
+          return
+        }
+        
+        if (!submitData.city || submitData.city.trim() === '') {
+          setError('도시를 입력해주세요')
+          setIsLoading(false)
+          return
+        }
+        
+        if (!submitData.birthday) {
+          setError('생년월일을 입력해주세요')
+          setIsLoading(false)
+          return
+        }
+        
+        // birthday를 문자열로 변환 (HTML date input은 문자열 반환)
+        let birthdayStr: string
+        
+        if (typeof submitData.birthday === 'string') {
+          // 이미 문자열인 경우 형식 검증
+          const dateRegex = /^\d{4}-\d{2}-\d{2}$/
+          if (!dateRegex.test(submitData.birthday)) {
+            setError('생년월일은 YYYY-MM-DD 형식이어야 합니다 (예: 2000-01-01)')
+            setIsLoading(false)
+            return
+          }
+          birthdayStr = submitData.birthday
+        } else if (submitData.birthday instanceof Date) {
+          // Date 객체인 경우 문자열로 변환
+          const year = submitData.birthday.getFullYear()
+          const month = String(submitData.birthday.getMonth() + 1).padStart(2, '0')
+          const day = String(submitData.birthday.getDate()).padStart(2, '0')
+          birthdayStr = `${year}-${month}-${day}`
+        } else {
+          setError('생년월일 형식이 올바르지 않습니다')
+          setIsLoading(false)
+          return
+        }
+        
+        submitData.birthday = birthdayStr
+        
+        // 언어 배열 처리
+        if (selectedLanguages.length > 0) {
+          submitData.languages = selectedLanguages
+        }
       }
       
       // 기획사인 경우 username을 email로 매핑
@@ -97,19 +150,17 @@ export default function RegisterPage() {
         delete submitData.username
       }
       
-      // 언어 배열 처리 - 타입 가드 사용
-      if (userType === 'APPLICANT' && selectedLanguages.length > 0 && data.userType === 'APPLICANT') {
-        submitData.languages = selectedLanguages
-      }
-      
       // 디버깅: 전송 데이터 확인
-      console.log('회원가입 요청 데이터:', submitData)
+      console.log('회원가입 요청 데이터 (JSON):', JSON.stringify(submitData, null, 2))
+      console.log('birthday 타입:', typeof submitData.birthday)
+      console.log('birthday 값:', submitData.birthday)
       
       await authApi.register(submitData)
-      router.push('/')
+      router.push('/login')
     } catch (err: any) {
       console.error('회원가입 오류:', err)
       console.error('오류 응답:', err.response?.data)
+      console.error('오류 상태 코드:', err.response?.status)
       
       // 백엔드에서 보낸 상세 오류 메시지 추출
       let errorMessage = tAuth('registerError')
@@ -119,11 +170,12 @@ export default function RegisterPage() {
         
         // Spring Validation 오류 메시지 처리
         if (errorData.errors && typeof errorData.errors === 'object') {
-          // 필드별 오류 메시지가 있는 경우
           const fieldErrors = Object.values(errorData.errors) as string[]
           errorMessage = fieldErrors.join(', ')
         } else if (errorData.message) {
           errorMessage = errorData.message
+        } else if (errorData.exceptionMessage) {
+          errorMessage = errorData.exceptionMessage
         } else if (typeof errorData === 'string') {
           errorMessage = errorData
         }

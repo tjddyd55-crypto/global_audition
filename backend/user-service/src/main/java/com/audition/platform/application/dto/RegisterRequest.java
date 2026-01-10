@@ -1,6 +1,7 @@
 package com.audition.platform.application.dto;
 
 import com.audition.platform.domain.entity.User;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -32,6 +33,7 @@ public class RegisterRequest {
 
     private String city; // 필수 (지망생)
 
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate birthday; // 필수 (지망생) - @NotNull은 조건부로 검증
 
     private String phone; // 선택적

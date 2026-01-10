@@ -1,20 +1,65 @@
 package com.audition.platform.presentation.exception;
 
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.transaction.TransactionSystemException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Map<String, Object>> handleHttpMessageNotReadableException(
+            HttpMessageNotReadableException ex) {
+        Map<String, Object> error = new HashMap<>();
+        error.put("status", HttpStatus.BAD_REQUEST.value());
+        error.put("error", "HttpMessageNotReadableException");
+        
+        String message = "요청 데이터 형식이 올바르지 않습니다";
+        
+        Throwable cause = ex.getCause();
+        if (cause instanceof InvalidFormatException) {
+            InvalidFormatException ife = (InvalidFormatException) cause;
+            String fieldName = ife.getPath().stream()
+                    .map(ref -> ref.getFieldName())
+                    .reduce((first, second) -> second)
+                    .orElse("알 수 없는 필드");
+            
+            if (LocalDate.class.equals(ife.getTargetType())) {
+                message = fieldName + " 필드는 'yyyy-MM-dd' 형식이어야 합니다 (예: 2000-01-01). 입력된 값: " + ife.getValue();
+            } else {
+                message = fieldName + " 필드의 형식이 올바르지 않습니다: " + ife.getValue();
+            }
+        } else if (cause != null) {
+            message = "JSON 파싱 오류: " + cause.getMessage();
+        } else {
+            message = ex.getMessage() != null ? ex.getMessage() : "요청 데이터를 읽을 수 없습니다";
+        }
+        
+        error.put("message", message);
+        error.put("exceptionType", ex.getClass().getName());
+        
+        System.err.println("=== HttpMessageNotReadableException ===");
+        System.err.println("Message: " + message);
+        if (cause != null) {
+            System.err.println("Cause: " + cause.getClass().getName());
+            System.err.println("Cause Message: " + cause.getMessage());
+        }
+        ex.printStackTrace();
+        
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationExceptions(
