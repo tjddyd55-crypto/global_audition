@@ -49,4 +49,13 @@ export const auditionApi = {
     })
     return data
   },
+
+  // 내 오디션 목록 (현재 로그인한 기획사의 오디션)
+  getMyAuditions: async (params?: {
+    page?: number
+    size?: number
+  }): Promise<PageResponse<Audition>> => {
+    const { data } = await apiClient.get('/auditions/my', { params })
+    return data
+  },
 }
