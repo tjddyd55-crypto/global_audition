@@ -9,7 +9,7 @@ import { authApi } from '@/lib/api/auth'
 import { countries, languages, timezones } from '@/lib/utils/countries'
 import { useTranslations } from 'next-intl'
 
-// 지망생 스키마
+// 지망생 스키마 (refine 제거 - discriminatedUnion 전에는 ZodObject 타입이어야 함)
 const applicantSchema = z.object({
   email: z.string().email('유효한 이메일을 입력해주세요'),
   password: z.string().min(8, '비밀번호는 최소 8자 이상이어야 합니다'),
@@ -24,12 +24,9 @@ const applicantSchema = z.object({
   timezone: z.string().optional(),
   languages: z.array(z.string()).optional(),
   gender: z.string().optional(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: '비밀번호가 일치하지 않습니다',
-  path: ['confirmPassword'],
 })
 
-// 기획사 스키마
+// 기획사 스키마 (refine 제거 - discriminatedUnion 전에는 ZodObject 타입이어야 함)
 const businessSchema = z.object({
   username: z.string().min(3, '아이디는 최소 3자 이상이어야 합니다'),
   password: z.string().min(8, '비밀번호는 최소 8자 이상이어야 합니다'),
@@ -46,12 +43,20 @@ const businessSchema = z.object({
   website: z.string().url('유효한 URL을 입력해주세요').optional().or(z.literal('')),
   contactEmail: z.string().email('유효한 이메일을 입력해주세요').optional().or(z.literal('')),
   contactPhone: z.string().optional(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: '비밀번호가 일치하지 않습니다',
-  path: ['confirmPassword'],
 })
 
-const registerSchema = z.discriminatedUnion('userType', [applicantSchema, businessSchema])
+// discriminatedUnion 후에 superRefine으로 비밀번호 확인 검증 추가
+const registerSchemaBase = z.discriminatedUnion('userType', [applicantSchema, businessSchema])
+
+const registerSchema = registerSchemaBase.superRefine((data, ctx) => {
+  if (data.password !== data.confirmPassword) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: '비밀번호가 일치하지 않습니다',
+      path: ['confirmPassword'],
+    })
+  }
+})
 
 type RegisterFormData = z.infer<typeof registerSchema>
 

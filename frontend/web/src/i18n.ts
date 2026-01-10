@@ -1,15 +1,11 @@
 import { getRequestConfig } from 'next-intl/server'
-import { requestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 import { routing } from './i18n.config'
 
 // 번역 파일 캐시 (메모리 캐싱)
 const messageCache = new Map<string, any>()
 
-export default getRequestConfig(async () => {
-  // next-intl 3.22+ 권장 방식: await requestLocale() 사용
-  const locale = await requestLocale()
-
+export default getRequestConfig(async ({ locale }) => {
   // 지원하지 않는 언어인 경우 404
   if (!routing.locales.includes(locale as any)) {
     notFound()
