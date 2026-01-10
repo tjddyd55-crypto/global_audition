@@ -108,8 +108,14 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, Object>> handleRuntimeException(RuntimeException ex) {
         Map<String, Object> error = new HashMap<>();
-        error.put("message", ex.getMessage());
+        error.put("message", ex.getMessage() != null ? ex.getMessage() : "처리 중 오류가 발생했습니다");
         error.put("status", HttpStatus.BAD_REQUEST.value());
+        error.put("error", "RuntimeException");
+        error.put("exceptionType", ex.getClass().getName());
+        
+        System.err.println("=== RuntimeException ===");
+        System.err.println("Message: " + ex.getMessage());
+        ex.printStackTrace();
         
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }

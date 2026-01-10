@@ -29,35 +29,31 @@ public class AuthController {
     @Operation(summary = "회원가입")
     public ResponseEntity<?> register(@RequestBody @Valid RegisterRequest request) {
         try {
+            // 요청 데이터 로깅 (디버깅용)
+            System.out.println("=== Registration Request ===");
+            System.out.println("Email: " + request.getEmail());
+            System.out.println("UserType: " + request.getUserType());
+            System.out.println("Country: " + request.getCountry());
+            System.out.println("City: " + request.getCity());
+            System.out.println("Birthday: " + request.getBirthday());
+            
             AuthResponse response = authService.register(request);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
-        } catch (Exception ex) {
-            // 예외 상세 정보를 포함한 응답
+        } catch (RuntimeException ex) {
+            // 비즈니스 로직 예외는 400 Bad Request로 반환
             Map<String, Object> error = new HashMap<>();
-            error.put("message", "회원가입 실패: " + ex.getMessage());
-            error.put("exceptionType", ex.getClass().getName());
-            error.put("exceptionMessage", ex.getMessage());
+            error.put("message", ex.getMessage());
+            error.put("status", HttpStatus.BAD_REQUEST.value());
+            error.put("error", "ValidationError");
             
-            // 스택 트레이스 정보 추가
-            StackTraceElement[] stackTrace = ex.getStackTrace();
-            if (stackTrace.length > 0) {
-                error.put("firstStackTrace", stackTrace[0].toString());
-            }
-            
-            if (ex.getCause() != null) {
-                error.put("cause", ex.getCause().getClass().getName() + ": " + ex.getCause().getMessage());
-                if (ex.getCause().getCause() != null) {
-                    error.put("rootCause", ex.getCause().getCause().getClass().getName() + ": " + ex.getCause().getCause().getMessage());
-                }
-            }
-            
-            // 로그 출력
-            System.err.println("=== Registration Error ===");
-            System.err.println("Exception: " + ex.getClass().getName());
+            System.err.println("=== Registration Validation Error ===");
             System.err.println("Message: " + ex.getMessage());
             ex.printStackTrace();
             
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        } catch (Exception ex) {
+            // 예상치 못한 예외는 500 Internal Server Error로 반환 (GlobalExceptionHandler에서 처리)
+            throw ex;
         }
     }
 

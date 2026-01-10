@@ -41,10 +41,11 @@ public class AuthService {
 
         // 사용자 생성
         User user = User.builder()
-                .email(request.getEmail())
+                .email(request.getEmail().trim())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .name(request.getName())
+                .name(request.getName().trim())
                 .userType(request.getUserType())
+                .provider(User.Provider.LOCAL) // 일반 회원가입
                 .build();
 
         User savedUser = userRepository.save(user);
@@ -52,26 +53,36 @@ public class AuthService {
         // 프로필 생성
         if (request.getUserType() == User.UserType.APPLICANT) {
             // 지망생 필수 필드 검증
-            if (request.getCountry() == null || request.getCity() == null || request.getBirthday() == null) {
-                throw new RuntimeException("지망생 회원가입 시 국가, 도시, 생년월일은 필수입니다");
+            if (request.getCountry() == null || request.getCountry().trim().isEmpty()) {
+                throw new RuntimeException("지망생 회원가입 시 국가는 필수입니다");
+            }
+            if (!request.getCountry().matches("^[A-Z]{2}$")) {
+                throw new RuntimeException("국가는 ISO 3166-1 alpha-2 형식이어야 합니다 (예: KR, US, JP). 입력된 값: " + request.getCountry());
+            }
+            if (request.getCity() == null || request.getCity().trim().isEmpty()) {
+                throw new RuntimeException("지망생 회원가입 시 도시는 필수입니다");
+            }
+            if (request.getBirthday() == null) {
+                throw new RuntimeException("지망생 회원가입 시 생년월일은 필수입니다");
             }
 
-            String languagesStr = request.getLanguages() != null && !request.getLanguages().isEmpty()
-                    ? String.join(",", request.getLanguages())
-                    : null;
+            String languagesStr = null;
+            if (request.getLanguages() != null && !request.getLanguages().isEmpty()) {
+                languagesStr = String.join(",", request.getLanguages());
+            }
 
             ApplicantProfile profile = ApplicantProfile.builder()
                     .userId(savedUser.getId()) // userId 명시적 설정
                     .user(savedUser)
-                    .country(request.getCountry())
-                    .city(request.getCity())
+                    .country(request.getCountry().trim().toUpperCase()) // 대문자로 변환 및 공백 제거
+                    .city(request.getCity().trim())
                     .birthday(request.getBirthday())
-                    .phone(request.getPhone())
-                    .address(request.getAddress())
-                    .timezone(request.getTimezone())
+                    .phone(request.getPhone() != null ? request.getPhone().trim() : null)
+                    .address(request.getAddress() != null ? request.getAddress().trim() : null)
+                    .timezone(request.getTimezone() != null ? request.getTimezone().trim() : null)
                     .languages(languagesStr)
-                    .gender(request.getGender())
-                    .nationality(request.getCountry()) // 하위 호환성을 위해 country 값 사용
+                    .gender(request.getGender() != null ? request.getGender().trim() : null)
+                    .nationality(request.getCountry().trim().toUpperCase()) // 하위 호환성을 위해 country 값 사용
                     .build();
             applicantProfileRepository.save(profile);
         } else if (request.getUserType() == User.UserType.BUSINESS) {
