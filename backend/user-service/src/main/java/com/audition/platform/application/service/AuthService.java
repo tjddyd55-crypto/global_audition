@@ -34,22 +34,11 @@ public class AuthService {
     private final SocialLoginService socialLoginService;
 
     public AuthResponse register(RegisterRequest request) {
-        System.out.println("=== AuthService.register() START ===");
-        
         // 이메일 중복 확인
         if (userRepository.existsByEmail(request.getEmail())) {
-            System.err.println("Email already exists: " + request.getEmail());
             throw new RuntimeException("이미 등록된 이메일입니다");
         }
 
-        // 사용자 생성 전 검증
-        System.out.println("Creating User entity...");
-        System.out.println("Email: " + request.getEmail());
-        System.out.println("Password: " + (request.getPassword() != null ? "***" : "NULL"));
-        System.out.println("Name: " + request.getName());
-        System.out.println("UserType: " + request.getUserType());
-        System.out.println("Provider: LOCAL (hardcoded)");
-        
         // 사용자 생성
         User user = User.builder()
                 .email(request.getEmail().trim())
@@ -59,33 +48,19 @@ public class AuthService {
                 .provider(User.Provider.LOCAL) // 일반 회원가입
                 .build();
 
-        System.out.println("Saving User to database...");
         User savedUser;
         try {
             savedUser = userRepository.save(user);
-            System.out.println("User saved successfully, ID: " + savedUser.getId());
         } catch (Exception e) {
-            System.err.println("=== FAILED to save User ===");
-            System.err.println("Error Type: " + e.getClass().getName());
-            System.err.println("Error Message: " + e.getMessage());
-            if (e.getCause() != null) {
-                System.err.println("Cause Type: " + e.getCause().getClass().getName());
-                System.err.println("Cause Message: " + e.getCause().getMessage());
-            }
+            System.err.println("Failed to save User: " + e.getMessage());
             e.printStackTrace();
             throw new RuntimeException("사용자 저장 중 오류가 발생했습니다: " + e.getMessage(), e);
         }
         
         // savedUser의 ID가 null인지 확인
         if (savedUser.getId() == null) {
-            System.err.println("=== CRITICAL ERROR: savedUser.getId() is null ===");
             throw new RuntimeException("사용자 저장 후 ID를 가져올 수 없습니다");
         }
-        
-        System.out.println("=== User Saved Successfully ===");
-        System.out.println("UserId: " + savedUser.getId());
-        System.out.println("Email: " + savedUser.getEmail());
-        System.out.println("UserType: " + savedUser.getUserType());
 
         // 프로필 생성
         if (request.getUserType() == User.UserType.APPLICANT) {
@@ -151,50 +126,18 @@ public class AuthService {
                     .nationality(request.getCountry().trim().toUpperCase()) // 하위 호환성을 위해 country 값 사용
                     .build();
             
-            System.out.println("=== Attempting to Save ApplicantProfile ===");
-            System.out.println("UserId: " + profile.getUserId());
-            System.out.println("Country: " + profile.getCountry());
-            System.out.println("City: " + profile.getCity());
-            System.out.println("Birthday: " + profile.getBirthday());
-            System.out.println("Phone: " + profile.getPhone());
-            System.out.println("Address: " + profile.getAddress());
-            System.out.println("Timezone: " + profile.getTimezone());
-            System.out.println("Languages: " + profile.getLanguages());
-            System.out.println("Gender: " + profile.getGender());
-            
             try {
-                ApplicantProfile savedProfile = applicantProfileRepository.save(profile);
-                System.out.println("=== ApplicantProfile Saved Successfully ===");
-                System.out.println("Saved UserId: " + savedProfile.getUserId());
+                applicantProfileRepository.save(profile);
             } catch (org.springframework.dao.DataIntegrityViolationException e) {
-                System.err.println("=== DataIntegrityViolationException ===");
-                System.err.println("Error: " + e.getClass().getName());
-                System.err.println("Message: " + e.getMessage());
-                if (e.getCause() != null) {
-                    System.err.println("Cause: " + e.getCause().getClass().getName());
-                    System.err.println("Cause Message: " + e.getCause().getMessage());
-                    if (e.getCause() instanceof java.sql.SQLException) {
-                        java.sql.SQLException sqlEx = (java.sql.SQLException) e.getCause();
-                        System.err.println("SQL State: " + sqlEx.getSQLState());
-                        System.err.println("Error Code: " + sqlEx.getErrorCode());
-                    }
+                System.err.println("DataIntegrityViolationException: " + e.getMessage());
+                if (e.getCause() instanceof java.sql.SQLException) {
+                    java.sql.SQLException sqlEx = (java.sql.SQLException) e.getCause();
+                    System.err.println("SQL State: " + sqlEx.getSQLState() + ", Error Code: " + sqlEx.getErrorCode());
                 }
                 e.printStackTrace();
                 throw new RuntimeException("프로필 저장 중 데이터 무결성 오류가 발생했습니다: " + e.getMessage(), e);
             } catch (Exception e) {
-                System.err.println("=== Failed to Save ApplicantProfile ===");
-                System.err.println("Error: " + e.getClass().getName());
-                System.err.println("Message: " + e.getMessage());
-                if (e.getCause() != null) {
-                    System.err.println("Cause: " + e.getCause().getClass().getName());
-                    System.err.println("Cause Message: " + e.getCause().getMessage());
-                    if (e.getCause() instanceof java.sql.SQLException) {
-                        java.sql.SQLException sqlEx = (java.sql.SQLException) e.getCause();
-                        System.err.println("SQL State: " + sqlEx.getSQLState());
-                        System.err.println("Error Code: " + sqlEx.getErrorCode());
-                        System.err.println("SQL Error: " + sqlEx.getSQLState() + " (" + sqlEx.getErrorCode() + ")");
-                    }
-                }
+                System.err.println("Failed to save ApplicantProfile: " + e.getMessage());
                 e.printStackTrace();
                 throw new RuntimeException("프로필 저장 중 오류가 발생했습니다: " + e.getMessage(), e);
             }
@@ -276,44 +219,18 @@ public class AuthService {
                     .verificationStatus(BusinessProfile.VerificationStatus.PENDING) // 기본값: 대기 중
                     .build();
             
-            System.out.println("=== Attempting to Save BusinessProfile ===");
-            System.out.println("UserId: " + profile.getUserId());
-            System.out.println("CompanyName: " + profile.getCompanyName());
-            System.out.println("Country: " + profile.getCountry());
-            System.out.println("City: " + profile.getCity());
-            
             try {
-                BusinessProfile savedProfile = businessProfileRepository.save(profile);
-                System.out.println("=== BusinessProfile Saved Successfully ===");
-                System.out.println("Saved UserId: " + savedProfile.getUserId());
+                businessProfileRepository.save(profile);
             } catch (org.springframework.dao.DataIntegrityViolationException e) {
-                System.err.println("=== DataIntegrityViolationException ===");
-                System.err.println("Error: " + e.getClass().getName());
-                System.err.println("Message: " + e.getMessage());
-                if (e.getCause() != null) {
-                    System.err.println("Cause: " + e.getCause().getClass().getName());
-                    System.err.println("Cause Message: " + e.getCause().getMessage());
-                    if (e.getCause() instanceof java.sql.SQLException) {
-                        java.sql.SQLException sqlEx = (java.sql.SQLException) e.getCause();
-                        System.err.println("SQL State: " + sqlEx.getSQLState());
-                        System.err.println("Error Code: " + sqlEx.getErrorCode());
-                    }
+                System.err.println("DataIntegrityViolationException: " + e.getMessage());
+                if (e.getCause() instanceof java.sql.SQLException) {
+                    java.sql.SQLException sqlEx = (java.sql.SQLException) e.getCause();
+                    System.err.println("SQL State: " + sqlEx.getSQLState() + ", Error Code: " + sqlEx.getErrorCode());
                 }
                 e.printStackTrace();
                 throw new RuntimeException("프로필 저장 중 데이터 무결성 오류가 발생했습니다: " + e.getMessage(), e);
             } catch (Exception e) {
-                System.err.println("=== Failed to Save BusinessProfile ===");
-                System.err.println("Error: " + e.getClass().getName());
-                System.err.println("Message: " + e.getMessage());
-                if (e.getCause() != null) {
-                    System.err.println("Cause: " + e.getCause().getClass().getName());
-                    System.err.println("Cause Message: " + e.getCause().getMessage());
-                    if (e.getCause() instanceof java.sql.SQLException) {
-                        java.sql.SQLException sqlEx = (java.sql.SQLException) e.getCause();
-                        System.err.println("SQL State: " + sqlEx.getSQLState());
-                        System.err.println("Error Code: " + sqlEx.getErrorCode());
-                    }
-                }
+                System.err.println("Failed to save BusinessProfile: " + e.getMessage());
                 e.printStackTrace();
                 throw new RuntimeException("프로필 저장 중 오류가 발생했습니다: " + e.getMessage(), e);
             }
@@ -322,46 +239,21 @@ public class AuthService {
         // JWT 토큰 생성
         String token;
         try {
-            System.out.println("=== Generating JWT Token ===");
-            System.out.println("UserId: " + savedUser.getId());
-            System.out.println("UserType: " + savedUser.getUserType().name());
             token = jwtTokenProvider.generateToken(savedUser.getId(), savedUser.getUserType().name());
-            System.out.println("=== JWT Token Generated Successfully ===");
         } catch (Exception e) {
-            System.err.println("=== Failed to Generate JWT Token ===");
-            System.err.println("Error: " + e.getClass().getName());
-            System.err.println("Message: " + e.getMessage());
-            if (e.getCause() != null) {
-                System.err.println("Cause: " + e.getCause().getClass().getName());
-                System.err.println("Cause Message: " + e.getCause().getMessage());
-            }
+            System.err.println("Failed to generate JWT token: " + e.getMessage());
             e.printStackTrace();
             throw new RuntimeException("JWT 토큰 생성 중 오류가 발생했습니다: " + e.getMessage(), e);
         }
 
-        try {
-            AuthResponse response = AuthResponse.builder()
-                    .token(token)
-                    .userId(savedUser.getId())
-                    .email(savedUser.getEmail())
-                    .name(savedUser.getName())
-                    .userType(savedUser.getUserType())
-                    .profileImageUrl(savedUser.getProfileImageUrl())
-                    .build();
-            
-            System.out.println("=== Registration Completed Successfully ===");
-            System.out.println("UserId: " + response.getUserId());
-            System.out.println("Email: " + response.getEmail());
-            System.out.println("UserType: " + response.getUserType());
-            
-            return response;
-        } catch (Exception e) {
-            System.err.println("=== Failed to Create AuthResponse ===");
-            System.err.println("Error: " + e.getClass().getName());
-            System.err.println("Message: " + e.getMessage());
-            e.printStackTrace();
-            throw new RuntimeException("응답 생성 중 오류가 발생했습니다: " + e.getMessage(), e);
-        }
+        return AuthResponse.builder()
+                .token(token)
+                .userId(savedUser.getId())
+                .email(savedUser.getEmail())
+                .name(savedUser.getName())
+                .userType(savedUser.getUserType())
+                .profileImageUrl(savedUser.getProfileImageUrl())
+                .build();
     }
 
     @Transactional(readOnly = true)
@@ -445,11 +337,8 @@ public class AuthService {
                             .build();
                     try {
                         applicantProfileRepository.save(profile);
-                        System.out.println("=== Social Login ApplicantProfile Saved Successfully ===");
                     } catch (Exception e) {
-                        System.err.println("=== Failed to Save Social Login ApplicantProfile ===");
-                        System.err.println("Error: " + e.getClass().getName());
-                        System.err.println("Message: " + e.getMessage());
+                        System.err.println("Failed to save social login ApplicantProfile: " + e.getMessage());
                         e.printStackTrace();
                         throw new RuntimeException("소셜 로그인 프로필 저장 중 오류가 발생했습니다: " + e.getMessage(), e);
                     }

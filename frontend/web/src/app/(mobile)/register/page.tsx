@@ -177,11 +177,6 @@ export default function RegisterPage() {
         }
       }
       
-      // 디버깅: 전송 데이터 확인
-      console.log('회원가입 요청 데이터 (JSON):', JSON.stringify(submitData, null, 2))
-      console.log('birthday 타입:', typeof submitData.birthday)
-      console.log('birthday 값:', submitData.birthday)
-      
       await authApi.register(submitData)
       router.push('/login')
     } catch (err: any) {
@@ -498,7 +493,6 @@ export default function RegisterPage() {
                   className="w-full px-4 py-2 border rounded-lg"
                   onChange={(e) => {
                     // TODO: 파일 업로드 구현
-                    console.log('File selected:', e.target.files?.[0])
                   }}
                 />
                 <p className="text-sm text-gray-500 mt-1">

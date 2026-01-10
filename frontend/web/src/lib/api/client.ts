@@ -10,17 +10,15 @@ const getApiBaseUrl = (): string => {
   if (envUrl && envUrl.trim() !== '') {
     // 끝의 슬래시 제거 및 공백 제거
     const trimmedUrl = envUrl.trim().replace(/\/+$/, '')
-    if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
-      console.log('[API Client] ✅ Using NEXT_PUBLIC_API_URL:', trimmedUrl)
-    }
     return trimmedUrl
   }
   
   // 기본값: Gateway URL (프로덕션)
   const defaultUrl = 'https://gateway-production-72d6.up.railway.app'
-  console.error('[API Client] ❌ NEXT_PUBLIC_API_URL 환경 변수가 설정되지 않았습니다!')
-  console.error('[API Client] Railway → frontend-web → Variables에서 NEXT_PUBLIC_API_URL을 설정해주세요.')
-  console.warn('[API Client] ⚠️ 기본값 사용:', defaultUrl)
+  if (process.env.NODE_ENV === 'development') {
+    console.error('[API Client] ❌ NEXT_PUBLIC_API_URL 환경 변수가 설정되지 않았습니다!')
+    console.warn('[API Client] ⚠️ 기본값 사용:', defaultUrl)
+  }
   return defaultUrl
 }
 
@@ -31,12 +29,8 @@ if (!API_BASE_URL || API_BASE_URL.trim() === '') {
   throw new Error('[API Client] API_BASE_URL is not defined. Please set NEXT_PUBLIC_API_URL environment variable.')
 }
 
-// 최종 baseURL 로깅 (클라이언트 사이드)
-if (typeof window !== 'undefined') {
-  const fullApiUrl = `${API_BASE_URL}/api/v1`
-  console.log('[API Client] 🔗 API Base URL:', fullApiUrl)
-  
-  // 잘못된 URL 감지
+// 잘못된 URL 감지 (개발 환경에서만)
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
   if (API_BASE_URL.includes('localhost') || API_BASE_URL.includes('127.0.0.1')) {
     console.error('[API Client] ⚠️ 로컬 호스트 URL 감지 - 프로덕션에서는 Gateway URL을 사용해야 합니다!')
   }
@@ -57,7 +51,9 @@ apiClient.interceptors.request.use(
     if (!config.baseURL) {
       const fallbackBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gateway-production-72d6.up.railway.app'
       config.baseURL = `${fallbackBaseUrl.replace(/\/+$/, '')}/api/v1`
-      console.error('[API Client] ⚠️ config.baseURL이 없어서 기본값 사용:', config.baseURL)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[API Client] ⚠️ config.baseURL이 없어서 기본값 사용:', config.baseURL)
+      }
     }
     
     const token = typeof window !== 'undefined' 
@@ -66,20 +62,6 @@ apiClient.interceptors.request.use(
     
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
-    }
-    
-    // 요청 URL 로깅 (디버깅용) - 안전 처리
-    const baseUrl = config.baseURL || ''
-    const path = config.url || ''
-    const fullUrl = `${baseUrl}${path}`
-    
-    if (typeof window !== 'undefined') {
-      console.log('[API Client] → Request:', {
-        method: (config.method || 'GET').toUpperCase(),
-        url: fullUrl,
-        baseURL: config.baseURL,
-        path: config.url,
-      })
     }
     
     return config
@@ -119,10 +101,12 @@ apiClient.interceptors.response.use(
         baseURL: error.config?.baseURL || 'undefined',
       })
       
-      // baseURL이 없거나 잘못된 경우
-      if (!error.config?.baseURL || error.config.baseURL.includes('undefined')) {
-        console.error('[API Client] 🔴 Critical: baseURL이 설정되지 않았습니다!')
-        console.error('[API Client] NEXT_PUBLIC_API_URL 환경 변수를 확인하세요.')
+      // baseURL이 없거나 잘못된 경우 (개발 환경에서만 상세 로그)
+      if (process.env.NODE_ENV === 'development') {
+        if (!error.config?.baseURL || error.config.baseURL.includes('undefined')) {
+          console.error('[API Client] 🔴 Critical: baseURL이 설정되지 않았습니다!')
+          console.error('[API Client] NEXT_PUBLIC_API_URL 환경 변수를 확인하세요.')
+        }
       }
     }
     

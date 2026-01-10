@@ -20,8 +20,7 @@ export default function ApplyPage() {
   const handleSubmit = async (data: any) => {
     setIsSubmitting(true)
     try {
-      // TODO: API 호출
-      console.log('Application submitted:', data)
+      // TODO: API 호출 구현 필요
       router.push(`/auditions/${auditionId}`)
     } catch (error) {
       console.error('Application submission failed:', error)
