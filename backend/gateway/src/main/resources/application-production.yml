@@ -8,6 +8,7 @@ spring:
     gateway:
       routes:
         # User Service
+        # Railway 환경 변수에서 설정: USER_SERVICE_URL=https://user-service-production-7ba1.up.railway.app
         - id: user-service
           uri: ${USER_SERVICE_URL:http://localhost:8082}
           predicates:
@@ -16,6 +17,7 @@ spring:
             - StripPrefix=0
         
         # Audition Service
+        # Railway 환경 변수에서 설정: AUDITION_SERVICE_URL=https://audition-service-production.up.railway.app
         - id: audition-service
           uri: ${AUDITION_SERVICE_URL:http://localhost:8081}
           predicates:
@@ -26,6 +28,7 @@ spring:
             - StripPrefix=0
         
         # Media Service
+        # Railway 환경 변수에서 설정: MEDIA_SERVICE_URL=https://media-service-production-dff0.up.railway.app
         - id: media-service
           uri: ${MEDIA_SERVICE_URL:http://localhost:8083}
           predicates:
@@ -51,6 +54,11 @@ management:
     web:
       exposure:
         include: health,info,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+      enabled: true
 
 logging:
   level:
