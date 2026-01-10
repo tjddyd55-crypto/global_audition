@@ -36,7 +36,13 @@ export const videoApi = {
     return data
   },
 
-  createVideo: async (video: Partial<VideoContent>): Promise<VideoContent> => {
+  createVideo: async (video: {
+    title: string
+    description?: string
+    videoUrl: string
+    category?: string
+    status: string
+  }): Promise<VideoContent> => {
     const { data } = await apiClient.post('/videos', video)
     return data
   },
@@ -44,5 +50,23 @@ export const videoApi = {
   likeVideo: async (id: number): Promise<VideoContent> => {
     const { data } = await apiClient.post(`/videos/${id}/like`)
     return data
+  },
+
+  updateVideo: async (
+    id: number,
+    video: {
+      title?: string
+      description?: string
+      videoUrl?: string
+      category?: string
+      status?: string
+    }
+  ): Promise<VideoContent> => {
+    const { data } = await apiClient.put(`/videos/${id}`, video)
+    return data
+  },
+
+  deleteVideo: async (id: number): Promise<void> => {
+    await apiClient.delete(`/videos/${id}`)
   },
 }
