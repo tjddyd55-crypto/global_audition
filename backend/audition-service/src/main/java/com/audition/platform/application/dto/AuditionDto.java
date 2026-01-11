@@ -30,6 +30,13 @@ public class AuditionDto {
     private LocalDate screeningDate3;
     private LocalDate announcementDate3;
     private String bannerUrl;
+    private String posterUrl;
+    private String posterKey;
+    private Audition.VideoType videoType;
+    private String videoUrl;
+    private String videoKey;
+    private Integer maxRounds;
+    private LocalDateTime deadlineAt;
     private Long businessId;
     private String businessName;
     private LocalDateTime createdAt;

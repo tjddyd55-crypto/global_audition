@@ -20,6 +20,7 @@ public class ApplicationDto {
     private Long userId;
     private String userName;
     private Application.ApplicationStatus status;
+    private Integer currentStage;
     private Application.ScreeningResult result1;
     private Application.ScreeningResult result2;
     private Application.ScreeningResult result3;

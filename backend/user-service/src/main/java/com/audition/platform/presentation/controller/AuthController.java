@@ -1,10 +1,6 @@
 package com.audition.platform.presentation.controller;
 
-import com.audition.platform.application.dto.AuthResponse;
-import com.audition.platform.application.dto.LoginRequest;
-import com.audition.platform.application.dto.RegisterRequest;
-import com.audition.platform.application.dto.SocialLoginRequest;
-import com.audition.platform.application.dto.UserDto;
+import com.audition.platform.application.dto.*;
 import com.audition.platform.application.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -83,5 +79,53 @@ public class AuthController {
     public ResponseEntity<UserDto> getUser(@PathVariable Long id) {
         UserDto user = authService.getUserById(id);
         return ResponseEntity.ok(user);
+    }
+
+    @PostMapping("/find-user-id")
+    @Operation(summary = "아이디 찾기 (이름과 이메일로 찾기)")
+    public ResponseEntity<?> findUserId(@RequestBody @Valid FindUserIdRequest request) {
+        try {
+            FindUserIdResponse response = authService.findUserId(request);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException ex) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("message", ex.getMessage());
+            error.put("status", HttpStatus.BAD_REQUEST.value());
+            error.put("error", "NotFoundError");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+    }
+
+    @PostMapping("/forgot-password")
+    @Operation(summary = "비밀번호 찾기 (재설정 토큰 발급)")
+    public ResponseEntity<?> forgotPassword(@RequestBody @Valid ForgotPasswordRequest request) {
+        try {
+            ForgotPasswordResponse response = authService.forgotPassword(request);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException ex) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("message", ex.getMessage());
+            error.put("status", HttpStatus.BAD_REQUEST.value());
+            error.put("error", "NotFoundError");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+    }
+
+    @PostMapping("/reset-password")
+    @Operation(summary = "비밀번호 재설정")
+    public ResponseEntity<?> resetPassword(@RequestBody @Valid ResetPasswordRequest request) {
+        try {
+            authService.resetPassword(request);
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "비밀번호가 성공적으로 재설정되었습니다");
+            response.put("status", HttpStatus.OK.value());
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException ex) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("message", ex.getMessage());
+            error.put("status", HttpStatus.BAD_REQUEST.value());
+            error.put("error", "ValidationError");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
     }
 }

@@ -1,6 +1,5 @@
 package com.audition.platform.application.dto;
 
-import com.audition.platform.domain.entity.AuditionOffer;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 

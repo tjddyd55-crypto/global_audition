@@ -5,6 +5,7 @@ import { useRouter } from '@/i18n.config'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { useQueryClient } from '@tanstack/react-query'
 import { authApi } from '@/lib/api/auth'
 import { countries, languages, timezones } from '@/lib/utils/countries'
 import { useTranslations } from 'next-intl'
@@ -62,6 +63,7 @@ type RegisterFormData = z.infer<typeof registerSchema>
 
 export default function RegisterPage() {
   const router = useRouter()
+  const queryClient = useQueryClient()
   const t = useTranslations('register')
   const tAuth = useTranslations('auth')
   const tValidation = useTranslations('validation')
@@ -192,8 +194,20 @@ export default function RegisterPage() {
         }
       }
       
-      await authApi.register(submitData)
-      router.push('/login')
+      const response = await authApi.register(submitData)
+      // 회원가입 성공 후 자동 로그인된 경우 userType에 따라 리다이렉트
+      if (response.token && response.userType) {
+        // 사용자 정보 쿼리 무효화하여 Header에서 즉시 반영되도록
+        queryClient.invalidateQueries({ queryKey: ['currentUser'] })
+        if (response.userType === 'BUSINESS') {
+          window.location.href = '/my/dashboard'
+        } else {
+          window.location.href = '/'
+        }
+      } else {
+        // 자동 로그인이 안된 경우 로그인 페이지로
+        router.push('/login')
+      }
     } catch (err: any) {
       console.error('회원가입 오류:', err)
       console.error('오류 응답:', err.response?.data)

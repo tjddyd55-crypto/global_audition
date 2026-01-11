@@ -72,6 +72,30 @@ public class Audition {
     @Column(name = "banner_url")
     private String bannerUrl;
 
+    @Column(name = "poster_url", length = 500)
+    private String posterUrl;
+
+    @Column(name = "poster_key", length = 500)
+    private String posterKey;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "video_type", length = 20)
+    @Builder.Default
+    private VideoType videoType = VideoType.YOUTUBE;
+
+    @Column(name = "video_url", length = 500)
+    private String videoUrl;
+
+    @Column(name = "video_key", length = 500)
+    private String videoKey;
+
+    @Column(name = "max_rounds", nullable = false)
+    @Builder.Default
+    private Integer maxRounds = 1;
+
+    @Column(name = "deadline_at")
+    private LocalDateTime deadlineAt;
+
     @Column(name = "business_id", nullable = false)
     private Long businessId;
 
@@ -101,5 +125,10 @@ public class Audition {
         ACTOR,
         MODEL,
         INSTRUMENT
+    }
+
+    public enum VideoType {
+        YOUTUBE,
+        UPLOAD
     }
 }

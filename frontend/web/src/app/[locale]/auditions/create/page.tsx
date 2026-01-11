@@ -9,7 +9,7 @@ import { auditionApi } from '@/lib/api/auditions'
 import { userApi } from '@/lib/api/user'
 import { authApi } from '@/lib/api/auth'
 import { useTranslations } from 'next-intl'
-import { AuditionCategory, AuditionStatus } from '@/types'
+import { AuditionCategory, AuditionStatus, VideoType } from '@/types'
 
 const auditionSchema = z.object({
   title: z.string().min(1, '제목을 입력해주세요'),
@@ -25,6 +25,12 @@ const auditionSchema = z.object({
   screeningDate2: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, '2차 심사일 형식이 올바르지 않습니다').optional().or(z.literal('')),
   screeningDate3: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, '3차 심사일 형식이 올바르지 않습니다').optional().or(z.literal('')),
   bannerUrl: z.string().url('유효한 URL을 입력해주세요').optional().or(z.literal('')),
+  posterUrl: z.string().url('유효한 URL을 입력해주세요').optional().or(z.literal('')),
+  videoType: z.nativeEnum(VideoType).optional(),
+  videoUrl: z.string().url('유효한 URL을 입력해주세요').optional().or(z.literal('')),
+  maxRounds: z.number().min(1).max(3).default(1),
+  deadlineAt: z.string().optional(),
+  status: z.nativeEnum(AuditionStatus).optional(),
 }).refine((data) => {
   const start = new Date(data.startDate)
   const end = new Date(data.endDate)
@@ -89,17 +95,29 @@ export default function CreateAuditionPage() {
     setError(null)
 
     try {
-      const auditionData = {
+      const auditionData: any = {
         ...data,
-        status: AuditionStatus.WAITING_OPENING,
+        status: data.status || AuditionStatus.WRITING,
         screeningDate1: data.screeningDate1 || undefined,
         screeningDate2: data.screeningDate2 || undefined,
         screeningDate3: data.screeningDate3 || undefined,
         bannerUrl: data.bannerUrl || undefined,
+        posterUrl: data.posterUrl || data.bannerUrl || undefined,
+        videoType: data.videoType || VideoType.YOUTUBE,
+        videoUrl: data.videoUrl || undefined,
+        maxRounds: data.maxRounds || 1,
+        deadlineAt: data.deadlineAt ? new Date(data.deadlineAt).toISOString() : undefined,
       }
 
+      // 빈 문자열을 undefined로 변환
+      Object.keys(auditionData).forEach(key => {
+        if (auditionData[key] === '') {
+          auditionData[key] = undefined
+        }
+      })
+
       await auditionApi.createAudition(auditionData)
-      router.push('/auditions')
+      router.push('/my/auditions')
     } catch (err: any) {
       console.error('Create audition failed:', err)
       setError(err.response?.data?.message || '오디션 공고 작성에 실패했습니다')
@@ -272,16 +290,103 @@ export default function CreateAuditionPage() {
             </div>
           </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">배너 이미지 URL</label>
+              <input
+                type="url"
+                {...register('bannerUrl')}
+                className="w-full px-4 py-2 border rounded-lg"
+                placeholder="https://example.com/banner.jpg"
+              />
+              {errors.bannerUrl && (
+                <p className="text-red-500 text-sm mt-1">{errors.bannerUrl.message}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">포스터 이미지 URL</label>
+              <input
+                type="url"
+                {...register('posterUrl')}
+                className="w-full px-4 py-2 border rounded-lg"
+                placeholder="https://example.com/poster.jpg"
+              />
+              {errors.posterUrl && (
+                <p className="text-red-500 text-sm mt-1">{errors.posterUrl.message}</p>
+              )}
+              <p className="text-xs text-gray-500 mt-1">포스터가 없으면 배너 이미지가 사용됩니다</p>
+            </div>
+          </div>
+
           <div>
-            <label className="block text-sm font-medium mb-2">배너 이미지 URL</label>
+            <label className="block text-sm font-medium mb-2">영상 타입 *</label>
+            <select
+              {...register('videoType')}
+              className="w-full px-4 py-2 border rounded-lg"
+              defaultValue={VideoType.YOUTUBE}
+            >
+              <option value={VideoType.YOUTUBE}>YouTube URL</option>
+              <option value={VideoType.UPLOAD}>직접 업로드 (추후 구현)</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">영상 URL</label>
             <input
               type="url"
-              {...register('bannerUrl')}
+              {...register('videoUrl')}
               className="w-full px-4 py-2 border rounded-lg"
-              placeholder="https://example.com/banner.jpg"
+              placeholder="https://www.youtube.com/watch?v=..."
             />
-            {errors.bannerUrl && (
-              <p className="text-red-500 text-sm mt-1">{errors.bannerUrl.message}</p>
+            {errors.videoUrl && (
+              <p className="text-red-500 text-sm mt-1">{errors.videoUrl.message}</p>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">최대 진행 차수 *</label>
+              <select
+                {...register('maxRounds', { valueAsNumber: true })}
+                className="w-full px-4 py-2 border rounded-lg"
+                defaultValue={1}
+              >
+                <option value={1}>1차 (1차만 진행)</option>
+                <option value={2}>2차 (1차 + 2차)</option>
+                <option value={3}>3차 (1차 + 2차 + 3차)</option>
+              </select>
+              {errors.maxRounds && (
+                <p className="text-red-500 text-sm mt-1">{errors.maxRounds.message}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">지원 마감일시</label>
+              <input
+                type="datetime-local"
+                {...register('deadlineAt')}
+                className="w-full px-4 py-2 border rounded-lg"
+              />
+              {errors.deadlineAt && (
+                <p className="text-red-500 text-sm mt-1">{errors.deadlineAt.message}</p>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">공개 상태 *</label>
+            <select
+              {...register('status')}
+              className="w-full px-4 py-2 border rounded-lg"
+              defaultValue={AuditionStatus.WRITING}
+            >
+              <option value={AuditionStatus.WRITING}>임시저장 (작성 중)</option>
+              <option value={AuditionStatus.WAITING_OPENING}>공개 대기</option>
+              <option value={AuditionStatus.ONGOING}>진행 중</option>
+            </select>
+            {errors.status && (
+              <p className="text-red-500 text-sm mt-1">{errors.status.message}</p>
             )}
           </div>
 

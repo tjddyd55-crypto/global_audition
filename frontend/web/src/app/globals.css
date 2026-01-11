@@ -1,32 +1,19 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* ============================================
+   GLOBAL CSS - 모든 스타일 모듈 import
+   Tailwind 제거, 순수 CSS로 전환
+   ============================================ */
 
-:root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+@import '../styles/base.css';
+@import '../styles/utilities.css';
+@import '../styles/components.css';
+@import '../styles/layout.css';
+@import '../styles/pages.css';
+
+/* 유틸리티 클래스 추가 (기존 Tailwind 호환성 유지) */
+.text-balance {
+  text-wrap: balance;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
-}
-
-body {
-  background-color: white;
-  color: rgb(17, 24, 39);
-}
-
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-  
-  .touch-pan-y {
-    touch-action: pan-y;
-  }
+.touch-pan-y {
+  touch-action: pan-y;
 }

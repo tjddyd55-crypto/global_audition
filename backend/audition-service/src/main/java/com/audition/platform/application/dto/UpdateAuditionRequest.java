@@ -21,4 +21,12 @@ public class UpdateAuditionRequest {
     private LocalDate screeningDate3;
     private LocalDate announcementDate3;
     private String bannerUrl;
+    private String posterUrl;
+    private String posterKey;
+    private Audition.VideoType videoType;
+    private String videoUrl;
+    private String videoKey;
+    private Integer maxRounds;
+    private java.time.LocalDateTime deadlineAt;
+    private Audition.AuditionStatus status;
 }

@@ -16,6 +16,8 @@ public interface AuditionRepository extends JpaRepository<Audition, Long> {
 
     Page<Audition> findByStatusIn(List<Audition.AuditionStatus> statuses, Pageable pageable);
 
+    Page<Audition> findByBusinessId(Long businessId, Pageable pageable);
+
     Page<Audition> findByBusinessIdAndStatusIn(
             Long businessId,
             List<Audition.AuditionStatus> statuses,

@@ -157,4 +157,41 @@ public class ApplicationController {
         List<ApplicationDto> applications = applicationService.getFinalPassed(auditionId);
         return ResponseEntity.ok(applications);
     }
+
+    @PutMapping("/{id}/pass")
+    @Operation(summary = "지원자 합격 처리", description = "기획사만 가능. stage는 1~3")
+    public ResponseEntity<ApplicationDto> passApplication(
+            @PathVariable Long id,
+            @RequestParam Integer stage,
+            @RequestParam(required = false) String message
+    ) {
+        Long businessId = SecurityUtils.getCurrentUserIdOrThrow();
+        ApplicationDto updated = applicationService.passApplication(id, businessId, stage, message);
+        return ResponseEntity.ok(updated);
+    }
+
+    @PutMapping("/{id}/fail")
+    @Operation(summary = "지원자 불합격 처리", description = "기획사만 가능")
+    public ResponseEntity<ApplicationDto> failApplication(
+            @PathVariable Long id,
+            @RequestParam(required = false) String message
+    ) {
+        Long businessId = SecurityUtils.getCurrentUserIdOrThrow();
+        ApplicationDto updated = applicationService.failApplication(id, businessId, message);
+        return ResponseEntity.ok(updated);
+    }
+
+    @GetMapping("/auditions/{auditionId}/applications")
+    @Operation(summary = "오디션별 지원자 목록 조회", description = "필터링: stage, status (기획사만 가능)")
+    public ResponseEntity<Page<ApplicationDto>> getApplicationsByAudition(
+            @PathVariable Long auditionId,
+            @RequestParam(required = false) Integer stage, // 0=전체, 1=1차합격, 2=2차합격, 3=최종합격
+            @RequestParam(required = false) Application.ApplicationStatus status,
+            @PageableDefault(size = 20) Pageable pageable
+    ) {
+        Long businessId = SecurityUtils.getCurrentUserIdOrThrow();
+        Page<ApplicationDto> applications = applicationService.getApplicationsByAudition(
+                auditionId, businessId, stage, status, pageable);
+        return ResponseEntity.ok(applications);
+    }
 }

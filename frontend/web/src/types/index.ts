@@ -33,6 +33,11 @@ export enum ScreeningResult {
   PENDING = 'PENDING',
 }
 
+export enum VideoType {
+  YOUTUBE = 'YOUTUBE',
+  UPLOAD = 'UPLOAD',
+}
+
 export interface Audition {
   id: number
   title: string
@@ -50,6 +55,13 @@ export interface Audition {
   announcementDate2?: string
   announcementDate3?: string
   bannerUrl?: string
+  posterUrl?: string
+  posterKey?: string
+  videoType?: VideoType
+  videoUrl?: string
+  videoKey?: string
+  maxRounds?: number
+  deadlineAt?: string
   businessId: number
   businessName?: string
   createdAt: string
@@ -59,8 +71,11 @@ export interface Audition {
 export interface Application {
   id: number
   auditionId: number
+  auditionTitle?: string
   userId: number
+  userName?: string
   status: ApplicationStatus
+  currentStage?: number // 0=지원, 1=1차합격, 2=2차합격, 3=최종합격
   result1?: ScreeningResult
   result2?: ScreeningResult
   result3?: ScreeningResult
@@ -68,7 +83,11 @@ export interface Application {
   videoId1?: number
   videoId2?: number
   photos: string[]
-  submittedAt: string
+  paymentTransactionId?: string
+  paymentAmount?: number
+  submittedAt?: string
+  createdAt?: string
+  updatedAt?: string
 }
 
 export interface PageResponse<T> {

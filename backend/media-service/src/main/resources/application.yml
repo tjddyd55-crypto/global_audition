@@ -11,6 +11,21 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
+  
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 50MB
+      max-request-size: 50MB
 
 server:
   port: 8083
+
+# 파일 업로드 저장 경로
+file:
+  upload:
+    dir: ./uploads
+    image:
+      dir: ${file.upload.dir}/images
+    video:
+      dir: ${file.upload.dir}/videos

@@ -47,6 +47,10 @@ public class SecurityConfig {
                                 "/api/v1/auditions",
                                 "/api/v1/auditions/**"
                         ).permitAll()
+                        // Admin endpoints (관리자만)
+                        .requestMatchers(
+                                "/api/v1/auditions/admin/**"
+                        ).hasRole("ADMIN")
                         // Business endpoints (기획사만)
                         .requestMatchers(
                                 "/api/v1/applications/**/result*",

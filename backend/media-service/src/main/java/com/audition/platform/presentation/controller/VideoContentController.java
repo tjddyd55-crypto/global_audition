@@ -50,13 +50,27 @@ public class VideoContentController {
     }
 
     @PostMapping
-    @Operation(summary = "비디오 업로드")
+    @Operation(summary = "비디오 업로드 (YouTube URL)")
     public ResponseEntity<VideoContentDto> createVideo(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @RequestBody @Valid CreateVideoRequest request
     ) {
         Long userId = securityUtils.getUserIdFromAuthHeaderOrThrow(authHeader);
         VideoContentDto created = videoContentService.createVideo(userId, request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    @PostMapping("/upload")
+    @Operation(summary = "비디오 파일 업로드")
+    public ResponseEntity<VideoContentDto> uploadVideoFile(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @RequestParam("file") org.springframework.web.multipart.MultipartFile file,
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String description,
+            @RequestParam(required = false) String category
+    ) {
+        Long userId = securityUtils.getUserIdFromAuthHeaderOrThrow(authHeader);
+        VideoContentDto created = videoContentService.uploadVideoFile(userId, file, title, description, category);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 

@@ -1,10 +1,8 @@
 package com.audition.platform.application.service;
 
-import com.audition.platform.application.dto.AuthResponse;
-import com.audition.platform.application.dto.LoginRequest;
-import com.audition.platform.application.dto.RegisterRequest;
-import com.audition.platform.application.dto.SocialLoginRequest;
-import com.audition.platform.application.dto.UserDto;
+import com.audition.platform.application.dto.*;
+import java.util.UUID;
+import java.time.LocalDateTime;
 import com.audition.platform.application.mapper.UserMapper;
 import com.audition.platform.domain.entity.ApplicantProfile;
 import com.audition.platform.domain.entity.BusinessProfile;
@@ -371,5 +369,97 @@ public class AuthService {
                 .userType(user.getUserType())
                 .profileImageUrl(user.getProfileImageUrl())
                 .build();
+    }
+
+    /**
+     * 아이디 찾기 (이름과 이메일로 찾기)
+     */
+    @Transactional(readOnly = true)
+    public FindUserIdResponse findUserId(FindUserIdRequest request) {
+        User user = userRepository.findByNameAndEmailAndDeletedAtIsNull(
+                request.getName().trim(),
+                request.getEmail().trim()
+        ).orElseThrow(() -> new RuntimeException("입력하신 정보와 일치하는 계정을 찾을 수 없습니다"));
+
+        // 이메일 마스킹 (예: abc@example.com -> ab***@example.com)
+        String email = user.getEmail();
+        String maskedEmail = maskEmail(email);
+
+        return FindUserIdResponse.builder()
+                .maskedEmail(maskedEmail)
+                .build();
+    }
+
+    /**
+     * 비밀번호 찾기 (재설정 토큰 발급)
+     */
+    public ForgotPasswordResponse forgotPassword(ForgotPasswordRequest request) {
+        User user = userRepository.findByEmailAndDeletedAtIsNull(request.getEmail().trim())
+                .orElseThrow(() -> new RuntimeException("입력하신 이메일로 등록된 계정을 찾을 수 없습니다"));
+
+        // 소셜 로그인 사용자는 비밀번호 재설정 불가
+        if (user.getProvider() != User.Provider.LOCAL) {
+            throw new RuntimeException("소셜 로그인으로 가입한 계정은 비밀번호 재설정이 불가능합니다");
+        }
+
+        // 비밀번호 재설정 토큰 생성
+        String resetToken = UUID.randomUUID().toString();
+        LocalDateTime expiresAt = LocalDateTime.now().plusHours(1); // 1시간 후 만료
+
+        user.setPasswordResetToken(resetToken);
+        user.setPasswordResetTokenExpiresAt(expiresAt);
+        userRepository.save(user);
+
+        // 실제 환경에서는 이메일로 전송하지만, 개발 단계에서는 응답에 포함
+        // TODO: 이메일 전송 기능 추가
+        return ForgotPasswordResponse.builder()
+                .resetToken(resetToken) // 개발 단계에서만 응답에 포함 (실제 환경에서는 제거)
+                .message("비밀번호 재설정 토큰이 발급되었습니다. 이메일을 확인해주세요. (개발 단계: 토큰은 응답에 포함됩니다)")
+                .build();
+    }
+
+    /**
+     * 비밀번호 재설정
+     */
+    public void resetPassword(ResetPasswordRequest request) {
+        // 비밀번호 확인 검증
+        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+            throw new RuntimeException("새 비밀번호와 비밀번호 확인이 일치하지 않습니다");
+        }
+
+        // 토큰으로 사용자 찾기
+        User user = userRepository.findByPasswordResetTokenAndPasswordResetTokenExpiresAtAfter(
+                request.getResetToken(),
+                LocalDateTime.now()
+        ).orElseThrow(() -> new RuntimeException("유효하지 않거나 만료된 재설정 토큰입니다"));
+
+        // 비밀번호 업데이트
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        user.setPasswordResetToken(null);
+        user.setPasswordResetTokenExpiresAt(null);
+        userRepository.save(user);
+    }
+
+    /**
+     * 이메일 마스킹 (예: abc@example.com -> ab***@example.com)
+     */
+    private String maskEmail(String email) {
+        if (email == null || email.isEmpty()) {
+            return email;
+        }
+
+        int atIndex = email.indexOf('@');
+        if (atIndex <= 0) {
+            return email;
+        }
+
+        String localPart = email.substring(0, atIndex);
+        String domainPart = email.substring(atIndex);
+
+        if (localPart.length() <= 2) {
+            return localPart.charAt(0) + "***" + domainPart;
+        } else {
+            return localPart.substring(0, 2) + "***" + domainPart;
+        }
     }
 }

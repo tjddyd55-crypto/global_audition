@@ -53,11 +53,12 @@ public class AuditionController {
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "오디션 수정")
+    @Operation(summary = "오디션 수정", description = "기획사만 가능")
     public ResponseEntity<AuditionDto> updateAudition(
             @PathVariable Long id,
             @RequestBody @Valid UpdateAuditionRequest request
     ) {
+        // 권한 확인은 Service에서 수행
         AuditionDto updated = auditionService.updateAudition(id, request);
         return ResponseEntity.ok(updated);
     }
@@ -87,5 +88,21 @@ public class AuditionController {
         Long businessId = SecurityUtils.getCurrentUserIdOrThrow();
         Page<AuditionDto> auditions = auditionService.getAuditionsByBusiness(businessId, pageable);
         return ResponseEntity.ok(auditions);
+    }
+
+    @GetMapping("/admin/all")
+    @Operation(summary = "관리자: 전체 오디션 목록", description = "관리자만 접근 가능 - 모든 상태의 오디션 조회")
+    public ResponseEntity<Page<AuditionDto>> getAllAuditionsForAdmin(
+            @PageableDefault(size = 20) Pageable pageable
+    ) {
+        Page<AuditionDto> auditions = auditionService.getAllAuditionsForAdmin(pageable);
+        return ResponseEntity.ok(auditions);
+    }
+
+    @DeleteMapping("/admin/{id}")
+    @Operation(summary = "관리자: 오디션 강제 삭제", description = "관리자만 접근 가능 - 소유자 확인 없이 삭제")
+    public ResponseEntity<Void> deleteAuditionAsAdmin(@PathVariable Long id) {
+        auditionService.deleteAuditionAsAdmin(id);
+        return ResponseEntity.noContent().build();
     }
 }

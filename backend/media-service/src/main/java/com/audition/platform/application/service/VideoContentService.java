@@ -5,12 +5,14 @@ import com.audition.platform.application.dto.VideoContentDto;
 import com.audition.platform.application.mapper.VideoContentMapper;
 import com.audition.platform.domain.entity.VideoContent;
 import com.audition.platform.domain.repository.VideoContentRepository;
+import com.audition.platform.infrastructure.storage.FileStorageService;
 import com.audition.platform.infrastructure.youtube.YouTubeUrlValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
@@ -19,6 +21,7 @@ public class VideoContentService {
 
     private final VideoContentRepository videoContentRepository;
     private final VideoContentMapper videoContentMapper;
+    private final FileStorageService fileStorageService;
 
     @Transactional(readOnly = true)
     public Page<VideoContentDto> getVideos(Long userId, Pageable pageable) {
@@ -128,5 +131,35 @@ public class VideoContentService {
         video.setLikeCount(video.getLikeCount() + 1);
         VideoContent updated = videoContentRepository.save(video);
         return videoContentMapper.toDto(updated);
+    }
+
+    /**
+     * 비디오 파일 업로드 (실제 파일)
+     */
+    public VideoContentDto uploadVideoFile(Long userId, MultipartFile file, String title, String description, String category) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("파일이 없습니다");
+        }
+
+        try {
+            // 파일 업로드
+            String videoUrl = fileStorageService.uploadVideo(file, userId);
+            
+            // VideoContent 엔티티 생성 (실제 환경에서는 비디오 트랜스코딩 후 URL 업데이트)
+            VideoContent video = VideoContent.builder()
+                    .userId(userId)
+                    .title(title != null ? title : file.getOriginalFilename())
+                    .description(description)
+                    .videoUrl(videoUrl)
+                    .thumbnailUrl(null) // 실제 환경에서는 비디오에서 썸네일 추출
+                    .category(category != null && !category.isEmpty() ? VideoContent.VideoCategory.valueOf(category) : VideoContent.VideoCategory.SINGER)
+                    .status(VideoContent.VideoStatus.PUBLISHED)
+                    .build();
+
+            VideoContent saved = videoContentRepository.save(video);
+            return videoContentMapper.toDto(saved);
+        } catch (Exception e) {
+            throw new RuntimeException("비디오 업로드 실패: " + e.getMessage(), e);
+        }
     }
 }

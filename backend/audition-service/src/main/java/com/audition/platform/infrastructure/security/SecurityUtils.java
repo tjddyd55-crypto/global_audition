@@ -40,7 +40,7 @@ public class SecurityUtils {
     
     /**
      * 현재 인증된 사용자가 특정 역할을 가지고 있는지 확인합니다.
-     * @param role 역할 (예: "BUSINESS", "APPLICANT")
+     * @param role 역할 (예: "BUSINESS", "APPLICANT", "ADMIN")
      * @return 역할을 가지고 있으면 true
      */
     public static boolean hasRole(String role) {
@@ -50,5 +50,23 @@ public class SecurityUtils {
         }
         return authentication.getAuthorities().stream()
                 .anyMatch(authority -> authority.getAuthority().equals("ROLE_" + role));
+    }
+
+    /**
+     * 현재 인증된 사용자가 관리자인지 확인합니다.
+     * @return 관리자이면 true
+     */
+    public static boolean isAdmin() {
+        return hasRole("ADMIN");
+    }
+
+    /**
+     * 관리자 권한 확인 - 관리자가 아니면 예외 발생
+     * @throws RuntimeException 관리자가 아닌 경우
+     */
+    public static void requireAdmin() {
+        if (!isAdmin()) {
+            throw new RuntimeException("관리자 권한이 필요합니다");
+        }
     }
 }

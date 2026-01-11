@@ -46,4 +46,8 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
             @Param("auditionId") Long auditionId,
             @Param("result") Application.ScreeningResult result
     );
+
+    Page<Application> findByAuditionIdAndCurrentStage(Long auditionId, Integer currentStage, Pageable pageable);
+
+    Page<Application> findByAuditionIdAndStatus(Long auditionId, Application.ApplicationStatus status, Pageable pageable);
 }

@@ -35,6 +35,10 @@ public class Application {
     @Column(nullable = false)
     private ApplicationStatus status;
 
+    @Column(name = "current_stage", nullable = false)
+    @Builder.Default
+    private Integer currentStage = 0; // 0=지원, 1=1차합격, 2=2차합격, 3=최종합격
+
     @Enumerated(EnumType.STRING)
     private ScreeningResult result1;
 

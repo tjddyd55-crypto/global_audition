@@ -5,6 +5,7 @@ import { useRouter } from '@/i18n.config'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { useQueryClient } from '@tanstack/react-query'
 import { authApi } from '@/lib/api/auth'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n.config'
@@ -18,6 +19,8 @@ type LoginFormData = z.infer<typeof loginSchema>
 
 export default function LoginPage() {
   const router = useRouter()
+  const queryClient = useQueryClient()
+  // auth 네임스페이스의 번역 사용 (messages/ko.json의 "auth" 객체)
   const t = useTranslations('auth')
   const tCommon = useTranslations('common')
   const [error, setError] = useState<string | null>(null)
@@ -35,11 +38,48 @@ export default function LoginPage() {
     setIsLoading(true)
     setError(null)
     try {
-      await authApi.login(data)
-      router.push('/')
+      const response = await authApi.login(data)
+      
+      // 응답 구조 확인 (accessToken 또는 token 필드 지원)
+      const token = response.accessToken || response.token
+      const userRole = response.role || response.userType
+      
+      // 로그인 성공/실패 분기 처리
+      if (!response || !token) {
+        setError('로그인 응답이 올바르지 않습니다. 다시 시도해주세요.')
+        setIsLoading(false)
+        return
+      }
+      
+      // 토큰이 localStorage에 저장되었는지 확인
+      const savedToken = localStorage.getItem('accessToken') || localStorage.getItem('auth_token')
+      
+      if (!savedToken) {
+        setError('토큰 저장에 실패했습니다. 다시 시도해주세요.')
+        setIsLoading(false)
+        return
+      }
+      
+      // 사용자 정보 쿼리 무효화하여 Header에서 즉시 반영되도록
+      queryClient.invalidateQueries({ queryKey: ['currentUser'] })
+      queryClient.invalidateQueries({ queryKey: ['currentUser', savedToken] })
+      
+      // auth-change 이벤트가 처리되고 Header가 업데이트될 시간을 주기 위해 약간의 딜레이
+      await new Promise(resolve => setTimeout(resolve, 300))
+      
+      // role/userType 분기 처리 (AGENCY/BUSINESS 모두 처리)
+      if (userRole === 'BUSINESS' || userRole === 'AGENCY') {
+        router.push('/my/dashboard')
+      } else if (userRole === 'APPLICANT' || userRole === 'USER') {
+        router.push('/')
+      } else {
+        // 기본 처리
+        router.push('/')
+      }
     } catch (err: any) {
-      setError(err.response?.data?.message || t('loginError'))
-    } finally {
+      console.error('로그인 오류:', err)
+      const errorMessage = err.response?.data?.message || err.message || t('loginError')
+      setError(errorMessage)
       setIsLoading(false)
     }
   }
@@ -116,7 +156,10 @@ export default function LoginPage() {
         {/* 소셜 로그인 구분선 */}
         <div className="mt-6 mb-6 flex items-center">
           <div className="flex-1 border-t border-gray-300"></div>
-          <span className="px-4 text-sm text-gray-500">{t('or') || '또는'}</span>
+          {/* t('or')는 auth.or 키를 참조 (useTranslations('auth') 스코프) */}
+          <span className="px-4 text-sm text-gray-500">
+            {t('or', { defaultValue: '또는' })}
+          </span>
           <div className="flex-1 border-t border-gray-300"></div>
         </div>
 
@@ -170,13 +213,22 @@ export default function LoginPage() {
           </button>
         </div>
 
-        <div className="mt-6 text-center">
+        <div className="mt-6 text-center space-y-2">
           <p className="text-gray-600">
             {t('noAccount')}{' '}
             <Link href="/register" className="text-primary-600 hover:underline">
               {t('registerButton')}
             </Link>
           </p>
+          <div className="flex justify-center gap-4 text-sm">
+            <Link href="/find-user-id" className="text-gray-600 hover:text-primary-600">
+              아이디 찾기
+            </Link>
+            <span className="text-gray-400">|</span>
+            <Link href="/find-password" className="text-gray-600 hover:text-primary-600">
+              비밀번호 찾기
+            </Link>
+          </div>
         </div>
       </div>
     </div>

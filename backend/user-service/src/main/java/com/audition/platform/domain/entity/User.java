@@ -57,9 +57,17 @@ public class User {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
+    // 비밀번호 재설정 관련 필드
+    @Column(name = "password_reset_token")
+    private String passwordResetToken;
+
+    @Column(name = "password_reset_token_expires_at")
+    private LocalDateTime passwordResetTokenExpiresAt;
+
     public enum UserType {
         APPLICANT,  // 지망생
-        BUSINESS    // 기획사
+        BUSINESS,   // 기획사
+        ADMIN       // 관리자(운영자)
     }
 
     public enum Provider {
