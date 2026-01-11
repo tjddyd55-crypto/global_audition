@@ -42,7 +42,8 @@
     "loginSuccess": "Connexion réussie",
     "registerSuccess": "Inscription réussie",
     "loginError": "E-mail ou mot de passe incorrect",
-    "registerError": "Échec de l'inscription"
+    "registerError": "Échec de l'inscription",
+    "or": "ou"
   },
   "register": {
     "title": "S'inscrire",

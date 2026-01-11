@@ -42,7 +42,8 @@
     "loginSuccess": "Inicio de sesión exitoso",
     "registerSuccess": "Registro exitoso",
     "loginError": "Correo electrónico o contraseña incorrectos",
-    "registerError": "Error en el registro"
+    "registerError": "Error en el registro",
+    "or": "o"
   },
   "register": {
     "title": "Registrarse",

@@ -42,7 +42,8 @@
     "loginSuccess": "登录成功",
     "registerSuccess": "注册成功",
     "loginError": "电子邮件或密码不正确",
-    "registerError": "注册失败"
+    "registerError": "注册失败",
+    "or": "或"
   },
   "register": {
     "title": "注册",

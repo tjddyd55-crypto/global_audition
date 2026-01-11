@@ -42,7 +42,8 @@
     "loginSuccess": "ログイン成功",
     "registerSuccess": "登録成功",
     "loginError": "メールアドレスまたはパスワードが正しくありません",
-    "registerError": "登録に失敗しました"
+    "registerError": "登録に失敗しました",
+    "or": "または"
   },
   "register": {
     "title": "登録",

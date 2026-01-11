@@ -42,7 +42,8 @@
     "loginSuccess": "Anmeldung erfolgreich",
     "registerSuccess": "Registrierung erfolgreich",
     "loginError": "E-Mail oder Passwort falsch",
-    "registerError": "Registrierung fehlgeschlagen"
+    "registerError": "Registrierung fehlgeschlagen",
+    "or": "oder"
   },
   "register": {
     "title": "Registrieren",

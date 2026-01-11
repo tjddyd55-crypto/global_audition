@@ -42,7 +42,8 @@
     "loginSuccess": "Login successful",
     "registerSuccess": "Registration successful",
     "loginError": "Invalid email or password",
-    "registerError": "Registration failed"
+    "registerError": "Registration failed",
+    "or": "or"
   },
   "register": {
     "title": "Register",

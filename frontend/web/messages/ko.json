@@ -42,7 +42,8 @@
     "loginSuccess": "로그인 성공",
     "registerSuccess": "회원가입 성공",
     "loginError": "이메일 또는 비밀번호가 올바르지 않습니다",
-    "registerError": "회원가입에 실패했습니다"
+    "registerError": "회원가입에 실패했습니다",
+    "or": "또는"
   },
   "register": {
     "title": "회원가입",
