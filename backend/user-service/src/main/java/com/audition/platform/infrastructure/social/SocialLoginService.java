@@ -4,10 +4,12 @@ import com.audition.platform.domain.entity.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
 
@@ -16,7 +18,7 @@ import java.util.Map;
 @Slf4j
 public class SocialLoginService {
 
-    private final WebClient.Builder webClientBuilder;
+    private final RestTemplate restTemplate;
 
     @Value("${social.google.client-id:}")
     private String googleClientId;
@@ -35,13 +37,18 @@ public class SocialLoginService {
      */
     public SocialUserInfo getGoogleUserInfo(String accessToken) {
         try {
-            WebClient webClient = webClientBuilder.build();
-            Map<String, Object> userInfo = webClient.get()
-                    .uri("https://www.googleapis.com/oauth2/v2/userinfo")
-                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
-                    .retrieve()
-                    .bodyToMono(Map.class)
-                    .block();
+            HttpHeaders headers = new HttpHeaders();
+            headers.set(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+            
+            ResponseEntity<Map> response = restTemplate.exchange(
+                    "https://www.googleapis.com/oauth2/v2/userinfo",
+                    HttpMethod.GET,
+                    entity,
+                    Map.class
+            );
+
+            Map<String, Object> userInfo = response.getBody();
 
             if (userInfo == null) {
                 throw new RuntimeException("Google 사용자 정보를 가져올 수 없습니다");
@@ -65,13 +72,18 @@ public class SocialLoginService {
      */
     public SocialUserInfo getKakaoUserInfo(String accessToken) {
         try {
-            WebClient webClient = webClientBuilder.build();
-            Map<String, Object> userInfo = webClient.get()
-                    .uri("https://kapi.kakao.com/v2/user/me")
-                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
-                    .retrieve()
-                    .bodyToMono(Map.class)
-                    .block();
+            HttpHeaders headers = new HttpHeaders();
+            headers.set(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+            
+            ResponseEntity<Map> response = restTemplate.exchange(
+                    "https://kapi.kakao.com/v2/user/me",
+                    HttpMethod.GET,
+                    entity,
+                    Map.class
+            );
+
+            Map<String, Object> userInfo = response.getBody();
 
             if (userInfo == null) {
                 throw new RuntimeException("Kakao 사용자 정보를 가져올 수 없습니다");
@@ -98,19 +110,24 @@ public class SocialLoginService {
      */
     public SocialUserInfo getNaverUserInfo(String accessToken) {
         try {
-            WebClient webClient = webClientBuilder.build();
-            Map<String, Object> response = webClient.get()
-                    .uri("https://openapi.naver.com/v1/nid/me")
-                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
-                    .retrieve()
-                    .bodyToMono(Map.class)
-                    .block();
+            HttpHeaders headers = new HttpHeaders();
+            headers.set(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+            
+            ResponseEntity<Map> response = restTemplate.exchange(
+                    "https://openapi.naver.com/v1/nid/me",
+                    HttpMethod.GET,
+                    entity,
+                    Map.class
+            );
 
-            if (response == null) {
+            Map<String, Object> responseBody = response.getBody();
+
+            if (responseBody == null) {
                 throw new RuntimeException("Naver 사용자 정보를 가져올 수 없습니다");
             }
 
-            Map<String, Object> userInfo = (Map<String, Object>) response.get("response");
+            Map<String, Object> userInfo = (Map<String, Object>) responseBody.get("response");
 
             return SocialUserInfo.builder()
                     .providerId((String) userInfo.get("id"))
@@ -130,18 +147,16 @@ public class SocialLoginService {
      */
     public SocialUserInfo getFacebookUserInfo(String accessToken) {
         try {
-            WebClient webClient = webClientBuilder.build();
-            Map<String, Object> userInfo = webClient.get()
-                    .uri(uriBuilder -> uriBuilder
-                            .scheme("https")
-                            .host("graph.facebook.com")
-                            .path("/v18.0/me")
-                            .queryParam("fields", "id,name,email,picture")
-                            .queryParam("access_token", accessToken)
-                            .build())
-                    .retrieve()
-                    .bodyToMono(Map.class)
-                    .block();
+            String url = "https://graph.facebook.com/v18.0/me?fields=id,name,email,picture&access_token=" + accessToken;
+            
+            ResponseEntity<Map> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    null,
+                    Map.class
+            );
+
+            Map<String, Object> userInfo = response.getBody();
 
             if (userInfo == null) {
                 throw new RuntimeException("Facebook 사용자 정보를 가져올 수 없습니다");
