@@ -2,13 +2,15 @@ spring:
   application:
     name: user-service
   
-  # Railway 환경 변수에서 직접 사용
-  # Railway 대시보드에서 다음 변수를 설정하세요:
-  # SPRING_DATASOURCE_URL=jdbc:postgresql://postgres.railway.internal:5432/railway
-  # SPRING_DATASOURCE_USERNAME=postgres
-  # SPRING_DATASOURCE_PASSWORD=실제비밀번호
+  # Railway PostgreSQL Public URL 사용
+  # Railway PostgreSQL 서비스 → Variables에서 DATABASE_PUBLIC_URL 복사 (JDBC 형식으로 변환 필요)
+  # 예: jdbc:postgresql://metro.proxy.rlwy.net:55360/railway
+  # Railway → user-service → Variables 설정:
+  # DATABASE_PUBLIC_URL = jdbc:postgresql://metro.proxy.rlwy.net:55360/railway
+  # SPRING_DATASOURCE_USERNAME = postgres
+  # SPRING_DATASOURCE_PASSWORD = 실제비밀번호
   datasource:
-    url: ${SPRING_DATASOURCE_URL}
+    url: ${DATABASE_PUBLIC_URL}
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: org.postgresql.Driver
