@@ -2,26 +2,38 @@ spring:
   application:
     name: audition-service
   
-  # Railway 환경 변수에서 직접 사용
-  # Railway 대시보드에서 다음 변수를 설정하세요:
-  # SPRING_DATASOURCE_URL=jdbc:postgresql://postgres.railway.internal:5432/railway
-  # SPRING_DATASOURCE_USERNAME=postgres
-  # SPRING_DATASOURCE_PASSWORD=실제비밀번호
+  # Railway PostgreSQL Public URL 사용
+  # Railway PostgreSQL 서비스 → Variables에서 DATABASE_PUBLIC_URL 복사
+  # URL에 username/password가 포함된 경우: 그대로 사용 가능
+  # URL만 사용하려면: jdbc:postgresql://metro.proxy.rlwy.net:55360/railway
+  # Railway → audition-service → Variables 설정 (두 가지 방법 중 선택):
+  # 방법 1: URL에 인증 정보 포함 → username/password 설정 불필요
+  #   DATABASE_PUBLIC_URL = jdbc:postgresql://postgres:비밀번호@metro.proxy.rlwy.net:55360/railway
+  # 방법 2: URL과 인증 정보 분리 (권장)
+  #   DATABASE_PUBLIC_URL = jdbc:postgresql://metro.proxy.rlwy.net:55360/railway
+  #   SPRING_DATASOURCE_USERNAME = postgres
+  #   SPRING_DATASOURCE_PASSWORD = 실제비밀번호
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/audition_db}
-    username: ${SPRING_DATASOURCE_USERNAME:postgres}
-    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    url: ${DATABASE_PUBLIC_URL}
+    username: ${SPRING_DATASOURCE_USERNAME:}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
     driver-class-name: org.postgresql.Driver
   
   jpa:
     hibernate:
       ddl-auto: validate
+    open-in-view: false
     show-sql: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: false
         use_sql_comments: false
+  
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
   
   data:
     redis:
@@ -47,9 +59,11 @@ management:
     web:
       exposure:
         include: health,info,metrics
+      base-path: /actuator  # 명시적으로 base-path 설정
   endpoint:
     health:
       show-details: always
+      enabled: true
       probes:
         enabled: true
   health:
