@@ -7,9 +7,10 @@ spring:
   cloud:
     gateway:
       httpclient:
-        connect-timeout: 10000  # 10珥??곌껐 ??꾩븘??        response-timeout: 30s   # 30珥??묐떟 ??꾩븘??      routes:
+        connect-timeout: 10000
+        response-timeout: 30s
+      routes:
         # User Service
-        # Railway ?섍꼍 蹂?섏뿉???ㅼ젙: USER_SERVICE_URL=https://user-service-production-7ba1.up.railway.app
         - id: user-service
           uri: http://user-service:${USER_SERVICE_PORT}
           predicates:
@@ -21,7 +22,6 @@ spring:
             response-timeout: 30000
         
         # Audition Service
-        # Railway ?섍꼍 蹂?섏뿉???ㅼ젙: AUDITION_SERVICE_URL=https://audition-service-production.up.railway.app
         - id: audition-service
           uri: http://audition-service:${AUDITION_SERVICE_PORT}
           predicates:
@@ -32,30 +32,32 @@ spring:
             - StripPrefix=0
         
         # Media Service
-        # Railway ?섍꼍 蹂?섏뿉???ㅼ젙: MEDIA_SERVICE_URL=https://media-service-production-dff0.up.railway.app
         - id: media-service
           uri: http://media-service:${MEDIA_SERVICE_PORT}
           predicates:
             - Path=/api/v1/videos/**
           filters:
             - StripPrefix=0
-      
-      # CORS ?ㅼ젙? CorsConfig.java?먯꽌 泥섎━ (globalcors ?ㅼ젙 ?쒓굅 - allowCredentials? allowedOrigins "*" 異⑸룎 ?닿껐)
 
 management:
   endpoints:
     web:
       exposure:
-        include: "*"  # 紐⑤뱺 ?붾뱶?ъ씤???몄텧 (gateway routes ?ы븿)
+        include: "*"
       base-path: /actuator
   endpoint:
     health:
       show-details: always
       enabled: true
     gateway:
-      enabled: true  # Gateway Actuator ?붾뱶?ъ씤???쒖꽦??
+      enabled: true
+
 logging:
   level:
     root: INFO
     com.audition.platform: INFO
-    org.springframework.cloud.gateway: DEBUG  # Gateway ?쇱슦???붾쾭源?    org.springframework.web.reactive: DEBUG   # WebFlux ?먮윭 ?붾쾭源?    reactor.netty.http.client: DEBUG          # Netty HTTP ?대씪?댁뼵???붾쾭源?    io.netty: DEBUG                           # Netty ?곸꽭 ?붾쾭源?    org.springframework.http.server.reactive: DEBUG  # Reactive HTTP ?쒕쾭 ?붾쾭源
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+    reactor.netty.http.client: DEBUG
+    io.netty: DEBUG
+    org.springframework.http.server.reactive: DEBUG
