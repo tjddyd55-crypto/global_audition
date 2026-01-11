@@ -6,6 +6,7 @@
 
 /* Flexbox */
 .flex { display: flex; }
+.flex-col { flex-direction: column; }
 .inline-flex { display: inline-flex; }
 .hidden { display: none; }
 .block { display: block; }
