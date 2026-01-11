@@ -125,3 +125,27 @@ img {
   height: auto;
   display: block;
 }
+
+/* 버튼 기본 스타일 */
+button {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Input 기본 스타일 */
+input {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}

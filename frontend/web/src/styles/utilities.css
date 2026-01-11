@@ -173,39 +173,6 @@
 .border-green-200 { border-color: var(--color-green-200); }
 .border-yellow-200 { border-color: var(--color-yellow-200); }
 
-/* Input field styling */
-input[type="email"],
-input[type="password"],
-input[type="text"],
-input[type="number"],
-textarea {
-  width: 100%;
-  padding: var(--spacing-2) var(--spacing-4);
-  border: var(--border-width) solid var(--color-gray-300);
-  border-radius: var(--border-radius-lg);
-  font-size: var(--font-size-base);
-  color: var(--color-gray-900);
-  background-color: var(--color-white);
-  font-family: inherit;
-}
-
-input[type="email"]:focus,
-input[type="password"]:focus,
-input[type="text"]:focus,
-input[type="number"]:focus,
-textarea:focus {
-  outline: none;
-  border-color: var(--color-primary-600);
-  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
-}
-
-input[type="email"]::placeholder,
-input[type="password"]::placeholder,
-input[type="text"]::placeholder,
-input[type="number"]::placeholder,
-textarea::placeholder {
-  color: var(--color-gray-400);
-}
 
 .rounded { border-radius: var(--border-radius); }
 .rounded-sm { border-radius: var(--border-radius-sm); }
