@@ -3,16 +3,20 @@ spring:
     name: user-service
   
   # Railway PostgreSQL Public URL 사용
-  # Railway PostgreSQL 서비스 → Variables에서 DATABASE_PUBLIC_URL 복사 (JDBC 형식으로 변환 필요)
-  # 예: jdbc:postgresql://metro.proxy.rlwy.net:55360/railway
-  # Railway → user-service → Variables 설정:
-  # DATABASE_PUBLIC_URL = jdbc:postgresql://metro.proxy.rlwy.net:55360/railway
-  # SPRING_DATASOURCE_USERNAME = postgres
-  # SPRING_DATASOURCE_PASSWORD = 실제비밀번호
+  # Railway PostgreSQL 서비스 → Variables에서 DATABASE_PUBLIC_URL 복사
+  # URL에 username/password가 포함된 경우: 그대로 사용 가능
+  # URL만 사용하려면: jdbc:postgresql://metro.proxy.rlwy.net:55360/railway
+  # Railway → user-service → Variables 설정 (두 가지 방법 중 선택):
+  # 방법 1: URL에 인증 정보 포함 → username/password 설정 불필요
+  #   DATABASE_PUBLIC_URL = jdbc:postgresql://postgres:비밀번호@metro.proxy.rlwy.net:55360/railway
+  # 방법 2: URL과 인증 정보 분리 (권장)
+  #   DATABASE_PUBLIC_URL = jdbc:postgresql://metro.proxy.rlwy.net:55360/railway
+  #   SPRING_DATASOURCE_USERNAME = postgres
+  #   SPRING_DATASOURCE_PASSWORD = 실제비밀번호
   datasource:
     url: ${DATABASE_PUBLIC_URL}
-    username: ${SPRING_DATASOURCE_USERNAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
+    username: ${SPRING_DATASOURCE_USERNAME:}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
     driver-class-name: org.postgresql.Driver
   
   jpa:
