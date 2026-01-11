@@ -35,6 +35,7 @@ spring:
       max-request-size: 2048MB
 
 server:
+  address: 0.0.0.0
   port: ${PORT:8081}
 
 jwt:
@@ -49,6 +50,8 @@ management:
   endpoint:
     health:
       show-details: always
+      probes:
+        enabled: true
   health:
     redis:
       enabled: false  # Redis Health Indicator 비활성화 (Redis가 없어도 Health Check 통과)
