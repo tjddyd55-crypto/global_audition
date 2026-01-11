@@ -78,8 +78,22 @@ export default function LoginPage() {
       }
     } catch (err: any) {
       console.error('로그인 오류:', err)
-      const errorMessage = err.response?.data?.message || err.message || t('loginError')
-      setError(errorMessage)
+      
+      // 네트워크 에러 또는 타임아웃 에러 처리
+      if (!err.response) {
+        if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+          setError('서버 응답 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.')
+        } else if (err.code === 'ERR_NETWORK' || err.message?.includes('Network Error')) {
+          setError('네트워크 연결에 실패했습니다. 인터넷 연결을 확인해주세요.')
+        } else {
+          setError('서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.')
+        }
+      } else {
+        // 서버 응답이 있는 경우
+        const errorMessage = err.response?.data?.message || err.message || t('loginError')
+        setError(errorMessage)
+      }
+      
       setIsLoading(false)
     }
   }

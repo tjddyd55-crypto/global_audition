@@ -51,6 +51,11 @@
 .mt-1 { margin-top: var(--spacing-1); }
 .mt-2 { margin-top: var(--spacing-2); }
 .mt-4 { margin-top: var(--spacing-4); }
+.mt-6 { margin-top: var(--spacing-6); }
+.mt-8 { margin-top: var(--spacing-8); }
+.mt-1 { margin-top: var(--spacing-1); }
+.mt-2 { margin-top: var(--spacing-2); }
+.mt-4 { margin-top: var(--spacing-4); }
 .mt-8 { margin-top: var(--spacing-8); }
 .ml-auto { margin-left: auto; }
 .ml-4 { margin-left: var(--spacing-4); }
@@ -87,18 +92,22 @@
 .z-20 { z-index: 20; }
 .z-50 { z-index: 50; }
 
-/* Typography */
+/* Typography - Font Sizes */
 .text-xs { font-size: var(--font-size-xs); }
 .text-sm { font-size: var(--font-size-sm); }
+.text-base { font-size: var(--font-size-base); }
 .text-lg { font-size: var(--font-size-lg); }
 .text-xl { font-size: var(--font-size-xl); }
 .text-2xl { font-size: var(--font-size-2xl); }
 .text-3xl { font-size: var(--font-size-3xl); }
 
+/* Typography - Font Weights */
+.font-normal { font-weight: var(--font-weight-normal); }
 .font-medium { font-weight: var(--font-weight-medium); }
 .font-semibold { font-weight: var(--font-weight-semibold); }
 .font-bold { font-weight: var(--font-weight-bold); }
 
+/* Text Alignment */
 .text-center { text-align: center; }
 .text-left { text-align: left; }
 .text-right { text-align: right; }
@@ -167,7 +176,9 @@
 .border-yellow-200 { border-color: var(--color-yellow-200); }
 
 .rounded { border-radius: var(--border-radius); }
+.rounded-sm { border-radius: var(--border-radius-sm); }
 .rounded-lg { border-radius: var(--border-radius-lg); }
+.rounded-xl { border-radius: 0.75rem; }
 .rounded-full { border-radius: var(--border-radius-full); }
 .overflow-hidden { overflow: hidden; }
 
