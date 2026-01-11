@@ -39,40 +39,63 @@ export interface LoginRequest {
 }
 
 export interface AuthResponse {
-  token: string
+  token?: string // 기존 필드 (호환성 유지)
+  accessToken?: string // 새로운 필드
+  refreshToken?: string
+  role?: 'APPLICANT' | 'BUSINESS' | 'AGENCY' | 'USER' // role 필드
+  userType?: 'APPLICANT' | 'BUSINESS' // 기존 필드 (호환성 유지)
   userId: number
   email: string
   name: string
-  userType: 'APPLICANT' | 'BUSINESS'
   profileImageUrl?: string
 }
 
 export const authApi = {
   register: async (data: RegisterRequest): Promise<AuthResponse> => {
     const { data: response } = await apiClient.post('/auth/register', data)
-    if (typeof window !== 'undefined' && response.token) {
-      localStorage.setItem('auth_token', response.token)
+    
+    // 응답 구조 확인 (accessToken 또는 token 필드 지원)
+    const token = response.accessToken || response.token
+    
+    if (typeof window !== 'undefined' && token) {
+      localStorage.setItem('accessToken', token)
+      localStorage.setItem('auth_token', token) // 기존 호환성 유지
+      // 커스텀 이벤트 발생하여 Header에 알림
+      window.dispatchEvent(new Event('auth-change'))
     }
     return response
   },
 
   login: async (data: LoginRequest): Promise<AuthResponse> => {
     const { data: response } = await apiClient.post('/auth/login', data)
-    if (typeof window !== 'undefined' && response.token) {
-      localStorage.setItem('auth_token', response.token)
+    
+    // 응답 구조 확인 (accessToken 또는 token 필드 지원)
+    const token = response.accessToken || response.token
+    
+    if (typeof window !== 'undefined' && token) {
+      localStorage.setItem('accessToken', token)
+      localStorage.setItem('auth_token', token) // 기존 호환성 유지
+      
+      // 커스텀 이벤트 발생하여 Header에 알림
+      window.dispatchEvent(new Event('auth-change'))
     }
+    
     return response
   },
 
   logout: () => {
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('auth_token')
+      localStorage.removeItem('accessToken')
+      localStorage.removeItem('auth_token') // 기존 호환성 유지
+      // 커스텀 이벤트 발생하여 Header에 알림
+      window.dispatchEvent(new Event('auth-change'))
     }
   },
 
   getToken: (): string | null => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('auth_token')
+      // accessToken 우선 확인, 없으면 auth_token 확인 (기존 호환성 유지)
+      return localStorage.getItem('accessToken') || localStorage.getItem('auth_token')
     }
     return null
   },
@@ -83,9 +106,30 @@ export const authApi = {
       accessToken,
       userType: userType || 'APPLICANT',
     })
-    if (typeof window !== 'undefined' && data.token) {
-      localStorage.setItem('auth_token', data.token)
+    
+    // 응답 구조 확인 (accessToken 또는 token 필드 지원)
+    const token = data.accessToken || data.token
+    
+    if (typeof window !== 'undefined' && token) {
+      localStorage.setItem('accessToken', token)
+      localStorage.setItem('auth_token', token) // 기존 호환성 유지
+      // 커스텀 이벤트 발생하여 Header에 알림
+      window.dispatchEvent(new Event('auth-change'))
     }
     return data
+  },
+
+  findUserId: async (data: { name: string; email: string }): Promise<{ maskedEmail: string }> => {
+    const { data: response } = await apiClient.post('/auth/find-user-id', data)
+    return response
+  },
+
+  forgotPassword: async (data: { email: string }): Promise<{ resetToken?: string; message: string }> => {
+    const { data: response } = await apiClient.post('/auth/forgot-password', data)
+    return response
+  },
+
+  resetPassword: async (data: { resetToken: string; newPassword: string; confirmPassword: string }): Promise<void> => {
+    await apiClient.post('/auth/reset-password', data)
   },
 }
