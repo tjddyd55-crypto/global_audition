@@ -21,13 +21,27 @@ spring:
             connect-timeout: 10000
             response-timeout: 30000
         
-        # Audition Service
-        - id: audition-service
+        # Audition Service - Auditions
+        - id: audition-service-auditions
           uri: http://audition-service:${AUDITION_SERVICE_PORT:8080}
           predicates:
-            - Path=/api/v1/auditions/**
-            - Path=/api/v1/applications/**
-            - Path=/api/v1/offers/**
+            - Path=/api/v1/auditions,/api/v1/auditions/**
+          filters:
+            - StripPrefix=0
+        
+        # Audition Service - Applications
+        - id: audition-service-applications
+          uri: http://audition-service:${AUDITION_SERVICE_PORT:8080}
+          predicates:
+            - Path=/api/v1/applications,/api/v1/applications/**
+          filters:
+            - StripPrefix=0
+        
+        # Audition Service - Offers
+        - id: audition-service-offers
+          uri: http://audition-service:${AUDITION_SERVICE_PORT:8080}
+          predicates:
+            - Path=/api/v1/offers,/api/v1/offers/**
           filters:
             - StripPrefix=0
         

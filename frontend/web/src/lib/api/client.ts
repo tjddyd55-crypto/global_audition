@@ -15,7 +15,7 @@ const getApiBaseUrl = (): string => {
   
   // 기본값: Gateway URL (프로덕션)
   const defaultUrl = 'https://gateway-production-72d6.up.railway.app'
-  if (process.env.NODE_ENV === 'development') {
+  if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
     console.error('[API Client] ❌ NEXT_PUBLIC_API_URL 환경 변수가 설정되지 않았습니다!')
     console.warn('[API Client] ⚠️ 기본값 사용:', defaultUrl)
   }
@@ -81,28 +81,28 @@ apiClient.interceptors.response.use(
     const path = error.config?.url || ''
     const fullUrl = `${baseUrl}${path}`
     
-    console.error('[API Client] ❌ Request Error:', {
-      fullUrl,
-      method: error.config?.method?.toUpperCase() || 'UNKNOWN',
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      data: error.response?.data,
-      message: error.message,
-      code: error.code,
-    })
-    
-    // 네트워크 에러 (서버에 도달하지 못함)
-    if (!error.response) {
-      console.error('[API Client] 🚨 Network Error - 요청이 서버에 도달하지 못했습니다!')
-      console.error('[API Client] Details:', {
-        url: fullUrl,
+    // 프로덕션에서는 에러 로그 최소화, 개발 환경에서만 상세 로그
+    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+      console.error('[API Client] ❌ Request Error:', {
+        fullUrl,
+        method: error.config?.method?.toUpperCase() || 'UNKNOWN',
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
         message: error.message,
         code: error.code,
-        baseURL: error.config?.baseURL || 'undefined',
       })
       
-      // baseURL이 없거나 잘못된 경우 (개발 환경에서만 상세 로그)
-      if (process.env.NODE_ENV === 'development') {
+      // 네트워크 에러 (서버에 도달하지 못함)
+      if (!error.response) {
+        console.error('[API Client] 🚨 Network Error - 요청이 서버에 도달하지 못했습니다!')
+        console.error('[API Client] Details:', {
+          url: fullUrl,
+          message: error.message,
+          code: error.code,
+          baseURL: error.config?.baseURL || 'undefined',
+        })
+        
         if (!error.config?.baseURL || error.config.baseURL.includes('undefined')) {
           console.error('[API Client] 🔴 Critical: baseURL이 설정되지 않았습니다!')
           console.error('[API Client] NEXT_PUBLIC_API_URL 환경 변수를 확인하세요.')

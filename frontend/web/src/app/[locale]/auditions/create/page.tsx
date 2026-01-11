@@ -302,6 +302,11 @@ export default function CreateAuditionPage() {
               {errors.bannerUrl && (
                 <p className="text-red-500 text-sm mt-1">{errors.bannerUrl.message}</p>
               )}
+              <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded text-xs text-blue-800">
+                <p className="font-semibold mb-1">📸 이미지 크기 안내</p>
+                <p>권장: 1920 x 1080px (16:9 비율)</p>
+                <p>최대: 10MB, 형식: JPG, PNG, WEBP</p>
+              </div>
             </div>
 
             <div>
@@ -316,6 +321,11 @@ export default function CreateAuditionPage() {
                 <p className="text-red-500 text-sm mt-1">{errors.posterUrl.message}</p>
               )}
               <p className="text-xs text-gray-500 mt-1">포스터가 없으면 배너 이미지가 사용됩니다</p>
+              <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded text-xs text-blue-800">
+                <p className="font-semibold mb-1">📸 이미지 크기 안내</p>
+                <p>권장: 1920 x 1080px (16:9 비율)</p>
+                <p>최대: 10MB, 형식: JPG, PNG, WEBP</p>
+              </div>
             </div>
           </div>
 
