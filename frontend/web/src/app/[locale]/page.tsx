@@ -16,7 +16,7 @@ export default async function HomePage({
   const tCommon = await getTranslations('common')
 
   return (
-    <main className="min-h-screen">
+    <>
       {/* 히어로 섹션 */}
       <section className="relative bg-gradient-to-br from-blue-50 via-white to-purple-50 py-20 md:py-32">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -123,6 +123,6 @@ export default async function HomePage({
           </Link>
         </div>
       </section>
-    </main>
+    </>
   )
 }
