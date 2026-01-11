@@ -46,8 +46,8 @@ management:
 
 logging:
   level:
-    root: ${LOGGING_LEVEL_ROOT:DEBUG}
-    com.audition.platform: ${LOGGING_LEVEL_COM_AUDITION_PLATFORM:DEBUG}
-    org.springframework.web: ${LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB:DEBUG}
-    org.hibernate.SQL: ${LOGGING_LEVEL_ORG_HIBERNATE_SQL:DEBUG}
-    org.hibernate.type.descriptor.sql.BasicBinder: ${LOGGING_LEVEL_HIBERNATE_BINDER:TRACE}
+    root: INFO
+    com.audition.platform: INFO
+    org.springframework.web: INFO
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: OFF
