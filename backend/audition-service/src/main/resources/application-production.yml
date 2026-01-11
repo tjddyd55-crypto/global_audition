@@ -59,4 +59,6 @@ management:
 logging:
   level:
     root: INFO
-    com.audition.platform: INFO
+    org.springframework: INFO
+    org.hibernate: WARN
+    com.zaxxer.hikari: WARN
