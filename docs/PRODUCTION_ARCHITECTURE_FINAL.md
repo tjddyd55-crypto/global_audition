@@ -1,7 +1,10 @@
 # 프로덕션 아키텍처 (최종)
 
 ## 서버 구성 (SSOT)
-- **api-backend**: gateway + user + audition 통합 배포
+- **api-backend** (Railway 서비스 이름): gateway + user + audition 통합 배포
+  - Root Directory: `backend` (또는 repo-root)
+  - 엔트리 포인트: `gateway` (backend/services/gateway)
+  - ❗ 실제 폴더명 `api-backend`는 존재하지 않음
 - **media-service**: 독립 서비스
 - **postgres-main**: 통합 데이터베이스
 
@@ -52,12 +55,19 @@
 
 ## 배포 구조
 
-### api-backend
+### api-backend (Railway 서비스 이름)
 ```
-gateway (포트: ${PORT})
-  ├── User Service (논리적 모듈)
-  └── Audition Service (논리적 모듈)
+backend/ (Root Directory)
+  └── services/
+      ├── gateway/ (엔트리 포인트, 포트: ${PORT})
+      ├── user-service/ (논리적 모듈)
+      └── audition-service/ (논리적 모듈)
 ```
+
+**중요**: 
+- ❗ `api-backend` 폴더는 존재하지 않음 (Railway 서비스 이름일 뿐)
+- ✅ Root Directory는 `backend`
+- ✅ gateway가 엔트리 포인트
 
 ### media-service
 ```

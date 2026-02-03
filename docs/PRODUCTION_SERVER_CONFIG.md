@@ -1,13 +1,16 @@
 # 프로덕션 서버 설정 (SSOT)
 
 ## 서버 구성
-- **api-backend**: gateway + user + audition 통합 배포
+- **api-backend** (Railway 서비스 이름): gateway + user + audition 통합 배포
+  - Root Directory: `backend` (또는 repo-root)
+  - 엔트리 포인트: `gateway` (backend/services/gateway)
+  - ❗ 실제 폴더명 `api-backend`는 존재하지 않음
 - **media-service**: 독립 서비스
 - **postgres-main**: 통합 데이터베이스
 
 ## 환경 변수 설정
 
-### api-backend (통합 서버)
+### api-backend (Railway 서비스 이름, Root Directory: backend)
 ```yaml
 # 포트
 PORT: ${PORT}  # Railway/서버에서 설정
@@ -58,9 +61,10 @@ JWT_EXPIRATION: 86400000
 
 ## Gateway 라우팅 (api-backend 내부)
 
-api-backend는 gateway + user + audition이 통합되어 있으므로:
+api-backend (Railway 서비스 이름)는 gateway + user + audition이 통합되어 있으므로:
+- Gateway (backend/services/gateway)가 엔트리 포인트
 - Gateway는 외부 요청을 받아 내부 라우팅
-- User/Audition은 논리적 모듈로만 분리
+- User/Audition은 논리적 모듈로만 분리 (폴더 구조 유지)
 - 같은 애플리케이션 컨텍스트에서 실행
 
 ## DB 스키마

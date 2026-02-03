@@ -24,11 +24,14 @@
 
 ## 프로덕션 서버 구조
 
-### api-backend (통합)
+### api-backend (Railway 서비스 이름)
+- **Root Directory**: `backend` (또는 repo-root)
+- **엔트리 포인트**: `gateway` (backend/services/gateway)
 - Gateway + User Service + Audition Service 통합 배포
 - 포트: ${PORT} (Railway/서버에서 설정)
 - DB: postgres-main (통합 DB)
-- 내부 호출: localhost로 호출 (같은 서버 내부)
+- 내부 호출: 직접 서비스 주입 사용 (통합 배포 시)
+- ❗ 실제 폴더명 `api-backend`는 존재하지 않음
 
 ### media-service (독립)
 - 독립 서비스로 배포
@@ -38,14 +41,14 @@
 
 ## 환경 변수 (프로덕션)
 
-### api-backend
+### api-backend (Railway 서비스 이름, Root Directory: backend)
 ```bash
 PORT=${PORT}
 DATABASE_PUBLIC_URL=jdbc:postgresql://postgres-main:5432/railway
 SPRING_DATASOURCE_USERNAME=postgres
 SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
 JWT_SECRET=${JWT_SECRET}
-user.service.url=http://localhost:${PORT}
+# user.service.url은 직접 서비스 주입 사용으로 제거됨
 ```
 
 ### media-service
@@ -60,6 +63,7 @@ JWT_SECRET=${JWT_SECRET}  # api-backend와 동일
 ## 주의사항
 
 1. **로컬 개발**: 여전히 별도 서비스로 실행 가능 (localhost:8081, localhost:8082)
-2. **프로덕션**: api-backend로 통합 배포 시 환경 변수 설정 필요
+2. **프로덕션**: api-backend (Railway 서비스 이름)로 통합 배포, Root Directory는 `backend`, gateway가 엔트리 포인트
 3. **DB 스키마**: 통합 DB 사용 (postgres-main)
-4. **내부 호출**: api-backend 내부에서는 localhost로 호출
+4. **내부 호출**: api-backend 내부에서는 직접 서비스 주입 사용 (통합 배포 시)
+5. **폴더 구조**: ❗ `api-backend` 폴더는 존재하지 않음, 현재 구조 유지

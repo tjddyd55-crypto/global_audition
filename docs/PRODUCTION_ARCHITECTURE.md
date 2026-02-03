@@ -1,7 +1,10 @@
 # 프로덕션 서버 구조 (SSOT)
 
 ## 서버 구성
-- **api-backend**: gateway + user + audition 통합 배포
+- **api-backend** (Railway 서비스 이름): gateway + user + audition 통합 배포
+  - Root Directory: `backend` (또는 repo-root)
+  - 엔트리 포인트: `gateway` (backend/services/gateway)
+  - ❗ 실제 폴더명 `api-backend`는 존재하지 않음
 - **media-service**: 독립 서비스
 - **postgres-main**: 통합 데이터베이스
 
