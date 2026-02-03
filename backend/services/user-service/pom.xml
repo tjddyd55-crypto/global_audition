@@ -139,6 +139,10 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <!-- 모듈 간 의존성을 위해 기본 JAR 유지 -->
+                    <classifier>exec</classifier>
+                </configuration>
             </plugin>
             
             <plugin>

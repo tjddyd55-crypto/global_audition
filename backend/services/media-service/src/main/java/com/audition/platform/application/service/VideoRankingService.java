@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -41,12 +42,16 @@ public class VideoRankingService {
      */
     public Page<VideoContentDto> getPopularVideos(Pageable pageable) {
         // 조회수와 좋아요 수를 합산한 점수로 정렬
+        Pageable sortedPageable = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                Sort.by(Sort.Direction.DESC, "viewCount", "likeCount")
+        );
+
         Page<VideoContent> videos = videoContentRepository.findByStatusAndVisibility(
                 VideoContent.VideoStatus.PUBLISHED,
                 VideoContent.Visibility.PUBLIC,
-                Pageable.ofSize(pageable.getPageSize())
-                        .withPage(pageable.getPageNumber())
-                        .withSort(Sort.by(Sort.Direction.DESC, "viewCount", "likeCount"))
+                sortedPageable
         );
         
         log.debug("인기 영상 랭킹 조회: {}개", videos.getTotalElements());

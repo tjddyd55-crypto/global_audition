@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -48,11 +49,15 @@ public class RecommendationService {
         // 마감일이 임박한 오디션 우선
         
         // 단순 규칙: 지원자 수 기준 정렬
+        Pageable sortedPageable = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                Sort.by(Sort.Direction.DESC, "createdAt")
+        );
+
         Page<Audition> auditions = auditionRepository.findByStatusIn(
                 List.of(Audition.AuditionStatus.ONGOING, Audition.AuditionStatus.UNDER_SCREENING),
-                Pageable.ofSize(pageable.getPageSize())
-                        .withPage(pageable.getPageNumber())
-                        .withSort(Sort.by(Sort.Direction.DESC, "createdAt"))
+                sortedPageable
         );
         
         // 지원자 수로 재정렬 (실시간 계산)
@@ -92,19 +97,37 @@ public class RecommendationService {
     /**
      * 인기 오디션 목록 조회 (지원자 수 기준)
      */
-    public List<Audition> getPopularAuditions(int limit) {
+    public List<AuditionDto> getPopularAuditions(int limit) {
         List<Audition> auditions = auditionRepository.findByStatusIn(
                 List.of(Audition.AuditionStatus.ONGOING, Audition.AuditionStatus.UNDER_SCREENING),
                 Sort.by(Sort.Direction.DESC, "createdAt")
         );
         
-        return auditions.stream()
+        List<Audition> sortedAuditions = auditions.stream()
                 .sorted((a1, a2) -> {
                     long count1 = applicationRepository.countByAuditionId(a1.getId());
                     long count2 = applicationRepository.countByAuditionId(a2.getId());
                     return Long.compare(count2, count1);
                 })
                 .limit(limit)
+                .collect(Collectors.toList());
+
+        return sortedAuditions.stream()
+                .map(audition -> {
+                    AuditionDto dto = auditionMapper.toDto(audition);
+                    if (audition.getBusinessId() != null) {
+                        try {
+                            com.audition.platform.application.dto.UserSummaryDto userSummary =
+                                    userServiceClient.getUserSummary(audition.getBusinessId());
+                            if (userSummary != null) {
+                                dto.setBusinessName(userSummary.getBusinessName());
+                            }
+                        } catch (Exception e) {
+                            log.warn("기획사 정보 조회 실패: businessId={}", audition.getBusinessId(), e);
+                        }
+                    }
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
 }

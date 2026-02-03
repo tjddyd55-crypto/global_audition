@@ -1,8 +1,8 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { videoApi } from '@/lib/api/videos'
-import { authApi } from '@/lib/api/auth'
+import { videoApi } from '../../../lib/api/videos'
+import { authApi } from '../../../lib/api/auth'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 

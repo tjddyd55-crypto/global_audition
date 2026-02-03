@@ -1,6 +1,6 @@
 'use client'
 
-import AuditionList from '@/components/audition/AuditionList'
+import AuditionList from '../../../components/audition/AuditionList'
 
 export default function AuditionsPage() {
   return (

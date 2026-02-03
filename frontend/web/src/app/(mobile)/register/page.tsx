@@ -6,8 +6,8 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQueryClient } from '@tanstack/react-query'
 import { z } from 'zod'
-import { authApi } from '@/lib/api/auth'
-import { countries, languages, timezones } from '@/lib/utils/countries'
+import { authApi } from '../../../lib/api/auth'
+import { countries, languages, timezones } from '../../../lib/utils/countries'
 
 // 지망생 스키마
 const applicantSchema = z.object({

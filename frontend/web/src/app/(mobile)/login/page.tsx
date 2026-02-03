@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQueryClient } from '@tanstack/react-query'
 import { z } from 'zod'
-import { authApi } from '@/lib/api/auth'
+import { authApi } from '../../../lib/api/auth'
 
 const loginSchema = z.object({
   email: z.string().email('유효한 이메일을 입력해주세요'),

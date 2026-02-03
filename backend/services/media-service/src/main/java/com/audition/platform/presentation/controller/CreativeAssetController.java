@@ -3,6 +3,7 @@ package com.audition.platform.presentation.controller;
 import com.audition.platform.application.dto.CreateCreativeAssetRequest;
 import com.audition.platform.application.dto.CreativeAssetDto;
 import com.audition.platform.application.service.CreativeAssetService;
+import com.audition.platform.domain.entity.CreativeAsset;
 import com.audition.platform.infrastructure.security.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

@@ -75,4 +75,12 @@ const nextConfig = {
   },
 }
 
-module.exports = withNextIntl(nextConfig)
+const finalConfig = withNextIntl(nextConfig)
+
+// next-intl 플러그인 적용 후 env가 누락되는 경우를 방지
+finalConfig.env = {
+  ...finalConfig.env,
+  _next_intl_trailing_slash: 'never',
+}
+
+module.exports = finalConfig

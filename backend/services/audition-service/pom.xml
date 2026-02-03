@@ -99,6 +99,13 @@
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
         </dependency>
+
+        <!-- User Service (api-backend 통합 배포 시 직접 참조) -->
+        <dependency>
+            <groupId>com.audition.platform</groupId>
+            <artifactId>user-service</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         
         <!-- Test -->
         <dependency>

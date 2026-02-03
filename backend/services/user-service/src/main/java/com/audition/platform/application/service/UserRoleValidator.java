@@ -45,6 +45,13 @@ public class UserRoleValidator {
     }
 
     /**
+     * 강사/인스트럭터 권한 검증 (하위 호환)
+     */
+    public void requireInstructor(Long userId) {
+        requireTrainer(userId);
+    }
+
+    /**
      * 관리자(ADMIN) 권한 검증
      */
     public void requireAdmin(Long userId) {
@@ -62,6 +69,13 @@ public class UserRoleValidator {
         if (!isAgency && !isTrainer) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "기획사 또는 트레이너만 수행할 수 있습니다");
         }
+    }
+
+    /**
+     * 기획사 멤버 권한 검증 (하위 호환)
+     */
+    public void requireAgencyMember(Long userId) {
+        requireAgency(userId);
     }
 
     /**

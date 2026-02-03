@@ -393,7 +393,6 @@ public class ApplicationService {
 
         Application updated = applicationRepository.save(application);
         ApplicationDto dto = applicationMapper.toDto(updated);
-        Audition audition = updated.getAudition();
         return enrichApplicationDto(dto, updated, audition);
     }
 
@@ -437,7 +436,6 @@ public class ApplicationService {
 
         Application updated = applicationRepository.save(application);
         ApplicationDto dto = applicationMapper.toDto(updated);
-        Audition audition = updated.getAudition();
         return enrichApplicationDto(dto, updated, audition);
     }
 
@@ -475,8 +473,8 @@ public class ApplicationService {
 
         return applications.map(app -> {
             ApplicationDto dto = applicationMapper.toDto(app);
-            Audition audition = app.getAudition();
-            return enrichApplicationDto(dto, app, audition);
+            Audition appAudition = app.getAudition();
+            return enrichApplicationDto(dto, app, appAudition);
         });
     }
 

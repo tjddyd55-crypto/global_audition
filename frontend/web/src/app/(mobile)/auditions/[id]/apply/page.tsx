@@ -2,9 +2,9 @@
 
 import { useParams, useRouter } from 'next/navigation'
 import { useState } from 'react'
-import ApplicationForm from '@/components/application/ApplicationForm'
+import ApplicationForm from '../../../../../components/application/ApplicationForm'
 import { useQuery } from '@tanstack/react-query'
-import { auditionApi } from '@/lib/api/auditions'
+import { auditionApi } from '../../../../../lib/api/auditions'
 
 export default function ApplyPage() {
   const params = useParams()

@@ -1,7 +1,7 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { auditionApi } from '@/lib/api/auditions'
+import { auditionApi } from '../../../../lib/api/auditions'
 import { useParams, useRouter } from 'next/navigation'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
