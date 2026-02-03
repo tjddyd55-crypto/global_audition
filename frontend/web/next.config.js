@@ -30,19 +30,23 @@ const nextConfig = {
       : false,
   },
   
-  // 개발 모드 최적화
-  ...(process.env.NODE_ENV === 'development' && {
-    webpack: (config, { dev, isServer }) => {
-      if (dev && !isServer) {
-        // 개발 모드에서 빠른 리프레시 최적화
-        config.watchOptions = {
-          poll: 1000,
-          aggregateTimeout: 300,
-        }
+  // Webpack alias 설정 (Railway 빌드 환경 호환)
+  webpack: (config, { dev, isServer }) => {
+    // alias 설정 추가 (Railway 빌드 환경에서도 작동하도록)
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': require('path').resolve(__dirname, './src'),
+    }
+    
+    if (dev && !isServer) {
+      // 개발 모드에서 빠른 리프레시 최적화
+      config.watchOptions = {
+        poll: 1000,
+        aggregateTimeout: 300,
       }
-      return config
-    },
-  }),
+    }
+    return config
+  },
   
   images: {
     domains: ['localhost'],

@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import AuditionCard from '../audition/AuditionCard'
-import { AuditionCategory, AuditionStatus } from '@/types'
+import { AuditionCategory, AuditionStatus } from '../../../types'
 
 const mockAudition = {
   id: 1,
