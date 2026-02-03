@@ -1,0 +1,55 @@
+server:
+  port: ${PORT:8080}
+
+spring:
+  application:
+    name: gateway
+  cloud:
+    gateway:
+      httpclient:
+        connect-timeout: 10000
+        response-timeout: 30s
+      routes:
+        # 서버 기준선(SSOT): api-backend는 gateway + user-domain + audition-domain이 하나의 배포 단위
+        # localhost/포트 기반 통신 금지
+        # api-backend 내부는 직접 컨트롤러로 처리 (Gateway 라우팅 불필요)
+        # media-service와의 통신만 도메인 기반 HTTP 호출
+        
+        # User Domain 경로 (api-backend 내부, 직접 컨트롤러 처리)
+        # Gateway는 외부 요청만 라우팅하므로 내부 경로는 라우팅 제거
+        # 통합 배포 시 같은 애플리케이션 컨텍스트에서 직접 처리
+        
+        # Audition Domain 경로 (api-backend 내부, 직접 컨트롤러 처리)
+        # Gateway는 외부 요청만 라우팅하므로 내부 경로는 라우팅 제거
+        # 통합 배포 시 같은 애플리케이션 컨텍스트에서 직접 처리
+        
+        # Media Service (독립 서비스, 도메인 기반 통신)
+        - id: media-service
+          uri: http://media-service:${MEDIA_SERVICE_PORT:8083}
+          predicates:
+            - Path=/api/v1/videos/**
+          filters:
+            - StripPrefix=0
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+      enabled: true
+    gateway:
+      enabled: true
+
+logging:
+  level:
+    root: INFO
+    com.audition.platform: INFO
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+    reactor.netty.http.client: DEBUG
+    io.netty: DEBUG
+    org.springframework.http.server.reactive: DEBUG

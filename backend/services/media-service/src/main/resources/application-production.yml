@@ -1,0 +1,39 @@
+spring:
+  application:
+    name: media-service
+  
+  # 프로덕션: postgres-main (통합 DB)
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres-main:5432/railway}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+server:
+  port: ${PORT:8083}
+
+jwt:
+  secret: ${JWT_SECRET:your-secret-key-should-be-at-least-256-bits-long-for-hs256-algorithm-change-in-production}
+  expiration: ${JWT_EXPIRATION:86400000}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    root: INFO
+    com.audition.platform: INFO

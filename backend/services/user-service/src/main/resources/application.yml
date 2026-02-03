@@ -1,0 +1,46 @@
+spring:
+  application:
+    name: user-service
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5432/audition_db
+    username: audition_user
+    password: audition_pass
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
+server:
+  port: 8082
+
+jwt:
+  secret: your-secret-key-should-be-at-least-256-bits-long-for-hs256-algorithm-change-in-production
+  expiration: 86400000
+
+# Email Configuration
+spring:
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+    from: ${MAIL_FROM:no-reply@audition-platform.com}
+
+# Application Configuration
+app:
+  frontend:
+    url: ${FRONTEND_URL:http://localhost:3000}
+
+# Stripe Configuration (테스트 모드)
+stripe:
+  secret-key: ${STRIPE_SECRET_KEY:sk_test_...}
+  webhook-secret: ${STRIPE_WEBHOOK_SECRET:whsec_...}

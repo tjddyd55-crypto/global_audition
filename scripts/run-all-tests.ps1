@@ -19,7 +19,7 @@ $testResults = @{}
 # Audition Service 테스트
 Write-Host "[1/4] Testing Audition Service..." -ForegroundColor Yellow
 try {
-    Push-Location "$projectRoot\backend\audition-service"
+    Push-Location "$projectRoot\backend\services\audition-service"
     if (Test-Path "mvnw.cmd") {
         & .\mvnw.cmd test 2>&1 | Out-Null
         if ($LASTEXITCODE -eq 0) {
@@ -48,7 +48,7 @@ Write-Host ""
 # User Service 테스트
 Write-Host "[2/4] Testing User Service..." -ForegroundColor Yellow
 try {
-    Push-Location "$projectRoot\backend\user-service"
+    Push-Location "$projectRoot\backend\services\user-service"
     if (Test-Path "mvnw.cmd") {
         & .\mvnw.cmd test 2>&1 | Out-Null
         if ($LASTEXITCODE -eq 0) {
@@ -76,7 +76,7 @@ Write-Host ""
 # Media Service 테스트
 Write-Host "[3/4] Testing Media Service..." -ForegroundColor Yellow
 try {
-    Push-Location "$projectRoot\backend\media-service"
+    Push-Location "$projectRoot\backend\services\media-service"
     if (Test-Path "mvnw.cmd") {
         & .\mvnw.cmd test 2>&1 | Out-Null
         if ($LASTEXITCODE -eq 0) {

@@ -46,6 +46,6 @@ cd ../../
 docker-compose up -d
 
 # 각 서비스 실행
-cd audition-service
+cd services/audition-service
 ./mvnw spring-boot:run
 ```

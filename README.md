@@ -7,10 +7,12 @@
 ```
 audition-platform/
 ├── backend/              # 백엔드 마이크로서비스
-│   ├── audition-service/ # 오디션 관리 서비스 (포트: 8081)
-│   ├── user-service/    # 사용자 관리 서비스 (포트: 8082)
-│   ├── media-service/   # 미디어(비디오) 관리 서비스 (포트: 8083)
-│   └── gateway/         # API Gateway (포트: 8080)
+│   ├── services/
+│   │   ├── audition-service/ # 오디션 관리 서비스 (포트: 8081)
+│   │   ├── user-service/    # 사용자 관리 서비스 (포트: 8082)
+│   │   ├── media-service/   # 미디어(비디오) 관리 서비스 (포트: 8083)
+│   │   └── gateway/         # API Gateway (포트: 8080)
+│   └── libs/                # 공통 모듈(계약/런타임)
 ├── frontend/            # 프론트엔드
 │   └── web/             # Next.js 14 웹 애플리케이션
 ├── mobile/              # 모바일 앱
@@ -67,10 +69,10 @@ audition-platform/
 docker-compose up -d
 
 # 2. 데이터베이스 스키마 생성
-psql -h localhost -U audition_user -d audition_db -f backend/audition-service/src/main/resources/db/schema.sql
+psql -h localhost -U audition_user -d audition_db -f backend/services/audition-service/src/main/resources/db/schema.sql
 
 # 3. 백엔드 서비스 실행
-cd backend/audition-service
+cd backend/services/audition-service
 ./mvnw spring-boot:run
 
 # 4. 프론트엔드 실행
@@ -91,7 +93,7 @@ npm run dev
 
 ### 백엔드 테스트
 ```bash
-cd backend/audition-service
+cd backend/services/audition-service
 ./mvnw test
 ```
 

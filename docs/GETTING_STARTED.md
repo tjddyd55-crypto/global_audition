@@ -18,22 +18,22 @@
 docker-compose up -d
 
 # 데이터베이스 스키마 생성
-psql -h localhost -U audition_user -d audition_db -f backend/audition-service/src/main/resources/db/schema.sql
+psql -h localhost -U audition_user -d audition_db -f backend/services/audition-service/src/main/resources/db/schema.sql
 ```
 
 ### 2. 백엔드 서비스 실행
 
 ```bash
 # Audition Service
-cd backend/audition-service
+cd backend/services/audition-service
 ./mvnw spring-boot:run
 
 # User Service (새 터미널)
-cd backend/user-service
+cd backend/services/user-service
 ./mvnw spring-boot:run
 
 # Media Service (새 터미널)
-cd backend/media-service
+cd backend/services/media-service
 ./mvnw spring-boot:run
 ```
 

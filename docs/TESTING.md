@@ -6,15 +6,15 @@
 
 ```bash
 # Audition Service
-cd backend/audition-service
+cd backend/services/audition-service
 ./mvnw test
 
 # User Service
-cd backend/user-service
+cd backend/services/user-service
 ./mvnw test
 
 # Media Service
-cd backend/media-service
+cd backend/services/media-service
 ./mvnw test
 ```
 
@@ -23,7 +23,7 @@ cd backend/media-service
 ```bash
 # 모든 서비스 테스트
 cd backend
-./mvnw test
+mvn test
 ```
 
 ## 프론트엔드 테스트

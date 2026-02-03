@@ -62,7 +62,7 @@ RAILWAY_DATABASE_URL=postgresql://postgres:password@host:port/railway
 
 각 서비스에 `application-local.yml` 파일 생성:
 
-**backend/user-service/src/main/resources/application-local.yml:**
+**backend/services/user-service/src/main/resources/application-local.yml:**
 ```yaml
 spring:
   datasource:
@@ -89,7 +89,7 @@ logging:
     com.audition.platform: DEBUG
 ```
 
-**backend/audition-service/src/main/resources/application-local.yml:**
+**backend/services/audition-service/src/main/resources/application-local.yml:**
 ```yaml
 spring:
   datasource:
@@ -116,7 +116,7 @@ logging:
     com.audition.platform: DEBUG
 ```
 
-**backend/media-service/src/main/resources/application-local.yml:**
+**backend/services/media-service/src/main/resources/application-local.yml:**
 ```yaml
 spring:
   datasource:
@@ -139,7 +139,7 @@ logging:
     com.audition.platform: DEBUG
 ```
 
-**backend/gateway/src/main/resources/application-local.yml:**
+**backend/services/gateway/src/main/resources/application-local.yml:**
 ```yaml
 server:
   port: 8080
@@ -215,22 +215,22 @@ Get-Content .env.local | ForEach-Object {
 **방법 2: 개별 실행**
 ```powershell
 # 터미널 1: User Service
-cd backend\user-service
+cd backend\services\user-service
 $env:SPRING_PROFILES_ACTIVE="local"
 .\mvnw.cmd spring-boot:run
 
 # 터미널 2: Audition Service
-cd backend\audition-service
+cd backend\services\audition-service
 $env:SPRING_PROFILES_ACTIVE="local"
 .\mvnw.cmd spring-boot:run
 
 # 터미널 3: Media Service
-cd backend\media-service
+cd backend\services\media-service
 $env:SPRING_PROFILES_ACTIVE="local"
 .\mvnw.cmd spring-boot:run
 
 # 터미널 4: Gateway
-cd backend\gateway
+cd backend\services\gateway
 $env:SPRING_PROFILES_ACTIVE="local"
 .\mvnw.cmd spring-boot:run
 ```

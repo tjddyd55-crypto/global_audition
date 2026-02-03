@@ -36,7 +36,7 @@
 
 ### 배포 방법
 ```bash
-cd backend/gateway
+cd backend/services/gateway
 railway link  # 또는 Railway 대시보드에서 GitHub 연결
 railway up
 ```
@@ -93,7 +93,7 @@ railway up
 
 ### 배포 방법
 ```bash
-cd backend/audition-service
+cd backend/services/audition-service
 railway link
 railway up
 ```
@@ -135,7 +135,7 @@ railway up
 
 ### 배포 방법
 ```bash
-cd backend/media-service
+cd backend/services/media-service
 railway link
 railway up
 ```

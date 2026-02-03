@@ -14,19 +14,19 @@ docker-compose up -d
 또는 개별적으로:
 ```powershell
 # User Service (포트 8082)
-cd backend\user-service
+cd backend\services\user-service
 .\mvnw.cmd spring-boot:run
 
 # Audition Service (포트 8081)
-cd backend\audition-service
+cd backend\services\audition-service
 .\mvnw.cmd spring-boot:run
 
 # Media Service (포트 8083)
-cd backend\media-service
+cd backend\services\media-service
 .\mvnw.cmd spring-boot:run
 
 # API Gateway (포트 8080)
-cd backend\gateway
+cd backend\services\gateway
 .\mvnw.cmd spring-boot:run
 ```
 
@@ -51,7 +51,7 @@ npm run dev
 
 각 서비스를 개별적으로 빌드:
 ```powershell
-cd backend\user-service
+cd backend\services\user-service
 .\mvnw.cmd clean package -DskipTests
 
 cd ..\audition-service
@@ -67,10 +67,10 @@ cd ..\gateway
 ### 2. JAR 파일 실행
 ```powershell
 # 각 서비스를 별도 터미널에서 실행
-java -jar backend\user-service\target\user-service-1.0.0-SNAPSHOT.jar
-java -jar backend\audition-service\target\audition-service-1.0.0-SNAPSHOT.jar
-java -jar backend\media-service\target\media-service-1.0.0-SNAPSHOT.jar
-java -jar backend\gateway\target\gateway-1.0.0-SNAPSHOT.jar
+java -jar backend\services\user-service\target\user-service-1.0.0-SNAPSHOT.jar
+java -jar backend\services\audition-service\target\audition-service-1.0.0-SNAPSHOT.jar
+java -jar backend\services\media-service\target\media-service-1.0.0-SNAPSHOT.jar
+java -jar backend\services\gateway\target\gateway-1.0.0-SNAPSHOT.jar
 ```
 
 ## ☁️ 클라우드 배포 (임시 서버)

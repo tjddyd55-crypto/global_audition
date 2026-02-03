@@ -13,7 +13,7 @@
 1. Railway 대시보드 접속
 2. 프로젝트 선택
 3. "+ New" → "GitHub Repo" 선택 (또는 Railway CLI 사용)
-4. `backend/media-service` 디렉토리 선택
+4. `backend/services/media-service` 디렉토리 선택
 
 ### 2. 환경 변수 설정
 
@@ -46,7 +46,7 @@ SPRING_DATASOURCE_PASSWORD=[Database 비밀번호 - 다른 서비스와 동일]
 #### 방법 1: Railway CLI 사용
 
 ```bash
-cd backend/media-service
+cd backend/services/media-service
 railway link  # 프로젝트 연결 (첫 배포 시)
 railway up    # 배포
 ```
@@ -56,7 +56,7 @@ railway up    # 배포
 1. Railway 대시보드에서 서비스 설정
 2. "Settings" → "GitHub" 탭에서 저장소 연결
 3. "Deploy" → "Configure Build"에서:
-   - Root Directory: `backend/media-service`
+   - Root Directory: `backend/services/media-service`
    - Build Command: `mvn clean package -DskipTests`
    - Start Command: `java -jar target/media-service-1.0.0-SNAPSHOT.jar`
 4. 자동으로 배포 시작

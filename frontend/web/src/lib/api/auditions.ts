@@ -58,4 +58,21 @@ export const auditionApi = {
     const { data } = await apiClient.get('/auditions/my', { params })
     return data
   },
+
+  // 기획사 대시보드 통계
+  getDashboardStats: async (): Promise<{
+    totalAuditions: number
+    totalApplicants: number
+  }> => {
+    const { data } = await apiClient.get('/auditions/stats/dashboard')
+    return data
+  },
+
+  // 오디션별 통계
+  getAuditionStats: async (id: number): Promise<{
+    applicantsPerStage: Record<number, number>
+  }> => {
+    const { data } = await apiClient.get(`/auditions/${id}/stats`)
+    return data
+  },
 }

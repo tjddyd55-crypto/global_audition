@@ -55,13 +55,21 @@ export default function BusinessDashboardPage() {
     enabled: userType === 'BUSINESS',
   })
 
-  // 통계 데이터 계산
+  // 대시보드 통계 API 호출
+  // 작업: 2026_06_frontend_stats_binding
+  const { data: dashboardStats } = useQuery({
+    queryKey: ['dashboardStats'],
+    queryFn: () => auditionApi.getDashboardStats(),
+    enabled: userType === 'BUSINESS',
+  })
+
+  // 통계 데이터 (API에서 가져온 값 사용)
+  const totalAuditionsCount = dashboardStats?.totalAuditions || 0
+  const totalApplicationsCount = dashboardStats?.totalApplicants || 0
+
+  // 진행 중 오디션 수 (최근 5개 중에서만 계산 - 전체는 통계 API에 추가 필요)
   const ongoingAuditionsCount =
     recentAuditions?.content.filter((a: Audition) => a.status === 'ONGOING').length || 0
-  const totalAuditionsCount = recentAuditions?.totalElements || 0
-
-  // 지원자 통계 (각 오디션별로 조회해야 함 - 추후 최적화)
-  const totalApplicationsCount = 0 // TODO: 통계 API 추가 필요
 
   if (isCheckingAuth) {
     return (

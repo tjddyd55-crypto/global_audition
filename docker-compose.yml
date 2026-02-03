@@ -35,7 +35,7 @@ services:
 
   # API Gateway (추후 구현)
   # gateway:
-  #   build: ./backend/gateway
+  #   build: ./backend/services/gateway
   #   ports:
   #     - "8080:8080"
   #   depends_on:

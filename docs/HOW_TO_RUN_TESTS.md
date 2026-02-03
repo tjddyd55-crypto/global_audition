@@ -31,7 +31,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\run-all-tests-quiet.ps1
 
 ```powershell
 # 1. Audition Service 테스트
-cd backend\audition-service
+cd backend\services\audition-service
 .\mvnw.cmd test
 # 또는 Maven이 설치되어 있다면
 mvn test
@@ -66,12 +66,14 @@ npm test
 ```
 audition-platform/
 └── backend/
-    ├── audition-service/  ← 여기서 실행
+    ├── services/
+    │   ├── audition-service/  ← 여기서 실행
     │   └── mvnw.cmd test
-    ├── user-service/      ← 여기서 실행
+    │   ├── user-service/      ← 여기서 실행
     │   └── mvnw.cmd test
-    └── media-service/     ← 여기서 실행
-        └── mvnw.cmd test
+    │   └── media-service/     ← 여기서 실행
+    │       └── mvnw.cmd test
+    └── pom.xml            ← (멀티모듈) `mvn test` 가능
 ```
 
 ### 프론트엔드 테스트
@@ -223,17 +225,17 @@ cd audition-platform
 
 ```powershell
 # 1. Audition Service
-cd backend\audition-service
+cd backend\services\audition-service
 mvn test
 cd ..\..
 
 # 2. User Service  
-cd backend\user-service
+cd backend\services\user-service
 mvn test
 cd ..\..
 
 # 3. Media Service
-cd backend\media-service
+cd backend\services\media-service
 mvn test
 cd ..\..
 
