@@ -89,10 +89,10 @@
 
 ### 4.2 api-backend
 - **Railway 서비스 이름**: `api-backend` (실제 폴더명이 아님)
-- **Root Directory**: `backend` (또는 repo-root)
+- **Root Directory**: `backend` (또는 repo-root) - **반드시 `backend`로 설정**
 - **엔트리 포인트**: `gateway` (backend/services/gateway)
 - **Build Command**: `./gradlew clean build` (backend에서 실행)
-- **Start Command**: `java -jar build/libs/gateway.jar` (gateway가 엔트리 포인트)
+- **Start Command**: `java -jar services/gateway/build/libs/gateway.jar` (gateway가 엔트리 포인트)
 - **Required ENV**:
   - `SPRING_PROFILES_ACTIVE=production`
   - `DATABASE_URL=postgres://<postgres-main>`
@@ -100,6 +100,12 @@
 - ❗ 개별 서비스 포트 설정 금지
 - ❗ application.yml에서 localhost 참조 금지
 - ❗ **폴더 구조 변경 금지** (gateway, user-service, audition-service는 논리적 모듈로만 분리)
+
+#### 빌드 오류 해결
+- **`./gradlew not found` 오류 발생 시**: Root Directory 설정 문제
+  - gradlew는 `backend/`에 존재
+  - Root Directory는 반드시 `backend`로 설정
+  - ❗ gradlew를 이동/복사/재생성하지 않음
 
 ### 4.3 media-service
 - **Root Directory**: `backend/media-service`
