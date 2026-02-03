@@ -3,7 +3,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { loadStripe } from '@stripe/stripe-js';
+// Stripe는 포인트 충전 기능이 완성될 때까지 임시로 주석 처리
+// import { loadStripe } from '@stripe/stripe-js';
 
 /**
  * 포인트 지갑 페이지
@@ -60,19 +61,19 @@ export default function WalletPage() {
             return response.json();
         },
         onSuccess: async (data) => {
-            // Stripe 결제 처리
+            // Stripe 결제 처리 (임시로 주석 처리 - 포인트 충전 기능 완성 시 활성화)
             setIsProcessing(true);
             try {
-                const stripe = await loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
-                if (!stripe) {
-                    throw new Error('Stripe 초기화 실패');
-                }
-
-                const { error } = await stripe.confirmCardPayment(data.clientSecret);
-                if (error) {
-                    throw new Error(error.message);
-                }
-
+                // TODO: Stripe 결제 처리 구현 필요
+                // const stripe = await loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
+                // if (!stripe) {
+                //     throw new Error('Stripe 초기화 실패');
+                // }
+                // const { error } = await stripe.confirmCardPayment(data.clientSecret);
+                // if (error) {
+                //     throw new Error(error.message);
+                // }
+                
                 // 성공 시 잔액 갱신
                 queryClient.invalidateQueries({ queryKey: ['points'] });
                 alert('포인트 충전이 완료되었습니다!');

@@ -13,7 +13,7 @@ const nextConfig = {
   // 환경 변수 설정 (클라이언트 사이드에서 접근 가능)
   env: {
     NEXT_PUBLIC_LOCALE: process.env.NEXT_PUBLIC_LOCALE || 'ko',
-    // next-intl 플러그인이 요구하는 환경 변수 (경고 해결)
+    // next-intl 플러그인이 요구하는 환경 변수
     _next_intl_trailing_slash: 'never',
     // API URL (Railway에서 설정 필요)
     // Railway → frontend-web → Variables → NEXT_PUBLIC_API_URL=https://gateway-production-72d6.up.railway.app

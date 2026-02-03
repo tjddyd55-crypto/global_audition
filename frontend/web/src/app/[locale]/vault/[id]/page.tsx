@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { useParams, useRouter } from '@/i18n.config'
+import { useParams as useNextParams } from 'next/navigation'
+import { useRouter } from '@/i18n.config'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { vaultApi, type CreativeAsset } from '@/lib/api/vault'
 import { feedbackApi, type ExpertFeedback } from '@/lib/api/feedback'
@@ -9,7 +10,7 @@ import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 
 export default function AssetDetailPage() {
-  const params = useParams()
+  const params = useNextParams()
   const router = useRouter()
   const t = useTranslations('common')
   const assetId = Number(params.id)

@@ -14,17 +14,14 @@
     "jsx": "preserve",
     "incremental": true,
     "types": ["jest", "@testing-library/jest-dom"],
+    "baseUrl": ".",
     "plugins": [
       {
         "name": "next"
       }
     ],
     "paths": {
-      "@/*": ["./src/*"],
-      "@/components/*": ["./src/components/*"],
-      "@/lib/*": ["./src/lib/*"],
-      "@/hooks/*": ["./src/hooks/*"],
-      "@/types/*": ["./src/types/*"]
+      "@/*": ["./src/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

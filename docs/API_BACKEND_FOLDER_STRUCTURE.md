@@ -47,9 +47,10 @@ audition-platform/
   - ❗ gradlew를 이동/복사/재생성하지 않음
 
 ### media-service 서비스
-- **Root Directory**: `backend/media-service`
-- **Build Command**: `./gradlew clean build`
-- **Start Command**: `java -jar build/libs/media-service.jar`
+- **Root Directory**: `backend` (반드시 `backend`로 설정)
+- **실행 대상 모듈**: `media-service` (backend/services/media-service)
+- **Build Command**: `mvn clean package -pl services/media-service -am -DskipTests` (backend에서 실행)
+- **Start Command**: `java -jar services/media-service/target/media-service-*.jar`
 
 ## 핵심 원칙
 
