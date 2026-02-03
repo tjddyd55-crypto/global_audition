@@ -48,9 +48,15 @@
 
 ### api-backend 서비스
 - **Railway 서비스 이름**: `api-backend`
-- **Root Directory**: `backend` (또는 repo-root)
+- **Root Directory**: `backend` - **반드시 `backend`로 설정**
 - **Build Command**: `./gradlew clean build` (backend에서 실행)
 - **Start Command**: `java -jar services/gateway/build/libs/gateway.jar` (gateway가 엔트리 포인트)
+
+#### 빌드 오류 해결
+- **`./gradlew not found` 오류 발생 시**: Root Directory 설정 문제
+  - gradlew는 `backend/`에 존재
+  - Root Directory는 반드시 `backend`로 설정
+  - ❗ gradlew를 이동/복사/재생성하지 않음
 
 ## 주의사항
 
