@@ -1,7 +1,7 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { auditionApi } from '@/lib/api/auditions'
+import { auditionApi } from '../../lib/api/auditions'
 import AuditionCard from './AuditionCard'
 import LoadingSpinner from '../common/LoadingSpinner'
 import ErrorMessage from '../common/ErrorMessage'

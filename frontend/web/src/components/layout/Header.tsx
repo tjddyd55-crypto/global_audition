@@ -1,12 +1,12 @@
 'use client'
 
-import { Link, useRouter } from '@/i18n.config'
+import { Link, useRouter } from '../../i18n.config'
 import { useTranslations } from 'next-intl'
 import { useState, memo, useMemo, useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import LanguageSwitcher from '@/components/common/LanguageSwitcher'
-import { authApi } from '@/lib/api/auth'
-import { userApi } from '@/lib/api/user'
+import LanguageSwitcher from '../common/LanguageSwitcher'
+import { authApi } from '../../lib/api/auth'
+import { userApi } from '../../lib/api/user'
 
 const Header = memo(function Header() {
   const router = useRouter()

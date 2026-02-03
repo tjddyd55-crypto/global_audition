@@ -1,5 +1,5 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import AuditionList from '@/components/audition/AuditionList'
+import AuditionList from '../../components/audition/AuditionList'
 
 export default async function AuditionsPage({
   params,

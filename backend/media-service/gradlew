@@ -3,16 +3,21 @@ set -e
 
 # Railway build command shim: ./gradlew clean build
 # Actual build uses Maven multi-module.
+# Root Directory: backend/media-service
+# Target: backend/services/media-service
 
-if [ -x "../services/media-service/mvnw" ]; then
-  MVN="../services/media-service/mvnw"
-elif [ -x "../mvnw" ]; then
-  MVN="../mvnw"
+SERVICE_DIR="../services/media-service"
+POM_FILE="$SERVICE_DIR/pom.xml"
+
+if [ -x "$SERVICE_DIR/mvnw" ]; then
+  MVN_CMD="$SERVICE_DIR/mvnw"
 elif command -v mvn >/dev/null 2>&1; then
-  MVN="mvn"
+  MVN_CMD="mvn"
 else
-  echo "mvn not found in PATH" >&2
+  echo "Error: mvn not found in PATH and mvnw not found at $SERVICE_DIR/mvnw" >&2
   exit 127
 fi
 
-$MVN -f ./pom.xml -DskipTests clean package
+echo "Building media-service with: $MVN_CMD -f $POM_FILE"
+cd "$SERVICE_DIR" || exit 1
+$MVN_CMD -f "$POM_FILE" -DskipTests clean package

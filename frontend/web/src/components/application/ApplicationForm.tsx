@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useQuery } from '@tanstack/react-query'
-import { vaultApi, type CreativeAsset } from '@/lib/api/vault'
+import { vaultApi, type CreativeAsset } from '../../lib/api/vault'
 
 const applicationSchema = z.object({
   videoId1: z.number().optional(),

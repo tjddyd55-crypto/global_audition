@@ -1,5 +1,5 @@
 import { apiClient } from './client'
-import type { Application, PageResponse, ScreeningResult } from '@/types'
+import type { Application, PageResponse, ScreeningResult } from '../../types'
 
 export const applicationApi = {
   // 지원자 목록 조회 (오디션별, 필터링 지원)

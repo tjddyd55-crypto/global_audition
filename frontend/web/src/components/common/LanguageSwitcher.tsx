@@ -1,7 +1,7 @@
 'use client'
 
 import { useLocale } from 'next-intl'
-import { usePathname, useRouter } from '@/i18n.config'
+import { usePathname, useRouter } from '../../i18n.config'
 import { useState } from 'react'
 
 const languages = [

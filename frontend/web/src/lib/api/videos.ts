@@ -1,5 +1,5 @@
 import { apiClient } from './client'
-import type { PageResponse } from '@/types'
+import type { PageResponse } from '../../types'
 
 export interface VideoContent {
   id: number

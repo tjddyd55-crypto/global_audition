@@ -1,5 +1,5 @@
 import { apiClient } from './client'
-import type { Audition, PageResponse } from '@/types'
+import type { Audition, PageResponse } from '../../types'
 
 export const auditionApi = {
   // 오디션 목록 조회

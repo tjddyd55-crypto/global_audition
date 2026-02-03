@@ -3,8 +3,8 @@
 import Link from 'next/link'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
-import type { Audition } from '@/types'
-import { AuditionCategory, AuditionStatus } from '@/types'
+import type { Audition } from '../../types'
+import { AuditionCategory, AuditionStatus } from '../../types'
 
 interface AuditionCardProps {
   audition: Audition
