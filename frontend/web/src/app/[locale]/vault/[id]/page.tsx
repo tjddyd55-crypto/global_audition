@@ -2,10 +2,10 @@
 
 import { useState } from 'react'
 import { useParams as useNextParams } from 'next/navigation'
-import { useRouter } from '@/i18n.config'
+import { useRouter } from '../../../../i18n.config'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { vaultApi, type CreativeAsset } from '@/lib/api/vault'
-import { feedbackApi, type ExpertFeedback } from '@/lib/api/feedback'
+import { vaultApi, type CreativeAsset } from '../../../../lib/api/vault'
+import { feedbackApi, type ExpertFeedback } from '../../../../lib/api/feedback'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 

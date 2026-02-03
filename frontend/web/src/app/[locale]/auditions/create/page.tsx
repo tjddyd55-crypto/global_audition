@@ -1,15 +1,15 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from '@/i18n.config'
+import { useRouter } from '../../../../i18n.config'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { auditionApi } from '@/lib/api/auditions'
-import { userApi } from '@/lib/api/user'
-import { authApi } from '@/lib/api/auth'
+import { auditionApi } from '../../../../lib/api/auditions'
+import { userApi } from '../../../../lib/api/user'
+import { authApi } from '../../../../lib/api/auth'
 import { useTranslations } from 'next-intl'
-import { AuditionCategory, AuditionStatus, VideoType } from '@/types'
+import { AuditionCategory, AuditionStatus, VideoType } from '../../../../types'
 
 const auditionSchema = z.object({
   title: z.string().min(1, '제목을 입력해주세요'),

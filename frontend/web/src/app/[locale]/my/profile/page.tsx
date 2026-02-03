@@ -1,11 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from '@/i18n.config'
+import { useRouter } from '../../../../i18n.config'
 import { useForm } from 'react-hook-form'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { userApi } from '@/lib/api/user'
-import { authApi } from '@/lib/api/auth'
+import { userApi } from '../../../../lib/api/user'
+import { authApi } from '../../../../lib/api/auth'
 import { useTranslations } from 'next-intl'
 
 interface BusinessProfileForm {

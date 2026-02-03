@@ -3,10 +3,10 @@ import { Inter } from 'next/font/google'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages, setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
-import { routing } from '@/i18n.config'
+import { routing } from '../../i18n.config'
 import { Providers } from '../providers'
-import Header from '@/components/layout/Header'
-import Footer from '@/components/layout/Footer'
+import Header from '../../components/layout/Header'
+import Footer from '../../components/layout/Footer'
 
 // 폰트 최적화: display swap으로 로딩 성능 개선
 const inter = Inter({ 

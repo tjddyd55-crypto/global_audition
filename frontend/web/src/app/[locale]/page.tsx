@@ -1,5 +1,5 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { Link } from '@/i18n.config'
+import { Link } from '../../i18n.config'
 
 // 서버 컴포넌트로 변경하여 성능 개선
 export default async function HomePage({

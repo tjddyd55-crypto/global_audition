@@ -4,7 +4,9 @@ set -e
 # Railway build command shim: ./gradlew clean build
 # Actual build uses Maven multi-module.
 
-if [ -x "../mvnw" ]; then
+if [ -x "../services/media-service/mvnw" ]; then
+  MVN="../services/media-service/mvnw"
+elif [ -x "../mvnw" ]; then
   MVN="../mvnw"
 elif command -v mvn >/dev/null 2>&1; then
   MVN="mvn"

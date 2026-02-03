@@ -1,14 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from '@/i18n.config'
+import { useRouter } from '../../../i18n.config'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useQueryClient } from '@tanstack/react-query'
-import { authApi } from '@/lib/api/auth'
+import { authApi } from '../../../lib/api/auth'
 import { useTranslations } from 'next-intl'
-import { Link } from '@/i18n.config'
+import { Link } from '../../../i18n.config'
 
 const loginSchema = z.object({
   email: z.string().email('유효한 이메일을 입력해주세요'),

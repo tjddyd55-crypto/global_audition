@@ -1,13 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from '@/i18n.config'
+import { useRouter } from '../../../i18n.config'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useQueryClient } from '@tanstack/react-query'
-import { authApi } from '@/lib/api/auth'
-import { countries, languages, timezones } from '@/lib/utils/countries'
+import { authApi } from '../../../lib/api/auth'
+import { countries, languages, timezones } from '../../../lib/utils/countries'
 import { useTranslations } from 'next-intl'
 
 // 지망생 스키마 (refine 제거 - discriminatedUnion 전에는 ZodObject 타입이어야 함)

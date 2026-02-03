@@ -4,9 +4,9 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { authApi } from '@/lib/api/auth'
+import { authApi } from '../../../lib/api/auth'
 import { useTranslations } from 'next-intl'
-import { Link } from '@/i18n.config'
+import { Link } from '../../../i18n.config'
 
 const findUserIdSchema = z.object({
   name: z.string().min(1, '이름을 입력해주세요'),

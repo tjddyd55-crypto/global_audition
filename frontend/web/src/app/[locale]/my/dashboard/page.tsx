@@ -1,15 +1,15 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from '@/i18n.config'
+import { useRouter } from '../../../../i18n.config'
 import { useQuery } from '@tanstack/react-query'
-import { auditionApi } from '@/lib/api/auditions'
-import { applicationApi } from '@/lib/api/applications'
-import { userApi } from '@/lib/api/user'
-import { authApi } from '@/lib/api/auth'
+import { auditionApi } from '../../../../lib/api/auditions'
+import { applicationApi } from '../../../../lib/api/applications'
+import { userApi } from '../../../../lib/api/user'
+import { authApi } from '../../../../lib/api/auth'
 import { useTranslations } from 'next-intl'
-import { Link } from '@/i18n.config'
-import type { Audition } from '@/types'
+import { Link } from '../../../../i18n.config'
+import type { Audition } from '../../../../types'
 
 export default function BusinessDashboardPage() {
   const router = useRouter()

@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from '@/i18n.config'
+import { useRouter } from '../../../i18n.config'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { vaultApi, type CreativeAsset } from '@/lib/api/vault'
+import { vaultApi, type CreativeAsset } from '../../../lib/api/vault'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 
