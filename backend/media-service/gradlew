@@ -1,0 +1,16 @@
+#!/usr/bin/env sh
+set -e
+
+# Railway build command shim: ./gradlew clean build
+# Actual build uses Maven multi-module.
+
+if [ -x "../mvnw" ]; then
+  MVN="../mvnw"
+elif command -v mvn >/dev/null 2>&1; then
+  MVN="mvn"
+else
+  echo "mvn not found in PATH" >&2
+  exit 127
+fi
+
+$MVN -f ./pom.xml -DskipTests clean package

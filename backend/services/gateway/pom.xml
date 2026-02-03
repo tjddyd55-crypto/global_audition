@@ -65,6 +65,10 @@
                                 <copy file="${project.build.directory}/${project.build.finalName}.jar"
                                       tofile="${project.basedir}/../../target/gateway.jar"
                                       overwrite="true" />
+                                <mkdir dir="${project.basedir}/../../gateway/build/libs" />
+                                <copy file="${project.build.directory}/${project.build.finalName}.jar"
+                                      tofile="${project.basedir}/../../gateway/build/libs/${project.build.finalName}.jar"
+                                      overwrite="true" />
                             </target>
                         </configuration>
                     </execution>

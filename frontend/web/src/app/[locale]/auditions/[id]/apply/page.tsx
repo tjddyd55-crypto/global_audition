@@ -1,11 +1,11 @@
 'use client'
 
 import { useParams } from 'next/navigation'
-import { useRouter } from '@/i18n.config'
+import { useRouter } from '../../../../../i18n.config'
 import { useState } from 'react'
-import ApplicationForm from '@/components/application/ApplicationForm'
+import ApplicationForm from '../../../../../components/application/ApplicationForm'
 import { useQuery } from '@tanstack/react-query'
-import { auditionApi } from '@/lib/api/auditions'
+import { auditionApi } from '../../../../../lib/api/auditions'
 import { useTranslations } from 'next-intl'
 
 export default function ApplyPage() {
