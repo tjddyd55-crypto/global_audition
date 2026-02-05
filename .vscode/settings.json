@@ -1,0 +1,34 @@
+{
+  // Git 자동 동작 비활성화 (GitHub 인증 팝업 방지)
+  "git.autofetch": false,
+  "git.confirmSync": false,
+  "git.enableSmartCommit": false,
+  "git.detectSubmodules": false,
+  
+  // 파일 감시 제외 (성능 최적화)
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/.git/**": true,
+    "**/.next/**": true,
+    "**/dist/**": true,
+    "**/target/**": true,
+    "**/build/**": true
+  },
+  
+  // TypeScript 설정
+  "typescript.tsdk": "frontend/web/node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  
+  // 파일 자동 저장
+  "files.autoSave": "onFocusChange",
+  
+  // 검색 제외
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.next": true,
+    "**/dist": true,
+    "**/target": true,
+    "**/build": true,
+    "**/package-lock.json": false
+  }
+}
