@@ -55,11 +55,15 @@ railway up    # 배포
 
 1. Railway 대시보드에서 서비스 설정
 2. "Settings" → "GitHub" 탭에서 저장소 연결
-3. "Deploy" → "Configure Build"에서:
-   - Root Directory: `backend/services/media-service`
-   - Build Command: `mvn clean package -DskipTests`
-   - Start Command: `java -jar target/media-service-1.0.0-SNAPSHOT.jar`
+3. "Settings" → "Build"에서:
+   - **Root Directory**: `backend` (중요: `backend/services/media-service`가 아님)
+   - **Builder**: Railpack
+   - **Custom Build Command**: `./services/media-service/gradlew clean build`
+   - **Custom Start Command**: `java -jar services/media-service/target/media-service-1.0.0-SNAPSHOT.jar`
+   - ⚠️ **Auto-detect 옵션 비활성화** (Maven 자동 감지 끄기)
 4. 자동으로 배포 시작
+
+> **참고**: `gradlew` 스크립트가 자동으로 `/app/target` 디렉터리를 생성하여 Railpack 호환성을 보장합니다.
 
 ### 5. 배포 확인
 
@@ -108,6 +112,24 @@ https://[media-service-url]/swagger-ui.html
 - `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD` 설정 확인
 - Database 서비스가 "Online" 상태인지 확인
 - Railway 내부 네트워크 주소 `postgres.railway.internal:5432` 사용 확인
+
+#### `/app/target not found` 오류
+
+이 오류는 Railpack이 Maven 프로젝트로 자동 감지되면서 `/app/target` 디렉터리를 찾지 못해 발생합니다.
+
+**해결 방법:**
+1. Root Directory가 `backend`로 설정되어 있는지 확인
+2. Custom Build Command가 `./services/media-service/gradlew clean build`로 설정되어 있는지 확인
+3. Auto-detect 옵션이 비활성화되어 있는지 확인
+4. `gradlew` 스크립트가 자동으로 `target` 디렉터리를 생성하므로, 빌드 로그에서 "Creating target directory for Railpack compatibility" 메시지 확인
+
+#### Permission denied (exit code: 126)
+
+`gradlew` 파일에 실행 권한이 없을 때 발생합니다.
+
+**해결 방법:**
+- Git에서 파일 권한이 올바르게 설정되어 있는지 확인 (`100755`)
+- 이미 수정되어 있으므로 재배포 시 자동으로 해결됩니다
 
 #### Actuator 접근 불가
 
