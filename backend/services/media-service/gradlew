@@ -2,14 +2,14 @@
 set -e
 
 # Railway build command shim: ./gradlew clean build
-# Actual build uses Maven multi-module.
-# Root Directory: backend/media-service
-# Target: backend/services/media-service
+# Actual build uses Maven.
+# Root Directory: backend
+# Build Command: ./services/media-service/gradlew clean build
+# Target: backend/services/media-service (self)
 
-# 현재 스크립트 위치 확인
+# 현재 스크립트 위치 확인 (backend/services/media-service)
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-BASE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-SERVICE_DIR="$BASE_DIR/services/media-service"
+SERVICE_DIR="$SCRIPT_DIR"
 POM_FILE="$SERVICE_DIR/pom.xml"
 
 # 경로 확인
@@ -17,7 +17,6 @@ if [ ! -f "$POM_FILE" ]; then
   echo "Error: POM file not found at $POM_FILE" >&2
   echo "Current directory: $(pwd)" >&2
   echo "Script directory: $SCRIPT_DIR" >&2
-  echo "Base directory: $BASE_DIR" >&2
   exit 1
 fi
 
@@ -25,9 +24,6 @@ fi
 if [ -x "$SERVICE_DIR/mvnw" ]; then
   MVN_CMD="$SERVICE_DIR/mvnw"
   echo "Using Maven wrapper: $MVN_CMD"
-elif [ -x "$BASE_DIR/mvnw" ]; then
-  MVN_CMD="$BASE_DIR/mvnw"
-  echo "Using Maven wrapper from base: $MVN_CMD"
 elif command -v mvn >/dev/null 2>&1; then
   MVN_CMD="mvn"
   echo "Using system Maven: $MVN_CMD"
@@ -35,7 +31,6 @@ else
   echo "Error: mvn not found in PATH" >&2
   echo "Checked locations:" >&2
   echo "  - $SERVICE_DIR/mvnw" >&2
-  echo "  - $BASE_DIR/mvnw" >&2
   exit 127
 fi
 
@@ -43,5 +38,6 @@ fi
 echo "Building media-service..."
 echo "  POM: $POM_FILE"
 echo "  Maven: $MVN_CMD"
+echo "  Current directory: $(pwd)"
 cd "$SERVICE_DIR" || exit 1
 exec "$MVN_CMD" -f "$POM_FILE" -DskipTests clean package
