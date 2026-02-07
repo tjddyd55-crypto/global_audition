@@ -1,0 +1,11 @@
+# Railway 빌드/실행 설정 (Root Directory = backend 기준)
+# media-service JAR를 /app/target 에 두고 실행하도록 설정
+
+[build]
+builder = "NIXPACKS"
+buildCommand = "mvn -f services/media-service/pom.xml -DskipTests package && mkdir -p target && cp services/media-service/target/*.jar target/"
+
+[deploy]
+startCommand = "java -jar target/*.jar"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10

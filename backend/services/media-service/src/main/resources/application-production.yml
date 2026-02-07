@@ -2,6 +2,11 @@ spring:
   application:
     name: media-service
   
+  # Flyway: 체크섬 불일치 시 repair, 순서 밖 마이그레이션 허용 (V4 등 누락 실행 허용)
+  flyway:
+    repair-on-migrate: true
+    out-of-order: true
+  
   # 프로덕션: Railway 내부 DB만 사용 (public proxy 아님)
   # Railway가 SPRING_DATASOURCE_URL로 내부 주소 주입 (예: postgres.railway.internal:5432/railway)
   # ddl-auto는 application.yml SSOT. Railway Variables에 SPRING_JPA_HIBERNATE_DDL_AUTO 설정 금지.
