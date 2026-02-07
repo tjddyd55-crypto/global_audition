@@ -75,3 +75,30 @@ After deploy:
 | CommentLike   | comment_likes   | V6 |
 
 All columns in entities match migration DDL (names and types). No API/UI contract mismatches were found in the audited scope.
+
+---
+
+## 6. Flyway Checksum Mismatch / 누락(V4) 대응
+
+### 적용 설정 (application-production.yml)
+
+- **repair-on-migrate: true** — DB의 `flyway_schema_history` 체크섬을 현재 코드(V2,V3,V5,V6) 기준으로 강제 동기화. Checksum Mismatch 해소.
+- **out-of-order: true** — 버전 순서와 관계없이 미실행 스크립트(V4 등) 실행 허용. 누락된 V4 실행 가능.
+
+### 메모: 배포 성공 후
+
+- **repair-on-migrate** 는 배포가 성공하고 `flyway_schema_history` 가 안정화되면 제거할 수 있음. 보안·감사상 장기적으로는 `false`(기본) 유지 권장.
+
+### 설정으로 해결되지 않을 때: 운영 DB와 비교
+
+운영 DB와 구조가 다르면 Flyway 적용이 실패할 수 있음. 아래는 현재 코드 기준 마이그레이션 요약(비교용).
+
+| 버전 | 내용 | 주요 테이블/변경 |
+|------|------|------------------|
+| V2 | creative_assets 생성 | id, user_id, title, description, asset_type, file_url, text_content, content_hash, file_size, mime_type, declared_creation_type, access_control, registered_at, created_at, updated_at. 인덱스: user_id, content_hash, access_control, created_at |
+| V3 | video_contents 컬럼 추가 | video_type VARCHAR(20), visibility VARCHAR(20). 인덱스: video_type, visibility |
+| V4 | video_feedback 생성 | id, video_id, user_id, timestamp_seconds, comment, created_at, updated_at. FK → video_contents(id). 인덱스: video_id, user_id, (video_id, timestamp_seconds) |
+| V5 | video_comments 생성 | id, video_id, user_id, parent_comment_id, content, like_count, created_at, updated_at, deleted_at. FK → video_contents, video_comments. 인덱스: video_id, user_id, parent_comment_id |
+| V6 | comment_likes 생성 | (comment_id, user_id) PK, created_at. FK → video_comments(id). 인덱스: user_id |
+
+운영 DB에서 위 테이블/컬럼이 다르면 스키마를 코드에 맞추거나, 마이그레이션 SQL을 수정한 뒤 다시 배포해야 함.
