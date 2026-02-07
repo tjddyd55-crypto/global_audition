@@ -5,6 +5,7 @@ spring:
     username: sa
     password: 
   
+  # H2 in-memory: schema must be created each run (ddl-auto SSOT is application.yml none; test-only override)
   jpa:
     hibernate:
       ddl-auto: create-drop

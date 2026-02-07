@@ -32,6 +32,38 @@ public class CreativeAssetController {
     private final CreativeAssetService creativeAssetService;
     private final SecurityUtils securityUtils;
 
+    /**
+     * ============================================================================
+     * 파일 업로드 플로우 문서화 (Phase A - 검증 단계)
+     * ============================================================================
+     * 
+     * [업로드 엔드포인트]
+     *   - 경로: POST /api/v1/vault/assets
+     *   - Gateway를 통해 접근: {GATEWAY_URL}/api/v1/vault/assets
+     * 
+     * [Storage Provider]
+     *   - 현재: Local File System (FileStorageService)
+     *     - 이미지: ./uploads/images/{userId}/{uuid}.{ext}
+     *     - 비디오/오디오: ./uploads/videos/{userId}/{uuid}.{ext}
+     *   - 향후 계획: S3 또는 CDN으로 마이그레이션 예정
+     *     - FileStorageService를 인터페이스로 추상화하여 교체 가능하도록 설계됨
+     * 
+     * [인증]
+     *   - 필수: Authorization 헤더 필요
+     *   - SecurityUtils.getUserIdFromAuthHeaderOrThrow()로 검증
+     *   - 인증 실패 시 401 Unauthorized 반환
+     * 
+     * [파일 크기 제한]
+     *   - application.yml: spring.servlet.multipart.max-file-size=50MB
+     *   - application.yml: spring.servlet.multipart.max-request-size=50MB
+     *   - 초과 시 413 Payload Too Large 반환
+     * 
+     * [파일 확장자 검증]
+     *   - FileStorageService에서 수행
+     *   - 이미지: .jpg, .jpeg, .png, .gif, .webp
+     *   - 비디오/오디오: .mp4, .mov, .avi, .webm, .mp3, .wav, .flac, .aac, .mid, .midi, .m4a, .ogg
+     *   - 미지원 확장자 시 IllegalArgumentException 발생 (400 Bad Request)
+     */
     @PostMapping("/assets")
     @Operation(summary = "창작물 자산 등록", description = "파일 업로드 또는 텍스트 입력, 해시 생성")
     public ResponseEntity<CreativeAssetDto> createAsset(
@@ -44,6 +76,7 @@ public class CreativeAssetController {
             @RequestParam(value = "declaredCreationType", required = false) String declaredCreationType,
             @RequestParam("accessControl") String accessControl
     ) {
+        // 인증: Authorization 헤더에서 userId 추출 (필수)
         Long userId = securityUtils.getUserIdFromAuthHeaderOrThrow(authHeader);
         
         // AssetType enum 변환

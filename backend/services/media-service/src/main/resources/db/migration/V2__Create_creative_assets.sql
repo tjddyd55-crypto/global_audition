@@ -20,6 +20,6 @@ CREATE TABLE IF NOT EXISTS creative_assets (
 );
 
 CREATE INDEX IF NOT EXISTS idx_creative_assets_user_id ON creative_assets(user_id);
-CREATE INDEX IF NOT EXISTS idx_creative_assets_hash ON creative_assets(file_hash);
+CREATE INDEX IF NOT EXISTS idx_creative_assets_hash ON creative_assets(content_hash);
 CREATE INDEX IF NOT EXISTS idx_creative_assets_access ON creative_assets(access_control);
 CREATE INDEX IF NOT EXISTS idx_creative_assets_created ON creative_assets(created_at DESC);

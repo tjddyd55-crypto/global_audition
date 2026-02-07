@@ -9,8 +9,6 @@ spring:
     driver-class-name: org.postgresql.Driver
   
   jpa:
-    hibernate:
-      ddl-auto: update  # 개발용: 자동 스키마 생성
     show-sql: true
 
 server:

@@ -11,6 +11,27 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 
+/**
+ * ============================================================================
+ * 파일 저장 서비스 (Storage Provider)
+ * ============================================================================
+ * 
+ * [현재 구현]
+ *   - Storage Provider: Local File System
+ *   - 이미지 저장 경로: ./uploads/images/{userId}/{uuid}.{ext}
+ *   - 비디오/오디오 저장 경로: ./uploads/videos/{userId}/{uuid}.{ext}
+ *   - Base URL: application.yml의 file.upload.base-url 설정값 사용
+ * 
+ * [향후 계획]
+ *   - S3 또는 CDN으로 마이그레이션 예정
+ *   - 인터페이스 추상화를 통해 교체 가능하도록 설계 필요
+ *   - 현재는 로컬 파일 시스템만 지원
+ * 
+ * [파일 확장자 검증]
+ *   - 이미지: .jpg, .jpeg, .png, .gif, .webp
+ *   - 비디오/오디오: .mp4, .mov, .avi, .webm, .mp3, .wav, .flac, .aac, .mid, .midi, .m4a, .ogg
+ *   - 미지원 확장자 시 IllegalArgumentException 발생
+ */
 @Service
 public class FileStorageService {
 

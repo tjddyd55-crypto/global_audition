@@ -8,9 +8,15 @@ spring:
     password: audition_pass
     driver-class-name: org.postgresql.Driver
   
+  # ddl-auto 단일 진실 소스(SSOT): profile 무관 항상 여기만 사용. Railway/로컬/CI 동일.
+  # ⚠ Railway Variables에 SPRING_JPA_HIBERNATE_DDL_AUTO 설정 금지 (설정 시 validate로 덮여 크래시 가능)
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: none
+    properties:
+      hibernate:
+        hbm2ddl:
+          auto: none
   
   servlet:
     multipart:

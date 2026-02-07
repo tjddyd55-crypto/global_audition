@@ -11,6 +11,33 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+/**
+ * ============================================================================
+ * 미디어 파일 업로드 컨트롤러 (이미지 전용)
+ * ============================================================================
+ * 
+ * [업로드 엔드포인트]
+ *   - 단일 이미지: POST /api/v1/media/upload/image
+ *   - 다중 이미지: POST /api/v1/media/upload/images (최대 10개)
+ *   - Gateway를 통해 접근: {GATEWAY_URL}/api/v1/media/upload/image
+ * 
+ * [Storage Provider]
+ *   - FileStorageService 사용 (로컬 파일 시스템)
+ *   - 저장 경로: ./uploads/images/{userId}/{uuid}.{ext}
+ *   - 향후: S3 또는 CDN으로 마이그레이션 예정
+ * 
+ * [인증]
+ *   - 필수: Authorization 헤더 필요
+ *   - SecurityUtils.getUserIdFromAuthHeaderOrThrow()로 검증
+ * 
+ * [파일 크기 제한]
+ *   - application.yml: max-file-size=50MB
+ *   - application.yml: max-request-size=50MB
+ * 
+ * [파일 확장자 검증]
+ *   - FileStorageService.isValidImageExtension()에서 수행
+ *   - 허용: .jpg, .jpeg, .png, .gif, .webp
+ */
 @RestController
 @RequestMapping("/api/v1/media")
 @RequiredArgsConstructor
@@ -26,6 +53,7 @@ public class MediaController {
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @RequestParam("file") MultipartFile file
     ) {
+        // 인증: Authorization 헤더에서 userId 추출 (필수)
         Long userId = securityUtils.getUserIdFromAuthHeaderOrThrow(authHeader);
         UploadImageResponse response = mediaService.uploadImage(file, userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);

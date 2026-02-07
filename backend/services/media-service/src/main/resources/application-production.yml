@@ -2,7 +2,9 @@ spring:
   application:
     name: media-service
   
-  # 프로덕션: postgres-main (통합 DB)
+  # 프로덕션: Railway 내부 DB만 사용 (public proxy 아님)
+  # Railway가 SPRING_DATASOURCE_URL로 내부 주소 주입 (예: postgres.railway.internal:5432/railway)
+  # ddl-auto는 application.yml SSOT. Railway Variables에 SPRING_JPA_HIBERNATE_DDL_AUTO 설정 금지.
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres-main:5432/railway}
     username: ${SPRING_DATASOURCE_USERNAME:postgres}
@@ -10,8 +12,6 @@ spring:
     driver-class-name: org.postgresql.Driver
   
   jpa:
-    hibernate:
-      ddl-auto: validate
     show-sql: false
     properties:
       hibernate:

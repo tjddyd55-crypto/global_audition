@@ -40,6 +40,12 @@
             <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
         </dependency>
+
+        <!-- Flyway: run db/migration on boot when ddl-auto=none (uses existing PostgreSQL driver) -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
         
         <dependency>
             <groupId>org.mapstruct</groupId>
