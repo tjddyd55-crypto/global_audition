@@ -1,33 +1,8 @@
 import axios, { InternalAxiosRequestConfig } from 'axios'
+import { API_BASE_URL } from '@/lib/env'
 
-// Railway Gateway URL (프로덕션)
-// Railway frontend-web 서비스에서 NEXT_PUBLIC_API_URL 환경 변수로 설정 필요
-// Railway → frontend-web → Variables → NEXT_PUBLIC_API_URL=https://gateway-production-72d6.up.railway.app
-const getApiBaseUrl = (): string => {
-  // Next.js 빌드 타임에 환경 변수가 하드코딩됨
-  const envUrl = process.env.NEXT_PUBLIC_API_URL
-  
-  if (envUrl && envUrl.trim() !== '') {
-    // 끝의 슬래시 제거 및 공백 제거
-    const trimmedUrl = envUrl.trim().replace(/\/+$/, '')
-    return trimmedUrl
-  }
-  
-  // 기본값: Gateway URL (프로덕션)
-  const defaultUrl = 'https://gateway-production-72d6.up.railway.app'
-  if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-    console.error('[API Client] ❌ NEXT_PUBLIC_API_URL 환경 변수가 설정되지 않았습니다!')
-    console.warn('[API Client] ⚠️ 기본값 사용:', defaultUrl)
-  }
-  return defaultUrl
-}
-
-const API_BASE_URL = getApiBaseUrl()
-
-// baseURL 검증 (빌드 타임 + 런타임)
-if (!API_BASE_URL || API_BASE_URL.trim() === '') {
-  throw new Error('[API Client] API_BASE_URL is not defined. Please set NEXT_PUBLIC_API_URL environment variable.')
-}
+// API_BASE_URL은 env.ts에서 빌드 타임에 검증됨
+// NEXT_PUBLIC_API_URL이 없으면 빌드가 실패합니다
 
 // 잘못된 URL 감지 (개발 환경에서만)
 if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
@@ -49,10 +24,10 @@ apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     // baseURL 보장 (안전 처리)
     if (!config.baseURL) {
-      const fallbackBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gateway-production-72d6.up.railway.app'
-      config.baseURL = `${fallbackBaseUrl.replace(/\/+$/, '')}/api/v1`
+      // API_BASE_URL은 env.ts에서 이미 검증되었으므로 항상 존재함
+      config.baseURL = `${API_BASE_URL}/api/v1`
       if (process.env.NODE_ENV === 'development') {
-        console.error('[API Client] ⚠️ config.baseURL이 없어서 기본값 사용:', config.baseURL)
+        console.error('[API Client] ⚠️ config.baseURL이 없어서 재설정:', config.baseURL)
       }
     }
     

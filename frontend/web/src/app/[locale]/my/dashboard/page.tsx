@@ -7,6 +7,8 @@ import { auditionApi } from '../../../../lib/api/auditions'
 import { applicationApi } from '../../../../lib/api/applications'
 import { userApi } from '../../../../lib/api/user'
 import { authApi } from '../../../../lib/api/auth'
+import { videoApi } from '../../../../lib/api/videos'
+import { checkAllServices } from '../../../../lib/api/health'
 import { useTranslations } from 'next-intl'
 import { Link } from '../../../../i18n.config'
 import type { Audition } from '../../../../types'
@@ -61,6 +63,23 @@ export default function BusinessDashboardPage() {
     queryKey: ['dashboardStats'],
     queryFn: () => auditionApi.getDashboardStats(),
     enabled: userType === 'BUSINESS',
+  })
+
+  // Health Check (Media-Service 연결 검증)
+  const { data: healthStatus, isLoading: isHealthLoading, error: healthError } = useQuery({
+    queryKey: ['healthCheck'],
+    queryFn: () => checkAllServices(),
+    enabled: userType === 'BUSINESS',
+    refetchInterval: 30000, // 30초마다 갱신
+    retry: 1,
+  })
+
+  // Media-Service API 테스트 (GET 요청만)
+  const { data: videosTest, isLoading: isVideosLoading } = useQuery({
+    queryKey: ['videosTest'],
+    queryFn: () => videoApi.getVideos({ page: 0, size: 1 }),
+    enabled: userType === 'BUSINESS',
+    retry: 1,
   })
 
   // 통계 데이터 (API에서 가져온 값 사용)
@@ -162,6 +181,54 @@ export default function BusinessDashboardPage() {
                   />
                 </svg>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* API 연결 상태 (테스트용) */}
+        <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
+          <h2 className="text-xl font-bold mb-4">API 연결 상태</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="border rounded-lg p-4">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-semibold">Gateway & Media-Service</h3>
+                {isHealthLoading ? (
+                  <span className="text-gray-500 text-sm">확인 중...</span>
+                ) : healthError ? (
+                  <span className="text-red-600 text-sm font-medium">연결 실패</span>
+                ) : healthStatus?.media.status === 'UP' ? (
+                  <span className="text-green-600 text-sm font-medium">✓ 정상</span>
+                ) : (
+                  <span className="text-red-600 text-sm font-medium">✗ 오류</span>
+                )}
+              </div>
+              {healthStatus && (
+                <div className="text-xs text-gray-600 space-y-1">
+                  <div>
+                    Gateway: <span className={healthStatus.gateway.status === 'UP' ? 'text-green-600' : 'text-red-600'}>{healthStatus.gateway.status}</span>
+                  </div>
+                  <div>
+                    Media-Service: <span className={healthStatus.media.status === 'UP' ? 'text-green-600' : 'text-red-600'}>{healthStatus.media.status}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="border rounded-lg p-4">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-semibold">Videos API 테스트</h3>
+                {isVideosLoading ? (
+                  <span className="text-gray-500 text-sm">확인 중...</span>
+                ) : videosTest ? (
+                  <span className="text-green-600 text-sm font-medium">✓ 정상</span>
+                ) : (
+                  <span className="text-red-600 text-sm font-medium">✗ 오류</span>
+                )}
+              </div>
+              {videosTest && (
+                <div className="text-xs text-gray-600">
+                  API 응답: {videosTest.totalElements || 0}개 비디오 조회 성공
+                </div>
+              )}
             </div>
           </div>
         </div>

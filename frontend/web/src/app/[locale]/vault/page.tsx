@@ -225,9 +225,39 @@ function CreateAssetModal({
             <label className="block text-sm font-medium mb-1">파일 업로드</label>
             <input
               type="file"
-              onChange={(e) => setFile(e.target.files?.[0] || null)}
+              onChange={(e) => {
+                const selectedFile = e.target.files?.[0]
+                if (selectedFile) {
+                  // TODO: 파일 크기 제한 검증 (50MB)
+                  // if (selectedFile.size > 50 * 1024 * 1024) {
+                  //   alert('파일 크기는 50MB를 초과할 수 없습니다')
+                  //   return
+                  // }
+                  
+                  // TODO: 파일 확장자 검증
+                  // const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.mp4', '.mov', '.avi', '.webm', '.mp3', '.wav', '.flac', '.aac', '.mid', '.midi', '.m4a', '.ogg']
+                  // const fileExtension = selectedFile.name.substring(selectedFile.name.lastIndexOf('.')).toLowerCase()
+                  // if (!allowedExtensions.includes(fileExtension)) {
+                  //   alert('지원하지 않는 파일 형식입니다')
+                  //   return
+                  // }
+                  
+                  // TODO: MIME 타입 체크
+                  // const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'audio/mpeg', ...]
+                  // if (!allowedMimeTypes.includes(selectedFile.type)) {
+                  //   alert('지원하지 않는 파일 형식입니다')
+                  //   return
+                  // }
+                  
+                  setFile(selectedFile)
+                } else {
+                  setFile(null)
+                }
+              }}
               className="w-full border rounded-lg px-4 py-2"
             />
+            {/* TODO: 파일 크기 제한 안내 메시지 추가 */}
+            {/* <p className="text-xs text-gray-500 mt-1">최대 50MB까지 업로드 가능</p> */}
           </div>
 
           <div>
