@@ -1,0 +1,333 @@
+/* ============================================
+   COMPONENT STYLES
+   의미 기반 클래스 (BEM 유사)
+   디자이너가 나중에 쉽게 찾아서 수정 가능
+   ============================================ */
+
+/* ========== Header ========== */
+.header {
+  /* Header 기본 스타일은 utilities로 처리, 여기는 의미 클래스용 */
+}
+
+/* ========== Footer ========== */
+.footer {
+  /* Footer 기본 스타일은 utilities로 처리 */
+}
+
+/* ========== Card Components ========== */
+.audition-card {
+  /* 카드 기본 스타일 - utilities 사용 */
+}
+
+.audition-card__header {
+  /* 카드 헤더 영역 */
+}
+
+.audition-card__title {
+  /* 카드 제목 */
+}
+
+.audition-card__body {
+  /* 카드 본문 */
+}
+
+.audition-card__meta {
+  /* 카드 메타 정보 (카테고리, 상태 등) */
+}
+
+/* ========== Badge/Status ========== */
+.status-badge {
+  display: inline-block;
+  padding: var(--spacing-1) var(--spacing-2);
+  border-radius: var(--border-radius);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+}
+
+.status-badge--ongoing {
+  background-color: var(--color-green-100);
+  color: var(--color-green-800);
+}
+
+.status-badge--finished {
+  background-color: var(--color-gray-100);
+  color: var(--color-gray-800);
+}
+
+.status-badge--pending {
+  background-color: var(--color-yellow-100);
+  color: var(--color-yellow-800);
+}
+
+.category-badge {
+  display: inline-block;
+  padding: var(--spacing-1) var(--spacing-2);
+  border-radius: var(--border-radius);
+  font-size: var(--font-size-sm);
+  background-color: var(--color-primary-100);
+  color: var(--color-primary-800);
+}
+
+/* ========== Button Components ========== */
+.btn {
+  display: inline-block;
+  padding: var(--spacing-3) var(--spacing-6);
+  border: var(--border-width) solid transparent;
+  border-radius: var(--border-radius-lg);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  text-align: center;
+  cursor: pointer;
+  transition: background-color var(--transition-base), 
+              color var(--transition-base),
+              border-color var(--transition-base);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn--primary {
+  background-color: var(--color-primary-600);
+  color: var(--color-white);
+}
+
+.btn--primary:hover:not(:disabled) {
+  background-color: var(--color-primary-700);
+}
+
+.btn--blue {
+  background-color: var(--color-blue-600);
+  color: var(--color-white);
+}
+
+.btn--blue:hover:not(:disabled) {
+  background-color: var(--color-blue-700);
+}
+
+.btn--green {
+  background-color: var(--color-green-600);
+  color: var(--color-white);
+}
+
+.btn--green:hover:not(:disabled) {
+  background-color: var(--color-green-700);
+}
+
+.btn--gray {
+  background-color: var(--color-gray-600);
+  color: var(--color-white);
+}
+
+.btn--gray:hover:not(:disabled) {
+  background-color: var(--color-gray-700);
+}
+
+.btn--outline {
+  background-color: transparent;
+  border-color: var(--color-gray-300);
+  color: var(--color-gray-700);
+}
+
+.btn--outline:hover:not(:disabled) {
+  background-color: var(--color-gray-50);
+}
+
+.btn--sm {
+  padding: var(--spacing-2) var(--spacing-4);
+  font-size: var(--font-size-sm);
+}
+
+/* ========== Form Components ========== */
+.form-group {
+  margin-bottom: var(--spacing-6);
+}
+
+.form-label {
+  display: block;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  margin-bottom: var(--spacing-2);
+  color: var(--color-gray-700);
+}
+
+.form-input {
+  width: 100%;
+  padding: var(--spacing-2) var(--spacing-4);
+  border: var(--border-width) solid var(--color-gray-300);
+  border-radius: var(--border-radius-lg);
+  font-size: var(--font-size-base);
+  color: var(--color-gray-900);
+  background-color: var(--color-white);
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--color-primary-600);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
+}
+
+.form-input::placeholder {
+  color: var(--color-gray-400);
+}
+
+.form-textarea {
+  width: 100%;
+  padding: var(--spacing-2) var(--spacing-4);
+  border: var(--border-width) solid var(--color-gray-300);
+  border-radius: var(--border-radius-lg);
+  font-size: var(--font-size-base);
+  font-family: inherit;
+  color: var(--color-gray-900);
+  background-color: var(--color-white);
+  resize: vertical;
+}
+
+.form-textarea:focus {
+  outline: none;
+  border-color: var(--color-primary-600);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
+}
+
+.form-error {
+  font-size: var(--font-size-sm);
+  color: var(--color-red-500);
+  margin-top: var(--spacing-1);
+}
+
+.form-error-message {
+  padding: var(--spacing-3) var(--spacing-4);
+  border: var(--border-width) solid var(--color-red-200);
+  border-radius: var(--border-radius);
+  background-color: var(--color-red-50);
+  color: var(--color-red-700);
+}
+
+.form-success-message {
+  padding: var(--spacing-3) var(--spacing-4);
+  border: var(--border-width) solid var(--color-green-200);
+  border-radius: var(--border-radius);
+  background-color: var(--color-green-50);
+  color: var(--color-green-700);
+}
+
+/* ========== Table Components ========== */
+.table-container {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: var(--color-white);
+}
+
+.table th,
+.table td {
+  padding: var(--spacing-3) var(--spacing-4);
+  text-align: left;
+  border-bottom: var(--border-width) solid var(--color-gray-200);
+}
+
+.table th {
+  font-weight: var(--font-weight-semibold);
+  background-color: var(--color-gray-50);
+  color: var(--color-gray-900);
+}
+
+.table tbody tr:hover {
+  background-color: var(--color-gray-50);
+}
+
+/* ========== Alert/Message Components ========== */
+.alert {
+  padding: var(--spacing-3) var(--spacing-4);
+  border-radius: var(--border-radius);
+  margin-bottom: var(--spacing-6);
+}
+
+.alert--success {
+  background-color: var(--color-green-50);
+  border: var(--border-width) solid var(--color-green-200);
+  color: var(--color-green-700);
+}
+
+.alert--error {
+  background-color: var(--color-red-50);
+  border: var(--border-width) solid var(--color-red-200);
+  color: var(--color-red-700);
+}
+
+.alert--warning {
+  background-color: var(--color-yellow-50);
+  border: var(--border-width) solid var(--color-yellow-200);
+  color: var(--color-yellow-800);
+}
+
+/* ========== Modal/Dropdown ========== */
+.dropdown {
+  position: relative;
+}
+
+.dropdown__menu {
+  position: absolute;
+  right: 0;
+  margin-top: var(--spacing-2);
+  width: 12rem;
+  background-color: var(--color-white);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-lg);
+  border: var(--border-width) solid var(--color-gray-200);
+  z-index: 20;
+}
+
+.dropdown__item {
+  display: block;
+  padding: var(--spacing-2) var(--spacing-4);
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-700);
+}
+
+.dropdown__item:hover {
+  background-color: var(--color-gray-100);
+}
+
+/* ========== Loading Spinner ========== */
+.loading-spinner {
+  display: inline-block;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 2px solid var(--color-gray-200);
+  border-top-color: var(--color-primary-600);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ========== Application Status ========== */
+.application-status {
+  display: inline-block;
+  padding: var(--spacing-1) var(--spacing-3);
+  border-radius: var(--border-radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+}
+
+.application-status--pass {
+  background-color: var(--color-blue-100);
+  color: var(--color-blue-800);
+}
+
+.application-status--fail {
+  background-color: var(--color-gray-100);
+  color: var(--color-gray-800);
+}
+
+.application-status--pending {
+  background-color: var(--color-yellow-100);
+  color: var(--color-yellow-800);
+}

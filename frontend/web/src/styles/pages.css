@@ -1,0 +1,190 @@
+/* ============================================
+   PAGE-SPECIFIC STYLES
+   특정 페이지에서만 사용하는 스타일
+   ============================================ */
+
+/* ========== Auth Pages (Login, Register, etc.) ========== */
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-4);
+}
+
+.auth-page__container {
+  width: 100%;
+  max-width: 28rem;
+}
+
+.auth-page__title {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  text-align: center;
+  margin-bottom: var(--spacing-8);
+}
+
+.auth-page__divider {
+  display: flex;
+  align-items: center;
+  margin: var(--spacing-6) 0;
+}
+
+.auth-page__divider::before,
+.auth-page__divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background-color: var(--color-gray-300);
+}
+
+.auth-page__divider-text {
+  padding: 0 var(--spacing-4);
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-500);
+}
+
+/* ========== Dashboard Page ========== */
+.dashboard {
+  min-height: 100vh;
+  padding: var(--spacing-4);
+  background-color: var(--color-gray-50);
+}
+
+@media (min-width: 768px) {
+  .dashboard {
+    padding: var(--spacing-8);
+  }
+}
+
+.dashboard__header {
+  margin-bottom: var(--spacing-8);
+}
+
+.dashboard__title {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: var(--spacing-2);
+}
+
+.dashboard__subtitle {
+  font-size: var(--font-size-base);
+  color: var(--color-gray-600);
+}
+
+.dashboard__stats {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-6);
+  margin-bottom: var(--spacing-8);
+}
+
+@media (min-width: 768px) {
+  .dashboard__stats {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.stat-card {
+  background-color: var(--color-white);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--spacing-6);
+}
+
+.stat-card__content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.stat-card__label {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-600);
+  margin-bottom: var(--spacing-1);
+}
+
+.stat-card__value {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+}
+
+/* ========== Applications Management Page ========== */
+.applications-page {
+  min-height: 100vh;
+  padding: var(--spacing-4);
+  background-color: var(--color-gray-50);
+}
+
+@media (min-width: 768px) {
+  .applications-page {
+    padding: var(--spacing-8);
+  }
+}
+
+.applications-page__header {
+  margin-bottom: var(--spacing-8);
+}
+
+.applications-page__title {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: var(--spacing-2);
+}
+
+.applications-page__filters {
+  background-color: var(--color-white);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--spacing-6);
+  margin-bottom: var(--spacing-6);
+}
+
+.filter-button {
+  padding: var(--spacing-2) var(--spacing-4);
+  border-radius: var(--border-radius-lg);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  border: none;
+  cursor: pointer;
+  transition: background-color var(--transition-base), 
+              color var(--transition-base);
+}
+
+.filter-button--active {
+  background-color: var(--color-blue-600);
+  color: var(--color-white);
+}
+
+.filter-button--inactive {
+  background-color: var(--color-gray-200);
+  color: var(--color-gray-700);
+}
+
+.filter-button--inactive:hover {
+  background-color: var(--color-gray-300);
+}
+
+/* ========== Form Pages ========== */
+.form-page {
+  min-height: 100vh;
+  padding: var(--spacing-4);
+  background-color: var(--color-gray-50);
+}
+
+.form-page__container {
+  width: 100%;
+  max-width: 42rem;
+  margin: 0 auto;
+  background-color: var(--color-white);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--spacing-8);
+}
+
+.form-page__title {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  text-align: center;
+  margin-bottom: var(--spacing-8);
+}

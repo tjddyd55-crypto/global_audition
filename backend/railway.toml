@@ -1,0 +1,11 @@
+# Railway: single Spring Boot backend (monolith)
+# Root directory = backend
+
+[build]
+builder = "NIXPACKS"
+buildCommand = "chmod +x mvnw && ./mvnw -DskipTests package"
+
+[deploy]
+startCommand = "java -jar target/*.jar"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10

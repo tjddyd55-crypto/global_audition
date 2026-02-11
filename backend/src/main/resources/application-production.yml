@@ -1,0 +1,11 @@
+# Production profile — do NOT set ddl-auto; Flyway is SSOT.
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        hbm2ddl:
+          auto: none
+  flyway:
+    enabled: true
