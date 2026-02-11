@@ -13,7 +13,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<Map<String, String>> handleResponseStatus(ResponseStatusException ex) {
-        String message = ex.getReason() != null ? ex.getReason() : ex.getStatusCode().getReasonPhrase();
+        HttpStatus status = HttpStatus.valueOf(ex.getStatusCode().value());
+        String message = ex.getReason() != null ? ex.getReason() : status.getReasonPhrase();
         return ResponseEntity.status(ex.getStatusCode()).body(Map.of("message", message));
     }
 }
