@@ -39,6 +39,7 @@ dist/
 /backend/target/
 **/target/
 target/
+.pg18data/
 !.mvn/wrapper/maven-wrapper.jar
 
 # Logs
