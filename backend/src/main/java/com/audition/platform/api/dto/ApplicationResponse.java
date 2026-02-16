@@ -10,6 +10,8 @@ public class ApplicationResponse {
     private UUID applicantId;
     private String applicantEmail;
     private String status;
+    private String message;
+    private Instant updatedAt;
     private Instant createdAt;
     private String auditionTitle; // for "my applications" list
 
@@ -23,6 +25,10 @@ public class ApplicationResponse {
     public void setApplicantEmail(String applicantEmail) { this.applicantEmail = applicantEmail; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+    public String getMessage() { return message; }
+    public void setMessage(String message) { this.message = message; }
+    public Instant getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
     public String getAuditionTitle() { return auditionTitle; }

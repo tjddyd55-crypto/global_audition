@@ -32,7 +32,7 @@ apiClient.interceptors.request.use(
     }
     
     const token = typeof window !== 'undefined' 
-      ? (localStorage.getItem('accessToken') || localStorage.getItem('auth_token'))
+      ? (localStorage.getItem('accessToken') || localStorage.getItem('auth_token') || localStorage.getItem('token'))
       : null
     
     if (token) {

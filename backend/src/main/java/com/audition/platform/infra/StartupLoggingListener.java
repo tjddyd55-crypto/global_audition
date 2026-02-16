@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.env.Environment;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
@@ -24,7 +25,7 @@ public class StartupLoggingListener implements ApplicationListener<ApplicationRe
     }
 
     @Override
-    public void onApplicationEvent(ApplicationReadyEvent event) {
+    public void onApplicationEvent(@NonNull ApplicationReadyEvent event) {
         String[] activeProfiles = env.getActiveProfiles();
         if (activeProfiles.length == 0) {
             activeProfiles = env.getDefaultProfiles();
@@ -33,12 +34,13 @@ public class StartupLoggingListener implements ApplicationListener<ApplicationRe
 
         String ddlAuto = env.getProperty("spring.jpa.hibernate.ddl-auto", "not set");
         String hbm2ddl = env.getProperty("spring.jpa.properties.hibernate.hbm2ddl.auto", "not set");
-        log.info("[Startup] Effective JPA ddl-auto: {}, hbm2ddl.auto: {} (production must be 'none')", ddlAuto, hbm2ddl);
+        log.info("[Startup] ddl-auto value: {}, hbm2ddl.auto: {} (production must be 'none')", ddlAuto, hbm2ddl);
 
         var info = flyway.info();
         int pending = info.pending().length;
         int applied = info.applied().length;
-        log.info("[Startup] Flyway migrations: {} applied, {} pending (migration success: {})",
-            applied, pending, pending == 0 ? "yes" : "pending");
+        log.info("[Startup] Flyway applied count: {}", applied);
+        log.info("[Startup] Flyway pending count: {}", pending);
+        log.info("[Startup] Flyway migrations status: {}", pending == 0 ? "up-to-date" : "pending");
     }
 }

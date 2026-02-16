@@ -13,15 +13,24 @@ export interface LoginRequest {
 
 export interface AuthResponse {
   token: string
-  email: string
   role: string
   userId: string
+  email?: string
+}
+
+export interface AuthMeResponse {
+  userId: string
+  email: string
+  role: 'APPLICANT' | 'AGENCY' | 'ADMIN'
+  name?: string | null
+  profileImageUrl?: string | null
 }
 
 export const authApi = {
   signup: async (data: SignupRequest): Promise<AuthResponse> => {
     const { data: response } = await apiClient.post<AuthResponse>('/auth/signup', data)
     if (typeof window !== 'undefined' && response.token) {
+      localStorage.setItem('token', response.token)
       localStorage.setItem('accessToken', response.token)
       localStorage.setItem('auth_token', response.token)
       localStorage.setItem('userRole', response.role)
@@ -34,6 +43,7 @@ export const authApi = {
   login: async (data: LoginRequest): Promise<AuthResponse> => {
     const { data: response } = await apiClient.post<AuthResponse>('/auth/login', data)
     if (typeof window !== 'undefined' && response.token) {
+      localStorage.setItem('token', response.token)
       localStorage.setItem('accessToken', response.token)
       localStorage.setItem('auth_token', response.token)
       localStorage.setItem('userRole', response.role)
@@ -43,10 +53,16 @@ export const authApi = {
     return response
   },
 
+  me: async (): Promise<AuthMeResponse> => {
+    const { data } = await apiClient.get<AuthMeResponse>('/auth/me')
+    return data
+  },
+
   logout: () => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('accessToken')
       localStorage.removeItem('auth_token')
+      localStorage.removeItem('token')
       localStorage.removeItem('userRole')
       localStorage.removeItem('userId')
       window.dispatchEvent(new Event('auth-change'))
@@ -55,7 +71,7 @@ export const authApi = {
 
   getToken: (): string | null => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('accessToken') || localStorage.getItem('auth_token')
+      return localStorage.getItem('accessToken') || localStorage.getItem('auth_token') || localStorage.getItem('token')
     }
     return null
   },

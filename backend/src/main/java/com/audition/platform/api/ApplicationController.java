@@ -1,6 +1,7 @@
 package com.audition.platform.api;
 
 import com.audition.platform.api.dto.ApplicationResponse;
+import com.audition.platform.api.dto.ApplicationDecisionRequest;
 import com.audition.platform.api.dto.UpdateApplicationStatusRequest;
 import com.audition.platform.application.ApplicationService;
 import jakarta.validation.Valid;
@@ -24,8 +25,13 @@ public class ApplicationController {
         return applicationService.apply(auditionId);
     }
 
-    @GetMapping("/applications/me")
+    @GetMapping("/applications/my")
     public List<ApplicationResponse> listMyApplications() {
+        return applicationService.listMyApplications();
+    }
+
+    @GetMapping("/applications/me")
+    public List<ApplicationResponse> listMyApplicationsLegacy() {
         return applicationService.listMyApplications();
     }
 
@@ -34,18 +40,36 @@ public class ApplicationController {
         return applicationService.listByAudition(auditionId);
     }
 
+    @PostMapping("/applications/{id}/decision")
+    public ApplicationResponse decide(@PathVariable UUID id, @Valid @RequestBody ApplicationDecisionRequest request) {
+        return applicationService.decide(id, request.getStatus());
+    }
+
+    @PostMapping("/applications/{id}/mark-reviewed")
+    public ApplicationResponse markReviewed(@PathVariable UUID id) {
+        return applicationService.markReviewed(id);
+    }
+
     @PatchMapping("/applications/{id}/status")
-    public ApplicationResponse updateStatus(@PathVariable UUID id, @Valid @RequestBody UpdateApplicationStatusRequest request) {
-        return applicationService.updateStatus(id, request.getStatus());
+    public ApplicationResponse updateStatusLegacy(@PathVariable UUID id, @Valid @RequestBody UpdateApplicationStatusRequest request) {
+        if ("REVIEWED".equals(request.getStatus())) {
+            return applicationService.markReviewed(id);
+        }
+        return applicationService.decide(id, request.getStatus());
     }
 
     @PostMapping("/applications/{id}/accept")
-    public ApplicationResponse accept(@PathVariable UUID id) {
-        return applicationService.accept(id);
+    public ApplicationResponse acceptLegacy(@PathVariable UUID id) {
+        return applicationService.decide(id, "ACCEPTED");
     }
 
     @PostMapping("/applications/{id}/reject")
-    public ApplicationResponse reject(@PathVariable UUID id) {
-        return applicationService.reject(id);
+    public ApplicationResponse rejectLegacy(@PathVariable UUID id) {
+        return applicationService.decide(id, "REJECTED");
+    }
+
+    @GetMapping("/applications/{id}")
+    public ApplicationResponse getById(@PathVariable UUID id) {
+        return applicationService.getApplicationForApplicantOrOwner(id);
     }
 }

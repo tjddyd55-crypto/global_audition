@@ -7,11 +7,15 @@ export interface AuditionResponse {
   description: string | null
   status: 'DRAFT' | 'OPEN' | 'CLOSED'
   createdAt: string
+  updatedAt?: string
+  countryCode?: string | null
+  deadlineAt?: string | null
+  category?: string | null
 }
 
 export const auditionApi = {
-  list: async (): Promise<AuditionResponse[]> => {
-    const { data } = await apiClient.get<AuditionResponse[]>('/auditions')
+  listOpen: async (): Promise<AuditionResponse[]> => {
+    const { data } = await apiClient.get<AuditionResponse[]>('/auditions', { params: { status: 'OPEN' } })
     return data
   },
 
@@ -20,38 +24,40 @@ export const auditionApi = {
     return data
   },
 
-  create: async (body: { title: string; description?: string; status?: string }): Promise<AuditionResponse> => {
+  create: async (body: {
+    title: string
+    description?: string
+    status?: 'DRAFT' | 'OPEN' | 'CLOSED'
+    countryCode?: string
+    deadlineAt?: string
+    category?: string
+  }): Promise<AuditionResponse> => {
     const { data } = await apiClient.post<AuditionResponse>('/auditions', body)
     return data
   },
 
-  /** List auditions owned by current user (GET /api/auditions/mine). */
-  getMyAuditions: async (_params: { page: number; size: number }): Promise<{ content: AuditionResponse[]; totalPages: number }> => {
-    const { data } = await apiClient.get<AuditionResponse[]>('/auditions/mine')
+  getMyAuditions: async (_params: { page?: number; size?: number } = {}): Promise<{ content: AuditionResponse[]; totalPages: number }> => {
+    const { data } = await apiClient.get<AuditionResponse[]>('/auditions/my')
     const content = data ?? []
     return { content, totalPages: Math.max(1, Math.ceil(content.length / 20)) }
   },
 
-  /** Dashboard stats: totalAuditions from my list; totalApplicants summed from each audition's applications. */
-  getDashboardStats: async (): Promise<{ totalAuditions: number; totalApplicants: number }> => {
-    const { content } = await auditionApi.getMyAuditions({ page: 0, size: 500 })
-    const { applicationApi } = await import('./applications')
-    let totalApplicants = 0
-    for (const a of content) {
-      try {
-        const list = await applicationApi.listByAudition(a.id)
-        totalApplicants += list.length
-      } catch {
-        // ignore per-audition errors
-      }
+  update: async (
+    id: string,
+    body: {
+      title?: string
+      description?: string
+      status?: 'DRAFT' | 'OPEN' | 'CLOSED'
+      countryCode?: string
+      deadlineAt?: string
+      category?: string
     }
-    return { totalAuditions: content.length, totalApplicants }
+  ): Promise<AuditionResponse> => {
+    const { data } = await apiClient.patch<AuditionResponse>(`/auditions/${id}`, body)
+    return data
   },
 
-  /** MVP: delete not implemented in backend; stub throws. */
-  deleteAudition: async (_id: string | number): Promise<void> => {
-    const err = new Error('삭제 기능은 현재 지원되지 않습니다.') as Error & { response?: { data?: { message?: string } } }
-    err.response = { data: { message: '삭제 기능은 현재 지원되지 않습니다.' } }
-    throw err
+  deleteAudition: async (id: string | number): Promise<void> => {
+    await apiClient.delete(`/auditions/${id}`)
   },
 }

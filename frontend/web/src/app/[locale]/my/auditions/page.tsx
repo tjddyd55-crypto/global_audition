@@ -44,7 +44,11 @@ export default function MyAuditionsPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('정말 삭제하시겠습니까?')) return
-    await deleteMutation.mutateAsync(id)
+    try {
+      await deleteMutation.mutateAsync(id)
+    } catch (e: any) {
+      alert(e?.response?.data?.message ?? '삭제는 현재 지원되지 않습니다.')
+    }
   }
 
   const getStatusBadgeColor = (status: string) => {
@@ -158,7 +162,7 @@ export default function MyAuditionsPage() {
                       상세보기
                     </Link>
                     <Link
-                      href={`/auditions/${audition.id}/applications`}
+                      href={`/my/auditions/${audition.id}/applications`}
                       className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
                     >
                       지원자 관리

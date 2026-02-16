@@ -9,5 +9,11 @@ public interface AuditionRepository extends JpaRepository<Audition, UUID> {
 
     List<Audition> findAllByOrderByCreatedAtDesc();
 
+    List<Audition> findByStatusOrderByCreatedAtDesc(String status);
+
     List<Audition> findByOwnerIdOrderByCreatedAtDesc(UUID ownerId);
+
+    long countByOwnerId(UUID ownerId);
+
+    long countByOwnerIdAndStatus(UUID ownerId, String status);
 }

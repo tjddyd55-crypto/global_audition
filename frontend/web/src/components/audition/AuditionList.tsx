@@ -9,7 +9,7 @@ import ErrorMessage from '../common/ErrorMessage'
 export default function AuditionList() {
   const { data, isLoading, error } = useQuery({
     queryKey: ['auditions'],
-    queryFn: () => auditionApi.list(),
+    queryFn: () => auditionApi.listOpen(),
   })
 
   if (isLoading) {

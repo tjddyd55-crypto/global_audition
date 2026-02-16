@@ -33,6 +33,12 @@ public class Application {
     @Column(nullable = false, columnDefinition = "TEXT") // SUBMITTED | REVIEWED | ACCEPTED | REJECTED
     private String status;
 
+    @Column(columnDefinition = "TEXT")
+    private String message;
+
+    @Column(name = "updated_at")
+    private Instant updatedAt = Instant.now();
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
@@ -48,6 +54,10 @@ public class Application {
     public void setApplicant(User applicant) { this.applicant = applicant; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+    public String getMessage() { return message; }
+    public void setMessage(String message) { this.message = message; }
+    public Instant getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 }

@@ -39,6 +39,8 @@ public class ApplicationService {
         r.setApplicantId(app.getApplicantId());
         r.setApplicantEmail(applicant != null ? applicant.getEmail() : null);
         r.setStatus(app.getStatus());
+        r.setMessage(app.getMessage());
+        r.setUpdatedAt(app.getUpdatedAt());
         r.setCreatedAt(app.getCreatedAt());
         return r;
     }
@@ -49,7 +51,7 @@ public class ApplicationService {
         if (applicantId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
         }
-        if (!SecurityUtils.hasRole("APPLICANT") && !SecurityUtils.hasRole("ADMIN")) {
+        if (!SecurityUtils.hasRole("APPLICANT")) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only APPLICANT can apply");
         }
         Audition audition = auditionRepository.findById(auditionId)
@@ -66,6 +68,7 @@ public class ApplicationService {
         app.setAuditionId(auditionId);
         app.setApplicantId(applicantId);
         app.setStatus("SUBMITTED");
+        app.setUpdatedAt(java.time.Instant.now());
         app = applicationRepository.save(app);
         return toResponse(app, applicant);
     }
@@ -74,6 +77,9 @@ public class ApplicationService {
         UUID applicantId = SecurityUtils.getCurrentUserId();
         if (applicantId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+        }
+        if (!SecurityUtils.hasRole("APPLICANT") && !SecurityUtils.hasRole("ADMIN")) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only APPLICANT or ADMIN can view my applications");
         }
         List<Application> list = applicationRepository.findByApplicantIdOrderByCreatedAtDesc(applicantId);
         return list.stream()
@@ -109,24 +115,19 @@ public class ApplicationService {
     }
 
     @Transactional
-    public ApplicationResponse accept(UUID applicationId) {
-        return updateStatus(applicationId, "ACCEPTED");
-    }
-
-    @Transactional
-    public ApplicationResponse reject(UUID applicationId) {
-        return updateStatus(applicationId, "REJECTED");
-    }
-
-    @Transactional
-    public ApplicationResponse updateStatus(UUID applicationId, String newStatus) {
-        if (!"REVIEWED".equals(newStatus) && !"ACCEPTED".equals(newStatus) && !"REJECTED".equals(newStatus)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Status must be REVIEWED, ACCEPTED, or REJECTED");
+    public ApplicationResponse decide(UUID applicationId, String decisionStatus) {
+        if (!"ACCEPTED".equals(decisionStatus) && !"REJECTED".equals(decisionStatus)) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Decision status must be ACCEPTED or REJECTED");
         }
-        return updateDecision(applicationId, newStatus);
+        return updateStatusInternal(applicationId, decisionStatus);
     }
 
-    private ApplicationResponse updateDecision(UUID applicationId, String newStatus) {
+    @Transactional
+    public ApplicationResponse markReviewed(UUID applicationId) {
+        return updateStatusInternal(applicationId, "REVIEWED");
+    }
+
+    private ApplicationResponse updateStatusInternal(UUID applicationId, String newStatus) {
         UUID currentUserId = SecurityUtils.getCurrentUserId();
         if (currentUserId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
@@ -139,8 +140,32 @@ public class ApplicationService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only audition owner can accept/reject");
         }
         app.setStatus(newStatus);
+        app.setUpdatedAt(java.time.Instant.now());
         app = applicationRepository.save(app);
         User applicant = userRepository.findById(app.getApplicantId()).orElse(null);
         return toResponse(app, applicant);
+    }
+
+    public ApplicationResponse getApplicationForApplicantOrOwner(UUID applicationId) {
+        UUID currentUserId = SecurityUtils.getCurrentUserId();
+        if (currentUserId == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+        }
+        Application app = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Application not found"));
+        Audition audition = auditionRepository.findById(app.getAuditionId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Audition not found"));
+
+        boolean isApplicant = app.getApplicantId().equals(currentUserId);
+        boolean isOwner = audition.getOwnerId().equals(currentUserId);
+        boolean isAdmin = SecurityUtils.hasRole("ADMIN");
+        if (!isApplicant && !isOwner && !isAdmin) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not allowed to access this application");
+        }
+
+        User applicant = userRepository.findById(app.getApplicantId()).orElse(null);
+        ApplicationResponse response = toResponse(app, applicant);
+        response.setAuditionTitle(audition.getTitle());
+        return response;
     }
 }

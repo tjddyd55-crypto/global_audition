@@ -1,12 +1,10 @@
 package com.audition.platform.api.dto;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-public class CreateAuditionRequest {
+public class UpdateAuditionRequest {
 
-    @NotBlank
     @Size(min = 1, max = 120)
     private String title;
 
@@ -14,7 +12,7 @@ public class CreateAuditionRequest {
     private String description;
 
     @Pattern(regexp = "DRAFT|OPEN|CLOSED")
-    private String status = "DRAFT";
+    private String status;
 
     private String countryCode;
 

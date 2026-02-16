@@ -15,4 +15,16 @@ public interface ApplicationRepository extends JpaRepository<Application, UUID> 
     boolean existsByAuditionIdAndApplicantId(UUID auditionId, UUID applicantId);
 
     List<Application> findByApplicantIdOrderByCreatedAtDesc(UUID applicantId);
+
+    long countByApplicantId(UUID applicantId);
+
+    long countByApplicantIdAndStatus(UUID applicantId, String status);
+
+    long countByStatusAndAuditionIdIn(String status, List<UUID> auditionIds);
+
+    long countByAuditionIdIn(List<UUID> auditionIds);
+
+    List<Application> findTop10ByAuditionIdInOrderByCreatedAtDesc(List<UUID> auditionIds);
+
+    List<Application> findTop10ByApplicantIdOrderByCreatedAtDesc(UUID applicantId);
 }

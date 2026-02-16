@@ -1,4 +1,4 @@
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
   id UUID PRIMARY KEY,
   email TEXT UNIQUE NOT NULL,
   password_hash TEXT NOT NULL,
@@ -6,7 +6,7 @@ CREATE TABLE users (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE TABLE auditions (
+CREATE TABLE IF NOT EXISTS auditions (
   id UUID PRIMARY KEY,
   owner_id UUID NOT NULL REFERENCES users(id),
   title TEXT NOT NULL,
@@ -15,7 +15,7 @@ CREATE TABLE auditions (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE TABLE applications (
+CREATE TABLE IF NOT EXISTS applications (
   id UUID PRIMARY KEY,
   audition_id UUID NOT NULL REFERENCES auditions(id) ON DELETE CASCADE,
   applicant_id UUID NOT NULL REFERENCES users(id),
@@ -25,6 +25,6 @@ CREATE TABLE applications (
 );
 
 -- indexes
-CREATE INDEX idx_auditions_owner ON auditions(owner_id);
-CREATE INDEX idx_applications_audition ON applications(audition_id);
-CREATE INDEX idx_applications_applicant ON applications(applicant_id);
+CREATE INDEX IF NOT EXISTS idx_auditions_owner ON auditions(owner_id);
+CREATE INDEX IF NOT EXISTS idx_applications_audition ON applications(audition_id);
+CREATE INDEX IF NOT EXISTS idx_applications_applicant ON applications(applicant_id);

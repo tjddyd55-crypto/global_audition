@@ -35,7 +35,9 @@ dist/
 .env.test.local
 .env.production.local
 
-# Spring Boot
+# Spring Boot / Java build outputs
+/backend/target/
+**/target/
 target/
 !.mvn/wrapper/maven-wrapper.jar
 
