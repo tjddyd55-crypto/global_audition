@@ -66,9 +66,12 @@ In the Backend service → **Variables**, set:
 | Variable | Value | Required |
 |----------|--------|----------|
 | `SPRING_PROFILES_ACTIVE` | `production` | Yes |
-| `SPRING_DATASOURCE_URL` | `jdbc:postgresql://<POSTGRES_HOST>:5432/<DB_NAME>` | Yes |
+| `SPRING_DATASOURCE_URL` | `jdbc:postgresql://<POSTGRES_HOST>:5432/<DB_NAME>?currentSchema=public` | Yes |
 | `SPRING_DATASOURCE_USERNAME` | Postgres username | Yes |
 | `SPRING_DATASOURCE_PASSWORD` | Postgres password | Yes |
+| `SPRING_FLYWAY_SCHEMAS` | `public` | Recommended |
+| `SPRING_FLYWAY_DEFAULT_SCHEMA` | `public` | Recommended |
+| `SPRING_FLYWAY_CREATE_SCHEMAS` | `true` | Recommended |
 
 - **Do not set** `SPRING_JPA_HIBERNATE_DDL_AUTO` (or any JPA schema-generation variable). Production uses `ddl-auto=none`; Flyway is the only schema authority.
 - For **private** DB on Railway, use the **internal** host (e.g. `postgres.railway.internal`) in `SPRING_DATASOURCE_URL` so traffic stays on Railway’s network.

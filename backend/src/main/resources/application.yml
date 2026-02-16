@@ -12,10 +12,13 @@ spring:
     name: audition-platform-backend
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/audition
+    url: jdbc:postgresql://localhost:5432/audition?currentSchema=public
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
+    hikari:
+      schema: public
+      connection-init-sql: SET search_path TO public
 
   jpa:
     hibernate:
@@ -32,6 +35,11 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: true
     baseline-version: 0
+    schemas: public
+    default-schema: public
+    create-schemas: true
+    init-sqls: SET search_path TO public
+    repair-on-migrate: true
 
 server:
   port: 8080

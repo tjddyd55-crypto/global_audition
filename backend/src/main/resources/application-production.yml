@@ -1,5 +1,13 @@
 # Production profile — do NOT set ddl-auto; Flyway is SSOT.
 spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${PGHOST:localhost}:${PGPORT:5432}/${PGDATABASE:audition}?currentSchema=public}
+    username: ${SPRING_DATASOURCE_USERNAME:${PGUSER:postgres}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${PGPASSWORD:postgres}}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      schema: public
+      connection-init-sql: SET search_path TO public
   jpa:
     hibernate:
       ddl-auto: none
@@ -9,3 +17,8 @@ spring:
           auto: none
   flyway:
     enabled: true
+    schemas: public
+    default-schema: public
+    create-schemas: true
+    init-sqls: SET search_path TO public
+    repair-on-migrate: true
