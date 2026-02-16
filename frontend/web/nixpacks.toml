@@ -1,0 +1,17 @@
+# Nixpacks config for Railway (Node/Next.js)
+# - Full install so build has TypeScript; avoid legacy production flag (npm warn)
+# - NODE_OPTIONS at start to reduce OOM/SIGTERM
+
+[phases.install]
+# Unset NODE_ENV for install so npm doesn't use legacy production (avoids npm warn)
+cmds = ["env -u NODE_ENV npm ci"]
+
+[phases.build]
+cmds = ["npm run build"]
+
+[variables]
+# Give Node more memory at runtime (reduce OOM/SIGTERM)
+NODE_OPTIONS = "--max-old-space-size=1024"
+
+[start]
+cmd = "npm run start"
