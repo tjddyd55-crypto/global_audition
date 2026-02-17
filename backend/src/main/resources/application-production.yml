@@ -1,4 +1,8 @@
 # Production profile — do NOT set ddl-auto; Flyway is SSOT.
+app:
+  cors:
+    allowed-origins: "https://frontend-production-8613a.up.railway.app,http://localhost:3000"
+
 spring:
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${PGHOST:localhost}:${PGPORT:5432}/${PGDATABASE:audition}?currentSchema=public}
