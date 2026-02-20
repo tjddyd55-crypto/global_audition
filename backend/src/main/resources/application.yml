@@ -2,8 +2,7 @@ app:
   version: 1.0.0-SNAPSHOT
   buildId: ""
   cors:
-    allowed-origins:
-      - http://localhost:3000
+    allowed-origins: "http://localhost:3000"
   jwt:
     secret: "${JWT_SECRET:change-me-in-production-min-32-chars}"
     expiration-ms: 86400000  # 24h

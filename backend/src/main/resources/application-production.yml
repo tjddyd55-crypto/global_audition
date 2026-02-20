@@ -1,8 +1,7 @@
 # Production profile — do NOT set ddl-auto; Flyway is SSOT.
 app:
   cors:
-    allowed-origins:
-      - https://frontend-production-8613a.up.railway.app
+    allowed-origins: "https://frontend-production-8613a.up.railway.app"
 
 spring:
   datasource:

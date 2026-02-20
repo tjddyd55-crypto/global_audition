@@ -3,7 +3,7 @@ import { apiClient } from './client'
 export interface SignupRequest {
   email: string
   password: string
-  role: 'APPLICANT' | 'AGENCY' | 'ADMIN'
+  role: 'APPLICANT' | 'AGENCY'
 }
 
 export interface LoginRequest {

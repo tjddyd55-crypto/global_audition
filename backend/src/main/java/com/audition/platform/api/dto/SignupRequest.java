@@ -16,7 +16,7 @@ public class SignupRequest {
     private String password;
 
     @NotBlank
-    @Pattern(regexp = "APPLICANT|AGENCY|ADMIN")
+    @Pattern(regexp = "APPLICANT|AGENCY")
     private String role;
 
     public String getEmail() { return email; }

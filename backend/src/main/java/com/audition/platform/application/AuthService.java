@@ -21,7 +21,7 @@ import java.util.UUID;
 
 @Service
 public class AuthService {
-    private static final Set<String> ALLOWED_ROLES = Set.of("APPLICANT", "AGENCY", "ADMIN");
+    private static final Set<String> ALLOWED_ROLES = Set.of("APPLICANT", "AGENCY");
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -40,10 +40,10 @@ public class AuthService {
         String email = req.getEmail().trim().toLowerCase(Locale.ROOT);
         String role = req.getRole().trim().toUpperCase(Locale.ROOT);
         if (!ALLOWED_ROLES.contains(role)) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Role must be APPLICANT, AGENCY, or ADMIN");
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Role must be APPLICANT or AGENCY");
         }
         if (userRepository.existsByEmail(email)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email already registered");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already registered");
         }
         User user = new User();
         user.setEmail(email);
@@ -52,7 +52,7 @@ public class AuthService {
         user.setUpdatedAt(Instant.now());
         user = userRepository.save(user);
         String token = jwtService.createToken(user.getId(), user.getEmail(), user.getRole());
-        return new AuthResponse(token, user.getEmail(), user.getRole(), user.getId().toString());
+        return new AuthResponse(token, user.getRole(), user.getId().toString());
     }
 
     public AuthResponse login(LoginRequest req) {
@@ -62,7 +62,7 @@ public class AuthService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password");
         }
         String token = jwtService.createToken(user.getId(), user.getEmail(), user.getRole());
-        return new AuthResponse(token, user.getEmail(), user.getRole(), user.getId().toString());
+        return new AuthResponse(token, user.getRole(), user.getId().toString());
     }
 
     public AuthMeResponse me() {

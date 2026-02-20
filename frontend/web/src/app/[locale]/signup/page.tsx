@@ -7,12 +7,12 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { authApi } from '../../../lib/api/auth'
 import { Link } from '../../../i18n.config'
+import RoleSelector from '../../../components/auth/RoleSelector'
 
 const signupSchema = z.object({
   email: z.string().email('유효한 이메일을 입력해주세요'),
   password: z.string().min(6, '비밀번호는 최소 6자 이상이어야 합니다'),
   confirmPassword: z.string().min(6, '비밀번호 확인을 입력해주세요'),
-  role: z.enum(['APPLICANT', 'AGENCY']),
 }).refine((data) => data.password === data.confirmPassword, {
   message: '비밀번호가 일치하지 않습니다',
   path: ['confirmPassword'],
@@ -24,10 +24,10 @@ export default function SignupPage() {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [role, setRole] = useState<'APPLICANT' | 'AGENCY'>('APPLICANT')
 
   const { register, handleSubmit, formState: { errors } } = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
-    defaultValues: { role: 'APPLICANT' },
   })
 
   const onSubmit = async (data: SignupFormData) => {
@@ -37,12 +37,20 @@ export default function SignupPage() {
       await authApi.signup({
         email: data.email,
         password: data.password,
-        role: data.role,
+        role,
       })
-      if (data.role === 'AGENCY') router.push('/my/dashboard')
+      if (role === 'AGENCY') router.push('/my/dashboard')
       else router.push('/auditions')
     } catch (err: any) {
-      setError(err.response?.data?.message || err.message || '회원가입에 실패했습니다.')
+      if (!err.response) {
+        setError('서버 연결 실패')
+      } else if (err.response.status === 400) {
+        setError(err.response.data?.message || '입력값을 확인해주세요.')
+      } else if (err.response.status === 409) {
+        setError('이미 가입된 이메일입니다.')
+      } else {
+        setError(err.response?.data?.message || '회원가입에 실패했습니다.')
+      }
     } finally {
       setIsLoading(false)
     }
@@ -85,13 +93,7 @@ export default function SignupPage() {
             />
             {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword.message}</p>}
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">역할</label>
-            <select {...register('role')} className="w-full border rounded px-3 py-2">
-              <option value="APPLICANT">지망생 (Applicant)</option>
-              <option value="AGENCY">기획사 (Agency)</option>
-            </select>
-          </div>
+          <RoleSelector role={role} onChange={setRole} />
           <button
             type="submit"
             disabled={isLoading}
