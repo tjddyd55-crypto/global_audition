@@ -8,6 +8,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -58,6 +59,24 @@ public class GlobalExceptionHandler {
         log.error("DataIntegrityViolation on {} {}: {}", request.getMethod(), request.getRequestURI(), message, ex);
         return ResponseEntity.status(HttpStatus.CONFLICT).body(
                 new ErrorResponse("409", message, request.getRequestURI(), Instant.now())
+        );
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleUnreadableMessage(HttpMessageNotReadableException ex, HttpServletRequest request) {
+        String message = "Invalid JSON payload";
+        Throwable root = ex.getMostSpecificCause();
+        if (root != null && root.getMessage() != null) {
+            String rootMsg = root.getMessage();
+            if (rootMsg.contains("double-quote to start field name")) {
+                message = "Invalid JSON payload: field names must be in double quotes";
+            } else if (rootMsg.contains("Cannot deserialize value")) {
+                message = "Invalid JSON payload: check field types and enum values";
+            }
+        }
+        log.warn("HttpMessageNotReadable on {} {}: {}", request.getMethod(), request.getRequestURI(), message, ex);
+        return ResponseEntity.badRequest().body(
+                new ErrorResponse("400", message, request.getRequestURI(), Instant.now())
         );
     }
 
