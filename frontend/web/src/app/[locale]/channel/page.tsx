@@ -7,6 +7,7 @@ import { videoApi, VideoContent } from '../../../lib/api/videos'
 import { userApi } from '../../../lib/api/user'
 import { authApi } from '../../../lib/api/auth'
 import { useTranslations } from 'next-intl'
+import Image from 'next/image'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -270,9 +271,13 @@ export default function ChannelPage() {
             {videos.content.map((video) => (
               <div key={video.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
                 {video.thumbnailUrl && (
-                  <img
+                  <Image
                     src={video.thumbnailUrl}
                     alt={video.title}
+                    width={640}
+                    height={192}
+                    unoptimized
+                    sizes="(max-width: 768px) 100vw, 33vw"
                     className="w-full h-48 object-cover"
                   />
                 )}

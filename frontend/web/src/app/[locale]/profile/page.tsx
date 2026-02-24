@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { videoApi } from '../../../lib/api/videos'
 import { authApi } from '../../../lib/api/auth'
 import { useRouter } from '../../../i18n.config'
+import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 
@@ -60,9 +61,13 @@ export default function ProfilePage() {
               {videos.content.map((video) => (
                 <div key={video.id} className="border rounded-lg overflow-hidden">
                   {video.thumbnailUrl && (
-                    <img
+                    <Image
                       src={video.thumbnailUrl}
                       alt={video.title}
+                      width={640}
+                      height={192}
+                      unoptimized
+                      sizes="(max-width: 768px) 100vw, 33vw"
                       className="w-full h-48 object-cover"
                     />
                   )}
