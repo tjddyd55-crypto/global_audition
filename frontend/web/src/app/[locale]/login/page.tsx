@@ -121,62 +121,72 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <h1 className="text-3xl font-bold text-center mb-8">{t('loginTitle')}</h1>
+        {/* Figma: Card wrapper */}
+        <div className="rounded-xl border border-gray-200 bg-white shadow-lg overflow-hidden">
+          <div className="p-6 pb-0">
+            <h1 className="text-2xl font-semibold text-center">{t('loginTitle')}</h1>
+          </div>
+          <div className="p-6">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                  {t('email')}
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  {...register('email')}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  placeholder="your@email.com"
+                />
+                {errors.email && (
+                  <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
+                )}
+              </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-              {error}
+              <div className="space-y-2">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                  {t('password')}
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  {...register('password')}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  placeholder="••••••••"
+                />
+                {errors.password && (
+                  <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>
+                )}
+              </div>
+
+              {error && (
+                <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">{error}</div>
+              )}
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-3 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 transition-all"
+              >
+                {isLoading ? tCommon('loading') : t('loginButton')}
+              </button>
+            </form>
+
+            {/* Figma: Separator with "또는" */}
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-200" />
+              </div>
+              <div className="relative flex justify-center">
+                <span className="bg-white px-2 text-sm text-gray-500">
+                  {t('or', { defaultValue: '또는' })}
+                </span>
+              </div>
             </div>
-          )}
 
-          <div>
-            <label className="block text-sm font-medium mb-2">{t('email')}</label>
-            <input
-              type="email"
-              {...register('email')}
-              className="w-full px-4 py-2 border rounded-lg"
-              placeholder="email@example.com"
-            />
-            {errors.email && (
-              <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-2">{t('password')}</label>
-            <input
-              type="password"
-              {...register('password')}
-              className="w-full px-4 py-2 border rounded-lg"
-              placeholder={t('password')}
-            />
-            {errors.password && (
-              <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>
-            )}
-          </div>
-
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50"
-          >
-            {isLoading ? tCommon('loading') : t('loginButton')}
-          </button>
-        </form>
-
-        {/* 소셜 로그인 구분선 */}
-        <div className="mt-6 mb-6 flex items-center">
-          <div className="flex-1 border-t border-gray-300"></div>
-          {/* t('or')는 auth.or 키를 참조 (useTranslations('auth') 스코프) */}
-          <span className="px-4 text-sm text-gray-500">
-            {t('or', { defaultValue: '또는' })}
-          </span>
-          <div className="flex-1 border-t border-gray-300"></div>
-        </div>
-
-        {/* 소셜 로그인 버튼 */}
-        <div className="space-y-3">
+            {/* Figma: Social login grid 2x2 */}
+            <div className="grid grid-cols-2 gap-3">
           <button
             onClick={() => handleSocialLogin('GOOGLE')}
             disabled={isLoading}
@@ -216,28 +226,30 @@ export default function LoginPage() {
           <button
             onClick={() => handleSocialLogin('FACEBOOK')}
             disabled={isLoading}
-            className="w-full px-6 py-3 bg-[#1877F2] text-white rounded-lg hover:bg-[#166FE5] disabled:opacity-50 flex items-center justify-center gap-3 font-medium"
+            className="w-full px-4 py-2.5 rounded-lg disabled:opacity-50 flex items-center justify-center gap-2 text-sm font-medium bg-[#1877F2] text-white hover:bg-[#166FE5]"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
               <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
             </svg>
-            <span>Facebook으로 로그인</span>
+            Facebook
           </button>
+            </div>
+          </div>
         </div>
 
-        <div className="mt-6 text-center space-y-2">
+        <div className="mt-6 text-center space-y-2 text-sm">
           <p className="text-gray-600">
             {t('noAccount')}{' '}
-            <Link href="/signup" className="text-primary-600 hover:underline">
+            <Link href="/signup" className="text-purple-600 hover:underline font-medium">
               {t('registerButton')}
             </Link>
           </p>
-          <div className="flex justify-center gap-4 text-sm">
-            <Link href="/find-user-id" className="text-gray-600 hover:text-primary-600">
+          <div className="flex justify-center gap-4">
+            <Link href="/find-user-id" className="text-gray-600 hover:text-purple-600">
               아이디 찾기
             </Link>
-            <span className="text-gray-400">|</span>
-            <Link href="/find-password" className="text-gray-600 hover:text-primary-600">
+            <span className="text-gray-400">·</span>
+            <Link href="/find-password" className="text-gray-600 hover:text-purple-600">
               비밀번호 찾기
             </Link>
           </div>

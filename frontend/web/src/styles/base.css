@@ -45,12 +45,18 @@
   
   --color-purple-100: #f3e8ff;
   --color-purple-600: #9333ea;
-  
+  --color-pink-500: #ec4899;
+  --color-pink-600: #db2777;
+
   /* Primary 색상 - 기본은 회색으로 */
   --color-primary-100: var(--color-gray-100);
   --color-primary-600: var(--color-gray-600);
   --color-primary-700: var(--color-gray-700);
   --color-primary-800: var(--color-gray-800);
+
+  /* 참고: Global Audition App 디자인 - 보라·핑크 그라데이션 (필요 시 primary로 교체) */
+  --color-ref-gradient-from: var(--color-purple-600);
+  --color-ref-gradient-to: var(--color-pink-600);
   
   /* 간격 */
   --spacing-1: 0.25rem;   /* 4px */

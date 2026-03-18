@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import { Link } from '../../i18n.config'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import type { AuditionResponse } from '../../lib/api/auditions'
@@ -15,24 +15,43 @@ const statusLabels: Record<string, string> = {
   CLOSED: '마감',
 }
 
+function StatusBadge({ status }: { status: string }) {
+  const style =
+    status === 'OPEN'
+      ? 'bg-green-100 text-green-700 border-green-200'
+      : status === 'CLOSED'
+        ? 'bg-gray-100 text-gray-700 border-gray-200'
+        : 'bg-yellow-100 text-yellow-700 border-yellow-200'
+  return (
+    <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${style}`}>
+      {statusLabels[status] ?? status}
+    </span>
+  )
+}
+
 export default function AuditionCard({ audition }: AuditionCardProps) {
   return (
-    <Link
-      href={`/auditions/${audition.id}`}
-      className="block border rounded-lg overflow-hidden hover:shadow-lg transition-shadow bg-white"
-    >
-      <div className="p-4">
-        <h3 className="text-lg font-semibold mb-2 line-clamp-2">{audition.title}</h3>
-        {audition.description && (
-          <p className="text-sm text-gray-600 line-clamp-2 mb-3">{audition.description}</p>
+    <Link href={`/auditions/${audition.id}`}>
+      <article className="h-full rounded-xl border-2 border-gray-100 bg-white p-5 shadow-sm transition-all hover:scale-[1.02] hover:border-purple-200 hover:shadow-lg cursor-pointer">
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <h3 className="text-lg font-semibold leading-tight line-clamp-2">{audition.title}</h3>
+          <StatusBadge status={audition.status} />
+        </div>
+        {audition.category && (
+          <span className="inline-flex rounded-md border px-2 py-0.5 text-xs font-medium mb-2">
+            {audition.category}
+          </span>
         )}
-        <span className="inline-block px-2 py-1 bg-gray-100 text-gray-700 rounded text-sm">
-          {statusLabels[audition.status] ?? audition.status}
-        </span>
-        <p className="text-xs text-gray-500 mt-2">
+        {audition.description && (
+          <p className="text-sm text-gray-600 mb-4 line-clamp-2">{audition.description}</p>
+        )}
+        <p className="flex items-center text-xs text-gray-500">
+          <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
           {format(new Date(audition.createdAt), 'yyyy.MM.dd', { locale: ko })}
         </p>
-      </div>
+      </article>
     </Link>
   )
 }

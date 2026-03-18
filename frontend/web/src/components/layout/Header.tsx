@@ -86,27 +86,35 @@ const Header = memo(function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-50 bg-white border-b">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          <Link href="/" className="text-2xl font-bold text-primary-600">
+    <header className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-lg">
+      <div className="container mx-auto px-4 h-16 flex items-center justify-between max-w-7xl">
+        {/* Logo - Figma: G circle + gradient text */}
+        <Link href="/" className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shrink-0">
+            <span className="text-white font-bold text-lg">G</span>
+          </div>
+          <span className="font-bold text-lg bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent hidden sm:inline">
             {t('appName')}
+          </span>
+        </Link>
+
+        {/* Desktop Menu */}
+        <nav className="hidden md:flex items-center gap-6">
+          <Link href="/auditions" className="text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors">
+            {t('auditions')}
+          </Link>
+          <Link href="/channel" className="text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors">
+            채널
+          </Link>
+          <Link href="/videos" className="text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors">
+            영상
           </Link>
 
-          {/* Desktop Menu */}
-          <nav className="hidden md:flex items-center space-x-4">
-            <Link href="/auditions" className="hover:text-primary-600">
-              {t('auditions')}
-            </Link>
-            <Link href="/channel" className="hover:text-primary-600">
-              채널
-            </Link>
-            
             {!isUserLoading && token && user ? (
               // 로그인 상태
               <div className="relative flex items-center space-x-4">
                 {user.userType === 'BUSINESS' && (
-                  <Link href="/my/dashboard" className="hover:text-primary-600 font-medium">
+                  <Link href="/my/dashboard" className="text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors">
                     대시보드
                   </Link>
                 )}
@@ -115,7 +123,7 @@ const Header = memo(function Header() {
                     onClick={toggleUserMenu}
                     className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-100"
                   >
-                    <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center text-white font-semibold">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-semibold shrink-0">
                       {user.name.charAt(0).toUpperCase()}
                     </div>
                     <span className="text-sm font-medium">{user.name}</span>
@@ -140,7 +148,7 @@ const Header = memo(function Header() {
                           <div className="px-4 py-2 border-b">
                             <p className="text-sm font-medium">{user.name}</p>
                             <p className="text-xs text-gray-500">{user.email}</p>
-                            <p className="text-xs text-primary-600 mt-1">
+                            <p className="text-xs text-purple-600 mt-1">
                               {user.userType === 'BUSINESS' ? '기획사' : '지원자'}
                             </p>
                           </div>
@@ -149,28 +157,28 @@ const Header = memo(function Header() {
                               <Link
                                 href="/my/dashboard"
                                 onClick={() => setIsUserMenuOpen(false)}
-                                className="block px-4 py-2 hover:bg-gray-100 text-sm"
+                                className="block px-4 py-2 hover:bg-purple-50 text-sm"
                               >
                                 대시보드
                               </Link>
                               <Link
                                 href="/my/auditions"
                                 onClick={() => setIsUserMenuOpen(false)}
-                                className="block px-4 py-2 hover:bg-gray-100 text-sm"
+                                className="block px-4 py-2 hover:bg-purple-50 text-sm"
                               >
                                 내 오디션
                               </Link>
                               <Link
                                 href="/my/profile"
                                 onClick={() => setIsUserMenuOpen(false)}
-                                className="block px-4 py-2 hover:bg-gray-100 text-sm"
+                                className="block px-4 py-2 hover:bg-purple-50 text-sm"
                               >
                                 내 정보
                               </Link>
                               <Link
                                 href="/auditions/create"
                                 onClick={() => setIsUserMenuOpen(false)}
-                                className="block px-4 py-2 hover:bg-gray-100 text-sm"
+                                className="block px-4 py-2 hover:bg-purple-50 text-sm"
                               >
                                 오디션 등록
                               </Link>
@@ -180,14 +188,14 @@ const Header = memo(function Header() {
                               <Link
                                 href="/profile"
                                 onClick={() => setIsUserMenuOpen(false)}
-                                className="block px-4 py-2 hover:bg-gray-100 text-sm"
+                                className="block px-4 py-2 hover:bg-purple-50 text-sm"
                               >
                                 프로필
                               </Link>
                               <Link
                                 href="/channel"
                                 onClick={() => setIsUserMenuOpen(false)}
-                                className="block px-4 py-2 hover:bg-gray-100 text-sm"
+                                className="block px-4 py-2 hover:bg-purple-50 text-sm"
                               >
                                 내 채널
                               </Link>
@@ -208,13 +216,16 @@ const Header = memo(function Header() {
                 </div>
               </div>
             ) : (
-              // 로그아웃 상태
+              // 로그아웃 상태 - Figma: ghost Login + gradient Signup
               <>
-                <Link href="/register" className="hover:text-primary-600">
-                  {t('register')}
-                </Link>
-                <Link href="/login" className="hover:text-primary-600">
+                <Link href="/login" className="text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors">
                   {t('login')}
+                </Link>
+                <Link
+                  href="/register"
+                  className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 px-4 py-2 text-sm font-medium text-white hover:from-purple-700 hover:to-pink-700 transition-all"
+                >
+                  {t('register')}
                 </Link>
               </>
             )}
@@ -268,6 +279,13 @@ const Header = memo(function Header() {
               onClick={closeMenu}
             >
               채널
+            </Link>
+            <Link
+              href="/videos"
+              className="block py-2 hover:text-primary-600"
+              onClick={closeMenu}
+            >
+              영상
             </Link>
             
             {!isUserLoading && token && user ? (
@@ -365,7 +383,6 @@ const Header = memo(function Header() {
             </div>
           </nav>
         )}
-      </div>
     </header>
   )
 })
