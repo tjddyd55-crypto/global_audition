@@ -76,8 +76,11 @@
   },
   "home": {
     "title": "Audition Platform",
+    "heroTitle": "Find the stage for your dreams",
+    "heroSubtitle": "Global audition platform connecting you with agencies worldwide",
     "subtitle": "Online audition platform connecting agencies and applicants",
     "viewAuditions": "View Auditions",
+    "getStarted": "Get Started",
     "feature1Title": "Join Auditions",
     "feature1Desc": "Apply to various auditions and seize opportunities",
     "feature2Title": "Manage Profile",

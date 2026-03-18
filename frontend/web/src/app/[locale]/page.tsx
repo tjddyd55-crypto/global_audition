@@ -6,8 +6,49 @@ import { useTranslations } from 'next-intl'
 import { auditionApi, type AuditionResponse } from '../../lib/api/auditions'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
+import Image from 'next/image'
 
-/* Figma Home: hero + 진행 중인 오디션(실제 API) + 최신 영상(플레이스홀더) + CTA */
+/* Figma Home: hero + 진행 중인 오디션(실제 API) + 최신 영상(목업) + CTA */
+
+/** 목업: 영상 API 연동 전까지 피그마와 동일한 카드 표시용 */
+const MOCK_LATEST_VIDEOS = [
+  {
+    id: '1',
+    title: 'Vocal Performance - "Rise Up"',
+    description: '나의 첫 보컬 퍼포먼스 영상입니다. 많은 응원 부탁드립니다!',
+    category: 'Vocal',
+    views: 15234,
+    likes: 892,
+    thumbnail: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&h=300&fit=crop',
+    channelId: '1',
+    channelName: '지수 Kim',
+    channelAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop',
+  },
+  {
+    id: '2',
+    title: 'Dance Cover - New Jeans "OMG"',
+    description: '뉴진스 OMG 커버 댄스입니다',
+    category: 'Dance',
+    views: 23456,
+    likes: 1234,
+    thumbnail: 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=400&h=300&fit=crop',
+    channelId: '1',
+    channelName: '지수 Kim',
+    channelAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop',
+  },
+  {
+    id: '3',
+    title: 'Freestyle Dance Performance',
+    description: '최신 힙합 트랙에 맞춘 프리스타일 댄스',
+    category: 'Dance',
+    views: 18901,
+    likes: 1045,
+    thumbnail: 'https://images.unsplash.com/photo-1547153760-18fc9498cfd8?w=400&h=300&fit=crop',
+    channelId: '2',
+    channelName: '민준 Park',
+    channelAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop',
+  },
+] as const
 
 const statusLabels: Record<string, string> = {
   DRAFT: '초안',
@@ -52,10 +93,10 @@ export default function HomePage() {
         <div className="container mx-auto px-4 py-16 md:py-24 relative">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 bg-clip-text text-transparent">
-              {t('title')}
+              {t('heroTitle') || t('title')}
             </h1>
             <p className="text-lg md:text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-              {t('subtitle')}
+              {t('heroSubtitle') || t('subtitle')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
@@ -136,19 +177,77 @@ export default function HomePage() {
         )}
       </section>
 
-      {/* 최신 영상 - Figma 스타일, 영상 API 없음 → CTA만 */}
+      {/* 최신 영상 - Figma 카드 레이아웃, 목업 데이터 (API 연동 시 교체) */}
       <section className="container mx-auto px-4 py-16 md:py-24">
         <div className="mb-8">
           <h2 className="text-3xl font-bold mb-2 text-center">최신 영상</h2>
           <p className="text-gray-600 text-center">최근 업로드된 영상을 확인하세요</p>
         </div>
-        <div className="rounded-xl border-2 border-dashed border-gray-200 bg-gray-50/50 p-12 text-center">
-          <p className="text-gray-500 mb-4">영상 피드가 준비되면 여기에 표시됩니다</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {MOCK_LATEST_VIDEOS.map((video) => (
+            <div key={video.id} className="group">
+              <article className="h-full rounded-xl border-2 border-gray-100 bg-white overflow-hidden shadow-sm transition-all hover:scale-[1.02] hover:border-purple-200 hover:shadow-lg cursor-pointer">
+                <div className="aspect-video bg-gray-200 relative overflow-hidden">
+                  <Image
+                    src={video.thumbnail}
+                    alt={video.title}
+                    width={400}
+                    height={300}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                    unoptimized
+                  />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                    <span className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <svg className="w-6 h-6 text-purple-600 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    </span>
+                  </div>
+                  <span className="absolute top-2 right-2 rounded bg-purple-600 px-2 py-0.5 text-xs font-medium text-white border-0">
+                    {video.category}
+                  </span>
+                </div>
+                <div className="p-4">
+                  <Link
+                    href={`/channel/${video.channelId}`}
+                    className="flex items-center gap-2 mb-3 hover:opacity-75 transition-opacity"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-purple-100 flex-shrink-0">
+                      <Image
+                        src={video.channelAvatar}
+                        alt={video.channelName}
+                        width={32}
+                        height={32}
+                        className="w-full h-full object-cover"
+                        unoptimized
+                      />
+                    </div>
+                    <span className="text-sm font-medium text-gray-700">{video.channelName}</span>
+                  </Link>
+                  <h3 className="font-semibold text-base mb-2 line-clamp-2">{video.title}</h3>
+                  <p className="text-gray-600 text-sm mb-3 line-clamp-2">{video.description}</p>
+                  <div className="flex items-center gap-4 text-sm text-gray-500">
+                    <span className="flex items-center gap-1">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                      {video.views.toLocaleString()}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+                      {video.likes.toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              </article>
+            </div>
+          ))}
+        </div>
+        <div className="text-center mt-8">
           <Link
             href="/videos"
-            className="inline-flex items-center justify-center rounded-lg border-2 border-purple-600 px-6 py-3 font-medium text-purple-600 hover:bg-purple-50"
+            className="inline-flex items-center justify-center rounded-lg border-2 border-gray-300 px-6 py-3 font-medium hover:bg-gray-50"
           >
-            영상 보기
+            모든 영상 보기
           </Link>
         </div>
       </section>

@@ -76,8 +76,11 @@
   },
   "home": {
     "title": "오디션 플랫폼",
+    "heroTitle": "꿈을 펼칠 무대를 찾아보세요",
+    "heroSubtitle": "전 세계 기획사와 연결되는 글로벌 오디션 플랫폼",
     "subtitle": "기획사와 지망생을 연결하는 온라인 오디션 플랫폼",
     "viewAuditions": "오디션 보기",
+    "getStarted": "시작하기",
     "feature1Title": "오디션 참가",
     "feature1Desc": "다양한 오디션에 지원하고 기회를 잡아보세요",
     "feature2Title": "프로필 관리",
