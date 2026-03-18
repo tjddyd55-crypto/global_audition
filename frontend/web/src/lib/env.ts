@@ -35,7 +35,7 @@ export const API_BASE_URL = (() => {
     throw new Error(
       'NEXT_PUBLIC_API_URL is not defined. ' +
       'Please set NEXT_PUBLIC_API_URL in Railway Variables. ' +
-      'Example: https://gateway-production-72d6.up.railway.app'
+      'Example: https://backend-production-b968.up.railway.app'
     )
   }
   

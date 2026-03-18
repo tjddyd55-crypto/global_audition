@@ -4,16 +4,17 @@
 
 ### NEXT_PUBLIC_API_URL (필수)
 
-**용도**: API Gateway Base URL
+**용도**: 백엔드 API Base URL (CORS가 허용된 실제 백엔드 도메인 사용)
 
 **설정 위치**:
 - Railway: `frontend-web` 서비스 → Variables
 - 로컬: `.env.local` (gitignore)
 
-**값 예시**:
+**값 예시 (운영)**:
 ```
-NEXT_PUBLIC_API_URL=https://gateway-production-72d6.up.railway.app
+NEXT_PUBLIC_API_URL=https://backend-production-b968.up.railway.app
 ```
+※ gateway URL이 아닌 **실제 백엔드 URL**을 사용해야 CORS 오류가 발생하지 않습니다.
 
 **빌드 타임 가드**: ✅ 적용됨 (`src/lib/env.ts`)
 - 누락 시 빌드 즉시 실패
@@ -23,7 +24,7 @@ NEXT_PUBLIC_API_URL=https://gateway-production-72d6.up.railway.app
 ```
 Error: NEXT_PUBLIC_API_URL is not defined.
 Please set NEXT_PUBLIC_API_URL in Railway Variables.
-Example: https://gateway-production-72d6.up.railway.app
+Example: https://backend-production-b968.up.railway.app
 ```
 
 ## Optional ENV
@@ -85,7 +86,7 @@ const dbUrl = process.env.DATABASE_URL  // ❌
 배포 전 확인:
 - [ ] `NEXT_PUBLIC_API_URL` 설정됨
 - [ ] 값이 빈 문자열 아님
-- [ ] 올바른 Gateway URL 형식
+- [ ] 올바른 백엔드 URL (CORS 허용된 실제 API 서버)
 
 ## 로컬 개발 체크리스트
 
