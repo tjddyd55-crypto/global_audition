@@ -32,13 +32,13 @@ function StatusBadge({ status }: { status: string }) {
 export default function AuditionCard({ audition }: AuditionCardProps) {
   return (
     <Link href={`/auditions/${audition.id}`}>
-      <article className="h-full rounded-xl border-2 border-gray-100 bg-white p-5 shadow-sm transition-all hover:scale-[1.02] hover:border-purple-200 hover:shadow-lg cursor-pointer">
+      <article className="h-full cursor-pointer rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:border-purple-200">
         <div className="flex items-start justify-between gap-2 mb-2">
           <h3 className="text-lg font-semibold leading-tight line-clamp-2">{audition.title}</h3>
           <StatusBadge status={audition.status} />
         </div>
         {audition.category && (
-          <span className="inline-flex rounded-md border px-2 py-0.5 text-xs font-medium mb-2">
+          <span className="mb-2 inline-flex rounded-md border px-2 py-0.5 text-xs font-medium">
             {audition.category}
           </span>
         )}
@@ -49,7 +49,7 @@ export default function AuditionCard({ audition }: AuditionCardProps) {
           <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
-          {format(new Date(audition.createdAt), 'yyyy.MM.dd', { locale: ko })}
+          {format(new Date(audition.createdAt), 'yyyy-MM-dd', { locale: ko })}
         </p>
       </article>
     </Link>
