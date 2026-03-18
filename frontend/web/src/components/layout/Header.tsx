@@ -103,7 +103,7 @@ const Header = memo(function Header() {
           <Link href="/auditions" className="text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors">
             {t('auditions')}
           </Link>
-          <Link href="/channel" className="text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors">
+          <Link href="/channels" className="text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors">
             채널
           </Link>
           <Link href="/videos" className="text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors">
@@ -274,7 +274,7 @@ const Header = memo(function Header() {
               {t('auditions')}
             </Link>
             <Link
-              href="/channel"
+              href="/channels"
               className="block py-2 hover:text-primary-600"
               onClick={closeMenu}
             >
