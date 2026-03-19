@@ -1,13 +1,6 @@
 /**
- * SSOT: Prisma Audition / API / 상세 / 생성 폼 동일 필드명
+ * SSOT: Prisma Audition / API / 상세 / 생성 폼 동일 필드명 (JSON detailContent 없음)
  */
-export type AuditionDetailContent = {
-  recruit: string[]
-  qualification: string[]
-  schedule: string[]
-  benefits: string[]
-}
-
 export type AuditionStatus = 'DRAFT' | 'OPEN' | 'CLOSED'
 
 export type AuditionDto = {
@@ -29,19 +22,13 @@ export type AuditionDto = {
   applicantsCount: number
   remainingDays: number
   recruitFields: string[]
+  qualifications: string[]
+  schedules: string[]
   location: string
   startDate: string
   endDate: string
-  detailContent: AuditionDetailContent
   benefits: string[]
 }
-
-export const emptyDetailContent = (): AuditionDetailContent => ({
-  recruit: [],
-  qualification: [],
-  schedule: [],
-  benefits: [],
-})
 
 export type CreateAuditionPayload = {
   title: string
@@ -54,10 +41,11 @@ export type CreateAuditionPayload = {
   agencyName: string
   agencyLogo?: string
   recruitFields: string[]
+  qualifications: string[]
+  schedules: string[]
   location: string
   startDate: string
   endDate: string
-  detailContent: AuditionDetailContent
   benefits: string[]
   countryCode?: string
   deadlineAt?: string

@@ -1,25 +1,9 @@
 import { apiClient } from './client'
-import type { AuditionDto, AuditionDetailContent, CreateAuditionPayload } from '../types/audition'
+import type { AuditionDto, CreateAuditionPayload } from '../types/audition'
+import { safeStringArr } from '../utils/safe'
 
 /** @deprecated 레거시 import 호환 — AuditionDto와 동일 */
 export type { AuditionDto as AuditionResponse } from '../types/audition'
-import { emptyDetailContent } from '../types/audition'
-
-function asStringArray(v: unknown): string[] {
-  if (!Array.isArray(v)) return []
-  return v.filter((x) => typeof x === 'string') as string[]
-}
-
-function parseDetailContent(raw: unknown): AuditionDetailContent {
-  if (!raw || typeof raw !== 'object') return emptyDetailContent()
-  const o = raw as Record<string, unknown>
-  return {
-    recruit: asStringArray(o.recruit),
-    qualification: asStringArray(o.qualification),
-    schedule: asStringArray(o.schedule),
-    benefits: asStringArray(o.benefits),
-  }
-}
 
 export function parseAuditionDto(raw: Record<string, unknown>): AuditionDto {
   return {
@@ -35,17 +19,18 @@ export function parseAuditionDto(raw: Record<string, unknown>): AuditionDto {
     createdAt: String(raw.createdAt ?? ''),
     coverImage: raw.coverImage != null ? String(raw.coverImage) : null,
     videoUrl: raw.videoUrl != null ? String(raw.videoUrl) : null,
-    galleryImages: asStringArray(raw.galleryImages),
+    galleryImages: safeStringArr(raw.galleryImages),
     agencyName: String(raw.agencyName ?? ''),
     agencyLogo: raw.agencyLogo != null ? String(raw.agencyLogo) : null,
-    applicantsCount: Number(raw.applicantsCount ?? 0),
-    remainingDays: Number(raw.remainingDays ?? 0),
-    recruitFields: asStringArray(raw.recruitFields),
+    applicantsCount: Number(raw.applicantsCount ?? 0) || 0,
+    remainingDays: Number(raw.remainingDays ?? 0) || 0,
+    recruitFields: safeStringArr(raw.recruitFields),
+    qualifications: safeStringArr(raw.qualifications),
+    schedules: safeStringArr(raw.schedules),
     location: String(raw.location ?? ''),
     startDate: String(raw.startDate ?? ''),
     endDate: String(raw.endDate ?? ''),
-    detailContent: parseDetailContent(raw.detailContent),
-    benefits: asStringArray(raw.benefits),
+    benefits: safeStringArr(raw.benefits),
   }
 }
 

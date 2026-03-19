@@ -1,14 +1,34 @@
 'use client'
 
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
 import { useRouter } from '../../../../../i18n.config'
 import { auditionApi } from '../../../../../lib/api/auditions'
 import { authApi } from '../../../../../lib/api/auth'
 import { useTranslations } from 'next-intl'
 import { Link } from '../../../../../i18n.config'
 import { LAYOUT, SIGNUP, HERO, AUDITION_DETAIL } from '../../../../../lib/design-tokens'
-import type { AuditionDetailContent, AuditionStatus, CreateAuditionPayload } from '../../../../../lib/types/audition'
-import { emptyDetailContent } from '../../../../../lib/types/audition'
+import type { AuditionStatus, CreateAuditionPayload } from '../../../../../lib/types/audition'
+
+/** 로컬 미리보기용 (CDN 업로드 전); 용량 초과 파일은 건너뜀 */
+const GALLERY_MAX_FILES_PER_PICK = 8
+const GALLERY_MAX_BYTES_PER_FILE = 1_500_000
+
+function readFileAsDataUrl(file: File): Promise<string | null> {
+  return new Promise((resolve) => {
+    if (file.size > GALLERY_MAX_BYTES_PER_FILE) {
+      resolve(null)
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : null)
+    reader.onerror = () => resolve(null)
+    reader.readAsDataURL(file)
+  })
+}
+
+function trimNonEmpty(lines: string[] | undefined): string[] {
+  return (lines ?? []).map((s) => (s ?? '').trim()).filter((s) => s.length > 0)
+}
 
 function StringListEditor({
   label,
@@ -19,23 +39,24 @@ function StringListEditor({
   values: string[]
   onChange: (next: string[]) => void
 }) {
-  const add = () => onChange([...values, ''])
+  const list = values.length ? values : ['']
+  const add = () => onChange([...list, ''])
   const setAt = (i: number, v: string) => {
-    const next = [...values]
+    const next = [...list]
     next[i] = v
     onChange(next)
   }
-  const remove = (i: number) => onChange(values.filter((_, j) => j !== i))
+  const remove = (i: number) => onChange(list.filter((_, j) => j !== i))
   return (
-    <div style={{ marginBottom: 20 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-        <label style={{ fontSize: 14, fontWeight: 600 }}>{label}</label>
+    <div style={{ marginBottom: AUDITION_DETAIL.mainGridGapPx }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: AUDITION_DETAIL.galleryGapPx }}>
+        <label style={{ fontSize: AUDITION_DETAIL.bodyFontPx, fontWeight: 600 }}>{label}</label>
         <button type="button" onClick={add} style={{ fontSize: 13, color: HERO.primaryGradientStart, background: 'none', border: 'none', cursor: 'pointer' }}>
           + 항목 추가
         </button>
       </div>
-      {values.map((v, i) => (
-        <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+      {list.map((v, i) => (
+        <div key={`${label}-row-${i}`} style={{ display: 'flex', gap: AUDITION_DETAIL.galleryGapPx, marginBottom: AUDITION_DETAIL.galleryGapPx }}>
           <input
             value={v}
             onChange={(e) => setAt(i, e.target.value)}
@@ -48,7 +69,16 @@ function StringListEditor({
               fontSize: SIGNUP.inputFontSizePx,
             }}
           />
-          <button type="button" onClick={() => remove(i)} style={{ padding: '0 12px', border: `1px solid ${SIGNUP.inputBorderColor}`, borderRadius: SIGNUP.inputRadiusPx, background: '#fff' }}>
+          <button
+            type="button"
+            onClick={() => remove(i)}
+            style={{
+              padding: `0 ${AUDITION_DETAIL.benefitCardPaddingPx}px`,
+              border: `1px solid ${SIGNUP.inputBorderColor}`,
+              borderRadius: SIGNUP.inputRadiusPx,
+              background: '#fff',
+            }}
+          >
             삭제
           </button>
         </div>
@@ -93,11 +123,12 @@ export default function DashboardAuditionCreatePage() {
   const [agencyName, setAgencyName] = useState('')
   const [agencyLogo, setAgencyLogo] = useState('')
   const [recruitFields, setRecruitFields] = useState<string[]>([''])
+  const [qualifications, setQualifications] = useState<string[]>([''])
+  const [schedules, setSchedules] = useState<string[]>([''])
+  const [benefits, setBenefits] = useState<string[]>([''])
   const [location, setLocation] = useState('')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
-  const [detail, setDetail] = useState<AuditionDetailContent>(emptyDetailContent())
-  const [benefitsTop, setBenefitsTop] = useState<string[]>([''])
 
   useEffect(() => {
     const token = authApi.getToken()
@@ -114,6 +145,21 @@ export default function DashboardAuditionCreatePage() {
     }
     setReady(true)
   }, [router])
+
+  const onGalleryFiles = async (e: ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files?.length) return
+    const urls: string[] = []
+    const limit = Math.min(files.length, GALLERY_MAX_FILES_PER_PICK)
+    for (let i = 0; i < limit; i++) {
+      const dataUrl = await readFileAsDataUrl(files[i])
+      if (dataUrl) urls.push(dataUrl)
+    }
+    e.target.value = ''
+    if (!urls.length) return
+    const existing = trimNonEmpty(galleryImages)
+    setGalleryImages([...existing, ...urls, ''])
+  }
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -135,35 +181,26 @@ export default function DashboardAuditionCreatePage() {
     }
     setIsLoading(true)
     setError(null)
-    const gallery = galleryImages.map((s) => s.trim()).filter(Boolean)
-    const recruits = recruitFields.map((s) => s.trim()).filter(Boolean)
-    const ben = benefitsTop.map((s) => s.trim()).filter(Boolean)
-    const detailMerged: AuditionDetailContent = {
-      recruit: detail.recruit.map((s) => s.trim()).filter(Boolean).length ? detail.recruit.map((s) => s.trim()).filter(Boolean) : recruits,
-      qualification: detail.qualification.map((s) => s.trim()).filter(Boolean),
-      schedule: detail.schedule.map((s) => s.trim()).filter(Boolean),
-      benefits: detail.benefits.map((s) => s.trim()).filter(Boolean).length ? detail.benefits.map((s) => s.trim()).filter(Boolean) : ben,
-    }
+
     const payload: CreateAuditionPayload = {
-      title: title.trim(),
-      description: description.trim(),
+      title: (title ?? '').trim(),
+      description: (description ?? '').trim(),
       status,
-      category: category.trim() || '기타',
-      coverImage: coverImage.trim() || undefined,
-      videoUrl: videoUrl.trim() || undefined,
-      galleryImages: gallery,
-      agencyName: agencyName.trim(),
-      agencyLogo: agencyLogo.trim() || undefined,
-      recruitFields: detailMerged.recruit,
-      location: location.trim(),
+      category: (category ?? '').trim() || '기타',
+      coverImage: (coverImage ?? '').trim() || undefined,
+      videoUrl: (videoUrl ?? '').trim() || undefined,
+      galleryImages: trimNonEmpty(galleryImages),
+      agencyName: (agencyName ?? '').trim(),
+      agencyLogo: (agencyLogo ?? '').trim() || undefined,
+      recruitFields: trimNonEmpty(recruitFields),
+      qualifications: trimNonEmpty(qualifications),
+      schedules: trimNonEmpty(schedules),
+      benefits: trimNonEmpty(benefits),
+      location: (location ?? '').trim(),
       startDate: new Date(startDate).toISOString(),
       endDate: new Date(endDate).toISOString(),
-      detailContent: {
-        ...detailMerged,
-        benefits: ben.length ? ben : detailMerged.benefits,
-      },
-      benefits: ben.length ? ben : detailMerged.benefits,
     }
+
     try {
       const created = await auditionApi.create(payload)
       router.push(`/auditions/${created.id}`)
@@ -192,9 +229,9 @@ export default function DashboardAuditionCreatePage() {
   const sectionTitle: React.CSSProperties = {
     fontSize: 18,
     fontWeight: 700,
-    margin: '32px 0 16px 0',
+    margin: `${AUDITION_DETAIL.mainGridGapPx}px 0 ${AUDITION_DETAIL.benefitGridGapPx}px 0`,
     borderBottom: `1px solid ${AUDITION_DETAIL.cardBorderColor}`,
-    paddingBottom: 8,
+    paddingBottom: AUDITION_DETAIL.galleryGapPx,
   }
 
   return (
@@ -205,97 +242,109 @@ export default function DashboardAuditionCreatePage() {
         padding: `${LAYOUT.sectionGapPx}px ${LAYOUT.containerPaddingPx}px`,
       }}
     >
-      <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ marginBottom: AUDITION_DETAIL.mainGridGapPx, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700 }}>오디션 등록</h1>
-        <Link href="/my/auditions" style={{ fontSize: 14, color: HERO.primaryGradientStart }}>
+        <Link href="/my/auditions" style={{ fontSize: AUDITION_DETAIL.bodyFontPx, color: HERO.primaryGradientStart }}>
           내 공고 목록
         </Link>
       </div>
 
       {error && (
-        <div style={{ marginBottom: 16, padding: 12, borderRadius: SIGNUP.cardRadiusPx, border: '1px solid #fecaca', background: '#fef2f2', color: '#b91c1c', fontSize: 14 }}>
+        <div
+          style={{
+            marginBottom: AUDITION_DETAIL.benefitGridGapPx,
+            padding: AUDITION_DETAIL.benefitCardPaddingPx,
+            borderRadius: SIGNUP.cardRadiusPx,
+            border: '1px solid #fecaca',
+            background: '#fef2f2',
+            color: '#b91c1c',
+            fontSize: AUDITION_DETAIL.bodyFontPx,
+          }}
+        >
           {error}
         </div>
       )}
 
       <form onSubmit={onSubmit} style={{ maxWidth: 720 }}>
         <h2 style={sectionTitle}>기본 정보</h2>
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>title</label>
+        <div style={{ marginBottom: AUDITION_DETAIL.benefitGridGapPx }}>
+          <label style={{ display: 'block', marginBottom: AUDITION_DETAIL.galleryGapPx, fontSize: AUDITION_DETAIL.bodyFontPx, fontWeight: 500 }}>title</label>
           <input value={title} onChange={(e) => setTitle(e.target.value)} style={inputStyle} required />
         </div>
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>description</label>
+        <div style={{ marginBottom: AUDITION_DETAIL.benefitGridGapPx }}>
+          <label style={{ display: 'block', marginBottom: AUDITION_DETAIL.galleryGapPx, fontSize: AUDITION_DETAIL.bodyFontPx, fontWeight: 500 }}>description</label>
           <textarea value={description} onChange={(e) => setDescription(e.target.value)} style={textareaStyle} required />
         </div>
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>status</label>
+        <div style={{ marginBottom: AUDITION_DETAIL.benefitGridGapPx }}>
+          <label style={{ display: 'block', marginBottom: AUDITION_DETAIL.galleryGapPx, fontSize: AUDITION_DETAIL.bodyFontPx, fontWeight: 500 }}>status</label>
           <select value={status} onChange={(e) => setStatus(e.target.value as AuditionStatus)} style={inputStyle}>
             <option value="DRAFT">DRAFT</option>
             <option value="OPEN">OPEN</option>
             <option value="CLOSED">CLOSED</option>
           </select>
         </div>
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>category</label>
+        <div style={{ marginBottom: AUDITION_DETAIL.benefitGridGapPx }}>
+          <label style={{ display: 'block', marginBottom: AUDITION_DETAIL.galleryGapPx, fontSize: AUDITION_DETAIL.bodyFontPx, fontWeight: 500 }}>category</label>
           <input value={category} onChange={(e) => setCategory(e.target.value)} style={inputStyle} />
         </div>
 
         <h2 style={sectionTitle}>미디어</h2>
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>coverImage (URL)</label>
+        <div style={{ marginBottom: AUDITION_DETAIL.benefitGridGapPx }}>
+          <label style={{ display: 'block', marginBottom: AUDITION_DETAIL.galleryGapPx, fontSize: AUDITION_DETAIL.bodyFontPx, fontWeight: 500 }}>coverImage (URL)</label>
           <input value={coverImage} onChange={(e) => setCoverImage(e.target.value)} style={inputStyle} placeholder="https://..." />
         </div>
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>videoUrl</label>
+        <div style={{ marginBottom: AUDITION_DETAIL.benefitGridGapPx }}>
+          <label style={{ display: 'block', marginBottom: AUDITION_DETAIL.galleryGapPx, fontSize: AUDITION_DETAIL.bodyFontPx, fontWeight: 500 }}>videoUrl</label>
           <input value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} style={inputStyle} placeholder="YouTube URL" />
         </div>
-        <StringListEditor label="galleryImages" values={galleryImages} onChange={setGalleryImages} />
+        <StringListEditor label="galleryImages (URL)" values={galleryImages} onChange={setGalleryImages} />
+        <div style={{ marginBottom: AUDITION_DETAIL.mainGridGapPx }}>
+          <label style={{ display: 'block', marginBottom: AUDITION_DETAIL.galleryGapPx, fontSize: AUDITION_DETAIL.bodyFontPx, fontWeight: 500 }}>
+            galleryImages — 파일 여러 장 추가 (로컬 미리보기, 용량 제한 {Math.round(GALLERY_MAX_BYTES_PER_FILE / 1000)}KB/파일)
+          </label>
+          <input type="file" accept="image/*" multiple onChange={onGalleryFiles} style={{ fontSize: AUDITION_DETAIL.metaMutedPx }} />
+        </div>
 
         <h2 style={sectionTitle}>기획사</h2>
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>agencyName</label>
+        <div style={{ marginBottom: AUDITION_DETAIL.benefitGridGapPx }}>
+          <label style={{ display: 'block', marginBottom: AUDITION_DETAIL.galleryGapPx, fontSize: AUDITION_DETAIL.bodyFontPx, fontWeight: 500 }}>agencyName</label>
           <input value={agencyName} onChange={(e) => setAgencyName(e.target.value)} style={inputStyle} required />
         </div>
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>agencyLogo (URL)</label>
+        <div style={{ marginBottom: AUDITION_DETAIL.benefitGridGapPx }}>
+          <label style={{ display: 'block', marginBottom: AUDITION_DETAIL.galleryGapPx, fontSize: AUDITION_DETAIL.bodyFontPx, fontWeight: 500 }}>agencyLogo (URL)</label>
           <input value={agencyLogo} onChange={(e) => setAgencyLogo(e.target.value)} style={inputStyle} />
         </div>
 
-        <h2 style={sectionTitle}>통계 / 메타</h2>
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>location</label>
+        <h2 style={sectionTitle}>위치 · 일정</h2>
+        <div style={{ marginBottom: AUDITION_DETAIL.benefitGridGapPx }}>
+          <label style={{ display: 'block', marginBottom: AUDITION_DETAIL.galleryGapPx, fontSize: AUDITION_DETAIL.bodyFontPx, fontWeight: 500 }}>location</label>
           <input value={location} onChange={(e) => setLocation(e.target.value)} style={inputStyle} required />
         </div>
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>startDate</label>
+        <div style={{ marginBottom: AUDITION_DETAIL.benefitGridGapPx }}>
+          <label style={{ display: 'block', marginBottom: AUDITION_DETAIL.galleryGapPx, fontSize: AUDITION_DETAIL.bodyFontPx, fontWeight: 500 }}>startDate</label>
           <input type="datetime-local" value={startDate} onChange={(e) => setStartDate(e.target.value)} style={inputStyle} required />
         </div>
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ display: 'block', marginBottom: 4, fontSize: 14, fontWeight: 500 }}>endDate</label>
+        <div style={{ marginBottom: AUDITION_DETAIL.benefitGridGapPx }}>
+          <label style={{ display: 'block', marginBottom: AUDITION_DETAIL.galleryGapPx, fontSize: AUDITION_DETAIL.bodyFontPx, fontWeight: 500 }}>endDate</label>
           <input type="datetime-local" value={endDate} onChange={(e) => setEndDate(e.target.value)} style={inputStyle} required />
         </div>
 
-        <h2 style={sectionTitle}>모집 정보 (detailContent)</h2>
-        <StringListEditor label="recruit" values={detail.recruit.length ? detail.recruit : ['']} onChange={(v) => setDetail({ ...detail, recruit: v.length ? v : [''] })} />
-        <StringListEditor label="qualification" values={detail.qualification.length ? detail.qualification : ['']} onChange={(v) => setDetail({ ...detail, qualification: v.length ? v : [''] })} />
-        <StringListEditor label="schedule" values={detail.schedule.length ? detail.schedule : ['']} onChange={(v) => setDetail({ ...detail, schedule: v.length ? v : [''] })} />
-        <StringListEditor label="benefits (detailContent)" values={detail.benefits.length ? detail.benefits : ['']} onChange={(v) => setDetail({ ...detail, benefits: v.length ? v : [''] })} />
-
-        <h2 style={sectionTitle}>recruitFields</h2>
+        <h2 style={sectionTitle}>모집 · 자격 · 일정 (배열)</h2>
         <StringListEditor label="recruitFields" values={recruitFields} onChange={setRecruitFields} />
+        <StringListEditor label="qualifications" values={qualifications} onChange={setQualifications} />
+        <StringListEditor label="schedules" values={schedules} onChange={setSchedules} />
 
-        <h2 style={sectionTitle}>혜택 카드 (benefits)</h2>
-        <StringListEditor label="benefits" values={benefitsTop} onChange={setBenefitsTop} />
+        <h2 style={sectionTitle}>혜택 (benefits)</h2>
+        <StringListEditor label="benefits" values={benefits} onChange={setBenefits} />
 
         <button
           type="submit"
           disabled={isLoading}
           style={{
-            marginTop: 24,
+            marginTop: AUDITION_DETAIL.mainGridGapPx,
             width: '100%',
             maxWidth: 400,
-            height: 44,
+            height: HERO.buttonHeightPx,
             borderRadius: HERO.buttonRadiusPx,
             border: 'none',
             background: `linear-gradient(90deg, ${HERO.primaryGradientStart}, ${HERO.primaryGradientEnd})`,

@@ -1,6 +1,5 @@
 package com.audition.platform.api.dto;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
@@ -36,14 +35,16 @@ public class UpdateAuditionRequest {
 
     private List<String> recruitFields;
 
+    private List<String> qualifications;
+
+    private List<String> schedules;
+
     @Size(max = 500)
     private String location;
 
     private String startDate;
 
     private String endDate;
-
-    private JsonNode detailContent;
 
     private List<String> benefits;
 
@@ -71,14 +72,16 @@ public class UpdateAuditionRequest {
     public void setAgencyLogo(String agencyLogo) { this.agencyLogo = agencyLogo; }
     public List<String> getRecruitFields() { return recruitFields; }
     public void setRecruitFields(List<String> recruitFields) { this.recruitFields = recruitFields; }
+    public List<String> getQualifications() { return qualifications; }
+    public void setQualifications(List<String> qualifications) { this.qualifications = qualifications; }
+    public List<String> getSchedules() { return schedules; }
+    public void setSchedules(List<String> schedules) { this.schedules = schedules; }
     public String getLocation() { return location; }
     public void setLocation(String location) { this.location = location; }
     public String getStartDate() { return startDate; }
     public void setStartDate(String startDate) { this.startDate = startDate; }
     public String getEndDate() { return endDate; }
     public void setEndDate(String endDate) { this.endDate = endDate; }
-    public JsonNode getDetailContent() { return detailContent; }
-    public void setDetailContent(JsonNode detailContent) { this.detailContent = detailContent; }
     public List<String> getBenefits() { return benefits; }
     public void setBenefits(List<String> benefits) { this.benefits = benefits; }
     public String getCountryCode() { return countryCode; }

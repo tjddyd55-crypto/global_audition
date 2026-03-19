@@ -164,4 +164,11 @@ export const AUDITION_DETAIL = {
   statusOpenColor: AUDITION_CARD.badgeColor,
   pageBackgroundMuted: '#fafafa',
   ownerLinkBg: '#2563eb',
+  /** 상세 섹션 아이콘 박스 */
+  sectionIconBoxPx: 28,
+  sectionHeaderRowGapPx: 8,
+  sectionTitleBelowRowPx: 12,
+  listIndentPx: 20,
+  heroBadgeMarginBottomPx: 12,
+  heroMetaWrapGapPx: 16,
 } as const

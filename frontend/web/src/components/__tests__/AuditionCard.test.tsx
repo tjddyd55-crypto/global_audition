@@ -1,7 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import AuditionCard from '../audition/AuditionCard'
 import type { AuditionDto } from '../../lib/types/audition'
-import { emptyDetailContent } from '../../lib/types/audition'
 
 const mockAudition: AuditionDto = {
   id: '1',
@@ -20,10 +19,11 @@ const mockAudition: AuditionDto = {
   applicantsCount: 0,
   remainingDays: 10,
   recruitFields: ['보컬'],
+  qualifications: [],
+  schedules: [],
   location: '서울',
   startDate: '2024-01-01T00:00:00.000Z',
   endDate: '2024-12-31T00:00:00.000Z',
-  detailContent: emptyDetailContent(),
   benefits: [],
 }
 

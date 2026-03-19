@@ -31,14 +31,13 @@ model Audition {
   remainingDays   Int      @map("remaining_days")
 
   recruitFields   String[] @map("recruit_fields")
+  qualifications  String[]
+  schedules       String[]
 
   location        String
 
   startDate       DateTime @map("start_date")
   endDate         DateTime @map("end_date")
-
-  /// { recruit, qualification, schedule, benefits } — JSON 고정 구조
-  detailContent   Json     @map("detail_content")
 
   benefits        String[]
 

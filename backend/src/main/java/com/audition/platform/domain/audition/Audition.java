@@ -1,7 +1,6 @@
 package com.audition.platform.domain.audition;
 
 import com.audition.platform.domain.user.User;
-import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -76,6 +75,14 @@ public class Audition {
     @Column(name = "recruit_fields", columnDefinition = "text[]")
     private String[] recruitFields = new String[0];
 
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "qualifications", columnDefinition = "text[]")
+    private String[] qualifications = new String[0];
+
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "schedules", columnDefinition = "text[]")
+    private String[] schedules = new String[0];
+
     @Column(nullable = false, columnDefinition = "TEXT")
     private String location = "";
 
@@ -84,10 +91,6 @@ public class Audition {
 
     @Column(name = "end_date")
     private Instant endDate;
-
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "detail_content", nullable = false, columnDefinition = "jsonb")
-    private JsonNode detailContent;
 
     @JdbcTypeCode(SqlTypes.ARRAY)
     @Column(name = "benefits", columnDefinition = "text[]")
@@ -131,14 +134,16 @@ public class Audition {
     public void setRemainingDays(int remainingDays) { this.remainingDays = remainingDays; }
     public String[] getRecruitFields() { return recruitFields; }
     public void setRecruitFields(String[] recruitFields) { this.recruitFields = recruitFields != null ? recruitFields : new String[0]; }
+    public String[] getQualifications() { return qualifications; }
+    public void setQualifications(String[] qualifications) { this.qualifications = qualifications != null ? qualifications : new String[0]; }
+    public String[] getSchedules() { return schedules; }
+    public void setSchedules(String[] schedules) { this.schedules = schedules != null ? schedules : new String[0]; }
     public String getLocation() { return location; }
     public void setLocation(String location) { this.location = location; }
     public Instant getStartDate() { return startDate; }
     public void setStartDate(Instant startDate) { this.startDate = startDate; }
     public Instant getEndDate() { return endDate; }
     public void setEndDate(Instant endDate) { this.endDate = endDate; }
-    public JsonNode getDetailContent() { return detailContent; }
-    public void setDetailContent(JsonNode detailContent) { this.detailContent = detailContent; }
     public String[] getBenefits() { return benefits; }
     public void setBenefits(String[] benefits) { this.benefits = benefits != null ? benefits : new String[0]; }
 }

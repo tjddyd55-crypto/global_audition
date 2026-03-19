@@ -31,9 +31,19 @@ export default function NewAuditionPage() {
     setError(null)
     try {
       await auditionApi.create({
-        title: data.title,
-        description: data.description || undefined,
+        title: data.title.trim(),
+        description: (data.description ?? '').trim() || '—',
         status: data.status,
+        category: '기타',
+        galleryImages: [],
+        agencyName: '미지정',
+        recruitFields: [],
+        qualifications: [],
+        schedules: [],
+        benefits: [],
+        location: '미지정',
+        startDate: new Date().toISOString(),
+        endDate: new Date(Date.now() + 30 * 86400000).toISOString(),
       })
       router.push('/auditions')
     } catch (err: any) {

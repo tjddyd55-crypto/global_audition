@@ -8,10 +8,6 @@ import com.audition.platform.domain.audition.Audition;
 import com.audition.platform.domain.audition.AuditionRepository;
 import com.audition.platform.domain.user.UserRepository;
 import com.audition.platform.infra.SecurityUtils;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,7 +18,6 @@ import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -30,21 +25,16 @@ import java.util.stream.Collectors;
 @Service
 public class AuditionService {
 
-    private static final String[] DETAIL_KEYS = {"recruit", "qualification", "schedule", "benefits"};
-
     private final AuditionRepository auditionRepository;
     private final UserRepository userRepository;
     private final ApplicationRepository applicationRepository;
-    private final ObjectMapper objectMapper;
 
     public AuditionService(AuditionRepository auditionRepository,
                            UserRepository userRepository,
-                           ApplicationRepository applicationRepository,
-                           ObjectMapper objectMapper) {
+                           ApplicationRepository applicationRepository) {
         this.auditionRepository = auditionRepository;
         this.userRepository = userRepository;
         this.applicationRepository = applicationRepository;
-        this.objectMapper = objectMapper;
     }
 
     private static Instant parseInstantRequired(String value, String field) {
@@ -69,47 +59,11 @@ public class AuditionService {
         }
     }
 
-    private JsonNode normalizeDetailContent(JsonNode raw) {
-        ObjectNode out = objectMapper.createObjectNode();
-        for (String key : DETAIL_KEYS) {
-            if (raw != null && raw.isObject() && raw.has(key) && raw.get(key).isArray()) {
-                out.set(key, raw.get(key));
-            } else {
-                out.set(key, objectMapper.createArrayNode());
-            }
-        }
-        return out;
-    }
-
     private static String[] listToArray(List<String> list) {
         if (list == null || list.isEmpty()) {
             return new String[0];
         }
         return list.stream().map(String::trim).filter(s -> !s.isEmpty()).toArray(String[]::new);
-    }
-
-    private static String[] jsonArrayToStrings(JsonNode arr) {
-        if (arr == null || !arr.isArray()) {
-            return new String[0];
-        }
-        List<String> list = new ArrayList<>();
-        for (JsonNode n : arr) {
-            if (n != null && n.isTextual()) {
-                String t = n.asText().trim();
-                if (!t.isEmpty()) {
-                    list.add(t);
-                }
-            }
-        }
-        return list.toArray(new String[0]);
-    }
-
-    private static void putArray(ObjectNode parent, String key, String[] values) {
-        ArrayNode arr = parent.arrayNode();
-        for (String v : values) {
-            arr.add(v);
-        }
-        parent.set(key, arr);
     }
 
     private int computeRemainingDays(Instant endDate) {
@@ -142,35 +96,16 @@ public class AuditionService {
         r.setApplicantsCount((int) applicationRepository.countByAuditionId(a.getId()));
         r.setRemainingDays(computeRemainingDays(a.getEndDate()));
         r.setRecruitFields(a.getRecruitFields() != null ? a.getRecruitFields() : new String[0]);
+        r.setQualifications(a.getQualifications() != null ? a.getQualifications() : new String[0]);
+        r.setSchedules(a.getSchedules() != null ? a.getSchedules() : new String[0]);
         r.setLocation(a.getLocation() != null ? a.getLocation() : "");
         r.setStartDate(a.getStartDate());
         r.setEndDate(a.getEndDate());
-        r.setDetailContent(a.getDetailContent() != null ? a.getDetailContent() : normalizeDetailContent(null));
         r.setBenefits(a.getBenefits() != null ? a.getBenefits() : new String[0]);
         return r;
     }
 
     private void applyCreateBody(Audition a, CreateAuditionRequest req) {
-        JsonNode detail = normalizeDetailContent(req.getDetailContent());
-        ObjectNode merged = (ObjectNode) detail;
-
-        String[] recruits = listToArray(req.getRecruitFields());
-        if (recruits.length == 0) {
-            recruits = jsonArrayToStrings(merged.get("recruit"));
-        }
-        String[] quals = jsonArrayToStrings(merged.get("qualification"));
-        String[] sched = jsonArrayToStrings(merged.get("schedule"));
-        String[] benFromDetail = jsonArrayToStrings(merged.get("benefits"));
-        String[] ben = listToArray(req.getBenefits());
-        if (ben.length == 0) {
-            ben = benFromDetail;
-        }
-
-        putArray(merged, "recruit", recruits);
-        putArray(merged, "qualification", quals);
-        putArray(merged, "schedule", sched);
-        putArray(merged, "benefits", ben);
-
         a.setTitle(req.getTitle().trim());
         a.setDescription(req.getDescription().trim());
         a.setStatus(req.getStatus() != null ? req.getStatus() : "DRAFT");
@@ -180,16 +115,18 @@ public class AuditionService {
         a.setGalleryImages(listToArray(req.getGalleryImages()));
         a.setAgencyName(req.getAgencyName().trim());
         a.setAgencyLogo(req.getAgencyLogo());
-        a.setRecruitFields(recruits);
+        a.setRecruitFields(listToArray(req.getRecruitFields()));
+        a.setQualifications(listToArray(req.getQualifications()));
+        a.setSchedules(listToArray(req.getSchedules()));
+        a.setBenefits(listToArray(req.getBenefits()));
         a.setLocation(req.getLocation().trim());
         Instant start = parseInstantRequired(req.getStartDate(), "startDate");
         Instant end = parseInstantRequired(req.getEndDate(), "endDate");
         a.setStartDate(start);
         a.setEndDate(end);
-        a.setDeadlineAt(parseInstantOrNull(req.getDeadlineAt()) != null ? parseInstantOrNull(req.getDeadlineAt()) : end);
+        Instant deadlineParsed = parseInstantOrNull(req.getDeadlineAt());
+        a.setDeadlineAt(deadlineParsed != null ? deadlineParsed : end);
         a.setCountryCode(req.getCountryCode());
-        a.setDetailContent(merged);
-        a.setBenefits(ben);
         a.setRemainingDays(computeRemainingDays(end));
         a.setApplicantsCount(0);
     }
@@ -308,28 +245,14 @@ public class AuditionService {
         if (request.getRecruitFields() != null) {
             audition.setRecruitFields(listToArray(request.getRecruitFields()));
         }
+        if (request.getQualifications() != null) {
+            audition.setQualifications(listToArray(request.getQualifications()));
+        }
+        if (request.getSchedules() != null) {
+            audition.setSchedules(listToArray(request.getSchedules()));
+        }
         if (request.getBenefits() != null) {
             audition.setBenefits(listToArray(request.getBenefits()));
-        }
-        if (request.getDetailContent() != null) {
-            JsonNode detail = normalizeDetailContent(request.getDetailContent());
-            ObjectNode merged = (ObjectNode) detail;
-            if (request.getRecruitFields() != null) {
-                putArray(merged, "recruit", audition.getRecruitFields());
-            }
-            if (request.getBenefits() != null) {
-                putArray(merged, "benefits", audition.getBenefits());
-            }
-            audition.setDetailContent(merged);
-        } else if (request.getRecruitFields() != null || request.getBenefits() != null) {
-            ObjectNode merged = (ObjectNode) normalizeDetailContent(audition.getDetailContent());
-            if (request.getRecruitFields() != null) {
-                putArray(merged, "recruit", audition.getRecruitFields());
-            }
-            if (request.getBenefits() != null) {
-                putArray(merged, "benefits", audition.getBenefits());
-            }
-            audition.setDetailContent(merged);
         }
 
         if (audition.getEndDate() != null) {

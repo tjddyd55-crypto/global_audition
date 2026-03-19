@@ -1,6 +1,5 @@
 package com.audition.platform.api.dto;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -44,6 +43,10 @@ public class CreateAuditionRequest {
 
     private List<String> recruitFields;
 
+    private List<String> qualifications;
+
+    private List<String> schedules;
+
     @NotBlank
     @Size(max = 500)
     private String location;
@@ -53,9 +56,6 @@ public class CreateAuditionRequest {
 
     @NotBlank
     private String endDate;
-
-    /** recruit, qualification, schedule, benefits 배열 */
-    private JsonNode detailContent;
 
     private List<String> benefits;
 
@@ -88,8 +88,6 @@ public class CreateAuditionRequest {
     public void setStartDate(String startDate) { this.startDate = startDate; }
     public String getEndDate() { return endDate; }
     public void setEndDate(String endDate) { this.endDate = endDate; }
-    public JsonNode getDetailContent() { return detailContent; }
-    public void setDetailContent(JsonNode detailContent) { this.detailContent = detailContent; }
     public List<String> getBenefits() { return benefits; }
     public void setBenefits(List<String> benefits) { this.benefits = benefits; }
     public String getCountryCode() { return countryCode; }

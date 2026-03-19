@@ -1,7 +1,5 @@
 package com.audition.platform.api.dto;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
 import java.time.Instant;
 import java.util.UUID;
 
@@ -26,10 +24,11 @@ public class AuditionResponse {
     private int applicantsCount;
     private int remainingDays;
     private String[] recruitFields;
+    private String[] qualifications;
+    private String[] schedules;
     private String location;
     private Instant startDate;
     private Instant endDate;
-    private JsonNode detailContent;
     private String[] benefits;
 
     public UUID getId() { return id; }
@@ -68,14 +67,16 @@ public class AuditionResponse {
     public void setRemainingDays(int remainingDays) { this.remainingDays = remainingDays; }
     public String[] getRecruitFields() { return recruitFields; }
     public void setRecruitFields(String[] recruitFields) { this.recruitFields = recruitFields; }
+    public String[] getQualifications() { return qualifications; }
+    public void setQualifications(String[] qualifications) { this.qualifications = qualifications; }
+    public String[] getSchedules() { return schedules; }
+    public void setSchedules(String[] schedules) { this.schedules = schedules; }
     public String getLocation() { return location; }
     public void setLocation(String location) { this.location = location; }
     public Instant getStartDate() { return startDate; }
     public void setStartDate(Instant startDate) { this.startDate = startDate; }
     public Instant getEndDate() { return endDate; }
     public void setEndDate(Instant endDate) { this.endDate = endDate; }
-    public JsonNode getDetailContent() { return detailContent; }
-    public void setDetailContent(JsonNode detailContent) { this.detailContent = detailContent; }
     public String[] getBenefits() { return benefits; }
     public void setBenefits(String[] benefits) { this.benefits = benefits; }
 }
