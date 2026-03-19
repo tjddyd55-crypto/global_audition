@@ -54,13 +54,13 @@ export default function ChannelPage() {
         }
 
         const user = await userApi.getCurrentUser()
-        if (user.userType !== 'APPLICANT') {
+        if (user.role !== 'APPLICANT') {
           router.push('/')
           return
         }
 
-        setUserType(user.userType)
-        setUserId(user.id)
+        setUserType('APPLICANT')
+        setUserId(Number.parseInt(user.userId, 10) || null)
       } catch (err: any) {
         console.error('Auth check failed:', err)
         if (err.response?.status === 401) {

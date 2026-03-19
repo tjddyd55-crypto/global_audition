@@ -44,12 +44,12 @@ export default function BusinessProfilePage() {
         }
 
         const user = await userApi.getCurrentUser()
-        if (user.userType !== 'BUSINESS') {
+        if (user.role !== 'AGENCY') {
           router.push('/')
           return
         }
 
-        setUserType(user.userType)
+        setUserType('BUSINESS')
         // TODO: 기획사 프로필 정보 로드 및 폼 초기화
         // reset({ ...userProfile })
       } catch (err: any) {

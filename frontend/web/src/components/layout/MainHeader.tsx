@@ -7,6 +7,7 @@ import { Link, usePathname, useRouter } from '../../i18n.config'
 import { authApi } from '../../lib/api/auth'
 import { userApi } from '../../lib/api/user'
 import { HEADER } from '../../lib/design-tokens'
+import { useAuthStore } from '@/lib/auth/authStore'
 
 const locales = ['ko', 'en', 'ja', 'zh', 'es', 'fr', 'de'] as const
 
@@ -16,25 +17,19 @@ export default function MainHeader() {
   const router = useRouter()
   const pathname = usePathname()
   const queryClient = useQueryClient()
-  const [token, setToken] = useState<string | null>(null)
+  const accessToken = useAuthStore((s) => s.accessToken)
   const [isMobileOpen, setIsMobileOpen] = useState(false)
   const [isLanguageOpen, setIsLanguageOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
 
   useEffect(() => {
-    const syncToken = () => setToken(authApi.getToken())
-    syncToken()
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === 'accessToken' || e.key === 'auth_token') syncToken()
-    }
-    window.addEventListener('storage', onStorage)
-    return () => window.removeEventListener('storage', onStorage)
+    useAuthStore.getState().syncFromStorage()
   }, [])
 
-  const { data: user } = useQuery({
-    queryKey: ['currentUser', token],
+  const { data: user, isLoading: meLoading } = useQuery({
+    queryKey: ['currentUser', accessToken],
     queryFn: () => userApi.getCurrentUser(),
-    enabled: Boolean(token),
+    enabled: Boolean(accessToken),
     retry: false,
     refetchOnWindowFocus: false,
   })
@@ -51,11 +46,15 @@ export default function MainHeader() {
   const handleLogout = () => {
     authApi.logout()
     queryClient.removeQueries({ queryKey: ['currentUser'] })
-    setToken(null)
     setIsUserMenuOpen(false)
     setIsMobileOpen(false)
     router.push('/')
   }
+
+  const displayName = user?.name?.trim() || user?.email || '내 계정'
+  const loggedIn = Boolean(accessToken)
+  /** 토큰 있으면 로그인 UI (me 로딩 중에는 토큰만으로 판단) */
+  const showUserChrome = loggedIn && (!meLoading || !!user)
 
   const headerStyle: React.CSSProperties = {
     height: HEADER.heightPx,
@@ -70,8 +69,8 @@ export default function MainHeader() {
 
   return (
     <header className="fixed inset-x-0 top-0 z-50">
-      <div style={headerStyle}>
-        <Link href="/" className="flex items-center gap-2 shrink-0" style={{ textDecoration: 'none' }}>
+      <div className="max-md:!px-4" style={headerStyle}>
+        <Link href="/" className="flex min-w-0 items-center gap-2 shrink-0" style={{ textDecoration: 'none' }}>
           <div
             style={{
               width: HEADER.logoSizePx,
@@ -88,18 +87,25 @@ export default function MainHeader() {
           >
             G
           </div>
-          <span style={{ fontWeight: HEADER.logoFontWeight, fontSize: HEADER.logoFontSizePx, color: '#000' }}>
+          <span
+            className="truncate max-md:max-w-[140px]"
+            style={{ fontWeight: HEADER.logoFontWeight, fontSize: HEADER.logoFontSizePx, color: '#000' }}
+          >
             글로벌 오디션
           </span>
         </Link>
 
-        <nav className="hidden md:flex" style={{ gap: HEADER.navGapPx }}>
+        <nav className="hidden lg:flex" style={{ gap: HEADER.navGapPx }}>
           <Link
             href="/auditions"
             className="transition-colors hover:opacity-90"
             style={{ fontSize: HEADER.navFontSizePx, color: HEADER.navColor, textDecoration: 'none' }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = HEADER.navHoverColor }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = HEADER.navColor }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = HEADER.navHoverColor
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = HEADER.navColor
+            }}
           >
             오디션
           </Link>
@@ -107,8 +113,12 @@ export default function MainHeader() {
             href="/channels"
             className="transition-colors hover:opacity-90"
             style={{ fontSize: HEADER.navFontSizePx, color: HEADER.navColor, textDecoration: 'none' }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = HEADER.navHoverColor }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = HEADER.navColor }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = HEADER.navHoverColor
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = HEADER.navColor
+            }}
           >
             채널
           </Link>
@@ -116,14 +126,18 @@ export default function MainHeader() {
             href="/videos"
             className="transition-colors hover:opacity-90"
             style={{ fontSize: HEADER.navFontSizePx, color: HEADER.navColor, textDecoration: 'none' }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = HEADER.navHoverColor }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = HEADER.navColor }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = HEADER.navHoverColor
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = HEADER.navColor
+            }}
           >
             영상
           </Link>
         </nav>
 
-        <div className="hidden md:flex items-center" style={{ gap: 16 }}>
+        <div className="hidden lg:flex items-center" style={{ gap: 16 }}>
           <div className="relative">
             <button
               type="button"
@@ -147,7 +161,7 @@ export default function MainHeader() {
               </div>
             )}
           </div>
-          {!token || !user ? (
+          {!showUserChrome ? (
             <>
               <Link href="/login" style={{ fontSize: 14, color: '#000', textDecoration: 'none' }}>
                 {t('login')}
@@ -177,7 +191,7 @@ export default function MainHeader() {
               <button
                 type="button"
                 onClick={() => setIsUserMenuOpen((p) => !p)}
-                className="flex items-center gap-2"
+                className="flex max-w-[200px] items-center gap-2"
               >
                 <div
                   style={{
@@ -193,9 +207,9 @@ export default function MainHeader() {
                     fontWeight: 600,
                   }}
                 >
-                  {(user?.name ?? '').charAt(0) || '?'}
+                  {displayName.charAt(0) || '?'}
                 </div>
-                <span style={{ fontSize: 14 }}>{user?.name ?? '이름 없음'}</span>
+                <span className="truncate text-sm">{displayName}</span>
               </button>
               {isUserMenuOpen && (
                 <div className="absolute right-0 top-full mt-1 w-44 rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
@@ -221,7 +235,7 @@ export default function MainHeader() {
         <button
           type="button"
           onClick={() => setIsMobileOpen((p) => !p)}
-          className="md:hidden flex items-center justify-center w-9 h-9 border border-gray-200 rounded"
+          className="lg:hidden flex items-center justify-center w-9 h-9 border border-gray-200 rounded"
           aria-label="메뉴"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -235,8 +249,8 @@ export default function MainHeader() {
       </div>
 
       {isMobileOpen && (
-        <div className="md:hidden border-t border-gray-200 bg-white px-6 py-4">
-          <div className="flex flex-col gap-2">
+        <div className="lg:hidden border-t border-gray-200 bg-white px-4 py-4 shadow-md">
+          <div className="flex flex-col gap-1">
             <Link href="/auditions" onClick={() => setIsMobileOpen(false)} className="py-2 text-sm">
               오디션
             </Link>
@@ -247,18 +261,57 @@ export default function MainHeader() {
               영상
             </Link>
           </div>
-          <div className="mt-4 pt-4 border-t border-gray-200 flex gap-2">
-            <Link href="/login" onClick={() => setIsMobileOpen(false)} className="flex-1 py-2 text-center text-sm border border-gray-200 rounded">
-              {t('login')}
-            </Link>
-            <Link
-              href="/register"
-              onClick={() => setIsMobileOpen(false)}
-              className="flex-1 py-2 text-center text-sm text-white rounded"
-              style={{ background: 'linear-gradient(90deg, #7c3aed, #ec4899)' }}
-            >
-              {t('register')}
-            </Link>
+          <div className="mt-3 border-t border-gray-200 pt-3">
+            <div className="text-xs text-gray-500 mb-2">언어</div>
+            <div className="flex flex-wrap gap-2">
+              {locales.map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  onClick={() => changeLocale(item)}
+                  className="rounded border border-gray-200 px-2 py-1 text-xs uppercase"
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="mt-4 flex flex-col gap-2 border-t border-gray-200 pt-4">
+            {showUserChrome ? (
+              <>
+                <div className="py-1 text-sm font-medium text-gray-900 truncate">{displayName}</div>
+                <Link href="/profile" onClick={() => setIsMobileOpen(false)} className="w-full py-3 text-center text-sm border border-gray-200 rounded-lg">
+                  프로필
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleLogout()
+                  }}
+                  className="w-full py-3 text-center text-sm text-red-600 border border-red-100 rounded-lg"
+                >
+                  로그아웃
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  onClick={() => setIsMobileOpen(false)}
+                  className="w-full py-3 text-center text-sm border border-gray-200 rounded-lg"
+                >
+                  {t('login')}
+                </Link>
+                <Link
+                  href="/register"
+                  onClick={() => setIsMobileOpen(false)}
+                  className="w-full py-3 text-center text-sm text-white rounded-lg"
+                  style={{ background: 'linear-gradient(90deg, #7c3aed, #ec4899)' }}
+                >
+                  {t('register')}
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}

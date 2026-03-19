@@ -1,4 +1,5 @@
 import { apiClient } from './client'
+import { useAuthStore } from '@/lib/auth/authStore'
 
 export interface SignupRequest {
   email: string
@@ -36,6 +37,7 @@ export const authApi = {
       localStorage.setItem('userRole', response.role)
       localStorage.setItem('userId', response.userId)
       window.dispatchEvent(new Event('auth-change'))
+      useAuthStore.getState().syncFromStorage()
     }
     return response
   },
@@ -49,6 +51,7 @@ export const authApi = {
       localStorage.setItem('userRole', response.role)
       localStorage.setItem('userId', response.userId)
       window.dispatchEvent(new Event('auth-change'))
+      useAuthStore.getState().syncFromStorage()
     }
     return response
   },
@@ -66,6 +69,7 @@ export const authApi = {
       localStorage.removeItem('userRole')
       localStorage.removeItem('userId')
       window.dispatchEvent(new Event('auth-change'))
+      useAuthStore.getState().syncFromStorage()
     }
   },
 

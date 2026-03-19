@@ -6,8 +6,16 @@
 export const LAYOUT = {
   containerMaxWidth: 1200,
   containerPaddingPx: 24,
+  /** md(768px) 미만 메인 가로 패딩 */
+  containerPaddingMobilePx: 16,
   sectionGapPx: 80,
   cardPaddingPx: 16,
+} as const
+
+/** Tailwind `md`/`lg` 와 동일 기준 (문서·주석용) */
+export const BREAKPOINTS = {
+  mdPx: 768,
+  lgPx: 1024,
 } as const
 
 export const HEADER = {
@@ -131,6 +139,8 @@ export const AUDITION_DETAIL = {
   containerPaddingPx: LAYOUT.containerPaddingPx,
   sectionGapPx: LAYOUT.sectionGapPx,
   heroTitlePx: 40,
+  /** 좁은 뷰포트에서 clamp 최소값 (모바일 타이포) */
+  heroTitleMinPx: 28,
   heroTitleWeight: 700,
   heroOverlayRgb: '0,0,0',
   heroOverlayOpacity: 0.55,
@@ -140,6 +150,8 @@ export const AUDITION_DETAIL = {
   cardBorderColor: AUDITION_CARD.borderColor,
   cardRadiusPx: AUDITION_CARD.borderRadiusPx,
   cardPaddingPx: 20,
+  /** 모바일 카드 내부 패딩 */
+  cardPaddingMobilePx: 16,
   videoRadiusPx: 12,
   galleryRadiusPx: 10,
   galleryColumns: 3,

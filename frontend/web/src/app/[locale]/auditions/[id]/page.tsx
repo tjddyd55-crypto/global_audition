@@ -3,7 +3,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { auditionApi } from '../../../../lib/api/auditions'
 import { applicationApi } from '../../../../lib/api/applications'
-import { authApi } from '../../../../lib/api/auth'
 import { useParams, useRouter } from 'next/navigation'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
@@ -14,6 +13,8 @@ import Image from 'next/image'
 import { AUDITION_CARD, AUDITION_DETAIL, HERO } from '../../../../lib/design-tokens'
 import { getVideoEmbedSrc } from '../../../../lib/utils/videoEmbed'
 import { safeArr, safeNum, safeStr } from '../../../../lib/utils/safe'
+import { useAuthStore } from '@/lib/auth/authStore'
+import { AuditionGalleryViewer } from '@/components/audition/AuditionGalleryViewer'
 
 function SectionBlock({
   iconLabel,
@@ -101,8 +102,9 @@ export default function AuditionDetailPage() {
   const t = useTranslations('common')
   const id = params.id as string
   const [applyError, setApplyError] = useState<string | null>(null)
-  const role = typeof window !== 'undefined' ? localStorage.getItem('userRole') : null
-  const token = typeof window !== 'undefined' ? authApi.getToken() : null
+  const accessToken = useAuthStore((s) => s.accessToken)
+  const myUserId = useAuthStore((s) => s.userId)
+  const role = useAuthStore((s) => s.role)
 
   const { data: audition, isLoading, error } = useQuery({
     queryKey: ['audition', id],
@@ -153,7 +155,9 @@ export default function AuditionDetailPage() {
   const benefits = safeArr(audition.benefits)
 
   const canApply = audition.status === 'OPEN' && (role === 'APPLICANT' || role === 'ADMIN')
-  const isOwner = role === 'AGENCY' || role === 'ADMIN'
+  const canManageAudition =
+    Boolean(accessToken) &&
+    (myUserId === audition.ownerId || role === 'ADMIN' || role === 'AGENCY')
 
   const fmt = (iso: string) => {
     try {
@@ -166,7 +170,6 @@ export default function AuditionDetailPage() {
   const container: React.CSSProperties = {
     maxWidth: AUDITION_DETAIL.containerMaxWidthPx,
     margin: '0 auto',
-    padding: `0 ${AUDITION_DETAIL.containerPaddingPx}px`,
     paddingBottom: AUDITION_DETAIL.fixedCtaHeightPx + AUDITION_DETAIL.mainGridGapPx,
   }
 
@@ -176,6 +179,8 @@ export default function AuditionDetailPage() {
     padding: AUDITION_DETAIL.cardPaddingPx,
     background: '#fff',
   }
+
+  const cardBaseClass = 'max-md:!p-4'
 
   return (
     <div style={{ minHeight: '100vh', background: AUDITION_DETAIL.pageBackgroundMuted }}>
@@ -194,12 +199,12 @@ export default function AuditionDetailPage() {
           }}
         />
         <div
+          className="mx-auto w-full max-w-[1200px] px-4 md:px-6"
           style={{
             position: 'relative',
             zIndex: 1,
-            maxWidth: AUDITION_DETAIL.containerMaxWidthPx,
-            margin: '0 auto',
-            padding: `${AUDITION_DETAIL.sectionGapPx}px ${AUDITION_DETAIL.containerPaddingPx}px`,
+            paddingTop: AUDITION_DETAIL.sectionGapPx,
+            paddingBottom: AUDITION_DETAIL.sectionGapPx,
             color: AUDITION_DETAIL.heroMetaColor,
           }}
         >
@@ -220,7 +225,7 @@ export default function AuditionDetailPage() {
           <h1
             style={{
               margin: '0 0 16px 0',
-              fontSize: AUDITION_DETAIL.heroTitlePx,
+              fontSize: `clamp(${AUDITION_DETAIL.heroTitleMinPx}px, 4vw, ${AUDITION_DETAIL.heroTitlePx}px)`,
               fontWeight: AUDITION_DETAIL.heroTitleWeight,
               lineHeight: 1.3,
               color: '#fff',
@@ -243,18 +248,16 @@ export default function AuditionDetailPage() {
         </div>
       </section>
 
-      <div style={{ ...container, paddingTop: AUDITION_DETAIL.sectionGapPx }}>
+      <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6" style={{ ...container, paddingTop: AUDITION_DETAIL.sectionGapPx }}>
         <div
+          className="grid grid-cols-1 lg:grid-cols-[1fr_320px]"
           style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 320px',
             gap: AUDITION_DETAIL.mainGridGapPx,
           }}
-          className="max-lg:grid-cols-1"
         >
           <div>
             {embed ? (
-              <div style={{ ...cardBase, marginBottom: AUDITION_DETAIL.mainGridGapPx }}>
+              <div className={cardBaseClass} style={{ ...cardBase, marginBottom: AUDITION_DETAIL.mainGridGapPx }}>
                 <h2
                   style={{
                     margin: '0 0 12px 0',
@@ -284,7 +287,7 @@ export default function AuditionDetailPage() {
               </div>
             ) : null}
 
-            <div style={{ ...cardBase, marginBottom: AUDITION_DETAIL.mainGridGapPx }}>
+            <div className={cardBaseClass} style={{ ...cardBase, marginBottom: AUDITION_DETAIL.mainGridGapPx }}>
               <h2
                 style={{
                   margin: '0 0 12px 0',
@@ -295,27 +298,7 @@ export default function AuditionDetailPage() {
                 갤러리
               </h2>
               {gallery.length > 0 ? (
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: `repeat(${AUDITION_DETAIL.galleryColumns}, 1fr)`,
-                    gap: AUDITION_DETAIL.galleryGapPx,
-                  }}
-                >
-                  {gallery.map((src, i) => (
-                    <div
-                      key={`g-${i}-${src.slice(0, 32)}`}
-                      style={{
-                        position: 'relative',
-                        aspectRatio: '4/3',
-                        borderRadius: AUDITION_DETAIL.galleryRadiusPx,
-                        overflow: 'hidden',
-                      }}
-                    >
-                      <Image src={src} alt="" fill style={{ objectFit: 'cover' }} unoptimized />
-                    </div>
-                  ))}
-                </div>
+                <AuditionGalleryViewer images={gallery} />
               ) : (
                 <div
                   style={{
@@ -347,7 +330,7 @@ export default function AuditionDetailPage() {
               )}
             </div>
 
-            <div style={cardBase}>
+            <div className={cardBaseClass} style={cardBase}>
               <h2
                 style={{
                   margin: '0 0 16px 0',
@@ -374,7 +357,7 @@ export default function AuditionDetailPage() {
           </div>
 
           <aside style={{ display: 'flex', flexDirection: 'column', gap: AUDITION_DETAIL.mainGridGapPx }}>
-            <div style={cardBase}>
+            <div className={cardBaseClass} style={cardBase}>
               <div style={{ display: 'flex', alignItems: 'center', gap: AUDITION_DETAIL.mainGridGapPx }}>
                 <div
                   style={{
@@ -413,7 +396,7 @@ export default function AuditionDetailPage() {
               </div>
             </div>
 
-            <div style={cardBase}>
+            <div className={cardBaseClass} style={cardBase}>
               <h3
                 style={{
                   margin: '0 0 12px 0',
@@ -453,7 +436,7 @@ export default function AuditionDetailPage() {
               </div>
             </div>
 
-            <div style={cardBase}>
+            <div className={cardBaseClass} style={cardBase}>
               <h3
                 style={{
                   margin: '0 0 12px 0',
@@ -489,6 +472,7 @@ export default function AuditionDetailPage() {
               {benefits.map((b, i) => (
                 <div
                   key={`b-${i}-${b.slice(0, 24)}`}
+                  className={cardBaseClass}
                   style={{
                     ...cardBase,
                     padding: AUDITION_DETAIL.benefitCardPaddingPx,
@@ -519,12 +503,13 @@ export default function AuditionDetailPage() {
           </div>
         )}
 
-        {canApply && token && (
-          <div style={{ marginTop: AUDITION_DETAIL.mainGridGapPx, textAlign: 'center' }}>
+        {canApply && accessToken && (
+          <div className="w-full max-w-md mx-auto px-2 md:px-0" style={{ marginTop: AUDITION_DETAIL.mainGridGapPx, textAlign: 'center' }}>
             <button
               type="button"
               onClick={() => applyMutation.mutate()}
               disabled={applyMutation.isPending}
+              className="w-full md:w-auto"
               style={{
                 padding: '12px 32px',
                 borderRadius: HERO.buttonRadiusPx,
@@ -540,12 +525,30 @@ export default function AuditionDetailPage() {
             </button>
           </div>
         )}
-        {isOwner && token && (
-          <div style={{ marginTop: AUDITION_DETAIL.benefitGridGapPx, textAlign: 'center' }}>
+        {canManageAudition && (
+          <div
+            className="flex w-full max-w-md mx-auto flex-col gap-3 px-2 md:max-w-none md:flex-row md:justify-center md:px-0"
+            style={{ marginTop: AUDITION_DETAIL.benefitGridGapPx, textAlign: 'center' }}
+          >
+            <Link
+              href={`/auditions/${id}/edit`}
+              className="inline-flex w-full md:w-auto items-center justify-center"
+              style={{
+                padding: '12px 24px',
+                borderRadius: HERO.buttonRadiusPx,
+                border: `1px solid ${AUDITION_DETAIL.cardBorderColor}`,
+                color: '#111',
+                fontWeight: 600,
+                textDecoration: 'none',
+                background: '#fff',
+              }}
+            >
+              수정하기
+            </Link>
             <Link
               href={`/my/auditions/${id}/applications`}
+              className="inline-flex w-full md:w-auto items-center justify-center"
               style={{
-                display: 'inline-block',
                 padding: '12px 24px',
                 borderRadius: HERO.buttonRadiusPx,
                 background: AUDITION_DETAIL.ownerLinkBg,
@@ -560,8 +563,9 @@ export default function AuditionDetailPage() {
         )}
       </div>
 
-      {!token && (
+      {!accessToken && (
         <div
+          className="max-md:flex-col max-md:justify-center max-md:gap-3 max-md:py-3 max-md:h-auto"
           style={{
             position: 'fixed',
             left: 0,
@@ -579,9 +583,15 @@ export default function AuditionDetailPage() {
             boxShadow: '0 -4px 24px rgba(0,0,0,0.06)',
           }}
         >
-          <span style={{ fontSize: AUDITION_DETAIL.bodyFontPx, color: AUDITION_DETAIL.bodyColor }}>로그인 후 지원 가능</span>
+          <span
+            className="max-md:w-full max-md:text-center"
+            style={{ fontSize: AUDITION_DETAIL.bodyFontPx, color: AUDITION_DETAIL.bodyColor }}
+          >
+            로그인 후 지원 가능
+          </span>
           <Link
             href="/login"
+            className="max-md:w-full max-md:justify-center"
             style={{
               flexShrink: 0,
               height: 44,
