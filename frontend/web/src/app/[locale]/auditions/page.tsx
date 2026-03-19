@@ -13,11 +13,19 @@ export default async function AuditionsPage({
   
   const t = await getTranslations('common')
 
+  const containerStyle = {
+    maxWidth: 1200,
+    margin: '0 auto' as const,
+    padding: '0 24px',
+    paddingTop: 80,
+    paddingBottom: 80,
+  }
+
   return (
-    <div className="container mx-auto px-4 py-8 min-h-screen max-w-7xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">{t('auditions')}</h1>
-        <p className="text-gray-600">전 세계 기획사의 오디션에 지원해보세요</p>
+    <div style={containerStyle}>
+      <div style={{ marginBottom: 32 }}>
+        <h1 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 8px 0' }}>{t('auditions')}</h1>
+        <p style={{ fontSize: 16, color: '#666', margin: 0 }}>전 세계 기획사의 오디션에 지원해보세요</p>
       </div>
       <AuditionList />
     </div>

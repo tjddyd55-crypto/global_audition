@@ -1,5 +1,7 @@
 'use client'
 
+import { SIGNUP } from '../../lib/design-tokens'
+
 type SignupRole = 'APPLICANT' | 'AGENCY'
 
 interface RoleSelectCardProps {
@@ -7,35 +9,15 @@ interface RoleSelectCardProps {
   onChange: (role: SignupRole) => void
 }
 
-interface Option {
-  role: SignupRole
-  title: string
-  description: string
-  activeStyle: string
-  dotStyle: string
-}
-
-const options: Option[] = [
-  {
-    role: 'APPLICANT',
-    title: '지원자',
-    description: '오디션에 지원하고 싶어요',
-    activeStyle: 'border-purple-400 bg-[#f7efff]',
-    dotStyle: 'bg-purple-600',
-  },
-  {
-    role: 'AGENCY',
-    title: '기획사',
-    description: '기획사이며 오디션을 등록하고 싶어요',
-    activeStyle: 'border-pink-400 bg-[#fff1f8]',
-    dotStyle: 'bg-pink-600',
-  },
+const options: { role: SignupRole; title: string; description: string }[] = [
+  { role: 'APPLICANT', title: '지원자', description: '오디션에 지원하고 싶어요' },
+  { role: 'AGENCY', title: '기획사', description: '기획사이며 오디션을 등록하고 싶어요' },
 ]
 
 export default function RoleSelectCard({ value, onChange }: RoleSelectCardProps) {
   return (
-    <div className="space-y-2">
-      <p className="text-sm font-semibold text-gray-800">역할</p>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: SIGNUP.roleGapPx, marginBottom: 16 }}>
+      <p style={{ fontSize: 14, fontWeight: 500, margin: '0 0 4px 0' }}>역할</p>
       {options.map((option) => {
         const selected = option.role === value
         return (
@@ -43,17 +25,18 @@ export default function RoleSelectCard({ value, onChange }: RoleSelectCardProps)
             key={option.role}
             type="button"
             onClick={() => onChange(option.role)}
-            className={`flex w-full items-center gap-3 rounded-lg border p-3 text-left transition ${
-              selected ? option.activeStyle : 'border-gray-200 bg-white'
-            }`}
+            style={{
+              padding: '12px 12px',
+              borderRadius: 8,
+              border: selected ? `2px solid ${SIGNUP.roleSelectedBorder}` : '1px solid #ddd',
+              background: selected ? SIGNUP.roleSelectedBg : 'white',
+              textAlign: 'left',
+              cursor: 'pointer',
+              fontSize: 14,
+            }}
           >
-            <span className="flex h-4 w-4 items-center justify-center rounded-full border border-gray-300 bg-white">
-              {selected && <span className={`h-2 w-2 rounded-full ${option.dotStyle}`} />}
-            </span>
-            <span>
-              <strong className="mr-1 text-sm text-gray-900">{option.title}</strong>
-              <span className="text-sm text-gray-500">{option.description}</span>
-            </span>
+            <span style={{ fontWeight: 600 }}>{option.title}</span>
+            <span style={{ color: '#666', marginLeft: 4 }}>{option.description}</span>
           </button>
         )
       })}

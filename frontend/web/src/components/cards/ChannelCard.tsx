@@ -3,6 +3,8 @@
 import Image from 'next/image'
 import { Link } from '../../i18n.config'
 import type { MockChannel } from '../../lib/mocks/channels'
+import { DEFAULT_IMAGES, FALLBACK_TEXT } from '../../lib/constants/fallbacks'
+import { AUDITION_CARD, CHANNEL_CARD } from '../../lib/design-tokens'
 
 interface ChannelCardProps {
   channel: MockChannel
@@ -21,42 +23,72 @@ export default function ChannelCard({ channel }: ChannelCardProps) {
   const totalViews = Number(channel?.totalViews ?? 0)
 
   return (
-    <article className="h-full rounded-xl border border-gray-200 bg-white p-5">
-      <div className="mb-3 flex flex-col items-center">
-        <div className="relative mb-3 h-24 w-24 overflow-hidden rounded-full border-4 border-[#f3ebff]">
-          {avatar ? (
-            <Image src={avatar} alt={name || '채널'} fill className="object-cover" sizes="96px" unoptimized />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center bg-gray-100 text-2xl text-gray-400">?</div>
-          )}
-        </div>
-        <h3 className="text-xl font-semibold text-gray-900">{name || '채널'}</h3>
+    <article
+      style={{
+        background: 'white',
+        border: `1px solid ${AUDITION_CARD.borderColor}`,
+        borderRadius: AUDITION_CARD.borderRadiusPx,
+        padding: CHANNEL_CARD.cardPaddingPx,
+        textAlign: 'center',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      <div style={{ margin: '0 auto', width: CHANNEL_CARD.profileSizePx, height: CHANNEL_CARD.profileSizePx, borderRadius: '50%', overflow: 'hidden', position: 'relative' }}>
+        {avatar ? (
+          <Image src={avatar} alt={name || FALLBACK_TEXT.channelName} fill style={{ objectFit: 'cover' }} unoptimized />
+        ) : (
+          <Image src={DEFAULT_IMAGES.avatar} alt="" fill style={{ objectFit: 'cover' }} unoptimized />
+        )}
       </div>
 
-      {description && (
-        <p className="mb-4 min-h-[44px] text-center text-sm text-gray-600 line-clamp-2">{description}</p>
-      )}
+      <h3
+        style={{
+          marginTop: CHANNEL_CARD.nameMarginTopPx,
+          fontWeight: CHANNEL_CARD.nameFontWeight,
+          fontSize: CHANNEL_CARD.nameFontSizePx,
+          marginBottom: 0,
+        }}
+      >
+        {name || FALLBACK_TEXT.channelName}
+      </h3>
 
-      <div className="space-y-1.5 text-sm">
-        <div className="flex items-center justify-between">
-          <span className="text-gray-500">구독자</span>
-          <strong className="text-purple-600">{subscribers.toLocaleString()}</strong>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="text-gray-500">▷ 영상</span>
-          <strong>{videoCount.toLocaleString()}</strong>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="text-gray-500">◉ 조회수</span>
-          <strong>{totalViews.toLocaleString()}</strong>
-        </div>
+      <p
+        style={{
+          fontSize: CHANNEL_CARD.descFontSizePx,
+          color: CHANNEL_CARD.descColor,
+          marginTop: CHANNEL_CARD.descMarginTopPx,
+          marginBottom: 0,
+          lineHeight: 1.4,
+        }}
+        className="line-clamp-2"
+      >
+        {description || FALLBACK_TEXT.description}
+      </p>
+
+      <div
+        style={{
+          marginTop: CHANNEL_CARD.statsMarginTopPx,
+          fontSize: CHANNEL_CARD.statsFontSizePx,
+          color: CHANNEL_CARD.statsColor,
+        }}
+      >
+        구독자 {subscribers.toLocaleString()} · 영상 {videoCount.toLocaleString()} · 조회 {totalViews.toLocaleString()}
       </div>
 
-      <div className="mt-4 border-t border-gray-100 pt-3 text-center">
-        <Link href={`/channel/${id}`} className="text-sm font-semibold text-purple-600 hover:text-pink-600">
-          채널 보기 →
-        </Link>
-      </div>
+      <Link
+        href={`/channel/${id}`}
+        style={{
+          marginTop: CHANNEL_CARD.buttonMarginTopPx,
+          fontSize: CHANNEL_CARD.buttonFontSizePx,
+          color: CHANNEL_CARD.buttonColor,
+          fontWeight: 500,
+          textDecoration: 'none',
+        }}
+      >
+        채널 보기 →
+      </Link>
     </article>
   )
 }

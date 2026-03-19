@@ -112,7 +112,7 @@ export default function LoginPage() {
             type="email"
             {...register('email')}
             placeholder="your@email.com"
-            className="h-10 w-full rounded-md border border-gray-300 bg-gray-50 px-3 text-sm focus:border-purple-500 focus:outline-none"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
           />
           {errors.email && <p className="text-xs text-red-500">{errors.email.message}</p>}
         </div>
@@ -126,7 +126,7 @@ export default function LoginPage() {
             type="password"
             {...register('password')}
             placeholder="••••••••"
-            className="h-10 w-full rounded-md border border-gray-300 bg-gray-50 px-3 text-sm focus:border-purple-500 focus:outline-none"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
           />
           {errors.password && <p className="text-xs text-red-500">{errors.password.message}</p>}
         </div>
@@ -134,7 +134,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={isLoading}
-          className="inline-flex h-11 w-full items-center justify-center rounded-md bg-gradient-to-r from-purple-600 to-pink-600 text-sm font-semibold text-white disabled:opacity-60"
+          className="w-full rounded-md bg-gradient-to-r from-purple-500 to-pink-500 py-2 font-medium text-white transition hover:opacity-95 disabled:opacity-60"
         >
           {isLoading ? '처리 중...' : t('loginButton')}
         </button>

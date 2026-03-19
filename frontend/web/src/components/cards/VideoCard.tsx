@@ -3,6 +3,8 @@
 import Image from 'next/image'
 import { Link } from '../../i18n.config'
 import type { MockVideo } from '../../lib/mocks/videos'
+import { DEFAULT_IMAGES, FALLBACK_TEXT } from '../../lib/constants/fallbacks'
+import { AUDITION_CARD, VIDEO_CARD } from '../../lib/design-tokens'
 
 interface VideoCardProps {
   video: MockVideo
@@ -14,71 +16,94 @@ const safeStr = (v: unknown): string => (v != null && typeof v === 'string' ? v 
 export default function VideoCard({ video, compact = false }: VideoCardProps) {
   if (!video) return null
   const title = safeStr(video.title)
-  const description = safeStr(video.description)
   const channelName = safeStr(video.channelName)
   const channelAvatar = video?.channelAvatar ?? ''
   const thumbnail = video?.thumbnail ?? null
   const views = Number(video?.views ?? 0)
   const likes = Number(video?.likes ?? 0)
-  const uploadedAt = safeStr(video?.uploadedAt)
   const category = safeStr(video?.category)
 
+  const cardPadding = compact ? 12 : AUDITION_CARD.paddingPx
+
   return (
-    <article className="overflow-hidden rounded-xl border border-gray-200 bg-white">
-      <div className="relative aspect-video bg-gray-100">
+    <article
+      style={{
+        background: 'white',
+        border: `1px solid ${AUDITION_CARD.borderColor}`,
+        borderRadius: AUDITION_CARD.borderRadiusPx,
+        overflow: 'hidden',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      <div style={{ position: 'relative', height: VIDEO_CARD.thumbnailHeightPx, background: AUDITION_CARD.imageBg }}>
         {thumbnail ? (
           <Image
             src={thumbnail}
-            alt={title || '영상'}
+            alt={title || FALLBACK_TEXT.videoTitle}
             fill
-            className="object-cover"
-            sizes={compact ? '(max-width: 1024px) 50vw, 25vw' : '(max-width: 1024px) 50vw, 33vw'}
+            style={{ objectFit: 'cover', borderRadius: VIDEO_CARD.thumbnailRadiusPx }}
             unoptimized
           />
         ) : (
-          <div className="flex h-full items-center justify-center text-sm text-gray-500">
-            이미지 준비 중
-          </div>
+          <Image
+            src={DEFAULT_IMAGES.videoThumbnail}
+            alt=""
+            fill
+            style={{ objectFit: 'cover', borderRadius: VIDEO_CARD.thumbnailRadiusPx }}
+            unoptimized
+          />
         )}
-        {category && (
-          <span className="absolute right-2 top-2 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 px-2 py-0.5 text-xs font-semibold text-white">
+        {category ? (
+          <span
+            style={{
+              position: 'absolute',
+              top: VIDEO_CARD.badgeTopPx,
+              right: VIDEO_CARD.badgeRightPx,
+              background: VIDEO_CARD.badgeBg,
+              color: 'white',
+              fontSize: VIDEO_CARD.badgeFontSizePx,
+              padding: `${VIDEO_CARD.badgePaddingY}px ${VIDEO_CARD.badgePaddingX}px`,
+              borderRadius: VIDEO_CARD.badgeRadius,
+            }}
+          >
             {category}
           </span>
-        )}
+        ) : null}
       </div>
-      <div className={`${compact ? 'p-3' : 'p-4'}`}>
-        <Link href={`/channel/${video?.channelId ?? ''}`} className="mb-2 inline-flex items-center gap-2">
+
+      <div style={{ padding: cardPadding, display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: VIDEO_CARD.profileGapPx }}>
           {channelAvatar ? (
-            <div className="relative h-7 w-7 overflow-hidden rounded-full border border-gray-200">
-              <Image
-                src={channelAvatar}
-                alt={channelName || '채널'}
-                fill
-                className="object-cover"
-                sizes="28px"
-                unoptimized
-              />
+            <div style={{ position: 'relative', width: VIDEO_CARD.profileSizePx, height: VIDEO_CARD.profileSizePx, borderRadius: '50%', overflow: 'hidden', flexShrink: 0 }}>
+              <Image src={channelAvatar} alt="" fill style={{ objectFit: 'cover' }} unoptimized />
             </div>
           ) : (
-            <div className="flex h-7 w-7 items-center justify-center rounded-full border border-gray-200 bg-gray-100 text-xs text-gray-500">
-              ?
+            <div style={{ position: 'relative', width: VIDEO_CARD.profileSizePx, height: VIDEO_CARD.profileSizePx, borderRadius: '50%', overflow: 'hidden', flexShrink: 0 }}>
+              <Image src={DEFAULT_IMAGES.avatar} alt="" fill style={{ objectFit: 'cover' }} unoptimized />
             </div>
           )}
-          <span className="text-sm text-gray-700">{channelName || '채널'}</span>
-        </Link>
-
-        <h3 className={`${compact ? 'text-sm' : 'text-base'} mb-1 line-clamp-2 font-semibold text-gray-900`}>
-          {title || '제목 없음'}
-        </h3>
-        {description && (
-          <p className={`${compact ? 'text-sm' : 'text-sm'} line-clamp-2 text-gray-600`}>{description}</p>
-        )}
-
-        <div className="mt-2 flex items-center gap-4 text-sm text-gray-500">
-          <span>◉ {views.toLocaleString()}</span>
-          <span>♡ {likes.toLocaleString()}</span>
+          <span style={{ fontSize: 13, color: AUDITION_CARD.descColor }} className="truncate">
+            {channelName || FALLBACK_TEXT.channelName}
+          </span>
         </div>
-        {compact && uploadedAt && <p className="mt-1 text-xs text-gray-500">{uploadedAt.replaceAll('-', '. ')}</p>}
+
+        <h3
+          style={{
+            fontSize: VIDEO_CARD.titleFontSizePx,
+            fontWeight: VIDEO_CARD.titleFontWeight,
+            margin: 0,
+            lineHeight: 1.4,
+          }}
+          className="line-clamp-2"
+        >
+          {title || FALLBACK_TEXT.videoTitle}
+        </h3>
+
+        <p style={{ fontSize: VIDEO_CARD.metaFontSizePx, color: VIDEO_CARD.metaColor, margin: 0 }}>
+          조회 {views.toLocaleString()} · 좋아요 {likes.toLocaleString()}
+        </p>
       </div>
     </article>
   )

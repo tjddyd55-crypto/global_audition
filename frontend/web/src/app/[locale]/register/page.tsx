@@ -9,6 +9,7 @@ import { authApi } from '../../../lib/api/auth'
 import { Link } from '../../../i18n.config'
 import RoleSelectCard from '../../../components/auth/RoleSelectCard'
 import AuthCardLayout from '../../../components/auth/AuthCardLayout'
+import { SIGNUP } from '../../../lib/design-tokens'
 
 const registerSchema = z.object({
   email: z
@@ -31,7 +32,16 @@ const registerSchema = z.object({
 type RegisterFormData = z.infer<typeof registerSchema>
 type RegisterRole = 'APPLICANT' | 'AGENCY'
 
-/** 피그마: 큰 역할 선택 2개 박스 + 입력 필드 + 그라데이션 버튼. authApi.signup 유지 */
+const inputStyle: React.CSSProperties = {
+  height: SIGNUP.inputHeightPx,
+  width: '100%',
+  borderRadius: SIGNUP.inputRadiusPx,
+  border: `1px solid ${SIGNUP.inputBorderColor}`,
+  padding: `0 ${SIGNUP.inputPaddingPx}px`,
+  fontSize: SIGNUP.inputFontSizePx,
+  boxSizing: 'border-box',
+}
+
 export default function RegisterPage() {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
@@ -62,68 +72,61 @@ export default function RegisterPage() {
   return (
     <AuthCardLayout title="회원가입">
       {error && (
-        <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <div style={{ marginBottom: 16, padding: '8px 12px', borderRadius: 8, border: '1px solid #fecaca', background: '#fef2f2', fontSize: 14, color: '#b91c1c' }}>
           {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)}>
         <RoleSelectCard value={role} onChange={setRole} />
 
-        <div className="space-y-1.5">
-          <label htmlFor="email" className="text-sm font-medium text-gray-700">
+        <div style={{ marginBottom: 16 }}>
+          <label htmlFor="email" style={{ display: 'block', fontSize: 14, fontWeight: 500, marginBottom: 4 }}>
             이메일
           </label>
-          <input
-            id="email"
-            type="email"
-            {...register('email')}
-            placeholder="your@email.com"
-            className="h-10 w-full rounded-md border border-gray-300 bg-gray-50 px-3 text-sm focus:border-purple-500 focus:outline-none"
-          />
-          {errors.email && <p className="text-xs text-red-500">{errors.email.message}</p>}
+          <input id="email" type="email" {...register('email')} placeholder="your@email.com" style={inputStyle} />
+          {errors.email && <p style={{ marginTop: 4, fontSize: 12, color: '#b91c1c' }}>{errors.email.message}</p>}
         </div>
 
-        <div className="space-y-1.5">
-          <label htmlFor="password" className="text-sm font-medium text-gray-700">
+        <div style={{ marginBottom: 16 }}>
+          <label htmlFor="password" style={{ display: 'block', fontSize: 14, fontWeight: 500, marginBottom: 4 }}>
             비밀번호
           </label>
-          <input
-            id="password"
-            type="password"
-            {...register('password')}
-            placeholder="6자 이상"
-            className="h-10 w-full rounded-md border border-gray-300 bg-gray-50 px-3 text-sm focus:border-purple-500 focus:outline-none"
-          />
-          {errors.password && <p className="text-xs text-red-500">{errors.password.message}</p>}
+          <input id="password" type="password" {...register('password')} placeholder="6자 이상" style={inputStyle} />
+          {errors.password && <p style={{ marginTop: 4, fontSize: 12, color: '#b91c1c' }}>{errors.password.message}</p>}
         </div>
 
-        <div className="space-y-1.5">
-          <label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700">
+        <div style={{ marginBottom: 20 }}>
+          <label htmlFor="confirmPassword" style={{ display: 'block', fontSize: 14, fontWeight: 500, marginBottom: 4 }}>
             비밀번호 확인
           </label>
-          <input
-            id="confirmPassword"
-            type="password"
-            {...register('confirmPassword')}
-            placeholder="비밀번호 확인"
-            className="h-10 w-full rounded-md border border-gray-300 bg-gray-50 px-3 text-sm focus:border-purple-500 focus:outline-none"
-          />
-          {errors.confirmPassword && <p className="text-xs text-red-500">{errors.confirmPassword.message}</p>}
+          <input id="confirmPassword" type="password" {...register('confirmPassword')} placeholder="비밀번호 확인" style={inputStyle} />
+          {errors.confirmPassword && <p style={{ marginTop: 4, fontSize: 12, color: '#b91c1c' }}>{errors.confirmPassword.message}</p>}
         </div>
 
         <button
           type="submit"
           disabled={isLoading}
-          className="mt-1 inline-flex h-11 w-full items-center justify-center rounded-md bg-gradient-to-r from-purple-600 to-pink-600 text-sm font-semibold text-white disabled:opacity-60"
+          style={{
+            width: '100%',
+            height: 44,
+            borderRadius: 8,
+            background: 'linear-gradient(90deg, #7c3aed, #ec4899)',
+            color: 'white',
+            fontSize: 14,
+            fontWeight: 500,
+            border: 'none',
+            cursor: isLoading ? 'not-allowed' : 'pointer',
+            opacity: isLoading ? 0.7 : 1,
+          }}
         >
           {isLoading ? '처리 중...' : '회원가입'}
         </button>
       </form>
 
-      <p className="mt-4 text-center text-sm text-gray-600">
+      <p style={{ marginTop: 24, textAlign: 'center', fontSize: 14, color: '#666' }}>
         이미 계정이 있으신가요?{' '}
-        <Link href="/login" className="font-semibold text-purple-600 hover:underline">
+        <Link href="/login" style={{ color: '#7c3aed', fontWeight: 600, textDecoration: 'none' }}>
           로그인
         </Link>
       </p>

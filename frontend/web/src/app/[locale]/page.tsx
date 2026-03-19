@@ -8,51 +8,37 @@ import AuditionCard from '../../components/cards/AuditionCard'
 import VideoCard from '../../components/cards/VideoCard'
 import HeroSection from '../../components/home/HeroSection'
 import { mockVideos } from '../../lib/mocks/videos'
+import { SkeletonAuditionCard } from '../../components/ui/SkeletonCard'
+import EmptyState from '../../components/ui/EmptyState'
+import { LAYOUT } from '../../lib/design-tokens'
 
-const fallbackAuditions: AuditionResponse[] = [
-  {
-    id: 'fallback-1',
-    ownerId: '0',
-    title: 'K-POP 글로벌 오디션 2026',
-    description: '차세대 K-POP 스타를 찾습니다. 노래, 춤, 랩 등 모든 포지션 지원 가능',
-    status: 'OPEN',
-    createdAt: '2026-03-15',
-    category: 'K-POP',
-  },
-  {
-    id: 'fallback-2',
-    ownerId: '0',
-    title: '뮤지컬 배우 공개 오디션',
-    description: '2026년 대형 뮤지컬 프로젝트 주연 및 조연 배우 모집',
-    status: 'OPEN',
-    createdAt: '2026-03-14',
-    category: 'Musical',
-  },
-  {
-    id: 'fallback-3',
-    ownerId: '0',
-    title: '신인 모델 발굴 오디션',
-    description: '패션위크 런웨이 모델 선발',
-    status: 'OPEN',
-    createdAt: '2026-03-10',
-    category: 'Fashion',
-  },
-]
+const containerStyle: React.CSSProperties = {
+  maxWidth: LAYOUT.containerMaxWidth,
+  margin: '0 auto',
+  padding: `0 ${LAYOUT.containerPaddingPx}px`,
+}
+
+const sectionStyle: React.CSSProperties = {
+  paddingTop: LAYOUT.sectionGapPx,
+  paddingBottom: LAYOUT.sectionGapPx,
+}
 
 export default function HomePage() {
   const t = useTranslations('home')
 
-  const { data: auditions } = useQuery({
+  const { data: auditions, isLoading: auditionsLoading } = useQuery({
     queryKey: ['auditions'],
     queryFn: () => auditionApi.listOpen(),
     retry: 1,
   })
   const auditList = auditions ?? []
-  const displayAuditions = (auditList.length > 0 ? auditList : fallbackAuditions).slice(0, 3)
+  const displayAuditions = auditList.slice(0, 3)
   const latestVideos = (mockVideos ?? []).slice(0, 3)
+  const auditionsEmpty = !auditionsLoading && displayAuditions.length === 0
+  const videosEmpty = latestVideos.length === 0
 
   return (
-    <div className="w-full">
+    <div>
       <HeroSection
         title={t('heroTitle')}
         subtitle={t('heroSubtitle')}
@@ -60,47 +46,91 @@ export default function HomePage() {
         startLabel={t('getStarted')}
       />
 
-      <section className="container mx-auto max-w-7xl px-4 py-16 md:py-20">
-        <div className="mb-8">
-          <h2 className="mb-2 text-center text-4xl font-bold text-gray-900">진행 중인 오디션</h2>
-          <p className="text-center text-base text-gray-500">지금 바로 지원 가능한 오디션을 확인하세요</p>
-        </div>
+      <section style={sectionStyle}>
+        <div style={containerStyle}>
+          <div style={{ marginBottom: 24, textAlign: 'center' }}>
+            <h2 style={{ fontSize: 24, fontWeight: 700, margin: '0 0 8px 0' }}>진행 중인 오디션</h2>
+            <p style={{ fontSize: 14, color: '#666', margin: 0 }}>지금 바로 지원 가능한 오디션을 확인하세요</p>
+          </div>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-          {(displayAuditions ?? []).map((audition, i) => (
-            <AuditionCard key={audition?.id ?? `audition-${i}`} audition={audition} />
-          ))}
-        </div>
+          {auditionsLoading ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 24 }}>
+              {[1, 2, 3].map((i) => (
+                <SkeletonAuditionCard key={i} />
+              ))}
+            </div>
+          ) : auditionsEmpty ? (
+            <EmptyState message="등록된 오디션이 없습니다" />
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 24 }}>
+              {displayAuditions.map((audition, i) => (
+                <AuditionCard key={audition?.id ?? `audition-${i}`} audition={audition} />
+              ))}
+            </div>
+          )}
 
-        <div className="mt-8 text-center">
-          <Link
-            href="/auditions"
-            className="inline-flex h-10 items-center rounded-md border border-gray-300 bg-white px-5 text-sm font-medium text-gray-700"
-          >
-            모든 오디션 보기
-          </Link>
+          <div style={{ marginTop: 24, textAlign: 'center' }}>
+            <Link
+              href="/auditions"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                height: 40,
+                paddingLeft: 20,
+                paddingRight: 20,
+                borderRadius: 8,
+                border: '1px solid #ddd',
+                background: 'white',
+                fontSize: 14,
+                color: '#333',
+                textDecoration: 'none',
+              }}
+            >
+              모든 오디션 보기
+            </Link>
+          </div>
         </div>
       </section>
 
-      <section className="container mx-auto max-w-7xl px-4 py-20 md:py-24">
-        <div className="mb-8">
-          <h2 className="mb-2 text-center text-4xl font-bold text-gray-900">최신 영상</h2>
-          <p className="text-center text-base text-gray-500">최근 업로드된 영상을 확인하세요</p>
-        </div>
+      <section style={sectionStyle}>
+        <div style={containerStyle}>
+          <div style={{ marginBottom: 24, textAlign: 'center' }}>
+            <h2 style={{ fontSize: 24, fontWeight: 700, margin: '0 0 8px 0' }}>최신 영상</h2>
+            <p style={{ fontSize: 14, color: '#666', margin: 0 }}>최근 업로드된 영상을 확인하세요</p>
+          </div>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-          {(latestVideos ?? []).map((video, i) => (
-            <VideoCard key={video?.id ?? `video-${i}`} video={video} />
-          ))}
-        </div>
+          {videosEmpty ? (
+            <EmptyState message="아직 업로드된 영상이 없습니다" />
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 24 }}>
+              {latestVideos.map((video, i) => (
+                <VideoCard key={video?.id ?? `video-${i}`} video={video} />
+              ))}
+            </div>
+          )}
 
-        <div className="mt-8 text-center">
-          <Link
-            href="/videos"
-            className="inline-flex h-10 items-center rounded-md border border-gray-300 bg-white px-5 text-sm font-medium text-gray-700"
-          >
-            모든 영상 보기
-          </Link>
+          <div style={{ marginTop: 24, textAlign: 'center' }}>
+            <Link
+              href="/videos"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                height: 40,
+                paddingLeft: 20,
+                paddingRight: 20,
+                borderRadius: 8,
+                border: '1px solid #ddd',
+                background: 'white',
+                fontSize: 14,
+                color: '#333',
+                textDecoration: 'none',
+              }}
+            >
+              모든 영상 보기
+            </Link>
+          </div>
         </div>
       </section>
     </div>

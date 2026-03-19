@@ -1,6 +1,7 @@
 'use client'
 
 import { Link } from '../../i18n.config'
+import { HERO } from '../../lib/design-tokens'
 
 interface HeroSectionProps {
   title: string
@@ -16,30 +17,80 @@ export default function HeroSection({
   startLabel,
 }: HeroSectionProps) {
   return (
-    <section className="relative overflow-hidden border-b border-[#f1e8f7] bg-[#fdf8fc]">
-      <div
-        className="absolute inset-0 opacity-30"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle at 25px 25px, rgba(216, 180, 254, 0.35) 1px, transparent 0)",
-          backgroundSize: '40px 40px',
-        }}
-      />
-      <div className="container relative mx-auto max-w-7xl px-4 py-24 text-center md:py-28">
-        <h1 className="mb-5 text-5xl font-extrabold leading-tight text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600 md:text-6xl">
+    <section
+      style={{
+        paddingTop: HERO.paddingTopPx,
+        paddingBottom: HERO.paddingBottomPx,
+        textAlign: 'center',
+        background: `linear-gradient(to bottom, ${HERO.gradientStart}, ${HERO.gradientEnd})`,
+      }}
+    >
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
+        <h1
+          style={{
+            fontSize: HERO.titleFontSizePx,
+            fontWeight: HERO.titleFontWeight,
+            lineHeight: HERO.titleLineHeight,
+            color: '#000',
+            margin: 0,
+          }}
+        >
           {title}
         </h1>
-        <p className="mx-auto mb-8 max-w-3xl text-lg text-gray-600 md:text-xl">{subtitle}</p>
-        <div className="flex items-center justify-center gap-3">
+        <p
+          style={{
+            marginTop: HERO.subMarginTopPx,
+            fontSize: HERO.subFontSizePx,
+            color: HERO.subColor,
+            marginBottom: 0,
+          }}
+        >
+          {subtitle}
+        </p>
+        <div
+          style={{
+            marginTop: HERO.buttonsMarginTopPx,
+            display: 'flex',
+            justifyContent: 'center',
+            flexWrap: 'wrap',
+            gap: HERO.buttonsGapPx,
+          }}
+        >
           <Link
             href="/auditions"
-            className="inline-flex h-11 items-center rounded-md bg-gradient-to-r from-purple-600 to-pink-600 px-6 text-sm font-semibold text-white shadow"
+            style={{
+              height: HERO.buttonHeightPx,
+              paddingLeft: HERO.buttonPaddingPx,
+              paddingRight: HERO.buttonPaddingPx,
+              borderRadius: HERO.buttonRadiusPx,
+              background: `linear-gradient(90deg, ${HERO.primaryGradientStart}, ${HERO.primaryGradientEnd})`,
+              color: 'white',
+              fontWeight: 500,
+              fontSize: 14,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              textDecoration: 'none',
+            }}
           >
             {auditionLabel}
           </Link>
           <Link
             href="/register"
-            className="inline-flex h-11 items-center rounded-md border border-gray-300 bg-white px-6 text-sm font-medium text-gray-700"
+            style={{
+              height: HERO.buttonHeightPx,
+              paddingLeft: HERO.buttonPaddingPx,
+              paddingRight: HERO.buttonPaddingPx,
+              borderRadius: HERO.buttonRadiusPx,
+              border: `1px solid ${HERO.secondaryBorderColor}`,
+              background: 'white',
+              color: '#333',
+              fontSize: 14,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              textDecoration: 'none',
+            }}
           >
             {startLabel}
           </Link>

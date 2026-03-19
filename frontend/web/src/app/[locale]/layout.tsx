@@ -7,6 +7,7 @@ import { routing } from '../../i18n.config'
 import { Providers } from '../providers'
 import Header from '../../components/layout/Header'
 import Footer from '../../components/layout/Footer'
+import ErrorBoundary from '../../components/ErrorBoundary'
 
 // 폰트 최적화: display swap으로 로딩 성능 개선
 const inter = Inter({ 
@@ -55,7 +56,9 @@ export default async function LocaleLayout({
     <NextIntlClientProvider messages={messages}>
       <div className={`flex flex-col min-h-screen ${inter.variable}`}>
         <Header />
-        <main className="flex-1 pt-16">{children}</main>
+        <main className="flex-1" style={{ paddingTop: 64 }}>
+          <ErrorBoundary>{children}</ErrorBoundary>
+        </main>
         <Footer />
       </div>
     </NextIntlClientProvider>

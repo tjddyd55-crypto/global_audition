@@ -3,7 +3,8 @@
 import { useQuery } from '@tanstack/react-query'
 import { auditionApi, type AuditionResponse } from '../../lib/api/auditions'
 import AuditionCard from './AuditionCard'
-import LoadingSpinner from '../common/LoadingSpinner'
+import { SkeletonAuditionCard } from '../ui/SkeletonCard'
+import EmptyState from '../ui/EmptyState'
 import ErrorMessage from '../common/ErrorMessage'
 
 export default function AuditionList() {
@@ -12,8 +13,20 @@ export default function AuditionList() {
     queryFn: () => auditionApi.listOpen(),
   })
 
+  const gridStyle: React.CSSProperties = {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+    gap: 24,
+  }
+
   if (isLoading) {
-    return <LoadingSpinner />
+    return (
+      <div style={gridStyle}>
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <SkeletonAuditionCard key={i} />
+        ))}
+      </div>
+    )
   }
 
   if (error) {
@@ -21,17 +34,13 @@ export default function AuditionList() {
   }
 
   if (!data || data.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-gray-500">등록된 오디션이 없습니다</p>
-      </div>
-    )
+    return <EmptyState message="등록된 오디션이 없습니다" />
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div style={gridStyle}>
       {data.map((audition: AuditionResponse) => (
-        <AuditionCard key={audition.id} audition={audition} />
+        <AuditionCard key={audition?.id ?? ''} audition={audition} />
       ))}
     </div>
   )
