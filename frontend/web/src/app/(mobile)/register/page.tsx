@@ -93,7 +93,7 @@ export default function RegisterPage() {
         }
         
         // country 코드를 대문자로 변환 (ISO 3166-1 alpha-2 형식)
-        submitData.country = submitData.country.trim().toUpperCase()
+        submitData.country = (submitData.country ?? '').trim().toUpperCase()
         
         // country 형식 검증 (2자 대문자)
         if (!/^[A-Z]{2}$/.test(submitData.country)) {
@@ -109,7 +109,7 @@ export default function RegisterPage() {
         }
         
         // city 공백 제거
-        submitData.city = submitData.city.trim()
+        submitData.city = (submitData.city ?? '').trim()
         
         if (!submitData.birthday) {
           setError('생년월일을 입력해주세요')
@@ -170,12 +170,12 @@ export default function RegisterPage() {
         
         // businessCity 공백 제거
         if (submitData.businessCity) {
-          submitData.businessCity = submitData.businessCity.trim()
+          submitData.businessCity = (submitData.businessCity ?? '').trim()
         }
         
         // companyName 공백 제거
         if (submitData.companyName) {
-          submitData.companyName = submitData.companyName.trim()
+          submitData.companyName = (submitData.companyName ?? '').trim()
         }
       }
       

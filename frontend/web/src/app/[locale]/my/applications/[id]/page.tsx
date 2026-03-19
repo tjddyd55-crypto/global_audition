@@ -28,7 +28,7 @@ export default function MyApplicationDetailPage() {
   })
 
   const createVideoMutation = useMutation({
-    mutationFn: () => applicationVideoApi.create(id, videoUrl.trim()),
+    mutationFn: () => applicationVideoApi.create(id, (videoUrl ?? '').trim()),
     onSuccess: () => {
       setVideoUrl('')
       setErrorMessage(null)
@@ -70,7 +70,7 @@ export default function MyApplicationDetailPage() {
             <button
               onClick={() => createVideoMutation.mutate()}
               className="px-4 py-2 bg-blue-600 text-white rounded"
-              disabled={!videoUrl.trim() || createVideoMutation.isPending}
+              disabled={!(videoUrl ?? '').trim() || createVideoMutation.isPending}
             >
               추가
             </button>

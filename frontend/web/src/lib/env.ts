@@ -31,16 +31,16 @@
 export const API_BASE_URL = (() => {
   const v = process.env.NEXT_PUBLIC_API_URL
   
-  if (!v || v.trim() === '') {
+  const s = typeof v === 'string' ? v : String(v ?? '')
+  if (!s || s.trim() === '') {
     throw new Error(
       'NEXT_PUBLIC_API_URL is not defined. ' +
       'Please set NEXT_PUBLIC_API_URL in Railway Variables. ' +
       'Example: https://backend-production-b968.up.railway.app'
     )
   }
-  
   // 끝의 슬래시 제거 및 공백 제거
-  return v.trim().replace(/\/+$/, '')
+  return s.trim().replace(/\/+$/, '')
 })()
 
 /**

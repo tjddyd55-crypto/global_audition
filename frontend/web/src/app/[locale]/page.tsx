@@ -42,13 +42,14 @@ const fallbackAuditions: AuditionResponse[] = [
 export default function HomePage() {
   const t = useTranslations('home')
 
-  const { data: auditions = [] } = useQuery({
+  const { data: auditions } = useQuery({
     queryKey: ['auditions'],
     queryFn: () => auditionApi.listOpen(),
     retry: 1,
   })
-  const displayAuditions = (auditions.length > 0 ? auditions : fallbackAuditions).slice(0, 3)
-  const latestVideos = mockVideos.slice(0, 3)
+  const auditList = auditions ?? []
+  const displayAuditions = (auditList.length > 0 ? auditList : fallbackAuditions).slice(0, 3)
+  const latestVideos = (mockVideos ?? []).slice(0, 3)
 
   return (
     <div className="w-full">
@@ -66,8 +67,8 @@ export default function HomePage() {
         </div>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-          {displayAuditions.map((audition) => (
-            <AuditionCard key={audition.id} audition={audition} />
+          {(displayAuditions ?? []).map((audition, i) => (
+            <AuditionCard key={audition?.id ?? `audition-${i}`} audition={audition} />
           ))}
         </div>
 
@@ -88,8 +89,8 @@ export default function HomePage() {
         </div>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-          {latestVideos.map((video) => (
-            <VideoCard key={video.id} video={video} />
+          {(latestVideos ?? []).map((video, i) => (
+            <VideoCard key={video?.id ?? `video-${i}`} video={video} />
           ))}
         </div>
 

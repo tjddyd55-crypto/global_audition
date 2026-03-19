@@ -41,7 +41,7 @@ export default function CreateAuditionPage() {
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    if (!title.trim()) {
+    if (!(title ?? '').trim()) {
       setError('제목을 입력해주세요')
       return
     }
@@ -50,11 +50,11 @@ export default function CreateAuditionPage() {
 
     try {
       await auditionApi.create({
-        title: title.trim(),
-        description: description.trim() || undefined,
+        title: (title ?? '').trim(),
+        description: (description ?? '').trim() || undefined,
         status,
-        countryCode: countryCode.trim() || undefined,
-        category: category.trim() || undefined,
+        countryCode: (countryCode ?? '').trim() || undefined,
+        category: (category ?? '').trim() || undefined,
         deadlineAt: deadlineAt ? new Date(deadlineAt).toISOString() : undefined,
       })
       router.push('/my/auditions')

@@ -138,9 +138,9 @@ function CreateAssetModal({
         declaredCreationType: declaredCreationType || undefined,
         accessControl,
       })
-    } else if (textContent.trim()) {
+    } else if ((textContent ?? '').trim()) {
       onCreate({
-        textContent: textContent.trim(),
+        textContent: (textContent ?? '').trim(),
         title,
         description: description || undefined,
         assetType,
@@ -281,7 +281,7 @@ function CreateAssetModal({
             </button>
             <button
               type="submit"
-              disabled={isLoading || !title || (!file && !textContent.trim())}
+              disabled={isLoading || !title || (!file && !(textContent ?? '').trim())}
               className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50"
             >
               {isLoading ? '등록 중...' : '등록'}

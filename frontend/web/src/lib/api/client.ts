@@ -60,7 +60,7 @@ apiClient.interceptors.response.use(
     if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
       console.error('[API Client] ❌ Request Error:', {
         fullUrl,
-        method: error.config?.method?.toUpperCase() || 'UNKNOWN',
+        method: (error.config?.method ?? '').toUpperCase() || 'UNKNOWN',
         status: error.response?.status,
         statusText: error.response?.statusText,
         data: error.response?.data,

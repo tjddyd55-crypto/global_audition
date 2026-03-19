@@ -161,9 +161,9 @@ export default function MainHeader() {
                   className="inline-flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-gray-100"
                 >
                   <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-xs font-semibold text-white">
-                    {user.name.charAt(0)}
+                    {(user?.name ?? '').charAt(0) || '?'}
                   </div>
-                  <span className="text-sm text-gray-800">{user.name}</span>
+                  <span className="text-sm text-gray-800">{user?.name ?? '사용자'}</span>
                 </button>
 
                 {isUserMenuOpen && (
