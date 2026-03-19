@@ -61,7 +61,7 @@ export default function MyDashboardPage() {
             <div className="bg-white rounded p-4 shadow">대기: {data.pending}</div>
           </div>
           <div className="flex gap-3">
-            <Link href="/auditions/create" className="px-4 py-2 bg-blue-600 text-white rounded">공고 등록</Link>
+            <Link href="/dashboard/auditions/create" className="px-4 py-2 bg-blue-600 text-white rounded">공고 등록</Link>
             <Link href="/my/auditions" className="px-4 py-2 bg-gray-700 text-white rounded">내 공고 관리</Link>
           </div>
           <div className="bg-white rounded p-4 shadow">

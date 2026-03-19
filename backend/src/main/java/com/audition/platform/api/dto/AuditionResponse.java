@@ -1,5 +1,7 @@
 package com.audition.platform.api.dto;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
 import java.time.Instant;
 import java.util.UUID;
 
@@ -15,6 +17,20 @@ public class AuditionResponse {
     private Instant deadlineAt;
     private String category;
     private Instant createdAt;
+
+    private String coverImage;
+    private String videoUrl;
+    private String[] galleryImages;
+    private String agencyName;
+    private String agencyLogo;
+    private int applicantsCount;
+    private int remainingDays;
+    private String[] recruitFields;
+    private String location;
+    private Instant startDate;
+    private Instant endDate;
+    private JsonNode detailContent;
+    private String[] benefits;
 
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
@@ -36,4 +52,30 @@ public class AuditionResponse {
     public void setCategory(String category) { this.category = category; }
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
+    public String getCoverImage() { return coverImage; }
+    public void setCoverImage(String coverImage) { this.coverImage = coverImage; }
+    public String getVideoUrl() { return videoUrl; }
+    public void setVideoUrl(String videoUrl) { this.videoUrl = videoUrl; }
+    public String[] getGalleryImages() { return galleryImages; }
+    public void setGalleryImages(String[] galleryImages) { this.galleryImages = galleryImages; }
+    public String getAgencyName() { return agencyName; }
+    public void setAgencyName(String agencyName) { this.agencyName = agencyName; }
+    public String getAgencyLogo() { return agencyLogo; }
+    public void setAgencyLogo(String agencyLogo) { this.agencyLogo = agencyLogo; }
+    public int getApplicantsCount() { return applicantsCount; }
+    public void setApplicantsCount(int applicantsCount) { this.applicantsCount = applicantsCount; }
+    public int getRemainingDays() { return remainingDays; }
+    public void setRemainingDays(int remainingDays) { this.remainingDays = remainingDays; }
+    public String[] getRecruitFields() { return recruitFields; }
+    public void setRecruitFields(String[] recruitFields) { this.recruitFields = recruitFields; }
+    public String getLocation() { return location; }
+    public void setLocation(String location) { this.location = location; }
+    public Instant getStartDate() { return startDate; }
+    public void setStartDate(Instant startDate) { this.startDate = startDate; }
+    public Instant getEndDate() { return endDate; }
+    public void setEndDate(Instant endDate) { this.endDate = endDate; }
+    public JsonNode getDetailContent() { return detailContent; }
+    public void setDetailContent(JsonNode detailContent) { this.detailContent = detailContent; }
+    public String[] getBenefits() { return benefits; }
+    public void setBenefits(String[] benefits) { this.benefits = benefits; }
 }

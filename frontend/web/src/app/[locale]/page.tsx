@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '../../i18n.config'
 import { useTranslations } from 'next-intl'
-import { auditionApi, type AuditionResponse } from '../../lib/api/auditions'
+import { auditionApi } from '../../lib/api/auditions'
 import AuditionCard from '../../components/cards/AuditionCard'
 import VideoCard from '../../components/cards/VideoCard'
 import HeroSection from '../../components/home/HeroSection'

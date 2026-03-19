@@ -1,7 +1,10 @@
 package com.audition.platform.domain.audition;
 
 import com.audition.platform.domain.user.User;
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.time.Instant;
@@ -26,10 +29,10 @@ public class Audition {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String title;
 
-    @Column(columnDefinition = "TEXT")
-    private String description;
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String description = "";
 
-    @Column(nullable = false, columnDefinition = "TEXT") // DRAFT | OPEN | CLOSED
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String status;
 
     @Column(name = "updated_at")
@@ -42,10 +45,53 @@ public class Audition {
     private Instant deadlineAt;
 
     @Column(columnDefinition = "TEXT")
-    private String category;
+    private String category = "";
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
+
+    @Column(name = "cover_image", columnDefinition = "TEXT")
+    private String coverImage;
+
+    @Column(name = "video_url", columnDefinition = "TEXT")
+    private String videoUrl;
+
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "gallery_images", columnDefinition = "text[]")
+    private String[] galleryImages = new String[0];
+
+    @Column(name = "agency_name", nullable = false, columnDefinition = "TEXT")
+    private String agencyName = "";
+
+    @Column(name = "agency_logo", columnDefinition = "TEXT")
+    private String agencyLogo;
+
+    @Column(name = "applicants_count", nullable = false)
+    private int applicantsCount = 0;
+
+    @Column(name = "remaining_days", nullable = false)
+    private int remainingDays = 0;
+
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "recruit_fields", columnDefinition = "text[]")
+    private String[] recruitFields = new String[0];
+
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String location = "";
+
+    @Column(name = "start_date")
+    private Instant startDate;
+
+    @Column(name = "end_date")
+    private Instant endDate;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "detail_content", nullable = false, columnDefinition = "jsonb")
+    private JsonNode detailContent;
+
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "benefits", columnDefinition = "text[]")
+    private String[] benefits = new String[0];
 
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
@@ -69,4 +115,30 @@ public class Audition {
     public void setCategory(String category) { this.category = category; }
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
+    public String getCoverImage() { return coverImage; }
+    public void setCoverImage(String coverImage) { return coverImage; }
+    public String getVideoUrl() { return videoUrl; }
+    public void setVideoUrl(String videoUrl) { return videoUrl; }
+    public String[] getGalleryImages() { return galleryImages; }
+    public void setGalleryImages(String[] galleryImages) { this.galleryImages = galleryImages != null ? galleryImages : new String[0]; }
+    public String getAgencyName() { return agencyName; }
+    public void setAgencyName(String agencyName) { this.agencyName = agencyName; }
+    public String getAgencyLogo() { return agencyLogo; }
+    public void setAgencyLogo(String agencyLogo) { this.agencyLogo = agencyLogo; }
+    public int getApplicantsCount() { return applicantsCount; }
+    public void setApplicantsCount(int applicantsCount) { this.applicantsCount = applicantsCount; }
+    public int getRemainingDays() { return remainingDays; }
+    public void setRemainingDays(int remainingDays) { this.remainingDays = remainingDays; }
+    public String[] getRecruitFields() { return recruitFields; }
+    public void setRecruitFields(String[] recruitFields) { this.recruitFields = recruitFields != null ? recruitFields : new String[0]; }
+    public String getLocation() { return location; }
+    public void setLocation(String location) { this.location = location; }
+    public Instant getStartDate() { return startDate; }
+    public void setStartDate(Instant startDate) { this.startDate = startDate; }
+    public Instant getEndDate() { return endDate; }
+    public void setEndDate(Instant endDate) { this.endDate = endDate; }
+    public JsonNode getDetailContent() { return detailContent; }
+    public void setDetailContent(JsonNode detailContent) { this.detailContent = detailContent; }
+    public String[] getBenefits() { return benefits; }
+    public void setBenefits(String[] benefits) { this.benefits = benefits != null ? benefits : new String[0]; }
 }

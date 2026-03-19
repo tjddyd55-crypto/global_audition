@@ -115,7 +115,7 @@ export default function MyAuditionsPage() {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">내 오디션 관리</h1>
           <Link
-            href="/auditions/create"
+            href="/dashboard/auditions/create"
             className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
           >
             + 오디션 등록
@@ -206,7 +206,7 @@ export default function MyAuditionsPage() {
           <div className="bg-white rounded-lg shadow-lg p-12 text-center">
             <p className="text-gray-500 text-lg mb-4">등록된 오디션이 없습니다</p>
             <Link
-              href="/auditions/create"
+              href="/dashboard/auditions/create"
               className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 inline-block"
             >
               첫 오디션 등록하기

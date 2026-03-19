@@ -32,7 +32,7 @@ export default function Footer() {
             <h3 className="mb-3 text-xl font-semibold text-gray-900">For Agencies</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/auditions/create" className="text-gray-600 hover:text-purple-600">
+                <Link href="/dashboard/auditions/create" className="text-gray-600 hover:text-purple-600">
                   Post Audition
                 </Link>
               </li>

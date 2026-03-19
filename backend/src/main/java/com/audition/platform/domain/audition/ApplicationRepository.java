@@ -24,6 +24,8 @@ public interface ApplicationRepository extends JpaRepository<Application, UUID> 
 
     long countByAuditionIdIn(List<UUID> auditionIds);
 
+    long countByAuditionId(UUID auditionId);
+
     List<Application> findTop10ByAuditionIdInOrderByCreatedAtDesc(List<UUID> auditionIds);
 
     List<Application> findTop10ByApplicantIdOrderByCreatedAtDesc(UUID applicantId);

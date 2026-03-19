@@ -70,6 +70,9 @@ public class ApplicationService {
         app.setStatus("SUBMITTED");
         app.setUpdatedAt(java.time.Instant.now());
         app = applicationRepository.save(app);
+        long cnt = applicationRepository.countByAuditionId(auditionId);
+        audition.setApplicantsCount((int) cnt);
+        auditionRepository.save(audition);
         return toResponse(app, applicant);
     }
 

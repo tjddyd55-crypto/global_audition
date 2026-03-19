@@ -1,0 +1,53 @@
+// SSOT: Audition 구조 (DB/API/UI/Form 동일 필드명)
+// 런타임 DB는 Spring + Flyway와 동기화 유지
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Audition {
+  id              String   @id @default(uuid())
+  ownerId         String   @map("owner_id")
+  title           String
+  description     String
+
+  /// DRAFT | OPEN | CLOSED (API·비즈니스 로직)
+  status          String
+  category        String
+
+  coverImage      String?  @map("cover_image")
+  videoUrl        String?  @map("video_url")
+  galleryImages   String[] @map("gallery_images")
+
+  agencyName      String   @map("agency_name")
+  agencyLogo      String?  @map("agency_logo")
+
+  applicantsCount Int      @default(0) @map("applicants_count")
+  remainingDays   Int      @map("remaining_days")
+
+  recruitFields   String[] @map("recruit_fields")
+
+  location        String
+
+  startDate       DateTime @map("start_date")
+  endDate         DateTime @map("end_date")
+
+  /// { recruit, qualification, schedule, benefits } — JSON 고정 구조
+  detailContent   Json     @map("detail_content")
+
+  benefits        String[]
+
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime? @map("updated_at")
+
+  // 레거시 컬럼 (마이그레이션 호환, Prisma에서 선택적 관리)
+  countryCode     String?  @map("country_code")
+  deadlineAt      DateTime? @map("deadline_at")
+
+  @@map("auditions")
+}

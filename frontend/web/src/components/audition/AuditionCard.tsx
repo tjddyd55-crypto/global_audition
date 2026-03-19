@@ -4,12 +4,12 @@ import { Link } from '../../i18n.config'
 import Image from 'next/image'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
-import type { AuditionResponse } from '../../lib/api/auditions'
+import type { AuditionDto } from '../../lib/types/audition'
 import { FALLBACK_TEXT, DEFAULT_IMAGES } from '../../lib/constants/fallbacks'
 import { AUDITION_CARD } from '../../lib/design-tokens'
 
 interface AuditionCardProps {
-  audition: AuditionResponse
+  audition: AuditionDto
 }
 
 const statusLabels: Record<string, string> = {
@@ -42,6 +42,7 @@ export default function AuditionCard({ audition }: AuditionCardProps) {
   const status = audition?.status ?? 'DRAFT'
   const category = audition?.category ?? ''
   const description = audition?.description ?? ''
+  const coverImage = audition?.coverImage ?? ''
   const createdAt = audition?.createdAt
   const dateStr = createdAt
     ? (() => {
@@ -121,7 +122,7 @@ export default function AuditionCard({ audition }: AuditionCardProps) {
           }}
         >
           <Image
-            src={DEFAULT_IMAGES.videoThumbnail}
+            src={coverImage || DEFAULT_IMAGES.videoThumbnail}
             alt=""
             fill
             style={{ objectFit: 'cover' }}

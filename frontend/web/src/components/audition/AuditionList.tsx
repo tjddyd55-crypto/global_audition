@@ -1,7 +1,8 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { auditionApi, type AuditionResponse } from '../../lib/api/auditions'
+import { auditionApi } from '../../lib/api/auditions'
+import type { AuditionDto } from '../../lib/types/audition'
 import AuditionCard from './AuditionCard'
 import { SkeletonAuditionCard } from '../ui/SkeletonCard'
 import EmptyState from '../ui/EmptyState'
@@ -39,7 +40,7 @@ export default function AuditionList() {
 
   return (
     <div style={gridStyle}>
-      {data.map((audition: AuditionResponse) => (
+      {data.map((audition: AuditionDto) => (
         <AuditionCard key={audition?.id ?? ''} audition={audition} />
       ))}
     </div>
