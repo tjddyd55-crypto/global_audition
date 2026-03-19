@@ -1,5 +1,5 @@
-// SSOT: Audition 구조 (DB/API/UI/Form 동일 필드명)
-// 런타임 DB는 Spring + Flyway와 동기화 유지
+// SSOT (5-way): Flyway auditions · JPA Audition · Java DTO · 본 schema · frontend/src/lib/types/audition.ts
+// text[] 만 사용 — detail_content / JSON 필드 없음. 배포: DB 마이그레이션 → 백엔드 → 프론트 순.
 
 generator client {
   provider = "prisma-client-js"

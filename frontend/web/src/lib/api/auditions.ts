@@ -5,6 +5,9 @@ import { safeStringArr } from '../utils/safe'
 /** @deprecated 레거시 import 호환 — AuditionDto와 동일 */
 export type { AuditionDto as AuditionResponse } from '../types/audition'
 
+/**
+ * SSOT: 백엔드 AuditionResponse 배열은 항상 [] 보장. 그래도 방어적으로 safeStringArr만 사용.
+ */
 export function parseAuditionDto(raw: Record<string, unknown>): AuditionDto {
   return {
     id: String(raw.id ?? ''),

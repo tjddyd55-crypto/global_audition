@@ -24,8 +24,9 @@ function SectionBlock({
   title: string
   items: string[]
 }) {
-  const list = safeArr(items).filter((s) => safeStr(s).length > 0)
-  if (!list.length) return null
+  const list = safeArr(items)
+    .map((s) => safeStr(s))
+    .filter((s) => s.length > 0)
   return (
     <div style={{ marginBottom: AUDITION_DETAIL.sectionGapPx }}>
       <div
@@ -63,19 +64,32 @@ function SectionBlock({
           {title}
         </h3>
       </div>
-      <ul
-        style={{
-          margin: 0,
-          paddingLeft: AUDITION_DETAIL.listIndentPx,
-          color: AUDITION_DETAIL.bodyColor,
-          fontSize: AUDITION_DETAIL.listItemFontPx,
-          lineHeight: AUDITION_DETAIL.listItemLineHeight,
-        }}
-      >
-        {list.map((line, i) => (
-          <li key={`${title}-${i}-${line.slice(0, 24)}`}>{line}</li>
-        ))}
-      </ul>
+      {list.length > 0 ? (
+        <ul
+          style={{
+            margin: 0,
+            paddingLeft: AUDITION_DETAIL.listIndentPx,
+            color: AUDITION_DETAIL.bodyColor,
+            fontSize: AUDITION_DETAIL.listItemFontPx,
+            lineHeight: AUDITION_DETAIL.listItemLineHeight,
+          }}
+        >
+          {list.map((line, i) => (
+            <li key={`${title}-${i}-${line.slice(0, 24)}`}>{line}</li>
+          ))}
+        </ul>
+      ) : (
+        <p
+          style={{
+            margin: 0,
+            color: AUDITION_DETAIL.metaMutedColor,
+            fontSize: AUDITION_DETAIL.metaMutedPx,
+            lineHeight: AUDITION_DETAIL.listItemLineHeight,
+          }}
+        >
+          정보 없음
+        </p>
+      )}
     </div>
   )
 }
@@ -305,17 +319,30 @@ export default function AuditionDetailPage() {
               ) : (
                 <div
                   style={{
-                    minHeight: 160,
-                    borderRadius: AUDITION_DETAIL.galleryRadiusPx,
-                    background: '#f3f4f6',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: AUDITION_DETAIL.metaMutedColor,
-                    fontSize: AUDITION_DETAIL.metaMutedPx,
+                    display: 'grid',
+                    gridTemplateColumns: `repeat(${AUDITION_DETAIL.galleryColumns}, 1fr)`,
+                    gap: AUDITION_DETAIL.galleryGapPx,
                   }}
                 >
-                  등록된 갤러리 이미지가 없습니다
+                  {Array.from({ length: AUDITION_DETAIL.galleryPlaceholderCount }, (_, i) => (
+                    <div
+                      key={`gallery-ph-${i}`}
+                      style={{
+                        position: 'relative',
+                        aspectRatio: '4/3',
+                        borderRadius: AUDITION_DETAIL.galleryRadiusPx,
+                        overflow: 'hidden',
+                        background: '#f3f4f6',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: AUDITION_DETAIL.metaMutedColor,
+                        fontSize: AUDITION_DETAIL.metaMutedPx,
+                      }}
+                    >
+                      —
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

@@ -143,6 +143,8 @@ export const AUDITION_DETAIL = {
   videoRadiusPx: 12,
   galleryRadiusPx: 10,
   galleryColumns: 3,
+  /** 이미지 없을 때 플레이스홀더 슬롯 수 (피그마 그리드 유지) */
+  galleryPlaceholderCount: 3,
   galleryGapPx: 12,
   sideCardPaddingPx: 20,
   sectionTitlePx: 16,

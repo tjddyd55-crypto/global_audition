@@ -1,3 +1,7 @@
+-- V6: detail_content(jsonb) 제거 · qualifications/schedules text[] 확정
+-- 운영 배포 순서: 본 마이그레이션 적용 → Spring 백엔드 기동 → 프론트. 순서 위반 시 JPA 매핑 오류.
+-- SSOT 배열: recruit_fields, qualifications, schedules, benefits, gallery_images (모두 text[])
+
 SET search_path TO public;
 
 ALTER TABLE public.auditions ADD COLUMN IF NOT EXISTS qualifications TEXT[] NOT NULL DEFAULT '{}';

@@ -76,7 +76,19 @@ public class AuditionService {
         return (int) Math.max(0, days);
     }
 
+    /**
+     * Hibernate/레거시 DB에서 text[] 가 null 로 올 수 있는 경우 엔티티 필드를 빈 배열로 고정 (응답 JSON 배열 null 방지).
+     */
+    private static void normalizeAuditionArrayFields(Audition a) {
+        a.setGalleryImages(a.getGalleryImages());
+        a.setRecruitFields(a.getRecruitFields());
+        a.setQualifications(a.getQualifications());
+        a.setSchedules(a.getSchedules());
+        a.setBenefits(a.getBenefits());
+    }
+
     private AuditionResponse toResponse(Audition a) {
+        normalizeAuditionArrayFields(a);
         AuditionResponse r = new AuditionResponse();
         r.setId(a.getId());
         r.setOwnerId(a.getOwnerId());
@@ -90,18 +102,18 @@ public class AuditionService {
         r.setCreatedAt(a.getCreatedAt());
         r.setCoverImage(a.getCoverImage());
         r.setVideoUrl(a.getVideoUrl());
-        r.setGalleryImages(a.getGalleryImages() != null ? a.getGalleryImages() : new String[0]);
+        r.setGalleryImages(a.getGalleryImages());
         r.setAgencyName(a.getAgencyName() != null ? a.getAgencyName() : "");
         r.setAgencyLogo(a.getAgencyLogo());
         r.setApplicantsCount((int) applicationRepository.countByAuditionId(a.getId()));
         r.setRemainingDays(computeRemainingDays(a.getEndDate()));
-        r.setRecruitFields(a.getRecruitFields() != null ? a.getRecruitFields() : new String[0]);
-        r.setQualifications(a.getQualifications() != null ? a.getQualifications() : new String[0]);
-        r.setSchedules(a.getSchedules() != null ? a.getSchedules() : new String[0]);
+        r.setRecruitFields(a.getRecruitFields());
+        r.setQualifications(a.getQualifications());
+        r.setSchedules(a.getSchedules());
         r.setLocation(a.getLocation() != null ? a.getLocation() : "");
         r.setStartDate(a.getStartDate());
         r.setEndDate(a.getEndDate());
-        r.setBenefits(a.getBenefits() != null ? a.getBenefits() : new String[0]);
+        r.setBenefits(a.getBenefits());
         return r;
     }
 

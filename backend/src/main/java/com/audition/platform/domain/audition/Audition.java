@@ -9,6 +9,10 @@ import org.hibernate.annotations.UuidGenerator;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * SSOT: Flyway auditions · API DTO · Prisma · frontend types 와 컬럼/배열 필드 일치.
+ * text[] — recruit_fields, qualifications, schedules, benefits, gallery_images. JSON/detail_content 없음.
+ */
 @Entity
 @Table(name = "auditions")
 public class Audition {
@@ -122,7 +126,8 @@ public class Audition {
     public void setCoverImage(String coverImage) { return coverImage; }
     public String getVideoUrl() { return videoUrl; }
     public void setVideoUrl(String videoUrl) { return videoUrl; }
-    public String[] getGalleryImages() { return galleryImages; }
+    /** DB/Hibernate가 null을 줄 수 있어도 호출부에는 빈 배열만 노출 (API null 금지) */
+    public String[] getGalleryImages() { return galleryImages != null ? galleryImages : new String[0]; }
     public void setGalleryImages(String[] galleryImages) { this.galleryImages = galleryImages != null ? galleryImages : new String[0]; }
     public String getAgencyName() { return agencyName; }
     public void setAgencyName(String agencyName) { this.agencyName = agencyName; }
@@ -132,11 +137,11 @@ public class Audition {
     public void setApplicantsCount(int applicantsCount) { this.applicantsCount = applicantsCount; }
     public int getRemainingDays() { return remainingDays; }
     public void setRemainingDays(int remainingDays) { this.remainingDays = remainingDays; }
-    public String[] getRecruitFields() { return recruitFields; }
+    public String[] getRecruitFields() { return recruitFields != null ? recruitFields : new String[0]; }
     public void setRecruitFields(String[] recruitFields) { this.recruitFields = recruitFields != null ? recruitFields : new String[0]; }
-    public String[] getQualifications() { return qualifications; }
+    public String[] getQualifications() { return qualifications != null ? qualifications : new String[0]; }
     public void setQualifications(String[] qualifications) { this.qualifications = qualifications != null ? qualifications : new String[0]; }
-    public String[] getSchedules() { return schedules; }
+    public String[] getSchedules() { return schedules != null ? schedules : new String[0]; }
     public void setSchedules(String[] schedules) { this.schedules = schedules != null ? schedules : new String[0]; }
     public String getLocation() { return location; }
     public void setLocation(String location) { this.location = location; }
@@ -144,6 +149,6 @@ public class Audition {
     public void setStartDate(Instant startDate) { this.startDate = startDate; }
     public Instant getEndDate() { return endDate; }
     public void setEndDate(Instant endDate) { this.endDate = endDate; }
-    public String[] getBenefits() { return benefits; }
+    public String[] getBenefits() { return benefits != null ? benefits : new String[0]; }
     public void setBenefits(String[] benefits) { this.benefits = benefits != null ? benefits : new String[0]; }
 }

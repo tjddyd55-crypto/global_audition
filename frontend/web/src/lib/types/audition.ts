@@ -1,5 +1,6 @@
 /**
- * SSOT: Prisma Audition / API / 상세 / 생성 폼 동일 필드명 (JSON detailContent 없음)
+ * SSOT (5-way 동기화): Flyway auditions · JPA Audition · API DTO · prisma/schema.prisma · 본 타입
+ * 배열 필드: recruitFields, qualifications, schedules, benefits, galleryImages — JSON/detail_content 없음
  */
 export type AuditionStatus = 'DRAFT' | 'OPEN' | 'CLOSED'
 
@@ -16,7 +17,8 @@ export type AuditionDto = {
   createdAt: string
   coverImage?: string | null
   videoUrl?: string | null
-  galleryImages?: string[]
+  /** parseAuditionDto 이후 항상 배열 (빈 배열 가능) */
+  galleryImages: string[]
   agencyName: string
   agencyLogo?: string | null
   applicantsCount: number

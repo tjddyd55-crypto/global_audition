@@ -9,9 +9,9 @@ import { Link } from '../../../../../i18n.config'
 import { LAYOUT, SIGNUP, HERO, AUDITION_DETAIL } from '../../../../../lib/design-tokens'
 import type { AuditionStatus, CreateAuditionPayload } from '../../../../../lib/types/audition'
 
-/** 로컬 미리보기용 (CDN 업로드 전); 용량 초과 파일은 건너뜀 */
+/** 로컬 미리보기용 (CDN 업로드 전). 향후 업로드 API 도입 시 URL만 저장할 것. */
 const GALLERY_MAX_FILES_PER_PICK = 8
-const GALLERY_MAX_BYTES_PER_FILE = 1_500_000
+const GALLERY_MAX_BYTES_PER_FILE = 2 * 1024 * 1024
 
 function readFileAsDataUrl(file: File): Promise<string | null> {
   return new Promise((resolve) => {
@@ -26,6 +26,7 @@ function readFileAsDataUrl(file: File): Promise<string | null> {
   })
 }
 
+/** 저장 시에만 trim — 입력 중에는 원문 유지 */
 function trimNonEmpty(lines: string[] | undefined): string[] {
   return (lines ?? []).map((s) => (s ?? '').trim()).filter((s) => s.length > 0)
 }
@@ -39,14 +40,17 @@ function StringListEditor({
   values: string[]
   onChange: (next: string[]) => void
 }) {
-  const list = values.length ? values : ['']
+  const list = values.length > 0 ? values : ['']
   const add = () => onChange([...list, ''])
   const setAt = (i: number, v: string) => {
     const next = [...list]
-    next[i] = v
+    next[i] = v ?? ''
     onChange(next)
   }
-  const remove = (i: number) => onChange(list.filter((_, j) => j !== i))
+  const remove = (i: number) => {
+    const next = list.filter((_, j) => j !== i)
+    onChange(next.length > 0 ? next : [])
+  }
   return (
     <div style={{ marginBottom: AUDITION_DETAIL.mainGridGapPx }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: AUDITION_DETAIL.galleryGapPx }}>
@@ -119,13 +123,13 @@ export default function DashboardAuditionCreatePage() {
   const [category, setCategory] = useState('')
   const [coverImage, setCoverImage] = useState('')
   const [videoUrl, setVideoUrl] = useState('')
-  const [galleryImages, setGalleryImages] = useState<string[]>([''])
+  const [galleryImages, setGalleryImages] = useState<string[]>([])
   const [agencyName, setAgencyName] = useState('')
   const [agencyLogo, setAgencyLogo] = useState('')
-  const [recruitFields, setRecruitFields] = useState<string[]>([''])
-  const [qualifications, setQualifications] = useState<string[]>([''])
-  const [schedules, setSchedules] = useState<string[]>([''])
-  const [benefits, setBenefits] = useState<string[]>([''])
+  const [recruitFields, setRecruitFields] = useState<string[]>([])
+  const [qualifications, setQualifications] = useState<string[]>([])
+  const [schedules, setSchedules] = useState<string[]>([])
+  const [benefits, setBenefits] = useState<string[]>([])
   const [location, setLocation] = useState('')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
@@ -158,7 +162,7 @@ export default function DashboardAuditionCreatePage() {
     e.target.value = ''
     if (!urls.length) return
     const existing = trimNonEmpty(galleryImages)
-    setGalleryImages([...existing, ...urls, ''])
+    setGalleryImages([...existing, ...urls])
   }
 
   const onSubmit = async (e: FormEvent) => {
@@ -300,7 +304,7 @@ export default function DashboardAuditionCreatePage() {
         <StringListEditor label="galleryImages (URL)" values={galleryImages} onChange={setGalleryImages} />
         <div style={{ marginBottom: AUDITION_DETAIL.mainGridGapPx }}>
           <label style={{ display: 'block', marginBottom: AUDITION_DETAIL.galleryGapPx, fontSize: AUDITION_DETAIL.bodyFontPx, fontWeight: 500 }}>
-            galleryImages — 파일 여러 장 추가 (로컬 미리보기, 용량 제한 {Math.round(GALLERY_MAX_BYTES_PER_FILE / 1000)}KB/파일)
+            galleryImages — 파일 여러 장 추가 (로컬 미리보기, 용량 제한 {Math.round(GALLERY_MAX_BYTES_PER_FILE / (1024 * 1024))}MB/파일)
           </label>
           <input type="file" accept="image/*" multiple onChange={onGalleryFiles} style={{ fontSize: AUDITION_DETAIL.metaMutedPx }} />
         </div>
