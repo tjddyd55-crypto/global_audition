@@ -58,7 +58,7 @@ export const AUDITION_CARD = {
   borderColor: '#eeeeee',
   titleFontSizePx: 16,
   titleFontWeight: 600,
-  badgeFontSizePx: 12,
+  badgeFontSizePx: 14,
   badgePaddingY: 4,
   badgePaddingX: 8,
   badgeRadius: 999,
@@ -165,7 +165,8 @@ export const AUDITION_DETAIL = {
   bodyColor: '#666666',
   listItemFontPx: 14,
   listItemLineHeight: 1.5,
-  metaMutedPx: 12,
+  /** 모바일 가독성: 14px 미만 본문/보조 텍스트 지양 — 상세 등에서 공통 사용 */
+  metaMutedPx: 14,
   metaMutedColor: '#888888',
   benefitGridColumns: 2,
   benefitGridGapPx: 16,

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
+import { toast } from 'sonner'
 import { SIGNUP, HERO, AUDITION_DETAIL } from '@/lib/design-tokens'
 import type { AuditionDto, AuditionStatus, CreateAuditionPayload } from '@/lib/types/audition'
 import { auditionApi } from '@/lib/api/auditions'
@@ -60,7 +61,7 @@ function StringListEditor({
         <button
           type="button"
           onClick={add}
-          style={{ fontSize: 13, color: HERO.primaryGradientStart, background: 'none', border: 'none', cursor: 'pointer' }}
+          style={{ fontSize: AUDITION_DETAIL.bodyFontPx, color: HERO.primaryGradientStart, background: 'none', border: 'none', cursor: 'pointer' }}
         >
           + 항목 추가
         </button>
@@ -260,7 +261,12 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
         onSuccess?.(updated)
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || (mode === 'create' ? '등록에 실패했습니다' : '수정에 실패했습니다'))
+      const msg =
+        err.response?.data?.message || (mode === 'create' ? '등록에 실패했습니다' : '수정에 실패했습니다')
+      if (mode === 'edit') {
+        toast.error(typeof msg === 'string' ? msg : '수정 실패')
+      }
+      setError(msg)
     } finally {
       setIsLoading(false)
     }
@@ -275,7 +281,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
   }
 
   const submitLabel = mode === 'create' ? '등록하기' : '저장하기'
-  const loadingLabel = mode === 'create' ? '저장 중...' : '수정 중...'
+  const loadingLabel = mode === 'create' ? '등록 중...' : '저장 중...'
 
   return (
     <>
@@ -417,7 +423,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full max-w-[400px]"
+          className="w-full max-w-[400px] md:max-w-none md:w-auto"
           style={{
             marginTop: AUDITION_DETAIL.mainGridGapPx,
             height: HERO.buttonHeightPx,

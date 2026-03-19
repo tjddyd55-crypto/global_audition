@@ -15,6 +15,7 @@ import { getVideoEmbedSrc } from '../../../../lib/utils/videoEmbed'
 import { safeArr, safeNum, safeStr } from '../../../../lib/utils/safe'
 import { useAuthStore } from '@/lib/auth/authStore'
 import { AuditionGalleryViewer } from '@/components/audition/AuditionGalleryViewer'
+import { canManageAudition as userCanManageAudition } from '@/lib/audition/auditionPermissions'
 
 function SectionBlock({
   iconLabel,
@@ -155,9 +156,12 @@ export default function AuditionDetailPage() {
   const benefits = safeArr(audition.benefits)
 
   const canApply = audition.status === 'OPEN' && (role === 'APPLICANT' || role === 'ADMIN')
-  const canManageAudition =
-    Boolean(accessToken) &&
-    (myUserId === audition.ownerId || role === 'ADMIN' || role === 'AGENCY')
+  const canManageAudition = userCanManageAudition({
+    accessToken,
+    userId: myUserId,
+    ownerId: audition.ownerId,
+    role,
+  })
 
   const fmt = (iso: string) => {
     try {
@@ -184,30 +188,40 @@ export default function AuditionDetailPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: AUDITION_DETAIL.pageBackgroundMuted }}>
-      <section
-        style={{
-          position: 'relative',
-          minHeight: 320,
-          background: cover ? `url(${cover}) center/cover no-repeat` : `linear-gradient(135deg, ${HERO.gradientStart}, ${HERO.gradientEnd})`,
-        }}
-      >
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: `rgba(${AUDITION_DETAIL.heroOverlayRgb},${AUDITION_DETAIL.heroOverlayOpacity})`,
-          }}
-        />
-        <div
-          className="mx-auto w-full max-w-[1200px] px-4 md:px-6"
-          style={{
-            position: 'relative',
-            zIndex: 1,
-            paddingTop: AUDITION_DETAIL.sectionGapPx,
-            paddingBottom: AUDITION_DETAIL.sectionGapPx,
-            color: AUDITION_DETAIL.heroMetaColor,
-          }}
-        >
+      <section className="relative w-full overflow-hidden">
+        <div className="relative aspect-[16/9] w-full min-h-[220px]">
+          {cover ? (
+            <Image
+              src={cover}
+              alt=""
+              fill
+              className="object-cover"
+              sizes="100vw"
+              priority
+              unoptimized
+            />
+          ) : (
+            <div
+              className="absolute inset-0"
+              style={{
+                background: `linear-gradient(135deg, ${HERO.gradientStart}, ${HERO.gradientEnd})`,
+              }}
+            />
+          )}
+          <div
+            className="absolute inset-0"
+            style={{
+              background: `rgba(${AUDITION_DETAIL.heroOverlayRgb},${AUDITION_DETAIL.heroOverlayOpacity})`,
+            }}
+          />
+          <div
+            className="relative z-[1] mx-auto flex h-full min-h-[220px] w-full max-w-[1200px] flex-col justify-end px-4 md:px-6"
+            style={{
+              paddingTop: AUDITION_DETAIL.sectionGapPx,
+              paddingBottom: AUDITION_DETAIL.sectionGapPx,
+              color: AUDITION_DETAIL.heroMetaColor,
+            }}
+          >
           <span
             style={{
               display: 'inline-block',
@@ -244,6 +258,7 @@ export default function AuditionDetailPage() {
             <span>마감 {fmt(safeStr(audition.endDate))}</span>
             <span>{safeStr(audition.location)}</span>
             <span>지원자 {applicants.toLocaleString()}명</span>
+          </div>
           </div>
         </div>
       </section>
@@ -301,9 +316,8 @@ export default function AuditionDetailPage() {
                 <AuditionGalleryViewer images={gallery} />
               ) : (
                 <div
+                  className="grid grid-cols-1 sm:grid-cols-3"
                   style={{
-                    display: 'grid',
-                    gridTemplateColumns: `repeat(${AUDITION_DETAIL.galleryColumns}, 1fr)`,
                     gap: AUDITION_DETAIL.galleryGapPx,
                   }}
                 >
@@ -382,7 +396,7 @@ export default function AuditionDetailPage() {
                     style={{
                       display: 'inline-block',
                       marginTop: AUDITION_DETAIL.galleryGapPx,
-                      fontSize: 11,
+                      fontSize: AUDITION_DETAIL.bodyFontPx,
                       padding: '2px 8px',
                       borderRadius: 999,
                       background: AUDITION_DETAIL.verifiedBadgeBg,

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { auditionApi } from '../../../../../lib/api/auditions'
@@ -10,6 +10,7 @@ import { useTranslations } from 'next-intl'
 import { Link } from '../../../../../i18n.config'
 import { LAYOUT, HERO, AUDITION_DETAIL } from '../../../../../lib/design-tokens'
 import { AuditionEditorForm } from '@/components/audition/AuditionEditorForm'
+import { canManageAudition } from '@/lib/audition/auditionPermissions'
 
 export default function AuditionEditPage() {
   const params = useParams()
@@ -18,6 +19,7 @@ export default function AuditionEditPage() {
   const id = params.id as string
   const [gateReady, setGateReady] = useState(false)
 
+  const accessToken = useAuthStore((s) => s.accessToken)
   const userId = useAuthStore((s) => s.userId)
   const role = useAuthStore((s) => s.role)
 
@@ -26,6 +28,17 @@ export default function AuditionEditPage() {
     queryFn: () => auditionApi.getById(id),
     enabled: !!id,
   })
+
+  const allowed = useMemo(
+    () =>
+      canManageAudition({
+        accessToken,
+        userId,
+        ownerId: audition?.ownerId,
+        role,
+      }),
+    [accessToken, userId, audition?.ownerId, role]
+  )
 
   useEffect(() => {
     if (!authApi.getToken()) {
@@ -37,12 +50,10 @@ export default function AuditionEditPage() {
 
   useEffect(() => {
     if (!audition || !userId) return
-    const isOwner = audition.ownerId === userId
-    const isAgencyOrAdmin = role === 'ADMIN' || role === 'AGENCY'
-    if (!isOwner && !isAgencyOrAdmin) {
-      router.replace(`/auditions/${id}`)
+    if (!canManageAudition({ accessToken, userId, ownerId: audition.ownerId, role })) {
+      router.replace('/')
     }
-  }, [audition, userId, role, id, router])
+  }, [audition, userId, role, accessToken, router, id])
 
   if (!gateReady) {
     return (
@@ -68,6 +79,14 @@ export default function AuditionEditPage() {
     )
   }
 
+  if (!allowed) {
+    return (
+      <div style={{ minHeight: '40vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {t('loading')}
+      </div>
+    )
+  }
+
   return (
     <div
       className="mx-auto w-full max-w-[1200px] px-4 md:px-6"
@@ -86,8 +105,14 @@ export default function AuditionEditPage() {
           gap: AUDITION_DETAIL.galleryGapPx,
         }}
       >
-        <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700 }}>공고 수정</h1>
-        <Link href={`/auditions/${id}`} style={{ fontSize: AUDITION_DETAIL.bodyFontPx, color: HERO.primaryGradientStart }}>
+        <h1 className="text-lg md:text-2xl" style={{ margin: 0, fontWeight: 700 }}>
+          공고 수정
+        </h1>
+        <Link
+          href={`/auditions/${id}`}
+          className="w-full text-sm md:w-auto md:text-base"
+          style={{ fontSize: AUDITION_DETAIL.bodyFontPx, color: HERO.primaryGradientStart }}
+        >
           상세로 돌아가기
         </Link>
       </div>
