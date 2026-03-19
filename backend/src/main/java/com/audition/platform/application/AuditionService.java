@@ -124,13 +124,13 @@ public class AuditionService {
         a.setCategory(req.getCategory().trim());
         a.setCoverImage(req.getCoverImage());
         a.setVideoUrl(req.getVideoUrl());
-        a.setGalleryImages(listToArray(req.getGalleryImages()));
+        a.setGalleryImages(listToArray(req.getGalleryImages() != null ? req.getGalleryImages() : List.of()));
         a.setAgencyName(req.getAgencyName().trim());
         a.setAgencyLogo(req.getAgencyLogo());
-        a.setRecruitFields(listToArray(req.getRecruitFields()));
-        a.setQualifications(listToArray(req.getQualifications()));
-        a.setSchedules(listToArray(req.getSchedules()));
-        a.setBenefits(listToArray(req.getBenefits()));
+        a.setRecruitFields(listToArray(req.getRecruitFields() != null ? req.getRecruitFields() : List.of()));
+        a.setQualifications(listToArray(req.getQualifications() != null ? req.getQualifications() : List.of()));
+        a.setSchedules(listToArray(req.getSchedules() != null ? req.getSchedules() : List.of()));
+        a.setBenefits(listToArray(req.getBenefits() != null ? req.getBenefits() : List.of()));
         a.setLocation(req.getLocation().trim());
         Instant start = parseInstantRequired(req.getStartDate(), "startDate");
         Instant end = parseInstantRequired(req.getEndDate(), "endDate");

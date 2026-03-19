@@ -123,9 +123,9 @@ public class Audition {
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
     public String getCoverImage() { return coverImage; }
-    public void setCoverImage(String coverImage) { return coverImage; }
+    public void setCoverImage(String coverImage) { this.coverImage = coverImage; }
     public String getVideoUrl() { return videoUrl; }
-    public void setVideoUrl(String videoUrl) { return videoUrl; }
+    public void setVideoUrl(String videoUrl) { this.videoUrl = videoUrl; }
     /** DB/Hibernate가 null을 줄 수 있어도 호출부에는 빈 배열만 노출 (API null 금지) */
     public String[] getGalleryImages() { return galleryImages != null ? galleryImages : new String[0]; }
     public void setGalleryImages(String[] galleryImages) { this.galleryImages = galleryImages != null ? galleryImages : new String[0]; }

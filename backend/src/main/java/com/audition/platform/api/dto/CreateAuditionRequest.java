@@ -82,6 +82,10 @@ public class CreateAuditionRequest {
     public void setAgencyLogo(String agencyLogo) { this.agencyLogo = agencyLogo; }
     public List<String> getRecruitFields() { return recruitFields; }
     public void setRecruitFields(List<String> recruitFields) { this.recruitFields = recruitFields; }
+    public List<String> getQualifications() { return qualifications; }
+    public void setQualifications(List<String> qualifications) { this.qualifications = qualifications; }
+    public List<String> getSchedules() { return schedules; }
+    public void setSchedules(List<String> schedules) { this.schedules = schedules; }
     public String getLocation() { return location; }
     public void setLocation(String location) { this.location = location; }
     public String getStartDate() { return startDate; }
