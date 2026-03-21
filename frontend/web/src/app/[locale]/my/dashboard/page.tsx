@@ -19,7 +19,7 @@ import {
 function statusLabel(status?: string) {
   if (status === 'ACCEPTED') return '합격'
   if (status === 'REJECTED') return '불합격'
-  if (status === 'REVIEWED') return '검토완료'
+  if (status === 'REVIEWING' || status === 'REVIEWED') return '검토중'
   if (status === 'SUBMITTED') return '제출완료'
   return status ?? '-'
 }

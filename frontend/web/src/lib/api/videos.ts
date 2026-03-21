@@ -1,9 +1,10 @@
 import { apiClient } from './client'
 import { MEDIA_ENDPOINTS } from './endpoints'
+import { unwrapData } from './unwrap'
 import type { PageResponse } from '../../types'
 
 export interface VideoContent {
-  id: number
+  id: string
   userId: number
   userName?: string
   title: string
@@ -19,6 +20,42 @@ export interface VideoContent {
   status: string
   createdAt: string
   updatedAt: string
+}
+
+function mapMeChannelVideoRow(v: {
+  videoId: string
+  title: string
+  videoUrl: string
+  description?: string | null
+  category?: string | null
+  thumbnailUrl?: string | null
+  visibility: string
+  viewCount: number
+  likeCount: number
+  createdAt: string
+}): VideoContent {
+  const created = typeof v.createdAt === 'string' ? v.createdAt : String(v.createdAt)
+  const pub = v.visibility === 'PUBLIC'
+  return {
+    id: v.videoId,
+    userId: 0,
+    title: v.title,
+    description: v.description ?? undefined,
+    videoUrl: v.videoUrl ?? '',
+    thumbnailUrl: v.thumbnailUrl ?? undefined,
+    duration: undefined,
+    viewCount: v.viewCount ?? 0,
+    likeCount: v.likeCount ?? 0,
+    commentCount: 0,
+    category: v.category ?? undefined,
+    status: pub ? 'PUBLISHED' : 'PRIVATE',
+    createdAt: created,
+    updatedAt: created,
+  }
+}
+
+function visibilityFromFormStatus(status: string): 'PUBLIC' | 'PRIVATE' {
+  return status === 'PUBLISHED' ? 'PUBLIC' : 'PRIVATE'
 }
 
 /**
@@ -41,7 +78,20 @@ export const videoApi = {
     return data
   },
 
-  getVideo: async (id: number): Promise<VideoContent> => {
+  getMyChannelVideos: async (): Promise<PageResponse<VideoContent>> => {
+    const { data } = await apiClient.get<unknown>('/me/channel/videos')
+    const p = unwrapData<{ items: Parameters<typeof mapMeChannelVideoRow>[0][]; total: number }>(data)
+    const items = (p.items ?? []).map(mapMeChannelVideoRow)
+    return {
+      content: items,
+      totalElements: p.total ?? items.length,
+      totalPages: 1,
+      page: 0,
+      size: items.length,
+    }
+  },
+
+  getVideo: async (id: string): Promise<VideoContent> => {
     // Gateway 경유 가능: /api/v1/videos/{id}
     const { data } = await apiClient.get(`${MEDIA_ENDPOINTS.VIDEOS}/${id}`)
     return data
@@ -54,19 +104,25 @@ export const videoApi = {
     category?: string
     status: string
   }): Promise<VideoContent> => {
-    // Gateway 경유 가능: /api/v1/videos
-    const { data } = await apiClient.post(`${MEDIA_ENDPOINTS.VIDEOS}`, video)
-    return data
+    const { data } = await apiClient.post<unknown>('/me/channel/videos', {
+      title: video.title,
+      description: video.description,
+      videoUrl: video.videoUrl,
+      category: video.category,
+      visibility: visibilityFromFormStatus(video.status),
+    })
+    const row = unwrapData<Parameters<typeof mapMeChannelVideoRow>[0]>(data)
+    return mapMeChannelVideoRow(row)
   },
 
-  likeVideo: async (id: number): Promise<VideoContent> => {
+  likeVideo: async (id: string): Promise<VideoContent> => {
     // Gateway 경유 가능: /api/v1/videos/{id}/like
     const { data } = await apiClient.post(`${MEDIA_ENDPOINTS.VIDEOS}/${id}/like`)
     return data
   },
 
   updateVideo: async (
-    id: number,
+    id: string,
     video: {
       title?: string
       description?: string
@@ -75,13 +131,18 @@ export const videoApi = {
       status?: string
     }
   ): Promise<VideoContent> => {
-    // Gateway 경유 가능: /api/v1/videos/{id}
-    const { data } = await apiClient.put(`${MEDIA_ENDPOINTS.VIDEOS}/${id}`, video)
-    return data
+    const body: Record<string, unknown> = {}
+    if (video.title != null) body.title = video.title
+    if (video.description != null) body.description = video.description
+    if (video.videoUrl != null) body.videoUrl = video.videoUrl
+    if (video.category != null) body.category = video.category
+    if (video.status != null) body.visibility = visibilityFromFormStatus(video.status)
+    const { data } = await apiClient.patch<unknown>(`/me/channel/videos/${id}`, body)
+    const row = unwrapData<Parameters<typeof mapMeChannelVideoRow>[0]>(data)
+    return mapMeChannelVideoRow(row)
   },
 
-  deleteVideo: async (id: number): Promise<void> => {
-    // Gateway 경유 가능: /api/v1/videos/{id}
-    await apiClient.delete(`${MEDIA_ENDPOINTS.VIDEOS}/${id}`)
+  deleteVideo: async (id: string): Promise<void> => {
+    await apiClient.delete(`/me/channel/videos/${id}`)
   },
 }

@@ -1,13 +1,13 @@
 import { apiClient } from './client'
-import { MEDIA_ENDPOINTS } from './endpoints'
+import { unwrapData } from './unwrap'
 import type { PageResponse } from '../../types'
 
 export type CreativeAsset = {
-  id: number
+  id: string
   userId: number
   title: string
   description?: string
-  assetType: 'LYRIC' | 'COMPOSITION' | 'DEMO_AUDIO' | 'VOCAL_GUIDE' | 'STEMS' | 'AI_GENERATED' | 'AI_ASSISTED'
+  assetType: string
   fileUrl?: string
   textContent?: string
   contentHash: string
@@ -20,39 +20,40 @@ export type CreativeAsset = {
   updatedAt?: string
 }
 
-/**
- * ============================================================================
- * 파일 업로드 플로우 문서화 (Phase A - 검증 단계)
- * ============================================================================
- * 
- * [1단계] Frontend: 파일 선택 및 Validation
- *   - 위치: src/app/[locale]/vault/page.tsx (CreateAssetModal)
- *   - 파일 선택: <input type="file"> 사용
- *   - TODO: 파일 크기 제한 검증 추가 필요 (현재 없음)
- *   - TODO: 파일 확장자 제한 검증 추가 필요 (현재 없음)
- *   - TODO: MIME 타입 체크 추가 필요 (현재 없음)
- * 
- * [2단계] Frontend → Media-Service: Upload 요청
- *   - 위치: src/lib/api/vault.ts (createAsset)
- *   - 방법: FormData + multipart/form-data
- *   - 엔드포인트: POST /api/v1/vault/assets
- *   - 인증: Authorization 헤더 필요 (apiClient가 자동 추가)
- *   - 단일 백엔드(NEXT_PUBLIC_API_URL)로 요청
- * 
- * [3단계] Backend: Storage 처리
- *   - 위치: backend (monolith)
- *   - 엔드포인트: CreativeAssetController.createAsset()
- *   - Storage Provider: Local File System (FileStorageService)
- *     - 현재: 로컬 파일 시스템 (./uploads/images, ./uploads/videos)
- *     - 향후: S3 또는 CDN으로 마이그레이션 예정
- *   - 인증: SecurityUtils.getUserIdFromAuthHeaderOrThrow() 사용
- *   - 파일 크기 제한: application.yml에서 50MB 설정
- *   - 확장자 검증: FileStorageService에서 수행
- *     - 이미지: .jpg, .jpeg, .png, .gif, .webp
- *     - 비디오/오디오: .mp4, .mov, .avi, .webm, .mp3, .wav, .flac, .aac, .mid, .midi, .m4a, .ogg
- */
+type VaultItemDetail = {
+  vaultItemId: string
+  title: string
+  description?: string | null
+  type: string
+  visibility: string
+  creationMethod: string
+  createdAt: string
+  fileUrl?: string | null
+  audioUrl?: string | null
+  videoUrl?: string | null
+}
+
+function mapVaultToCreative(v: VaultItemDetail): CreativeAsset {
+  const created = typeof v.createdAt === 'string' ? v.createdAt : String(v.createdAt)
+  const vis = v.visibility as CreativeAsset['accessControl']
+  return {
+    id: v.vaultItemId,
+    userId: 0,
+    title: v.title,
+    description: v.description ?? undefined,
+    assetType: v.type,
+    fileUrl: v.fileUrl ?? undefined,
+    textContent: undefined,
+    contentHash: 'vault',
+    declaredCreationType: v.creationMethod,
+    accessControl: vis === 'PUBLIC' || vis === 'AUDITION_ONLY' || vis === 'PRIVATE' ? vis : 'PRIVATE',
+    registeredAt: created,
+    createdAt: created,
+    updatedAt: created,
+  }
+}
+
 export const vaultApi = {
-  // 창작물 자산 등록
   createAsset: async (params: {
     file?: File
     textContent?: string
@@ -62,11 +63,6 @@ export const vaultApi = {
     declaredCreationType?: string
     accessControl: string
   }): Promise<CreativeAsset> => {
-    // TODO: Frontend Validation 추가 필요
-    // - 파일 크기 제한: 50MB (media-service와 동일하게)
-    // - 파일 확장자 검증: FileStorageService의 허용 목록과 일치
-    // - MIME 타입 체크: file.type 검증
-    
     const formData = new FormData()
     if (params.file) {
       formData.append('file', params.file)
@@ -80,36 +76,46 @@ export const vaultApi = {
     if (params.declaredCreationType) formData.append('declaredCreationType', params.declaredCreationType)
     formData.append('accessControl', params.accessControl)
 
-    // Gateway 경유: 미설정 (향후 Gateway에 /api/v1/vault/** 라우팅 추가 필요)
-    const { data } = await apiClient.post(`${MEDIA_ENDPOINTS.VAULT}/assets`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+    const { data } = await apiClient.post<unknown>('/me/vault', formData)
+    const d = unwrapData<VaultItemDetail>(data)
+    return mapVaultToCreative(d)
+  },
+
+  getMyAssets: async (params?: { page?: number; size?: number }): Promise<PageResponse<CreativeAsset>> => {
+    const { data } = await apiClient.get<unknown>('/me/vault', { params })
+    const page = unwrapData<{ items: VaultItemDetail[]; total: number }>(data)
+    const items = (page.items ?? []).map((row) => {
+      const r = row as VaultItemDetail
+      return mapVaultToCreative({
+        vaultItemId: r.vaultItemId,
+        title: r.title,
+        description: r.description ?? null,
+        type: r.type,
+        visibility: r.visibility,
+        creationMethod: r.creationMethod,
+        createdAt: r.createdAt as string,
+        fileUrl: r.fileUrl ?? null,
+        audioUrl: r.audioUrl ?? null,
+        videoUrl: r.videoUrl ?? null,
+      })
     })
-    return data
+    return {
+      content: items,
+      totalElements: page.total ?? items.length,
+      totalPages: 1,
+      page: params?.page ?? 0,
+      size: items.length,
+    }
   },
 
-  // 내 창작물 목록 조회
-  getMyAssets: async (params?: {
-    page?: number
-    size?: number
-  }): Promise<PageResponse<CreativeAsset>> => {
-    // Gateway 경유: 미설정 (향후 Gateway에 /api/v1/vault/** 라우팅 추가 필요)
-    const { data } = await apiClient.get(`${MEDIA_ENDPOINTS.VAULT}/assets/my`, { params })
-    return data
+  getAsset: async (id: string): Promise<CreativeAsset> => {
+    const { data } = await apiClient.get<unknown>(`/me/vault/${id}`)
+    const d = unwrapData<VaultItemDetail>(data)
+    return mapVaultToCreative(d)
   },
 
-  // 창작물 상세 조회
-  getAsset: async (id: number): Promise<CreativeAsset> => {
-    // Gateway 경유: 미설정 (향후 Gateway에 /api/v1/vault/** 라우팅 추가 필요)
-    const { data } = await apiClient.get(`${MEDIA_ENDPOINTS.VAULT}/assets/${id}`)
-    return data
-  },
-
-  // asset_id 목록으로 조회
-  getAssetsByIds: async (assetIds: number[]): Promise<CreativeAsset[]> => {
-    // Gateway 경유: 미설정 (향후 Gateway에 /api/v1/vault/** 라우팅 추가 필요)
-    const { data } = await apiClient.post(`${MEDIA_ENDPOINTS.VAULT}/assets/batch`, assetIds)
-    return data
+  getAssetsByIds: async (assetIds: string[]): Promise<CreativeAsset[]> => {
+    const results = await Promise.all(assetIds.map((id) => vaultApi.getAsset(id).catch(() => null)))
+    return results.filter((x): x is CreativeAsset => x != null)
   },
 }

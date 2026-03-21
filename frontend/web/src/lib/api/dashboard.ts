@@ -1,4 +1,5 @@
 import { apiClient } from './client'
+import { unwrapData } from './unwrap'
 import type { ApplicationResponseWithAudition } from './applications'
 import type { AuditionResponse } from './auditions'
 
@@ -28,7 +29,38 @@ export const dashboardApi = {
     return data
   },
   getApplicant: async (): Promise<ApplicantDashboardResponse> => {
-    const { data } = await apiClient.get<ApplicantDashboardResponse>('/dashboard/applicant')
-    return data
+    const { data } = await apiClient.get<unknown>('/me/dashboard')
+    const d = unwrapData<{
+      stats: {
+        appliedCount: number
+        reviewingCount: number
+        acceptedCount: number
+        rejectedCount: number
+        videoCount: number
+      }
+      recentApplications: Array<{
+        applicationId: string
+        auditionId: string
+        auditionTitle: string
+        appliedAt: string
+        status: string
+      }>
+    }>(data)
+    return {
+      applied: d.stats.appliedCount,
+      reviewed: d.stats.reviewingCount,
+      accepted: d.stats.acceptedCount,
+      rejected: d.stats.rejectedCount,
+      videosCount: d.stats.videoCount,
+      recentApplications: d.recentApplications.map((a) => ({
+        id: a.applicationId,
+        auditionId: a.auditionId,
+        applicantId: '',
+        applicantEmail: null,
+        auditionTitle: a.auditionTitle,
+        status: a.status as ApplicationResponseWithAudition['status'],
+        createdAt: a.appliedAt,
+      })),
+    }
   },
 }

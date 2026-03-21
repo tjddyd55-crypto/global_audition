@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Pattern;
 public class UpdateApplicationStatusRequest {
 
     @NotBlank
-    @Pattern(regexp = "REVIEWED|ACCEPTED|REJECTED")
+    @Pattern(regexp = "REVIEWING|ACCEPTED|REJECTED")
     private String status;
 
     public String getStatus() { return status; }

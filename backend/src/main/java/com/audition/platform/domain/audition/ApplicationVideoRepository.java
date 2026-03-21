@@ -10,5 +10,7 @@ public interface ApplicationVideoRepository extends JpaRepository<ApplicationVid
 
     List<ApplicationVideo> findByApplicationIdOrderByCreatedAtDesc(UUID applicationId);
 
+    Optional<ApplicationVideo> findFirstByApplicationIdOrderByCreatedAtAsc(UUID applicationId);
+
     Optional<ApplicationVideo> findByIdAndApplicationId(UUID id, UUID applicationId);
 }

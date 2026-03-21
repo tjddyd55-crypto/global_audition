@@ -7,14 +7,14 @@ import { applicationApi } from '../../../../lib/api/applications'
 import { BTN_SECONDARY, CARD_BASE, PAGE_CONTAINER, SECTION_GAP, TEXT_SUB, TITLE_PAGE } from '@/lib/ui/specClasses'
 
 function statusBadgeClass(status: string) {
-  if (status === 'REVIEWED') return 'rounded-full bg-blue-50 px-3 py-1 text-sm text-blue-700'
+  if (status === 'REVIEWING' || status === 'REVIEWED') return 'rounded-full bg-blue-50 px-3 py-1 text-sm text-blue-700'
   if (status === 'ACCEPTED') return 'rounded-full bg-green-50 px-3 py-1 text-sm text-green-700'
   if (status === 'REJECTED') return 'rounded-full bg-red-50 px-3 py-1 text-sm text-red-700'
   return 'rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-700'
 }
 
 function statusLabel(status: string) {
-  if (status === 'REVIEWED') return '검토중'
+  if (status === 'REVIEWING' || status === 'REVIEWED') return '검토중'
   if (status === 'ACCEPTED') return '합격'
   if (status === 'REJECTED') return '불합격'
   if (status === 'SUBMITTED') return '제출'

@@ -36,6 +36,7 @@ public class ApplicationVideoService {
         ApplicationVideoResponse response = new ApplicationVideoResponse();
         response.setId(video.getId());
         response.setApplicationId(video.getApplicationId());
+        response.setTitle(video.getTitle());
         response.setVideoUrl(video.getVideoUrl());
         response.setCreatedAt(video.getCreatedAt());
         return response;
@@ -69,6 +70,8 @@ public class ApplicationVideoService {
         ApplicationVideo video = new ApplicationVideo();
         video.setApplicationId(applicationId);
         video.setVideoUrl(request.getVideoUrl().trim());
+        String t = request.getTitle();
+        video.setTitle(t != null && !t.isBlank() ? t.trim() : "Audition Video");
         return toResponse(applicationVideoRepository.save(video));
     }
 

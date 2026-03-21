@@ -30,8 +30,13 @@ public class Application {
     @JoinColumn(name = "applicant_id", insertable = false, updatable = false)
     private User applicant;
 
-    @Column(nullable = false, columnDefinition = "TEXT") // SUBMITTED | REVIEWED | ACCEPTED | REJECTED
+    /** 심사 파이프라인: SUBMITTING 완료 후 SUBMITTED → REVIEWING → ACCEPTED | REJECTED (투표와 무관) */
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String status;
+
+    /** 공개 투표 누적 수 — votes 테이블과 트랜잭션으로 동기화, 목록 조회 시 COUNT(*) 사용 금지 */
+    @Column(name = "vote_count", nullable = false)
+    private long voteCount = 0;
 
     @Column(columnDefinition = "TEXT")
     private String message;
@@ -54,6 +59,8 @@ public class Application {
     public void setApplicant(User applicant) { this.applicant = applicant; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+    public long getVoteCount() { return voteCount; }
+    public void setVoteCount(long voteCount) { this.voteCount = voteCount; }
     public String getMessage() { return message; }
     public void setMessage(String message) { this.message = message; }
     public Instant getUpdatedAt() { return updatedAt; }

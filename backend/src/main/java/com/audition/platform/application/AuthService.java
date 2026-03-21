@@ -1,9 +1,10 @@
 package com.audition.platform.application;
 
+import com.audition.platform.api.dto.AuthMeDataDto;
 import com.audition.platform.api.dto.AuthResponse;
-import com.audition.platform.api.dto.AuthMeResponse;
 import com.audition.platform.api.dto.LoginRequest;
 import com.audition.platform.api.dto.SignupRequest;
+import com.audition.platform.application.me.MeApiMapping;
 import com.audition.platform.domain.user.User;
 import com.audition.platform.domain.user.UserRepository;
 import com.audition.platform.infra.JwtService;
@@ -50,6 +51,9 @@ public class AuthService {
         user.setPasswordHash(passwordEncoder.encode(req.getPassword()));
         user.setRole(role);
         user.setUpdatedAt(Instant.now());
+        String local = extractLocalPart(email);
+        user.setUsername(uniqueUsername(local));
+        user.setDisplayName(displayNameFromLocal(local));
         user = userRepository.save(user);
         String token = jwtService.createToken(user.getId(), user.getEmail(), user.getRole());
         return new AuthResponse(token, user.getRole(), user.getId().toString());
@@ -65,20 +69,42 @@ public class AuthService {
         return new AuthResponse(token, user.getRole(), user.getId().toString());
     }
 
-    public AuthMeResponse me() {
+    public AuthMeDataDto meData() {
         UUID userId = SecurityUtils.getCurrentUserId();
         if (userId == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
         }
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "사용자를 찾을 수 없습니다."));
+        AuthMeDataDto d = new AuthMeDataDto();
+        d.setId(user.getId().toString());
+        d.setEmail(user.getEmail());
+        d.setUsername(user.getUsername());
+        d.setDisplayName(user.getDisplayName());
+        d.setRole(MeApiMapping.userRoleToApi(user.getRole()));
+        d.setProfileImageUrl(user.getProfileImageUrl());
+        return d;
+    }
 
-        AuthMeResponse response = new AuthMeResponse();
-        response.setUserId(user.getId().toString());
-        response.setEmail(user.getEmail());
-        response.setRole(user.getRole());
-        response.setName(user.getName());
-        response.setProfileImageUrl(user.getProfileImageUrl());
-        return response;
+    private static String extractLocalPart(String email) {
+        int at = email.indexOf('@');
+        return at > 0 ? email.substring(0, at) : "user";
+    }
+
+    private String uniqueUsername(String localPart) {
+        String sanitized = localPart.replaceAll("[^a-zA-Z0-9_]", "_");
+        if (sanitized.isEmpty()) {
+            sanitized = "user";
+        }
+        String candidate = sanitized + "_" + UUID.randomUUID().toString().replace("-", "").substring(0, 10);
+        while (userRepository.existsByUsername(candidate)) {
+            candidate = sanitized + "_" + UUID.randomUUID().toString().replace("-", "").substring(0, 10);
+        }
+        return candidate;
+    }
+
+    private static String displayNameFromLocal(String localPart) {
+        String s = localPart.replaceAll("[^a-zA-Z0-9가-힣 ._\\-]", "").trim();
+        return s.isEmpty() ? "User" : s;
     }
 }

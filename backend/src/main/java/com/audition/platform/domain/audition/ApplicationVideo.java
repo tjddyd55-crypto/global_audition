@@ -31,6 +31,9 @@ public class ApplicationVideo {
     @Column(name = "video_url", nullable = false, columnDefinition = "TEXT")
     private String videoUrl;
 
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String title = "Audition Video";
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
@@ -42,6 +45,8 @@ public class ApplicationVideo {
     public void setApplication(Application application) { this.application = application; }
     public String getVideoUrl() { return videoUrl; }
     public void setVideoUrl(String videoUrl) { this.videoUrl = videoUrl; }
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 }

@@ -6,6 +6,7 @@ import java.util.UUID;
 public class ApplicationVideoResponse {
     private UUID id;
     private UUID applicationId;
+    private String title;
     private String videoUrl;
     private Instant createdAt;
 
@@ -13,6 +14,8 @@ public class ApplicationVideoResponse {
     public void setId(UUID id) { this.id = id; }
     public UUID getApplicationId() { return applicationId; }
     public void setApplicationId(UUID applicationId) { this.applicationId = applicationId; }
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
     public String getVideoUrl() { return videoUrl; }
     public void setVideoUrl(String videoUrl) { this.videoUrl = videoUrl; }
     public Instant getCreatedAt() { return createdAt; }

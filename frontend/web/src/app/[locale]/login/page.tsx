@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useRouter } from '../../../i18n.config'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -24,8 +25,13 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>
 
+function isSafeInternalNextPath(path: string): boolean {
+  return path.startsWith('/') && !path.startsWith('//') && !path.includes('://')
+}
+
 export default function LoginPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const queryClient = useQueryClient()
   const t = useTranslations('auth')
   const [error, setError] = useState<string | null>(null)
@@ -65,6 +71,12 @@ export default function LoginPage() {
       queryClient.invalidateQueries({ queryKey: ['currentUser', savedToken] })
 
       await new Promise(resolve => setTimeout(resolve, 300))
+
+      const nextRaw = searchParams.get('next')
+      if (nextRaw && isSafeInternalNextPath(nextRaw)) {
+        router.push(nextRaw)
+        return
+      }
 
       if (userRole === 'BUSINESS' || userRole === 'AGENCY') {
         router.push('/my/dashboard')

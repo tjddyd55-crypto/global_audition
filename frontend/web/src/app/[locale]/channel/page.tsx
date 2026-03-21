@@ -39,7 +39,6 @@ export default function ChannelPage() {
   const queryClient = useQueryClient()
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
   const [userType, setUserType] = useState<'APPLICANT' | 'BUSINESS' | null>(null)
-  const [userId, setUserId] = useState<number | null>(null)
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [editingVideo, setEditingVideo] = useState<VideoContent | null>(null)
 
@@ -71,7 +70,6 @@ export default function ChannelPage() {
         }
 
         setUserType('APPLICANT')
-        setUserId(Number.parseInt(user.userId, 10) || null)
       } catch (err: any) {
         console.error('Auth check failed:', err)
         if (err.response?.status === 401) {
@@ -86,9 +84,9 @@ export default function ChannelPage() {
   }, [router])
 
   const { data: videos, isLoading } = useQuery({
-    queryKey: ['videos', userId],
-    queryFn: () => videoApi.getVideos({ userId: userId ?? undefined, page: 0, size: 100 }),
-    enabled: !!userId,
+    queryKey: ['my-channel-videos'],
+    queryFn: () => videoApi.getMyChannelVideos(),
+    enabled: userType === 'APPLICANT',
   })
 
   const createMutation = useMutation({
@@ -98,23 +96,23 @@ export default function ChannelPage() {
         status: data.status as 'PUBLISHED' | 'DRAFT' | 'PRIVATE',
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['videos', userId] })
+      queryClient.invalidateQueries({ queryKey: ['my-channel-videos'] })
       setShowCreateForm(false)
       reset()
     },
   })
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => videoApi.deleteVideo(id),
+    mutationFn: (id: string) => videoApi.deleteVideo(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['videos', userId] })
+      queryClient.invalidateQueries({ queryKey: ['my-channel-videos'] })
     },
   })
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: VideoFormData }) => videoApi.updateVideo(id, data),
+    mutationFn: ({ id, data }: { id: string; data: VideoFormData }) => videoApi.updateVideo(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['videos', userId] })
+      queryClient.invalidateQueries({ queryKey: ['my-channel-videos'] })
       setEditingVideo(null)
       setShowCreateForm(false)
       reset()
@@ -145,7 +143,7 @@ export default function ChannelPage() {
     setShowCreateForm(true)
   }
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     if (!confirm('정말 삭제하시겠습니까?')) return
     await deleteMutation.mutateAsync(id)
   }

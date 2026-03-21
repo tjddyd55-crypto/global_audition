@@ -259,6 +259,26 @@ export default function AuditionDetailPage() {
             <span>{safeStr(audition.location)}</span>
             <span>지원자 {applicants.toLocaleString()}명</span>
           </div>
+          <div style={{ marginTop: 16 }}>
+            <Link
+              href={`/auditions/${id}/votes`}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '10px 18px',
+                borderRadius: HERO.buttonRadiusPx,
+                background: 'rgba(255,255,255,0.2)',
+                color: '#fff',
+                fontWeight: 600,
+                fontSize: AUDITION_DETAIL.heroMetaFontPx,
+                textDecoration: 'none',
+                border: '1px solid rgba(255,255,255,0.35)',
+              }}
+            >
+              지원자 투표하기
+            </Link>
+          </div>
           </div>
         </div>
       </section>

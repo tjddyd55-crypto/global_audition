@@ -11,7 +11,7 @@ const applicationSchema = z.object({
   videoId1: z.number().optional(),
   videoId2: z.number().optional(),
   photos: z.array(z.string().url()).optional(),
-  assetIds: z.array(z.number()).optional(), // Creative Vault asset_id 목록
+  assetIds: z.array(z.string()).optional(), // Vault 항목 UUID
 })
 
 type ApplicationFormData = z.infer<typeof applicationSchema>
@@ -24,7 +24,7 @@ interface ApplicationFormProps {
 export default function ApplicationForm({ auditionId, onSubmit }: ApplicationFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showVaultSelector, setShowVaultSelector] = useState(false)
-  const [selectedAssetIds, setSelectedAssetIds] = useState<number[]>([])
+  const [selectedAssetIds, setSelectedAssetIds] = useState<string[]>([])
 
   // 내 Vault 자산 목록 조회
   const { data: myAssets } = useQuery({
@@ -55,7 +55,7 @@ export default function ApplicationForm({ auditionId, onSubmit }: ApplicationFor
     }
   }
 
-  const handleAssetToggle = (assetId: number) => {
+  const handleAssetToggle = (assetId: string) => {
     const newSelected = selectedAssetIds.includes(assetId)
       ? selectedAssetIds.filter(id => id !== assetId)
       : [...selectedAssetIds, assetId]

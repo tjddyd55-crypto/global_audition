@@ -11,17 +11,19 @@ import { CARD_BASE, PAGE_CONTAINER, SECTION_GAP, TEXT_SUB, TITLE_PAGE } from '@/
 export default function AssetDetailPage() {
   const params = useNextParams()
   const t = useTranslations('common')
-  const assetId = Number(params.id)
+  const assetId = String(params.id ?? '')
+  const legacyNumericAssetId = /^\d+$/.test(assetId) ? Number(assetId) : null
 
   const { data: asset, isLoading: assetLoading } = useQuery({
     queryKey: ['asset', assetId],
     queryFn: () => vaultApi.getAsset(assetId),
+    enabled: !!assetId,
   })
 
   const { data: feedbacks, isLoading: feedbacksLoading } = useQuery({
-    queryKey: ['feedback', assetId],
-    queryFn: () => feedbackApi.getFeedbackByAsset(assetId, { page: 0, size: 20 }),
-    enabled: !!assetId,
+    queryKey: ['feedback', legacyNumericAssetId],
+    queryFn: () => feedbackApi.getFeedbackByAsset(legacyNumericAssetId!, { page: 0, size: 20 }),
+    enabled: legacyNumericAssetId != null,
   })
 
   if (assetLoading) {

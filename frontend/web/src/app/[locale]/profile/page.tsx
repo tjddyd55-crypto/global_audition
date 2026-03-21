@@ -20,7 +20,7 @@ import {
 export default function ProfilePage() {
   const router = useRouter()
   const t = useTranslations('common')
-  const [userId, setUserId] = useState<number | null>(null)
+  const [hasToken, setHasToken] = useState(false)
 
   useEffect(() => {
     const token = authApi.getToken()
@@ -28,13 +28,13 @@ export default function ProfilePage() {
       router.push('/login')
       return
     }
-    setUserId(1)
+    setHasToken(true)
   }, [router])
 
   const { data: videos, isLoading } = useQuery({
-    queryKey: ['videos', userId],
-    queryFn: () => videoApi.getVideos({ userId: userId ?? undefined, page: 0, size: 20 }),
-    enabled: !!userId,
+    queryKey: ['my-channel-videos-profile'],
+    queryFn: () => videoApi.getMyChannelVideos(),
+    enabled: hasToken,
   })
 
   if (isLoading) {

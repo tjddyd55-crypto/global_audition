@@ -91,7 +91,7 @@ public class DashboardService {
         long totalApplications = auditionIds.isEmpty() ? 0 : applicationRepository.countByAuditionIdIn(auditionIds);
         long accepted = auditionIds.isEmpty() ? 0 : applicationRepository.countByStatusAndAuditionIdIn("ACCEPTED", auditionIds);
         long rejected = auditionIds.isEmpty() ? 0 : applicationRepository.countByStatusAndAuditionIdIn("REJECTED", auditionIds);
-        long reviewed = auditionIds.isEmpty() ? 0 : applicationRepository.countByStatusAndAuditionIdIn("REVIEWED", auditionIds);
+        long reviewed = auditionIds.isEmpty() ? 0 : applicationRepository.countByStatusAndAuditionIdIn("REVIEWING", auditionIds);
         long submitted = auditionIds.isEmpty() ? 0 : applicationRepository.countByStatusAndAuditionIdIn("SUBMITTED", auditionIds);
 
         List<Application> recentApplications = auditionIds.isEmpty()
@@ -140,7 +140,7 @@ public class DashboardService {
 
         ApplicantDashboardResponse response = new ApplicantDashboardResponse();
         response.setApplied(applicationRepository.countByApplicantId(userId));
-        response.setReviewed(applicationRepository.countByApplicantIdAndStatus(userId, "REVIEWED"));
+        response.setReviewed(applicationRepository.countByApplicantIdAndStatus(userId, "REVIEWING"));
         response.setAccepted(applicationRepository.countByApplicantIdAndStatus(userId, "ACCEPTED"));
         response.setRejected(applicationRepository.countByApplicantIdAndStatus(userId, "REJECTED"));
         response.setVideosCount(videosCount);

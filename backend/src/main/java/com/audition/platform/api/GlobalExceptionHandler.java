@@ -1,5 +1,6 @@
 package com.audition.platform.api;
 
+import com.audition.platform.api.dto.ApiFailResponse;
 import com.audition.platform.api.dto.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -23,20 +24,23 @@ public class GlobalExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<ErrorResponse> handleResponseStatus(ResponseStatusException ex, HttpServletRequest request) {
+    public ResponseEntity<?> handleResponseStatus(ResponseStatusException ex, HttpServletRequest request) {
         log.warn("ResponseStatusException on {} {}: {}", request.getMethod(), request.getRequestURI(), ex.getReason(), ex);
         HttpStatusCode status = ex.getStatusCode();
         String reasonPhrase = (status instanceof HttpStatus)
                 ? ((HttpStatus) status).getReasonPhrase()
                 : status.toString();
         String message = ex.getReason() != null ? ex.getReason() : reasonPhrase;
+        if (useSsotEnvelope(request)) {
+            return ResponseEntity.status(status).body(new ApiFailResponse(message));
+        }
         return ResponseEntity.status(status).body(
                 new ErrorResponse(String.valueOf(status.value()), message, request.getRequestURI(), Instant.now())
         );
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex, HttpServletRequest request) {
+    public ResponseEntity<?> handleValidation(MethodArgumentNotValidException ex, HttpServletRequest request) {
         String message = ex.getBindingResult().getFieldErrors().stream()
                 .map(this::formatFieldError)
                 .collect(Collectors.joining(", "));
@@ -44,6 +48,9 @@ public class GlobalExceptionHandler {
             message = "Validation failed";
         }
         log.warn("Validation failed on {} {}: {}", request.getMethod(), request.getRequestURI(), message);
+        if (useSsotEnvelope(request)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiFailResponse(message));
+        }
         return ResponseEntity.unprocessableEntity().body(
                 new ErrorResponse("422", message, request.getRequestURI(), Instant.now())
         );
@@ -63,7 +70,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ErrorResponse> handleUnreadableMessage(HttpMessageNotReadableException ex, HttpServletRequest request) {
+    public ResponseEntity<?> handleUnreadableMessage(HttpMessageNotReadableException ex, HttpServletRequest request) {
         String message = "Invalid JSON payload";
         Throwable root = ex.getMostSpecificCause();
         if (root != null && root.getMessage() != null) {
@@ -75,6 +82,9 @@ public class GlobalExceptionHandler {
             }
         }
         log.warn("HttpMessageNotReadable on {} {}: {}", request.getMethod(), request.getRequestURI(), message, ex);
+        if (useSsotEnvelope(request)) {
+            return ResponseEntity.badRequest().body(new ApiFailResponse(message));
+        }
         return ResponseEntity.badRequest().body(
                 new ErrorResponse("400", message, request.getRequestURI(), Instant.now())
         );
@@ -91,5 +101,21 @@ public class GlobalExceptionHandler {
     private String formatFieldError(FieldError fieldError) {
         String defaultMessage = fieldError.getDefaultMessage() == null ? "is invalid" : fieldError.getDefaultMessage();
         return fieldError.getField() + " " + defaultMessage;
+    }
+
+    /** /api/me/* 및 GET /api/auth/me — 프론트 SSOT 실패 포맷 */
+    private static boolean useSsotEnvelope(HttpServletRequest request) {
+        String uri = request.getRequestURI();
+        boolean agencyApplicants = uri.contains("/api/auditions/") && uri.contains("/applications");
+        boolean auditionVotes = uri.contains("/api/auditions/") && uri.endsWith("/votes");
+        boolean votesMutations = uri.equals("/api/votes") || uri.startsWith("/api/votes/");
+        boolean appStatusPatch = uri.contains("/api/applications/") && uri.endsWith("/status");
+        return uri.contains("/api/me/")
+                || uri.endsWith("/api/me")
+                || uri.contains("/api/auth/me")
+                || agencyApplicants
+                || auditionVotes
+                || votesMutations
+                || appStatusPatch;
     }
 }

@@ -18,13 +18,13 @@ import {
 } from '@/lib/ui/specClasses'
 
 function statusBadgeClass(status: string) {
-  if (status === 'REVIEWED') return 'rounded-full bg-blue-50 px-3 py-1 text-sm text-blue-700'
+  if (status === 'REVIEWING' || status === 'REVIEWED') return 'rounded-full bg-blue-50 px-3 py-1 text-sm text-blue-700'
   if (status === 'ACCEPTED') return 'rounded-full bg-green-50 px-3 py-1 text-sm text-green-700'
   return 'rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-700'
 }
 
 function statusLabel(status: string) {
-  if (status === 'REVIEWED') return '검토중'
+  if (status === 'REVIEWING' || status === 'REVIEWED') return '검토중'
   if (status === 'ACCEPTED') return '합격'
   if (status === 'REJECTED') return '불합격'
   if (status === 'SUBMITTED') return '제출'
@@ -44,28 +44,28 @@ export default function MyApplicationDetailPage() {
     queryFn: () => applicationApi.getById(id),
     enabled: !!id,
   })
-  const videosQuery = useQuery({
-    queryKey: ['my-application-videos', id],
-    queryFn: () => applicationVideoApi.list(id),
-    enabled: !!id,
-  })
+
+  const videos = applicationQuery.data?.videos ?? []
 
   const createVideoMutation = useMutation({
     mutationFn: () => applicationVideoApi.create(id, (videoUrl ?? '').trim()),
     onSuccess: () => {
       setVideoUrl('')
       setErrorMessage(null)
-      queryClient.invalidateQueries({ queryKey: ['my-application-videos', id] })
+      queryClient.invalidateQueries({ queryKey: ['my-application', id] })
     },
-    onError: (e: any) => setErrorMessage(e?.response?.data?.message ?? '영상 URL 등록에 실패했습니다.'),
+    onError: (e: unknown) => {
+      const err = e as { response?: { data?: { message?: string } } }
+      setErrorMessage(err?.response?.data?.message ?? '영상 URL 등록에 실패했습니다.')
+    },
   })
 
   const removeVideoMutation = useMutation({
-    mutationFn: (videoId: string) => applicationVideoApi.remove(videoId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['my-application-videos', id] }),
+    mutationFn: (videoId: string) => applicationVideoApi.remove(id, videoId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['my-application', id] }),
   })
 
-  if (applicationQuery.isLoading || videosQuery.isLoading) {
+  if (applicationQuery.isLoading) {
     return <div className="flex min-h-screen items-center justify-center">{t('loading')}</div>
   }
   if (!applicationQuery.data) {
@@ -112,10 +112,10 @@ export default function MyApplicationDetailPage() {
 
           <p className={`${TEXT_SUB} mb-2 mt-6`}>등록된 영상</p>
           <ul className="flex flex-col gap-2">
-            {(videosQuery.data ?? []).map((video) => (
+            {videos.map((video) => (
               <li key={video.id} className={`${CARD_BASE} flex items-center justify-between gap-2`}>
                 <a href={video.videoUrl} target="_blank" className="text-sm text-[#3B82F6] no-underline" rel="noreferrer">
-                  {video.videoUrl}
+                  {video.title?.trim() ? video.title : video.videoUrl}
                 </a>
                 <button
                   type="button"
@@ -126,7 +126,7 @@ export default function MyApplicationDetailPage() {
                 </button>
               </li>
             ))}
-            {(videosQuery.data ?? []).length === 0 && <li className={TEXT_SUB}>등록된 영상이 없습니다.</li>}
+            {videos.length === 0 && <li className={TEXT_SUB}>등록된 영상이 없습니다.</li>}
           </ul>
         </div>
       </div>

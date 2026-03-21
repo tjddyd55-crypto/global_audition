@@ -1,8 +1,10 @@
 package com.audition.platform.api;
 
-import com.audition.platform.api.dto.ApplicationResponse;
+import com.audition.platform.api.dto.ApiEnvelope;
+import com.audition.platform.api.dto.AgencyApplicantsListDto;
 import com.audition.platform.api.dto.ApplicationDecisionRequest;
-import com.audition.platform.api.dto.UpdateApplicationStatusRequest;
+import com.audition.platform.api.dto.ApplicationResponse;
+import com.audition.platform.api.dto.PatchApplicationStatusRequest;
 import com.audition.platform.application.ApplicationService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
@@ -36,8 +38,8 @@ public class ApplicationController {
     }
 
     @GetMapping("/auditions/{auditionId}/applications")
-    public List<ApplicationResponse> listApplications(@PathVariable UUID auditionId) {
-        return applicationService.listByAudition(auditionId);
+    public ApiEnvelope<AgencyApplicantsListDto> listApplications(@PathVariable UUID auditionId) {
+        return ApiEnvelope.ok(applicationService.listAgencyApplicants(auditionId));
     }
 
     @PostMapping("/applications/{id}/decision")
@@ -51,11 +53,8 @@ public class ApplicationController {
     }
 
     @PatchMapping("/applications/{id}/status")
-    public ApplicationResponse updateStatusLegacy(@PathVariable UUID id, @Valid @RequestBody UpdateApplicationStatusRequest request) {
-        if ("REVIEWED".equals(request.getStatus())) {
-            return applicationService.markReviewed(id);
-        }
-        return applicationService.decide(id, request.getStatus());
+    public ApplicationResponse patchApplicationStatus(@PathVariable UUID id, @Valid @RequestBody PatchApplicationStatusRequest request) {
+        return applicationService.patchApplicationStatus(id, request.getStatus());
     }
 
     @PostMapping("/applications/{id}/accept")

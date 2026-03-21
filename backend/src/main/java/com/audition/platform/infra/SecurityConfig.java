@@ -1,5 +1,6 @@
 package com.audition.platform.infra;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -12,6 +13,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import java.nio.charset.StandardCharsets;
 
 @Configuration
 @EnableWebSecurity
@@ -35,13 +38,31 @@ public class SecurityConfig {
             .cors(Customizer.withDefaults())
             .csrf(csrf -> csrf.disable())
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .exceptionHandling(e -> e
+                .authenticationEntryPoint((request, response, authException) -> writeApiError(response, 401, "로그인이 필요합니다."))
+                .accessDeniedHandler((request, response, accessDeniedException) ->
+                        writeApiError(response, 403, "접근 권한이 없습니다."))
+            )
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**", "/api/health", "/api/version").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/signup").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/auth/me").permitAll()
+                .requestMatchers("/uploads/**").permitAll()
+                .requestMatchers("/api/health", "/api/version").permitAll()
                 .requestMatchers("/actuator/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/auditions", "/api/auditions/*").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/auditions/*/votes").permitAll()
+                .requestMatchers("/api/me/**").authenticated()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
+    }
+
+    private static void writeApiError(HttpServletResponse response, int status, String message) throws java.io.IOException {
+        response.setStatus(status);
+        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+        response.setContentType("application/json;charset=UTF-8");
+        String escaped = message.replace("\\", "\\\\").replace("\"", "\\\"");
+        response.getWriter().write("{\"success\":false,\"message\":\"" + escaped + "\"}");
     }
 }

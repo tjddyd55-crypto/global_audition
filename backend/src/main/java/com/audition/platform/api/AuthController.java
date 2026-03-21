@@ -1,7 +1,8 @@
 package com.audition.platform.api;
 
+import com.audition.platform.api.dto.ApiEnvelope;
+import com.audition.platform.api.dto.AuthMeDataDto;
 import com.audition.platform.api.dto.AuthResponse;
-import com.audition.platform.api.dto.AuthMeResponse;
 import com.audition.platform.api.dto.LoginRequest;
 import com.audition.platform.api.dto.SignupRequest;
 import com.audition.platform.application.AuthService;
@@ -29,7 +30,7 @@ public class AuthController {
     }
 
     @GetMapping("/me")
-    public AuthMeResponse me() {
-        return authService.me();
+    public ApiEnvelope<AuthMeDataDto> me() {
+        return ApiEnvelope.ok(authService.meData());
     }
 }
