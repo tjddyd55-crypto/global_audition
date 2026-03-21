@@ -92,12 +92,12 @@ export default function MyApplicationDetailPage() {
         <div className={CARD_BASE}>
           <h2 className={`${TITLE_PAGE} mb-4`}>영상 URL 관리</h2>
           <p className={`${TEXT_SUB} mb-2`}>YouTube URL 추가</p>
-          <div className="flex flex-col gap-2 md:flex-row md:items-center">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-3">
             <input
               value={videoUrl}
               onChange={(e) => setVideoUrl(e.target.value)}
               placeholder="https://youtube.com/watch?v=..."
-              className={`${INPUT_BASE} md:flex-1`}
+              className={`${INPUT_BASE} min-w-0 md:flex-1`}
             />
             <button
               type="button"
@@ -105,7 +105,7 @@ export default function MyApplicationDetailPage() {
               disabled={!(videoUrl ?? '').trim() || createVideoMutation.isPending}
               className={BTN_PRIMARY}
             >
-              + 추가
+              {createVideoMutation.isPending ? '추가 중...' : '+ 추가'}
             </button>
           </div>
           {errorMessage && <p className="mt-2 text-sm text-red-600">{errorMessage}</p>}
