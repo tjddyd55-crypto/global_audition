@@ -19,6 +19,18 @@ type AuthState = {
   userId: string | null
   role: string | null
   syncFromStorage: () => void
+  /** localStorage + 메모리 세션 제거 (401·로그아웃 공통). idempotent. */
+  clearAuth: () => void
+}
+
+function clearStorageSession() {
+  if (typeof window === 'undefined') return
+  localStorage.removeItem('accessToken')
+  localStorage.removeItem('auth_token')
+  localStorage.removeItem('token')
+  localStorage.removeItem('userRole')
+  localStorage.removeItem('userId')
+  window.dispatchEvent(new Event('auth-change'))
 }
 
 /**
@@ -27,4 +39,8 @@ type AuthState = {
 export const useAuthStore = create<AuthState>((set) => ({
   ...readSessionFromStorage(),
   syncFromStorage: () => set(readSessionFromStorage()),
+  clearAuth: () => {
+    clearStorageSession()
+    set({ accessToken: null, userId: null, role: null })
+  },
 }))

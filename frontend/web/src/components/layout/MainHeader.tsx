@@ -6,8 +6,8 @@ import { useLocale, useTranslations } from 'next-intl'
 import { Link, usePathname, useRouter } from '../../i18n.config'
 import { authApi } from '../../lib/api/auth'
 import { userApi } from '../../lib/api/user'
-import { HEADER } from '../../lib/design-tokens'
 import { useAuthStore } from '@/lib/auth/authStore'
+import { BTN_PRIMARY, DROPDOWN_ITEM } from '@/lib/ui/specClasses'
 
 const locales = ['ko', 'en', 'ja', 'zh', 'es', 'fr', 'de'] as const
 
@@ -23,8 +23,10 @@ export default function MainHeader() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
 
   useEffect(() => {
-    useAuthStore.getState().syncFromStorage()
-  }, [])
+    if (!accessToken) {
+      queryClient.removeQueries({ queryKey: ['currentUser'] })
+    }
+  }, [accessToken, queryClient])
 
   const { data: user, isLoading: meLoading } = useQuery({
     queryKey: ['currentUser', accessToken],
@@ -32,6 +34,10 @@ export default function MainHeader() {
     enabled: Boolean(accessToken),
     retry: false,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    staleTime: Infinity,
+    gcTime: 30 * 60 * 1000,
   })
 
   const changeLocale = (nextLocale: string) => {
@@ -51,109 +57,54 @@ export default function MainHeader() {
     router.push('/')
   }
 
+  const closeUserMenu = () => setIsUserMenuOpen(false)
+
   const displayName = user?.name?.trim() || user?.email || '내 계정'
   const loggedIn = Boolean(accessToken)
-  /** 토큰 있으면 로그인 UI (me 로딩 중에는 토큰만으로 판단) */
   const showUserChrome = loggedIn && (!meLoading || !!user)
 
-  const headerStyle: React.CSSProperties = {
-    height: HEADER.heightPx,
-    paddingLeft: HEADER.paddingPx,
-    paddingRight: HEADER.paddingPx,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    background: '#ffffff',
-    borderBottom: `1px solid ${HEADER.borderColor}`,
-  }
+  const navLinkClass =
+    'text-sm text-[#555555] no-underline transition-opacity hover:opacity-90 hover:text-black'
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50">
-      <div className="max-md:!px-4" style={headerStyle}>
-        <Link href="/" className="flex min-w-0 items-center gap-2 shrink-0" style={{ textDecoration: 'none' }}>
-          <div
-            style={{
-              width: HEADER.logoSizePx,
-              height: HEADER.logoSizePx,
-              borderRadius: '50%',
-              background: 'linear-gradient(90deg, #7c3aed, #ec4899)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white',
-              fontWeight: 700,
-              fontSize: 16,
-            }}
-          >
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-[#eeeeee] bg-white">
+      <div className="flex h-16 items-center justify-between px-6 max-md:px-4">
+        <Link href="/" className="flex min-w-0 shrink-0 items-center gap-2 no-underline">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-[#7c3aed] to-[#ec4899] text-base font-bold text-white">
             G
           </div>
-          <span
-            className="truncate max-md:max-w-[140px]"
-            style={{ fontWeight: HEADER.logoFontWeight, fontSize: HEADER.logoFontSizePx, color: '#000' }}
-          >
-            글로벌 오디션
-          </span>
+          <span className="truncate text-base font-semibold text-black max-md:max-w-[140px]">글로벌 오디션</span>
         </Link>
 
-        <nav className="hidden lg:flex" style={{ gap: HEADER.navGapPx }}>
-          <Link
-            href="/auditions"
-            className="transition-colors hover:opacity-90"
-            style={{ fontSize: HEADER.navFontSizePx, color: HEADER.navColor, textDecoration: 'none' }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = HEADER.navHoverColor
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = HEADER.navColor
-            }}
-          >
+        <nav className="hidden gap-8 lg:flex">
+          <Link href="/auditions" className={navLinkClass}>
             오디션
           </Link>
-          <Link
-            href="/channels"
-            className="transition-colors hover:opacity-90"
-            style={{ fontSize: HEADER.navFontSizePx, color: HEADER.navColor, textDecoration: 'none' }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = HEADER.navHoverColor
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = HEADER.navColor
-            }}
-          >
+          <Link href="/channels" className={navLinkClass}>
             채널
           </Link>
-          <Link
-            href="/videos"
-            className="transition-colors hover:opacity-90"
-            style={{ fontSize: HEADER.navFontSizePx, color: HEADER.navColor, textDecoration: 'none' }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = HEADER.navHoverColor
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = HEADER.navColor
-            }}
-          >
+          <Link href="/videos" className={navLinkClass}>
             영상
           </Link>
         </nav>
 
-        <div className="hidden lg:flex items-center" style={{ gap: 16 }}>
+        <div className="hidden items-center gap-4 lg:flex">
           <div className="relative">
             <button
               type="button"
               onClick={() => setIsLanguageOpen((p) => !p)}
-              style={{ fontSize: 14, color: HEADER.navColor, background: 'none', border: 'none', cursor: 'pointer' }}
+              className="cursor-pointer border-0 bg-transparent text-sm text-[#555555]"
             >
               {locale.toUpperCase()}
             </button>
             {isLanguageOpen && (
-              <div className="absolute right-0 top-full mt-1 rounded-lg border border-gray-200 bg-white shadow-lg py-1 min-w-[80px]">
+              <div className="absolute right-0 top-full z-50 mt-1 min-w-[80px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
                 {locales.map((item) => (
                   <button
                     key={item}
                     type="button"
                     onClick={() => changeLocale(item)}
-                    className="block w-full px-3 py-2 text-left text-sm uppercase hover:bg-gray-50"
+                    className="block w-full px-3 py-2 text-left text-sm uppercase hover:bg-gray-100"
                   >
                     {item}
                   </button>
@@ -163,25 +114,12 @@ export default function MainHeader() {
           </div>
           {!showUserChrome ? (
             <>
-              <Link href="/login" style={{ fontSize: 14, color: '#000', textDecoration: 'none' }}>
+              <Link href="/login" className="text-sm text-black no-underline">
                 {t('login')}
               </Link>
               <Link
                 href="/register"
-                style={{
-                  height: 36,
-                  paddingLeft: 16,
-                  paddingRight: 16,
-                  borderRadius: 8,
-                  background: 'linear-gradient(90deg, #7c3aed, #ec4899)',
-                  color: 'white',
-                  fontSize: 14,
-                  fontWeight: 500,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  textDecoration: 'none',
-                }}
+                className="inline-flex h-9 items-center justify-center rounded-lg bg-gradient-to-r from-[#7c3aed] to-[#ec4899] px-4 text-sm font-medium text-white no-underline"
               >
                 {t('register')}
               </Link>
@@ -191,39 +129,28 @@ export default function MainHeader() {
               <button
                 type="button"
                 onClick={() => setIsUserMenuOpen((p) => !p)}
-                className="flex max-w-[200px] items-center gap-2"
+                className="flex max-w-[200px] items-center gap-2 rounded-full border-0 bg-transparent p-0"
               >
-                <div
-                  style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: '50%',
-                    background: 'linear-gradient(90deg, #7c3aed, #ec4899)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'white',
-                    fontSize: 12,
-                    fontWeight: 600,
-                  }}
-                >
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-[#7c3aed] to-[#ec4899] text-sm font-semibold text-white">
                   {displayName.charAt(0) || '?'}
                 </div>
-                <span className="truncate text-sm">{displayName}</span>
+                <span className="truncate text-sm text-gray-900">{displayName}</span>
               </button>
               {isUserMenuOpen && (
-                <div className="absolute right-0 top-full mt-1 w-44 rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
-                  <Link href="/profile" className="block px-3 py-2 text-sm hover:bg-gray-50">
+                <div className="absolute right-0 top-full z-50 mt-1 min-w-[200px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+                  <Link href="/profile" className={DROPDOWN_ITEM} onClick={closeUserMenu}>
                     프로필
                   </Link>
-                  <Link href="/channel" className="block px-3 py-2 text-sm hover:bg-gray-50">
-                    내 채널
+                  <Link href="/my/dashboard" className={DROPDOWN_ITEM} onClick={closeUserMenu}>
+                    대시보드
                   </Link>
-                  <button
-                    type="button"
-                    onClick={handleLogout}
-                    className="block w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-gray-50"
-                  >
+                  <Link href="/channel" className={DROPDOWN_ITEM} onClick={closeUserMenu}>
+                    내 채널 관리
+                  </Link>
+                  <Link href="/vault" className={DROPDOWN_ITEM} onClick={closeUserMenu}>
+                    창작물 보관소
+                  </Link>
+                  <button type="button" onClick={handleLogout} className={`${DROPDOWN_ITEM} text-red-600`}>
                     로그아웃
                   </button>
                 </div>
@@ -235,10 +162,10 @@ export default function MainHeader() {
         <button
           type="button"
           onClick={() => setIsMobileOpen((p) => !p)}
-          className="lg:hidden flex items-center justify-center w-9 h-9 border border-gray-200 rounded"
+          className="flex h-9 w-9 items-center justify-center rounded border border-gray-200 lg:hidden"
           aria-label="메뉴"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             {isMobileOpen ? (
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             ) : (
@@ -249,27 +176,27 @@ export default function MainHeader() {
       </div>
 
       {isMobileOpen && (
-        <div className="lg:hidden border-t border-gray-200 bg-white px-4 py-4 shadow-md">
+        <div className="border-t border-gray-200 bg-white px-4 py-4 shadow-md lg:hidden">
           <div className="flex flex-col gap-1">
-            <Link href="/auditions" onClick={() => setIsMobileOpen(false)} className="py-2 text-sm">
+            <Link href="/auditions" onClick={() => setIsMobileOpen(false)} className="py-2 text-sm text-gray-900">
               오디션
             </Link>
-            <Link href="/channels" onClick={() => setIsMobileOpen(false)} className="py-2 text-sm">
+            <Link href="/channels" onClick={() => setIsMobileOpen(false)} className="py-2 text-sm text-gray-900">
               채널
             </Link>
-            <Link href="/videos" onClick={() => setIsMobileOpen(false)} className="py-2 text-sm">
+            <Link href="/videos" onClick={() => setIsMobileOpen(false)} className="py-2 text-sm text-gray-900">
               영상
             </Link>
           </div>
           <div className="mt-3 border-t border-gray-200 pt-3">
-            <div className="text-xs text-gray-500 mb-2">언어</div>
+            <div className="mb-2 text-sm text-gray-600">언어</div>
             <div className="flex flex-wrap gap-2">
               {locales.map((item) => (
                 <button
                   key={item}
                   type="button"
                   onClick={() => changeLocale(item)}
-                  className="rounded border border-gray-200 px-2 py-1 text-xs uppercase"
+                  className="rounded border border-gray-200 px-2 py-1 text-sm uppercase"
                 >
                   {item}
                 </button>
@@ -279,16 +206,39 @@ export default function MainHeader() {
           <div className="mt-4 flex flex-col gap-2 border-t border-gray-200 pt-4">
             {showUserChrome ? (
               <>
-                <div className="py-1 text-sm font-medium text-gray-900 truncate">{displayName}</div>
-                <Link href="/profile" onClick={() => setIsMobileOpen(false)} className="w-full py-3 text-center text-sm border border-gray-200 rounded-lg">
+                <div className="truncate py-1 text-sm font-medium text-gray-900">{displayName}</div>
+                <Link
+                  href="/profile"
+                  onClick={() => setIsMobileOpen(false)}
+                  className="w-full rounded-lg border border-[#E5E7EB] py-3 text-center text-sm text-gray-900"
+                >
                   프로필
+                </Link>
+                <Link
+                  href="/my/dashboard"
+                  onClick={() => setIsMobileOpen(false)}
+                  className="w-full rounded-lg border border-[#E5E7EB] py-3 text-center text-sm text-gray-900"
+                >
+                  대시보드
+                </Link>
+                <Link
+                  href="/channel"
+                  onClick={() => setIsMobileOpen(false)}
+                  className="w-full rounded-lg border border-[#E5E7EB] py-3 text-center text-sm text-gray-900"
+                >
+                  내 채널 관리
+                </Link>
+                <Link
+                  href="/vault"
+                  onClick={() => setIsMobileOpen(false)}
+                  className="w-full rounded-lg border border-[#E5E7EB] py-3 text-center text-sm text-gray-900"
+                >
+                  창작물 보관소
                 </Link>
                 <button
                   type="button"
-                  onClick={() => {
-                    handleLogout()
-                  }}
-                  className="w-full py-3 text-center text-sm text-red-600 border border-red-100 rounded-lg"
+                  onClick={() => handleLogout()}
+                  className="w-full rounded-lg border border-red-100 py-3 text-center text-sm text-red-600"
                 >
                   로그아웃
                 </button>
@@ -298,15 +248,14 @@ export default function MainHeader() {
                 <Link
                   href="/login"
                   onClick={() => setIsMobileOpen(false)}
-                  className="w-full py-3 text-center text-sm border border-gray-200 rounded-lg"
+                  className="w-full rounded-lg border border-[#E5E7EB] py-3 text-center text-sm text-gray-900"
                 >
                   {t('login')}
                 </Link>
                 <Link
                   href="/register"
                   onClick={() => setIsMobileOpen(false)}
-                  className="w-full py-3 text-center text-sm text-white rounded-lg"
-                  style={{ background: 'linear-gradient(90deg, #7c3aed, #ec4899)' }}
+                  className={`${BTN_PRIMARY} w-full justify-center py-3`}
                 >
                   {t('register')}
                 </Link>

@@ -62,15 +62,7 @@ export const authApi = {
   },
 
   logout: () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('accessToken')
-      localStorage.removeItem('auth_token')
-      localStorage.removeItem('token')
-      localStorage.removeItem('userRole')
-      localStorage.removeItem('userId')
-      window.dispatchEvent(new Event('auth-change'))
-      useAuthStore.getState().syncFromStorage()
-    }
+    useAuthStore.getState().clearAuth()
   },
 
   getToken: (): string | null => {

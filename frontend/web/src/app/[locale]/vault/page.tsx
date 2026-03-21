@@ -1,14 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from '../../../i18n.config'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { vaultApi, type CreativeAsset } from '../../../lib/api/vault'
 import { useTranslations } from 'next-intl'
-import Link from 'next/link'
+import { Link } from '../../../i18n.config'
+import { BTN_PRIMARY, BTN_SECONDARY, CARD_BASE, INPUT_BASE, PAGE_CONTAINER, SECTION_GAP, TEXT_SUB, TITLE_PAGE } from '@/lib/ui/specClasses'
 
 export default function VaultPage() {
-  const router = useRouter()
   const t = useTranslations('common')
   const queryClient = useQueryClient()
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -28,29 +27,22 @@ export default function VaultPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">{t('loading')}</div>
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-lg font-semibold text-gray-900">{t('loading')}</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen p-4 md:p-8 bg-gray-50">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8 flex justify-between items-center">
+    <div className="min-h-screen bg-gray-50">
+      <div className={`${PAGE_CONTAINER} py-6 ${SECTION_GAP}`}>
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
-            <h1 className="text-3xl font-bold mb-2">창작물 보관소</h1>
-            <p className="text-gray-600">
-              업로드 즉시 존재 확인 기록이 생성됩니다.
-            </p>
-            <p className="text-sm text-gray-500 mt-1">
-              본 플랫폼은 저작권 등록기관이 아니며, 업로더 선언과 기록을 저장합니다.
-            </p>
+            <h1 className={TITLE_PAGE}>창작물 보관소</h1>
+            <p className={`${TEXT_SUB} mt-2`}>업로드 즉시 존재 확인 기록이 생성됩니다.</p>
+            <p className={`${TEXT_SUB} mt-2`}>본 플랫폼은 저작권 등록기관이 아니며, 업로더 선언과 기록을 저장합니다.</p>
           </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-semibold"
-          >
+          <button type="button" onClick={() => setShowCreateModal(true)} className={BTN_PRIMARY}>
             + 창작물 등록
           </button>
         </div>
@@ -63,14 +55,12 @@ export default function VaultPage() {
           />
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {assets?.content && assets.content.length > 0 ? (
-            assets.content.map((asset: CreativeAsset) => (
-              <AssetCard key={asset.id} asset={asset} />
-            ))
+            assets.content.map((asset: CreativeAsset) => <AssetCard key={asset.id} asset={asset} />)
           ) : (
-            <div className="col-span-full text-center py-12 text-gray-500">
-              <p>등록된 창작물이 없습니다.</p>
+            <div className="col-span-full py-12 text-center">
+              <p className={TEXT_SUB}>등록된 창작물이 없습니다.</p>
             </div>
           )}
         </div>
@@ -81,26 +71,30 @@ export default function VaultPage() {
 
 function AssetCard({ asset }: { asset: CreativeAsset }) {
   return (
-    <Link href={`/vault/${asset.id}`}>
-      <div className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer">
-        <div className="flex items-start justify-between mb-4">
-          <h3 className="text-lg font-semibold">{asset.title}</h3>
-          <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
-            {asset.assetType}
-          </span>
+    <Link href={`/vault/${asset.id}`} className="block no-underline">
+      <div className={CARD_BASE}>
+        <div className="mb-4 flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-violet-100 text-lg text-violet-700">
+            ♪
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="text-sm font-semibold text-gray-900">{asset.title}</h3>
+            <span className="mt-2 inline-block rounded-full bg-blue-50 px-3 py-0.5 text-sm text-blue-700">{asset.assetType}</span>
+          </div>
         </div>
-        {asset.description && (
-          <p className="text-sm text-gray-600 mb-4 line-clamp-2">{asset.description}</p>
-        )}
-        <div className="flex items-center justify-between text-xs text-gray-500">
-          <span>등록일: {new Date(asset.registeredAt).toLocaleDateString('ko-KR')}</span>
-          <span className={`px-2 py-1 rounded ${
-            asset.accessControl === 'PUBLIC' ? 'bg-green-100 text-green-800' :
-            asset.accessControl === 'AUDITION_ONLY' ? 'bg-yellow-100 text-yellow-800' :
-            'bg-gray-100 text-gray-800'
-          }`}>
-            {asset.accessControl === 'PUBLIC' ? '공개' :
-             asset.accessControl === 'AUDITION_ONLY' ? '오디션만' : '비공개'}
+        {asset.description ? <p className={`${TEXT_SUB} mb-4 line-clamp-2`}>{asset.description}</p> : null}
+        <div className="flex items-center justify-between">
+          <span className={TEXT_SUB}>등록일: {new Date(asset.registeredAt).toLocaleDateString('ko-KR')}</span>
+          <span
+            className={
+              asset.accessControl === 'PUBLIC'
+                ? 'rounded-full bg-green-50 px-3 py-0.5 text-sm text-green-700'
+                : asset.accessControl === 'AUDITION_ONLY'
+                  ? 'rounded-full bg-yellow-50 px-3 py-0.5 text-sm text-yellow-800'
+                  : 'rounded-full bg-gray-100 px-3 py-0.5 text-sm text-gray-700'
+            }
+          >
+            {asset.accessControl === 'PUBLIC' ? '공개' : asset.accessControl === 'AUDITION_ONLY' ? '오디션만' : '비공개'}
           </span>
         </div>
       </div>
@@ -125,7 +119,7 @@ function CreateAssetModal({
   const [file, setFile] = useState<File | null>(null)
   const [textContent, setTextContent] = useState('')
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmitForm = (e: React.FormEvent) => {
     e.preventDefault()
     if (!title) return
 
@@ -151,39 +145,21 @@ function CreateAssetModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <h2 className="text-2xl font-bold mb-4">창작물 등록</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className={`${CARD_BASE} max-h-[90vh] w-full max-w-2xl overflow-y-auto`}>
+        <h2 className={`${TITLE_PAGE} mb-4`}>창작물 등록</h2>
+        <form onSubmit={handleSubmitForm} className="flex flex-col gap-4">
           <div>
-            <label className="block text-sm font-medium mb-1">제목 *</label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full border rounded-lg px-4 py-2"
-              required
-            />
+            <label className="mb-1 block text-sm font-medium text-gray-900">제목 *</label>
+            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} className={INPUT_BASE} required />
           </div>
-
           <div>
-            <label className="block text-sm font-medium mb-1">설명</label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full border rounded-lg px-4 py-2"
-              rows={3}
-            />
+            <label className="mb-1 block text-sm font-medium text-gray-900">설명</label>
+            <textarea value={description} onChange={(e) => setDescription(e.target.value)} className={INPUT_BASE} rows={3} />
           </div>
-
           <div>
-            <label className="block text-sm font-medium mb-1">자산 타입 *</label>
-            <select
-              value={assetType}
-              onChange={(e) => setAssetType(e.target.value)}
-              className="w-full border rounded-lg px-4 py-2"
-              required
-            >
+            <label className="mb-1 block text-sm font-medium text-gray-900">자산 타입 *</label>
+            <select value={assetType} onChange={(e) => setAssetType(e.target.value)} className={INPUT_BASE} required>
               <option value="LYRIC">가사</option>
               <option value="COMPOSITION">악보/미디</option>
               <option value="DEMO_AUDIO">데모 음원</option>
@@ -193,96 +169,51 @@ function CreateAssetModal({
               <option value="AI_ASSISTED">AI 보조</option>
             </select>
           </div>
-
           <div>
-            <label className="block text-sm font-medium mb-1">창작 방식</label>
-            <select
-              value={declaredCreationType}
-              onChange={(e) => setDeclaredCreationType(e.target.value)}
-              className="w-full border rounded-lg px-4 py-2"
-            >
+            <label className="mb-1 block text-sm font-medium text-gray-900">창작 방식</label>
+            <select value={declaredCreationType} onChange={(e) => setDeclaredCreationType(e.target.value)} className={INPUT_BASE}>
               <option value="HUMAN">인간 창작</option>
               <option value="AI_ASSISTED">AI 보조</option>
               <option value="AI_GENERATED">AI 생성</option>
             </select>
           </div>
-
           <div>
-            <label className="block text-sm font-medium mb-1">공개 범위 *</label>
-            <select
-              value={accessControl}
-              onChange={(e) => setAccessControl(e.target.value)}
-              className="w-full border rounded-lg px-4 py-2"
-              required
-            >
+            <label className="mb-1 block text-sm font-medium text-gray-900">공개 범위 *</label>
+            <select value={accessControl} onChange={(e) => setAccessControl(e.target.value)} className={INPUT_BASE} required>
               <option value="PUBLIC">공개</option>
               <option value="AUDITION_ONLY">오디션만</option>
               <option value="PRIVATE">비공개</option>
             </select>
           </div>
-
           <div>
-            <label className="block text-sm font-medium mb-1">파일 업로드</label>
+            <label className="mb-1 block text-sm font-medium text-gray-900">파일 업로드</label>
             <input
               type="file"
               onChange={(e) => {
                 const selectedFile = e.target.files?.[0]
-                if (selectedFile) {
-                  // TODO: 파일 크기 제한 검증 (50MB)
-                  // if (selectedFile.size > 50 * 1024 * 1024) {
-                  //   alert('파일 크기는 50MB를 초과할 수 없습니다')
-                  //   return
-                  // }
-                  
-                  // TODO: 파일 확장자 검증
-                  // const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.mp4', '.mov', '.avi', '.webm', '.mp3', '.wav', '.flac', '.aac', '.mid', '.midi', '.m4a', '.ogg']
-                  // const fileExtension = selectedFile.name.substring(selectedFile.name.lastIndexOf('.')).toLowerCase()
-                  // if (!allowedExtensions.includes(fileExtension)) {
-                  //   alert('지원하지 않는 파일 형식입니다')
-                  //   return
-                  // }
-                  
-                  // TODO: MIME 타입 체크
-                  // const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'audio/mpeg', ...]
-                  // if (!allowedMimeTypes.includes(selectedFile.type)) {
-                  //   alert('지원하지 않는 파일 형식입니다')
-                  //   return
-                  // }
-                  
-                  setFile(selectedFile)
-                } else {
-                  setFile(null)
-                }
+                setFile(selectedFile ?? null)
               }}
-              className="w-full border rounded-lg px-4 py-2"
+              className={INPUT_BASE}
             />
-            {/* TODO: 파일 크기 제한 안내 메시지 추가 */}
-            {/* <p className="text-xs text-gray-500 mt-1">최대 50MB까지 업로드 가능</p> */}
           </div>
-
           <div>
-            <label className="block text-sm font-medium mb-1">또는 텍스트 입력 (가사 등)</label>
+            <label className="mb-1 block text-sm font-medium text-gray-900">또는 텍스트 입력 (가사 등)</label>
             <textarea
               value={textContent}
               onChange={(e) => setTextContent(e.target.value)}
-              className="w-full border rounded-lg px-4 py-2"
+              className={INPUT_BASE}
               rows={5}
               placeholder="텍스트를 입력하세요..."
             />
           </div>
-
-          <div className="flex gap-4 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50"
-            >
+          <div className="flex flex-col gap-3 pt-4 md:flex-row">
+            <button type="button" onClick={onClose} className={`${BTN_SECONDARY} md:flex-1`}>
               취소
             </button>
             <button
               type="submit"
               disabled={isLoading || !title || (!file && !(textContent ?? '').trim())}
-              className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50"
+              className={`${BTN_PRIMARY} md:flex-1`}
             >
               {isLoading ? '등록 중...' : '등록'}
             </button>

@@ -56,7 +56,7 @@ export default async function LocaleLayout({
     <NextIntlClientProvider messages={messages}>
       <div className={`flex flex-col min-h-screen ${inter.variable}`}>
         <Header />
-        <main className="flex-1" style={{ paddingTop: 64 }}>
+        <main className="flex-1 pt-16">
           <ErrorBoundary>{children}</ErrorBoundary>
         </main>
         <Footer />

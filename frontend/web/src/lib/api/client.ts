@@ -1,5 +1,6 @@
 import axios, { InternalAxiosRequestConfig } from 'axios'
 import { API_BASE_URL } from '@/lib/env'
+import { useAuthStore } from '@/lib/auth/authStore'
 
 // API_BASE_URL은 env.ts에서 빌드 타임에 검증됨
 // NEXT_PUBLIC_API_URL이 없으면 빌드가 실패합니다
@@ -19,6 +20,20 @@ export const apiClient = axios.create({
   timeout: 30000,
 })
 
+function getRequestAuthorizationHeader(config: InternalAxiosRequestConfig | undefined): string | undefined {
+  const h = config?.headers
+  if (!h) return undefined
+  if (typeof (h as { get?: (k: string) => unknown }).get === 'function') {
+    const v = (h as { get: (k: string) => unknown }).get('Authorization')
+    if (typeof v === 'string') return v
+    const v2 = (h as { get: (k: string) => unknown }).get('authorization')
+    return typeof v2 === 'string' ? v2 : undefined
+  }
+  const rec = h as Record<string, unknown>
+  const a = rec.Authorization ?? rec.authorization
+  return typeof a === 'string' ? a : undefined
+}
+
 // 요청 인터셉터 (인증 토큰 추가 및 디버깅)
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
@@ -37,8 +52,14 @@ apiClient.interceptors.request.use(
     
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
+    } else if (
+      process.env.NODE_ENV === 'development' &&
+      typeof config.url === 'string' &&
+      config.url.includes('/auth/me')
+    ) {
+      console.warn('[API Client] /auth/me 요청인데 localStorage에 토큰 없음 → Authorization 미설정')
     }
-    
+
     return config
   },
   (error) => {
@@ -85,10 +106,16 @@ apiClient.interceptors.response.use(
       }
     }
     
-    if (error.response?.status === 401) {
-      // 인증 실패 시 로그인 페이지로 리다이렉트
-      if (typeof window !== 'undefined') {
-        window.location.href = '/login'
+    if (error.response?.status === 401 && typeof window !== 'undefined') {
+      const url = String(error.config?.url ?? '')
+      const isPublicAuthRoute =
+        url.includes('/auth/login') || url.includes('/auth/signup') || url.includes('/auth/forgot')
+      const authHeader = getRequestAuthorizationHeader(error.config)
+      const hadBearer = typeof authHeader === 'string' && authHeader.startsWith('Bearer ')
+
+      // Bearer를 보낸 요청만 세션 정리 (로그인 실패 401 등은 제외). 전역 location 리다이렉트 금지 → /me 루프·깜빡임 방지.
+      if (!isPublicAuthRoute && hadBearer) {
+        useAuthStore.getState().clearAuth()
       }
     }
     return Promise.reject(error)

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
-import { AUDITION_DETAIL, HERO } from '@/lib/design-tokens'
+import { TEXT_SUB } from '@/lib/ui/specClasses'
 
 type Props = {
   images: string[]
@@ -15,8 +15,7 @@ function preloadUrl(url: string | undefined) {
 }
 
 /**
- * 가로 스크롤 + snap, 탭 시 전체 화면 모달(좌우·닫기).
- * 스트립: 현재 인덱스 표시 + 다음 이미지 프리로드. design-tokens radius 사용.
+ * 가로 스크롤 + snap (스펙: snap-x snap-mandatory), 탭 시 전체 화면 모달.
  */
 export function AuditionGalleryViewer({ images }: Props) {
   const [modalIndex, setModalIndex] = useState<number | null>(null)
@@ -106,57 +105,36 @@ export function AuditionGalleryViewer({ images }: Props) {
 
   if (images.length === 0) return null
 
-  const thumbW = 'min(280px, 85vw)'
-
   return (
     <div className="relative">
       <div
         ref={scrollerRef}
-        className="flex overflow-x-auto pb-2 -mx-1"
-        style={{
-          gap: AUDITION_DETAIL.galleryGapPx,
-          scrollSnapType: 'x mandatory',
-          WebkitOverflowScrolling: 'touch',
-          // 가로 스냅 스크롤: pan-x 필수(pan-y만 주면 가로 스크롤이 막힘). 세로 페이지 스크롤은 부모에서 처리.
-          touchAction: 'pan-x',
-        }}
+        className="-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 touch-pan-x [-webkit-overflow-scrolling:touch]"
       >
         {images.map((src, i) => (
           <button
             key={`g-strip-${i}-${src.slice(0, 24)}`}
             type="button"
             onClick={() => setModalIndex(i)}
-            className="relative shrink-0 overflow-hidden border-0 bg-gray-100 p-0 cursor-pointer"
-            style={{
-              width: thumbW,
-              aspectRatio: '4/3',
-              borderRadius: AUDITION_DETAIL.galleryRadiusPx,
-              scrollSnapAlign: 'center',
-            }}
+            className="relative aspect-[4/3] w-[min(280px,85vw)] shrink-0 snap-center cursor-pointer overflow-hidden rounded-[10px] border-0 bg-gray-100 p-0"
           >
             <Image src={src} alt="" fill sizes="280px" className="object-cover" unoptimized />
           </button>
         ))}
       </div>
 
-      <div
-        className="mt-2 flex flex-col items-center gap-2"
-        style={{ color: AUDITION_DETAIL.bodyColor, fontSize: AUDITION_DETAIL.bodyFontPx }}
-      >
+      <div className="mt-2 flex flex-col items-center gap-2">
         <div className="flex justify-center gap-1.5" aria-hidden>
           {images.map((_, i) => (
             <span
               key={`dot-${i}`}
-              className="rounded-full transition-[width,background-color] duration-200"
-              style={{
-                width: i === stripIndex ? 18 : 6,
-                height: 6,
-                backgroundColor: i === stripIndex ? HERO.primaryGradientStart : 'rgba(0,0,0,0.2)',
-              }}
+              className={`rounded-full transition-all duration-200 ${
+                i === stripIndex ? 'h-1.5 w-[18px] bg-[#7c3aed]' : 'h-1.5 w-1.5 bg-black/20'
+              }`}
             />
           ))}
         </div>
-        <span className="tabular-nums" style={{ fontSize: AUDITION_DETAIL.bodyFontPx }}>
+        <span className={`tabular-nums ${TEXT_SUB}`}>
           {stripIndex + 1} / {images.length}
         </span>
       </div>
@@ -172,8 +150,7 @@ export function AuditionGalleryViewer({ images }: Props) {
           <button
             type="button"
             onClick={close}
-            className="absolute right-4 top-4 z-[102] flex h-10 w-10 items-center justify-center rounded-full text-2xl font-light text-white"
-            style={{ background: 'rgba(0,0,0,0.45)' }}
+            className="absolute right-4 top-4 z-[102] flex h-10 w-10 items-center justify-center rounded-full bg-black/45 text-2xl font-light text-white"
             aria-label="닫기"
           >
             ×
@@ -182,8 +159,7 @@ export function AuditionGalleryViewer({ images }: Props) {
             <button
               type="button"
               onClick={goPrev}
-              className="absolute left-2 z-[102] rounded-full px-3 py-4 text-3xl text-white md:left-6"
-              style={{ background: 'rgba(0,0,0,0.35)' }}
+              className="absolute left-2 z-[102] rounded-full bg-black/35 px-3 py-4 text-3xl text-white md:left-6"
               aria-label="이전"
             >
               ‹
@@ -193,8 +169,7 @@ export function AuditionGalleryViewer({ images }: Props) {
             <button
               type="button"
               onClick={goNext}
-              className="absolute right-2 z-[102] rounded-full px-3 py-4 text-3xl text-white md:right-6"
-              style={{ background: 'rgba(0,0,0,0.35)' }}
+              className="absolute right-2 z-[102] rounded-full bg-black/35 px-3 py-4 text-3xl text-white md:right-6"
               aria-label="다음"
             >
               ›
@@ -202,7 +177,6 @@ export function AuditionGalleryViewer({ images }: Props) {
           )}
           <div
             className="relative mx-4 h-[min(85vh,100%)] w-full max-w-5xl touch-pan-x"
-            style={{ touchAction: 'pan-x' }}
             onClick={(e) => e.stopPropagation()}
             onTouchStart={onModalTouchStart}
             onTouchEnd={onModalTouchEnd}
@@ -216,10 +190,7 @@ export function AuditionGalleryViewer({ images }: Props) {
               unoptimized
             />
           </div>
-          <div
-            className="pointer-events-none absolute bottom-6 left-0 right-0 flex justify-center text-white/90 tabular-nums"
-            style={{ fontSize: AUDITION_DETAIL.bodyFontPx }}
-          >
+          <div className="pointer-events-none absolute bottom-6 left-0 right-0 flex justify-center tabular-nums text-sm text-white/90">
             {modalIndex + 1} / {images.length}
           </div>
         </div>

@@ -7,6 +7,15 @@ import { useRouter } from '../../../i18n.config'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import {
+  BTN_SECONDARY,
+  CARD_BASE,
+  CARD_MEDIA_SHELL,
+  PAGE_CONTAINER,
+  SECTION_GAP,
+  TEXT_SUB,
+  TITLE_PAGE,
+} from '@/lib/ui/specClasses'
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -19,8 +28,7 @@ export default function ProfilePage() {
       router.push('/login')
       return
     }
-    // TODO: 토큰에서 userId 추출
-    setUserId(1) // 임시
+    setUserId(1)
   }, [router])
 
   const { data: videos, isLoading } = useQuery({
@@ -31,58 +39,65 @@ export default function ProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">{t('loading')}</div>
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-lg font-semibold text-gray-900">{t('loading')}</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen p-4 md:p-8">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl md:text-4xl font-bold mb-8">{t('profile')}</h1>
-
-        <div className="mb-8">
+    <div className="min-h-screen bg-gray-50">
+      <div className={`${PAGE_CONTAINER} py-6 ${SECTION_GAP}`}>
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <h1 className={TITLE_PAGE}>{t('profile')}</h1>
           <button
+            type="button"
             onClick={() => {
               authApi.logout()
               router.push('/')
             }}
-            className="px-4 py-2 border rounded-lg hover:bg-gray-50"
+            className={BTN_SECONDARY}
           >
             {t('logout')}
           </button>
         </div>
 
         <div>
-          <h2 className="text-2xl font-semibold mb-4">{t('videos')}</h2>
+          <h2 className={`${TITLE_PAGE} mb-4`}>{t('videos')}</h2>
           {videos && videos.content.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               {videos.content.map((video) => (
-                <div key={video.id} className="border rounded-lg overflow-hidden">
-                  {video.thumbnailUrl && (
-                    <Image
-                      src={video.thumbnailUrl}
-                      alt={video.title}
-                      width={640}
-                      height={192}
-                      unoptimized
-                      sizes="(max-width: 768px) 100vw, 33vw"
-                      className="w-full h-48 object-cover"
-                    />
+                <div key={video.id} className={CARD_MEDIA_SHELL}>
+                  {video.thumbnailUrl ? (
+                    <div className="relative aspect-[16/9] w-full">
+                      <Image
+                        src={video.thumbnailUrl}
+                        alt={video.title}
+                        fill
+                        unoptimized
+                        sizes="(max-width: 768px) 100vw, 33vw"
+                        className="rounded-t-xl object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex aspect-[16/9] w-full items-center justify-center rounded-t-xl bg-gray-100 text-sm text-gray-600">
+                      썸네일 없음
+                    </div>
                   )}
                   <div className="p-4">
-                    <h3 className="font-semibold mb-2">{video.title}</h3>
-                    <div className="text-sm text-gray-600">
-                      <p>조회수: {video.viewCount}</p>
-                      <p>좋아요: {video.likeCount}</p>
+                    <h3 className="text-sm font-semibold text-gray-900">{video.title}</h3>
+                    <div className={`${TEXT_SUB} mt-2 flex flex-col gap-1`}>
+                      <span>조회수: {video.viewCount}</span>
+                      <span>좋아요: {video.likeCount}</span>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-gray-500">등록된 영상이 없습니다</p>
+            <div className={CARD_BASE}>
+              <p className={TEXT_SUB}>등록된 영상이 없습니다</p>
+            </div>
           )}
         </div>
       </div>
