@@ -2,10 +2,13 @@ package com.audition.platform.application.credit;
 
 import com.audition.platform.domain.credit.CreditPolicy;
 import com.audition.platform.domain.credit.CreditPolicyRepository;
+import com.audition.platform.api.dto.CreditTransactionDto;
 import com.audition.platform.domain.credit.CreditTransaction;
 import com.audition.platform.domain.credit.CreditTransactionRepository;
 import com.audition.platform.domain.credit.UserCredit;
 import com.audition.platform.domain.credit.UserCreditRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +40,13 @@ public class CreditService {
     @Transactional(readOnly = true)
     public long getBalance(UUID userId) {
         return userCreditRepository.findById(userId).map(UserCredit::getBalance).orElse(0L);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<CreditTransactionDto> listMyTransactions(UUID userId, Pageable pageable) {
+        return creditTransactionRepository
+                .findByUserIdOrderByCreatedAtDesc(userId, pageable)
+                .map(CreditTransactionMapper::toDto);
     }
 
     private void persistCreditTransaction(

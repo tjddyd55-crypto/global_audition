@@ -123,6 +123,9 @@ export default function MyDashboardPage() {
             <Link href="/my/auditions" className={BTN_SECONDARY}>
               내 공고 관리
             </Link>
+            <Link href="/credits" className={BTN_SECONDARY}>
+              크레딧
+            </Link>
           </div>
           <div className={CARD_BASE}>
             <h2 className={`${TITLE_PAGE} mb-4`}>최근 지원</h2>
@@ -168,6 +171,9 @@ export default function MyDashboardPage() {
           </Link>
           <Link href="/my/applications" className={BTN_SECONDARY}>
             내 지원서
+          </Link>
+          <Link href="/credits" className={BTN_SECONDARY}>
+            크레딧
           </Link>
         </div>
 

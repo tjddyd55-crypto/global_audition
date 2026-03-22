@@ -6,7 +6,6 @@ import com.audition.platform.api.dto.AdminCreditAdjustRequest;
 import com.audition.platform.api.dto.AdminCreditAdjustResponse;
 import com.audition.platform.api.dto.CreditTransactionDto;
 import com.audition.platform.api.dto.UserCreditLookupDto;
-import com.audition.platform.domain.credit.CreditTransaction;
 import com.audition.platform.domain.credit.CreditTransactionRepository;
 import com.audition.platform.domain.credit.CreditTransactionSpecifications;
 import com.audition.platform.domain.user.User;
@@ -119,22 +118,6 @@ public class SuperAdminCreditAdministrationService {
         SuperAdminAuthHelper.requireSuperAdmin();
         return creditTransactionRepository
                 .findAll(CreditTransactionSpecifications.filter(userId, type, fromInclusive, toExclusive), pageable)
-                .map(SuperAdminCreditAdministrationService::toTxDto);
-    }
-
-    private static CreditTransactionDto toTxDto(CreditTransaction t) {
-        CreditTransactionDto d = new CreditTransactionDto();
-        d.setId(t.getId().toString());
-        d.setUserId(t.getUserId().toString());
-        d.setAmount(t.getAmount());
-        d.setType(t.getType());
-        d.setReason(t.getReason());
-        d.setReferenceId(t.getReferenceId());
-        d.setGrantedBy(t.getGrantedBy() != null ? t.getGrantedBy().toString() : null);
-        d.setNote(t.getNote());
-        d.setBeforeBalance(t.getBeforeBalance());
-        d.setAfterBalance(t.getAfterBalance());
-        d.setCreatedAt(t.getCreatedAt());
-        return d;
+                .map(CreditTransactionMapper::toDto);
     }
 }
