@@ -36,7 +36,28 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback }: Props) {
 
   const invalidate = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ['audition-votes', auditionId] })
+    queryClient.invalidateQueries({ queryKey: ['audition-ranking', auditionId] })
+    queryClient.invalidateQueries({ queryKey: ['audition-manage', auditionId] })
   }, [queryClient, auditionId])
+
+  const openVideoWithViewBump = useCallback(
+    (item: PublicVoteItem) => {
+      setPlayItem(item)
+      if (typeof window === 'undefined') return
+      const k = `audition-view-${auditionId}-${item.applicationId}`
+      if (sessionStorage.getItem(k)) return
+      sessionStorage.setItem(k, '1')
+      void auditionApi
+        .bumpApplicationView(item.applicationId)
+        .then(() => {
+          invalidate()
+        })
+        .catch(() => {
+          sessionStorage.removeItem(k)
+        })
+    },
+    [auditionId, invalidate]
+  )
 
   const castMutation = useMutation({
     mutationFn: ({ applicationId }: { applicationId: string }) =>
@@ -117,11 +138,12 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback }: Props) {
               <button
                 key={c.name}
                 type="button"
+                disabled={voteMutationBusy}
                 onClick={() => setCategory(c.name === '전체' ? null : c.name)}
                 className={
                   (c.name === '전체' && category === null) || c.name === category
-                    ? 'rounded-full bg-violet-600 px-3 py-1.5 text-sm font-medium text-white'
-                    : 'rounded-full border border-[#E5E7EB] bg-white px-3 py-1.5 text-sm font-medium text-gray-800 hover:bg-gray-50'
+                    ? 'rounded-full bg-violet-600 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-60'
+                    : 'rounded-full border border-[#E5E7EB] bg-white px-3 py-1.5 text-sm font-medium text-gray-800 hover:bg-gray-50 disabled:opacity-50'
                 }
               >
                 {c.name}
@@ -158,8 +180,8 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback }: Props) {
                   </span>
                   <button
                     type="button"
-                    disabled={!getVideoEmbedSrc(item.videoUrl)}
-                    onClick={() => setPlayItem(item)}
+                    disabled={!getVideoEmbedSrc(item.videoUrl) || voteMutationBusy}
+                    onClick={() => openVideoWithViewBump(item)}
                     className="absolute left-1/2 top-1/2 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-2xl text-white hover:bg-black/60 disabled:cursor-not-allowed disabled:opacity-40"
                     aria-label="재생"
                   >
@@ -188,7 +210,7 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback }: Props) {
                     {item.isVoted ? (
                       <button
                         type="button"
-                        disabled={removeMutation.isPending}
+                        disabled={voteMutationBusy}
                         onClick={() => {
                           if (!requireAuth()) return
                           removeMutation.mutate(item.applicationId)

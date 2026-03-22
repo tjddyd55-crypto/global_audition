@@ -676,19 +676,51 @@ export default function AuditionDetailPage() {
               지원자 보기 &amp; 투표
             </Link>
             {canManageAudition ? (
-              <Link
-                href={`/auditions/${id}/applications`}
-                className="inline-flex h-11 w-full min-[480px]:min-w-[160px] items-center justify-center font-semibold text-white no-underline md:w-auto"
-                style={{
-                  borderRadius: HERO.buttonRadiusPx,
-                  background: AUDITION_DETAIL.ownerLinkBg,
-                  fontSize: AUDITION_DETAIL.bodyFontPx,
-                  paddingLeft: 20,
-                  paddingRight: 20,
-                }}
-              >
-                지원자 관리
-              </Link>
+              <>
+                <Link
+                  href={`/auditions/${id}/ranking`}
+                  className="inline-flex h-11 w-full min-[480px]:min-w-[120px] items-center justify-center border font-semibold no-underline md:w-auto"
+                  style={{
+                    borderRadius: HERO.buttonRadiusPx,
+                    borderColor: AUDITION_DETAIL.cardBorderColor,
+                    background: '#f5f3ff',
+                    color: '#5b21b6',
+                    fontSize: AUDITION_DETAIL.bodyFontPx,
+                    paddingLeft: 16,
+                    paddingRight: 16,
+                  }}
+                >
+                  랭킹
+                </Link>
+                <Link
+                  href={`/auditions/${id}/manage`}
+                  className="inline-flex h-11 w-full min-[480px]:min-w-[120px] items-center justify-center border font-semibold no-underline md:w-auto"
+                  style={{
+                    borderRadius: HERO.buttonRadiusPx,
+                    borderColor: AUDITION_DETAIL.cardBorderColor,
+                    background: '#fff',
+                    color: '#111',
+                    fontSize: AUDITION_DETAIL.bodyFontPx,
+                    paddingLeft: 16,
+                    paddingRight: 16,
+                  }}
+                >
+                  상태 관리
+                </Link>
+                <Link
+                  href={`/auditions/${id}/applications`}
+                  className="inline-flex h-11 w-full min-[480px]:min-w-[160px] items-center justify-center font-semibold text-white no-underline md:w-auto"
+                  style={{
+                    borderRadius: HERO.buttonRadiusPx,
+                    background: AUDITION_DETAIL.ownerLinkBg,
+                    fontSize: AUDITION_DETAIL.bodyFontPx,
+                    paddingLeft: 20,
+                    paddingRight: 20,
+                  }}
+                >
+                  지원자 관리
+                </Link>
+              </>
             ) : null}
           </div>
         </div>

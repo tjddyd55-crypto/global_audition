@@ -9,10 +9,14 @@ import com.audition.platform.api.dto.ManageApplicationStatsDto;
 import com.audition.platform.api.dto.ManageApplicationsPageDataDto;
 import com.audition.platform.api.dto.ManageAuditionHeaderDto;
 import com.audition.platform.application.audition.ApplicantCardMetricsLoader;
+import com.audition.platform.application.credit.CreditPolicyKey;
+import com.audition.platform.application.credit.CreditService;
 import com.audition.platform.application.me.MeApiMapping;
 import com.audition.platform.application.ranking.ApplicationRankingService;
 import com.audition.platform.domain.audition.Application;
 import com.audition.platform.domain.audition.ApplicationRepository;
+import com.audition.platform.domain.audition.ApplicationVideo;
+import com.audition.platform.domain.audition.ApplicationVideoRepository;
 import com.audition.platform.domain.audition.Audition;
 import com.audition.platform.domain.audition.AuditionRepository;
 import com.audition.platform.domain.score.ApplicationScore;
@@ -27,6 +31,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import org.springframework.util.StringUtils;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -46,6 +51,8 @@ public class ApplicationService {
     private final ApplicantCardMetricsLoader metricsLoader;
     private final ApplicationScoreRepository applicationScoreRepository;
     private final ApplicationRankingService applicationRankingService;
+    private final ApplicationVideoRepository applicationVideoRepository;
+    private final CreditService creditService;
 
     public ApplicationService(
             ApplicationRepository applicationRepository,
@@ -53,13 +60,17 @@ public class ApplicationService {
             UserRepository userRepository,
             ApplicantCardMetricsLoader metricsLoader,
             ApplicationScoreRepository applicationScoreRepository,
-            ApplicationRankingService applicationRankingService) {
+            ApplicationRankingService applicationRankingService,
+            ApplicationVideoRepository applicationVideoRepository,
+            CreditService creditService) {
         this.applicationRepository = applicationRepository;
         this.auditionRepository = auditionRepository;
         this.userRepository = userRepository;
         this.metricsLoader = metricsLoader;
         this.applicationScoreRepository = applicationScoreRepository;
         this.applicationRankingService = applicationRankingService;
+        this.applicationVideoRepository = applicationVideoRepository;
+        this.creditService = creditService;
     }
 
     private static ApplicationResponse toResponse(Application app, User applicant) {
@@ -73,6 +84,31 @@ public class ApplicationService {
         r.setUpdatedAt(app.getUpdatedAt());
         r.setCreatedAt(app.getCreatedAt());
         return r;
+    }
+
+    /**
+     * 공개 투표 화면에서 대표 영상(application_videos 최신 1건) 조회수 +1.
+     * application_videos 행이 없으면 무시. 오디션이 OPEN일 때만 반영.
+     */
+    @Transactional
+    public void incrementRepresentativeVideoView(UUID applicationId) {
+        Application app = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "지원을 찾을 수 없습니다."));
+        Audition audition = auditionRepository.findById(app.getAuditionId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "오디션을 찾을 수 없습니다."));
+        if (!"OPEN".equals(audition.getStatus())) {
+            return;
+        }
+        Optional<ApplicationVideo> videoOpt =
+                applicationVideoRepository.findFirstByApplicationIdOrderByCreatedAtDesc(applicationId);
+        if (videoOpt.isEmpty()) {
+            return;
+        }
+        ApplicationVideo video = videoOpt.get();
+        video.setViewCount(video.getViewCount() + 1);
+        video.setUpdatedAt(Instant.now());
+        applicationVideoRepository.save(video);
+        applicationRankingService.recalculateScores(app.getAuditionId());
     }
 
     private void assertAgencyOrAdminCanManageAudition(Audition audition) {
@@ -284,6 +320,7 @@ public class ApplicationService {
         if (applicationRepository.existsByAuditionIdAndApplicantId(auditionId, applicantId)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Already applied to this audition");
         }
+        creditService.useCredits(applicantId, CreditPolicyKey.AUDITION_APPLY, auditionId.toString());
         User applicant = userRepository.findById(applicantId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "User not found"));
         Application app = new Application();

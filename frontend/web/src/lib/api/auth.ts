@@ -22,7 +22,7 @@ export interface AuthResponse {
 export interface AuthMeResponse {
   userId: string
   email: string
-  role: 'APPLICANT' | 'AGENCY' | 'ADMIN'
+  role: 'APPLICANT' | 'AGENCY' | 'ADMIN' | 'SUPER_ADMIN' | 'USER'
   name?: string | null
   profileImageUrl?: string | null
 }

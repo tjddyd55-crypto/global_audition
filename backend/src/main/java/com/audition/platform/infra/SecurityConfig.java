@@ -13,6 +13,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import java.nio.charset.StandardCharsets;
 
@@ -51,6 +52,10 @@ public class SecurityConfig {
                 .requestMatchers("/actuator/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/auditions", "/api/auditions/*").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/auditions/*/votes").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/applications").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/applications/*/public").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/comments").permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/api/applications/*/view", "POST")).permitAll()
                 .requestMatchers("/api/me/**").authenticated()
                 .anyRequest().authenticated()
             )

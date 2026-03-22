@@ -42,8 +42,8 @@ target/
 .pg18data/
 !.mvn/wrapper/maven-wrapper.jar
 
-# Logs
-logs/
+# Logs (repository root only — do not ignore app routes like **/admin/super/logs/)
+/logs/
 *.log
 
 # OS

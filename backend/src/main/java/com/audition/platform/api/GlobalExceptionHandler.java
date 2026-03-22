@@ -111,6 +111,14 @@ public class GlobalExceptionHandler {
         boolean auditionRanking = uri.contains("/api/auditions/") && uri.endsWith("/ranking");
         boolean votesMutations = uri.equals("/api/votes") || uri.startsWith("/api/votes/");
         boolean appStatusPatch = uri.contains("/api/applications/") && uri.endsWith("/status");
+        boolean appViewBump = uri.contains("/api/applications/") && uri.endsWith("/view");
+        boolean appPublicDetail = uri.contains("/api/applications/") && uri.endsWith("/public");
+        boolean appListPublic = "/api/applications".equals(uri);
+        boolean commentsPath = "/api/comments".equals(uri);
+        boolean likesPath = "/api/likes".equals(uri) || uri.startsWith("/api/likes/");
+        boolean creditsPath = uri.startsWith("/api/credits");
+        boolean adminApiPath = uri.startsWith("/api/admin/");
+        String method = request.getMethod() != null ? request.getMethod() : "";
         return uri.contains("/api/me/")
                 || uri.endsWith("/api/me")
                 || uri.contains("/api/auth/me")
@@ -118,6 +126,13 @@ public class GlobalExceptionHandler {
                 || auditionVotes
                 || auditionRanking
                 || votesMutations
-                || appStatusPatch;
+                || appStatusPatch
+                || appViewBump
+                || appPublicDetail
+                || (appListPublic && "GET".equalsIgnoreCase(method))
+                || (commentsPath && ("GET".equalsIgnoreCase(method) || "POST".equalsIgnoreCase(method)))
+                || likesPath
+                || creditsPath
+                || adminApiPath;
     }
 }

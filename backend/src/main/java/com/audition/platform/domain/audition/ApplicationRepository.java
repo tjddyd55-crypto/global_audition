@@ -45,4 +45,7 @@ public interface ApplicationRepository extends JpaRepository<Application, UUID> 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(value = "UPDATE applications SET vote_count = vote_count + :delta WHERE id = :id AND vote_count + :delta >= 0", nativeQuery = true)
     int adjustVoteCount(@Param("id") UUID id, @Param("delta") long delta);
+
+    /** 영상 허브·추천 사이드바: 공개 가능한 지원만, 최신순 상한 */
+    List<Application> findTop50ByStatusInOrderByCreatedAtDesc(Collection<String> statuses);
 }

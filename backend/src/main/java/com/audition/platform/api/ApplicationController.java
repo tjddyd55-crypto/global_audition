@@ -75,6 +75,13 @@ public class ApplicationController {
         return ApiEnvelope.ok(applicationService.patchApplicationStatus(id, request.getStatus()));
     }
 
+    /** 공개 투표 등에서 대표 영상 조회수 +1 (인증 불필요, MVP) */
+    @PostMapping("/applications/{id}/view")
+    public ApiEnvelope<Boolean> incrementApplicationView(@PathVariable UUID id) {
+        applicationService.incrementRepresentativeVideoView(id);
+        return ApiEnvelope.ok(Boolean.TRUE);
+    }
+
     @PostMapping("/applications/{id}/accept")
     public ApplicationResponse acceptLegacy(@PathVariable UUID id) {
         return applicationService.decide(id, "ACCEPTED");

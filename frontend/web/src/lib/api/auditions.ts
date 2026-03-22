@@ -227,6 +227,12 @@ export const auditionApi = {
     unwrapData<boolean>(data)
   },
 
+  /** 투표 카드 영상 재생 시 대표 영상 조회수 +1 (세션당 1회 제한은 프론트에서 처리) */
+  bumpApplicationView: async (applicationId: string): Promise<void> => {
+    const { data } = await apiClient.post<unknown>(`/applications/${applicationId}/view`)
+    unwrapData<boolean>(data)
+  },
+
   /** AGENCY/ADMIN: 지원자 관리 화면 */
   listManageApplications: async (
     auditionId: string,
@@ -305,4 +311,9 @@ export const auditionApi = {
       }
     })
   },
+}
+
+/** 스펙 문서용 별칭 — {@link auditionApi.listManageApplications} 와 동일 */
+export function getManageList(auditionId: string, category?: string | null) {
+  return auditionApi.listManageApplications(auditionId, category)
 }

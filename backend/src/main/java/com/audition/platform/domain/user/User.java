@@ -22,7 +22,8 @@ public class User {
     private String passwordHash;
 
     @Column(nullable = false, columnDefinition = "TEXT")
-    private String role; // APPLICANT | AGENCY | ADMIN
+    /** APPLICANT | AGENCY | ADMIN | SUPER_ADMIN | USER */
+    private String role;
 
     @Column(columnDefinition = "TEXT")
     private String name;
@@ -38,6 +39,10 @@ public class User {
 
     @Column(name = "profile_image_url", columnDefinition = "TEXT")
     private String profileImageUrl;
+
+    /** 대량 지급 필터용 (선택) */
+    @Column(name = "country_code", columnDefinition = "TEXT")
+    private String countryCode;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
@@ -63,6 +68,8 @@ public class User {
     public void setBio(String bio) { this.bio = bio; }
     public String getProfileImageUrl() { return profileImageUrl; }
     public void setProfileImageUrl(String profileImageUrl) { this.profileImageUrl = profileImageUrl; }
+    public String getCountryCode() { return countryCode; }
+    public void setCountryCode(String countryCode) { this.countryCode = countryCode; }
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
