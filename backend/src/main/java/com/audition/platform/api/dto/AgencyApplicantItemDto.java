@@ -13,6 +13,9 @@ public class AgencyApplicantItemDto {
     private String category;
     private long viewCount;
     private long likeCount;
+    private long voteCount;
+    private Double recommendedScore;
+    private Integer recommendedRank;
     /** SUBMITTED | REVIEWING | ACCEPTED | REJECTED */
     private String status;
 
@@ -78,6 +81,30 @@ public class AgencyApplicantItemDto {
 
     public void setLikeCount(long likeCount) {
         this.likeCount = likeCount;
+    }
+
+    public long getVoteCount() {
+        return voteCount;
+    }
+
+    public void setVoteCount(long voteCount) {
+        this.voteCount = voteCount;
+    }
+
+    public Double getRecommendedScore() {
+        return recommendedScore;
+    }
+
+    public void setRecommendedScore(Double recommendedScore) {
+        this.recommendedScore = recommendedScore;
+    }
+
+    public Integer getRecommendedRank() {
+        return recommendedRank;
+    }
+
+    public void setRecommendedRank(Integer recommendedRank) {
+        this.recommendedRank = recommendedRank;
     }
 
     public String getStatus() {

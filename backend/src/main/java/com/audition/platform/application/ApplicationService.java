@@ -3,48 +3,63 @@ package com.audition.platform.application;
 import com.audition.platform.api.dto.AgencyApplicantItemDto;
 import com.audition.platform.api.dto.AgencyApplicantsListDto;
 import com.audition.platform.api.dto.ApplicationResponse;
+import com.audition.platform.api.dto.ApplicationStatusPatchDataDto;
+import com.audition.platform.api.dto.CategoryCountDto;
+import com.audition.platform.api.dto.ManageApplicationStatsDto;
+import com.audition.platform.api.dto.ManageApplicationsPageDataDto;
+import com.audition.platform.api.dto.ManageAuditionHeaderDto;
+import com.audition.platform.application.audition.ApplicantCardMetricsLoader;
 import com.audition.platform.application.me.MeApiMapping;
+import com.audition.platform.application.ranking.ApplicationScoringService;
 import com.audition.platform.domain.audition.Application;
 import com.audition.platform.domain.audition.ApplicationRepository;
-import com.audition.platform.domain.audition.ApplicationVideo;
-import com.audition.platform.domain.audition.ApplicationVideoRepository;
 import com.audition.platform.domain.audition.Audition;
 import com.audition.platform.domain.audition.AuditionRepository;
-import com.audition.platform.domain.channel.ChannelVideo;
-import com.audition.platform.domain.channel.ChannelVideoRepository;
+import com.audition.platform.domain.score.ApplicationScore;
+import com.audition.platform.domain.score.ApplicationScoreRepository;
 import com.audition.platform.domain.user.User;
 import com.audition.platform.domain.user.UserRepository;
 import com.audition.platform.infra.SecurityUtils;
-import com.audition.platform.infra.YoutubeThumbnailUtil;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import org.springframework.util.StringUtils;
+
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
 public class ApplicationService {
 
+    private static final List<String> STANDARD_MANAGE_CATEGORIES = List.of("보컬", "댄스", "랩", "프로듀싱");
+
     private final ApplicationRepository applicationRepository;
     private final AuditionRepository auditionRepository;
     private final UserRepository userRepository;
-    private final ApplicationVideoRepository applicationVideoRepository;
-    private final ChannelVideoRepository channelVideoRepository;
+    private final ApplicantCardMetricsLoader metricsLoader;
+    private final ApplicationScoreRepository applicationScoreRepository;
+    private final ApplicationScoringService applicationScoringService;
 
-    public ApplicationService(ApplicationRepository applicationRepository,
-                              AuditionRepository auditionRepository,
-                              UserRepository userRepository,
-                              ApplicationVideoRepository applicationVideoRepository,
-                              ChannelVideoRepository channelVideoRepository) {
+    public ApplicationService(
+            ApplicationRepository applicationRepository,
+            AuditionRepository auditionRepository,
+            UserRepository userRepository,
+            ApplicantCardMetricsLoader metricsLoader,
+            ApplicationScoreRepository applicationScoreRepository,
+            ApplicationScoringService applicationScoringService) {
         this.applicationRepository = applicationRepository;
         this.auditionRepository = auditionRepository;
         this.userRepository = userRepository;
-        this.applicationVideoRepository = applicationVideoRepository;
-        this.channelVideoRepository = channelVideoRepository;
+        this.metricsLoader = metricsLoader;
+        this.applicationScoreRepository = applicationScoreRepository;
+        this.applicationScoringService = applicationScoringService;
     }
 
     private static ApplicationResponse toResponse(Application app, User applicant) {
@@ -86,45 +101,116 @@ public class ApplicationService {
         assertAgencyOrAdminCanManageAudition(audition);
 
         List<Application> list = applicationRepository.findByAuditionIdOrderByCreatedAtDesc(auditionId);
+        Map<UUID, ApplicationScore> scoreByApp = applicationScoreRepository.findByAuditionId(auditionId).stream()
+                .collect(Collectors.toMap(ApplicationScore::getApplicationId, Function.identity(), (a, b) -> a));
         AgencyApplicantsListDto out = new AgencyApplicantsListDto();
-        out.setItems(list.stream().map(app -> toAgencyItem(app)).collect(Collectors.toList()));
+        out.setItems(list.stream().map(app -> toAgencyItem(app, scoreByApp.get(app.getId()))).collect(Collectors.toList()));
         return out;
     }
 
-    private AgencyApplicantItemDto toAgencyItem(Application app) {
-        User applicant = userRepository.findById(app.getApplicantId()).orElse(null);
-        String videoUrl = "";
-        Optional<ApplicationVideo> appVid = applicationVideoRepository.findFirstByApplicationIdOrderByCreatedAtAsc(app.getId());
-        if (appVid.isPresent()) {
-            videoUrl = appVid.get().getVideoUrl() != null ? appVid.get().getVideoUrl() : "";
+    /**
+     * 기획사 지원자 관리 화면 (통계·카테고리·추천 점수 포함)
+     */
+    public ManageApplicationsPageDataDto listManageApplications(UUID auditionId, String categoryFilter) {
+        UUID currentUserId = SecurityUtils.getCurrentUserId();
+        if (currentUserId == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
         }
+        Audition audition = auditionRepository.findById(auditionId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "오디션을 찾을 수 없습니다."));
+        assertAgencyOrAdminCanManageAudition(audition);
 
-        Optional<ChannelVideo> chVid = channelVideoRepository.findFirstByOwnerIdOrderByUpdatedAtDesc(app.getApplicantId());
-        String thumbnailUrl = null;
-        long viewCount = 0;
-        long likeCount = 0;
-        String category = "";
-        if (chVid.isPresent()) {
-            ChannelVideo cv = chVid.get();
-            thumbnailUrl = cv.getThumbnailUrl();
-            viewCount = cv.getViewCount();
-            likeCount = cv.getLikeCount();
-            category = cv.getCategory() != null ? cv.getCategory() : "";
+        List<Application> all = applicationRepository.findByAuditionIdOrderByCreatedAtDesc(auditionId);
+        if (applicationScoreRepository.countByAuditionId(auditionId) == 0 && !all.isEmpty()) {
+            applicationScoringService.recalculateForAudition(auditionId);
         }
-        if (thumbnailUrl == null || thumbnailUrl.isBlank()) {
-            thumbnailUrl = YoutubeThumbnailUtil.hqThumbnail(videoUrl).orElse(null);
+        Map<UUID, ApplicationScore> scoreByApp = applicationScoreRepository.findByAuditionId(auditionId).stream()
+                .collect(Collectors.toMap(ApplicationScore::getApplicationId, Function.identity(), (a, b) -> a));
+
+        List<AgencyApplicantItemDto> fullItems = all.stream()
+                .map(app -> toAgencyItem(app, scoreByApp.get(app.getId())))
+                .collect(Collectors.toList());
+
+        List<AgencyApplicantItemDto> visible = filterManageByCategory(fullItems, categoryFilter);
+
+        ManageApplicationsPageDataDto dto = new ManageApplicationsPageDataDto();
+        ManageAuditionHeaderDto header = new ManageAuditionHeaderDto();
+        header.setId(audition.getId().toString());
+        header.setTitle(audition.getTitle() != null ? audition.getTitle() : "");
+        dto.setAudition(header);
+        dto.setStats(buildManageStats(all));
+        dto.setCategories(buildManageCategoryTabs(fullItems));
+        dto.setItems(visible);
+        return dto;
+    }
+
+    private static List<AgencyApplicantItemDto> filterManageByCategory(List<AgencyApplicantItemDto> items, String categoryFilter) {
+        if (!StringUtils.hasText(categoryFilter) || "전체".equals(categoryFilter.trim())) {
+            return items;
         }
+        String want = categoryFilter.trim();
+        return items.stream()
+                .filter(i -> want.equals((i.getCategory() != null ? i.getCategory() : "").trim()))
+                .collect(Collectors.toList());
+    }
+
+    private static ManageApplicationStatsDto buildManageStats(List<Application> apps) {
+        long sub = 0;
+        long rev = 0;
+        long acc = 0;
+        long rej = 0;
+        for (Application a : apps) {
+            String st = a.getStatus();
+            if ("SUBMITTED".equals(st)) {
+                sub++;
+            } else if ("REVIEWING".equals(st)) {
+                rev++;
+            } else if ("ACCEPTED".equals(st)) {
+                acc++;
+            } else if ("REJECTED".equals(st)) {
+                rej++;
+            }
+        }
+        ManageApplicationStatsDto s = new ManageApplicationStatsDto();
+        s.setTotal(apps.size());
+        s.setSubmitted(sub);
+        s.setReviewing(rev);
+        s.setAccepted(acc);
+        s.setRejected(rej);
+        return s;
+    }
+
+    private List<CategoryCountDto> buildManageCategoryTabs(List<AgencyApplicantItemDto> items) {
+        List<CategoryCountDto> tabs = new ArrayList<>();
+        tabs.add(new CategoryCountDto("전체", items.size()));
+        for (String c : STANDARD_MANAGE_CATEGORIES) {
+            long n = items.stream()
+                    .filter(i -> c.equals((i.getCategory() != null ? i.getCategory() : "").trim()))
+                    .count();
+            tabs.add(new CategoryCountDto(c, n));
+        }
+        return tabs;
+    }
+
+    private AgencyApplicantItemDto toAgencyItem(Application app, ApplicationScore score) {
+        User applicant = userRepository.findById(app.getApplicantId()).orElse(null);
+        var m = metricsLoader.resolve(app);
 
         AgencyApplicantItemDto dto = new AgencyApplicantItemDto();
         dto.setApplicationId(app.getId().toString());
         dto.setUserName(applicant != null ? applicant.getDisplayName() : "");
         dto.setUserEmail(applicant != null ? applicant.getEmail() : "");
-        dto.setVideoUrl(videoUrl);
-        dto.setThumbnailUrl(thumbnailUrl);
-        dto.setCategory(category);
-        dto.setViewCount(viewCount);
-        dto.setLikeCount(likeCount);
+        dto.setVideoUrl(m.videoUrl());
+        dto.setThumbnailUrl(m.thumbnailUrl());
+        dto.setCategory(m.category());
+        dto.setViewCount(m.viewCount());
+        dto.setLikeCount(m.likeCount());
+        dto.setVoteCount(app.getVoteCount());
         dto.setStatus(MeApiMapping.applicationStatusToApi(app.getStatus()));
+        if (score != null) {
+            dto.setRecommendedScore(score.getWeightedScore());
+            dto.setRecommendedRank(score.getRecommendedRank());
+        }
         return dto;
     }
 
@@ -133,7 +219,7 @@ public class ApplicationService {
      * (지원 심사 상태는 투표와 별개)
      */
     @Transactional
-    public ApplicationResponse patchApplicationStatus(UUID applicationId, String apiStatus) {
+    public ApplicationStatusPatchDataDto patchApplicationStatus(UUID applicationId, String apiStatus) {
         String dbTarget = toDbStatusFromApi(apiStatus);
         UUID currentUserId = SecurityUtils.getCurrentUserId();
         if (currentUserId == null) {
@@ -159,8 +245,11 @@ public class ApplicationService {
         app.setStatus(dbTarget);
         app.setUpdatedAt(java.time.Instant.now());
         app = applicationRepository.save(app);
-        User applicant = userRepository.findById(app.getApplicantId()).orElse(null);
-        return toResponse(app, applicant);
+        applicationScoringService.recalculateForAudition(app.getAuditionId());
+        return new ApplicationStatusPatchDataDto(
+                app.getId().toString(),
+                MeApiMapping.applicationStatusToApi(app.getStatus())
+        );
     }
 
     private static String toDbStatusFromApi(String apiStatus) {
@@ -277,6 +366,7 @@ public class ApplicationService {
         app.setStatus(newStatus);
         app.setUpdatedAt(java.time.Instant.now());
         app = applicationRepository.save(app);
+        applicationScoringService.recalculateForAudition(app.getAuditionId());
         User applicant = userRepository.findById(app.getApplicantId()).orElse(null);
         return toResponse(app, applicant);
     }

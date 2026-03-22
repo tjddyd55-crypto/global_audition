@@ -4,19 +4,18 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class PublicVoteItemDto {
+public class RankingItemDto {
 
     private String applicationId;
     private String userName;
-    private String userEmail;
-    private int rank;
-    private String description;
-    private String videoUrl;
-    private String thumbnailUrl;
     private String category;
     private long voteCount;
     private long viewCount;
-    private boolean voted;
+    private String status;
+    private double score;
+    private int rank;
+
+    private boolean recommended;
 
     public String getApplicationId() {
         return applicationId;
@@ -32,46 +31,6 @@ public class PublicVoteItemDto {
 
     public void setUserName(String userName) {
         this.userName = userName;
-    }
-
-    public String getUserEmail() {
-        return userEmail;
-    }
-
-    public void setUserEmail(String userEmail) {
-        this.userEmail = userEmail;
-    }
-
-    public int getRank() {
-        return rank;
-    }
-
-    public void setRank(int rank) {
-        this.rank = rank;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public String getVideoUrl() {
-        return videoUrl;
-    }
-
-    public void setVideoUrl(String videoUrl) {
-        this.videoUrl = videoUrl;
-    }
-
-    public String getThumbnailUrl() {
-        return thumbnailUrl;
-    }
-
-    public void setThumbnailUrl(String thumbnailUrl) {
-        this.thumbnailUrl = thumbnailUrl;
     }
 
     public String getCategory() {
@@ -98,12 +57,36 @@ public class PublicVoteItemDto {
         this.viewCount = viewCount;
     }
 
-    @JsonProperty("isVoted")
-    public boolean isVoted() {
-        return voted;
+    public String getStatus() {
+        return status;
     }
 
-    public void setVoted(boolean voted) {
-        this.voted = voted;
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public double getScore() {
+        return score;
+    }
+
+    public void setScore(double score) {
+        this.score = score;
+    }
+
+    public int getRank() {
+        return rank;
+    }
+
+    public void setRank(int rank) {
+        this.rank = rank;
+    }
+
+    @JsonProperty("recommended")
+    public boolean isRecommended() {
+        return recommended;
+    }
+
+    public void setRecommended(boolean recommended) {
+        this.recommended = recommended;
     }
 }

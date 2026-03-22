@@ -4,10 +4,19 @@ import com.audition.platform.api.dto.ApiEnvelope;
 import com.audition.platform.api.dto.AgencyApplicantsListDto;
 import com.audition.platform.api.dto.ApplicationDecisionRequest;
 import com.audition.platform.api.dto.ApplicationResponse;
+import com.audition.platform.api.dto.ApplicationStatusPatchDataDto;
+import com.audition.platform.api.dto.ManageApplicationsPageDataDto;
 import com.audition.platform.api.dto.PatchApplicationStatusRequest;
 import com.audition.platform.application.ApplicationService;
 import jakarta.validation.Valid;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.UUID;
@@ -42,6 +51,13 @@ public class ApplicationController {
         return ApiEnvelope.ok(applicationService.listAgencyApplicants(auditionId));
     }
 
+    @GetMapping("/auditions/{auditionId}/applications/manage")
+    public ApiEnvelope<ManageApplicationsPageDataDto> listApplicationsManage(
+            @PathVariable UUID auditionId,
+            @RequestParam(name = "category", required = false) String category) {
+        return ApiEnvelope.ok(applicationService.listManageApplications(auditionId, category));
+    }
+
     @PostMapping("/applications/{id}/decision")
     public ApplicationResponse decide(@PathVariable UUID id, @Valid @RequestBody ApplicationDecisionRequest request) {
         return applicationService.decide(id, request.getStatus());
@@ -53,8 +69,10 @@ public class ApplicationController {
     }
 
     @PatchMapping("/applications/{id}/status")
-    public ApplicationResponse patchApplicationStatus(@PathVariable UUID id, @Valid @RequestBody PatchApplicationStatusRequest request) {
-        return applicationService.patchApplicationStatus(id, request.getStatus());
+    public ApiEnvelope<ApplicationStatusPatchDataDto> patchApplicationStatus(
+            @PathVariable UUID id,
+            @Valid @RequestBody PatchApplicationStatusRequest request) {
+        return ApiEnvelope.ok(applicationService.patchApplicationStatus(id, request.getStatus()));
     }
 
     @PostMapping("/applications/{id}/accept")

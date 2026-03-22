@@ -156,6 +156,11 @@ export default function AuditionDetailPage() {
   const benefits = safeArr(audition.benefits)
 
   const canApply = audition.status === 'OPEN' && (role === 'APPLICANT' || role === 'ADMIN')
+  const isOpen = audition.status === 'OPEN'
+  /** 하단 CTA: 오픈 시 비로그인은 로그인 유도, 지원자/관리자만 실제 지원 버튼 */
+  const showApplyLoginCta = isOpen && !accessToken
+  const showApplySubmitCta = isOpen && accessToken && (role === 'APPLICANT' || role === 'ADMIN')
+  const showApplyDisabledCta = isOpen && accessToken && !showApplySubmitCta
   const canManageAudition = userCanManageAudition({
     accessToken,
     userId: myUserId,
@@ -171,10 +176,11 @@ export default function AuditionDetailPage() {
     }
   }
 
+  /** 하단 고정 CTA(모바일 2열 대비) 여백 */
   const container: React.CSSProperties = {
     maxWidth: AUDITION_DETAIL.containerMaxWidthPx,
     margin: '0 auto',
-    paddingBottom: AUDITION_DETAIL.fixedCtaHeightPx + AUDITION_DETAIL.mainGridGapPx,
+    paddingBottom: Math.max(AUDITION_DETAIL.fixedCtaHeightPx * 2, 120) + AUDITION_DETAIL.mainGridGapPx,
   }
 
   const cardBase: React.CSSProperties = {
@@ -261,7 +267,7 @@ export default function AuditionDetailPage() {
           </div>
           <div style={{ marginTop: 16 }}>
             <Link
-              href={`/auditions/${id}/votes`}
+              href={`/auditions/${id}/vote`}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -276,7 +282,7 @@ export default function AuditionDetailPage() {
                 border: '1px solid rgba(255,255,255,0.35)',
               }}
             >
-              지원자 투표하기
+              지원자 보기 &amp; 투표
             </Link>
           </div>
           </div>
@@ -537,28 +543,6 @@ export default function AuditionDetailPage() {
           </div>
         )}
 
-        {canApply && accessToken && (
-          <div className="w-full max-w-md mx-auto px-2 md:px-0" style={{ marginTop: AUDITION_DETAIL.mainGridGapPx, textAlign: 'center' }}>
-            <button
-              type="button"
-              onClick={() => applyMutation.mutate()}
-              disabled={applyMutation.isPending}
-              className="w-full md:w-auto"
-              style={{
-                padding: '12px 32px',
-                borderRadius: HERO.buttonRadiusPx,
-                border: 'none',
-                background: `linear-gradient(90deg, ${HERO.primaryGradientStart}, ${HERO.primaryGradientEnd})`,
-                color: '#fff',
-                fontWeight: 600,
-                cursor: applyMutation.isPending ? 'not-allowed' : 'pointer',
-                opacity: applyMutation.isPending ? 0.7 : 1,
-              }}
-            >
-              {applyMutation.isPending ? '처리 중...' : '지원하기'}
-            </button>
-          </div>
-        )}
         {canManageAudition && (
           <div
             className="flex w-full max-w-md mx-auto flex-col gap-3 px-2 md:max-w-none md:flex-row md:justify-center md:px-0"
@@ -580,7 +564,7 @@ export default function AuditionDetailPage() {
               수정하기
             </Link>
             <Link
-              href={`/my/auditions/${id}/applications`}
+              href={`/auditions/${id}/applications`}
               className="inline-flex w-full md:w-auto items-center justify-center"
               style={{
                 padding: '12px 24px',
@@ -591,60 +575,124 @@ export default function AuditionDetailPage() {
                 textDecoration: 'none',
               }}
             >
-              지원자 목록
+              지원자 관리
             </Link>
           </div>
         )}
       </div>
 
-      {!accessToken && (
+      <div
+        className="max-md:pb-[max(16px,env(safe-area-inset-bottom,0px))]"
+        style={{
+          position: 'fixed',
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 40,
+          background: '#fff',
+          borderTop: `1px solid ${AUDITION_DETAIL.cardBorderColor}`,
+          boxShadow: '0 -4px 24px rgba(0,0,0,0.06)',
+        }}
+      >
         <div
-          className="max-md:flex-col max-md:justify-center max-md:gap-3 max-md:py-3 max-md:h-auto"
-          style={{
-            position: 'fixed',
-            left: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: 40,
-            height: AUDITION_DETAIL.fixedCtaHeightPx,
-            padding: `0 ${AUDITION_DETAIL.fixedCtaPaddingPx}px`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: AUDITION_DETAIL.benefitGridGapPx,
-            background: '#fff',
-            borderTop: `1px solid ${AUDITION_DETAIL.cardBorderColor}`,
-            boxShadow: '0 -4px 24px rgba(0,0,0,0.06)',
-          }}
+          className="mx-auto flex max-w-[1200px] flex-col gap-3 px-4 py-4 md:flex-row md:items-center md:justify-between"
+          style={{ paddingLeft: AUDITION_DETAIL.fixedCtaPaddingPx, paddingRight: AUDITION_DETAIL.fixedCtaPaddingPx }}
         >
-          <span
-            className="max-md:w-full max-md:text-center"
-            style={{ fontSize: AUDITION_DETAIL.bodyFontPx, color: AUDITION_DETAIL.bodyColor }}
-          >
-            로그인 후 지원 가능
-          </span>
-          <Link
-            href="/login"
-            className="max-md:w-full max-md:justify-center"
-            style={{
-              flexShrink: 0,
-              height: 44,
-              paddingLeft: 20,
-              paddingRight: 20,
-              borderRadius: HERO.buttonRadiusPx,
-              background: `linear-gradient(90deg, ${HERO.primaryGradientStart}, ${HERO.primaryGradientEnd})`,
-              color: '#fff',
-              fontWeight: 500,
-              fontSize: 14,
-              display: 'inline-flex',
-              alignItems: 'center',
-              textDecoration: 'none',
-            }}
-          >
-            로그인
-          </Link>
+          <div className="flex w-full flex-col gap-2 min-[480px]:flex-row min-[480px]:items-center md:w-auto">
+            {showApplySubmitCta ? (
+              <button
+                type="button"
+                onClick={() => applyMutation.mutate()}
+                disabled={applyMutation.isPending}
+                className="inline-flex h-11 w-full min-[480px]:w-auto items-center justify-center px-6 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-70"
+                style={{
+                  borderRadius: HERO.buttonRadiusPx,
+                  border: 'none',
+                  background: `linear-gradient(90deg, ${HERO.primaryGradientStart}, ${HERO.primaryGradientEnd})`,
+                  fontSize: AUDITION_DETAIL.bodyFontPx,
+                }}
+              >
+                {applyMutation.isPending ? '처리 중...' : '지원하기'}
+              </button>
+            ) : showApplyLoginCta ? (
+              <Link
+                href={`/login?next=${encodeURIComponent(`/auditions/${id}`)}`}
+                className="inline-flex h-11 w-full min-[480px]:w-auto items-center justify-center px-6 font-semibold text-white no-underline"
+                style={{
+                  borderRadius: HERO.buttonRadiusPx,
+                  background: `linear-gradient(90deg, ${HERO.primaryGradientStart}, ${HERO.primaryGradientEnd})`,
+                  fontSize: AUDITION_DETAIL.bodyFontPx,
+                }}
+              >
+                지원하기
+              </Link>
+            ) : showApplyDisabledCta ? (
+              <button
+                type="button"
+                disabled
+                title="지원자 계정으로 로그인 후 이용할 수 있습니다."
+                className="inline-flex h-11 w-full min-[480px]:w-auto cursor-not-allowed items-center justify-center px-6 font-semibold opacity-50"
+                style={{
+                  borderRadius: HERO.buttonRadiusPx,
+                  border: `1px solid ${AUDITION_DETAIL.cardBorderColor}`,
+                  background: '#f9fafb',
+                  color: '#6b7280',
+                  fontSize: AUDITION_DETAIL.bodyFontPx,
+                }}
+              >
+                지원하기
+              </button>
+            ) : (
+              <button
+                type="button"
+                disabled
+                className="inline-flex h-11 w-full min-[480px]:w-auto cursor-not-allowed items-center justify-center px-6 font-semibold opacity-50"
+                style={{
+                  borderRadius: HERO.buttonRadiusPx,
+                  border: `1px solid ${AUDITION_DETAIL.cardBorderColor}`,
+                  background: '#f9fafb',
+                  color: '#6b7280',
+                  fontSize: AUDITION_DETAIL.bodyFontPx,
+                }}
+              >
+                지원 마감
+              </button>
+            )}
+          </div>
+          <div className="flex w-full flex-col gap-2 min-[480px]:flex-row min-[480px]:flex-wrap min-[480px]:justify-end md:w-auto md:justify-end">
+            <Link
+              href={`/auditions/${id}/vote`}
+              className="inline-flex h-11 w-full min-[480px]:min-w-[200px] items-center justify-center border font-semibold no-underline md:w-auto"
+              style={{
+                borderRadius: HERO.buttonRadiusPx,
+                borderColor: AUDITION_DETAIL.cardBorderColor,
+                background: '#fff',
+                color: '#111',
+                fontSize: AUDITION_DETAIL.bodyFontPx,
+                paddingLeft: 20,
+                paddingRight: 20,
+              }}
+            >
+              지원자 보기 &amp; 투표
+            </Link>
+            {canManageAudition ? (
+              <Link
+                href={`/auditions/${id}/applications`}
+                className="inline-flex h-11 w-full min-[480px]:min-w-[160px] items-center justify-center font-semibold text-white no-underline md:w-auto"
+                style={{
+                  borderRadius: HERO.buttonRadiusPx,
+                  background: AUDITION_DETAIL.ownerLinkBg,
+                  fontSize: AUDITION_DETAIL.bodyFontPx,
+                  paddingLeft: 20,
+                  paddingRight: 20,
+                }}
+              >
+                지원자 관리
+              </Link>
+            ) : null}
+          </div>
         </div>
-      )}
+      </div>
     </div>
   )
 }

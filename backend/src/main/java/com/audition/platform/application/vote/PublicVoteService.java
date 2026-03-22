@@ -1,67 +1,80 @@
 package com.audition.platform.application.vote;
 
-import com.audition.platform.api.dto.AuditionPublicVotesDataDto;
+import com.audition.platform.api.dto.CategoryCountDto;
 import com.audition.platform.api.dto.PublicVoteItemDto;
+import com.audition.platform.api.dto.PublicVotePageDataDto;
 import com.audition.platform.api.dto.VoteMutationResultDto;
+import com.audition.platform.api.dto.VotePageAuditionDto;
+import com.audition.platform.api.dto.VotePageSummaryDto;
+import com.audition.platform.application.audition.ApplicantCardMetricsLoader;
+import com.audition.platform.application.ranking.ApplicationScoringService;
 import com.audition.platform.domain.audition.Application;
 import com.audition.platform.domain.audition.ApplicationRepository;
-import com.audition.platform.domain.audition.ApplicationVideo;
-import com.audition.platform.domain.audition.ApplicationVideoRepository;
 import com.audition.platform.domain.audition.Audition;
 import com.audition.platform.domain.audition.AuditionRepository;
-import com.audition.platform.domain.channel.ChannelVideo;
-import com.audition.platform.domain.channel.ChannelVideoRepository;
+import com.audition.platform.domain.score.ApplicationScore;
+import com.audition.platform.domain.score.ApplicationScoreRepository;
 import com.audition.platform.domain.user.User;
 import com.audition.platform.domain.user.UserRepository;
 import com.audition.platform.domain.vote.Vote;
 import com.audition.platform.domain.vote.VoteRepository;
 import com.audition.platform.infra.SecurityUtils;
-import com.audition.platform.infra.YoutubeThumbnailUtil;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
 public class PublicVoteService {
 
-    /**
-     * 공개 투표 카드 노출 대상 — 지원 심사 상태와 무관한 정책(불합격만 제외).
-     * 투표 가능 여부는 {@link #castVote}에서 별도 검증.
-     */
     private static final List<String> LISTABLE_STATUSES = List.of("SUBMITTED", "REVIEWING", "ACCEPTED");
+    private static final List<String> STANDARD_CATEGORIES = List.of("보컬", "댄스", "랩", "프로듀싱");
 
     private final AuditionRepository auditionRepository;
     private final ApplicationRepository applicationRepository;
     private final UserRepository userRepository;
-    private final ApplicationVideoRepository applicationVideoRepository;
-    private final ChannelVideoRepository channelVideoRepository;
+    private final ApplicantCardMetricsLoader metricsLoader;
     private final VoteRepository voteRepository;
+    private final ApplicationScoreRepository applicationScoreRepository;
+    private final ApplicationScoringService applicationScoringService;
 
     public PublicVoteService(
             AuditionRepository auditionRepository,
             ApplicationRepository applicationRepository,
             UserRepository userRepository,
-            ApplicationVideoRepository applicationVideoRepository,
-            ChannelVideoRepository channelVideoRepository,
-            VoteRepository voteRepository) {
+            ApplicantCardMetricsLoader metricsLoader,
+            VoteRepository voteRepository,
+            ApplicationScoreRepository applicationScoreRepository,
+            ApplicationScoringService applicationScoringService) {
         this.auditionRepository = auditionRepository;
         this.applicationRepository = applicationRepository;
         this.userRepository = userRepository;
-        this.applicationVideoRepository = applicationVideoRepository;
-        this.channelVideoRepository = channelVideoRepository;
+        this.metricsLoader = metricsLoader;
         this.voteRepository = voteRepository;
+        this.applicationScoreRepository = applicationScoreRepository;
+        this.applicationScoringService = applicationScoringService;
     }
 
-    public AuditionPublicVotesDataDto getPublicVotes(UUID auditionId) {
+    public PublicVotePageDataDto getPublicVotes(UUID auditionId, String categoryFilter) {
         Audition audition = auditionRepository.findById(auditionId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "오디션을 찾을 수 없습니다."));
-        assertAgencyMayViewVoteLeaderboard(audition);
+
+        List<Application> apps = applicationRepository.findByAuditionIdAndStatusInOrderByCreatedAtDesc(
+                auditionId, LISTABLE_STATUSES);
+
+        ensureScoresIfMissing(auditionId, apps);
+
+        Map<UUID, ApplicationScore> scoreByApp = applicationScoreRepository.findByAuditionId(auditionId).stream()
+                .collect(Collectors.toMap(ApplicationScore::getApplicationId, Function.identity(), (a, b) -> a));
 
         UUID voterId = SecurityUtils.getCurrentUserId();
         final String myVoteStr = voterId == null
@@ -72,82 +85,101 @@ public class PublicVoteService {
 
         long totalVotes = applicationRepository.sumVoteCountByAuditionId(auditionId);
 
-        List<Application> apps = applicationRepository.findByAuditionIdAndStatusInOrderByCreatedAtDesc(
-                auditionId, LISTABLE_STATUSES);
-
-        List<PublicVoteItemDto> items = apps.stream()
-                .map(app -> toItem(app, myVoteStr))
+        List<PublicVoteItemDto> allItems = apps.stream()
+                .map(app -> toVoteItem(app, myVoteStr, scoreByApp.get(app.getId())))
                 .collect(Collectors.toList());
 
-        AuditionPublicVotesDataDto out = new AuditionPublicVotesDataDto();
-        out.setTotalVotes(totalVotes);
-        out.setMyVote(myVoteStr);
-        out.setItems(items);
+        List<PublicVoteItemDto> visible = filterByCategory(allItems, categoryFilter);
+
+        long totalViews = allItems.stream().mapToLong(PublicVoteItemDto::getViewCount).sum();
+        int myVoteCount = myVoteStr != null && !myVoteStr.isBlank() ? 1 : 0;
+
+        VotePageSummaryDto summary = new VotePageSummaryDto();
+        summary.setApplicantCount(allItems.size());
+        summary.setTotalVotes(totalVotes);
+        summary.setTotalViewCount(totalViews);
+        summary.setMyVoteCount(myVoteCount);
+
+        VotePageAuditionDto auditionDto = new VotePageAuditionDto();
+        auditionDto.setId(audition.getId().toString());
+        auditionDto.setTitle(audition.getTitle() != null ? audition.getTitle() : "");
+        auditionDto.setDescription(audition.getDescription() != null ? audition.getDescription() : "");
+        auditionDto.setApplicantCount(allItems.size());
+        auditionDto.setTotalVotes(totalVotes);
+        auditionDto.setCategories(buildCategoryTabs(allItems));
+
+        PublicVotePageDataDto out = new PublicVotePageDataDto();
+        out.setAudition(auditionDto);
+        out.setSummary(summary);
+        out.setMyVoteApplicationId(myVoteStr);
+        out.setItems(visible);
         return out;
     }
 
-    /**
-     * AGENCY는 본인 소유 오디션의 투표 현황만 조회 가능. ADMIN은 전체. APPLICANT/비로그인은 공개 조회.
-     */
-    private void assertAgencyMayViewVoteLeaderboard(Audition audition) {
-        if (SecurityUtils.hasRole("ADMIN")) {
+    private void ensureScoresIfMissing(UUID auditionId, List<Application> listableApps) {
+        if (listableApps.isEmpty()) {
             return;
         }
-        if (!SecurityUtils.hasRole("AGENCY")) {
-            return;
-        }
-        UUID uid = SecurityUtils.getCurrentUserId();
-        if (uid == null || !audition.getOwnerId().equals(uid)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "다른 기획사 공고의 투표 현황은 조회할 수 없습니다.");
+        if (applicationScoreRepository.countByAuditionId(auditionId) == 0) {
+            applicationScoringService.recalculateForAudition(auditionId);
         }
     }
 
-    private PublicVoteItemDto toItem(Application app, String myVoteApplicationId) {
+    private static List<PublicVoteItemDto> filterByCategory(List<PublicVoteItemDto> items, String categoryFilter) {
+        if (!StringUtils.hasText(categoryFilter) || "전체".equals(categoryFilter.trim())) {
+            return items;
+        }
+        String want = categoryFilter.trim();
+        return items.stream()
+                .filter(i -> want.equals((i.getCategory() != null ? i.getCategory() : "").trim()))
+                .collect(Collectors.toList());
+    }
+
+    private List<CategoryCountDto> buildCategoryTabs(List<PublicVoteItemDto> items) {
+        List<CategoryCountDto> tabs = new ArrayList<>();
+        tabs.add(new CategoryCountDto("전체", items.size()));
+        for (String c : STANDARD_CATEGORIES) {
+            long n = items.stream()
+                    .filter(i -> c.equals((i.getCategory() != null ? i.getCategory() : "").trim()))
+                    .count();
+            tabs.add(new CategoryCountDto(c, n));
+        }
+        return tabs;
+    }
+
+    private PublicVoteItemDto toVoteItem(Application app, String myVoteApplicationId, ApplicationScore score) {
         User applicant = userRepository.findById(app.getApplicantId()).orElse(null);
-
-        String videoUrl = "";
-        Optional<ApplicationVideo> appVid = applicationVideoRepository.findFirstByApplicationIdOrderByCreatedAtAsc(app.getId());
-        if (appVid.isPresent() && appVid.get().getVideoUrl() != null) {
-            videoUrl = appVid.get().getVideoUrl();
-        }
-
-        Optional<ChannelVideo> chVid = channelVideoRepository.findFirstByOwnerIdOrderByUpdatedAtDesc(app.getApplicantId());
-        String thumbnailUrl = null;
-        long viewCount = 0;
-        String category = "";
-        if (chVid.isPresent()) {
-            ChannelVideo cv = chVid.get();
-            thumbnailUrl = cv.getThumbnailUrl();
-            viewCount = cv.getViewCount();
-            category = cv.getCategory() != null ? cv.getCategory() : "";
-        }
-        if (thumbnailUrl == null || thumbnailUrl.isBlank()) {
-            thumbnailUrl = YoutubeThumbnailUtil.hqThumbnail(videoUrl).orElse(null);
-        }
+        var m = metricsLoader.resolve(app);
 
         String appIdStr = app.getId().toString();
         boolean isVoted = myVoteApplicationId != null && myVoteApplicationId.equals(appIdStr);
+        int rank = score != null && score.getRecommendedRank() != null ? score.getRecommendedRank() : 0;
 
         PublicVoteItemDto dto = new PublicVoteItemDto();
         dto.setApplicationId(appIdStr);
         dto.setUserName(applicant != null ? applicant.getDisplayName() : "");
+        dto.setUserEmail(applicant != null ? applicant.getEmail() : "");
         dto.setDescription(applicant != null && applicant.getBio() != null ? applicant.getBio() : "");
-        dto.setVideoUrl(videoUrl);
-        dto.setThumbnailUrl(thumbnailUrl);
-        dto.setCategory(category);
+        dto.setVideoUrl(m.videoUrl());
+        dto.setThumbnailUrl(m.thumbnailUrl());
+        dto.setCategory(m.category());
         dto.setVoteCount(app.getVoteCount());
-        dto.setViewCount(viewCount);
+        dto.setViewCount(m.viewCount());
         dto.setVoted(isVoted);
+        dto.setRank(rank);
         return dto;
     }
 
     @Transactional
-    public VoteMutationResultDto castVote(UUID applicationId) {
+    public VoteMutationResultDto castVote(UUID auditionId, UUID applicationId) {
         assertApplicantMayVote();
         UUID voterId = requireUserId();
 
         Application app = applicationRepository.findById(applicationId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "지원을 찾을 수 없습니다."));
+        if (!app.getAuditionId().equals(auditionId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "오디션과 지원이 일치하지 않습니다.");
+        }
         if (!LISTABLE_STATUSES.contains(app.getStatus())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "투표할 수 없는 지원 상태입니다.");
         }
@@ -159,11 +191,14 @@ public class PublicVoteService {
         }
 
         Optional<Vote> previous = voteRepository.findByAuditionIdAndUserId(audition.getId(), voterId);
+        boolean replaced = false;
         if (previous.isPresent()) {
             Vote pv = previous.get();
             if (pv.getApplicationId().equals(app.getId())) {
-                return new VoteMutationResultDto(app.getId().toString());
+                applicationScoringService.recalculateForAudition(auditionId);
+                return new VoteMutationResultDto(app.getId().toString(), false);
             }
+            replaced = true;
             int dec = applicationRepository.adjustVoteCount(pv.getApplicationId(), -1);
             if (dec != 1) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "투표 수 동기화 오류가 발생했습니다. 다시 시도해주세요.");
@@ -182,7 +217,8 @@ public class PublicVoteService {
         row.setUserId(voterId);
         voteRepository.save(row);
 
-        return new VoteMutationResultDto(app.getId().toString());
+        applicationScoringService.recalculateForAudition(auditionId);
+        return new VoteMutationResultDto(app.getId().toString(), replaced);
     }
 
     @Transactional
@@ -193,14 +229,17 @@ public class PublicVoteService {
         Vote vote = voteRepository.findByUserIdAndApplicationId(voterId, applicationId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 투표를 찾을 수 없습니다."));
 
+        UUID auditionId = vote.getAuditionId();
+
         int dec = applicationRepository.adjustVoteCount(vote.getApplicationId(), -1);
         if (dec != 1) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "투표 취소 중 동기화 오류가 발생했습니다.");
         }
         voteRepository.delete(vote);
+
+        applicationScoringService.recalculateForAudition(auditionId);
     }
 
-    /** USER(역할 APPLICANT)만 투표/취소 — AGENCY/ADMIN은 투표 API 사용 불가 */
     private static void assertApplicantMayVote() {
         if (!SecurityUtils.hasRole("APPLICANT")) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "투표는 일반 사용자(지원자) 계정만 가능합니다.");

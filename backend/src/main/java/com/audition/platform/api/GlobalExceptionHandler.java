@@ -108,6 +108,7 @@ public class GlobalExceptionHandler {
         String uri = request.getRequestURI();
         boolean agencyApplicants = uri.contains("/api/auditions/") && uri.contains("/applications");
         boolean auditionVotes = uri.contains("/api/auditions/") && uri.endsWith("/votes");
+        boolean auditionRanking = uri.contains("/api/auditions/") && uri.endsWith("/ranking");
         boolean votesMutations = uri.equals("/api/votes") || uri.startsWith("/api/votes/");
         boolean appStatusPatch = uri.contains("/api/applications/") && uri.endsWith("/status");
         return uri.contains("/api/me/")
@@ -115,6 +116,7 @@ public class GlobalExceptionHandler {
                 || uri.contains("/api/auth/me")
                 || agencyApplicants
                 || auditionVotes
+                || auditionRanking
                 || votesMutations
                 || appStatusPatch;
     }

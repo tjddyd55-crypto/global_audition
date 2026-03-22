@@ -1,27 +1,36 @@
 'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useRouter } from '@/i18n.config'
 import { useCallback, useState } from 'react'
-import { votesApi, type PublicVoteItem } from '@/lib/api/votes'
+import { toast } from 'sonner'
+import { auditionApi, type PublicVoteItem } from '@/lib/api/auditions'
 import { getVideoEmbedSrc } from '@/lib/utils/videoEmbed'
 import { useAuthStore } from '@/lib/auth/authStore'
-import { AUDITION_DETAIL, HERO } from '@/lib/design-tokens'
+import { Link, useRouter } from '@/i18n.config'
+import { HERO } from '@/lib/design-tokens'
+import { CARD_BASE, PAGE_CONTAINER, TEXT_SUB } from '@/lib/ui/specClasses'
 
-type PublicVoteBoardProps = {
-  auditionId: string
-  auditionTitle: string
+function formatCount(n: number) {
+  return new Intl.NumberFormat('ko-KR').format(n)
 }
 
-export function PublicVoteBoard({ auditionId, auditionTitle }: PublicVoteBoardProps) {
+type Props = {
+  auditionId: string
+  auditionTitleFallback: string
+}
+
+export function PublicVoteBoard({ auditionId, auditionTitleFallback }: Props) {
   const queryClient = useQueryClient()
   const router = useRouter()
   const accessToken = useAuthStore((s) => s.accessToken)
+  const [category, setCategory] = useState<string | null>(null)
   const [playItem, setPlayItem] = useState<PublicVoteItem | null>(null)
 
+  const qk = ['audition-votes', auditionId, category ?? '전체'] as const
+
   const votesQuery = useQuery({
-    queryKey: ['audition-votes', auditionId],
-    queryFn: () => votesApi.list(auditionId),
+    queryKey: qk,
+    queryFn: () => auditionApi.listVotes(auditionId, category),
     enabled: !!auditionId,
   })
 
@@ -30,18 +39,27 @@ export function PublicVoteBoard({ auditionId, auditionTitle }: PublicVoteBoardPr
   }, [queryClient, auditionId])
 
   const castMutation = useMutation({
-    mutationFn: (applicationId: string) => votesApi.cast(applicationId),
-    onSuccess: invalidate,
+    mutationFn: ({ applicationId }: { applicationId: string }) =>
+      auditionApi.vote(auditionId, applicationId),
+    onSuccess: (res) => {
+      invalidate()
+      toast.success(res.replaced ? '투표가 변경되었습니다.' : '투표했습니다.')
+    },
+    onError: () => toast.error('투표에 실패했습니다.'),
   })
 
   const removeMutation = useMutation({
-    mutationFn: (applicationId: string) => votesApi.remove(applicationId),
-    onSuccess: invalidate,
+    mutationFn: (applicationId: string) => auditionApi.cancelVote(applicationId),
+    onSuccess: () => {
+      invalidate()
+      toast.success('투표를 취소했습니다.')
+    },
+    onError: () => toast.error('취소에 실패했습니다.'),
   })
 
   const requireAuth = useCallback(() => {
     if (!accessToken) {
-      router.push(`/login?next=${encodeURIComponent(`/auditions/${auditionId}/votes`)}`)
+      router.push(`/login?next=${encodeURIComponent(`/auditions/${auditionId}/vote`)}`)
       return false
     }
     return true
@@ -51,234 +69,174 @@ export function PublicVoteBoard({ auditionId, auditionTitle }: PublicVoteBoardPr
 
   if (votesQuery.isLoading) {
     return (
-      <div style={{ padding: 24, textAlign: 'center', fontSize: AUDITION_DETAIL.bodyFontPx }}>불러오는 중…</div>
+      <div className="flex min-h-[40vh] items-center justify-center text-sm text-gray-600">불러오는 중…</div>
     )
   }
 
   if (votesQuery.isError) {
-    return (
-      <div style={{ padding: 24, textAlign: 'center', color: '#b91c1c' }}>
-        투표 정보를 불러오지 못했습니다.
-      </div>
-    )
+    return <div className="py-12 text-center text-sm text-red-600">투표 정보를 불러오지 못했습니다.</div>
   }
 
-  const payload = votesQuery.data
-  const items = payload?.items ?? []
+  const p = votesQuery.data
+  const audition = p?.audition
+  const summary = p?.summary
+  const items = p?.items ?? []
+  const title = audition?.title || auditionTitleFallback
+  const subCopy = '마음에 드는 지원자에게 투표하고 응원해주세요!'
 
   return (
-    <div>
-      <header style={{ marginBottom: 20 }}>
-        <h1
-          style={{
-            margin: '0 0 8px 0',
-            fontSize: AUDITION_DETAIL.sectionTitlePx,
-            fontWeight: AUDITION_DETAIL.sectionTitleWeight,
-          }}
-        >
-          공개 투표
-        </h1>
-        <p style={{ margin: 0, color: AUDITION_DETAIL.metaMutedColor, fontSize: AUDITION_DETAIL.bodyFontPx }}>
-          {auditionTitle} · 총 {payload?.totalVotes ?? 0}표
-        </p>
-      </header>
+    <div className="min-h-screen bg-gray-50 pb-8">
+      {/* Hero */}
+      <div
+        className="border-b border-violet-100"
+        style={{
+          background: `linear-gradient(135deg, ${HERO.primaryGradientStart}22, ${HERO.primaryGradientEnd}18, #fff)`,
+          paddingTop: 28,
+          paddingBottom: 32,
+        }}
+      >
+        <div className={PAGE_CONTAINER}>
+          <Link href={`/auditions/${auditionId}`} className="text-sm font-medium text-violet-700 no-underline hover:underline">
+            ← 오디션 상세
+          </Link>
+          <h1 className="mt-4 text-2xl font-bold text-gray-900 md:text-3xl">{title}</h1>
+          <p className={`${TEXT_SUB} mt-2 max-w-2xl text-base text-gray-700`}>{subCopy}</p>
+          <div className="mt-4 flex flex-wrap gap-4 text-sm text-gray-600">
+            <span>지원자 {formatCount(audition?.applicantCount ?? summary?.applicantCount ?? 0)}명</span>
+            <span>총 투표 {formatCount(audition?.totalVotes ?? summary?.totalVotes ?? 0)}</span>
+          </div>
+        </div>
+      </div>
 
-      {items.length === 0 ? (
-        <p style={{ color: AUDITION_DETAIL.metaMutedColor }}>투표 가능한 지원자가 없습니다.</p>
-      ) : (
-        <ul
-          style={{
-            listStyle: 'none',
-            margin: 0,
-            padding: 0,
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-            gap: AUDITION_DETAIL.mainGridGapPx,
-          }}
-        >
-          {items.map((item) => (
-            <li
-              key={item.applicationId}
-              style={{
-                border: `1px solid ${AUDITION_DETAIL.cardBorderColor}`,
-                borderRadius: AUDITION_DETAIL.cardRadiusPx,
-                overflow: 'hidden',
-                background: '#fff',
-              }}
-            >
-              <div style={{ position: 'relative', aspectRatio: '16/10', background: '#111' }}>
-                {item.thumbnailUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element -- 외부 썸네일 URL
-                  <img
-                    src={item.thumbnailUrl}
-                    alt=""
-                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                  />
-                ) : (
-                  <div style={{ width: '100%', height: '100%', background: '#222' }} />
-                )}
-                <button
-                  type="button"
-                  onClick={() => setPlayItem(item)}
-                  disabled={!getVideoEmbedSrc(item.videoUrl)}
-                  style={{
-                    position: 'absolute',
-                    inset: 0,
-                    margin: 'auto',
-                    width: 56,
-                    height: 56,
-                    borderRadius: '50%',
-                    border: 'none',
-                    background: 'rgba(0,0,0,0.55)',
-                    color: '#fff',
-                    fontSize: 22,
-                    cursor: getVideoEmbedSrc(item.videoUrl) ? 'pointer' : 'not-allowed',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                  aria-label="영상 재생"
-                >
-                  ▶
-                </button>
-              </div>
-              <div style={{ padding: AUDITION_DETAIL.cardPaddingPx }}>
-                <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 4 }}>{item.userName || '이름 없음'}</div>
-                <div style={{ marginBottom: 12, fontSize: AUDITION_DETAIL.metaMutedPx, color: '#64748b' }}>
-                  {[item.category || null, item.viewCount > 0 ? `조회 ${item.viewCount.toLocaleString()}` : null]
-                    .filter(Boolean)
-                    .join(' · ') || '카테고리 미등록'}
-                </div>
-                {item.description ? (
-                  <p
-                    style={{
-                      margin: '0 0 12px 0',
-                      fontSize: AUDITION_DETAIL.metaMutedPx,
-                      color: AUDITION_DETAIL.metaMutedColor,
-                      lineHeight: 1.45,
-                      maxHeight: 72,
-                      overflow: 'hidden',
-                    }}
-                  >
-                    {item.description}
-                  </p>
-                ) : null}
-                <div
-                  style={{
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    alignItems: 'center',
-                    gap: 8,
-                    marginTop: 8,
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: AUDITION_DETAIL.metaMutedPx,
-                      padding: '6px 10px',
-                      borderRadius: 8,
-                      background: '#fef2f2',
-                      color: '#b91c1c',
-                    }}
-                  >
-                    ❤️ {item.voteCount.toLocaleString()} 투표
-                  </span>
-                  {item.isVoted ? (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (!requireAuth()) return
-                        removeMutation.mutate(item.applicationId)
-                      }}
-                      disabled={removeMutation.isPending}
-                      style={{
-                        padding: '8px 14px',
-                        borderRadius: HERO.buttonRadiusPx,
-                        border: '1px solid #cbd5e1',
-                        background: '#fff',
-                        fontWeight: 600,
-                        cursor: removeMutation.isPending ? 'wait' : 'pointer',
-                      }}
-                    >
-                      취소
-                    </button>
+      <div className={`${PAGE_CONTAINER} mt-6 flex flex-col gap-6`}>
+        {/* 카테고리 탭 */}
+        {audition?.categories && audition.categories.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {audition.categories.map((c) => (
+              <button
+                key={c.name}
+                type="button"
+                onClick={() => setCategory(c.name === '전체' ? null : c.name)}
+                className={
+                  (c.name === '전체' && category === null) || c.name === category
+                    ? 'rounded-full bg-violet-600 px-3 py-1.5 text-sm font-medium text-white'
+                    : 'rounded-full border border-[#E5E7EB] bg-white px-3 py-1.5 text-sm font-medium text-gray-800 hover:bg-gray-50'
+                }
+              >
+                {c.name}
+                {c.name !== '전체' ? ` ${c.count}` : ''}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* 요약 카드 4개 */}
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <SummaryCard label="지원자" value={summary?.applicantCount ?? 0} />
+          <SummaryCard label="총 투표" value={summary?.totalVotes ?? 0} />
+          <SummaryCard label="총 조회수" value={summary?.totalViewCount ?? 0} />
+          <SummaryCard label="내 투표" value={summary?.myVoteCount ?? 0} />
+        </div>
+
+        {/* 그리드 */}
+        {items.length === 0 ? (
+          <p className={`${TEXT_SUB} text-center`}>표시할 지원자가 없습니다.</p>
+        ) : (
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {items.map((item) => (
+              <article key={item.applicationId} className="overflow-hidden rounded-xl border border-[#E5E7EB] bg-white shadow-sm">
+                <div className="relative aspect-[16/10] bg-gray-900">
+                  {item.thumbnailUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={item.thumbnailUrl} alt="" className="h-full w-full object-cover" />
                   ) : (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (!requireAuth()) return
-                        castMutation.mutate(item.applicationId)
-                      }}
-                      disabled={castMutation.isPending}
-                      style={{
-                        padding: '8px 14px',
-                        borderRadius: HERO.buttonRadiusPx,
-                        border: 'none',
-                        background: `linear-gradient(90deg, ${HERO.primaryGradientStart}, ${HERO.primaryGradientEnd})`,
-                        color: '#fff',
-                        fontWeight: 600,
-                        cursor: castMutation.isPending ? 'wait' : 'pointer',
-                      }}
-                    >
-                      투표하기
-                    </button>
+                    <div className="h-full w-full bg-gray-800" />
                   )}
+                  <span className="absolute left-2 top-2 rounded-full bg-black/60 px-2 py-0.5 text-xs font-medium text-white">
+                    👁 {formatCount(item.viewCount)}
+                  </span>
+                  <button
+                    type="button"
+                    disabled={!getVideoEmbedSrc(item.videoUrl)}
+                    onClick={() => setPlayItem(item)}
+                    className="absolute left-1/2 top-1/2 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-2xl text-white hover:bg-black/60 disabled:cursor-not-allowed disabled:opacity-40"
+                    aria-label="재생"
+                  >
+                    ▶
+                  </button>
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/80 to-transparent" />
+                  {item.category ? (
+                    <span className="absolute bottom-3 left-2 rounded-md bg-violet-600/90 px-2 py-0.5 text-xs font-semibold text-white">
+                      {item.category}
+                    </span>
+                  ) : null}
                 </div>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
+                <div className="p-4">
+                  <p className="text-base font-bold text-gray-900">{item.userName || '이름 없음'}</p>
+                  <p className={`${TEXT_SUB} mt-1 line-clamp-2 text-sm`}>
+                    {item.description?.trim() ? item.description : item.userEmail}
+                  </p>
+                  <div
+                    className={`mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-[#E5E7EB] pt-4 ${
+                      item.isVoted ? 'ring-2 ring-violet-400 ring-offset-2 rounded-lg -mx-2 px-2 pb-2' : ''
+                    }`}
+                  >
+                    <span className="text-sm font-medium text-gray-800">
+                      ♥ {formatCount(item.voteCount)} <span className="text-gray-500">투표</span>
+                    </span>
+                    {item.isVoted ? (
+                      <button
+                        type="button"
+                        disabled={removeMutation.isPending}
+                        onClick={() => {
+                          if (!requireAuth()) return
+                          removeMutation.mutate(item.applicationId)
+                        }}
+                        className="rounded-lg border border-[#E5E7EB] bg-white px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50 disabled:opacity-50"
+                      >
+                        투표 취소
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        disabled={castMutation.isPending}
+                        onClick={() => {
+                          if (!requireAuth()) return
+                          castMutation.mutate({ applicationId: item.applicationId })
+                        }}
+                        className="rounded-lg bg-gradient-to-r from-violet-600 to-pink-500 px-4 py-2 text-sm font-semibold text-white hover:opacity-95 disabled:opacity-50"
+                      >
+                        투표하기
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </div>
 
       {playItem && embed ? (
         <div
           role="dialog"
           aria-modal="true"
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 50,
-            background: 'rgba(0,0,0,0.75)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: 16,
-          }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4"
           onClick={() => setPlayItem(null)}
         >
-          <div
-            style={{
-              width: 'min(960px, 100%)',
-              position: 'relative',
-              background: '#000',
-              borderRadius: AUDITION_DETAIL.videoRadiusPx,
-              overflow: 'hidden',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="relative w-full max-w-3xl overflow-hidden rounded-xl bg-black" onClick={(e) => e.stopPropagation()}>
             <button
               type="button"
               onClick={() => setPlayItem(null)}
-              style={{
-                position: 'absolute',
-                top: 8,
-                right: 8,
-                zIndex: 2,
-                border: 'none',
-                borderRadius: 8,
-                padding: '6px 12px',
-                background: 'rgba(255,255,255,0.9)',
-                fontWeight: 600,
-                cursor: 'pointer',
-              }}
+              className="absolute right-2 top-2 z-10 rounded-lg bg-white/90 px-3 py-1 text-sm font-semibold"
             >
               닫기
             </button>
-            <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0 }}>
+            <div className="relative pb-[56.25%]">
               <iframe
                 title="vote-video"
                 src={embed}
-                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none' }}
+                className="absolute inset-0 h-full w-full border-0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
               />
@@ -286,6 +244,15 @@ export function PublicVoteBoard({ auditionId, auditionTitle }: PublicVoteBoardPr
           </div>
         </div>
       ) : null}
+    </div>
+  )
+}
+
+function SummaryCard({ label, value }: { label: string; value: number }) {
+  return (
+    <div className={CARD_BASE + ' text-center'}>
+      <div className="text-xl font-bold text-violet-600">{formatCount(value)}</div>
+      <div className={TEXT_SUB}>{label}</div>
     </div>
   )
 }

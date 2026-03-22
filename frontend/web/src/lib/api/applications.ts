@@ -87,9 +87,9 @@ export const applicationApi = {
   patchApplicationStatus: async (
     applicationId: string,
     status: AgencyApplicationStatus
-  ): Promise<ApplicationResponse> => {
+  ): Promise<{ applicationId: string; status: string }> => {
     const { data } = await apiClient.patch<unknown>(`/applications/${applicationId}/status`, { status })
-    return unwrapData<ApplicationResponse>(data)
+    return unwrapData<{ applicationId: string; status: string }>(data)
   },
 
   getById: async (applicationId: string): Promise<ApplicationDetailWithVideos> => {

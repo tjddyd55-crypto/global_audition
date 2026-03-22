@@ -162,7 +162,7 @@ export default function MyAuditionsPage() {
                       상세보기
                     </Link>
                     <Link
-                      href={`/my/auditions/${audition.id}/applications`}
+                      href={`/auditions/${audition.id}/applications`}
                       className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
                     >
                       지원자 관리

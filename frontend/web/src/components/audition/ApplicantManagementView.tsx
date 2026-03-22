@@ -1,13 +1,10 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import Image from 'next/image'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import {
-  applicationApi,
-  type AgencyApplicantItem,
-  type AgencyApplicationStatus,
-} from '@/lib/api/applications'
+import { toast } from 'sonner'
+import { auditionApi, type ManageApplicantItem, type ManageApplicationsPayload } from '@/lib/api/auditions'
 import {
   BTN_PRIMARY,
   BTN_SECONDARY,
@@ -24,14 +21,16 @@ function formatCount(n: number) {
   return new Intl.NumberFormat('ko-KR').format(n)
 }
 
-function statusBadgeClass(status: AgencyApplicantItem['status']) {
+type AgencyApplicationStatus = 'REVIEWING' | 'ACCEPTED' | 'REJECTED'
+
+function statusBadgeClass(status: ManageApplicantItem['status']) {
   if (status === 'REVIEWING') return 'bg-blue-50 text-blue-700'
   if (status === 'ACCEPTED') return 'bg-green-50 text-green-700'
   if (status === 'REJECTED') return 'bg-red-50 text-red-700'
   return 'bg-white/90 text-gray-900 border border-gray-200'
 }
 
-function statusLabel(status: AgencyApplicantItem['status']) {
+function statusLabel(status: ManageApplicantItem['status']) {
   if (status === 'REVIEWING') return '검토중'
   if (status === 'ACCEPTED') return '합격'
   if (status === 'REJECTED') return '불합격'
@@ -52,74 +51,56 @@ type Props = {
   auditionTitle: string
   backHref: string
   backLabel: string
-  queryKeyPrefix: string
+  queryKeyPrefix?: string
 }
 
-export function ApplicantManagementView({ auditionId, auditionTitle, backHref, backLabel, queryKeyPrefix }: Props) {
+export function ApplicantManagementView({
+  auditionId,
+  auditionTitle,
+  backHref,
+  backLabel,
+  queryKeyPrefix = 'audition-manage',
+}: Props) {
   const queryClient = useQueryClient()
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null)
   const [patchingId, setPatchingId] = useState<string | null>(null)
 
-  const qk = [queryKeyPrefix, auditionId] as const
+  const qk = [queryKeyPrefix, auditionId, categoryFilter ?? '전체'] as const
 
-  const { data: items = [], isLoading, error } = useQuery({
+  const { data: payload, isLoading, error } = useQuery({
     queryKey: qk,
-    queryFn: () => applicationApi.listAgencyApplicants(auditionId),
+    queryFn: () => auditionApi.listManageApplications(auditionId, categoryFilter),
     enabled: !!auditionId,
   })
 
-  const categories = useMemo(() => {
-    const set = new Set<string>()
-    for (const it of items) {
-      const c = (it.category ?? '').trim()
-      if (c) set.add(c)
-    }
-    return Array.from(set).sort()
-  }, [items])
+  const stats = payload?.stats ?? {
+    total: 0,
+    submitted: 0,
+    reviewing: 0,
+    accepted: 0,
+    rejected: 0,
+  }
 
-  const categoryCounts = useMemo(() => {
-    const m = new Map<string, number>()
-    for (const it of items) {
-      const c = (it.category ?? '').trim()
-      if (!c) continue
-      m.set(c, (m.get(c) ?? 0) + 1)
-    }
-    return m
-  }, [items])
-
-  const filtered = useMemo(() => {
-    if (!categoryFilter) return items
-    return items.filter((it) => (it.category ?? '').trim() === categoryFilter)
-  }, [items, categoryFilter])
-
-  const stats = useMemo(() => {
-    let submitted = 0
-    let reviewing = 0
-    let accepted = 0
-    let rejected = 0
-    for (const it of items) {
-      if (it.status === 'SUBMITTED') submitted += 1
-      else if (it.status === 'REVIEWING') reviewing += 1
-      else if (it.status === 'ACCEPTED') accepted += 1
-      else if (it.status === 'REJECTED') rejected += 1
-    }
-    return { total: items.length, submitted, reviewing, accepted, rejected }
-  }, [items])
+  const categories = payload?.categories ?? []
+  const items = payload?.items ?? []
 
   const patchMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: AgencyApplicationStatus }) =>
-      applicationApi.patchApplicationStatus(id, status),
+      auditionApi.updateApplicationStatus(id, status),
     onMutate: async ({ id, status }) => {
       setPatchingId(id)
       await queryClient.cancelQueries({ queryKey: qk })
-      const previous = queryClient.getQueryData<AgencyApplicantItem[]>(qk)
-      queryClient.setQueryData<AgencyApplicantItem[]>(qk, (old) => {
+      const previous = queryClient.getQueryData<ManageApplicationsPayload>(qk)
+      queryClient.setQueryData<ManageApplicationsPayload>(qk, (old) => {
         if (!old) return old
-        return old.map((it) =>
-          it.applicationId === id
-            ? { ...it, status: status as AgencyApplicantItem['status'] }
-            : it
-        )
+        const nextStatus =
+          status === 'REVIEWING' ? ('REVIEWING' as const) : status === 'ACCEPTED' ? ('ACCEPTED' as const) : ('REJECTED' as const)
+        return {
+          ...old,
+          items: old.items.map((it) =>
+            it.applicationId === id ? { ...it, status: nextStatus } : it
+          ),
+        }
       })
       return { previous }
     },
@@ -127,10 +108,14 @@ export function ApplicantManagementView({ auditionId, auditionTitle, backHref, b
       if (context?.previous !== undefined) {
         queryClient.setQueryData(qk, context.previous)
       }
+      toast.error('상태 변경에 실패했습니다.')
+    },
+    onSuccess: () => {
+      toast.success('저장되었습니다.')
     },
     onSettled: () => {
       setPatchingId(null)
-      queryClient.invalidateQueries({ queryKey: qk })
+      queryClient.invalidateQueries({ queryKey: [queryKeyPrefix, auditionId] })
     },
   })
 
@@ -138,7 +123,9 @@ export function ApplicantManagementView({ auditionId, auditionTitle, backHref, b
     patchMutation.mutate({ id, status })
   }
 
-  const terminal = (s: AgencyApplicantItem['status']) => s === 'ACCEPTED' || s === 'REJECTED'
+  const terminal = (s: ManageApplicantItem['status']) => s === 'ACCEPTED' || s === 'REJECTED'
+
+  const titleFromApi = payload?.audition?.title
 
   if (isLoading) {
     return (
@@ -167,7 +154,7 @@ export function ApplicantManagementView({ auditionId, auditionTitle, backHref, b
             {backLabel}
           </Link>
           <h1 className={`${TITLE_PAGE} mt-3 text-2xl font-bold text-gray-900`}>지원자 관리</h1>
-          <p className={`${TEXT_SUB} mt-1 text-base text-gray-700`}>{auditionTitle}</p>
+          <p className={`${TEXT_SUB} mt-1 text-base text-gray-700`}>{titleFromApi || auditionTitle}</p>
         </div>
       </div>
 
@@ -186,30 +173,28 @@ export function ApplicantManagementView({ auditionId, auditionTitle, backHref, b
               <span aria-hidden>🔽</span> 카테고리 필터
             </p>
             <div className="flex flex-wrap gap-2">
-              <FilterChip
-                active={categoryFilter === null}
-                onClick={() => setCategoryFilter(null)}
-                label="전체"
-              />
               {categories.map((c) => (
                 <FilterChip
-                  key={c}
-                  active={categoryFilter === c}
-                  onClick={() => setCategoryFilter(c)}
-                  label={`${c} (${categoryCounts.get(c) ?? 0})`}
+                  key={c.name}
+                  active={
+                    (c.name === '전체' && categoryFilter === null) ||
+                    (c.name !== '전체' && categoryFilter === c.name)
+                  }
+                  onClick={() => setCategoryFilter(c.name === '전체' ? null : c.name)}
+                  label={`${c.name}${c.name === '전체' ? '' : ` (${c.count})`}`}
                 />
               ))}
             </div>
           </div>
         )}
 
-        {filtered.length === 0 ? (
+        {items.length === 0 ? (
           <div className={CARD_BASE}>
             <p className={`${TEXT_SUB} text-center`}>표시할 지원자가 없습니다.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filtered.map((app) => (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {items.map((app) => (
               <div key={app.applicationId} className={`${CARD_MEDIA_SHELL} flex flex-col`}>
                 <div className="relative aspect-[9/16] w-full overflow-hidden bg-gray-200">
                   {app.thumbnailUrl ? (
@@ -232,6 +217,9 @@ export function ApplicantManagementView({ auditionId, auditionTitle, backHref, b
                     </span>
                     <span className="rounded-full bg-black/55 px-2 py-0.5 text-xs font-medium text-white">
                       ♥ {formatCount(app.likeCount)}
+                    </span>
+                    <span className="rounded-full bg-black/55 px-2 py-0.5 text-xs font-medium text-white">
+                      투표 {formatCount(app.voteCount)}
                     </span>
                   </div>
 
@@ -263,6 +251,11 @@ export function ApplicantManagementView({ auditionId, auditionTitle, backHref, b
                 </div>
 
                 <div className="space-y-3 border-t border-[#E5E7EB] p-4">
+                  {app.recommendedRank != null && app.recommendedScore != null ? (
+                    <p className="text-xs text-gray-500">
+                      추천 {app.recommendedRank}위 · {app.recommendedScore.toFixed(1)}점
+                    </p>
+                  ) : null}
                   <div>
                     <p className="text-sm font-semibold text-gray-900">{app.userName || '지원자'}</p>
                     <p className={`${TEXT_SUB} truncate`}>{app.userEmail}</p>
@@ -270,36 +263,32 @@ export function ApplicantManagementView({ auditionId, auditionTitle, backHref, b
 
                   {!terminal(app.status) && (
                     <div className="flex flex-wrap gap-2">
-                      {app.status === 'SUBMITTED' ? (
-                        <button
-                          type="button"
-                          disabled={patchingId === app.applicationId}
-                          className={`${BTN_SECONDARY} !w-auto flex-1 min-w-[4rem] justify-center text-xs`}
-                          onClick={() => runPatch(app.applicationId, 'REVIEWING')}
-                        >
-                          검토
-                        </button>
-                      ) : null}
-                      {app.status === 'SUBMITTED' || app.status === 'REVIEWING' ? (
-                        <>
-                          <button
-                            type="button"
-                            disabled={patchingId === app.applicationId}
-                            className={`${BTN_PRIMARY} !w-auto flex-1 min-w-[4rem] justify-center bg-emerald-600 text-xs hover:bg-emerald-700`}
-                            onClick={() => runPatch(app.applicationId, 'ACCEPTED')}
-                          >
-                            합격
-                          </button>
-                          <button
-                            type="button"
-                            disabled={patchingId === app.applicationId}
-                            className="shrink-0 flex-1 min-w-[4rem] rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
-                            onClick={() => runPatch(app.applicationId, 'REJECTED')}
-                          >
-                            불합격
-                          </button>
-                        </>
-                      ) : null}
+                      <button
+                        type="button"
+                        disabled={patchingId === app.applicationId}
+                        className={`${BTN_SECONDARY} !w-auto flex-1 min-w-[4rem] justify-center text-xs ${
+                          app.status === 'REVIEWING' ? 'ring-2 ring-violet-500' : ''
+                        }`}
+                        onClick={() => runPatch(app.applicationId, 'REVIEWING')}
+                      >
+                        검토
+                      </button>
+                      <button
+                        type="button"
+                        disabled={patchingId === app.applicationId}
+                        className={`${BTN_PRIMARY} !w-auto flex-1 min-w-[4rem] justify-center bg-emerald-600 text-xs hover:bg-emerald-700`}
+                        onClick={() => runPatch(app.applicationId, 'ACCEPTED')}
+                      >
+                        합격
+                      </button>
+                      <button
+                        type="button"
+                        disabled={patchingId === app.applicationId}
+                        className="shrink-0 flex-1 min-w-[4rem] rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                        onClick={() => runPatch(app.applicationId, 'REJECTED')}
+                      >
+                        불합격
+                      </button>
                     </div>
                   )}
                   {terminal(app.status) && <p className={`${TEXT_SUB} text-center text-xs`}>처리가 완료되었습니다.</p>}
