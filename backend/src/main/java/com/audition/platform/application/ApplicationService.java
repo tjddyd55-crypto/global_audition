@@ -10,7 +10,7 @@ import com.audition.platform.api.dto.ManageApplicationsPageDataDto;
 import com.audition.platform.api.dto.ManageAuditionHeaderDto;
 import com.audition.platform.application.audition.ApplicantCardMetricsLoader;
 import com.audition.platform.application.me.MeApiMapping;
-import com.audition.platform.application.ranking.ApplicationScoringService;
+import com.audition.platform.application.ranking.ApplicationRankingService;
 import com.audition.platform.domain.audition.Application;
 import com.audition.platform.domain.audition.ApplicationRepository;
 import com.audition.platform.domain.audition.Audition;
@@ -45,7 +45,7 @@ public class ApplicationService {
     private final UserRepository userRepository;
     private final ApplicantCardMetricsLoader metricsLoader;
     private final ApplicationScoreRepository applicationScoreRepository;
-    private final ApplicationScoringService applicationScoringService;
+    private final ApplicationRankingService applicationRankingService;
 
     public ApplicationService(
             ApplicationRepository applicationRepository,
@@ -53,13 +53,13 @@ public class ApplicationService {
             UserRepository userRepository,
             ApplicantCardMetricsLoader metricsLoader,
             ApplicationScoreRepository applicationScoreRepository,
-            ApplicationScoringService applicationScoringService) {
+            ApplicationRankingService applicationRankingService) {
         this.applicationRepository = applicationRepository;
         this.auditionRepository = auditionRepository;
         this.userRepository = userRepository;
         this.metricsLoader = metricsLoader;
         this.applicationScoreRepository = applicationScoreRepository;
-        this.applicationScoringService = applicationScoringService;
+        this.applicationRankingService = applicationRankingService;
     }
 
     private static ApplicationResponse toResponse(Application app, User applicant) {
@@ -122,7 +122,7 @@ public class ApplicationService {
 
         List<Application> all = applicationRepository.findByAuditionIdOrderByCreatedAtDesc(auditionId);
         if (applicationScoreRepository.countByAuditionId(auditionId) == 0 && !all.isEmpty()) {
-            applicationScoringService.recalculateForAudition(auditionId);
+            applicationRankingService.recalculateScores(auditionId);
         }
         Map<UUID, ApplicationScore> scoreByApp = applicationScoreRepository.findByAuditionId(auditionId).stream()
                 .collect(Collectors.toMap(ApplicationScore::getApplicationId, Function.identity(), (a, b) -> a));
@@ -210,6 +210,7 @@ public class ApplicationService {
         if (score != null) {
             dto.setRecommendedScore(score.getWeightedScore());
             dto.setRecommendedRank(score.getRecommendedRank());
+            dto.setRecommended(score.isRecommended());
         }
         return dto;
     }
@@ -245,7 +246,7 @@ public class ApplicationService {
         app.setStatus(dbTarget);
         app.setUpdatedAt(java.time.Instant.now());
         app = applicationRepository.save(app);
-        applicationScoringService.recalculateForAudition(app.getAuditionId());
+        applicationRankingService.recalculateScores(app.getAuditionId());
         return new ApplicationStatusPatchDataDto(
                 app.getId().toString(),
                 MeApiMapping.applicationStatusToApi(app.getStatus())
@@ -366,7 +367,7 @@ public class ApplicationService {
         app.setStatus(newStatus);
         app.setUpdatedAt(java.time.Instant.now());
         app = applicationRepository.save(app);
-        applicationScoringService.recalculateForAudition(app.getAuditionId());
+        applicationRankingService.recalculateScores(app.getAuditionId());
         User applicant = userRepository.findById(app.getApplicantId()).orElse(null);
         return toResponse(app, applicant);
     }

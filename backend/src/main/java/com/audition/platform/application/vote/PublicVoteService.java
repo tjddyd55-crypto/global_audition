@@ -7,7 +7,8 @@ import com.audition.platform.api.dto.VoteMutationResultDto;
 import com.audition.platform.api.dto.VotePageAuditionDto;
 import com.audition.platform.api.dto.VotePageSummaryDto;
 import com.audition.platform.application.audition.ApplicantCardMetricsLoader;
-import com.audition.platform.application.ranking.ApplicationScoringService;
+import com.audition.platform.application.me.MeApiMapping;
+import com.audition.platform.application.ranking.ApplicationRankingService;
 import com.audition.platform.domain.audition.Application;
 import com.audition.platform.domain.audition.ApplicationRepository;
 import com.audition.platform.domain.audition.Audition;
@@ -45,7 +46,7 @@ public class PublicVoteService {
     private final ApplicantCardMetricsLoader metricsLoader;
     private final VoteRepository voteRepository;
     private final ApplicationScoreRepository applicationScoreRepository;
-    private final ApplicationScoringService applicationScoringService;
+    private final ApplicationRankingService applicationRankingService;
 
     public PublicVoteService(
             AuditionRepository auditionRepository,
@@ -54,14 +55,14 @@ public class PublicVoteService {
             ApplicantCardMetricsLoader metricsLoader,
             VoteRepository voteRepository,
             ApplicationScoreRepository applicationScoreRepository,
-            ApplicationScoringService applicationScoringService) {
+            ApplicationRankingService applicationRankingService) {
         this.auditionRepository = auditionRepository;
         this.applicationRepository = applicationRepository;
         this.userRepository = userRepository;
         this.metricsLoader = metricsLoader;
         this.voteRepository = voteRepository;
         this.applicationScoreRepository = applicationScoreRepository;
-        this.applicationScoringService = applicationScoringService;
+        this.applicationRankingService = applicationRankingService;
     }
 
     public PublicVotePageDataDto getPublicVotes(UUID auditionId, String categoryFilter) {
@@ -121,7 +122,7 @@ public class PublicVoteService {
             return;
         }
         if (applicationScoreRepository.countByAuditionId(auditionId) == 0) {
-            applicationScoringService.recalculateForAudition(auditionId);
+            applicationRankingService.recalculateScores(auditionId);
         }
     }
 
@@ -167,6 +168,12 @@ public class PublicVoteService {
         dto.setViewCount(m.viewCount());
         dto.setVoted(isVoted);
         dto.setRank(rank);
+        dto.setStatus(MeApiMapping.applicationStatusToApi(app.getStatus()));
+        if (score != null) {
+            dto.setRecommendedScore(score.getWeightedScore());
+            dto.setRecommendedRank(score.getRecommendedRank());
+            dto.setRecommended(score.isRecommended());
+        }
         return dto;
     }
 
@@ -195,7 +202,7 @@ public class PublicVoteService {
         if (previous.isPresent()) {
             Vote pv = previous.get();
             if (pv.getApplicationId().equals(app.getId())) {
-                applicationScoringService.recalculateForAudition(auditionId);
+                applicationRankingService.recalculateScores(auditionId);
                 return new VoteMutationResultDto(app.getId().toString(), false);
             }
             replaced = true;
@@ -217,7 +224,7 @@ public class PublicVoteService {
         row.setUserId(voterId);
         voteRepository.save(row);
 
-        applicationScoringService.recalculateForAudition(auditionId);
+        applicationRankingService.recalculateScores(auditionId);
         return new VoteMutationResultDto(app.getId().toString(), replaced);
     }
 
@@ -237,7 +244,7 @@ public class PublicVoteService {
         }
         voteRepository.delete(vote);
 
-        applicationScoringService.recalculateForAudition(auditionId);
+        applicationRankingService.recalculateScores(auditionId);
     }
 
     private static void assertApplicantMayVote() {

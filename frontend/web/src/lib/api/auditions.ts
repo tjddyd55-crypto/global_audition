@@ -24,6 +24,10 @@ export type PublicVoteItem = {
   viewCount: number
   isVoted: boolean
   rank: number
+  status?: string
+  recommendedScore?: number | null
+  recommendedRank?: number | null
+  recommended?: boolean | null
 }
 
 export type PublicVotesPagePayload = {
@@ -65,6 +69,7 @@ export type ManageApplicantItem = {
   voteCount: number
   recommendedScore?: number | null
   recommendedRank?: number | null
+  recommended?: boolean | null
   status: 'SUBMITTED' | 'REVIEWING' | 'ACCEPTED' | 'REJECTED'
 }
 
@@ -88,6 +93,8 @@ export type RankingItem = {
 }
 
 function parsePublicVoteItem(raw: Record<string, unknown>): PublicVoteItem {
+  const recScore = raw.recommendedScore
+  const recRank = raw.recommendedRank
   return {
     applicationId: String(raw.applicationId ?? ''),
     userName: String(raw.userName ?? ''),
@@ -100,6 +107,10 @@ function parsePublicVoteItem(raw: Record<string, unknown>): PublicVoteItem {
     viewCount: Number(raw.viewCount ?? 0) || 0,
     isVoted: Boolean(raw.isVoted),
     rank: Number(raw.rank ?? 0) || 0,
+    status: raw.status != null ? String(raw.status) : undefined,
+    recommendedScore: recScore != null ? Number(recScore) : undefined,
+    recommendedRank: recRank != null ? Number(recRank) : undefined,
+    recommended: raw.recommended != null ? Boolean(raw.recommended) : undefined,
   }
 }
 
@@ -252,6 +263,7 @@ export const auditionApi = {
           voteCount: Number(r.voteCount ?? 0) || 0,
           recommendedScore: r.recommendedScore != null ? Number(r.recommendedScore) : null,
           recommendedRank: r.recommendedRank != null ? Number(r.recommendedRank) : null,
+          recommended: r.recommended != null ? Boolean(r.recommended) : null,
           status: String(r.status ?? 'SUBMITTED') as ManageApplicantItem['status'],
         }
       }),

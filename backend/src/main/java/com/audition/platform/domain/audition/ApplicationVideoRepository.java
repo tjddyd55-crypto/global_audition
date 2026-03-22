@@ -12,5 +12,8 @@ public interface ApplicationVideoRepository extends JpaRepository<ApplicationVid
 
     Optional<ApplicationVideo> findFirstByApplicationIdOrderByCreatedAtAsc(UUID applicationId);
 
+    /** 대표 영상 MVP: 가장 최근 업로드 1건 */
+    Optional<ApplicationVideo> findFirstByApplicationIdOrderByCreatedAtDesc(UUID applicationId);
+
     Optional<ApplicationVideo> findByIdAndApplicationId(UUID id, UUID applicationId);
 }

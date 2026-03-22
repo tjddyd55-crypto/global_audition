@@ -29,7 +29,7 @@ public class AuditionRankingQueryService {
     private final ApplicationRepository applicationRepository;
     private final ApplicationScoreRepository applicationScoreRepository;
     private final UserRepository userRepository;
-    private final ApplicationScoringService applicationScoringService;
+    private final ApplicationRankingService applicationRankingService;
     private final ApplicantCardMetricsLoader metricsLoader;
 
     public AuditionRankingQueryService(
@@ -37,13 +37,13 @@ public class AuditionRankingQueryService {
             ApplicationRepository applicationRepository,
             ApplicationScoreRepository applicationScoreRepository,
             UserRepository userRepository,
-            ApplicationScoringService applicationScoringService,
+            ApplicationRankingService applicationRankingService,
             ApplicantCardMetricsLoader metricsLoader) {
         this.auditionRepository = auditionRepository;
         this.applicationRepository = applicationRepository;
         this.applicationScoreRepository = applicationScoreRepository;
         this.userRepository = userRepository;
-        this.applicationScoringService = applicationScoringService;
+        this.applicationRankingService = applicationRankingService;
         this.metricsLoader = metricsLoader;
     }
 
@@ -53,7 +53,7 @@ public class AuditionRankingQueryService {
         assertAgencyOrAdminCanManageAudition(audition);
 
         if (applicationScoreRepository.countByAuditionId(auditionId) == 0) {
-            applicationScoringService.recalculateForAudition(auditionId);
+            applicationRankingService.recalculateScores(auditionId);
         }
 
         List<ApplicationScore> scores = new ArrayList<>(applicationScoreRepository.findByAuditionId(auditionId));

@@ -27,7 +27,8 @@ public class ApplicantCardMetricsLoader {
     }
 
     public ApplicantCardMetrics resolve(Application app) {
-        Optional<ApplicationVideo> avOpt = applicationVideoRepository.findFirstByApplicationIdOrderByCreatedAtAsc(app.getId());
+        Optional<ApplicationVideo> avOpt =
+                applicationVideoRepository.findFirstByApplicationIdOrderByCreatedAtDesc(app.getId());
         String videoUrl = "";
         String thumbnailUrl = null;
         String category = "";

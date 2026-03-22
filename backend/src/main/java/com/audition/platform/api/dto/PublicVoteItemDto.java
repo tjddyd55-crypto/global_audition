@@ -17,6 +17,11 @@ public class PublicVoteItemDto {
     private long voteCount;
     private long viewCount;
     private boolean voted;
+    /** API 심사 상태 (SUBMITTED | REVIEWING | …) */
+    private String status;
+    private Double recommendedScore;
+    private Integer recommendedRank;
+    private Boolean recommended;
 
     public String getApplicationId() {
         return applicationId;
@@ -105,5 +110,37 @@ public class PublicVoteItemDto {
 
     public void setVoted(boolean voted) {
         this.voted = voted;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public Double getRecommendedScore() {
+        return recommendedScore;
+    }
+
+    public void setRecommendedScore(Double recommendedScore) {
+        this.recommendedScore = recommendedScore;
+    }
+
+    public Integer getRecommendedRank() {
+        return recommendedRank;
+    }
+
+    public void setRecommendedRank(Integer recommendedRank) {
+        this.recommendedRank = recommendedRank;
+    }
+
+    public Boolean getRecommended() {
+        return recommended;
+    }
+
+    public void setRecommended(Boolean recommended) {
+        this.recommended = recommended;
     }
 }

@@ -1,3 +1,7 @@
+audition:
+  # 기동 시 투표/랭킹 관련 DB 스키마 점검 (PostgreSQL). 비활성: voting-db-verify: false
+  voting-db-verify: true
+
 app:
   version: 1.0.0-SNAPSHOT
   buildId: ""

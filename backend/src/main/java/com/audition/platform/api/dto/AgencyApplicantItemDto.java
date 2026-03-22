@@ -18,6 +18,7 @@ public class AgencyApplicantItemDto {
     private Integer recommendedRank;
     /** SUBMITTED | REVIEWING | ACCEPTED | REJECTED */
     private String status;
+    private Boolean recommended;
 
     public String getApplicationId() {
         return applicationId;
@@ -113,5 +114,13 @@ public class AgencyApplicantItemDto {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public Boolean getRecommended() {
+        return recommended;
+    }
+
+    public void setRecommended(Boolean recommended) {
+        this.recommended = recommended;
     }
 }
