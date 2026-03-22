@@ -207,10 +207,17 @@ public class ApplicationService {
         dto.setLikeCount(m.likeCount());
         dto.setVoteCount(app.getVoteCount());
         dto.setStatus(MeApiMapping.applicationStatusToApi(app.getStatus()));
+        dto.setVoted(false);
         if (score != null) {
             dto.setRecommendedScore(score.getWeightedScore());
             dto.setRecommendedRank(score.getRecommendedRank());
+            dto.setRank(score.getRecommendedRank());
             dto.setRecommended(score.isRecommended());
+        } else {
+            dto.setRecommendedScore(0.0);
+            dto.setRecommendedRank(0);
+            dto.setRank(0);
+            dto.setRecommended(false);
         }
         return dto;
     }

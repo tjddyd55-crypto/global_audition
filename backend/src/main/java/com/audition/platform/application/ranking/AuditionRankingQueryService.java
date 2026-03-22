@@ -77,6 +77,7 @@ public class AuditionRankingQueryService {
             dto.setScore(sc.getWeightedScore());
             dto.setRank(sc.getRecommendedRank() != null ? sc.getRecommendedRank() : 0);
             dto.setRecommended(sc.isRecommended());
+            dto.setVoted(false);
             items.add(dto);
         }
 

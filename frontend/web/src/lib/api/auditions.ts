@@ -69,7 +69,9 @@ export type ManageApplicantItem = {
   voteCount: number
   recommendedScore?: number | null
   recommendedRank?: number | null
+  rank?: number | null
   recommended?: boolean | null
+  isVoted?: boolean
   status: 'SUBMITTED' | 'REVIEWING' | 'ACCEPTED' | 'REJECTED'
 }
 
@@ -88,8 +90,10 @@ export type RankingItem = {
   viewCount: number
   status: string
   score: number
+  recommendedScore: number
   rank: number
   recommended: boolean
+  isVoted: boolean
 }
 
 function parsePublicVoteItem(raw: Record<string, unknown>): PublicVoteItem {
@@ -263,7 +267,9 @@ export const auditionApi = {
           voteCount: Number(r.voteCount ?? 0) || 0,
           recommendedScore: r.recommendedScore != null ? Number(r.recommendedScore) : null,
           recommendedRank: r.recommendedRank != null ? Number(r.recommendedRank) : null,
+          rank: r.rank != null ? Number(r.rank) : null,
           recommended: r.recommended != null ? Boolean(r.recommended) : null,
+          isVoted: r.isVoted != null ? Boolean(r.isVoted) : false,
           status: String(r.status ?? 'SUBMITTED') as ManageApplicantItem['status'],
         }
       }),
@@ -283,6 +289,7 @@ export const auditionApi = {
     const body = unwrapData<{ items: unknown[] }>(data)
     return (body.items ?? []).map((x) => {
       const r = x as Record<string, unknown>
+      const scoreVal = Number(r.score ?? r.recommendedScore ?? 0) || 0
       return {
         applicationId: String(r.applicationId ?? ''),
         userName: String(r.userName ?? ''),
@@ -290,9 +297,11 @@ export const auditionApi = {
         voteCount: Number(r.voteCount ?? 0) || 0,
         viewCount: Number(r.viewCount ?? 0) || 0,
         status: String(r.status ?? ''),
-        score: Number(r.score ?? 0) || 0,
+        score: scoreVal,
+        recommendedScore: scoreVal,
         rank: Number(r.rank ?? 0) || 0,
         recommended: Boolean(r.recommended),
+        isVoted: Boolean(r.isVoted),
       }
     })
   },

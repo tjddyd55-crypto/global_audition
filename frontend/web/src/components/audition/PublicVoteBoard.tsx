@@ -66,6 +66,7 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback }: Props) {
   }, [accessToken, router, auditionId])
 
   const embed = playItem ? getVideoEmbedSrc(playItem.videoUrl) : null
+  const voteMutationBusy = castMutation.isPending || removeMutation.isPending
 
   if (votesQuery.isLoading) {
     return (
@@ -199,7 +200,7 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback }: Props) {
                     ) : (
                       <button
                         type="button"
-                        disabled={castMutation.isPending}
+                        disabled={voteMutationBusy}
                         onClick={() => {
                           if (!requireAuth()) return
                           castMutation.mutate({ applicationId: item.applicationId })

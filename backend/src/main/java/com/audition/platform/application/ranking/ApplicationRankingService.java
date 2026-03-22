@@ -16,9 +16,10 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * 오디션 단위 랭킹·추천 점수 재계산.
+ * 오디션 단위 랭킹·추천 점수 재계산 (MVP LOCK).
  * <p>
- * score = voteNorm*0.55 + viewNorm*0.20 + statusWeight*0.20 + (like&gt;0 ? 5 : 0)
+ * voteScore = vote/maxVote*100, viewScore = view/maxView*100, likeScore = like/maxLike*100<br>
+ * score = voteScore*0.55 + viewScore*0.20 + statusWeight*0.20 + likeScore*0.05
  * </p>
  */
 @Service
@@ -29,7 +30,7 @@ public class ApplicationRankingService {
     private static final double W_VOTE = 0.55;
     private static final double W_VIEW = 0.20;
     private static final double W_STATUS = 0.20;
-    private static final double LIKE_BONUS = 5.0;
+    private static final double W_LIKE = 0.05;
 
     private final ApplicationRepository applicationRepository;
     private final ApplicationScoreRepository applicationScoreRepository;
@@ -62,13 +63,14 @@ public class ApplicationRankingService {
 
         long maxVote = rows.stream().mapToLong(r -> r.voteCount).max().orElse(0);
         long maxView = rows.stream().mapToLong(r -> r.metrics.viewCount()).max().orElse(0);
+        long maxLike = rows.stream().mapToLong(r -> r.metrics.likeCount()).max().orElse(0);
 
         for (ScoreRow r : rows) {
             double voteScore = normalize(r.voteCount, maxVote);
             double viewScore = normalize(r.metrics.viewCount(), maxView);
+            double likeScore = normalize(r.metrics.likeCount(), maxLike);
             double statusW = statusWeight(r.app.getStatus());
-            double likePart = r.metrics.likeCount() > 0 ? LIKE_BONUS : 0;
-            double score = voteScore * W_VOTE + viewScore * W_VIEW + statusW * W_STATUS + likePart;
+            double score = voteScore * W_VOTE + viewScore * W_VIEW + statusW * W_STATUS + likeScore * W_LIKE;
             r.score = round1(score);
         }
 

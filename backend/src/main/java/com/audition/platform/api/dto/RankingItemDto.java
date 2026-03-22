@@ -17,6 +17,9 @@ public class RankingItemDto {
 
     private boolean recommended;
 
+    /** 랭킹 API에서도 투표 카드와 동일 필드명 제공 */
+    private boolean voted;
+
     public String getApplicationId() {
         return applicationId;
     }
@@ -88,5 +91,14 @@ public class RankingItemDto {
 
     public void setRecommended(boolean recommended) {
         this.recommended = recommended;
+    }
+
+    @JsonProperty("isVoted")
+    public boolean isVoted() {
+        return voted;
+    }
+
+    public void setVoted(boolean voted) {
+        this.voted = voted;
     }
 }

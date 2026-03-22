@@ -1,7 +1,9 @@
 package com.audition.platform.api.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
- * 기획사 지원자 관리 카드 (GET /api/auditions/{id}/applications)
+ * 기획사 지원자 관리 카드 (GET /api/auditions/{id}/applications/manage)
  */
 public class AgencyApplicantItemDto {
 
@@ -16,9 +18,22 @@ public class AgencyApplicantItemDto {
     private long voteCount;
     private Double recommendedScore;
     private Integer recommendedRank;
+    /** 랭킹 순위 (recommendedRank 와 동일 스냅샷) */
+    private Integer rank;
     /** SUBMITTED | REVIEWING | ACCEPTED | REJECTED */
     private String status;
     private Boolean recommended;
+    /** 관리 화면에서는 항상 false (투표 카드와 필드 스키마 통일) */
+    private boolean voted;
+
+    @JsonProperty("isVoted")
+    public boolean isVoted() {
+        return voted;
+    }
+
+    public void setVoted(boolean voted) {
+        this.voted = voted;
+    }
 
     public String getApplicationId() {
         return applicationId;
@@ -106,6 +121,14 @@ public class AgencyApplicantItemDto {
 
     public void setRecommendedRank(Integer recommendedRank) {
         this.recommendedRank = recommendedRank;
+    }
+
+    public Integer getRank() {
+        return rank;
+    }
+
+    public void setRank(Integer rank) {
+        this.rank = rank;
     }
 
     public String getStatus() {

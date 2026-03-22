@@ -173,13 +173,17 @@ public class PublicVoteService {
             dto.setRecommendedScore(score.getWeightedScore());
             dto.setRecommendedRank(score.getRecommendedRank());
             dto.setRecommended(score.isRecommended());
+        } else {
+            dto.setRecommendedScore(0.0);
+            dto.setRecommendedRank(0);
+            dto.setRecommended(false);
         }
         return dto;
     }
 
     @Transactional
     public VoteMutationResultDto castVote(UUID auditionId, UUID applicationId) {
-        assertApplicantMayVote();
+        assertAuthenticatedMayVote();
         UUID voterId = requireUserId();
 
         Application app = applicationRepository.findById(applicationId)
@@ -202,7 +206,6 @@ public class PublicVoteService {
         if (previous.isPresent()) {
             Vote pv = previous.get();
             if (pv.getApplicationId().equals(app.getId())) {
-                applicationRankingService.recalculateScores(auditionId);
                 return new VoteMutationResultDto(app.getId().toString(), false);
             }
             replaced = true;
@@ -230,7 +233,7 @@ public class PublicVoteService {
 
     @Transactional
     public void removeVote(UUID applicationId) {
-        assertApplicantMayVote();
+        assertAuthenticatedMayVote();
         UUID voterId = requireUserId();
 
         Vote vote = voteRepository.findByUserIdAndApplicationId(voterId, applicationId)
@@ -247,9 +250,10 @@ public class PublicVoteService {
         applicationRankingService.recalculateScores(auditionId);
     }
 
-    private static void assertApplicantMayVote() {
-        if (!SecurityUtils.hasRole("APPLICANT")) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "투표는 일반 사용자(지원자) 계정만 가능합니다.");
+    /** MVP: 로그인한 사용자는 투표 가능 (역할은 백엔드에서만 판단, 프론트 추정 금지). */
+    private static void assertAuthenticatedMayVote() {
+        if (SecurityUtils.getCurrentUserId() == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
         }
     }
 
