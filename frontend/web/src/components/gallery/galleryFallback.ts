@@ -1,7 +1,7 @@
 import type { SyntheticEvent } from 'react'
 
 /**
- * 갤러리·모달·썸네일 깨진 URL 대체용 단일 정적 자산.
+ * 갤러리·모달 등 이미지 로드 실패 시 대체용 단일 정적 자산.
  * (예시 `/images/placeholder.png` 대신 리포에 포함된 SVG 사용 — PNG 추가 시 이 상수만 교체)
  */
 export const GALLERY_IMAGE_FALLBACK_SRC = '/audition-cover-placeholder.svg'

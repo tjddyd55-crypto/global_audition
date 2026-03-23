@@ -29,7 +29,7 @@ type AuditionDetailMediaProps = {
 }
 
 /**
- * 상세 본문: 대표 + 갤러리 단일 슬라이더(16:9 메인) + 썸네일 + 풀스크린 모달
+ * 상세 본문: 대표·갤러리 통합 슬라이더(16:9 · contain) + 풀스크린 모달
  */
 export function AuditionDetailMediaSection({ coverUrl, galleryUrls }: AuditionDetailMediaProps) {
   return (
@@ -45,7 +45,7 @@ export function AuditionDetailMediaSection({ coverUrl, galleryUrls }: AuditionDe
           이미지
         </h2>
         <p className="m-0 mb-4 text-sm text-gray-500">
-          대표 이미지를 포함해 슬라이드로 볼 수 있습니다. 메인 영역을 누르면 전체 화면으로 확대됩니다.
+          대표 이미지를 포함해 슬라이드로 볼 수 있습니다. 좌우 버튼·스와이프로 넘길 수 있고, 메인 영역을 누르면 전체 화면으로 확대됩니다.
         </p>
         <AuditionGallery coverImage={coverUrl} images={galleryUrls} />
       </div>

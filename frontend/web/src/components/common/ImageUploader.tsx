@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useId, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useId, useState, type ReactNode } from 'react'
 import {
   DndContext,
   closestCenter,
@@ -52,13 +52,18 @@ function aspectFrameClass(aspect: ImageUploaderAspect, forThumb: boolean): strin
   if (aspect === 'portrait') {
     return forThumb ? 'aspect-[3/4] rounded-lg' : 'aspect-[3/4] rounded-lg'
   }
-  return forThumb ? 'aspect-video rounded-md' : 'aspect-video rounded-md'
+  return forThumb ? 'aspect-[16/9] rounded-md' : 'aspect-[16/9] rounded-md'
+}
+
+function previewObjectFitClass(aspect: ImageUploaderAspect): string {
+  return aspect === 'landscape' ? 'object-contain' : 'object-cover'
 }
 
 function SortableImageCard({
   sortableId,
   url,
   aspect,
+  objectFitClass,
   disabled,
   onRemove,
   dragDisabled,
@@ -66,6 +71,7 @@ function SortableImageCard({
   sortableId: string
   url: string
   aspect: ImageUploaderAspect
+  objectFitClass: string
   disabled: boolean
   onRemove: () => void
   dragDisabled: boolean
@@ -88,7 +94,7 @@ function SortableImageCard({
         <img
           src={url}
           alt=""
-          className="h-full w-full object-cover"
+          className={`h-full w-full ${objectFitClass}`}
           onError={(ev) => {
             const el = ev.currentTarget
             if (el.dataset.fallback === '1') return
@@ -135,15 +141,19 @@ export function ImageUploader({
   label,
   showFieldError,
 }: ImageUploaderProps) {
-  const inputRef = useRef<HTMLInputElement>(null)
+  const fileInputId = useId()
   const dndId = useId()
   const [isDraggingFile, setIsDraggingFile] = useState(false)
   const [uploadBusy, setUploadBusy] = useState(false)
 
   const resolvedMax = maxCountProp ?? (multiple ? DEFAULT_GALLERY_MAX : 1)
   const resolvedUploadDir: AuditionUploadDir = uploadDirProp ?? (multiple ? 'gallery' : 'covers')
-  const canAddMore = value.length < resolvedMax
+  /** 갤러리만 슬롯 상한 적용. 단일(대표)은 이미지가 있어도 교체 가능해야 함 */
+  const galleryFull = multiple && value.length >= resolvedMax
+  const inputDisabled = disabled || uploadBusy || galleryFull
   const busy = disabled || uploadBusy
+
+  const coverPreviewFit = previewObjectFitClass(aspect)
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -217,16 +227,20 @@ export function ImageUploader({
 
   const onInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const list = e.target.files
-    e.target.value = ''
-    if (!list?.length) return
-    await validateAndUploadFiles(Array.from(list))
+    try {
+      if (!list?.length) return
+      await validateAndUploadFiles(Array.from(list))
+    } finally {
+      e.target.value = ''
+    }
   }
 
   const onDrop = async (e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
     setIsDraggingFile(false)
-    if (busy || !canAddMore) return
+    if (busy) return
+    if (multiple && value.length >= resolvedMax) return
     const dt = e.dataTransfer.files
     if (!dt?.length) return
     await validateAndUploadFiles(Array.from(dt))
@@ -237,9 +251,7 @@ export function ImageUploader({
     'border-2 border-dashed border-gray-300 rounded-lg p-6 text-center transition-colors cursor-pointer select-none'
   const dropActive = isDraggingFile ? 'border-violet-500 bg-violet-50/50' : 'hover:border-gray-400 bg-gray-50/40'
 
-  const openFilePicker = () => {
-    if (!busy && canAddMore) inputRef.current?.click()
-  }
+  const labelDisabledClass = inputDisabled ? 'cursor-not-allowed opacity-60 pointer-events-none' : ''
 
   return (
     <div
@@ -263,23 +275,23 @@ export function ImageUploader({
       {guide ? <div className="mb-3 text-xs leading-relaxed text-gray-600">{guide}</div> : null}
 
       <input
-        ref={inputRef}
+        id={fileInputId}
         type="file"
         accept={AUDITION_IMAGE_ACCEPT_ATTR}
-        multiple={multiple && canAddMore}
-        className="hidden"
+        multiple={multiple && !galleryFull}
+        className="sr-only"
         onChange={onInputChange}
-        disabled={busy}
+        disabled={inputDisabled}
+        aria-label="이미지 파일 선택"
       />
 
       {!multiple && (
-        <button
-          type="button"
-          disabled={busy || !canAddMore}
-          onClick={openFilePicker}
+        <label
+          htmlFor={fileInputId}
+          className={`${dropZoneClass} ${dropActive} mb-4 block w-full max-w-md ${labelDisabledClass}`}
           onDragEnter={(e) => {
             e.preventDefault()
-            if (!busy && canAddMore) setIsDraggingFile(true)
+            if (!inputDisabled) setIsDraggingFile(true)
           }}
           onDragLeave={(e) => {
             e.preventDefault()
@@ -287,7 +299,6 @@ export function ImageUploader({
           }}
           onDragOver={(e) => e.preventDefault()}
           onDrop={onDrop}
-          className={`${dropZoneClass} ${dropActive} mb-4 w-full max-w-md disabled:cursor-not-allowed disabled:opacity-60`}
         >
           <div className={`relative mx-auto mb-3 w-full max-w-[220px] overflow-hidden bg-gray-100 ${framePreview}`}>
             {uploadBusy ? (
@@ -297,7 +308,7 @@ export function ImageUploader({
               <img
                 src={value[0]}
                 alt=""
-                className="h-full w-full object-cover"
+                className={`h-full w-full ${coverPreviewFit}`}
                 onError={(ev) => {
                   const el = ev.currentTarget
                   if (el.dataset.fallback === '1') return
@@ -314,17 +325,22 @@ export function ImageUploader({
             )}
           </div>
           <p className="text-sm text-gray-600">JPG · PNG · WebP, 최대 5MB</p>
-        </button>
+        </label>
       )}
 
+      {uploadBusy ? (
+        <p className="mt-2 text-sm text-gray-500" aria-live="polite">
+          업로드 중…
+        </p>
+      ) : null}
+
       {multiple && value.length === 0 && (
-        <button
-          type="button"
-          disabled={busy || !canAddMore}
-          onClick={openFilePicker}
+        <label
+          htmlFor={fileInputId}
+          className={`${dropZoneClass} ${dropActive} mb-4 block w-full ${labelDisabledClass}`}
           onDragEnter={(e) => {
             e.preventDefault()
-            if (!busy && canAddMore) setIsDraggingFile(true)
+            if (!inputDisabled) setIsDraggingFile(true)
           }}
           onDragLeave={(e) => {
             e.preventDefault()
@@ -332,7 +348,6 @@ export function ImageUploader({
           }}
           onDragOver={(e) => e.preventDefault()}
           onDrop={onDrop}
-          className={`${dropZoneClass} ${dropActive} mb-4 w-full disabled:cursor-not-allowed disabled:opacity-60`}
         >
           <div className={`relative mx-auto mb-3 w-full max-w-[320px] overflow-hidden bg-gray-100 ${framePreview}`}>
             {uploadBusy ? (
@@ -345,7 +360,7 @@ export function ImageUploader({
             )}
           </div>
           <p className="text-sm text-gray-600">JPG · PNG · WebP, 각 최대 5MB · 최대 {resolvedMax}장</p>
-        </button>
+        </label>
       )}
 
       {multiple && value.length > 0 ? (
@@ -353,7 +368,7 @@ export function ImageUploader({
           className={`${dropZoneClass} ${dropActive} mb-4`}
           onDragEnter={(e) => {
             e.preventDefault()
-            if (!busy && canAddMore) setIsDraggingFile(true)
+            if (!busy && !galleryFull) setIsDraggingFile(true)
           }}
           onDragLeave={(e) => {
             e.preventDefault()
@@ -362,14 +377,15 @@ export function ImageUploader({
           onDragOver={(e) => e.preventDefault()}
           onDrop={onDrop}
         >
-          <button
-            type="button"
-            disabled={busy || !canAddMore}
-            onClick={openFilePicker}
-            className="text-sm font-medium text-violet-700 underline disabled:text-gray-400"
-          >
-            {uploadBusy ? '업로드 중…' : canAddMore ? '이미지 더 추가 (클릭 또는 드래그)' : `최대 ${resolvedMax}장까지 등록됨`}
-          </button>
+          {galleryFull || inputDisabled ? (
+            <span className="text-sm font-medium text-gray-400">
+              {uploadBusy ? '업로드 중…' : `최대 ${resolvedMax}장까지 등록됨`}
+            </span>
+          ) : (
+            <label htmlFor={fileInputId} className="cursor-pointer text-sm font-medium text-violet-700 underline">
+              {uploadBusy ? '업로드 중…' : '이미지 더 추가 (클릭 또는 드래그)'}
+            </label>
+          )}
           <p className="mt-2 text-xs text-gray-500">순서: 좌하단 ⋮⋮ 핸들을 드래그 · 우상단 × 삭제</p>
         </div>
       ) : null}
@@ -384,6 +400,7 @@ export function ImageUploader({
                   sortableId={String(index)}
                   url={url}
                   aspect={aspect}
+                  objectFitClass={previewObjectFitClass(aspect)}
                   disabled={busy}
                   dragDisabled={value.length < 2}
                   onRemove={() => removeAt(index)}
@@ -395,15 +412,14 @@ export function ImageUploader({
       ) : null}
 
       {!multiple && value[0] ? (
-        <div className="mt-2 flex items-center gap-2">
-          <button
-            type="button"
-            disabled={busy}
-            onClick={openFilePicker}
-            className="text-sm font-medium text-violet-700 underline disabled:opacity-50"
-          >
-            이미지 변경
-          </button>
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          {inputDisabled ? (
+            <span className="text-sm font-medium text-gray-400">이미지 변경</span>
+          ) : (
+            <label htmlFor={fileInputId} className="cursor-pointer text-sm font-medium text-violet-700 underline">
+              이미지 변경
+            </label>
+          )}
           <button
             type="button"
             disabled={busy}

@@ -490,7 +490,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
               <span className="ml-1 text-xs font-normal text-gray-500">(등록·마감 시 필수)</span>
             </>
           }
-          guide="대표 이미지는 세로형(3:4) 권장 (포스터 형태). 카드·리스트·상단 영역에 동일 비율로 표시됩니다."
+          guide="세로형 (3:4) 권장. 카드·리스트·상단 히어로에 동일 비율(3:4, cover)로 표시됩니다."
           multiple={false}
           aspect="portrait"
           maxCount={1}
@@ -524,7 +524,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
         <ImageUploader
           className="mb-8"
           label={EDITOR_LABELS.galleryImages}
-          guide="갤러리 이미지는 가로형(16:9) 권장. 드래그로 순서를 바꿀 수 있습니다."
+          guide="가로형 (16:9) 권장. 상세 페이지 갤러리 영역은 16:9 · contain으로 표시됩니다. 드래그로 순서를 바꿀 수 있습니다."
           multiple
           aspect="landscape"
           maxCount={10}

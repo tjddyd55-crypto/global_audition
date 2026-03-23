@@ -74,8 +74,8 @@ public class ImageUploadController {
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
-            log.error("이미지 업로드 API 실패", e);
-            throw new RuntimeException("S3 upload failed", e);
+            log.error("S3 업로드 실패", e);
+            throw new RuntimeException("S3 upload failed: " + e.getMessage(), e);
         }
     }
 }

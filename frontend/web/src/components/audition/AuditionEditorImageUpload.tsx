@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, type ChangeEvent, type ReactNode } from 'react'
+import { useId, type ChangeEvent, type ReactNode } from 'react'
 import { toast } from 'sonner'
 import { SIGNUP, AUDITION_DETAIL } from '@/lib/design-tokens'
 import {
@@ -42,20 +42,23 @@ export function SingleImageUploadField({
   helperText,
   showFieldError,
 }: SingleImageUploadFieldProps) {
-  const inputRef = useRef<HTMLInputElement>(null)
+  const fileInputId = useId()
 
   const onPick = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    e.target.value = ''
-    if (!file) return
-    onUploadingChange(true)
     try {
-      const url = await uploadAuditionImage(file, uploadDir)
-      onImageUrlChange(url)
-    } catch (err: unknown) {
-      toast.error(apiUploadErrorMessage(err) || '이미지 업로드 실패')
+      if (!file) return
+      onUploadingChange(true)
+      try {
+        const url = await uploadAuditionImage(file, uploadDir)
+        onImageUrlChange(url)
+      } catch (err: unknown) {
+        toast.error(apiUploadErrorMessage(err) || '이미지 업로드 실패')
+      } finally {
+        onUploadingChange(false)
+      }
     } finally {
-      onUploadingChange(false)
+      e.target.value = ''
     }
   }
 
@@ -88,17 +91,17 @@ export function SingleImageUploadField({
       ) : null}
       <div className="flex flex-wrap items-center gap-3">
         <input
-          ref={inputRef}
+          id={fileInputId}
           type="file"
           accept={AUDITION_IMAGE_ACCEPT_ATTR}
-          className="hidden"
+          className="sr-only"
           onChange={onPick}
           disabled={busy}
+          aria-label="이미지 파일 선택"
         />
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => inputRef.current?.click()}
+        <label
+          htmlFor={fileInputId}
+          className="inline-flex items-center justify-center"
           style={{
             height: SIGNUP.inputHeightPx,
             borderRadius: SIGNUP.inputRadiusPx,
@@ -111,7 +114,7 @@ export function SingleImageUploadField({
           }}
         >
           {uploading ? '업로드 중…' : '파일 선택'}
-        </button>
+        </label>
         {uploading ? (
           <span className="text-sm text-gray-600" aria-live="polite">
             업로드 중...

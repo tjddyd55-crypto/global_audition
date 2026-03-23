@@ -61,64 +61,6 @@ function GalleryMainImage({ src, label }: { src: string; label: string }) {
   )
 }
 
-function ThumbnailButton({
-  src,
-  index,
-  isActive,
-  onSelect,
-}: {
-  src: string
-  index: number
-  isActive: boolean
-  onSelect: (i: number) => void
-}) {
-  const [loaded, setLoaded] = useState(false)
-
-  useEffect(() => {
-    setLoaded(false)
-  }, [src])
-
-  const finishLoad = useCallback(() => {
-    setLoaded(true)
-  }, [])
-
-  return (
-    <button
-      type="button"
-      id={`thumb-${index}`}
-      onClick={() => onSelect(index)}
-      className={`relative h-20 shrink-0 origin-center cursor-pointer overflow-hidden rounded border-2 bg-black transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 hover:scale-105 ${
-        isActive
-          ? 'z-[1] scale-105 border-purple-500 opacity-100'
-          : 'border-transparent opacity-70 hover:opacity-100'
-      }`}
-      aria-label={`이미지 ${index + 1} 보기`}
-      aria-current={isActive ? 'true' : undefined}
-    >
-      {!loaded && (
-        <div
-          className="absolute inset-0 z-[0] rounded bg-gray-200 animate-pulse"
-          aria-hidden
-        />
-      )}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        key={src}
-        src={src}
-        alt=""
-        loading="lazy"
-        className="relative z-[1] h-full w-full object-cover transition-opacity duration-200 data-[loaded=false]:opacity-0 data-[loaded=true]:opacity-100"
-        data-loaded={loaded}
-        onLoad={finishLoad}
-        onError={(e) => {
-          applyGalleryImageOnError(e)
-          finishLoad()
-        }}
-      />
-    </button>
-  )
-}
-
 export default function AuditionGallery({ coverImage, images = [] }: AuditionGalleryProps) {
   const allImages = useMemo(() => buildAllImages(coverImage, images), [coverImage, images])
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -138,13 +80,6 @@ export default function AuditionGallery({ coverImage, images = [] }: AuditionGal
     if (next) preloadImageUrl(next)
     if (prev) preloadImageUrl(prev)
   }, [currentIndex, allImages])
-
-  useEffect(() => {
-    const el = document.getElementById(`thumb-${currentIndex}`)
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
-    }
-  }, [currentIndex])
 
   const current = allImages[currentIndex] ?? ''
   const canPrev = currentIndex > 0
@@ -196,7 +131,7 @@ export default function AuditionGallery({ coverImage, images = [] }: AuditionGal
       <div
         role="button"
         tabIndex={0}
-        className="group relative flex w-full cursor-pointer items-center justify-center bg-black aspect-video"
+        className="group relative flex w-full cursor-pointer items-center justify-center bg-black aspect-[16/9]"
         onClick={() => setIsOpen(true)}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
@@ -236,18 +171,6 @@ export default function AuditionGallery({ coverImage, images = [] }: AuditionGal
             ›
           </button>
         )}
-      </div>
-
-      <div className="mt-2 flex items-center gap-2 overflow-x-auto overflow-y-visible py-1 pb-2 [-ms-overflow-style:none] [scrollbar-width:thin]">
-        {allImages.map((img, idx) => (
-          <ThumbnailButton
-            key={`${idx}-${img.slice(0, 48)}`}
-            src={img}
-            index={idx}
-            isActive={idx === currentIndex}
-            onSelect={setCurrentIndex}
-          />
-        ))}
       </div>
 
       {isOpen && (
