@@ -1,5 +1,7 @@
 package com.audition.platform.infra.s3;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.annotation.Bean;
@@ -27,15 +29,19 @@ import java.net.URI;
 @ConditionalOnExpression("T(org.springframework.util.StringUtils).hasText('${app.s3.bucket:}')")
 public class AwsS3ClientConfig {
 
+    private static final Logger log = LoggerFactory.getLogger(AwsS3ClientConfig.class);
+
     @Bean
     public S3Client s3Client(
-            @Value("${app.s3.region:ap-northeast-2}") String region,
+            @Value("${app.s3.bucket}") String bucket,
+            @Value("${app.s3.region}") String region,
             @Value("${app.s3.endpoint:}") String endpoint,
             @Value("${AWS_ACCESS_KEY:}") String accessKeyLegacy,
             @Value("${AWS_SECRET_KEY:}") String secretKeyLegacy,
             @Value("${AWS_ACCESS_KEY_ID:}") String accessKeyId,
             @Value("${AWS_SECRET_ACCESS_KEY:}") String secretAccessKey
     ) {
+        log.info("S3 client bean: bucket={}, region={}", bucket.trim(), region.trim());
         var builder = S3Client.builder().region(Region.of(region.trim()));
 
         String ak = StringUtils.hasText(accessKeyLegacy) ? accessKeyLegacy.trim() : null;

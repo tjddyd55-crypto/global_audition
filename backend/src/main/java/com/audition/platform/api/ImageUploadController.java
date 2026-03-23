@@ -3,6 +3,8 @@ package com.audition.platform.api;
 import com.audition.platform.api.dto.ImageUploadResponse;
 import com.audition.platform.application.storage.ImageUploadDirectory;
 import com.audition.platform.application.storage.S3ImageUploadService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -20,6 +22,8 @@ import org.springframework.web.server.ResponseStatusException;
 @RequestMapping("/api/uploads")
 public class ImageUploadController {
 
+    private static final Logger log = LoggerFactory.getLogger(ImageUploadController.class);
+
     private final ObjectProvider<S3ImageUploadService> uploadService;
 
     public ImageUploadController(ObjectProvider<S3ImageUploadService> uploadService) {
@@ -33,9 +37,12 @@ public class ImageUploadController {
     ) {
         S3ImageUploadService svc = uploadService.getIfAvailable();
         if (svc == null) {
+            log.warn(
+                    "POST /api/uploads/image rejected (503): S3 not configured — set AWS_BUCKET, AWS_REGION, and IAM keys on the server."
+            );
             throw new ResponseStatusException(
                     HttpStatus.SERVICE_UNAVAILABLE,
-                    "이미지 업로드가 구성되지 않았습니다. app.s3.bucket 및 AWS 자격 증명을 설정하세요."
+                    "이미지 업로드가 구성되지 않았습니다. AWS_BUCKET·AWS_REGION·자격 증명을 설정하세요."
             );
         }
         return new ImageUploadResponse(svc.upload(file, ImageUploadDirectory.fromParam(dir)));

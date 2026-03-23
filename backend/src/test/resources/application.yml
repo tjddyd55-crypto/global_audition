@@ -1,0 +1,5 @@
+# 단위 테스트: CI/로컬에 AWS_BUCKET 미설정 시에도 컨텍스트 로딩 가능하도록 고정값
+app:
+  s3:
+    bucket: test-placeholder-bucket
+    region: ap-northeast-2

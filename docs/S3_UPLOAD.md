@@ -38,8 +38,8 @@
 
 | 변수 | 설명 |
 |------|------|
-| `AWS_BUCKET` | 버킷 이름. **빈 문자열**이면 S3 빈 미등록 → 업로드 API 503. 미설정 시 `application.yml` 기본값 `global-audition` |
-| `AWS_REGION` | 리전 (기본 `ap-northeast-2`) |
+| `AWS_BUCKET` | **필수** (운영/Railway). 비우면 S3 빈 미등록 → 업로드 API 503. 예: `global-audition` |
+| `AWS_REGION` | **필수**. 예: `ap-northeast-2` |
 | `AWS_ACCESS_KEY` / `AWS_SECRET_KEY` | 액세스 키 (레거시 이름) |
 | `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | AWS 표준 이름 (동일 우선순위: 레거시가 있으면 레거시 사용) |
 | `AWS_S3_PUBLIC_BASE_URL` | 선택. CloudFront 등 공개 URL 접두사 |

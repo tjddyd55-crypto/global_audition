@@ -1,5 +1,6 @@
 package com.audition.platform.application.storage;
 
+import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,7 +41,7 @@ public class S3ImageUploadService {
     @Value("${app.s3.bucket}")
     private String bucket;
 
-    @Value("${app.s3.region:ap-northeast-2}")
+    @Value("${app.s3.region}")
     private String region;
 
     /**
@@ -52,6 +53,12 @@ public class S3ImageUploadService {
 
     public S3ImageUploadService(S3Client s3Client) {
         this.s3Client = s3Client;
+    }
+
+    @PostConstruct
+    void logS3Target() {
+        log.info("S3 bucket: {}", bucket != null && !bucket.isBlank() ? bucket.trim() : "(empty)");
+        log.info("S3 region: {}", region != null && !region.isBlank() ? region.trim() : "(empty)");
     }
 
     public String upload(MultipartFile file, ImageUploadDirectory directory) {
