@@ -61,6 +61,16 @@ apiClient.interceptors.request.use(
       console.warn('[API Client] /auth/me 요청인데 localStorage에 토큰 없음 → Authorization 미설정')
     }
 
+    // multipart: 기본 Content-Type(application/json) 제거 → 브라우저가 multipart boundary 설정
+    if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+      const h = config.headers
+      if (h && typeof (h as { delete?: (k: string) => void }).delete === 'function') {
+        ;(h as { delete: (k: string) => void }).delete('Content-Type')
+      } else if (h && typeof h === 'object') {
+        delete (h as Record<string, unknown>)['Content-Type']
+      }
+    }
+
     return config
   },
   (error) => {

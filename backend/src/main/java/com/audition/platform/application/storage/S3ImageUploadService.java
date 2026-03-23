@@ -1,5 +1,7 @@
 package com.audition.platform.application.storage;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.http.HttpStatus;
@@ -8,7 +10,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.ObjectCannedACL;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.IOException;
@@ -18,10 +19,13 @@ import java.util.UUID;
 
 /**
  * 이미지 바이너리는 S3(또는 S3 호환)에만 저장하고, DB에는 반환된 공개 URL만 남깁니다.
+ * Object ACL 미설정 — 버킷 &quot;Bucket owner enforced&quot; 및 퍼블릭 정책만 사용.
  */
 @Service
 @ConditionalOnBean(S3Client.class)
 public class S3ImageUploadService {
+
+    private static final Logger log = LoggerFactory.getLogger(S3ImageUploadService.class);
 
     private static final long MAX_BYTES = 5L * 1024 * 1024;
 
@@ -46,12 +50,6 @@ public class S3ImageUploadService {
     @Value("${app.s3.public-base-url:}")
     private String publicBaseUrl;
 
-    /**
-     * true면 {@link ObjectCannedACL#PUBLIC_READ}. 버킷이 ACL 비활성이면 업로드 실패 → 기본 false, 버킷 정책 권장.
-     */
-    @Value("${app.s3.public-read-acl:false}")
-    private boolean publicReadAcl;
-
     public S3ImageUploadService(S3Client s3Client) {
         this.s3Client = s3Client;
     }
@@ -73,20 +71,22 @@ public class S3ImageUploadService {
         String ext = extensionFor(file, contentType);
         String key = directory.keyPrefix() + UUID.randomUUID() + ext;
         try {
-            PutObjectRequest.Builder put = PutObjectRequest.builder()
+            PutObjectRequest request = PutObjectRequest.builder()
                     .bucket(bucket.trim())
                     .key(key)
-                    .contentType(contentType) // 정규화된 MIME (jpeg/png/webp)
-                    .contentLength(file.getSize());
-            if (publicReadAcl) {
-                put.acl(ObjectCannedACL.PUBLIC_READ);
-            }
+                    .contentType(contentType)
+                    .contentLength(file.getSize())
+                    .build();
             s3Client.putObject(
-                    put.build(),
+                    request,
                     RequestBody.fromInputStream(file.getInputStream(), file.getSize())
             );
         } catch (IOException e) {
+            log.error("S3 upload IO error bucket={} key={}", bucket, key, e);
             throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "스토리지 업로드에 실패했습니다.");
+        } catch (Exception e) {
+            log.error("S3 upload error bucket={} key={}", bucket, key, e);
+            throw e;
         }
         return publicUrlFor(key);
     }

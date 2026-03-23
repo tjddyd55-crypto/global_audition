@@ -13,15 +13,15 @@ app:
   cors:
     allowed-origins: "${APP_CORS_ALLOWED_ORIGINS:http://localhost:3000,https://frontend-production-8613a.up.railway.app}"
   # 이미지 업로드(S3). bucket 비우면 POST /api/uploads/image 는 503.
-  # 권장 환경변수: AWS_BUCKET, AWS_REGION, AWS_ACCESS_KEY + AWS_SECRET_KEY
-  # (또는 표준 AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY — 코드에서 둘 다 지원)
-  # 퍼블릭 읽기가 ACL로만 필요하면 AWS_S3_PUBLIC_READ_ACL=true (버킷이 ACL 허용일 때만)
+  # 로컬 기본: global-audition / ap-northeast-2. 운영은 AWS_BUCKET 등으로 덮어쓰기.
+  # 권장 환경변수: AWS_BUCKET, AWS_REGION, AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY
+  # 퍼블릭 읽기는 버킷 정책(또는 CloudFront)으로만 — Object ACL 미사용(Bucket owner enforced 대응).
   s3:
-    bucket: ${AWS_BUCKET:}
+    bucket: ${AWS_BUCKET:global-audition}
     region: ${AWS_REGION:ap-northeast-2}
     public-base-url: ${AWS_S3_PUBLIC_BASE_URL:}
     endpoint: ${AWS_S3_ENDPOINT:}
-    public-read-acl: ${AWS_S3_PUBLIC_READ_ACL:false}
+    public-read-acl: false
   jwt:
     secret: "${JWT_SECRET:change-me-in-production-min-32-chars}"
     expiration-ms: 86400000  # 24h
