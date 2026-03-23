@@ -6,6 +6,9 @@ app:
   version: 1.0.0-SNAPSHOT
   buildId: ""
   public-base-url: "http://localhost:8080"
+  # Railway 등: BOOTSTRAP_SUPER_ADMIN=true 로 한 번 기동해 계정 생성 후 반드시 false 로 복구
+  super-admin:
+    bootstrap-enabled: ${BOOTSTRAP_SUPER_ADMIN:false}
   cors:
     allowed-origins: "http://localhost:3000"
   jwt:
