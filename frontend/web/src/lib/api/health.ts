@@ -29,10 +29,9 @@ export async function checkBackendHealth(): Promise<{ ok: boolean }> {
 
 /** Monolith backend: GET /api/version → { version, buildId } */
 export async function getBackendVersion(): Promise<{ version: string; buildId: string }> {
-  const res = await apiFetch('/version', {
+  const res = await apiFetchPublic('/version', {
     method: 'GET',
     cache: 'no-store',
-    auth: false,
   })
   if (!res.ok) throw new Error(`Backend version failed: ${res.status}`)
   const data = await res.json()

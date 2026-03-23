@@ -16,12 +16,15 @@ export function apiUrl(apiPath: string): string {
 export class ApiFetchError extends Error {
   readonly status: number
   readonly bodyText: string
+  /** 요청 최종 URL (fetch Response.url — 리다이렉트 후 값) */
+  readonly url: string
 
-  constructor(status: number, bodyText: string) {
+  constructor(status: number, bodyText: string, url = '') {
     super(`API ${status}: ${bodyText.slice(0, 200)}`)
     this.name = 'ApiFetchError'
     this.status = status
     this.bodyText = bodyText
+    this.url = url
   }
 }
 
@@ -75,7 +78,7 @@ export async function apiFetchJson<T>(apiPath: string, options: ApiFetchOptions 
   const res = await apiFetch(apiPath, options)
   const text = await res.text()
   if (!res.ok) {
-    throw new ApiFetchError(res.status, text)
+    throw new ApiFetchError(res.status, text, res.url)
   }
   if (res.status === 204 || text === '') {
     return undefined as T

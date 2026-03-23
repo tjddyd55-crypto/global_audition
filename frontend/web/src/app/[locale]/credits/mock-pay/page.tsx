@@ -4,7 +4,7 @@
  * 목 결제 UI → 백엔드 `POST /api/payments/callback/success|fail` 만 호출.
  * (Next `app/api/...` + Prisma 로 콜백/지급을 다시 만들지 않음 — Spring PaymentOrderService 가 SSOT)
  */
-import { useEffect, useState, Suspense } from 'react'
+import { useEffect, useState, Suspense, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useLocale } from 'next-intl'
 import { useRouter, Link } from '../../../../i18n.config'
@@ -31,8 +31,11 @@ function MockPayContent() {
   const [order, setOrder] = useState<CreditOrderSummary | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
-  /** 콜백 요청 중 — 완료 전까지 버튼 비활성화(중복 클릭·PG UX 정합) */
+  /** 콜백 요청 중 — 완료 전까지 전 버튼·이탈 링크 잠금(모바일 더블탭·느린 네트워크) */
   const [pendingAction, setPendingAction] = useState<null | 'success' | 'fail'>(null)
+  const isCallbackLocked = pendingAction !== null
+  /** 리렌더 전 동시 더블탭 차단 */
+  const callbackInFlightRef = useRef(false)
 
   useEffect(() => {
     if (!isMockPaymentUiEnabled()) {
@@ -69,33 +72,41 @@ function MockPayContent() {
   }, [router, orderNo])
 
   const onSuccess = async () => {
-    if (!orderNo || pendingAction !== null) return
+    if (!orderNo || isCallbackLocked || callbackInFlightRef.current) return
+    callbackInFlightRef.current = true
     setPendingAction('success')
     setError(null)
     try {
-      // 반드시 콜백 완료 후 이동 (DB 반영 전에 result 로 가면 안 됨)
       await creditsApi.paymentSuccessCallback({
         orderNo,
         providerTxId: `MOCK-${Date.now()}`,
         payload: { source: 'MOCK_UI', locale },
       })
+      // 위 await 가 성공한 경우에만 실행. catch 에서는 절대 success 페이지로 이동하지 않음.
       router.push(`/credits/result/success?orderNo=${encodeURIComponent(orderNo)}`)
     } catch (e: unknown) {
       let msg = '성공 처리에 실패했습니다.'
       if (e instanceof ApiFetchError) {
-        console.error('[mock-pay] success callback', e.status, e.bodyText)
+        console.error('[mock-pay] success callback', {
+          status: e.status,
+          body: e.bodyText,
+          url: e.url,
+        })
         msg = e.bodyText || msg
       } else {
         console.error('[mock-pay] success callback', e)
       }
       setError(msg)
+      alert('결제 처리에 실패했습니다. 잠시 후 다시 시도해 주세요.')
     } finally {
+      callbackInFlightRef.current = false
       setPendingAction(null)
     }
   }
 
   const onFail = async () => {
-    if (!orderNo || pendingAction !== null) return
+    if (!orderNo || isCallbackLocked || callbackInFlightRef.current) return
+    callbackInFlightRef.current = true
     setPendingAction('fail')
     setError(null)
     try {
@@ -110,13 +121,19 @@ function MockPayContent() {
     } catch (e: unknown) {
       let msg = '실패 처리에 실패했습니다.'
       if (e instanceof ApiFetchError) {
-        console.error('[mock-pay] fail callback', e.status, e.bodyText)
+        console.error('[mock-pay] fail callback', {
+          status: e.status,
+          body: e.bodyText,
+          url: e.url,
+        })
         msg = e.bodyText || msg
       } else {
         console.error('[mock-pay] fail callback', e)
       }
       setError(msg)
+      alert('결제 실패 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.')
     } finally {
+      callbackInFlightRef.current = false
       setPendingAction(null)
     }
   }
@@ -143,9 +160,14 @@ function MockPayContent() {
         <h1 className={TITLE_PAGE}>목 결제 (PG 연동 전)</h1>
         <p className={TEXT_SUB}>실제 과금 없이 성공/실패 콜백만 테스트합니다.</p>
         {pendingAction && (
-          <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-            결제 콜백 처리 중… (서버 반영 후 결과 페이지로 이동합니다)
-          </p>
+          <div
+            role="status"
+            aria-live="polite"
+            className="rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950"
+          >
+            <p className="font-semibold">결제 처리 중입니다…</p>
+            <p className="mt-1">페이지를 닫지 마세요. 서버 반영이 끝나면 결과 화면으로 이동합니다.</p>
+          </div>
         )}
 
         {!orderNo && (
@@ -173,7 +195,7 @@ function MockPayContent() {
             <div className="mt-6 flex flex-wrap gap-3">
               <button
                 type="button"
-                disabled={pendingAction !== null || order.status === 'PAID'}
+                disabled={isCallbackLocked || order.status === 'PAID'}
                 onClick={onSuccess}
                 className={BTN_PRIMARY}
               >
@@ -181,7 +203,7 @@ function MockPayContent() {
               </button>
               <button
                 type="button"
-                disabled={pendingAction !== null || order.status === 'PAID' || order.status === 'FAILED'}
+                disabled={isCallbackLocked || order.status === 'PAID' || order.status === 'FAILED'}
                 onClick={onFail}
                 className={`${BTN_SECONDARY} border border-red-200 bg-red-50 text-red-800`}
               >
@@ -193,9 +215,18 @@ function MockPayContent() {
 
         {error && <p className="text-sm text-red-600">{error}</p>}
 
-        <Link href="/credits/checkout" className={`${BTN_SECONDARY} inline-block text-sm`}>
-          결제 확인으로
-        </Link>
+        {isCallbackLocked ? (
+          <span
+            className={`${BTN_SECONDARY} inline-block cursor-not-allowed text-sm opacity-50`}
+            aria-disabled
+          >
+            결제 확인으로 (처리 중에는 이동할 수 없습니다)
+          </span>
+        ) : (
+          <Link href="/credits/checkout" className={`${BTN_SECONDARY} inline-block text-sm`}>
+            결제 확인으로
+          </Link>
+        )}
       </div>
     </div>
   )

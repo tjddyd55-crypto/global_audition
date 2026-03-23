@@ -55,6 +55,8 @@
 
 (콜백 없이 result 만 열면 안 됨)
 
+**코드 강제:** `try/catch` 에서 **catch 블록에는 `router.push` 금지**. 실패 시 `alert` + 화면 에러만 표시 (mock-pay).
+
 ## 환경 변수
 
 - `NEXT_PUBLIC_CREDIT_MOCK_PAYMENT` — 미설정이면 목 결제 UI 기본 활성 (`true`/`1` 명시 권장).

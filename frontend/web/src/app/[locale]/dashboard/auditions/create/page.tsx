@@ -48,7 +48,7 @@ export default function DashboardAuditionCreatePage() {
 
   return (
     <div
-      className="mx-auto w-full max-w-[1200px] px-4 md:px-6"
+      className="mx-auto w-full max-w-[min(1400px,100%)] px-4 md:px-6"
       style={{
         paddingTop: LAYOUT.sectionGapPx,
         paddingBottom: LAYOUT.sectionGapPx,

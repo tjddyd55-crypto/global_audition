@@ -10,7 +10,7 @@ async function assertPaymentCallbackOk(res: Response): Promise<void> {
     return
   }
   const text = await res.text()
-  throw new ApiFetchError(res.status, text)
+  throw new ApiFetchError(res.status, text, res.url)
 }
 
 export type CreditBalance = {
@@ -138,10 +138,7 @@ export const creditsApi = {
         payload: body.payload ?? null,
       }),
     })
-    if (!res.ok) {
-      const text = await res.text()
-      throw new ApiFetchError(res.status, text)
-    }
+    await assertPaymentCallbackOk(res)
   },
 
   /** Spring `POST /api/payments/callback/fail` */
