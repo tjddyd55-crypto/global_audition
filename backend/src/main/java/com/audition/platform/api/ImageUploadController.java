@@ -7,9 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.core.env.Environment;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -54,22 +52,17 @@ public class ImageUploadController {
     }
 
     @PostMapping(value = "/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> uploadImage(
+    public ImageUploadResponse uploadImage(
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "dir", required = false, defaultValue = "covers") String dir
     ) {
-        S3ImageUploadService svc = uploadService.getIfAvailable();
-        if (svc == null) {
-            log.warn(
-                    "POST /api/uploads/image rejected (503): S3 not configured — set AWS_BUCKET, AWS_REGION, and IAM keys on the server."
-            );
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of(
-                    "error", "IMAGE_UPLOAD_UNAVAILABLE",
-                    "message", "이미지 업로드가 구성되지 않았습니다. AWS_BUCKET·AWS_REGION·자격 증명을 설정하세요."
-            ));
+        S3ImageUploadService s3ImageUploadService = uploadService.getIfAvailable();
+        if (s3ImageUploadService == null) {
+            log.error("POST /api/uploads/image: S3ImageUploadService 빈 없음 — S3Client 미등록 여부 확인");
+            throw new IllegalStateException("S3 서비스 초기화 실패");
         }
 
-        final ImageUploadDirectory directory;
+        ImageUploadDirectory directory;
         try {
             directory = ImageUploadDirectory.fromParam(dir);
         } catch (ResponseStatusException e) {
@@ -77,19 +70,12 @@ public class ImageUploadController {
         }
 
         try {
-            String url = svc.upload(file, directory);
-            return ResponseEntity.ok(new ImageUploadResponse(url));
+            return new ImageUploadResponse(s3ImageUploadService.upload(file, directory));
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
             log.error("이미지 업로드 API 실패", e);
-            String message = e.getMessage() != null && !e.getMessage().isBlank()
-                    ? e.getMessage()
-                    : "이미지 업로드에 실패했습니다.";
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of(
-                    "error", "IMAGE_UPLOAD_FAILED",
-                    "message", message
-            ));
+            throw new RuntimeException("S3 upload failed", e);
         }
     }
 }

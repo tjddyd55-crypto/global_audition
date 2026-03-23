@@ -3,7 +3,6 @@ package com.audition.platform.infra.s3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
@@ -17,16 +16,10 @@ import software.amazon.awssdk.services.s3.S3Configuration;
 import java.net.URI;
 
 /**
- * {@code app.s3.bucket} 이 비어 있지 않을 때만 S3 클라이언트 등록.
- * <p>
- * 자격 증명: {@code AWS_ACCESS_KEY} + {@code AWS_SECRET_KEY} (또는 표준
- * {@code AWS_ACCESS_KEY_ID} + {@code AWS_SECRET_ACCESS_KEY})가 있으면 StaticCredentialsProvider,
- * 없으면 {@link DefaultCredentialsProvider} (IAM 역할, ~/.aws/credentials 등).
- * </p>
- * MinIO 등은 {@code app.s3.endpoint} + path-style.
+ * {@code app.s3.bucket}·{@code app.s3.region} 이 유효할 때만 S3 클라이언트 등록.
+ * {@code ConditionalOnExpression} 미사용 — Java 조건만 사용.
  */
 @Configuration
-@ConditionalOnExpression("T(org.springframework.util.StringUtils).hasText('${app.s3.bucket:}')")
 public class AwsS3ClientConfig {
 
     private static final Logger log = LoggerFactory.getLogger(AwsS3ClientConfig.class);
@@ -41,8 +34,27 @@ public class AwsS3ClientConfig {
             @Value("${AWS_ACCESS_KEY_ID:}") String accessKeyId,
             @Value("${AWS_SECRET_ACCESS_KEY:}") String secretAccessKey
     ) {
-        log.info("S3 CONFIG → S3Client bean (bucket={}, region={})", bucket.trim(), region.trim());
-        var builder = S3Client.builder().region(Region.of(region.trim()));
+        if (bucket == null) {
+            log.error("S3Client 미생성: app.s3.bucket 이 null 입니다. AWS_BUCKET 환경변수를 설정하세요.");
+            return null;
+        }
+        if (region == null) {
+            log.error("S3Client 미생성: app.s3.region 이 null 입니다. AWS_REGION 환경변수를 설정하세요.");
+            return null;
+        }
+
+        String b = bucket.trim();
+        String r = region.trim();
+        if (!StringUtils.hasText(b)) {
+            log.error("S3Client 미생성: bucket 이 비어 있습니다. AWS_BUCKET 을 비우지 마세요.");
+            return null;
+        }
+        if (!StringUtils.hasText(r)) {
+            log.error("S3Client 미생성: region 이 비어 있습니다. AWS_REGION 을 비우지 마세요.");
+            return null;
+        }
+
+        var builder = S3Client.builder().region(Region.of(r));
 
         String ak = StringUtils.hasText(accessKeyLegacy) ? accessKeyLegacy.trim() : null;
         String sk = StringUtils.hasText(secretKeyLegacy) ? secretKeyLegacy.trim() : null;
@@ -65,6 +77,9 @@ public class AwsS3ClientConfig {
                     .endpointOverride(URI.create(endpoint.trim()))
                     .serviceConfiguration(S3Configuration.builder().pathStyleAccessEnabled(true).build());
         }
-        return builder.build();
+
+        S3Client client = builder.build();
+        log.info("S3 client created → bucket={}, region={}", b, r);
+        return client;
     }
 }

@@ -41,7 +41,7 @@ function messageFromUploadErrorBody(data: unknown): string {
   return typeof msg === 'string' && msg.trim().length > 0 ? msg.trim() : ''
 }
 
-/** 업로드 API 전용 — 401/403 안내 포함. 503 시 서버 `{ error, message }` 본문 우선 */
+/** 업로드 API 전용 — 401/403·500/503 시 응답 본문 `message` 우선 */
 export function apiUploadErrorMessage(e: unknown): string {
   if (axios.isAxiosError(e)) {
     const status = e.response?.status
@@ -54,6 +54,10 @@ export function apiUploadErrorMessage(e: unknown): string {
     }
     if (status === 503) {
       return body || '이미지 업로드 실패'
+    }
+    if (status === 500) {
+      const m = messageFromUploadErrorBody(e.response?.data)
+      if (m) return m
     }
     if (body) return body
   }
@@ -72,6 +76,10 @@ export function apiErrorMessage(e: unknown): string {
     if (e.response?.status === 503) {
       const m = messageFromUploadErrorBody(e.response?.data)
       return m || '이미지 업로드 실패'
+    }
+    if (e.response?.status === 500) {
+      const m = messageFromUploadErrorBody(e.response?.data)
+      if (m) return m
     }
     if (e.response?.status === 401) {
       return '로그인이 필요합니다.'

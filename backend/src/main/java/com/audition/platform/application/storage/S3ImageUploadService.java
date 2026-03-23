@@ -71,6 +71,7 @@ public class S3ImageUploadService {
         }
         String ext = extensionFor(file, contentType);
         String key = directory.keyPrefix() + UUID.randomUUID() + ext;
+        log.info("S3 업로드 실행 → bucket={}, region={}", bucket.trim(), region.trim());
         try {
             PutObjectRequest request = PutObjectRequest.builder()
                     .bucket(bucket.trim())
@@ -94,10 +95,10 @@ public class S3ImageUploadService {
 
     private void requireBucketAndRegionConfigured() {
         if (bucket == null || bucket.isBlank()) {
-            throw new IllegalStateException("AWS_BUCKET 설정 안됨");
+            throw new RuntimeException("AWS_BUCKET 없음");
         }
         if (region == null || region.isBlank()) {
-            throw new IllegalStateException("AWS_REGION 설정 안됨");
+            throw new RuntimeException("AWS_REGION 없음");
         }
     }
 

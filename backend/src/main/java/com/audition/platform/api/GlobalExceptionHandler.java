@@ -91,11 +91,58 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleException(Exception ex, HttpServletRequest request) {
+    public ResponseEntity<?> handleException(Exception ex, HttpServletRequest request) {
         log.error("Unhandled exception on {} {}", request.getMethod(), request.getRequestURI(), ex);
+        String uri = request.getRequestURI();
+        if (uri != null && uri.startsWith("/api/uploads/")) {
+            String message = extractRootMessage(ex);
+            if (message.isBlank()) {
+                message = "이미지 업로드에 실패했습니다.";
+            }
+            if (useSsotEnvelope(request)) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiFailResponse(message));
+            }
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    new ErrorResponse("500", message, request.getRequestURI(), Instant.now())
+            );
+        }
+        String message = extractRootMessage(ex);
+        if (message.isBlank()) {
+            message = "Internal server error";
+        }
+        if (useSsotEnvelope(request)) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiFailResponse(message));
+        }
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-                new ErrorResponse("500", "Internal server error", request.getRequestURI(), Instant.now())
+                new ErrorResponse("500", message, request.getRequestURI(), Instant.now())
         );
+    }
+
+    /**
+     * 가장 안쪽 cause의 메시지를 우선하고, 없으면 체인을 따라 첫 비어 있지 않은 메시지를 반환.
+     * AWS SDK 등 래핑 예외에서 실제 API 오류 문구를 노출할 때 사용.
+     */
+    private static String extractRootMessage(Throwable e) {
+        if (e == null) {
+            return "";
+        }
+        Throwable root = e;
+        while (root.getCause() != null) {
+            root = root.getCause();
+        }
+        String fromRoot = root.getMessage();
+        if (fromRoot != null && !fromRoot.isBlank()) {
+            return fromRoot.trim();
+        }
+        Throwable t = e;
+        while (t != null) {
+            String m = t.getMessage();
+            if (m != null && !m.isBlank()) {
+                return m.trim();
+            }
+            t = t.getCause();
+        }
+        return "";
     }
 
     private String formatFieldError(FieldError fieldError) {
