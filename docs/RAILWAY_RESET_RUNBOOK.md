@@ -65,13 +65,16 @@ In the Backend service → **Variables**, set:
 
 | Variable | Value | Required |
 |----------|--------|----------|
-| `SPRING_PROFILES_ACTIVE` | `production` | Yes |
+| ~~`SPRING_PROFILES_ACTIVE`~~ | **설정하지 않음** (삭제) — `application.yml` 단일 + 아래 변수만 사용 | — |
 | `SPRING_DATASOURCE_URL` | `jdbc:postgresql://<POSTGRES_HOST>:5432/<DB_NAME>?currentSchema=public` | Yes |
 | `SPRING_DATASOURCE_USERNAME` | Postgres username | Yes |
 | `SPRING_DATASOURCE_PASSWORD` | Postgres password | Yes |
 | `SPRING_FLYWAY_SCHEMAS` | `public` | Recommended |
 | `SPRING_FLYWAY_DEFAULT_SCHEMA` | `public` | Recommended |
 | `SPRING_FLYWAY_CREATE_SCHEMAS` | `true` | Recommended |
+| `AWS_BUCKET` | 예: `global-audition` | Yes (이미지 업로드) |
+| `AWS_REGION` | 예: `ap-northeast-2` | Yes |
+| `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | S3 PutObject 권한 | Yes |
 
 - **Do not set** `SPRING_JPA_HIBERNATE_DDL_AUTO` (or any JPA schema-generation variable). Production uses `ddl-auto=none`; Flyway is the only schema authority.
 - For **private** DB on Railway, use the **internal** host (e.g. `postgres.railway.internal`) in `SPRING_DATASOURCE_URL` so traffic stays on Railway’s network.
@@ -82,9 +85,8 @@ In the Backend service → **Variables**, set:
 
 1. Deploy the Backend (push to branch or **Deploy** in Railway).
 2. Wait for build and start. Check logs for:
-   - `[Startup] Active profile(s): [production]`
-   - `[Startup] Effective JPA ddl-auto: none`
-   - `[Startup] Flyway migrations: N applied, 0 pending`
+   - `S3 CONFIG → bucket=...` (또는 `(empty)` 시 업로드 503)
+   - Flyway 마이그레이션 적용 로그
 3. Open **Settings** → **Networking** → **Generate domain** (if not already).
 4. Copy the public URL (e.g. `https://backend-production-xxxx.up.railway.app`). This is the **Backend URL** for the frontend.
 

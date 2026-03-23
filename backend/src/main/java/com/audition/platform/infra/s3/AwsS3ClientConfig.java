@@ -41,7 +41,7 @@ public class AwsS3ClientConfig {
             @Value("${AWS_ACCESS_KEY_ID:}") String accessKeyId,
             @Value("${AWS_SECRET_ACCESS_KEY:}") String secretAccessKey
     ) {
-        log.info("S3 client bean: bucket={}, region={}", bucket.trim(), region.trim());
+        log.info("S3 CONFIG → S3Client bean (bucket={}, region={})", bucket.trim(), region.trim());
         var builder = S3Client.builder().region(Region.of(region.trim()));
 
         String ak = StringUtils.hasText(accessKeyLegacy) ? accessKeyLegacy.trim() : null;

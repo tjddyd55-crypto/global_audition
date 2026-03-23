@@ -1,28 +1,9 @@
-# Production profile — do NOT set ddl-auto; Flyway is SSOT.
-app:
-  cors:
-    allowed-origins: "https://frontend-production-8613a.up.railway.app"
-
-spring:
-  datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${PGHOST:localhost}:${PGPORT:5432}/${PGDATABASE:audition}?currentSchema=public}
-    username: ${SPRING_DATASOURCE_USERNAME:${PGUSER:postgres}}
-    password: ${SPRING_DATASOURCE_PASSWORD:${PGPASSWORD:postgres}}
-    driver-class-name: org.postgresql.Driver
-    hikari:
-      schema: public
-      connection-init-sql: SET search_path TO public
-  jpa:
-    hibernate:
-      ddl-auto: none
-    properties:
-      hibernate:
-        hbm2ddl:
-          auto: none
-  flyway:
-    enabled: true
-    schemas: public
-    default-schema: public
-    create-schemas: true
-    init-sqls: SET search_path TO public
-    repair-on-migrate: true
+# =============================================================================
+# 사용 중지 — spring.profiles.active=production 으로 로드하지 마세요.
+# Railway·운영은 application.yml + 환경변수만 사용 (SPRING_PROFILES_ACTIVE 삭제).
+# DB: SPRING_DATASOURCE_URL 또는 PGHOST/PGPORT/PGDATABASE/PGUSER/PGPASSWORD
+# S3: AWS_BUCKET, AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
+# =============================================================================
+# 유효한 YAML 자리표시자(실제 설정 없음)
+audition:
+  deprecated-production-file-marker: true

@@ -34,6 +34,11 @@
 </dependency>
 ```
 
+## Spring 프로파일
+
+- **`SPRING_PROFILES_ACTIVE` 를 두지 마세요.** 백엔드는 `application.yml` 하나와 환경변수만 사용합니다.
+- `application-production.yml`은 레거시 자리 표시이며 활성 프로파일로 로드하지 않습니다.
+
 ## 환경 변수
 
 | 변수 | 설명 |

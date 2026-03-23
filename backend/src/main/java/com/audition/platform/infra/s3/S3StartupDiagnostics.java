@@ -21,7 +21,7 @@ public class S3StartupDiagnostics {
         Environment env = event.getApplicationContext().getEnvironment();
         String bucket = env.getProperty("app.s3.bucket", "");
         String region = env.getProperty("app.s3.region", "");
-        log.info("S3 config (resolved) — bucket: [{}], region: [{}]", bucket, region);
+        log.info("S3 CONFIG → bucket={}, region={}", bucket.isBlank() ? "(empty)" : bucket, region.isBlank() ? "(empty)" : region);
         if (!StringUtils.hasText(bucket)) {
             log.warn(
                     "S3 upload API disabled: app.s3.bucket is empty. Set Railway env AWS_BUCKET (and AWS_REGION, credentials)."

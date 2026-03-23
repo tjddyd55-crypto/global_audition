@@ -12,14 +12,14 @@ app:
   # 쉼표 구분. Railway: APP_CORS_ALLOWED_ORIGINS=https://...,http://localhost:3000
   cors:
     allowed-origins: "${APP_CORS_ALLOWED_ORIGINS:http://localhost:3000,https://frontend-production-8613a.up.railway.app}"
-  # 이미지 업로드(S3). Railway 등: AWS_BUCKET·AWS_REGION·자격증명 필수. bucket 비우면 업로드 API 503.
-  # 퍼블릭 읽기는 버킷 정책(또는 CloudFront) — Object ACL 미사용.
+  # 이미지 업로드(S3). Railway: AWS_BUCKET·AWS_REGION·자격증명 필수. bucket 비우면 업로드 API 503.
+  # spring.profiles.active 사용 안 함 — 본 파일 + 환경변수만 사용.
   s3:
     bucket: ${AWS_BUCKET}
     region: ${AWS_REGION}
+    public-read-acl: false
     public-base-url: ${AWS_S3_PUBLIC_BASE_URL:}
     endpoint: ${AWS_S3_ENDPOINT:}
-    public-read-acl: false
   jwt:
     secret: "${JWT_SECRET:change-me-in-production-min-32-chars}"
     expiration-ms: 86400000  # 24h
@@ -36,10 +36,11 @@ spring:
       max-file-size: 50MB
       max-request-size: 55MB
 
+  # 로컬: 기본 localhost. Railway: SPRING_DATASOURCE_* 또는 PG* 환경변수로 덮어씀 (프로파일 불필요).
   datasource:
-    url: jdbc:postgresql://localhost:5432/audition?currentSchema=public
-    username: postgres
-    password: postgres
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${PGHOST:localhost}:${PGPORT:5432}/${PGDATABASE:audition}?currentSchema=public}
+    username: ${SPRING_DATASOURCE_USERNAME:${PGUSER:postgres}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${PGPASSWORD:postgres}}
     driver-class-name: org.postgresql.Driver
     hikari:
       schema: public
