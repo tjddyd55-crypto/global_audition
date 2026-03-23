@@ -63,7 +63,13 @@
 |------|------|
 | **401** | JWT 없음 → `apiClient` + 로그인 확인 |
 | **403** | AGENCY/ADMIN 아님 또는 IAM에 `s3:PutObject` 없음 |
+| **503** | 본문 JSON `{"error":"IMAGE_UPLOAD_UNAVAILABLE"|"IMAGE_UPLOAD_FAILED","message":"..."}` — 로그·메시지로 원인 확인 |
 | 업로드 성공인데 이미지 안 보임 | 버킷 정책·CloudFront·URL 접두사(`public-base-url`) 확인 |
+
+## 헬스 (`GET /api/uploads/health`)
+
+- **인증 불필요** — `bucket`, `region`(설정값), `status`(`OK` | `UNAVAILABLE`) 반환.
+- `UNAVAILABLE`: S3 빈 미등록(버킷 비움 등)으로 업로드 API가 503을 내는 상태.
 
 ## Postman
 

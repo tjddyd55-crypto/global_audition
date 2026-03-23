@@ -49,6 +49,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/auth/me").permitAll()
                 .requestMatchers("/uploads/**").permitAll()
                 .requestMatchers("/api/health", "/api/version").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/uploads/health").permitAll()
                 .requestMatchers("/actuator/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/credits/public/policies/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/auditions", "/api/auditions/*").permitAll()

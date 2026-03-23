@@ -207,7 +207,7 @@ export function ImageUploader({
         }
         onChange(next)
       } catch (err) {
-        toast.error(apiUploadErrorMessage(err) || '업로드에 실패했습니다.')
+        toast.error(apiUploadErrorMessage(err) || '이미지 업로드 실패')
       } finally {
         setUploadBusy(false)
       }

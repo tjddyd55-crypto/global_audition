@@ -13,7 +13,6 @@ import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
-import java.io.IOException;
 import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
@@ -62,6 +61,8 @@ public class S3ImageUploadService {
     }
 
     public String upload(MultipartFile file, ImageUploadDirectory directory) {
+        requireBucketAndRegionConfigured();
+
         if (file == null || file.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "파일이 비어 있습니다.");
         }
@@ -88,14 +89,23 @@ public class S3ImageUploadService {
                     request,
                     RequestBody.fromInputStream(file.getInputStream(), file.getSize())
             );
-        } catch (IOException e) {
-            log.error("S3 upload IO error bucket={} key={}", bucket, key, e);
-            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "스토리지 업로드에 실패했습니다.");
         } catch (Exception e) {
-            log.error("S3 upload error bucket={} key={}", bucket, key, e);
-            throw e;
+            log.error("S3 업로드 실패 bucket={} region={} key={}", bucket, region, key, e);
+            throw new RuntimeException(
+                    "S3 업로드 실패 - bucket=" + bucket.trim() + ", region=" + region.trim(),
+                    e
+            );
         }
         return publicUrlFor(key);
+    }
+
+    private void requireBucketAndRegionConfigured() {
+        if (bucket == null || bucket.isBlank()) {
+            throw new IllegalStateException("AWS_BUCKET 설정 안됨");
+        }
+        if (region == null || region.isBlank()) {
+            throw new IllegalStateException("AWS_REGION 설정 안됨");
+        }
     }
 
     private String publicUrlFor(String key) {

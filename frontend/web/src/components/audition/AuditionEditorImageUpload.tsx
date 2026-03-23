@@ -53,7 +53,7 @@ export function SingleImageUploadField({
       const url = await uploadAuditionImage(file, uploadDir)
       onImageUrlChange(url)
     } catch (err: unknown) {
-      toast.error(apiUploadErrorMessage(err) || '업로드 실패')
+      toast.error(apiUploadErrorMessage(err) || '이미지 업로드 실패')
     } finally {
       onUploadingChange(false)
     }

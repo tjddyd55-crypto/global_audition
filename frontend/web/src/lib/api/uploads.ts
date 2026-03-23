@@ -30,12 +30,22 @@ export async function uploadAuditionImage(file: File, dir: AuditionUploadDir = '
   return url
 }
 
-/** 업로드 API 전용 — 401/403 안내 포함 */
+type UploadErrorBody = {
+  message?: string
+  error?: string
+}
+
+function messageFromUploadErrorBody(data: unknown): string {
+  const d = data as UploadErrorBody | undefined
+  const msg = d?.message
+  return typeof msg === 'string' && msg.trim().length > 0 ? msg.trim() : ''
+}
+
+/** 업로드 API 전용 — 401/403 안내 포함. 503 시 서버 `{ error, message }` 본문 우선 */
 export function apiUploadErrorMessage(e: unknown): string {
   if (axios.isAxiosError(e)) {
     const status = e.response?.status
-    const d = e.response?.data as { message?: string } | undefined
-    const body = typeof d?.message === 'string' && d.message.length > 0 ? d.message : ''
+    const body = messageFromUploadErrorBody(e.response?.data)
     if (status === 401) {
       return body || '업로드 실패: 로그인이 필요합니다. (JWT)'
     }
@@ -43,7 +53,7 @@ export function apiUploadErrorMessage(e: unknown): string {
       return body || '업로드 실패: 권한이 없습니다. AGENCY/ADMIN 역할 또는 S3 IAM 정책을 확인하세요.'
     }
     if (status === 503) {
-      return body || '이미지 업로드 서버가 구성되지 않았습니다. 관리자에게 문의하세요.'
+      return body || '이미지 업로드 실패'
     }
     if (body) return body
   }
@@ -60,7 +70,8 @@ export function apiErrorMessage(e: unknown): string {
       return d.message
     }
     if (e.response?.status === 503) {
-      return '이미지 업로드 서버가 구성되지 않았습니다. 관리자에게 문의하세요.'
+      const m = messageFromUploadErrorBody(e.response?.data)
+      return m || '이미지 업로드 실패'
     }
     if (e.response?.status === 401) {
       return '로그인이 필요합니다.'
