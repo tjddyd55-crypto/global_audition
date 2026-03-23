@@ -1,7 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { AUDITION_COVER_PLACEHOLDER_SRC } from '@/components/audition/AuditionEditorPreview'
+import { applyGalleryImageOnError, GALLERY_IMAGE_FALLBACK_SRC } from '@/components/gallery/galleryFallback'
+import { shouldTriggerSwipeNavigation } from '@/components/gallery/gallerySwipe'
 
 export type GalleryModalProps = {
   images: string[]
@@ -10,26 +11,61 @@ export type GalleryModalProps = {
   onClose: () => void
 }
 
+function preloadImageUrl(url: string | undefined): void {
+  if (!url || url === GALLERY_IMAGE_FALLBACK_SRC) return
+  const img = new Image()
+  img.src = url
+}
+
 function ModalImageInner({ src, label }: { src: string; label: string }) {
-  const [failed, setFailed] = useState(false)
+  const [loaded, setLoaded] = useState(false)
+
   useEffect(() => {
-    setFailed(false)
+    setLoaded(false)
   }, [src])
 
+  const finishLoad = useCallback(() => {
+    setLoaded(true)
+  }, [])
+
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={failed ? AUDITION_COVER_PLACEHOLDER_SRC : src}
-      alt={label}
-      className="pointer-events-none max-h-[90vh] max-w-[90vw] select-none object-contain"
-      onError={() => setFailed(true)}
-      draggable={false}
-    />
+    <div className="relative flex max-h-[90vh] max-w-[90vw] items-center justify-center">
+      {!loaded && (
+        <div
+          className="absolute inset-0 z-[0] min-h-[40vh] min-w-[50vw] rounded bg-gray-200 animate-pulse md:min-h-[50vh]"
+          aria-hidden
+        />
+      )}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        key={src}
+        src={src}
+        alt={label}
+        loading="eager"
+        fetchPriority="high"
+        className="relative z-[1] max-h-[90vh] max-w-[90vw] select-none object-contain transition-opacity duration-200 data-[loaded=false]:opacity-0 data-[loaded=true]:opacity-100"
+        data-loaded={loaded}
+        draggable={false}
+        onLoad={finishLoad}
+        onError={(e) => {
+          applyGalleryImageOnError(e)
+          finishLoad()
+        }}
+      />
+    </div>
   )
 }
 
 export function GalleryModal({ images, currentIndex, setCurrentIndex, onClose }: GalleryModalProps) {
   const touchStartX = useRef<number | null>(null)
+  const touchStartTime = useRef<number | null>(null)
+
+  useEffect(() => {
+    const next = images[currentIndex + 1]
+    const prev = images[currentIndex - 1]
+    if (next) preloadImageUrl(next)
+    if (prev) preloadImageUrl(prev)
+  }, [currentIndex, images])
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -75,18 +111,24 @@ export function GalleryModal({ images, currentIndex, setCurrentIndex, onClose }:
 
   const onTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.targetTouches[0]?.clientX ?? null
+    touchStartTime.current = typeof performance !== 'undefined' ? performance.now() : Date.now()
   }
 
   const onTouchEnd = (e: React.TouchEvent) => {
     const start = touchStartX.current
+    const t0 = touchStartTime.current
     touchStartX.current = null
-    if (start == null) return
+    touchStartTime.current = null
+    if (start == null || t0 == null) return
     const end = e.changedTouches[0]?.clientX
     if (end == null) return
-    const dx = end - start
-    const threshold = 56
-    if (dx > threshold) goPrev()
-    else if (dx < -threshold) goNext()
+    const deltaX = end - start
+    const t1 = typeof performance !== 'undefined' ? performance.now() : Date.now()
+    const durationMs = Math.max(1, t1 - t0)
+
+    const nav = shouldTriggerSwipeNavigation(deltaX, durationMs)
+    if (nav === 'prev') goPrev()
+    else if (nav === 'next') goNext()
   }
 
   if (images.length === 0) return null

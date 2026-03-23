@@ -1,8 +1,9 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { AUDITION_COVER_PLACEHOLDER_SRC } from '@/components/audition/AuditionEditorPreview'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { GalleryModal } from '@/components/gallery/GalleryModal'
+import { applyGalleryImageOnError, GALLERY_IMAGE_FALLBACK_SRC } from '@/components/gallery/galleryFallback'
+import { shouldTriggerSwipeNavigation } from '@/components/gallery/gallerySwipe'
 
 export type AuditionGalleryProps = {
   coverImage: string
@@ -17,21 +18,46 @@ function buildAllImages(coverImage: string, images: string[] | undefined): strin
   return cover ? [cover, ...galleryOnly] : galleryOnly
 }
 
+function preloadImageUrl(url: string | undefined): void {
+  if (!url || url === GALLERY_IMAGE_FALLBACK_SRC) return
+  const img = new Image()
+  img.src = url
+}
+
 function GalleryMainImage({ src, label }: { src: string; label: string }) {
-  const [failed, setFailed] = useState(false)
+  const [loaded, setLoaded] = useState(false)
+
   useEffect(() => {
-    setFailed(false)
+    setLoaded(false)
   }, [src])
-  const url = failed ? AUDITION_COVER_PLACEHOLDER_SRC : src
+
+  const finishLoad = useCallback(() => {
+    setLoaded(true)
+  }, [])
 
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={url}
-      alt={label}
-      className="max-h-full max-w-full object-contain"
-      onError={() => setFailed(true)}
-    />
+    <div className="relative z-0 flex h-full w-full min-h-0 min-w-0 items-center justify-center">
+      {!loaded && (
+        <div
+          className="absolute inset-0 z-[0] rounded bg-gray-200 animate-pulse"
+          aria-hidden
+        />
+      )}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        key={src}
+        src={src}
+        alt={label}
+        loading="lazy"
+        className="relative z-[1] max-h-full max-w-full object-contain transition-opacity duration-200 data-[loaded=false]:opacity-0 data-[loaded=true]:opacity-100"
+        data-loaded={loaded}
+        onLoad={finishLoad}
+        onError={(e) => {
+          applyGalleryImageOnError(e)
+          finishLoad()
+        }}
+      />
+    </div>
   )
 }
 
@@ -46,55 +72,88 @@ function ThumbnailButton({
   isActive: boolean
   onSelect: (i: number) => void
 }) {
-  const [failed, setFailed] = useState(false)
+  const [loaded, setLoaded] = useState(false)
+
   useEffect(() => {
-    setFailed(false)
+    setLoaded(false)
   }, [src])
-  const url = failed ? AUDITION_COVER_PLACEHOLDER_SRC : src
+
+  const finishLoad = useCallback(() => {
+    setLoaded(true)
+  }, [])
 
   return (
     <button
       type="button"
+      id={`thumb-${index}`}
       onClick={() => onSelect(index)}
-      className={`relative h-20 shrink-0 aspect-video cursor-pointer overflow-hidden rounded border-2 bg-black transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 ${
-        isActive ? 'border-purple-500' : 'border-transparent'
+      className={`relative h-20 shrink-0 origin-center cursor-pointer overflow-hidden rounded border-2 bg-black transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 hover:scale-105 ${
+        isActive
+          ? 'z-[1] scale-105 border-purple-500 opacity-100'
+          : 'border-transparent opacity-70 hover:opacity-100'
       }`}
       aria-label={`이미지 ${index + 1} 보기`}
       aria-current={isActive ? 'true' : undefined}
     >
+      {!loaded && (
+        <div
+          className="absolute inset-0 z-[0] rounded bg-gray-200 animate-pulse"
+          aria-hidden
+        />
+      )}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={url}
+        key={src}
+        src={src}
         alt=""
-        className="h-full w-full object-cover"
-        onError={() => setFailed(true)}
+        loading="lazy"
+        className="relative z-[1] h-full w-full object-cover transition-opacity duration-200 data-[loaded=false]:opacity-0 data-[loaded=true]:opacity-100"
+        data-loaded={loaded}
+        onLoad={finishLoad}
+        onError={(e) => {
+          applyGalleryImageOnError(e)
+          finishLoad()
+        }}
       />
     </button>
   )
 }
 
 export default function AuditionGallery({ coverImage, images = [] }: AuditionGalleryProps) {
-  const allImages = buildAllImages(coverImage, images)
+  const allImages = useMemo(() => buildAllImages(coverImage, images), [coverImage, images])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isOpen, setIsOpen] = useState(false)
   const touchStartX = useRef<number | null>(null)
+  const touchStartTime = useRef<number | null>(null)
 
   useEffect(() => {
     if (allImages.length === 0) return
     setCurrentIndex((prev) => Math.min(prev, allImages.length - 1))
   }, [allImages.length])
 
+  /** 인접 슬라이드 프리로드 (이전·다음) */
+  useEffect(() => {
+    const next = allImages[currentIndex + 1]
+    const prev = allImages[currentIndex - 1]
+    if (next) preloadImageUrl(next)
+    if (prev) preloadImageUrl(prev)
+  }, [currentIndex, allImages])
+
+  useEffect(() => {
+    const el = document.getElementById(`thumb-${currentIndex}`)
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+    }
+  }, [currentIndex])
+
   const current = allImages[currentIndex] ?? ''
   const canPrev = currentIndex > 0
   const canNext = currentIndex < allImages.length - 1
 
-  const goPrev = useCallback(
-    (e?: React.MouseEvent) => {
-      e?.stopPropagation()
-      setCurrentIndex((i) => Math.max(0, i - 1))
-    },
-    []
-  )
+  const goPrev = useCallback((e?: React.MouseEvent) => {
+    e?.stopPropagation()
+    setCurrentIndex((i) => Math.max(0, i - 1))
+  }, [])
 
   const goNext = useCallback(
     (e?: React.MouseEvent) => {
@@ -106,18 +165,24 @@ export default function AuditionGallery({ coverImage, images = [] }: AuditionGal
 
   const onMainTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.targetTouches[0]?.clientX ?? null
+    touchStartTime.current = typeof performance !== 'undefined' ? performance.now() : Date.now()
   }
 
   const onMainTouchEnd = (e: React.TouchEvent) => {
     const start = touchStartX.current
+    const t0 = touchStartTime.current
     touchStartX.current = null
-    if (start == null) return
+    touchStartTime.current = null
+    if (start == null || t0 == null) return
     const end = e.changedTouches[0]?.clientX
     if (end == null) return
-    const dx = end - start
-    const threshold = 48
-    if (dx > threshold) goPrev()
-    else if (dx < -threshold) goNext()
+    const deltaX = end - start
+    const t1 = typeof performance !== 'undefined' ? performance.now() : Date.now()
+    const durationMs = Math.max(1, t1 - t0)
+
+    const nav = shouldTriggerSwipeNavigation(deltaX, durationMs)
+    if (nav === 'prev') goPrev()
+    else if (nav === 'next') goNext()
   }
 
   if (allImages.length === 0) {
@@ -144,6 +209,13 @@ export default function AuditionGallery({ coverImage, images = [] }: AuditionGal
       >
         <GalleryMainImage src={current} label={`이미지 ${currentIndex + 1} / ${allImages.length}`} />
 
+        <div
+          className="pointer-events-none absolute bottom-2 right-2 z-[2] rounded bg-black/60 px-2 py-1 text-sm tabular-nums text-white"
+          aria-hidden
+        >
+          {currentIndex + 1} / {allImages.length}
+        </div>
+
         {canPrev && (
           <button
             type="button"
@@ -166,7 +238,7 @@ export default function AuditionGallery({ coverImage, images = [] }: AuditionGal
         )}
       </div>
 
-      <div className="mt-2 flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:thin]">
+      <div className="mt-2 flex items-center gap-2 overflow-x-auto overflow-y-visible py-1 pb-2 [-ms-overflow-style:none] [scrollbar-width:thin]">
         {allImages.map((img, idx) => (
           <ThumbnailButton
             key={`${idx}-${img.slice(0, 48)}`}
