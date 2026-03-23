@@ -49,6 +49,24 @@ export type AdminLogEntry = {
   createdAt: string
 }
 
+export type PaymentOrderAdminRow = {
+  id: string
+  orderNo: string
+  userId: string
+  packageId: string
+  provider: string
+  amount: number
+  currency: string
+  status: string
+  credits: number
+  bonusCredits: number
+  paidAt?: string | null
+  providerTxId?: string | null
+  failReason?: string | null
+  createdAt: string
+  updatedAt: string
+}
+
 export type SpringPage<T> = {
   content: T[]
   totalElements: number
@@ -218,6 +236,23 @@ export const superAdminApi = {
         type: params.type || undefined,
         from: params.from || undefined,
         to: params.to || undefined,
+        page: params.page ?? 0,
+        size: params.size ?? 50,
+      },
+    })
+    return data
+  },
+
+  listPaymentOrders: async (params: {
+    userId?: string
+    status?: string
+    page?: number
+    size?: number
+  }): Promise<SpringPage<PaymentOrderAdminRow>> => {
+    const { data } = await apiClient.get<SpringPage<PaymentOrderAdminRow>>('/admin/payment-orders', {
+      params: {
+        userId: params.userId?.trim() || undefined,
+        status: params.status?.trim() || undefined,
         page: params.page ?? 0,
         size: params.size ?? 50,
       },

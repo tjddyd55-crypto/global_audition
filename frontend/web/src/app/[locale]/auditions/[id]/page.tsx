@@ -14,7 +14,8 @@ import { AUDITION_CARD, AUDITION_DETAIL, HERO } from '../../../../lib/design-tok
 import { getVideoEmbedSrc } from '../../../../lib/utils/videoEmbed'
 import { safeArr, safeNum, safeStr } from '../../../../lib/utils/safe'
 import { useAuthStore } from '@/lib/auth/authStore'
-import { AuditionGalleryViewer } from '@/components/audition/AuditionGalleryViewer'
+import { AuditionDetailHeroImage, AuditionDetailMediaSection } from '@/components/audition/AuditionDetailMedia'
+import { CREDIT_POLICY_AUDITION_APPLY, creditsApi } from '@/lib/api/credits'
 import { canManageAudition as userCanManageAudition } from '@/lib/audition/auditionPermissions'
 
 function SectionBlock({
@@ -113,11 +114,31 @@ export default function AuditionDetailPage() {
     enabled: !!id,
   })
 
+  const isOpenAudition = audition?.status === 'OPEN'
+
+  const { data: applyPolicy, isLoading: applyPolicyLoading, isError: applyPolicyError } = useQuery({
+    queryKey: ['credit-policy-public', CREDIT_POLICY_AUDITION_APPLY],
+    queryFn: () => creditsApi.getPublicPolicy(CREDIT_POLICY_AUDITION_APPLY),
+    enabled: !!id && isOpenAudition,
+    staleTime: 60_000,
+  })
+
+  const showApplySubmitCtaEarly =
+    isOpenAudition && !!accessToken && (role === 'APPLICANT' || role === 'ADMIN')
+
+  const { data: creditBalance, isLoading: balanceLoading } = useQuery({
+    queryKey: ['credits', 'balance'],
+    queryFn: () => creditsApi.getBalance(),
+    enabled: !!id && showApplySubmitCtaEarly,
+    staleTime: 30_000,
+  })
+
   const applyMutation = useMutation({
     mutationFn: () => applicationApi.apply(id),
     onSuccess: () => {
       setApplyError(null)
       queryClient.invalidateQueries({ queryKey: ['audition', id] })
+      queryClient.invalidateQueries({ queryKey: ['credits', 'balance'] })
       router.push('/my/dashboard')
     },
     onError: (err: any) => {
@@ -147,8 +168,12 @@ export default function AuditionDetailPage() {
 
   const embed = getVideoEmbedSrc(safeStr(audition.videoUrl))
   const galleryRaw = safeArr(audition.galleryImages)
-  const gallery = galleryRaw.filter((src) => safeStr(src).length > 0).slice(0, 12)
   const cover = safeStr(audition.coverImage)
+  /** 대표와 동일 URL 중복 제거 후 추가 이미지 */
+  const galleryExtra = galleryRaw
+    .map((src) => safeStr(src))
+    .filter((s) => s.length > 0 && s !== cover)
+    .slice(0, 24)
   const applicants = safeNum(audition.applicantsCount)
   const recruitList = safeArr(audition.recruitFields)
   const qualifications = safeArr(audition.qualifications)
@@ -167,6 +192,25 @@ export default function AuditionDetailPage() {
     ownerId: audition.ownerId,
     role,
   })
+
+  const applyPolicySnapshot = applyPolicy
+  const creditBalanceAmount = creditBalance?.balance ?? 0
+  const needCreditsForApply =
+    !!applyPolicySnapshot && applyPolicySnapshot.active && applyPolicySnapshot.cost > 0
+  const creditGateReady = !needCreditsForApply || !balanceLoading
+  const hasEnoughCredits =
+    !applyPolicySnapshot || !applyPolicySnapshot.active || applyPolicySnapshot.cost <= 0
+      ? true
+      : creditBalanceAmount >= applyPolicySnapshot.cost
+  const applyButtonDisabledForCredits =
+    showApplySubmitCta &&
+    (applyMutation.isPending ||
+      applyPolicyLoading ||
+      applyPolicyError ||
+      !applyPolicySnapshot ||
+      !applyPolicySnapshot.active ||
+      !creditGateReady ||
+      !hasEnoughCredits)
 
   const fmt = (iso: string) => {
     try {
@@ -197,15 +241,7 @@ export default function AuditionDetailPage() {
       <section className="relative w-full overflow-hidden">
         <div className="relative aspect-[16/9] w-full min-h-[220px]">
           {cover ? (
-            <Image
-              src={cover}
-              alt=""
-              fill
-              className="object-cover"
-              sizes="100vw"
-              priority
-              unoptimized
-            />
+            <AuditionDetailHeroImage src={cover} />
           ) : (
             <div
               className="absolute inset-0"
@@ -240,7 +276,11 @@ export default function AuditionDetailPage() {
               marginBottom: AUDITION_DETAIL.heroBadgeMarginBottomPx,
             }}
           >
-            {audition.status === 'OPEN' ? '모집중' : audition.status === 'CLOSED' ? '마감' : '초안'}
+            {audition.status === 'OPEN'
+              ? '모집중 · OPEN'
+              : audition.status === 'CLOSED'
+                ? '마감 · CLOSED'
+                : '초안 · DRAFT'}
           </span>
           <h1
             style={{
@@ -329,45 +369,7 @@ export default function AuditionDetailPage() {
             ) : null}
 
             <div className={cardBaseClass} style={{ ...cardBase, marginBottom: AUDITION_DETAIL.mainGridGapPx }}>
-              <h2
-                style={{
-                  margin: '0 0 12px 0',
-                  fontSize: AUDITION_DETAIL.sectionTitlePx,
-                  fontWeight: AUDITION_DETAIL.sectionTitleWeight,
-                }}
-              >
-                갤러리
-              </h2>
-              {gallery.length > 0 ? (
-                <AuditionGalleryViewer images={gallery} />
-              ) : (
-                <div
-                  className="grid grid-cols-1 sm:grid-cols-3"
-                  style={{
-                    gap: AUDITION_DETAIL.galleryGapPx,
-                  }}
-                >
-                  {Array.from({ length: AUDITION_DETAIL.galleryPlaceholderCount }, (_, i) => (
-                    <div
-                      key={`gallery-ph-${i}`}
-                      style={{
-                        position: 'relative',
-                        aspectRatio: '4/3',
-                        borderRadius: AUDITION_DETAIL.galleryRadiusPx,
-                        overflow: 'hidden',
-                        background: '#f3f4f6',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: AUDITION_DETAIL.metaMutedColor,
-                        fontSize: AUDITION_DETAIL.metaMutedPx,
-                      }}
-                    >
-                      —
-                    </div>
-                  ))}
-                </div>
-              )}
+              <AuditionDetailMediaSection coverUrl={cover} galleryUrls={galleryExtra} />
             </div>
 
             <div className={cardBaseClass} style={cardBase}>
@@ -600,20 +602,49 @@ export default function AuditionDetailPage() {
         >
           <div className="flex w-full flex-col gap-2 min-[480px]:flex-row min-[480px]:items-center md:w-auto">
             {showApplySubmitCta ? (
-              <button
-                type="button"
-                onClick={() => applyMutation.mutate()}
-                disabled={applyMutation.isPending}
-                className="inline-flex h-11 w-full min-[480px]:w-auto items-center justify-center px-6 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-70"
-                style={{
-                  borderRadius: HERO.buttonRadiusPx,
-                  border: 'none',
-                  background: `linear-gradient(90deg, ${HERO.primaryGradientStart}, ${HERO.primaryGradientEnd})`,
-                  fontSize: AUDITION_DETAIL.bodyFontPx,
-                }}
-              >
-                {applyMutation.isPending ? '처리 중...' : '지원하기'}
-              </button>
+              <div className="flex w-full min-[480px]:w-auto flex-col gap-1">
+                <button
+                  type="button"
+                  onClick={() => applyMutation.mutate()}
+                  disabled={applyButtonDisabledForCredits}
+                  className="inline-flex h-11 w-full min-[480px]:w-auto items-center justify-center px-6 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-70"
+                  style={{
+                    borderRadius: HERO.buttonRadiusPx,
+                    border: 'none',
+                    background: `linear-gradient(90deg, ${HERO.primaryGradientStart}, ${HERO.primaryGradientEnd})`,
+                    fontSize: AUDITION_DETAIL.bodyFontPx,
+                  }}
+                >
+                  {applyMutation.isPending
+                    ? '처리 중...'
+                    : applyPolicyLoading || balanceLoading
+                      ? '확인 중...'
+                      : '지원하기'}
+                </button>
+                {isOpen && applyPolicySnapshot && applyPolicySnapshot.active && applyPolicySnapshot.cost > 0 ? (
+                  <span className="text-center text-xs text-gray-500 min-[480px]:text-left">
+                    지원 시 크레딧 {applyPolicySnapshot.cost} 소모 · 보유 {creditBalanceAmount}
+                    {needCreditsForApply && creditGateReady && !hasEnoughCredits ? (
+                      <>
+                        {' '}
+                        <Link href="/credits/charge" className="font-semibold text-violet-700 underline">
+                          충전하기
+                        </Link>
+                      </>
+                    ) : null}
+                  </span>
+                ) : null}
+                {isOpen && applyPolicySnapshot && !applyPolicySnapshot.active ? (
+                  <span className="text-center text-xs text-amber-700 min-[480px]:text-left">
+                    지원 비용 정책이 비활성화되어 지원할 수 없습니다.
+                  </span>
+                ) : null}
+                {isOpen && applyPolicyError ? (
+                  <span className="text-center text-xs text-red-600 min-[480px]:text-left">
+                    지원 비용 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.
+                  </span>
+                ) : null}
+              </div>
             ) : showApplyLoginCta ? (
               <Link
                 href={`/login?next=${encodeURIComponent(`/auditions/${id}`)}`}

@@ -26,3 +26,10 @@ export function extractYoutubeVideoId(raw: string): string | null {
   }
   return null
 }
+
+/** 비어 있으면 true, 값이 있으면 YouTube로 해석 가능할 때만 true */
+export function isBlankOrValidYoutubeUrl(raw: string): boolean {
+  const s = (raw ?? '').trim()
+  if (!s) return true
+  return extractYoutubeVideoId(s) != null
+}

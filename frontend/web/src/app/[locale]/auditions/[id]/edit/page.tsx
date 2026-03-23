@@ -9,6 +9,7 @@ import { useAuthStore } from '@/lib/auth/authStore'
 import { useTranslations } from 'next-intl'
 import { Link } from '../../../../../i18n.config'
 import { LAYOUT, HERO, AUDITION_DETAIL } from '../../../../../lib/design-tokens'
+import { toast } from 'sonner'
 import { AuditionEditorForm } from '@/components/audition/AuditionEditorForm'
 import { canManageAudition } from '@/lib/audition/auditionPermissions'
 
@@ -121,7 +122,10 @@ export default function AuditionEditPage() {
         mode="edit"
         auditionId={id}
         initialAudition={audition}
-        onSuccess={() => router.push(`/auditions/${id}`)}
+        onSuccess={() => {
+          toast.success('공고가 반영되었습니다. 상세 화면으로 이동합니다.', { duration: 3500 })
+          router.push(`/auditions/${id}`)
+        }}
       />
     </div>
   )

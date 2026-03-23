@@ -23,6 +23,8 @@
         <java.version>17</java.version>
         <jjwt.version>0.12.3</jjwt.version>
         <springdoc.version>2.3.0</springdoc.version>
+        <!-- Gradle: implementation 'software.amazon.awssdk:s3:2.20.0' 와 동일 계열 -->
+        <aws.sdk.version>2.20.0</aws.sdk.version>
     </properties>
 
     <dependencies>
@@ -76,6 +78,11 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>s3</artifactId>
+            <version>${aws.sdk.version}</version>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>

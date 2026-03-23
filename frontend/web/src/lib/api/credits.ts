@@ -17,6 +17,16 @@ export type CreditBalance = {
   balance: number
 }
 
+/** GET /api/credits/public/policies/{key} — 비로그인 허용 */
+export type CreditPolicyPublic = {
+  policyKey: string
+  cost: number
+  active: boolean
+}
+
+/** 공개 조회 허용 정책 키 (백엔드와 동일) */
+export const CREDIT_POLICY_AUDITION_APPLY = 'AUDITION_APPLY' as const
+
 export type CreditTransactionItem = {
   id: string
   userId: string
@@ -86,6 +96,13 @@ export function isMockPaymentUiEnabled(): boolean {
 }
 
 export const creditsApi = {
+  getPublicPolicy: async (policyKey: string): Promise<CreditPolicyPublic> => {
+    const { data } = await apiClient.get<CreditPolicyPublic>(
+      `/credits/public/policies/${encodeURIComponent(policyKey)}`
+    )
+    return data
+  },
+
   getBalance: async (): Promise<CreditBalance> => {
     const { data } = await apiClient.get<CreditBalance>('/credits/balance')
     return data

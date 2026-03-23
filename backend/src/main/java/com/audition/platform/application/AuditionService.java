@@ -7,6 +7,7 @@ import com.audition.platform.domain.audition.ApplicationRepository;
 import com.audition.platform.domain.audition.Audition;
 import com.audition.platform.domain.audition.AuditionRepository;
 import com.audition.platform.domain.user.UserRepository;
+import com.audition.platform.domain.util.YoutubeUrls;
 import com.audition.platform.infra.SecurityUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -143,6 +144,27 @@ public class AuditionService {
         a.setApplicantsCount(0);
     }
 
+    private static void assertYoutubeIfVideoPresent(String status, String videoUrl) {
+        String st = status != null ? status : "DRAFT";
+        if (!"OPEN".equals(st) && !"CLOSED".equals(st)) {
+            return;
+        }
+        if (!YoutubeUrls.isBlankOrValidYoutube(videoUrl)) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "영상 링크는 YouTube URL만 입력할 수 있습니다.");
+        }
+    }
+
+    /** 게시(OPEN)·마감(CLOSED) 시 대표 이미지 URL 필수 */
+    private static void assertCoverImageForPublished(String status, String coverImage) {
+        String st = status != null ? status : "DRAFT";
+        if (!"OPEN".equals(st) && !"CLOSED".equals(st)) {
+            return;
+        }
+        if (coverImage == null || coverImage.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "게시·마감 상태에서는 대표 이미지(coverImage)가 필요합니다.");
+        }
+    }
+
     @Transactional
     public AuditionResponse create(CreateAuditionRequest req) {
         UUID ownerId = SecurityUtils.getCurrentUserId();
@@ -155,6 +177,8 @@ public class AuditionService {
         if (!userRepository.existsById(ownerId)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User not found");
         }
+        assertYoutubeIfVideoPresent(req.getStatus(), req.getVideoUrl());
+        assertCoverImageForPublished(req.getStatus(), req.getCoverImage());
         Audition a = new Audition();
         a.setOwnerId(ownerId);
         a.setUpdatedAt(Instant.now());
@@ -266,6 +290,9 @@ public class AuditionService {
         if (request.getBenefits() != null) {
             audition.setBenefits(listToArray(request.getBenefits()));
         }
+
+        assertYoutubeIfVideoPresent(audition.getStatus(), audition.getVideoUrl());
+        assertCoverImageForPublished(audition.getStatus(), audition.getCoverImage());
 
         if (audition.getEndDate() != null) {
             audition.setRemainingDays(computeRemainingDays(audition.getEndDate()));

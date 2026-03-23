@@ -1,9 +1,13 @@
 'use client'
 
+import { useMemo } from 'react'
 import type { AuditionStatus } from '@/lib/types/audition'
 import { AUDITION_DETAIL, HERO } from '@/lib/design-tokens'
 import { EDITOR_LABELS, auditionStatusLabelKo } from '@/lib/audition/auditionEditorCopy'
 import { extractYoutubeVideoId } from '@/lib/audition/youtubeEmbed'
+
+/** public 정적 자산 — 깨진 URL 시 onError fallback (무한 루프 방지: 한 번만 교체) */
+export const AUDITION_COVER_PLACEHOLDER_SRC = '/audition-cover-placeholder.svg'
 
 export type AuditionEditorPreviewProps = {
   title: string
@@ -22,10 +26,20 @@ export function AuditionEditorPreview({
   videoUrl,
   status,
 }: AuditionEditorPreviewProps) {
-  const videoId = extractYoutubeVideoId(videoUrl)
-  const displayTitle = title.trim() || '제목을 입력하세요'
-  const displayCategory = (category.trim() || '기타').trim()
-  const displayDesc = description.trim() || '상세 설명이 여기에 표시됩니다.'
+  const videoId = useMemo(() => extractYoutubeVideoId(videoUrl), [videoUrl])
+  const embedSrc = useMemo(
+    () => (videoId ? `https://www.youtube.com/embed/${videoId}` : ''),
+    [videoId],
+  )
+
+  const displayTitle = useMemo(() => title.trim() || '제목을 입력하세요', [title])
+  const displayCategory = useMemo(() => (category.trim() || '기타').trim(), [category])
+  const displayDesc = useMemo(
+    () => description.trim() || '상세 설명이 여기에 표시됩니다.',
+    [description],
+  )
+
+  const coverTrimmed = coverImage.trim()
 
   return (
     <aside
@@ -46,19 +60,25 @@ export function AuditionEditorPreview({
           style={{ borderColor: AUDITION_DETAIL.cardBorderColor }}
         >
           <div className="relative aspect-[16/9] w-full bg-gray-200">
-            {coverImage.trim() ? (
+            {coverTrimmed ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={coverImage.trim()}
+                src={coverTrimmed}
                 alt=""
                 className="h-full w-full object-cover"
+                loading="lazy"
+                decoding="async"
                 onError={(e) => {
-                  e.currentTarget.style.display = 'none'
+                  const el = e.currentTarget
+                  if (el.dataset.fallback === '1') return
+                  el.dataset.fallback = '1'
+                  el.onerror = null
+                  el.src = AUDITION_COVER_PLACEHOLDER_SRC
                 }}
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-sm text-gray-400">
-                대표 이미지 URL을 입력하면 여기에 표시됩니다
+                대표 이미지를 업로드하면 여기에 표시됩니다
               </div>
             )}
           </div>
@@ -83,20 +103,21 @@ export function AuditionEditorPreview({
             <h2 className="text-lg font-bold text-gray-900 leading-tight">{displayTitle}</h2>
             <p className="text-sm text-gray-600 whitespace-pre-wrap line-clamp-6">{displayDesc}</p>
 
-            {videoId && (
+            {embedSrc ? (
               <div className="pt-2">
                 <p className="mb-1 text-xs font-medium text-gray-500">영상 미리보기</p>
                 <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-black">
                   <iframe
+                    key={embedSrc}
                     title="YouTube 미리보기"
                     className="absolute inset-0 h-full w-full"
-                    src={`https://www.youtube.com/embed/${videoId}`}
+                    src={embedSrc}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
                   />
                 </div>
               </div>
-            )}
+            ) : null}
           </div>
         </div>
       </div>

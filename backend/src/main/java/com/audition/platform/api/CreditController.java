@@ -3,9 +3,11 @@ package com.audition.platform.api;
 import com.audition.platform.api.dto.CreditBalanceResponse;
 import com.audition.platform.api.dto.CreditChargeRequest;
 import com.audition.platform.api.dto.CreditOrderSummaryResponse;
+import com.audition.platform.api.dto.CreditPolicyPublicDto;
 import com.audition.platform.api.dto.CreditTransactionDto;
 import com.audition.platform.api.dto.PreparePaymentRequest;
 import com.audition.platform.api.dto.PreparePaymentResponse;
+import com.audition.platform.application.credit.CreditPolicyKey;
 import com.audition.platform.application.credit.CreditService;
 import com.audition.platform.application.payment.PaymentOrderService;
 import com.audition.platform.infra.SecurityUtils;
@@ -34,6 +36,18 @@ public class CreditController {
     public CreditController(CreditService creditService, PaymentOrderService paymentOrderService) {
         this.creditService = creditService;
         this.paymentOrderService = paymentOrderService;
+    }
+
+    /**
+     * 비로그인 공개: 오디션 지원 1회 비용·정책 활성 여부만 노출 ({@link CreditPolicyKey#AUDITION_APPLY} 만 허용).
+     */
+    @GetMapping("/public/policies/{policyKey}")
+    public CreditPolicyPublicDto getPublicPolicy(@PathVariable String policyKey) {
+        String key = policyKey != null ? policyKey.trim() : "";
+        if (!CreditPolicyKey.AUDITION_APPLY.equals(key)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "공개 정책을 찾을 수 없습니다.");
+        }
+        return creditService.getPolicyPublicSnapshot(key);
     }
 
     @GetMapping("/balance")

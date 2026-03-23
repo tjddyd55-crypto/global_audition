@@ -1,0 +1,136 @@
+package com.audition.platform.application.storage;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.ObjectCannedACL;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+
+import java.io.IOException;
+import java.util.Locale;
+import java.util.Set;
+import java.util.UUID;
+
+/**
+ * 이미지 바이너리는 S3(또는 S3 호환)에만 저장하고, DB에는 반환된 공개 URL만 남깁니다.
+ */
+@Service
+@ConditionalOnBean(S3Client.class)
+public class S3ImageUploadService {
+
+    private static final long MAX_BYTES = 5L * 1024 * 1024;
+
+    private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of(
+            "image/jpeg",
+            "image/png",
+            "image/webp"
+    );
+
+    private final S3Client s3Client;
+
+    @Value("${app.s3.bucket}")
+    private String bucket;
+
+    @Value("${app.s3.region:ap-northeast-2}")
+    private String region;
+
+    /**
+     * 비우면 {@code https://{bucket}.s3.{region}.amazonaws.com/{key}} 형식으로 조합합니다.
+     * CloudFront·커스텀 도메인는 이 값으로 지정하세요.
+     */
+    @Value("${app.s3.public-base-url:}")
+    private String publicBaseUrl;
+
+    /**
+     * true면 {@link ObjectCannedACL#PUBLIC_READ}. 버킷이 ACL 비활성이면 업로드 실패 → 기본 false, 버킷 정책 권장.
+     */
+    @Value("${app.s3.public-read-acl:false}")
+    private boolean publicReadAcl;
+
+    public S3ImageUploadService(S3Client s3Client) {
+        this.s3Client = s3Client;
+    }
+
+    public String upload(MultipartFile file, ImageUploadDirectory directory) {
+        if (file == null || file.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "파일이 비어 있습니다.");
+        }
+        String contentType = normalizeImageContentType(file.getContentType());
+        if (contentType == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNPROCESSABLE_ENTITY,
+                    "허용 형식은 JPEG, PNG, WebP만 가능합니다."
+            );
+        }
+        if (file.getSize() > MAX_BYTES) {
+            throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE, "이미지는 최대 5MB까지 업로드할 수 있습니다.");
+        }
+        String ext = extensionFor(file, contentType);
+        String key = directory.keyPrefix() + UUID.randomUUID() + ext;
+        try {
+            PutObjectRequest.Builder put = PutObjectRequest.builder()
+                    .bucket(bucket.trim())
+                    .key(key)
+                    .contentType(contentType) // 정규화된 MIME (jpeg/png/webp)
+                    .contentLength(file.getSize());
+            if (publicReadAcl) {
+                put.acl(ObjectCannedACL.PUBLIC_READ);
+            }
+            s3Client.putObject(
+                    put.build(),
+                    RequestBody.fromInputStream(file.getInputStream(), file.getSize())
+            );
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "스토리지 업로드에 실패했습니다.");
+        }
+        return publicUrlFor(key);
+    }
+
+    private String publicUrlFor(String key) {
+        if (publicBaseUrl != null && !publicBaseUrl.isBlank()) {
+            String base = publicBaseUrl.trim().replaceAll("/+$", "");
+            return base + "/" + key;
+        }
+        String b = bucket.trim();
+        String r = region.trim();
+        return "https://" + b + ".s3." + r + ".amazonaws.com/" + key;
+    }
+
+    /**
+     * @return 정규 MIME 또는 null (비허용)
+     */
+    private static String normalizeImageContentType(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        String ct = raw.toLowerCase(Locale.ROOT).trim();
+        if ("image/jpg".equals(ct) || "image/pjpeg".equals(ct)) {
+            ct = "image/jpeg";
+        }
+        if (!ALLOWED_CONTENT_TYPES.contains(ct)) {
+            return null;
+        }
+        return ct;
+    }
+
+    private static String extensionFor(MultipartFile file, String normalizedContentType) {
+        String name = file.getOriginalFilename();
+        if (name != null && name.contains(".")) {
+            String ext = name.substring(name.lastIndexOf('.')).toLowerCase(Locale.ROOT);
+            if (ext.matches("\\.(jpe?g|png|webp)")) {
+                return ext.equals(".jpeg") ? ".jpg" : ext;
+            }
+        }
+        return switch (normalizedContentType) {
+            case "image/jpeg" -> ".jpg";
+            case "image/png" -> ".png";
+            case "image/webp" -> ".webp";
+            default -> ".jpg";
+        };
+    }
+}

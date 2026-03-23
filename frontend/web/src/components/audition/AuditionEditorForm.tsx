@@ -1,29 +1,16 @@
 'use client'
 
-import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent, type CSSProperties } from 'react'
 import { toast } from 'sonner'
 import { SIGNUP, HERO, AUDITION_DETAIL } from '@/lib/design-tokens'
 import type { AuditionDto, AuditionStatus, CreateAuditionPayload } from '@/lib/types/audition'
 import { auditionApi } from '@/lib/api/auditions'
+import { apiErrorMessage } from '@/lib/api/uploads'
 import { isoToDatetimeLocalValue } from '@/lib/audition/datetimeLocal'
+import { isBlankOrValidYoutubeUrl } from '@/lib/audition/youtubeEmbed'
 import { AuditionEditorPreview } from '@/components/audition/AuditionEditorPreview'
+import { GalleryImagesField, SingleImageUploadField } from '@/components/audition/AuditionEditorImageUpload'
 import { EDITOR_LABELS, AUDITION_STATUS_LABEL_KO } from '@/lib/audition/auditionEditorCopy'
-
-const GALLERY_MAX_FILES_PER_PICK = 8
-const GALLERY_MAX_BYTES_PER_FILE = 2 * 1024 * 1024
-
-function readFileAsDataUrl(file: File): Promise<string | null> {
-  return new Promise((resolve) => {
-    if (file.size > GALLERY_MAX_BYTES_PER_FILE) {
-      resolve(null)
-      return
-    }
-    const reader = new FileReader()
-    reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : null)
-    reader.onerror = () => resolve(null)
-    reader.readAsDataURL(file)
-  })
-}
 
 function trimNonEmpty(lines: string[] | undefined): string[] {
   return (lines ?? []).map((s) => (s ?? '').trim()).filter((s) => s.length > 0)
@@ -162,6 +149,16 @@ export type AuditionEditorFormProps = {
 export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot, onSuccess }: AuditionEditorFormProps) {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  /** 필수·검증 실패 시 빨간 테두리 */
+  const [showTitleError, setShowTitleError] = useState(false)
+  const [showDescriptionError, setShowDescriptionError] = useState(false)
+  const [showVideoUrlError, setShowVideoUrlError] = useState(false)
+  const [showCoverError, setShowCoverError] = useState(false)
+  const [coverUploading, setCoverUploading] = useState(false)
+  const [logoUploading, setLogoUploading] = useState(false)
+  const [galleryUploading, setGalleryUploading] = useState(false)
+  /** 임시 저장 직후 상단 안내 (토스트 보강) */
+  const [draftSavedBanner, setDraftSavedBanner] = useState(false)
   /** 신규 작성: 첫 임시저장 후 PATCH에 사용 */
   const [draftId, setDraftId] = useState<string | null>(null)
 
@@ -211,21 +208,6 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
     setEndDate(v.endDate || defaultDatetimeLocalEnd())
   }, [mode, initialAudition])
 
-  const onGalleryFiles = async (e: ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
-    if (!files?.length) return
-    const urls: string[] = []
-    const limit = Math.min(files.length, GALLERY_MAX_FILES_PER_PICK)
-    for (let i = 0; i < limit; i++) {
-      const dataUrl = await readFileAsDataUrl(files[i])
-      if (dataUrl) urls.push(dataUrl)
-    }
-    e.target.value = ''
-    if (!urls.length) return
-    const existing = trimNonEmpty(galleryImages)
-    setGalleryImages([...existing, ...urls])
-  }
-
   const buildPayload = (forcedStatus: AuditionStatus): CreateAuditionPayload => {
     const sd = startDate || defaultDatetimeLocalStart()
     const ed = endDate || defaultDatetimeLocalEnd()
@@ -250,14 +232,35 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
   }
 
   const validate = (intent: 'draft' | 'publish'): string | null => {
-    if (!(title ?? '').trim()) return '제목을 입력해 주세요.'
+    if (!(title ?? '').trim()) {
+      setShowTitleError(true)
+      return '제목을 입력해 주세요.'
+    }
+    setShowTitleError(false)
+
     if (intent === 'publish') {
       if (!(description ?? '').trim() || (description ?? '').trim() === '—') {
+        setShowDescriptionError(true)
         return '게시하려면 상세 설명을 입력해 주세요.'
       }
+      setShowDescriptionError(false)
+      if (!(coverImage ?? '').trim()) {
+        setShowCoverError(true)
+        return '게시하려면 대표 이미지를 업로드해 주세요.'
+      }
+      setShowCoverError(false)
+      if (!isBlankOrValidYoutubeUrl(videoUrl)) {
+        setShowVideoUrlError(true)
+        return '영상은 YouTube URL만 입력할 수 있습니다.'
+      }
+      setShowVideoUrlError(false)
       if (!(agencyName ?? '').trim()) return '게시하려면 기획사명을 입력해 주세요.'
       if (!(location ?? '').trim()) return '게시하려면 위치를 입력해 주세요.'
       if (!startDate || !endDate) return '시작일과 종료일을 입력해 주세요.'
+    } else {
+      setShowDescriptionError(false)
+      setShowVideoUrlError(false)
+      setShowCoverError(false)
     }
     return null
   }
@@ -278,12 +281,16 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
         const created = await auditionApi.create(payload)
         setDraftId(created.id)
         setStatus(forced)
-        toast.success(intent === 'draft' ? '임시 저장되었습니다. 이어서 수정할 수 있습니다.' : '게시되었습니다.')
+        if (intent === 'draft') {
+          setDraftSavedBanner(true)
+          toast.success('임시 저장되었습니다', { duration: 5000 })
+        } else {
+          setDraftSavedBanner(false)
+          toast.success('공고가 등록되었습니다', { duration: 4000 })
+        }
         if (intent === 'publish') onSuccess?.(created)
       } catch (e: unknown) {
-        const msg = e && typeof e === 'object' && 'response' in e
-          ? String((e as { response?: { data?: { message?: string } } }).response?.data?.message ?? '')
-          : ''
+        const msg = apiErrorMessage(e)
         setError(msg || '저장에 실패했습니다.')
       } finally {
         setIsLoading(false)
@@ -296,12 +303,16 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
     try {
       const updated = await auditionApi.update(id, payload)
       setStatus(forced)
-      toast.success(intent === 'draft' ? '임시 저장되었습니다.' : '게시 상태로 저장되었습니다.')
+      if (intent === 'draft') {
+        setDraftSavedBanner(true)
+        toast.success('임시 저장되었습니다', { duration: 5000 })
+      } else {
+        setDraftSavedBanner(false)
+        toast.success('공고가 등록되었습니다', { duration: 4000 })
+      }
       if (intent === 'publish') onSuccess?.(updated)
     } catch (e: unknown) {
-      const msg = e && typeof e === 'object' && 'response' in e
-        ? String((e as { response?: { data?: { message?: string } } }).response?.data?.message ?? '')
-        : ''
+      const msg = apiErrorMessage(e)
       setError(msg || '저장에 실패했습니다.')
       if (mode === 'edit') toast.error(msg || '저장 실패')
     } finally {
@@ -328,9 +339,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
       setStatus('CLOSED')
       toast.success('마감 상태로 저장되었습니다.')
     } catch (e: unknown) {
-      const msg = e && typeof e === 'object' && 'response' in e
-        ? String((e as { response?: { data?: { message?: string } } }).response?.data?.message ?? '')
-        : ''
+      const msg = apiErrorMessage(e)
       setError(msg || '저장에 실패했습니다.')
     } finally {
       setIsLoading(false)
@@ -345,8 +354,29 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
     paddingBottom: AUDITION_DETAIL.galleryGapPx,
   }
 
-  const previewStatus: AuditionStatus =
-    mode === 'create' && !effectiveId ? (status === 'OPEN' ? 'OPEN' : 'DRAFT') : status
+  useEffect(() => {
+    if (!draftSavedBanner) return
+    const t = window.setTimeout(() => setDraftSavedBanner(false), 8000)
+    return () => window.clearTimeout(t)
+  }, [draftSavedBanner])
+
+  const titleInputStyle: CSSProperties = {
+    ...inputStyle,
+    borderColor: showTitleError ? '#ef4444' : SIGNUP.inputBorderColor,
+    borderWidth: showTitleError ? 2 : 1,
+  }
+  const descriptionInputStyle: CSSProperties = {
+    ...textareaStyle,
+    borderColor: showDescriptionError ? '#ef4444' : SIGNUP.inputBorderColor,
+    borderWidth: showDescriptionError ? 2 : 1,
+  }
+  const videoInputStyle: CSSProperties = {
+    ...inputStyle,
+    borderColor: showVideoUrlError ? '#ef4444' : SIGNUP.inputBorderColor,
+    borderWidth: showVideoUrlError ? 2 : 1,
+  }
+
+  const formBusy = isLoading || coverUploading || logoUploading || galleryUploading
 
   const formCol = (
     <div className="min-w-0 w-full lg:w-[60%]">
@@ -355,17 +385,41 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
         className="w-full max-w-none"
       >
         <h2 style={sectionTitle}>{EDITOR_LABELS.sectionBasic}</h2>
+        {draftSavedBanner && (
+          <div
+            role="status"
+            className="mb-4 flex items-start justify-between gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900"
+          >
+            <span>
+              <strong>임시 저장됨</strong> — 서버에 반영되었습니다. 이어서 수정한 뒤 다시 임시 저장하거나 등록할 수 있습니다.
+            </span>
+            <button
+              type="button"
+              className="shrink-0 text-emerald-700 underline"
+              onClick={() => setDraftSavedBanner(false)}
+            >
+              닫기
+            </button>
+          </div>
+        )}
         <div style={{ marginBottom: AUDITION_DETAIL.benefitGridGapPx }}>
           <label
             style={{ display: 'block', marginBottom: AUDITION_DETAIL.galleryGapPx, fontSize: AUDITION_DETAIL.bodyFontPx, fontWeight: 600 }}
           >
-            {EDITOR_LABELS.title}
+            {EDITOR_LABELS.title}{' '}
+            <span className="text-red-600" aria-hidden>
+              *
+            </span>
           </label>
           <input
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            style={inputStyle}
+            onChange={(e) => {
+              setTitle(e.target.value)
+              setShowTitleError(false)
+            }}
+            style={titleInputStyle}
             placeholder="예: 2025 글로벌 보컬 오디션"
+            aria-invalid={showTitleError}
             required
           />
         </div>
@@ -373,13 +427,21 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
           <label
             style={{ display: 'block', marginBottom: AUDITION_DETAIL.galleryGapPx, fontSize: AUDITION_DETAIL.bodyFontPx, fontWeight: 600 }}
           >
-            {EDITOR_LABELS.description}
+            {EDITOR_LABELS.description}{' '}
+            <span className="text-red-600" aria-hidden>
+              *
+            </span>
+            <span className="ml-1 text-xs font-normal text-gray-500">(등록·마감 시 필수)</span>
           </label>
           <textarea
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            style={textareaStyle}
+            onChange={(e) => {
+              setDescription(e.target.value)
+              setShowDescriptionError(false)
+            }}
+            style={descriptionInputStyle}
             placeholder="모집 내용, 자격 요건, 진행 방식 등을 적어 주세요."
+            aria-invalid={showDescriptionError}
           />
         </div>
 
@@ -418,41 +480,54 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
         </div>
 
         <h2 style={sectionTitle}>{EDITOR_LABELS.sectionMedia}</h2>
-        <div style={{ marginBottom: AUDITION_DETAIL.benefitGridGapPx }}>
-          <label
-            style={{ display: 'block', marginBottom: AUDITION_DETAIL.galleryGapPx, fontSize: AUDITION_DETAIL.bodyFontPx, fontWeight: 600 }}
-          >
-            {EDITOR_LABELS.coverImage} (URL)
-          </label>
-          <input
-            value={coverImage}
-            onChange={(e) => setCoverImage(e.target.value)}
-            style={inputStyle}
-            placeholder="https://… (카드·상단에 노출)"
-          />
-        </div>
+        <SingleImageUploadField
+          label={
+            <>
+              {EDITOR_LABELS.coverImage}{' '}
+              <span className="text-red-600" aria-hidden>
+                *
+              </span>
+              <span className="ml-1 text-xs font-normal text-gray-500">(등록·마감 시 필수)</span>
+            </>
+          }
+          uploadDir="covers"
+          imageUrl={coverImage}
+          onImageUrlChange={(url) => {
+            setCoverImage(url)
+            setShowCoverError(false)
+          }}
+          uploading={coverUploading}
+          onUploadingChange={setCoverUploading}
+          disabled={isLoading}
+          helperText="카드·상단 썸네일. 임시저장 시 생략 가능, 등록 시 S3 업로드 필수."
+          showFieldError={showCoverError}
+        />
         <div style={{ marginBottom: AUDITION_DETAIL.benefitGridGapPx }}>
           <label
             style={{ display: 'block', marginBottom: AUDITION_DETAIL.galleryGapPx, fontSize: AUDITION_DETAIL.bodyFontPx, fontWeight: 600 }}
           >
             {EDITOR_LABELS.videoUrl}
+            <span className="ml-1 text-xs font-normal text-gray-500">(YouTube만, 등록·마감 시 형식 검사)</span>
           </label>
           <input
             value={videoUrl}
-            onChange={(e) => setVideoUrl(e.target.value)}
-            style={inputStyle}
-            placeholder="YouTube 주소 (미리보기에 임베드)"
+            onChange={(e) => {
+              setVideoUrl(e.target.value)
+              setShowVideoUrlError(false)
+            }}
+            style={videoInputStyle}
+            placeholder="https://www.youtube.com/watch?v=… 또는 youtu.be/…"
+            aria-invalid={showVideoUrlError}
           />
         </div>
-        <StringListEditor label={EDITOR_LABELS.galleryUrls} values={galleryImages} onChange={setGalleryImages} />
-        <div style={{ marginBottom: AUDITION_DETAIL.mainGridGapPx }}>
-          <label
-            style={{ display: 'block', marginBottom: AUDITION_DETAIL.galleryGapPx, fontSize: AUDITION_DETAIL.bodyFontPx, fontWeight: 600 }}
-          >
-            {EDITOR_LABELS.galleryFiles} (각 최대 {Math.round(GALLERY_MAX_BYTES_PER_FILE / (1024 * 1024))}MB)
-          </label>
-          <input type="file" accept="image/*" multiple onChange={onGalleryFiles} style={{ fontSize: AUDITION_DETAIL.metaMutedPx }} />
-        </div>
+        <GalleryImagesField
+          label={EDITOR_LABELS.galleryImages}
+          urls={galleryImages}
+          onUrlsChange={setGalleryImages}
+          uploading={galleryUploading}
+          onUploadingChange={setGalleryUploading}
+          disabled={isLoading}
+        />
 
         <h2 style={sectionTitle}>{EDITOR_LABELS.sectionAgency}</h2>
         <div style={{ marginBottom: AUDITION_DETAIL.benefitGridGapPx }}>
@@ -468,14 +543,15 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
             placeholder="운영 기획사 또는 주최"
           />
         </div>
-        <div style={{ marginBottom: AUDITION_DETAIL.benefitGridGapPx }}>
-          <label
-            style={{ display: 'block', marginBottom: AUDITION_DETAIL.galleryGapPx, fontSize: AUDITION_DETAIL.bodyFontPx, fontWeight: 600 }}
-          >
-            {EDITOR_LABELS.agencyLogo}
-          </label>
-          <input value={agencyLogo} onChange={(e) => setAgencyLogo(e.target.value)} style={inputStyle} placeholder="https://…" />
-        </div>
+        <SingleImageUploadField
+          label={EDITOR_LABELS.agencyLogo}
+          uploadDir="agency_logo"
+          imageUrl={agencyLogo}
+          onImageUrlChange={setAgencyLogo}
+          uploading={logoUploading}
+          onUploadingChange={setLogoUploading}
+          disabled={isLoading}
+        />
 
         <h2 style={sectionTitle}>{EDITOR_LABELS.sectionSchedule}</h2>
         <div style={{ marginBottom: AUDITION_DETAIL.benefitGridGapPx }}>
@@ -519,7 +595,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap" style={{ marginTop: AUDITION_DETAIL.mainGridGapPx }}>
           <button
             type="button"
-            disabled={isLoading}
+            disabled={formBusy}
             onClick={() => persist('draft')}
             style={{
               height: HERO.buttonHeightPx,
@@ -529,15 +605,15 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
               color: '#374151',
               fontWeight: 600,
               padding: '0 20px',
-              cursor: isLoading ? 'not-allowed' : 'pointer',
-              opacity: isLoading ? 0.7 : 1,
+              cursor: formBusy ? 'not-allowed' : 'pointer',
+              opacity: formBusy ? 0.7 : 1,
             }}
           >
             {isLoading ? '저장 중…' : '임시 저장'}
           </button>
           <button
             type="button"
-            disabled={isLoading}
+            disabled={formBusy}
             onClick={() => persist('publish')}
             style={{
               height: HERO.buttonHeightPx,
@@ -547,8 +623,8 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
               color: '#fff',
               fontWeight: 600,
               padding: '0 20px',
-              cursor: isLoading ? 'not-allowed' : 'pointer',
-              opacity: isLoading ? 0.7 : 1,
+              cursor: formBusy ? 'not-allowed' : 'pointer',
+              opacity: formBusy ? 0.7 : 1,
             }}
           >
             {isLoading ? '처리 중…' : '등록하기'}
@@ -556,7 +632,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
           {(mode === 'edit' || !!draftId) && (
             <button
               type="button"
-              disabled={isLoading}
+              disabled={formBusy}
               onClick={persistClosed}
               style={{
                 height: HERO.buttonHeightPx,
@@ -566,8 +642,8 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
                 color: '#b91c1c',
                 fontWeight: 600,
                 padding: '0 20px',
-                cursor: isLoading ? 'not-allowed' : 'pointer',
-                opacity: isLoading ? 0.7 : 1,
+                cursor: formBusy ? 'not-allowed' : 'pointer',
+                opacity: formBusy ? 0.7 : 1,
               }}
             >
               마감으로 저장

@@ -42,7 +42,8 @@ export default function TransactionsPage() {
 
       <p className="mb-3 text-xs text-gray-500">
         API: <code className="rounded bg-gray-100 px-1">GET /api/admin/credit-transactions</code> (Spring Page) · axios{' '}
-        <code className="rounded bg-gray-100 px-1">withCredentials</code> + Bearer
+        <code className="rounded bg-gray-100 px-1">withCredentials</code> + Bearer ·{' '}
+        <strong>referenceId</strong>: 오디션 지원 시 오디션 UUID, 패키지 결제 충전 시 <code>orderNo</code> 등과 연계
       </p>
 
       <div className="mb-4 rounded-lg border bg-white p-4">
@@ -106,7 +107,7 @@ export default function TransactionsPage() {
 
         {!isLoading && !error && rows.length > 0 && (
           <>
-            <table className="w-full min-w-[900px] text-sm">
+            <table className="w-full min-w-[1040px] text-sm">
               <thead>
                 <tr className="border-b text-left">
                   <th className="py-2 pr-2 font-medium">ID</th>
@@ -114,6 +115,7 @@ export default function TransactionsPage() {
                   <th className="py-2 pr-2 font-medium">금액</th>
                   <th className="py-2 pr-2 font-medium">타입</th>
                   <th className="py-2 pr-2 font-medium">사유</th>
+                  <th className="py-2 pr-2 font-medium">referenceId</th>
                   <th className="py-2 pr-2 font-medium">Before</th>
                   <th className="py-2 pr-2 font-medium">After</th>
                   <th className="py-2 font-medium">날짜</th>
@@ -135,6 +137,9 @@ export default function TransactionsPage() {
                     <td className="py-2 pr-2">{t.type}</td>
                     <td className="max-w-[140px] truncate py-2 pr-2" title={t.reason}>
                       {t.reason}
+                    </td>
+                    <td className="max-w-[120px] truncate py-2 pr-2 font-mono text-xs text-gray-600" title={t.referenceId ?? ''}>
+                      {t.referenceId ?? '—'}
                     </td>
                     <td className="py-2 pr-2 tabular-nums">
                       {t.beforeBalance != null ? t.beforeBalance : '—'}

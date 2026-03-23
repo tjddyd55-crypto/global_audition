@@ -24,6 +24,7 @@ import com.audition.platform.domain.score.ApplicationScoreRepository;
 import com.audition.platform.domain.user.User;
 import com.audition.platform.domain.user.UserRepository;
 import com.audition.platform.infra.SecurityUtils;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -328,7 +329,11 @@ public class ApplicationService {
         app.setApplicantId(applicantId);
         app.setStatus("SUBMITTED");
         app.setUpdatedAt(java.time.Instant.now());
-        app = applicationRepository.save(app);
+        try {
+            app = applicationRepository.save(app);
+        } catch (DataIntegrityViolationException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Already applied to this audition");
+        }
         long cnt = applicationRepository.countByAuditionId(auditionId);
         audition.setApplicantsCount((int) cnt);
         auditionRepository.save(audition);

@@ -19,7 +19,8 @@ public class WebConfig implements WebMvcConfigurer {
     public void addCorsMappings(@NonNull CorsRegistry registry) {
         registry.addMapping("/api/**")
             .allowedOrigins(Objects.requireNonNull(parseAllowedOrigins()))
-            .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+            // PATCH: 오디션 수정·크레딧 등 — allowCredentials 시 메서드 와일드카드 미사용
+            .allowedMethods("GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
             .allowedHeaders("*")
             .allowCredentials(true)
             .maxAge(3600);

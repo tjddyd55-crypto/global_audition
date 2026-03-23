@@ -1,0 +1,287 @@
+'use client'
+
+import { useRef, type ChangeEvent, type ReactNode } from 'react'
+import { toast } from 'sonner'
+import { SIGNUP, AUDITION_DETAIL } from '@/lib/design-tokens'
+import {
+  uploadAuditionImage,
+  apiUploadErrorMessage,
+  type AuditionUploadDir,
+} from '@/lib/api/uploads'
+import { AUDITION_IMAGE_ACCEPT_ATTR } from '@/lib/audition/auditionImageRules'
+import { AUDITION_COVER_PLACEHOLDER_SRC } from '@/components/audition/AuditionEditorPreview'
+
+const inputBaseStyle: React.CSSProperties = {
+  width: '100%',
+  fontSize: AUDITION_DETAIL.metaMutedPx,
+}
+
+type SingleImageUploadFieldProps = {
+  label: ReactNode
+  /** S3 키 접두사용 dir */
+  uploadDir: AuditionUploadDir
+  imageUrl: string
+  onImageUrlChange: (url: string) => void
+  uploading: boolean
+  onUploadingChange: (v: boolean) => void
+  disabled?: boolean
+  helperText?: string
+  /** 등록 검증 실패 시 강조 */
+  showFieldError?: boolean
+}
+
+/** 대표 이미지·기획사 로고 — 파일만 허용, 선택 즉시 uploadAuditionImage → URL 반영 */
+export function SingleImageUploadField({
+  label,
+  uploadDir,
+  imageUrl,
+  onImageUrlChange,
+  uploading,
+  onUploadingChange,
+  disabled,
+  helperText,
+  showFieldError,
+}: SingleImageUploadFieldProps) {
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const onPick = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    onUploadingChange(true)
+    try {
+      const url = await uploadAuditionImage(file, uploadDir)
+      onImageUrlChange(url)
+    } catch (err: unknown) {
+      toast.error(apiUploadErrorMessage(err) || '업로드 실패')
+    } finally {
+      onUploadingChange(false)
+    }
+  }
+
+  const busy = Boolean(disabled || uploading)
+
+  return (
+    <div
+      style={{
+        marginBottom: AUDITION_DETAIL.benefitGridGapPx,
+        padding: showFieldError ? 12 : 0,
+        marginLeft: showFieldError ? -12 : 0,
+        marginRight: showFieldError ? -12 : 0,
+        borderRadius: 8,
+        border: showFieldError ? '2px solid #ef4444' : '2px solid transparent',
+        background: showFieldError ? '#fef2f2' : undefined,
+      }}
+    >
+      <label
+        style={{
+          display: 'block',
+          marginBottom: AUDITION_DETAIL.galleryGapPx,
+          fontSize: AUDITION_DETAIL.bodyFontPx,
+          fontWeight: 600,
+        }}
+      >
+        {label}
+      </label>
+      {helperText ? (
+        <p style={{ marginBottom: AUDITION_DETAIL.galleryGapPx, fontSize: 12, color: '#6b7280' }}>{helperText}</p>
+      ) : null}
+      <div className="flex flex-wrap items-center gap-3">
+        <input
+          ref={inputRef}
+          type="file"
+          accept={AUDITION_IMAGE_ACCEPT_ATTR}
+          className="hidden"
+          onChange={onPick}
+          disabled={busy}
+        />
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => inputRef.current?.click()}
+          style={{
+            height: SIGNUP.inputHeightPx,
+            borderRadius: SIGNUP.inputRadiusPx,
+            border: `1px solid ${SIGNUP.inputBorderColor}`,
+            background: '#fff',
+            padding: `0 ${SIGNUP.inputPaddingPx}px`,
+            fontWeight: 600,
+            cursor: busy ? 'not-allowed' : 'pointer',
+            opacity: busy ? 0.7 : 1,
+          }}
+        >
+          {uploading ? '업로드 중…' : '파일 선택'}
+        </button>
+        {uploading ? (
+          <span className="text-sm text-gray-600" aria-live="polite">
+            업로드 중...
+          </span>
+        ) : null}
+        {imageUrl ? (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => onImageUrlChange('')}
+            style={{
+              fontSize: AUDITION_DETAIL.bodyFontPx,
+              color: '#b91c1c',
+              background: 'none',
+              border: 'none',
+              cursor: busy ? 'not-allowed' : 'pointer',
+              textDecoration: 'underline',
+            }}
+          >
+            제거
+          </button>
+        ) : null}
+      </div>
+      {imageUrl ? (
+        <div className="mt-3 overflow-hidden rounded-lg border border-gray-200 bg-gray-50" style={{ maxWidth: 320 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={imageUrl}
+            alt=""
+            className="h-auto max-h-48 w-full object-contain"
+            onError={(ev) => {
+              const el = ev.currentTarget
+              if (el.dataset.fallback === '1') return
+              el.dataset.fallback = '1'
+              el.onerror = null
+              el.src = AUDITION_COVER_PLACEHOLDER_SRC
+            }}
+          />
+        </div>
+      ) : null}
+      <p style={{ ...inputBaseStyle, marginTop: AUDITION_DETAIL.galleryGapPx, color: '#6b7280' }}>
+        JPG·PNG·WebP, 최대 5MB. 대표 이미지 변경: 「이미지 변경」 또는 「제거」 후 다시 선택. S3 URL만 DB에 저장됩니다.
+      </p>
+    </div>
+  )
+}
+
+const GALLERY_MAX_PER_PICK = 8
+
+type GalleryImagesFieldProps = {
+  label: string
+  urls: string[]
+  onUrlsChange: (next: string[]) => void
+  uploading: boolean
+  onUploadingChange: (v: boolean) => void
+  disabled?: boolean
+}
+
+export function GalleryImagesField({
+  label,
+  urls,
+  onUrlsChange,
+  uploading,
+  onUploadingChange,
+  disabled,
+}: GalleryImagesFieldProps) {
+  const inputRef = useRef<HTMLInputElement>(null)
+  const busy = Boolean(disabled || uploading)
+
+  const onPick = async (e: ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    e.target.value = ''
+    if (!files?.length) return
+    const limit = Math.min(files.length, GALLERY_MAX_PER_PICK)
+    onUploadingChange(true)
+    const nextUrls = [...urls]
+    try {
+      for (let i = 0; i < limit; i++) {
+        const url = await uploadAuditionImage(files[i], 'gallery')
+        nextUrls.push(url)
+      }
+      onUrlsChange(nextUrls)
+    } catch (err: unknown) {
+      toast.error(apiUploadErrorMessage(err) || '업로드 실패')
+    } finally {
+      onUploadingChange(false)
+    }
+  }
+
+  const removeAt = (idx: number) => {
+    onUrlsChange(urls.filter((_, j) => j !== idx))
+  }
+
+  return (
+    <div style={{ marginBottom: AUDITION_DETAIL.mainGridGapPx }}>
+      <label
+        style={{
+          display: 'block',
+          marginBottom: AUDITION_DETAIL.galleryGapPx,
+          fontSize: AUDITION_DETAIL.bodyFontPx,
+          fontWeight: 600,
+        }}
+      >
+        {label}
+      </label>
+      <div className="flex flex-wrap items-center gap-3">
+        <input
+          ref={inputRef}
+          type="file"
+          accept={AUDITION_IMAGE_ACCEPT_ATTR}
+          multiple
+          className="hidden"
+          onChange={onPick}
+          disabled={busy}
+        />
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => inputRef.current?.click()}
+          style={{
+            height: SIGNUP.inputHeightPx,
+            borderRadius: SIGNUP.inputRadiusPx,
+            border: `1px solid ${SIGNUP.inputBorderColor}`,
+            background: '#fff',
+            padding: `0 ${SIGNUP.inputPaddingPx}px`,
+            fontWeight: 600,
+            cursor: busy ? 'not-allowed' : 'pointer',
+            opacity: busy ? 0.7 : 1,
+          }}
+        >
+          {uploading ? '업로드 중…' : '이미지 추가 (여러 장)'}
+        </button>
+        {uploading ? (
+          <span className="text-sm text-gray-600" aria-live="polite">
+            업로드 중...
+          </span>
+        ) : null}
+      </div>
+      {urls.length > 0 ? (
+        <ul className="mt-3 flex flex-wrap gap-2">
+          {urls.map((u, i) => (
+            <li key={`${u}-${i}`} className="relative h-20 w-20 overflow-hidden rounded border border-gray-200 bg-gray-100">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={u}
+                alt=""
+                className="h-full w-full object-cover"
+                onError={(ev) => {
+                  const el = ev.currentTarget
+                  if (el.dataset.fallback === '1') return
+                  el.dataset.fallback = '1'
+                  el.onerror = null
+                  el.src = AUDITION_COVER_PLACEHOLDER_SRC
+                }}
+              />
+              <button
+                type="button"
+                className="absolute right-0 top-0 rounded-bl bg-black/60 px-1.5 text-xs text-white"
+                onClick={() => removeAt(i)}
+                disabled={busy}
+              >
+                ×
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      <p style={{ ...inputBaseStyle, marginTop: AUDITION_DETAIL.galleryGapPx, color: '#6b7280' }}>
+        JPG·PNG·WebP, 각 최대 5MB. 한 번에 최대 {GALLERY_MAX_PER_PICK}장. × 로 개별 삭제 가능.
+      </p>
+    </div>
+  )
+}

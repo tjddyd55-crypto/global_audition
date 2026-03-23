@@ -2,6 +2,7 @@ package com.audition.platform.application.credit;
 
 import com.audition.platform.domain.credit.CreditPolicy;
 import com.audition.platform.domain.credit.CreditPolicyRepository;
+import com.audition.platform.api.dto.CreditPolicyPublicDto;
 import com.audition.platform.api.dto.CreditTransactionDto;
 import com.audition.platform.domain.credit.CreditTransaction;
 import com.audition.platform.domain.credit.CreditTransactionRepository;
@@ -44,6 +45,16 @@ public class CreditService {
     @Transactional(readOnly = true)
     public long getBalance(UUID userId) {
         return userCreditRepository.findById(userId).map(UserCredit::getBalance).orElse(0L);
+    }
+
+    /**
+     * 공개 정책 스냅샷 (비용·활성 여부). 로그인 불필요 경로에서 사용.
+     */
+    @Transactional(readOnly = true)
+    public CreditPolicyPublicDto getPolicyPublicSnapshot(String policyKey) {
+        CreditPolicy policy = creditPolicyRepository.findById(policyKey)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "크레딧 정책을 찾을 수 없습니다."));
+        return new CreditPolicyPublicDto(policyKey, policy.getCost(), policy.isActive());
     }
 
     @Transactional(readOnly = true)

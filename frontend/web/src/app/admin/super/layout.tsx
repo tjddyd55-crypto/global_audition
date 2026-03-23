@@ -9,6 +9,7 @@ const MENU = [
   { name: '크레딧 패키지', path: '/admin/super/credit-packages' },
   { name: '유저 관리', path: '/admin/super/users' },
   { name: '거래 내역', path: '/admin/super/transactions' },
+  { name: '결제 주문', path: '/admin/super/payment-orders' },
   { name: '로그', path: '/admin/super/logs' },
   { name: '대량 지급', path: '/admin/super/bulk-grant' },
 ] as const

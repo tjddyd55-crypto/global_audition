@@ -1,8 +1,44 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import Image from 'next/image'
 import { TEXT_SUB } from '@/lib/ui/specClasses'
+import { AUDITION_COVER_PLACEHOLDER_SRC } from '@/components/audition/AuditionEditorPreview'
+
+function GalleryThumb({ src, onOpen }: { src: string; onOpen: () => void }) {
+  const [failed, setFailed] = useState(false)
+  const url = failed ? AUDITION_COVER_PLACEHOLDER_SRC : src
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className="relative aspect-[4/3] w-[min(280px,85vw)] shrink-0 snap-center cursor-pointer overflow-hidden rounded-[10px] border-0 bg-gray-100 p-0"
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={url}
+        alt=""
+        className="absolute inset-0 h-full w-full object-cover"
+        onError={() => setFailed(true)}
+      />
+    </button>
+  )
+}
+
+function GalleryModalImage({ src }: { src: string }) {
+  const [failed, setFailed] = useState(false)
+  const url = failed ? AUDITION_COVER_PLACEHOLDER_SRC : src
+  return (
+    <div className="flex h-[min(85vh,100%)] w-full items-center justify-center">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={url}
+        alt=""
+        className="max-h-[85vh] max-w-full object-contain"
+        onError={() => setFailed(true)}
+      />
+    </div>
+  )
+}
 
 type Props = {
   images: string[]
@@ -112,14 +148,7 @@ export function AuditionGalleryViewer({ images }: Props) {
         className="-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 touch-pan-x [-webkit-overflow-scrolling:touch]"
       >
         {images.map((src, i) => (
-          <button
-            key={`g-strip-${i}-${src.slice(0, 24)}`}
-            type="button"
-            onClick={() => setModalIndex(i)}
-            className="relative aspect-[4/3] w-[min(280px,85vw)] shrink-0 snap-center cursor-pointer overflow-hidden rounded-[10px] border-0 bg-gray-100 p-0"
-          >
-            <Image src={src} alt="" fill sizes="280px" className="object-cover" unoptimized />
-          </button>
+          <GalleryThumb key={`g-strip-${i}-${src.slice(0, 24)}`} src={src} onOpen={() => setModalIndex(i)} />
         ))}
       </div>
 
@@ -181,14 +210,7 @@ export function AuditionGalleryViewer({ images }: Props) {
             onTouchStart={onModalTouchStart}
             onTouchEnd={onModalTouchEnd}
           >
-            <Image
-              src={images[modalIndex]}
-              alt=""
-              fill
-              className="object-contain"
-              priority
-              unoptimized
-            />
+            <GalleryModalImage src={images[modalIndex]} />
           </div>
           <div className="pointer-events-none absolute bottom-6 left-0 right-0 flex justify-center tabular-nums text-sm text-white/90">
             {modalIndex + 1} / {images.length}

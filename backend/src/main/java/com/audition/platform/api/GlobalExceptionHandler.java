@@ -118,6 +118,7 @@ public class GlobalExceptionHandler {
         boolean likesPath = "/api/likes".equals(uri) || uri.startsWith("/api/likes/");
         boolean creditsPath = uri.startsWith("/api/credits");
         boolean adminApiPath = uri.startsWith("/api/admin/");
+        boolean uploadsPath = uri.startsWith("/api/uploads/");
         String method = request.getMethod() != null ? request.getMethod() : "";
         return uri.contains("/api/me/")
                 || uri.endsWith("/api/me")
@@ -133,6 +134,7 @@ public class GlobalExceptionHandler {
                 || (commentsPath && ("GET".equalsIgnoreCase(method) || "POST".equalsIgnoreCase(method)))
                 || likesPath
                 || creditsPath
-                || adminApiPath;
+                || adminApiPath
+                || uploadsPath;
     }
 }
