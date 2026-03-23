@@ -16,7 +16,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/admin/credit-transactions")
+@RequestMapping({"/api/admin/credit-transactions", "/api/admin/transactions"})
 public class SuperAdminCreditTransactionController {
 
     private final SuperAdminCreditAdministrationService superAdminCreditAdministrationService;

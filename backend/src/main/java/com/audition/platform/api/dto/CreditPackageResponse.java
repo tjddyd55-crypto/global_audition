@@ -10,6 +10,8 @@ public class CreditPackageResponse {
     private long credits;
     private long bonusCredits;
     private boolean active;
+    private int sortOrder;
+    private Instant createdAt;
     private Instant updatedAt;
 
     public String getId() {
@@ -58,6 +60,22 @@ public class CreditPackageResponse {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public int getSortOrder() {
+        return sortOrder;
+    }
+
+    public void setSortOrder(int sortOrder) {
+        this.sortOrder = sortOrder;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
     }
 
     public Instant getUpdatedAt() {

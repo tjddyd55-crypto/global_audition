@@ -2,11 +2,12 @@ package com.audition.platform.api;
 
 import com.audition.platform.api.dto.CreditBalanceResponse;
 import com.audition.platform.api.dto.CreditChargeRequest;
+import com.audition.platform.api.dto.CreditOrderSummaryResponse;
 import com.audition.platform.api.dto.CreditTransactionDto;
 import com.audition.platform.api.dto.PreparePaymentRequest;
 import com.audition.platform.api.dto.PreparePaymentResponse;
-import com.audition.platform.application.credit.CreditCatalogService;
 import com.audition.platform.application.credit.CreditService;
+import com.audition.platform.application.payment.PaymentOrderService;
 import com.audition.platform.infra.SecurityUtils;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -14,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,11 +29,11 @@ import java.util.UUID;
 public class CreditController {
 
     private final CreditService creditService;
-    private final CreditCatalogService creditCatalogService;
+    private final PaymentOrderService paymentOrderService;
 
-    public CreditController(CreditService creditService, CreditCatalogService creditCatalogService) {
+    public CreditController(CreditService creditService, PaymentOrderService paymentOrderService) {
         this.creditService = creditService;
-        this.creditCatalogService = creditCatalogService;
+        this.paymentOrderService = paymentOrderService;
     }
 
     @GetMapping("/balance")
@@ -62,7 +64,13 @@ public class CreditController {
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "유효하지 않은 packageId입니다.");
         }
-        return creditCatalogService.preparePayment(userId, packageId);
+        return paymentOrderService.preparePayment(userId, packageId, request.getProvider());
+    }
+
+    @GetMapping("/orders/{orderNo}")
+    public CreditOrderSummaryResponse getOrder(@PathVariable String orderNo) {
+        UUID userId = requireUserId();
+        return paymentOrderService.getOrderForUser(orderNo.trim(), userId);
     }
 
     private static UUID requireUserId() {

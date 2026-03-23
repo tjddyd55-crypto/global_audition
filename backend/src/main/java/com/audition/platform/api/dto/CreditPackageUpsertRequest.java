@@ -24,6 +24,10 @@ public class CreditPackageUpsertRequest {
     @NotNull
     private Boolean active;
 
+    /** 정렬 (작을수록 먼저). 미입력 시 0 */
+    @Min(0)
+    private Integer sortOrder;
+
     public String getName() {
         return name;
     }
@@ -62,5 +66,17 @@ public class CreditPackageUpsertRequest {
 
     public void setActive(Boolean active) {
         this.active = active;
+    }
+
+    public Integer getSortOrder() {
+        return sortOrder;
+    }
+
+    public void setSortOrder(Integer sortOrder) {
+        this.sortOrder = sortOrder;
+    }
+
+    public int sortOrderOrDefault() {
+        return sortOrder == null ? 0 : sortOrder;
     }
 }

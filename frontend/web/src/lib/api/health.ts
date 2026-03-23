@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '@/lib/env'
+import { apiFetchPublic } from './apiFetch'
 import { MEDIA_ENDPOINTS } from './endpoints'
 
 /**
@@ -17,10 +18,9 @@ export interface HealthStatus {
 
 /** Monolith backend: GET /api/health → { ok: true } */
 export async function checkBackendHealth(): Promise<{ ok: boolean }> {
-  const res = await fetch(`${API_BASE_URL}/api/health`, {
+  const res = await apiFetchPublic('/health', {
     method: 'GET',
     cache: 'no-store',
-    headers: { 'Content-Type': 'application/json' },
   })
   if (!res.ok) throw new Error(`Backend health failed: ${res.status}`)
   const data = await res.json()
@@ -29,10 +29,10 @@ export async function checkBackendHealth(): Promise<{ ok: boolean }> {
 
 /** Monolith backend: GET /api/version → { version, buildId } */
 export async function getBackendVersion(): Promise<{ version: string; buildId: string }> {
-  const res = await fetch(`${API_BASE_URL}/api/version`, {
+  const res = await apiFetch('/version', {
     method: 'GET',
     cache: 'no-store',
-    headers: { 'Content-Type': 'application/json' },
+    auth: false,
   })
   if (!res.ok) throw new Error(`Backend version failed: ${res.status}`)
   const data = await res.json()
@@ -65,12 +65,9 @@ export async function checkMediaHealth(): Promise<HealthStatus> {
     // GET 요청만 사용하므로 안전합니다
     // Gateway 경유 가능: USE_GATEWAY.VIDEOS = true
     // 실제 경로: {API_BASE_URL}/api/v1/videos
-    const res = await fetch(`${API_BASE_URL}/api/v1${MEDIA_ENDPOINTS.VIDEOS}?page=0&size=1`, {
+    const res = await apiFetchPublic(`${MEDIA_ENDPOINTS.VIDEOS}?page=0&size=1`, {
       method: 'GET',
       cache: 'no-store',
-      headers: {
-        'Content-Type': 'application/json',
-      },
     })
 
     if (!res.ok) {

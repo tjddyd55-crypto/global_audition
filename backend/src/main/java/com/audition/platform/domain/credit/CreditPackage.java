@@ -33,6 +33,12 @@ public class CreditPackage {
     @Column(nullable = false)
     private boolean active = true;
 
+    @Column(name = "sort_order", nullable = false)
+    private int sortOrder = 0;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt = Instant.now();
+
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt = Instant.now();
 
@@ -82,6 +88,22 @@ public class CreditPackage {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public int getSortOrder() {
+        return sortOrder;
+    }
+
+    public void setSortOrder(int sortOrder) {
+        this.sortOrder = sortOrder;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
     }
 
     public Instant getUpdatedAt() {

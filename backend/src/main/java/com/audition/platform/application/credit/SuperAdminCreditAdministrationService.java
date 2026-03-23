@@ -13,6 +13,7 @@ import com.audition.platform.domain.user.UserRepository;
 import com.audition.platform.infra.SecurityUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -119,5 +120,22 @@ public class SuperAdminCreditAdministrationService {
         return creditTransactionRepository
                 .findAll(CreditTransactionSpecifications.filter(userId, type, fromInclusive, toExclusive), pageable)
                 .map(CreditTransactionMapper::toDto);
+    }
+
+    /**
+     * 슈퍼관리자 유저 목록 + 크레딧 잔액 (페이지당 N회 balance 조회 — size는 과도하게 크게 두지 말 것).
+     */
+    @Transactional(readOnly = true)
+    public Page<UserCreditLookupDto> listUsersWithBalances(String q, Pageable pageable) {
+        SuperAdminAuthHelper.requireSuperAdmin();
+        Specification<User> spec = (root, query, cb) -> {
+            if (q == null || q.isBlank()) {
+                return cb.conjunction();
+            }
+            String pattern = "%" + q.trim().toLowerCase(Locale.ROOT) + "%";
+            return cb.like(cb.lower(root.get("email")), pattern);
+        };
+        Page<User> users = userRepository.findAll(spec, pageable);
+        return users.map(u -> new UserCreditLookupDto(u.getId().toString(), u.getEmail(), creditService.getBalance(u.getId())));
     }
 }

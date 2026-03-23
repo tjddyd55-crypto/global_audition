@@ -11,4 +11,6 @@ public interface CreditTransactionRepository extends JpaRepository<CreditTransac
         JpaSpecificationExecutor<CreditTransaction> {
 
     Page<CreditTransaction> findByUserIdOrderByCreatedAtDesc(UUID userId, Pageable pageable);
+
+    boolean existsByUserIdAndTypeAndReferenceId(UUID userId, String type, String referenceId);
 }

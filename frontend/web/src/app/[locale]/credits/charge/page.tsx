@@ -96,6 +96,9 @@ export default function CreditsChargePage() {
                       </span>
                     )}
                   </p>
+                  <p className="mt-1 text-sm font-semibold text-gray-800">
+                    총 {(p.credits + p.bonusCredits).toLocaleString('ko-KR')} 크레딧 지급
+                  </p>
                 </button>
               )
             })}

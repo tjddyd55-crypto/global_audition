@@ -27,32 +27,32 @@ export interface AuthMeResponse {
   profileImageUrl?: string | null
 }
 
+/**
+ * 로그인/가입 직후 토큰·역할을 localStorage + auth 스토어에 반영.
+ * DB에서 role을 바꾼 뒤에는 반드시 재로그인해야 한다(JWT는 발급 시점 claim).
+ * 메인 로그인 UI는 추가로 `window.location.assign`으로 전체 로드해 옛 메모리 상태와 불일치 403을 줄인다.
+ */
+function persistAuthToken(response: AuthResponse) {
+  if (typeof window === 'undefined' || !response.token) return
+  localStorage.setItem('token', response.token)
+  localStorage.setItem('accessToken', response.token)
+  localStorage.setItem('auth_token', response.token)
+  localStorage.setItem('userRole', response.role)
+  localStorage.setItem('userId', response.userId)
+  window.dispatchEvent(new Event('auth-change'))
+  useAuthStore.getState().syncFromStorage()
+}
+
 export const authApi = {
   signup: async (data: SignupRequest): Promise<AuthResponse> => {
     const { data: response } = await apiClient.post<AuthResponse>('/auth/signup', data)
-    if (typeof window !== 'undefined' && response.token) {
-      localStorage.setItem('token', response.token)
-      localStorage.setItem('accessToken', response.token)
-      localStorage.setItem('auth_token', response.token)
-      localStorage.setItem('userRole', response.role)
-      localStorage.setItem('userId', response.userId)
-      window.dispatchEvent(new Event('auth-change'))
-      useAuthStore.getState().syncFromStorage()
-    }
+    persistAuthToken(response)
     return response
   },
 
   login: async (data: LoginRequest): Promise<AuthResponse> => {
     const { data: response } = await apiClient.post<AuthResponse>('/auth/login', data)
-    if (typeof window !== 'undefined' && response.token) {
-      localStorage.setItem('token', response.token)
-      localStorage.setItem('accessToken', response.token)
-      localStorage.setItem('auth_token', response.token)
-      localStorage.setItem('userRole', response.role)
-      localStorage.setItem('userId', response.userId)
-      window.dispatchEvent(new Event('auth-change'))
-      useAuthStore.getState().syncFromStorage()
-    }
+    persistAuthToken(response)
     return response
   },
 

@@ -5,7 +5,13 @@ import { useSearchParams } from 'next/navigation'
 import axios from 'axios'
 import { useRouter, Link } from '../../../../i18n.config'
 import { authApi } from '@/lib/api/auth'
-import { creditsApi, type CreditPackageCatalogItem, type PreparePaymentResult } from '@/lib/api/credits'
+import {
+  creditsApi,
+  type CreditOrderSummary,
+  type CreditPackageCatalogItem,
+  type PreparePaymentResult,
+  isMockPaymentUiEnabled,
+} from '@/lib/api/credits'
 import {
   BTN_PRIMARY,
   BTN_SECONDARY,
@@ -20,12 +26,15 @@ function CheckoutContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const packageId = searchParams.get('packageId')?.trim() ?? ''
+  const orderNoParam = searchParams.get('orderNo')?.trim() ?? ''
 
   const [selectedPackage, setSelectedPackage] = useState<CreditPackageCatalogItem | null>(null)
+  const [orderSummary, setOrderSummary] = useState<CreditOrderSummary | null>(null)
+  const [prepareResult, setPrepareResult] = useState<PreparePaymentResult | null>(null)
+
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
-  const [prepareResult, setPrepareResult] = useState<PreparePaymentResult | null>(null)
-  const [prepareError, setPrepareError] = useState<string | null>(null)
+  const [actionError, setActionError] = useState<string | null>(null)
   const [isPreparing, setIsPreparing] = useState(false)
 
   useEffect(() => {
@@ -44,12 +53,19 @@ function CheckoutContent() {
     ;(async () => {
       setIsLoading(true)
       setLoadError(null)
-      setPrepareResult(null)
-      setPrepareError(null)
       try {
         const pkg = await creditsApi.getPackage(packageId)
         if (cancelled) return
         setSelectedPackage(pkg)
+        if (orderNoParam) {
+          const ord = await creditsApi.getOrder(orderNoParam)
+          if (cancelled) return
+          setOrderSummary(ord)
+          setPrepareResult(null)
+        } else {
+          setOrderSummary(null)
+          setPrepareResult(null)
+        }
       } catch {
         if (!cancelled) {
           setSelectedPackage(null)
@@ -63,27 +79,43 @@ function CheckoutContent() {
     return () => {
       cancelled = true
     }
-  }, [router, packageId])
+  }, [router, packageId, orderNoParam])
 
-  const onPreparePayment = async () => {
+  const onCreateOrder = async () => {
     if (!packageId) return
     setIsPreparing(true)
-    setPrepareError(null)
-    setPrepareResult(null)
+    setActionError(null)
     try {
-      const res = await creditsApi.preparePayment(packageId)
+      const res = await creditsApi.preparePayment(packageId, 'MOCK')
       setPrepareResult(res)
+      router.replace(`/credits/checkout?packageId=${encodeURIComponent(packageId)}&orderNo=${encodeURIComponent(res.orderNo)}`)
     } catch (e: unknown) {
-      let msg = '결제 준비 요청에 실패했습니다.'
+      let msg = '주문 생성에 실패했습니다.'
       if (axios.isAxiosError(e)) {
         const data = e.response?.data as { message?: string } | undefined
         if (data?.message && typeof data.message === 'string') msg = data.message
       }
-      setPrepareError(msg)
+      setActionError(msg)
     } finally {
       setIsPreparing(false)
     }
   }
+
+  const goToPayment = () => {
+    const path =
+      prepareResult?.redirectUrl ??
+      (orderNoParam ? `/credits/mock-pay?orderNo=${encodeURIComponent(orderNoParam)}` : null)
+    if (path) {
+      router.push(path)
+    }
+  }
+
+  const displayOrderNo = orderSummary?.orderNo ?? prepareResult?.orderNo ?? orderNoParam
+  const displayProvider = orderSummary?.provider ?? prepareResult?.provider ?? 'MOCK'
+  const displayAmount = orderSummary?.amount ?? selectedPackage?.price
+  const displayCredits = orderSummary?.credits ?? selectedPackage?.credits
+  const displayBonus = orderSummary?.bonusCredits ?? selectedPackage?.bonusCredits
+  const displayName = orderSummary?.packageName ?? selectedPackage?.name
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -114,39 +146,70 @@ function CheckoutContent() {
 
         {selectedPackage && (
           <div className={CARD_BASE}>
-            <h2 className={`${TITLE_PAGE} mb-4`}>선택한 상품</h2>
-            <p className="text-base font-semibold text-gray-900">{selectedPackage.name}</p>
-            <ul className={`mt-3 flex flex-col gap-1 ${TEXT_SUB}`}>
-              <li>결제 금액: {selectedPackage.price.toLocaleString('ko-KR')}원</li>
-              <li>크레딧: {selectedPackage.credits.toLocaleString('ko-KR')}</li>
-              {selectedPackage.bonusCredits > 0 && (
+            <h2 className={`${TITLE_PAGE} mb-4`}>주문 요약</h2>
+            <ul className={`flex flex-col gap-2 ${TEXT_SUB}`}>
+              {displayOrderNo && (
+                <li>
+                  <span className="font-medium text-gray-800">주문번호</span> {displayOrderNo}
+                </li>
+              )}
+              <li>
+                <span className="font-medium text-gray-800">패키지</span> {displayName}
+              </li>
+              <li>
+                <span className="font-medium text-gray-800">결제 금액</span>{' '}
+                {(displayAmount ?? 0).toLocaleString('ko-KR')}원
+              </li>
+              <li>
+                <span className="font-medium text-gray-800">지급 크레딧</span>{' '}
+                {(displayCredits ?? 0).toLocaleString('ko-KR')}
+              </li>
+              {(displayBonus ?? 0) > 0 && (
                 <li className="font-medium text-green-600">
-                  보너스: +{selectedPackage.bonusCredits.toLocaleString('ko-KR')}
+                  보너스 +{(displayBonus ?? 0).toLocaleString('ko-KR')}
+                </li>
+              )}
+              <li>
+                <span className="font-medium text-gray-800">총 지급 예정</span>{' '}
+                {(displayCredits ?? 0) + (displayBonus ?? 0)} 크레딧
+              </li>
+              <li>
+                <span className="font-medium text-gray-800">Provider</span> {displayProvider}
+              </li>
+              {orderSummary && (
+                <li>
+                  <span className="font-medium text-gray-800">상태</span> {orderSummary.status}
                 </li>
               )}
             </ul>
 
-            <button
-              type="button"
-              disabled={isPreparing}
-              onClick={onPreparePayment}
-              className={`${BTN_PRIMARY} mt-6`}
-            >
-              {isPreparing ? '처리 중…' : '결제하기'}
-            </button>
-
-            {prepareError && (
-              <p className="mt-3 text-sm text-red-600">{prepareError}</p>
+            {!orderNoParam && !orderSummary && (
+              <button
+                type="button"
+                disabled={isPreparing}
+                onClick={onCreateOrder}
+                className={`${BTN_PRIMARY} mt-6`}
+              >
+                {isPreparing ? '주문 생성 중…' : '주문 생성하기'}
+              </button>
             )}
 
-            {prepareResult && (
-              <div className="mt-6 rounded-lg border border-[#E5E7EB] bg-gray-50 p-4">
-                <p className="text-sm font-semibold text-gray-900">결제 준비 완료 (모의)</p>
-                <p className={`${TEXT_SUB} mt-2`}>{prepareResult.message}</p>
-                <pre className="mt-3 max-h-48 overflow-auto rounded-md bg-white p-3 text-xs text-gray-800">
-                  {JSON.stringify(prepareResult, null, 2)}
-                </pre>
-              </div>
+            {(orderNoParam || orderSummary) && isMockPaymentUiEnabled() && (
+              <button type="button" onClick={goToPayment} className={`${BTN_PRIMARY} mt-4 block`}>
+                결제 진행 (목)
+              </button>
+            )}
+
+            {(orderNoParam || orderSummary) && !isMockPaymentUiEnabled() && (
+              <p className={`${TEXT_SUB} mt-4`}>
+                실제 PG 연동 시 이 단계에서 결제사 화면으로 이동합니다. (목 결제 비활성화됨)
+              </p>
+            )}
+
+            {actionError && <p className="mt-3 text-sm text-red-600">{actionError}</p>}
+
+            {prepareResult && !orderNoParam && (
+              <p className={`${TEXT_SUB} mt-4`}>주문이 생성되었습니다. URL이 갱신되면 결제 진행을 눌러 주세요.</p>
             )}
           </div>
         )}

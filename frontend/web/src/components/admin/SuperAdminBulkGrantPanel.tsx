@@ -11,7 +11,7 @@ import {
 } from '@/lib/api/superAdmin'
 import { LAYOUT } from '@/lib/design-tokens'
 
-export default function SuperAdminCreditsBulkPage() {
+export default function SuperAdminBulkGrantPanel() {
   const qc = useQueryClient()
   const [country, setCountry] = useState('')
   const [createdAfterLocal, setCreatedAfterLocal] = useState('')

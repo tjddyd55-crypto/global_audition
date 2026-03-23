@@ -1,6 +1,7 @@
 import axios, { InternalAxiosRequestConfig } from 'axios'
 import { API_BASE_URL } from '@/lib/env'
 import { useAuthStore } from '@/lib/auth/authStore'
+import { getStoredAccessToken } from './authToken'
 
 // API_BASE_URL은 env.ts에서 빌드 타임에 검증됨
 // NEXT_PUBLIC_API_URL이 없으면 빌드가 실패합니다
@@ -18,6 +19,8 @@ export const apiClient = axios.create({
     'Content-Type': 'application/json',
   },
   timeout: 30000,
+  /** CORS allowCredentials(true) 백엔드와 정합; Bearer는 인터셉터에서 계속 붙임 */
+  withCredentials: true,
 })
 
 function getRequestAuthorizationHeader(config: InternalAxiosRequestConfig | undefined): string | undefined {
@@ -46,10 +49,8 @@ apiClient.interceptors.request.use(
       }
     }
     
-    const token = typeof window !== 'undefined' 
-      ? (localStorage.getItem('accessToken') || localStorage.getItem('auth_token') || localStorage.getItem('token'))
-      : null
-    
+    const token = getStoredAccessToken()
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     } else if (

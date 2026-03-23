@@ -5,7 +5,12 @@ package com.audition.platform.api.dto;
  */
 public class PreparePaymentResponse {
 
+    /** 비즈니스 주문번호 (payment_orders.order_no) */
+    private String orderNo;
+
+    /** 하위 호환: orderNo 와 동일 */
     private String orderId;
+
     private String packageId;
     private String packageName;
     private long amount;
@@ -15,12 +20,41 @@ public class PreparePaymentResponse {
     private String status;
     private String message;
 
+    /** 목 PG 등 — 프론트 라우팅용 상대 경로 */
+    private String redirectUrl;
+
+    private String provider;
+
+    public String getOrderNo() {
+        return orderNo;
+    }
+
+    public void setOrderNo(String orderNo) {
+        this.orderNo = orderNo;
+    }
+
     public String getOrderId() {
         return orderId;
     }
 
     public void setOrderId(String orderId) {
         this.orderId = orderId;
+    }
+
+    public String getRedirectUrl() {
+        return redirectUrl;
+    }
+
+    public void setRedirectUrl(String redirectUrl) {
+        this.redirectUrl = redirectUrl;
+    }
+
+    public String getProvider() {
+        return provider;
+    }
+
+    public void setProvider(String provider) {
+        this.provider = provider;
     }
 
     public String getPackageId() {

@@ -10,6 +10,9 @@ public final class AdminAuditAction {
     public static final String CREDIT_ADJUST = "CREDIT_ADJUST";
     public static final String CREDIT_POLICY_PATCH = "CREDIT_POLICY_PATCH";
     public static final String USER_UPDATE = "USER_UPDATE";
+    public static final String CREDIT_PACKAGE_CREATE = "CREDIT_PACKAGE_CREATE";
+    public static final String CREDIT_PACKAGE_UPDATE = "CREDIT_PACKAGE_UPDATE";
+    public static final String CREDIT_PACKAGE_DELETE = "CREDIT_PACKAGE_DELETE";
 
     private AdminAuditAction() {
     }

@@ -13,6 +13,7 @@ type FormState = {
   credits: number
   bonusCredits: number
   active: boolean
+  sortOrder: number
 }
 
 const emptyForm: FormState = {
@@ -21,6 +22,7 @@ const emptyForm: FormState = {
   credits: 0,
   bonusCredits: 0,
   active: true,
+  sortOrder: 0,
 }
 
 export default function SuperAdminCreditPackagesPage() {
@@ -42,6 +44,7 @@ export default function SuperAdminCreditPackagesPage() {
         credits: createForm.credits,
         bonusCredits: createForm.bonusCredits,
         active: createForm.active,
+        sortOrder: createForm.sortOrder,
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['superAdmin', 'credit-packages'] })
@@ -57,6 +60,7 @@ export default function SuperAdminCreditPackagesPage() {
         credits: body.credits,
         bonusCredits: body.bonusCredits,
         active: body.active,
+        sortOrder: body.sortOrder,
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['superAdmin', 'credit-packages'] })
@@ -77,12 +81,14 @@ export default function SuperAdminCreditPackagesPage() {
       credits: p.credits,
       bonusCredits: p.bonusCredits,
       active: p.active,
+      sortOrder: p.sortOrder ?? 0,
     })
   }
 
   const fieldStyle = { height: 36, padding: '0 10px', borderRadius: 8, border: '1px solid #ddd', fontSize: 14 } as const
 
   const columns: DataTableColumn<CreditPackageRow>[] = [
+    { id: 'sort', header: 'sort_order', cell: (r) => r.sortOrder ?? 0 },
     { id: 'name', header: 'name', cell: (r) => r.name },
     { id: 'price', header: 'price', cell: (r) => r.price },
     { id: 'credits', header: 'credits', cell: (r) => r.credits },
@@ -166,6 +172,16 @@ export default function SuperAdminCreditPackagesPage() {
               onChange={(e) => setCreateForm((f) => ({ ...f, bonusCredits: Number(e.target.value) }))}
             />
           </label>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 14 }}>
+            sort_order
+            <input
+              type="number"
+              min={0}
+              style={fieldStyle}
+              value={createForm.sortOrder}
+              onChange={(e) => setCreateForm((f) => ({ ...f, sortOrder: Number(e.target.value) }))}
+            />
+          </label>
           <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14 }}>
             <input
               type="checkbox"
@@ -197,7 +213,7 @@ export default function SuperAdminCreditPackagesPage() {
       {editingId && (
         <AdminCard title="패키지 수정">
           <div style={{ display: 'grid', gap: 12, maxWidth: 480 }}>
-            {(['name', 'price', 'credits', 'bonusCredits'] as const).map((key) => (
+            {(['name', 'price', 'credits', 'bonusCredits', 'sortOrder'] as const).map((key) => (
               <label key={key} style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 14 }}>
                 {key}
                 <input

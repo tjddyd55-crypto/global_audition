@@ -14,6 +14,8 @@ export type CreditPackageRow = {
   credits: number
   bonusCredits: number
   active: boolean
+  sortOrder: number
+  createdAt?: string
   updatedAt: string
 }
 
@@ -88,6 +90,7 @@ export const superAdminApi = {
     credits: number
     bonusCredits: number
     active: boolean
+    sortOrder?: number
   }): Promise<CreditPackageRow> => {
     const { data } = await apiClient.post<CreditPackageRow>('/admin/credit-packages', body)
     return data
@@ -95,7 +98,14 @@ export const superAdminApi = {
 
   updateCreditPackage: async (
     id: string,
-    body: { name: string; price: number; credits: number; bonusCredits: number; active: boolean }
+    body: {
+      name: string
+      price: number
+      credits: number
+      bonusCredits: number
+      active: boolean
+      sortOrder?: number
+    }
   ): Promise<CreditPackageRow> => {
     const { data } = await apiClient.put<CreditPackageRow>(`/admin/credit-packages/${id}`, body)
     return data
@@ -107,6 +117,22 @@ export const superAdminApi = {
 
   lookupUser: async (q: string): Promise<UserCreditLookup> => {
     const { data } = await apiClient.get<UserCreditLookup>('/admin/users/lookup', { params: { q } })
+    return data
+  },
+
+  /** GET /api/admin/users — SUPER_ADMIN, 페이지네이션 (백엔드 Spring Page) */
+  listUsersWithCredits: async (params: {
+    q?: string
+    page?: number
+    size?: number
+  }): Promise<SpringPage<UserCreditLookup>> => {
+    const { data } = await apiClient.get<SpringPage<UserCreditLookup>>('/admin/users', {
+      params: {
+        q: params.q?.trim() || undefined,
+        page: params.page ?? 0,
+        size: params.size ?? 50,
+      },
+    })
     return data
   },
 
@@ -186,7 +212,7 @@ export const superAdminApi = {
     page?: number
     size?: number
   }): Promise<SpringPage<CreditTransactionRow>> => {
-    const { data } = await apiClient.get<SpringPage<CreditTransactionRow>>('/admin/credit-transactions', {
+    const { data } = await apiClient.get<SpringPage<CreditTransactionRow>>('/admin/transactions', {
       params: {
         userId: params.userId || undefined,
         type: params.type || undefined,

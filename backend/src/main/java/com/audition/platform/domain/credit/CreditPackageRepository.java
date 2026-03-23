@@ -7,5 +7,5 @@ import java.util.UUID;
 
 public interface CreditPackageRepository extends JpaRepository<CreditPackage, UUID> {
 
-    List<CreditPackage> findByActiveTrueOrderByPriceAsc();
+    List<CreditPackage> findByActiveTrueOrderBySortOrderAscPriceAsc();
 }

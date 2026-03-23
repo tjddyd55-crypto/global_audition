@@ -35,3 +35,24 @@ Flyway V17이 아직 적용되지 않았거나 INSERT가 스킵된 경우(이메
    - 로그인 확인 후 **`BOOTSTRAP_SUPER_ADMIN=false` 로 되돌리거나 변수 삭제** (보안).
    - 선택: `BOOTSTRAP_SUPER_ADMIN_EMAIL`, `BOOTSTRAP_SUPER_ADMIN_PASSWORD` 로 이메일·비밀번호 변경 가능.
    - 이미 계정이 있는데 비밀번호만 맞추려면: `BOOTSTRAP_SUPER_ADMIN=true` 와 함께 `BOOTSTRAP_SUPER_ADMIN_RESET_PASSWORD=true` (한 번만 사용 후 둘 다 끌 것).
+
+### 관리 API 403 (역할은 맞는데 API만 거절될 때)
+
+JWT의 `role` 클레임은 **로그인 시점** DB 값으로 발급됩니다. DB에서 `users.role`을 `SUPER_ADMIN`으로 바꾼 뒤에는 **반드시 다시 로그인**해야 새 토큰에 반영됩니다.
+
+확인/수정 예시 (PostgreSQL):
+
+```sql
+SELECT id, email, role FROM users WHERE email = 'your@email.com';
+UPDATE users SET role = 'SUPER_ADMIN' WHERE email = 'your@email.com';
+```
+
+이후 프론트에서 로그아웃 → 다시 로그인 → `/admin/super` 재접속.
+
+## 크레딧 결제(목 PG) — Flyway V18 + V19
+
+- V18: `payment_orders` 테이블 + `credit_packages.sort_order`, `created_at` 추가.
+- V19: 주문 상태 문자열 `PENDING` → `CREATED` (Java enum과 DB 정합). 상태: **CREATED → READY → PAID | FAILED | CANCELLED**.
+- 유저: `POST /api/credits/prepare-payment` → `GET /api/credits/orders/{orderNo}` → (목) `POST /api/payments/callback/success|fail` (로그인 사용자·본인 주문만).
+- 패키지 충전 크레딧은 `credit_transactions.type=CHARGE`, `reason=PACKAGE_PURCHASE`, `reference_id=order_no` 로만 적립; 동일 조합이 이미 있으면 재지급하지 않음.
+- 실 PG 연동 시 `PaymentProvider` 구현체 추가 및 콜백을 서버 간 검증으로 바꾸면 된다.

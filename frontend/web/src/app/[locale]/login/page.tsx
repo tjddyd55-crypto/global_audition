@@ -8,7 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useQueryClient } from '@tanstack/react-query'
 import { authApi } from '../../../lib/api/auth'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { Link } from '../../../i18n.config'
 import AuthCardLayout from '../../../components/auth/AuthCardLayout'
 
@@ -31,6 +31,7 @@ function isSafeInternalNextPath(path: string): boolean {
 
 export default function LoginPage() {
   const router = useRouter()
+  const locale = useLocale()
   const searchParams = useSearchParams()
   const queryClient = useQueryClient()
   const t = useTranslations('auth')
@@ -73,17 +74,20 @@ export default function LoginPage() {
       await new Promise(resolve => setTimeout(resolve, 300))
 
       const nextRaw = searchParams.get('next')
+      let path: string
       if (nextRaw && isSafeInternalNextPath(nextRaw)) {
-        router.push(nextRaw)
-        return
+        path = nextRaw.startsWith('/') ? nextRaw : `/${nextRaw}`
+      } else if (userRole === 'BUSINESS' || userRole === 'AGENCY') {
+        path = '/my/dashboard'
+      } else {
+        path = '/'
       }
 
-      if (userRole === 'BUSINESS' || userRole === 'AGENCY') {
-        router.push('/my/dashboard')
-      } else if (userRole === 'APPLICANT' || userRole === 'USER') {
-        router.push('/')
+      // 전체 문서 로드로 이동 → 메모리 내 옛 JWT/역할(Zustand 등)과 localStorage 불일치로 인한 403 방지
+      if (typeof window !== 'undefined') {
+        window.location.assign(`/${locale}${path}`)
       } else {
-        router.push('/')
+        router.push(path)
       }
     } catch (err: any) {
       if (!err.response) {

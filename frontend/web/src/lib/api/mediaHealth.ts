@@ -1,4 +1,4 @@
-import { API_BASE_URL } from '@/lib/env'
+import { apiFetchPublic } from './apiFetch'
 
 /**
  * Media-Service Health-check 전용 API (GET only)
@@ -9,7 +9,9 @@ import { API_BASE_URL } from '@/lib/env'
  * - 실제 데이터 변경/업로드 없음
  */
 export async function checkMediaHealth(): Promise<{ status: string; [k: string]: unknown }> {
-  const res = await fetch(`${API_BASE_URL}/api/v1/videos?page=0&size=1`, { cache: 'no-store' })
+  const res = await apiFetchPublic('/v1/videos?page=0&size=1', {
+    cache: 'no-store',
+  })
   if (!res.ok) throw new Error('Media service unavailable')
   return res.json()
 }

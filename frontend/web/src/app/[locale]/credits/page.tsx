@@ -96,7 +96,8 @@ export default function CreditsDashboardPage() {
         </div>
 
         <div className={CARD_BASE}>
-          <h2 className={`${TITLE_PAGE} mb-4`}>최근 거래 내역</h2>
+          <h2 className={`${TITLE_PAGE} mb-1`}>최근 거래 내역</h2>
+          <p className={`${TEXT_SUB} mb-4`}>최근 30건까지 표시됩니다.</p>
           {isLoading ? (
             <p className={TEXT_SUB}>불러오는 중…</p>
           ) : transactions.length === 0 ? (

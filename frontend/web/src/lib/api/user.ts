@@ -16,6 +16,7 @@ export const userApi = {
     return {
       userId: raw.id,
       email: raw.email,
+      /** 백엔드 SSOT: APPLICANT만 화면용 USER로 내려오므로 APPLICANT로 복원. SUPER_ADMIN 등은 그대로 */
       role: raw.role === 'USER' ? 'APPLICANT' : raw.role,
       name: raw.displayName ?? raw.username ?? null,
       profileImageUrl: raw.profileImageUrl ?? null,

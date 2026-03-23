@@ -7,6 +7,8 @@ import com.audition.platform.domain.credit.CreditTransaction;
 import com.audition.platform.domain.credit.CreditTransactionRepository;
 import com.audition.platform.domain.credit.UserCredit;
 import com.audition.platform.domain.credit.UserCreditRepository;
+import com.audition.platform.domain.payment.PaymentOrder;
+import com.audition.platform.domain.payment.PaymentOrderStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -23,6 +25,8 @@ public class CreditService {
     private static final String CHARGE_REASON_MANUAL = "MANUAL";
     public static final String REASON_ADMIN_GRANT = "ADMIN_GRANT";
     public static final String REASON_ADMIN_DEDUCT = "ADMIN_DEDUCT";
+    /** 결제 완료 후 패키지 충전 */
+    public static final String REASON_PACKAGE_PURCHASE = "PACKAGE_PURCHASE";
 
     private final CreditPolicyRepository creditPolicyRepository;
     private final UserCreditRepository userCreditRepository;
@@ -189,6 +193,45 @@ public class CreditService {
                 ref,
                 grantedBy,
                 noteResolved,
+                before,
+                after);
+        return after;
+    }
+
+    /**
+     * {@code payment_orders} 가 PAID 인 뒤 호출. 동일 {@code orderNo} 로 CHARGE 가 있으면 중복 지급하지 않는다.
+     */
+    @Transactional
+    public long applyChargeFromPaymentOrder(PaymentOrder order) {
+        if (order.getStatus() != PaymentOrderStatus.PAID) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "PAID 주문만 크레딧 지급이 가능합니다.");
+        }
+        UUID userId = order.getUserId();
+        String ref = order.getOrderNo();
+        if (creditTransactionRepository.existsByUserIdAndTypeAndReferenceId(userId, CreditTransactionType.CHARGE, ref)) {
+            return getBalance(userId);
+        }
+        long total = order.getCredits() + order.getBonusCredits();
+        if (total <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "지급할 크레딧이 없습니다.");
+        }
+        userCreditRepository.ensureWalletRow(userId);
+        UserCredit wallet = userCreditRepository.findByUserIdForUpdate(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "크레딧 지갑을 준비할 수 없습니다."));
+        long before = wallet.getBalance();
+        long after = before + total;
+        wallet.setBalance(after);
+        wallet.setUpdatedAt(Instant.now());
+        userCreditRepository.save(wallet);
+        String note = "payment_order packageId=" + order.getPackageId() + " provider=" + order.getProvider();
+        persistCreditTransaction(
+                userId,
+                total,
+                CreditTransactionType.CHARGE,
+                REASON_PACKAGE_PURCHASE,
+                ref,
+                null,
+                note,
                 before,
                 after);
         return after;
