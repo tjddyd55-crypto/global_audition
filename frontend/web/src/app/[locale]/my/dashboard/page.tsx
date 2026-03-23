@@ -67,20 +67,62 @@ export default function MyDashboardPage() {
     }
   }, [router])
 
+  const agencyEnabled = role === 'AGENCY' || role === 'ADMIN'
+  const applicantEnabled = role === 'APPLICANT'
+
   const agencyQuery = useQuery({
     queryKey: ['dashboard', 'agency'],
     queryFn: dashboardApi.getAgency,
-    enabled: role === 'AGENCY' || role === 'ADMIN',
+    enabled: agencyEnabled,
   })
 
   const applicantQuery = useQuery({
     queryKey: ['dashboard', 'applicant'],
     queryFn: dashboardApi.getApplicant,
-    enabled: role === 'APPLICANT',
+    enabled: applicantEnabled,
   })
 
-  if (agencyQuery.isLoading || applicantQuery.isLoading) {
+  const dashboardLoading =
+    (agencyEnabled && agencyQuery.isLoading) || (applicantEnabled && applicantQuery.isLoading)
+
+  if (dashboardLoading) {
     return <div className="flex min-h-screen items-center justify-center">{t('loading')}</div>
+  }
+
+  /** 백엔드 대시보드 API는 AGENCY/ADMIN·APPLICANT 전용. SUPER_ADMIN 등은 별도 허브만 표시 */
+  if (role === 'SUPER_ADMIN' || role === 'USER') {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className={`${PAGE_CONTAINER} py-6 ${SECTION_GAP}`}>
+          <div>
+            <h1 className={TITLE_PAGE}>
+              {role === 'SUPER_ADMIN' ? '슈퍼관리자' : '내 대시보드'}
+            </h1>
+            <p className={`${TEXT_SUB} mt-2`}>
+              {role === 'SUPER_ADMIN'
+                ? '플랫폼 운영 메뉴로 이동하거나 크레딧을 관리할 수 있습니다.'
+                : '일반 계정입니다. 서비스 메뉴를 이용해 주세요.'}
+            </p>
+          </div>
+          <div className={CARD_BASE}>
+            <h2 className={`${TITLE_PAGE} mb-4`}>바로가기</h2>
+            <div className="flex flex-col gap-3 md:flex-row md:flex-wrap">
+              {role === 'SUPER_ADMIN' && (
+                <Link href="/admin/super" className={BTN_PRIMARY}>
+                  슈퍼관리자 콘솔
+                </Link>
+              )}
+              <Link href="/credits" className={BTN_SECONDARY}>
+                크레딧
+              </Link>
+              <Link href="/auditions" className={BTN_SECONDARY}>
+                오디션
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (role === 'AGENCY' || role === 'ADMIN') {
@@ -148,7 +190,17 @@ export default function MyDashboardPage() {
   }
 
   const applicant = applicantQuery.data
-  if (!applicant) return <div className="flex min-h-screen items-center justify-center text-red-500">{t('error')}</div>
+  if (!applicant) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-gray-50 px-4 text-center">
+        <p className="text-red-600">{t('error')}</p>
+        <p className={TEXT_SUB}>대시보드 데이터를 불러오지 못했습니다. 다시 로그인하거나 잠시 후 시도해 주세요.</p>
+        <Link href="/auditions" className={BTN_SECONDARY}>
+          오디션으로 이동
+        </Link>
+      </div>
+    )
+  }
   return (
     <div className="min-h-screen bg-gray-50">
       <div className={`${PAGE_CONTAINER} py-6 ${SECTION_GAP}`}>
