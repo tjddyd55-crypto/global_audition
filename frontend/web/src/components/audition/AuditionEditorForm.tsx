@@ -9,7 +9,8 @@ import { apiErrorMessage } from '@/lib/api/uploads'
 import { isoToDatetimeLocalValue } from '@/lib/audition/datetimeLocal'
 import { isBlankOrValidYoutubeUrl } from '@/lib/audition/youtubeEmbed'
 import { AuditionEditorPreview } from '@/components/audition/AuditionEditorPreview'
-import { GalleryImagesField, SingleImageUploadField } from '@/components/audition/AuditionEditorImageUpload'
+import { SingleImageUploadField } from '@/components/audition/AuditionEditorImageUpload'
+import { ImageUploader } from '@/components/common/ImageUploader'
 import { EDITOR_LABELS, AUDITION_STATUS_LABEL_KO } from '@/lib/audition/auditionEditorCopy'
 
 function trimNonEmpty(lines: string[] | undefined): string[] {
@@ -154,9 +155,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
   const [showDescriptionError, setShowDescriptionError] = useState(false)
   const [showVideoUrlError, setShowVideoUrlError] = useState(false)
   const [showCoverError, setShowCoverError] = useState(false)
-  const [coverUploading, setCoverUploading] = useState(false)
   const [logoUploading, setLogoUploading] = useState(false)
-  const [galleryUploading, setGalleryUploading] = useState(false)
   /** 임시 저장 직후 상단 안내 (토스트 보강) */
   const [draftSavedBanner, setDraftSavedBanner] = useState(false)
   /** 신규 작성: 첫 임시저장 후 PATCH에 사용 */
@@ -376,7 +375,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
     borderWidth: showVideoUrlError ? 2 : 1,
   }
 
-  const formBusy = isLoading || coverUploading || logoUploading || galleryUploading
+  const formBusy = isLoading || logoUploading
 
   const formCol = (
     <div className="min-w-0 w-full lg:w-[60%]">
@@ -480,7 +479,8 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
         </div>
 
         <h2 style={sectionTitle}>{EDITOR_LABELS.sectionMedia}</h2>
-        <SingleImageUploadField
+        <ImageUploader
+          className="mb-8"
           label={
             <>
               {EDITOR_LABELS.coverImage}{' '}
@@ -490,16 +490,17 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
               <span className="ml-1 text-xs font-normal text-gray-500">(등록·마감 시 필수)</span>
             </>
           }
+          guide="대표 이미지는 세로형(3:4) 권장 (포스터 형태). 카드·리스트·상단 영역에 동일 비율로 표시됩니다."
+          multiple={false}
+          aspect="portrait"
+          maxCount={1}
           uploadDir="covers"
-          imageUrl={coverImage}
-          onImageUrlChange={(url) => {
-            setCoverImage(url)
+          value={coverImage.trim() ? [coverImage.trim()] : []}
+          onChange={(urls) => {
+            setCoverImage(urls[0] ?? '')
             setShowCoverError(false)
           }}
-          uploading={coverUploading}
-          onUploadingChange={setCoverUploading}
           disabled={isLoading}
-          helperText="카드·상단 썸네일. 임시저장 시 생략 가능, 등록 시 S3 업로드 필수."
           showFieldError={showCoverError}
         />
         <div style={{ marginBottom: AUDITION_DETAIL.benefitGridGapPx }}>
@@ -520,12 +521,16 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
             aria-invalid={showVideoUrlError}
           />
         </div>
-        <GalleryImagesField
+        <ImageUploader
+          className="mb-8"
           label={EDITOR_LABELS.galleryImages}
-          urls={galleryImages}
-          onUrlsChange={setGalleryImages}
-          uploading={galleryUploading}
-          onUploadingChange={setGalleryUploading}
+          guide="갤러리 이미지는 가로형(16:9) 권장. 드래그로 순서를 바꿀 수 있습니다."
+          multiple
+          aspect="landscape"
+          maxCount={10}
+          uploadDir="gallery"
+          value={galleryImages}
+          onChange={setGalleryImages}
           disabled={isLoading}
         />
 

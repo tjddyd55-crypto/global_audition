@@ -319,7 +319,7 @@ public class ApplicationService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Audition is not open for applications");
         }
         if (applicationRepository.existsByAuditionIdAndApplicantId(auditionId, applicantId)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Already applied to this audition");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 지원 완료입니다.");
         }
         creditService.useCredits(applicantId, CreditPolicyKey.AUDITION_APPLY, auditionId.toString());
         User applicant = userRepository.findById(applicantId)
@@ -332,7 +332,7 @@ public class ApplicationService {
         try {
             app = applicationRepository.save(app);
         } catch (DataIntegrityViolationException e) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Already applied to this audition");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 지원 완료입니다.");
         }
         long cnt = applicationRepository.countByAuditionId(auditionId);
         audition.setApplicantsCount((int) cnt);

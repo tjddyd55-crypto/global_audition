@@ -30,6 +30,8 @@ export type AuditionDto = {
   startDate: string
   endDate: string
   benefits: string[]
+  /** 로그인 지원자/관리자일 때만: 해당 오디션 지원 여부 */
+  hasApplied?: boolean
 }
 
 export type CreateAuditionPayload = {

@@ -113,12 +113,13 @@ public class SuperAdminCreditAdministrationService {
     public Page<CreditTransactionDto> listTransactions(
             UUID userId,
             String type,
+            String referenceId,
             Instant fromInclusive,
             Instant toExclusive,
             Pageable pageable) {
         SuperAdminAuthHelper.requireSuperAdmin();
         return creditTransactionRepository
-                .findAll(CreditTransactionSpecifications.filter(userId, type, fromInclusive, toExclusive), pageable)
+                .findAll(CreditTransactionSpecifications.filter(userId, type, referenceId, fromInclusive, toExclusive), pageable)
                 .map(CreditTransactionMapper::toDto);
     }
 

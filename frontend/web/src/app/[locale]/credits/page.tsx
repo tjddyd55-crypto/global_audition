@@ -25,12 +25,30 @@ function typeLabel(type: string) {
   return type
 }
 
+function reasonSummary(type: string, reason: string, referenceId: string | null) {
+  if (type === 'USE' && reason === 'AUDITION_APPLY' && referenceId) {
+    return `오디션 지원 (참조: ${referenceId.slice(0, 8)}…)`
+  }
+  if (type === 'CHARGE' && reason === 'PACKAGE_PURCHASE') {
+    return '패키지 결제 충전'
+  }
+  return reason
+}
+
+const TX_TYPE_FILTERS = [
+  { value: '', label: '전체' },
+  { value: 'CHARGE', label: '충전' },
+  { value: 'USE', label: '사용' },
+  { value: 'GRANT', label: '지급' },
+] as const
+
 export default function CreditsDashboardPage() {
   const router = useRouter()
   const [balance, setBalance] = useState<number | null>(null)
   const [transactions, setTransactions] = useState<CreditTransactionItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [typeFilter, setTypeFilter] = useState<string>('')
 
   useEffect(() => {
     if (!authApi.getToken()) {
@@ -45,7 +63,7 @@ export default function CreditsDashboardPage() {
       try {
         const [balRes, txRes] = await Promise.all([
           creditsApi.getBalance(),
-          creditsApi.getTransactions(0, 30),
+          creditsApi.getTransactions(0, 50, typeFilter.trim() || undefined),
         ])
         if (cancelled) return
         setBalance(balRes.balance)
@@ -64,7 +82,7 @@ export default function CreditsDashboardPage() {
     return () => {
       cancelled = true
     }
-  }, [router])
+  }, [router, typeFilter])
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -96,8 +114,24 @@ export default function CreditsDashboardPage() {
         </div>
 
         <div className={CARD_BASE}>
-          <h2 className={`${TITLE_PAGE} mb-1`}>최근 거래 내역</h2>
-          <p className={`${TEXT_SUB} mb-4`}>최근 30건까지 표시됩니다.</p>
+          <h2 className={`${TITLE_PAGE} mb-1`}>크레딧 사용 내역</h2>
+          <p className={`${TEXT_SUB} mb-3`}>충전·사용·지급을 구분해 조회합니다. (최근 50건)</p>
+          <div className="mb-4 flex flex-wrap gap-2">
+            {TX_TYPE_FILTERS.map((f) => (
+              <button
+                key={f.value || 'all'}
+                type="button"
+                onClick={() => setTypeFilter(f.value)}
+                className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                  typeFilter === f.value
+                    ? 'border-[#3B82F6] bg-[#3B82F6] text-white'
+                    : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
           {isLoading ? (
             <p className={TEXT_SUB}>불러오는 중…</p>
           ) : transactions.length === 0 ? (
@@ -108,10 +142,15 @@ export default function CreditsDashboardPage() {
                 <li key={tx.id} className="flex flex-col gap-1 py-4 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-900">
-                      {typeLabel(tx.type)} · {tx.reason}
+                      {typeLabel(tx.type)} · {reasonSummary(tx.type, tx.reason, tx.referenceId ?? null)}
                     </p>
                     <p className={TEXT_SUB}>
                       {tx.createdAt ? new Date(tx.createdAt).toLocaleString('ko-KR') : '-'}
+                      {tx.referenceId ? (
+                        <span className="mt-0.5 block font-mono text-[11px] text-gray-400">
+                          ref: {tx.referenceId}
+                        </span>
+                      ) : null}
                     </p>
                   </div>
                   <div className="text-right">

@@ -9,6 +9,7 @@ const PAGE_SIZE = 50
 export default function TransactionsPage() {
   const [userId, setUserId] = useState('')
   const [type, setType] = useState('')
+  const [referenceId, setReferenceId] = useState('')
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
   const [page, setPage] = useState(0)
@@ -22,11 +23,12 @@ export default function TransactionsPage() {
   }
 
   const { data, isLoading, error, refetch, isFetching } = useQuery({
-    queryKey: ['superAdmin', 'credit-transactions', userId, type, from, to, page],
+    queryKey: ['superAdmin', 'credit-transactions', userId, type, referenceId, from, to, page],
     queryFn: () =>
       superAdminApi.listCreditTransactions({
         userId: userId.trim() || undefined,
         type: type.trim() || undefined,
+        referenceId: referenceId.trim() || undefined,
         from: toIso(from, false),
         to: to ? toIso(to, true) : undefined,
         page,
@@ -65,6 +67,15 @@ export default function TransactionsPage() {
               value={type}
               onChange={(e) => setType(e.target.value)}
               placeholder="CHARGE, USE, GRANT…"
+            />
+          </label>
+          <label className="flex flex-col gap-1 text-xs text-gray-600 sm:col-span-2">
+            referenceId (오디션 UUID / orderNo 등)
+            <input
+              className="rounded border border-gray-300 px-2 py-1.5 text-sm font-mono"
+              value={referenceId}
+              onChange={(e) => setReferenceId(e.target.value)}
+              placeholder="정확 일치"
             />
           </label>
           <label className="flex flex-col gap-1 text-xs text-gray-600">

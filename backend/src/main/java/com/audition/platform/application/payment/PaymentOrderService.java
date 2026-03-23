@@ -22,6 +22,10 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * 패키지 결제 주문 라이프사이클. 크레딧 잔액 증가(충전)는 {@link CreditService#applyChargeFromPaymentOrder} 만 사용하며,
+ * {@code credit_transactions.referenceId} 에 {@link PaymentOrder#getOrderNo()} 를 넣어 추적한다.
+ */
 @Service
 public class PaymentOrderService {
 

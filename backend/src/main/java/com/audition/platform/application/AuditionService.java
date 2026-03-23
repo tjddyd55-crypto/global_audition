@@ -221,7 +221,12 @@ public class AuditionService {
     public AuditionResponse getById(UUID id) {
         Audition a = auditionRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Audition not found"));
-        return toResponse(a);
+        AuditionResponse r = toResponse(a);
+        UUID viewerId = SecurityUtils.getCurrentUserId();
+        if (viewerId != null && (SecurityUtils.hasRole("APPLICANT") || SecurityUtils.hasRole("ADMIN"))) {
+            r.setHasApplied(applicationRepository.existsByAuditionIdAndApplicantId(id, viewerId));
+        }
+        return r;
     }
 
     @Transactional

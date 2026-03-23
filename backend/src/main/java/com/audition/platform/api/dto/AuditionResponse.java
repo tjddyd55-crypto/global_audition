@@ -31,6 +31,11 @@ public class AuditionResponse {
     private Instant endDate;
     private String[] benefits;
 
+    /**
+     * 로그인한 지원자/관리자일 때만 설정. 해당 오디션에 이미 지원했으면 true.
+     */
+    private Boolean hasApplied;
+
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
     public UUID getOwnerId() { return ownerId; }
@@ -79,4 +84,12 @@ public class AuditionResponse {
     public void setEndDate(Instant endDate) { this.endDate = endDate; }
     public String[] getBenefits() { return benefits; }
     public void setBenefits(String[] benefits) { this.benefits = benefits; }
+
+    public Boolean getHasApplied() {
+        return hasApplied;
+    }
+
+    public void setHasApplied(Boolean hasApplied) {
+        this.hasApplied = hasApplied;
+    }
 }

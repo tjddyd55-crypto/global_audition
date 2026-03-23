@@ -11,7 +11,7 @@ function GalleryThumb({ src, onOpen }: { src: string; onOpen: () => void }) {
     <button
       type="button"
       onClick={onOpen}
-      className="relative aspect-[4/3] w-[min(280px,85vw)] shrink-0 snap-center cursor-pointer overflow-hidden rounded-[10px] border-0 bg-gray-100 p-0"
+      className="relative aspect-video w-[min(320px,85vw)] shrink-0 snap-center cursor-pointer overflow-hidden rounded-md border-0 bg-gray-100 p-0"
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
@@ -28,7 +28,7 @@ function GalleryModalImage({ src }: { src: string }) {
   const [failed, setFailed] = useState(false)
   const url = failed ? AUDITION_COVER_PLACEHOLDER_SRC : src
   return (
-    <div className="flex h-[min(85vh,100%)] w-full items-center justify-center">
+    <div className="flex h-[min(85vh,100%)] w-full items-center justify-center bg-black">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={url}
@@ -170,7 +170,7 @@ export function AuditionGalleryViewer({ images }: Props) {
 
       {modalIndex !== null && (
         <div
-          className="fixed inset-0 z-[100] flex cursor-default items-center justify-center bg-black/90"
+          className="fixed inset-0 z-[100] flex cursor-default items-center justify-center bg-black"
           role="dialog"
           onClick={close}
           aria-modal

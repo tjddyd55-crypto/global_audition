@@ -144,6 +144,7 @@ export function parseAuditionDto(raw: Record<string, unknown>): AuditionDto {
     startDate: String(raw.startDate ?? ''),
     endDate: String(raw.endDate ?? ''),
     benefits: safeStringArr(raw.benefits),
+    hasApplied: raw.hasApplied === true ? true : raw.hasApplied === false ? false : undefined,
   }
 }
 

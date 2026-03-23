@@ -112,20 +112,17 @@ export default function AuditionCard({ audition }: AuditionCardProps) {
         </p>
 
         <div
+          className="relative mb-3 aspect-[3/4] w-full overflow-hidden bg-gray-100"
           style={{
-            height: AUDITION_CARD.imageHeightPx,
             borderRadius: AUDITION_CARD.imageRadiusPx,
             background: AUDITION_CARD.imageBg,
-            position: 'relative',
-            overflow: 'hidden',
-            marginBottom: 12,
           }}
         >
           <Image
             src={coverImage || DEFAULT_IMAGES.videoThumbnail}
             alt=""
             fill
-            style={{ objectFit: 'cover' }}
+            className="object-cover"
             unoptimized
           />
         </div>

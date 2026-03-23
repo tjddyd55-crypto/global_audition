@@ -25,12 +25,15 @@ public class AdminCreditPolicyService {
 
     private final CreditPolicyRepository creditPolicyRepository;
     private final AdminAuditLogService adminAuditLogService;
+    private final CreditPolicyPublicSnapshotCache creditPolicyPublicSnapshotCache;
 
     public AdminCreditPolicyService(
             CreditPolicyRepository creditPolicyRepository,
-            AdminAuditLogService adminAuditLogService) {
+            AdminAuditLogService adminAuditLogService,
+            CreditPolicyPublicSnapshotCache creditPolicyPublicSnapshotCache) {
         this.creditPolicyRepository = creditPolicyRepository;
         this.adminAuditLogService = adminAuditLogService;
+        this.creditPolicyPublicSnapshotCache = creditPolicyPublicSnapshotCache;
     }
 
     private static void assertSuperAdmin() {
@@ -71,6 +74,7 @@ public class AdminCreditPolicyService {
         }
         policy.setUpdatedAt(Instant.now());
         creditPolicyRepository.save(policy);
+        creditPolicyPublicSnapshotCache.invalidate(policyKey);
         Map<String, Object> after = policySnapshot(policyKey, policy);
         UUID adminId = SecurityUtils.getCurrentUserId();
         if (adminId != null) {

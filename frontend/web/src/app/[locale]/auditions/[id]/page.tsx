@@ -104,12 +104,15 @@ export default function AuditionDetailPage() {
   const t = useTranslations('common')
   const id = params.id as string
   const [applyError, setApplyError] = useState<string | null>(null)
+  /** 클릭 직후 즉시 비활성화 (네트워크 대기 전 이중 클릭 방지) */
+  const [applyClickLock, setApplyClickLock] = useState(false)
   const accessToken = useAuthStore((s) => s.accessToken)
   const myUserId = useAuthStore((s) => s.userId)
   const role = useAuthStore((s) => s.role)
 
   const { data: audition, isLoading, error } = useQuery({
-    queryKey: ['audition', id],
+    /** 로그인 전후 hasApplied 등 뷰어 전용 필드 반영 */
+    queryKey: ['audition', id, myUserId ?? 'anon'],
     queryFn: () => auditionApi.getById(id),
     enabled: !!id,
   })
@@ -135,6 +138,10 @@ export default function AuditionDetailPage() {
 
   const applyMutation = useMutation({
     mutationFn: () => applicationApi.apply(id),
+    onMutate: () => {
+      setApplyClickLock(true)
+      setApplyError(null)
+    },
     onSuccess: () => {
       setApplyError(null)
       queryClient.invalidateQueries({ queryKey: ['audition', id] })
@@ -142,10 +149,13 @@ export default function AuditionDetailPage() {
       router.push('/my/dashboard')
     },
     onError: (err: any) => {
+      setApplyClickLock(false)
+      const status = err.response?.status
+      const serverMsg = err.response?.data?.message
       const msg =
-        err.response?.status === 409
-          ? '이미 지원하셨습니다.'
-          : err.response?.data?.message || err.message || '지원에 실패했습니다.'
+        status === 409
+          ? serverMsg || '이미 지원 완료입니다.'
+          : serverMsg || err.message || '지원에 실패했습니다.'
       setApplyError(msg)
     },
   })
@@ -180,8 +190,8 @@ export default function AuditionDetailPage() {
   const schedules = safeArr(audition.schedules)
   const benefits = safeArr(audition.benefits)
 
-  const canApply = audition.status === 'OPEN' && (role === 'APPLICANT' || role === 'ADMIN')
   const isOpen = audition.status === 'OPEN'
+  const alreadyApplied = audition.hasApplied === true
   /** 하단 CTA: 오픈 시 비로그인은 로그인 유도, 지원자/관리자만 실제 지원 버튼 */
   const showApplyLoginCta = isOpen && !accessToken
   const showApplySubmitCta = isOpen && accessToken && (role === 'APPLICANT' || role === 'ADMIN')
@@ -202,15 +212,18 @@ export default function AuditionDetailPage() {
     !applyPolicySnapshot || !applyPolicySnapshot.active || applyPolicySnapshot.cost <= 0
       ? true
       : creditBalanceAmount >= applyPolicySnapshot.cost
-  const applyButtonDisabledForCredits =
+  const applyButtonDisabledForCredits = Boolean(
     showApplySubmitCta &&
-    (applyMutation.isPending ||
-      applyPolicyLoading ||
-      applyPolicyError ||
-      !applyPolicySnapshot ||
-      !applyPolicySnapshot.active ||
-      !creditGateReady ||
-      !hasEnoughCredits)
+      !alreadyApplied &&
+      (applyClickLock ||
+        applyMutation.isPending ||
+        applyPolicyLoading ||
+        applyPolicyError ||
+        !applyPolicySnapshot ||
+        !applyPolicySnapshot.active ||
+        !creditGateReady ||
+        !hasEnoughCredits)
+  )
 
   const fmt = (iso: string) => {
     try {
@@ -239,7 +252,7 @@ export default function AuditionDetailPage() {
   return (
     <div style={{ minHeight: '100vh', background: AUDITION_DETAIL.pageBackgroundMuted }}>
       <section className="relative w-full overflow-hidden">
-        <div className="relative aspect-[16/9] w-full min-h-[220px]">
+        <div className="relative mx-auto aspect-[3/4] w-full max-w-lg min-h-[220px] sm:max-w-xl">
           {cover ? (
             <AuditionDetailHeroImage src={cover} />
           ) : (
@@ -601,8 +614,28 @@ export default function AuditionDetailPage() {
           style={{ paddingLeft: AUDITION_DETAIL.fixedCtaPaddingPx, paddingRight: AUDITION_DETAIL.fixedCtaPaddingPx }}
         >
           <div className="flex w-full flex-col gap-2 min-[480px]:flex-row min-[480px]:items-center md:w-auto">
-            {showApplySubmitCta ? (
-              <div className="flex w-full min-[480px]:w-auto flex-col gap-1">
+            {showApplySubmitCta && alreadyApplied ? (
+              <div className="flex w-full min-[480px]:w-auto flex-col gap-2">
+                <button
+                  type="button"
+                  disabled
+                  className="inline-flex h-11 w-full min-[480px]:w-auto cursor-not-allowed items-center justify-center px-6 font-semibold opacity-80"
+                  style={{
+                    borderRadius: HERO.buttonRadiusPx,
+                    border: `1px solid ${AUDITION_DETAIL.cardBorderColor}`,
+                    background: '#ecfdf5',
+                    color: '#047857',
+                    fontSize: AUDITION_DETAIL.bodyFontPx,
+                  }}
+                >
+                  지원 완료
+                </button>
+                <span className="text-center text-xs text-gray-500 min-[480px]:text-left">
+                  이 오디션에 이미 지원하셨습니다.
+                </span>
+              </div>
+            ) : showApplySubmitCta ? (
+              <div className="flex w-full min-[480px]:w-auto flex-col gap-2">
                 <button
                   type="button"
                   onClick={() => applyMutation.mutate()}
@@ -615,7 +648,7 @@ export default function AuditionDetailPage() {
                     fontSize: AUDITION_DETAIL.bodyFontPx,
                   }}
                 >
-                  {applyMutation.isPending
+                  {applyMutation.isPending || applyClickLock
                     ? '처리 중...'
                     : applyPolicyLoading || balanceLoading
                       ? '확인 중...'
@@ -624,15 +657,19 @@ export default function AuditionDetailPage() {
                 {isOpen && applyPolicySnapshot && applyPolicySnapshot.active && applyPolicySnapshot.cost > 0 ? (
                   <span className="text-center text-xs text-gray-500 min-[480px]:text-left">
                     지원 시 크레딧 {applyPolicySnapshot.cost} 소모 · 보유 {creditBalanceAmount}
-                    {needCreditsForApply && creditGateReady && !hasEnoughCredits ? (
-                      <>
-                        {' '}
-                        <Link href="/credits/charge" className="font-semibold text-violet-700 underline">
-                          충전하기
-                        </Link>
-                      </>
-                    ) : null}
                   </span>
+                ) : null}
+                {isOpen &&
+                needCreditsForApply &&
+                creditGateReady &&
+                !hasEnoughCredits &&
+                applyPolicySnapshot?.active ? (
+                  <Link
+                    href="/credits/charge"
+                    className="inline-flex h-10 w-full min-[480px]:w-auto items-center justify-center rounded-lg border-2 border-violet-600 bg-white px-4 text-sm font-semibold text-violet-700 no-underline hover:bg-violet-50"
+                  >
+                    크레딧 충전하기
+                  </Link>
                 ) : null}
                 {isOpen && applyPolicySnapshot && !applyPolicySnapshot.active ? (
                   <span className="text-center text-xs text-amber-700 min-[480px]:text-left">
@@ -686,7 +723,7 @@ export default function AuditionDetailPage() {
                   fontSize: AUDITION_DETAIL.bodyFontPx,
                 }}
               >
-                지원 마감
+                마감됨
               </button>
             )}
           </div>

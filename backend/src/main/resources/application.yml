@@ -25,6 +25,9 @@ app:
   jwt:
     secret: "${JWT_SECRET:change-me-in-production-min-32-chars}"
     expiration-ms: 86400000  # 24h
+  # 운영: false 권장 — 크레딧 충전은 payment_orders(PAID) 경로만 사용
+  credits:
+    allow-legacy-self-charge: ${APP_ALLOW_LEGACY_CREDIT_CHARGE:true}
 
 spring:
   application:

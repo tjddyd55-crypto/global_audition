@@ -59,7 +59,7 @@ export function AuditionEditorPreview({
           className="overflow-hidden rounded-lg border border-gray-100 bg-gray-50"
           style={{ borderColor: AUDITION_DETAIL.cardBorderColor }}
         >
-          <div className="relative aspect-[16/9] w-full bg-gray-200">
+          <div className="relative aspect-[3/4] w-full max-w-xs mx-auto bg-gray-200 rounded-lg overflow-hidden">
             {coverTrimmed ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img

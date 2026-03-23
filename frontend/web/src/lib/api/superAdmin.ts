@@ -225,6 +225,7 @@ export const superAdminApi = {
   listCreditTransactions: async (params: {
     userId?: string
     type?: string
+    referenceId?: string
     from?: string
     to?: string
     page?: number
@@ -234,6 +235,7 @@ export const superAdminApi = {
       params: {
         userId: params.userId || undefined,
         type: params.type || undefined,
+        referenceId: params.referenceId?.trim() || undefined,
         from: params.from || undefined,
         to: params.to || undefined,
         page: params.page ?? 0,

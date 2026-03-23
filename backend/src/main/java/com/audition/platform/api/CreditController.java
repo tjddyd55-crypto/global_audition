@@ -21,6 +21,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -32,10 +34,15 @@ public class CreditController {
 
     private final CreditService creditService;
     private final PaymentOrderService paymentOrderService;
+    private final boolean allowLegacySelfChargeApi;
 
-    public CreditController(CreditService creditService, PaymentOrderService paymentOrderService) {
+    public CreditController(
+            CreditService creditService,
+            PaymentOrderService paymentOrderService,
+            @Value("${app.credits.allow-legacy-self-charge:true}") boolean allowLegacySelfChargeApi) {
         this.creditService = creditService;
         this.paymentOrderService = paymentOrderService;
+        this.allowLegacySelfChargeApi = allowLegacySelfChargeApi;
     }
 
     /**
@@ -57,13 +64,24 @@ public class CreditController {
     }
 
     @GetMapping("/transactions")
-    public Page<CreditTransactionDto> listMyTransactions(@PageableDefault(size = 20) Pageable pageable) {
+    public Page<CreditTransactionDto> listMyTransactions(
+            @RequestParam(required = false) String type,
+            @PageableDefault(size = 20) Pageable pageable) {
         UUID userId = requireUserId();
-        return creditService.listMyTransactions(userId, pageable);
+        return creditService.listMyTransactions(userId, type, pageable);
     }
 
+    /**
+     * 레거시 수동 충전. 운영에서는 {@code app.credits.allow-legacy-self-charge=false} 로 비활성화하고
+     * 결제 주문({@link PaymentOrderService}) 경로만 허용할 것.
+     */
     @PostMapping("/charge")
     public CreditBalanceResponse charge(@Valid @RequestBody CreditChargeRequest request) {
+        if (!allowLegacySelfChargeApi) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "수동 충전 API는 비활성화되었습니다. 패키지 결제를 이용해 주세요.");
+        }
         UUID userId = requireUserId();
         long balance = creditService.chargeCredits(userId, request.getAmount());
         return new CreditBalanceResponse(balance);

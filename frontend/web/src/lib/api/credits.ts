@@ -108,9 +108,13 @@ export const creditsApi = {
     return data
   },
 
-  getTransactions: async (page = 0, size = 20): Promise<CreditsTransactionPage> => {
+  getTransactions: async (
+    page = 0,
+    size = 20,
+    type?: string
+  ): Promise<CreditsTransactionPage> => {
     const { data } = await apiClient.get<CreditsTransactionPage>('/credits/transactions', {
-      params: { page, size },
+      params: { page, size, type: type?.trim() || undefined },
     })
     return data
   },

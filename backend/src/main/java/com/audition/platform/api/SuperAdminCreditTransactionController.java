@@ -29,9 +29,10 @@ public class SuperAdminCreditTransactionController {
     public Page<CreditTransactionDto> list(
             @RequestParam(required = false) UUID userId,
             @RequestParam(required = false) String type,
+            @RequestParam(required = false) String referenceId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to,
             @PageableDefault(size = 50, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        return superAdminCreditAdministrationService.listTransactions(userId, type, from, to, pageable);
+        return superAdminCreditAdministrationService.listTransactions(userId, type, referenceId, from, to, pageable);
     }
 }

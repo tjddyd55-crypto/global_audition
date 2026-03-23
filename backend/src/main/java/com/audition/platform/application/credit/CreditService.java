@@ -10,6 +10,7 @@ import com.audition.platform.domain.credit.UserCredit;
 import com.audition.platform.domain.credit.UserCreditRepository;
 import com.audition.platform.domain.payment.PaymentOrder;
 import com.audition.platform.domain.payment.PaymentOrderStatus;
+import com.audition.platform.domain.credit.CreditTransactionSpecifications;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -32,14 +33,17 @@ public class CreditService {
     private final CreditPolicyRepository creditPolicyRepository;
     private final UserCreditRepository userCreditRepository;
     private final CreditTransactionRepository creditTransactionRepository;
+    private final CreditPolicyPublicSnapshotCache creditPolicyPublicSnapshotCache;
 
     public CreditService(
             CreditPolicyRepository creditPolicyRepository,
             UserCreditRepository userCreditRepository,
-            CreditTransactionRepository creditTransactionRepository) {
+            CreditTransactionRepository creditTransactionRepository,
+            CreditPolicyPublicSnapshotCache creditPolicyPublicSnapshotCache) {
         this.creditPolicyRepository = creditPolicyRepository;
         this.userCreditRepository = userCreditRepository;
         this.creditTransactionRepository = creditTransactionRepository;
+        this.creditPolicyPublicSnapshotCache = creditPolicyPublicSnapshotCache;
     }
 
     @Transactional(readOnly = true)
@@ -52,15 +56,24 @@ public class CreditService {
      */
     @Transactional(readOnly = true)
     public CreditPolicyPublicDto getPolicyPublicSnapshot(String policyKey) {
+        return creditPolicyPublicSnapshotCache.getOrLoad(policyKey, () -> loadPolicyPublicFromDb(policyKey));
+    }
+
+    private CreditPolicyPublicDto loadPolicyPublicFromDb(String policyKey) {
         CreditPolicy policy = creditPolicyRepository.findById(policyKey)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "크레딧 정책을 찾을 수 없습니다."));
         return new CreditPolicyPublicDto(policyKey, policy.getCost(), policy.isActive());
     }
 
     @Transactional(readOnly = true)
-    public Page<CreditTransactionDto> listMyTransactions(UUID userId, Pageable pageable) {
+    public Page<CreditTransactionDto> listMyTransactions(UUID userId, String type, Pageable pageable) {
+        if (type == null || type.isBlank()) {
+            return creditTransactionRepository
+                    .findByUserIdOrderByCreatedAtDesc(userId, pageable)
+                    .map(CreditTransactionMapper::toDto);
+        }
         return creditTransactionRepository
-                .findByUserIdOrderByCreatedAtDesc(userId, pageable)
+                .findAll(CreditTransactionSpecifications.forUserWithOptionalType(userId, type), pageable)
                 .map(CreditTransactionMapper::toDto);
     }
 
