@@ -12,10 +12,30 @@ function appendQueryParam(embedUrl: string, key: string, value: string): string 
 function buildYoutubeEmbedPath(id: string, options?: VideoEmbedOptions): string | null {
   if (!id) return null
   let url = `https://www.youtube.com/embed/${id}`
+  url = appendQueryParam(url, 'controls', '1')
+  url = appendQueryParam(url, 'modestbranding', '1')
+  url = appendQueryParam(url, 'rel', '0')
   if (options?.autoplay) {
+    // iOS/Safari: autoplay는 대개 mute + playsinline 과 함께여야 동작
     url = appendQueryParam(url, 'autoplay', '1')
+    url = appendQueryParam(url, 'playsinline', '1')
+    url = appendQueryParam(url, 'mute', '1')
   }
   return url
+}
+
+/** Shorts·세로형 유튜브 URL (임베드 비율 9:16 용) */
+export function isYoutubeShortsLikeUrl(url: string): boolean {
+  const u = (url ?? '').trim()
+  if (!u) return false
+  try {
+    const parsed = new URL(u)
+    const host = parsed.hostname.replace(/^www\./, '')
+    if (host !== 'youtu.be' && !host.includes('youtube.com')) return false
+    return /\/shorts\//i.test(parsed.pathname)
+  } catch {
+    return false
+  }
 }
 
 export function getVideoEmbedSrc(url: string, options?: VideoEmbedOptions): string | null {

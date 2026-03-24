@@ -240,7 +240,18 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback }: Props) {
         )}
       </div>
 
-      <VideoEmbedOverlay videoUrl={playItem?.videoUrl ?? null} onClose={() => setPlayItem(null)} />
+      <VideoEmbedOverlay
+        play={
+          playItem
+            ? {
+                url: playItem.videoUrl,
+                title: `${playItem.userName} 지원 영상`,
+                thumbnail: playItem.thumbnailUrl ?? undefined,
+              }
+            : undefined
+        }
+        onClose={() => setPlayItem(null)}
+      />
     </div>
   )
 }
