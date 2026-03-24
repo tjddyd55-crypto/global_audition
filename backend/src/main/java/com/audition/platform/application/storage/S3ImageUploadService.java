@@ -3,9 +3,7 @@ package com.audition.platform.application.storage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -20,8 +18,6 @@ import java.util.UUID;
  * 이미지 바이너리는 S3(또는 S3 호환)에만 저장하고, DB에는 반환된 공개 URL만 남깁니다.
  * Object ACL 미설정 — 버킷 &quot;Bucket owner enforced&quot; 및 퍼블릭 정책만 사용.
  */
-@Service
-@ConditionalOnBean(S3Client.class)
 public class S3ImageUploadService {
 
     private static final Logger log = LoggerFactory.getLogger(S3ImageUploadService.class);
