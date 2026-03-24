@@ -5,7 +5,7 @@ import AuditionGallery from '@/components/gallery/AuditionGallery'
 import { AUDITION_COVER_PLACEHOLDER_SRC } from '@/components/audition/AuditionEditorPreview'
 
 /**
- * 모바일 히어로: 잘림 없음 — bg-black + contain + max 높이.
+ * 모바일 히어로: 잘림 없음 — bg-white + contain + max 높이.
  */
 export function AuditionDetailHeroImage({ src }: { src: string }) {
   const [failed, setFailed] = useState(false)
@@ -13,7 +13,7 @@ export function AuditionDetailHeroImage({ src }: { src: string }) {
   const url = !trimmed || failed ? AUDITION_COVER_PLACEHOLDER_SRC : trimmed
 
   return (
-    <div className="w-full bg-black">
+    <div className="flex w-full justify-center bg-white">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={url}

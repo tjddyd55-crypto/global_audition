@@ -1,7 +1,6 @@
 'use client'
 
 import { Link } from '../../i18n.config'
-import Image from 'next/image'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import type { AuditionDto } from '../../lib/types/audition'
@@ -96,18 +95,19 @@ export default function AuditionCard({ audition }: AuditionCardProps) {
         </p>
 
         <div
-          className="relative mb-3 aspect-[3/4] w-full overflow-hidden bg-gray-100"
+          className="mb-3 w-full bg-white"
           style={{
             borderRadius: AUDITION_CARD.imageRadiusPx,
-            background: AUDITION_CARD.imageBg,
+            overflow: 'hidden',
           }}
         >
-          <Image
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             src={coverImage || DEFAULT_IMAGES.videoThumbnail}
             alt=""
-            fill
-            className="object-cover"
-            unoptimized
+            className="block h-auto w-full object-contain"
+            loading="lazy"
+            decoding="async"
           />
         </div>
 

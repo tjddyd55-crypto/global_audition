@@ -19,19 +19,19 @@ type AuditionDetailHeroSectionProps = {
   applicantsCount: number
 }
 
-/** PC: 포스터 컬럼 — 꽉 찬 cover (레터박스 없음) */
+/** PC: 포스터 — 상세 모바일과 동일, 잘림 없음(contain) + 흰 배경 */
 function DesktopPosterImage({ src }: { src: string }) {
   const [failed, setFailed] = useState(false)
   const trimmed = src.trim()
   const url = !trimmed || failed ? AUDITION_COVER_PLACEHOLDER_SRC : trimmed
 
   return (
-    <div className="relative h-[min(70vh,640px)] w-full overflow-hidden bg-neutral-900">
+    <div className="flex w-full justify-center bg-white">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={url}
         alt=""
-        className="absolute inset-0 h-full w-full object-cover object-center"
+        className="mx-auto block h-auto w-full max-h-[min(70vh,640px)] object-contain"
         loading="eager"
         decoding="async"
         onError={() => setFailed(true)}
@@ -47,8 +47,8 @@ function statusBadgeCopy(status: string): string {
 }
 
 /**
- * 모바일: contain 대표 이미지(bg-black) + 하단 그라데이션 위 텍스트/CTA.
- * PC(lg+): 좌측 cover 포스터 + 우측 정보, 블러 배경.
+ * 모바일: contain 대표 이미지(bg-white) + 하단 그라데이션 위 텍스트/CTA.
+ * PC(lg+): 좌측 contain 포스터 + 우측 정보, 블러 배경.
  */
 export function AuditionDetailHeroSection({
   auditionId,
@@ -94,7 +94,7 @@ export function AuditionDetailHeroSection({
     <section className="relative w-full overflow-hidden">
       {/* ——— 모바일 · contain 히어로(잘림 없음) + 하단 오버레이 UI ——— */}
       <div className="lg:hidden w-full">
-        <div className="relative w-full bg-black">
+        <div className="relative w-full bg-white">
           {cover ? (
             <AuditionDetailHeroImage src={cover} />
           ) : (
