@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useState, type MouseEvent } from 'react'
 import { Link } from '@/i18n.config'
 import { AUDITION_DETAIL, HERO } from '@/lib/design-tokens'
 import { safeStr } from '@/lib/utils/safe'
@@ -19,19 +19,19 @@ type AuditionDetailHeroSectionProps = {
   applicantsCount: number
 }
 
-/** PC: 포스터 — 베젤(#111) + contain (잘림 없음) */
+/** PC: 포스터 컬럼 — 꽉 찬 cover (레터박스 없음) */
 function DesktopPosterImage({ src }: { src: string }) {
   const [failed, setFailed] = useState(false)
   const trimmed = src.trim()
   const url = !trimmed || failed ? AUDITION_COVER_PLACEHOLDER_SRC : trimmed
 
   return (
-    <div className="flex w-full justify-center bg-[#111] py-3">
+    <div className="relative h-[min(70vh,640px)] w-full overflow-hidden bg-neutral-900">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={url}
         alt=""
-        className="mx-auto h-auto w-full max-h-[min(85vh,920px)] object-contain"
+        className="absolute inset-0 h-full w-full object-cover object-center"
         loading="eager"
         decoding="async"
         onError={() => setFailed(true)}
@@ -47,8 +47,8 @@ function statusBadgeCopy(status: string): string {
 }
 
 /**
- * 모바일: 기존 풀폭 포스터 + 하단 오버레이 텍스트.
- * PC(lg+): 좌측 고정 폭 포스터 카드 + 우측 정보(가독성), 선택적 블러 배경.
+ * 모바일: h-[50vh] cover 히어로 + 어두운 오버레이 + 하단 텍스트/CTA.
+ * PC(lg+): 좌측 cover 포스터 + 우측 정보, 블러 배경.
  */
 export function AuditionDetailHeroSection({
   auditionId,
@@ -75,7 +75,7 @@ export function AuditionDetailHeroSection({
     }
   }, [])
 
-  const scrollToApplyBar = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
+  const scrollToApplyBar = useCallback((e: MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault()
     if (typeof window === 'undefined') return
     window.scrollTo({
@@ -92,98 +92,87 @@ export function AuditionDetailHeroSection({
 
   return (
     <section className="relative w-full overflow-hidden">
-      {/* ——— 모바일 · 히어로 풀폭(contain) + 메타는 하단 섹션 ——— */}
+      {/* ——— 모바일 · cover 히어로 + 오버레이 UI ——— */}
       <div className="lg:hidden w-full">
-        {cover ? (
-          <AuditionDetailHeroImage src={cover} />
-        ) : (
-          <div
-            className="flex min-h-[min(40vh,320px)] w-full items-center justify-center"
-            style={{
-              background: `linear-gradient(135deg, ${HERO.gradientStart}, ${HERO.gradientEnd})`,
-            }}
-          >
-            <span className="text-sm font-medium text-white/90">대표 이미지 없음</span>
-          </div>
-        )}
-        <div
-          className="w-full space-y-4 px-4 py-6 md:px-6"
-          style={{
-            background: AUDITION_DETAIL.pageBackgroundMuted,
-          }}
-        >
-          <span
-            className="inline-block rounded-full px-3 py-1 text-sm font-semibold"
-            style={{
-              background:
-                status === 'OPEN' ? '#dcfce7' : status === 'CLOSED' ? '#f3f4f6' : '#fef3c7',
-              color:
-                status === 'OPEN' ? '#15803d' : status === 'CLOSED' ? '#4b5563' : '#b45309',
-            }}
-          >
-            {statusBadgeCopy(status)}
-          </span>
-          <h1
-            className="text-balance m-0 text-2xl font-bold leading-tight text-gray-900"
-            style={{ fontWeight: AUDITION_DETAIL.heroTitleWeight }}
-          >
-            {safeStr(title)}
-          </h1>
-          {tags.length > 0 ? (
-            <div className="flex flex-wrap gap-2" aria-label="오디션 태그">
-              {tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="rounded-full border border-gray-200 bg-gray-50 px-2.5 py-0.5 text-xs font-medium text-gray-700"
+        <div className="relative h-[50vh] w-full overflow-hidden">
+          {cover ? (
+            <AuditionDetailHeroImage src={cover} />
+          ) : (
+            <div
+              className="absolute inset-0"
+              style={{
+                background: `linear-gradient(135deg, ${HERO.gradientStart}, ${HERO.gradientEnd})`,
+              }}
+            />
+          )}
+          <div className="pointer-events-none absolute inset-0 bg-black/40" aria-hidden />
+          <div className="absolute bottom-4 left-4 right-4 z-[1] text-white">
+            <span
+              className={`mb-2 inline-block rounded-full px-3 py-1 text-xs font-semibold ${
+                status === 'OPEN'
+                  ? 'bg-green-100 text-green-800'
+                  : status === 'CLOSED'
+                    ? 'bg-gray-200 text-gray-700'
+                    : 'bg-amber-100 text-amber-900'
+              }`}
+            >
+              {statusBadgeCopy(status)}
+            </span>
+            <h1
+              className="mb-1 text-balance text-xl font-bold leading-snug"
+              style={{ fontWeight: AUDITION_DETAIL.heroTitleWeight }}
+            >
+              {safeStr(title)}
+            </h1>
+            {tags.length > 0 ? (
+              <div className="mb-2 flex flex-wrap gap-1.5" aria-label="오디션 태그">
+                {tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-full border border-white/35 bg-white/10 px-2 py-0.5 text-[11px] font-medium text-white"
+                  >
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            ) : null}
+            <p className="m-0 text-sm opacity-90">
+              마감 {endDateFormatted} · {safeStr(location)} · 지원자 {applicants}명
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {isOpen ? (
+                <a
+                  href="#audition-detail-apply"
+                  onClick={scrollToApplyBar}
+                  className="inline-flex items-center justify-center px-4 py-2 text-xs font-semibold text-white no-underline"
+                  style={{
+                    borderRadius: HERO.buttonRadiusPx,
+                    background: `linear-gradient(90deg, ${HERO.primaryGradientStart}, ${HERO.primaryGradientEnd})`,
+                  }}
                 >
-                  #{tag}
+                  지원하기
+                </a>
+              ) : (
+                <span className="inline-flex items-center px-4 py-2 text-xs font-semibold text-white/50">
+                  {status === 'CLOSED' ? '마감됨' : '지원 불가'}
                 </span>
-              ))}
-            </div>
-          ) : null}
-          <p className="m-0 text-base text-gray-600">
-            마감 {endDateFormatted}
-            <span className="mx-2 text-gray-300">·</span>
-            {safeStr(location)}
-            <span className="mx-2 text-gray-300">·</span>
-            지원자 {applicants}명
-          </p>
-          <div className="flex flex-wrap gap-3 pt-1">
-            {isOpen ? (
-              <a
-                href="#audition-detail-apply"
-                onClick={scrollToApplyBar}
-                className="inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold text-white no-underline"
-                style={{
-                  borderRadius: HERO.buttonRadiusPx,
-                  background: `linear-gradient(90deg, ${HERO.primaryGradientStart}, ${HERO.primaryGradientEnd})`,
-                }}
-              >
-                지원하기
-              </a>
-            ) : (
+              )}
               <button
                 type="button"
-                disabled
-                className="cursor-not-allowed rounded-lg border border-gray-200 bg-gray-100 px-5 py-2.5 text-sm font-semibold text-gray-400"
+                onClick={onShare}
+                className="inline-flex items-center border border-white/40 bg-white/10 px-4 py-2 text-xs font-semibold text-white"
+                style={{ borderRadius: HERO.buttonRadiusPx }}
               >
-                {status === 'CLOSED' ? '마감됨' : '지원 불가'}
+                {shareHint === 'ok' ? '복사됨' : shareHint === 'err' ? '실패' : '공유'}
               </button>
-            )}
-            <button
-              type="button"
-              onClick={onShare}
-              className="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-800"
-            >
-              {shareHint === 'ok' ? '링크 복사됨' : shareHint === 'err' ? '복사 실패' : '공유'}
-            </button>
-            <Link
-              href={`/auditions/${auditionId}/vote`}
-              className="inline-flex items-center justify-center rounded-lg border px-5 py-2.5 text-sm font-semibold text-gray-800 no-underline"
-              style={{ borderColor: AUDITION_DETAIL.cardBorderColor }}
-            >
-              지원자 보기 · 투표
-            </Link>
+              <Link
+                href={`/auditions/${auditionId}/vote`}
+                className="inline-flex items-center border border-white/40 px-4 py-2 text-xs font-semibold text-white no-underline"
+                style={{ borderRadius: HERO.buttonRadiusPx }}
+              >
+                투표
+              </Link>
+            </div>
           </div>
         </div>
       </div>
