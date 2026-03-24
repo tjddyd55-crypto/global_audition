@@ -202,7 +202,7 @@ export function AuditionDetailHeroSection({
             src={cover}
             alt=""
             aria-hidden
-            className="pointer-events-none absolute inset-0 h-full w-full scale-105 object-cover opacity-20 blur-3xl"
+            className="pointer-events-none absolute inset-0 h-full w-full scale-105 object-cover object-top opacity-20 blur-3xl md:object-center"
           />
         ) : null}
         <div

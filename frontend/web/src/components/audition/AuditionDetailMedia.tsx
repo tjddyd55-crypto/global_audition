@@ -5,7 +5,7 @@ import { AUDITION_DETAIL } from '@/lib/design-tokens'
 import AuditionGallery from '@/components/gallery/AuditionGallery'
 import { AUDITION_COVER_PLACEHOLDER_SRC } from '@/components/audition/AuditionEditorPreview'
 
-/** 히어로 대표 이미지: 세로 포스터 3:4 · cover */
+/** 히어로 대표 이미지: 3:4 박스 안 cover — 상단(얼굴·타이틀) 우선, md+는 중앙 */
 export function AuditionDetailHeroImage({ src }: { src: string }) {
   const [failed, setFailed] = useState(false)
   const trimmed = src.trim()
@@ -16,7 +16,7 @@ export function AuditionDetailHeroImage({ src }: { src: string }) {
     <img
       src={url}
       alt=""
-      className="absolute inset-0 h-full w-full object-cover"
+      className="absolute inset-0 h-full w-full object-cover object-top md:object-center"
       onError={() => setFailed(true)}
     />
   )
