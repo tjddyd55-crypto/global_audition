@@ -5,6 +5,7 @@ import com.audition.platform.api.dto.CreateAuditionRequest;
 import com.audition.platform.api.dto.UpdateAuditionRequest;
 import com.audition.platform.domain.audition.ApplicationRepository;
 import com.audition.platform.domain.audition.Audition;
+import com.audition.platform.domain.audition.AuditionTagNormalizer;
 import com.audition.platform.domain.audition.AuditionRepository;
 import com.audition.platform.domain.user.UserRepository;
 import com.audition.platform.domain.util.YoutubeUrls;
@@ -86,6 +87,7 @@ public class AuditionService {
         a.setQualifications(a.getQualifications());
         a.setSchedules(a.getSchedules());
         a.setBenefits(a.getBenefits());
+        a.setTags(a.getTags());
     }
 
     private AuditionResponse toResponse(Audition a) {
@@ -99,7 +101,7 @@ public class AuditionService {
         r.setUpdatedAt(a.getUpdatedAt());
         r.setCountryCode(a.getCountryCode());
         r.setDeadlineAt(a.getDeadlineAt());
-        r.setCategory(a.getCategory());
+        r.setTags(a.getTags());
         r.setCreatedAt(a.getCreatedAt());
         r.setCoverImage(a.getCoverImage());
         r.setVideoUrl(a.getVideoUrl());
@@ -122,7 +124,7 @@ public class AuditionService {
         a.setTitle(req.getTitle().trim());
         a.setDescription(req.getDescription().trim());
         a.setStatus(req.getStatus() != null ? req.getStatus() : "DRAFT");
-        a.setCategory(req.getCategory().trim());
+        a.setTags(AuditionTagNormalizer.normalize(req.getTags()));
         a.setCoverImage(req.getCoverImage());
         a.setVideoUrl(req.getVideoUrl());
         a.setGalleryImages(listToArray(req.getGalleryImages() != null ? req.getGalleryImages() : List.of()));
@@ -253,8 +255,8 @@ public class AuditionService {
         if (request.getCountryCode() != null) {
             audition.setCountryCode(request.getCountryCode());
         }
-        if (request.getCategory() != null) {
-            audition.setCategory(request.getCategory().trim());
+        if (request.getTags() != null) {
+            audition.setTags(AuditionTagNormalizer.normalize(request.getTags()));
         }
         if (request.getDeadlineAt() != null) {
             audition.setDeadlineAt(parseInstantOrNull(request.getDeadlineAt()));

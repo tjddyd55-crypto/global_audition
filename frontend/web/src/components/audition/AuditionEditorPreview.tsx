@@ -12,7 +12,7 @@ export const AUDITION_COVER_PLACEHOLDER_SRC = '/audition-cover-placeholder.svg'
 export type AuditionEditorPreviewProps = {
   title: string
   description: string
-  category: string
+  tags: string[]
   coverImage: string
   videoUrl: string
   status: AuditionStatus
@@ -21,7 +21,7 @@ export type AuditionEditorPreviewProps = {
 export function AuditionEditorPreview({
   title,
   description,
-  category,
+  tags,
   coverImage,
   videoUrl,
   status,
@@ -33,7 +33,7 @@ export function AuditionEditorPreview({
   )
 
   const displayTitle = useMemo(() => title.trim() || '제목을 입력하세요', [title])
-  const displayCategory = useMemo(() => (category.trim() || '기타').trim(), [category])
+  const displayTags = useMemo(() => tags.map((t) => t.trim()).filter(Boolean), [tags])
   const displayDesc = useMemo(
     () => description.trim() || '상세 설명이 여기에 표시됩니다.',
     [description],
@@ -97,7 +97,16 @@ export function AuditionEditorPreview({
               >
                 {auditionStatusLabelKo(status)}
               </span>
-              <span className="text-xs font-medium text-gray-500">{displayCategory}</span>
+              {displayTags.length > 0
+                ? displayTags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-xs font-medium text-gray-600"
+                    >
+                      #{tag}
+                    </span>
+                  ))
+                : null}
             </div>
 
             <h2 className="text-lg font-bold text-gray-900 leading-tight">{displayTitle}</h2>

@@ -16,6 +16,7 @@ import {
   TEXT_SUB,
   TITLE_PAGE,
 } from '@/lib/ui/specClasses'
+import { getVideoEmbedSrc } from '@/lib/utils/videoEmbed'
 
 function statusBadgeClass(status: string) {
   if (status === 'REVIEWING' || status === 'REVIEWED') return 'rounded-full bg-blue-50 px-3 py-1 text-sm text-blue-700'
@@ -38,6 +39,8 @@ export default function MyApplicationDetailPage() {
   const queryClient = useQueryClient()
   const [videoUrl, setVideoUrl] = useState('')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  /** 재생 오버레이: 페이지 이동 없이 iframe으로만 재생 */
+  const [playVideoUrl, setPlayVideoUrl] = useState<string | null>(null)
 
   const applicationQuery = useQuery({
     queryKey: ['my-application', id],
@@ -73,6 +76,7 @@ export default function MyApplicationDetailPage() {
   }
 
   const app = applicationQuery.data
+  const playEmbed = playVideoUrl ? getVideoEmbedSrc(playVideoUrl) : null
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -114,9 +118,13 @@ export default function MyApplicationDetailPage() {
           <ul className="flex flex-col gap-2">
             {videos.map((video) => (
               <li key={video.id} className={`${CARD_BASE} flex items-center justify-between gap-2`}>
-                <a href={video.videoUrl} target="_blank" className="text-sm text-[#3B82F6] no-underline" rel="noreferrer">
+                <button
+                  type="button"
+                  onClick={() => setPlayVideoUrl(video.videoUrl)}
+                  className="min-w-0 flex-1 text-left text-sm font-medium text-[#3B82F6] underline-offset-2 hover:underline"
+                >
                   {video.title?.trim() ? video.title : video.videoUrl}
-                </a>
+                </button>
                 <button
                   type="button"
                   onClick={() => removeVideoMutation.mutate(video.id)}
@@ -130,6 +138,69 @@ export default function MyApplicationDetailPage() {
           </ul>
         </div>
       </div>
+
+      {playVideoUrl && playEmbed ? (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="영상 재생"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4"
+          onClick={() => setPlayVideoUrl(null)}
+        >
+          <div
+            className="relative w-full max-w-3xl overflow-hidden rounded-xl bg-black"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setPlayVideoUrl(null)}
+              className="absolute right-2 top-2 z-10 rounded-lg bg-white/90 px-3 py-1 text-sm font-semibold text-gray-900 shadow"
+            >
+              닫기
+            </button>
+            <div className="relative pb-[56.25%]">
+              <iframe
+                title="등록 영상"
+                src={playEmbed}
+                className="absolute inset-0 h-full w-full border-0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          </div>
+        </div>
+      ) : playVideoUrl && !playEmbed ? (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4"
+          onClick={() => setPlayVideoUrl(null)}
+        >
+          <div
+            className="relative w-full max-w-md rounded-xl bg-white p-6 shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="mb-4 text-sm text-gray-700">이 URL은 여기에서 임베드할 수 없습니다.</p>
+            <div className="flex flex-wrap gap-2">
+              <a
+                href={playVideoUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex rounded-lg bg-[#3B82F6] px-4 py-2 text-sm font-semibold text-white no-underline"
+              >
+                새 창에서 열기
+              </a>
+              <button
+                type="button"
+                onClick={() => setPlayVideoUrl(null)}
+                className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold"
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }

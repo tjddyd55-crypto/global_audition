@@ -1,4 +1,4 @@
-// SSOT (5-way): Flyway auditions · JPA Audition · Java DTO · 본 schema · frontend/src/lib/types/audition.ts
+// SSOT (5-way): Flyway auditions · JPA Audition · Java DTO · 본 schema · frontend/src/lib/types/audition.ts (tags = text[])
 // text[] 만 사용 — detail_content / JSON 필드 없음. 배포: DB 마이그레이션 → 백엔드 → 프론트 순.
 
 generator client {
@@ -18,7 +18,7 @@ model Audition {
 
   /// DRAFT | OPEN | CLOSED (API·비즈니스 로직)
   status          String
-  category        String
+  tags            String[]
 
   coverImage      String?  @map("cover_image")
   videoUrl        String?  @map("video_url")

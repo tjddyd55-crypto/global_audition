@@ -10,11 +10,12 @@ import { Link } from '../../../../i18n.config'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import Image from 'next/image'
-import { AUDITION_CARD, AUDITION_DETAIL, HERO } from '../../../../lib/design-tokens'
+import { AUDITION_DETAIL, HERO } from '../../../../lib/design-tokens'
 import { getVideoEmbedSrc } from '../../../../lib/utils/videoEmbed'
 import { safeArr, safeNum, safeStr } from '../../../../lib/utils/safe'
 import { useAuthStore } from '@/lib/auth/authStore'
-import { AuditionDetailHeroImage, AuditionDetailMediaSection } from '@/components/audition/AuditionDetailMedia'
+import { AuditionDetailHeroSection } from '@/components/audition/AuditionDetailHeroSection'
+import { AuditionDetailMediaSection } from '@/components/audition/AuditionDetailMedia'
 import { CREDIT_POLICY_AUDITION_APPLY, creditsApi } from '@/lib/api/credits'
 import { canManageAudition as userCanManageAudition } from '@/lib/audition/auditionPermissions'
 
@@ -189,6 +190,7 @@ export default function AuditionDetailPage() {
   const qualifications = safeArr(audition.qualifications)
   const schedules = safeArr(audition.schedules)
   const benefits = safeArr(audition.benefits)
+  const auditionTags = safeArr(audition.tags)
 
   const isOpen = audition.status === 'OPEN'
   const alreadyApplied = audition.hasApplied === true
@@ -251,96 +253,16 @@ export default function AuditionDetailPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: AUDITION_DETAIL.pageBackgroundMuted }}>
-      <section className="relative w-full overflow-hidden">
-        <div className="relative mx-auto aspect-[3/4] w-full max-w-lg min-h-[220px] sm:max-w-xl">
-          {cover ? (
-            <AuditionDetailHeroImage src={cover} />
-          ) : (
-            <div
-              className="absolute inset-0"
-              style={{
-                background: `linear-gradient(135deg, ${HERO.gradientStart}, ${HERO.gradientEnd})`,
-              }}
-            />
-          )}
-          <div
-            className="absolute inset-0"
-            style={{
-              background: `rgba(${AUDITION_DETAIL.heroOverlayRgb},${AUDITION_DETAIL.heroOverlayOpacity})`,
-            }}
-          />
-          <div
-            className="relative z-[1] mx-auto flex h-full min-h-[220px] w-full max-w-[1200px] flex-col justify-end px-4 md:px-6"
-            style={{
-              paddingTop: AUDITION_DETAIL.sectionGapPx,
-              paddingBottom: AUDITION_DETAIL.sectionGapPx,
-              color: AUDITION_DETAIL.heroMetaColor,
-            }}
-          >
-          <span
-            style={{
-              display: 'inline-block',
-              fontSize: AUDITION_CARD.badgeFontSizePx,
-              padding: `${AUDITION_CARD.badgePaddingY}px ${AUDITION_CARD.badgePaddingX}px`,
-              borderRadius: AUDITION_CARD.badgeRadius,
-              background: AUDITION_DETAIL.statusOpenBg,
-              color: AUDITION_DETAIL.statusOpenColor,
-              fontWeight: 600,
-              marginBottom: AUDITION_DETAIL.heroBadgeMarginBottomPx,
-            }}
-          >
-            {audition.status === 'OPEN'
-              ? '모집중 · OPEN'
-              : audition.status === 'CLOSED'
-                ? '마감 · CLOSED'
-                : '초안 · DRAFT'}
-          </span>
-          <h1
-            style={{
-              margin: '0 0 16px 0',
-              fontSize: `clamp(${AUDITION_DETAIL.heroTitleMinPx}px, 4vw, ${AUDITION_DETAIL.heroTitlePx}px)`,
-              fontWeight: AUDITION_DETAIL.heroTitleWeight,
-              lineHeight: 1.3,
-              color: '#fff',
-            }}
-          >
-            {safeStr(audition.title)}
-          </h1>
-          <div
-            style={{
-              fontSize: AUDITION_DETAIL.heroMetaFontPx,
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: AUDITION_DETAIL.heroMetaWrapGapPx,
-            }}
-          >
-            <span>마감 {fmt(safeStr(audition.endDate))}</span>
-            <span>{safeStr(audition.location)}</span>
-            <span>지원자 {applicants.toLocaleString()}명</span>
-          </div>
-          <div style={{ marginTop: 16 }}>
-            <Link
-              href={`/auditions/${id}/vote`}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 8,
-                padding: '10px 18px',
-                borderRadius: HERO.buttonRadiusPx,
-                background: 'rgba(255,255,255,0.2)',
-                color: '#fff',
-                fontWeight: 600,
-                fontSize: AUDITION_DETAIL.heroMetaFontPx,
-                textDecoration: 'none',
-                border: '1px solid rgba(255,255,255,0.35)',
-              }}
-            >
-              지원자 보기 &amp; 투표
-            </Link>
-          </div>
-          </div>
-        </div>
-      </section>
+      <AuditionDetailHeroSection
+        auditionId={id}
+        coverUrl={cover}
+        title={safeStr(audition.title)}
+        status={String(audition.status)}
+        tags={auditionTags}
+        endDateFormatted={fmt(safeStr(audition.endDate))}
+        location={safeStr(audition.location)}
+        applicantsCount={applicants}
+      />
 
       <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6" style={{ ...container, paddingTop: AUDITION_DETAIL.sectionGapPx }}>
         <div
@@ -381,9 +303,11 @@ export default function AuditionDetailPage() {
               </div>
             ) : null}
 
-            <div className={cardBaseClass} style={{ ...cardBase, marginBottom: AUDITION_DETAIL.mainGridGapPx }}>
-              <AuditionDetailMediaSection coverUrl={cover} galleryUrls={galleryExtra} />
-            </div>
+            {galleryExtra.length > 0 ? (
+              <div className={cardBaseClass} style={{ ...cardBase, marginBottom: AUDITION_DETAIL.mainGridGapPx }}>
+                <AuditionDetailMediaSection galleryUrls={galleryExtra} />
+              </div>
+            ) : null}
 
             <div className={cardBaseClass} style={cardBase}>
               <h2
@@ -597,7 +521,9 @@ export default function AuditionDetailPage() {
       </div>
 
       <div
-        className="max-md:pb-[max(16px,env(safe-area-inset-bottom,0px))]"
+        id="audition-detail-apply"
+        tabIndex={-1}
+        className="max-md:pb-[max(16px,env(safe-area-inset-bottom,0px))] scroll-mt-4 outline-none"
         style={{
           position: 'fixed',
           left: 0,

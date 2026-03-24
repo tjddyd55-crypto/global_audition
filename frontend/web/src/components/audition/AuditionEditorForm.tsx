@@ -12,6 +12,7 @@ import { AuditionEditorPreview } from '@/components/audition/AuditionEditorPrevi
 import { SingleImageUploadField } from '@/components/audition/AuditionEditorImageUpload'
 import { ImageUploader } from '@/components/common/ImageUploader'
 import { EDITOR_LABELS, AUDITION_STATUS_LABEL_KO } from '@/lib/audition/auditionEditorCopy'
+import { AUDITION_TAG_OPTIONS, normalizeAuditionTagsForPayload } from '@/lib/audition/auditionTags'
 
 function trimNonEmpty(lines: string[] | undefined): string[] {
   return (lines ?? []).map((s) => (s ?? '').trim()).filter((s) => s.length > 0)
@@ -122,7 +123,7 @@ function applyInitial(a: AuditionDto) {
     title: a.title ?? '',
     description: a.description ?? '',
     status: (a.status as AuditionStatus) || 'DRAFT',
-    category: a.category ?? '',
+    tags: [...(a.tags ?? [])],
     coverImage: a.coverImage ?? '',
     videoUrl: a.videoUrl ?? '',
     galleryImages: [...(a.galleryImages ?? [])],
@@ -164,7 +165,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [status, setStatus] = useState<AuditionStatus>('DRAFT')
-  const [category, setCategory] = useState('')
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [coverImage, setCoverImage] = useState('')
   const [videoUrl, setVideoUrl] = useState('')
   const [galleryImages, setGalleryImages] = useState<string[]>([])
@@ -192,7 +193,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
     setTitle(v.title)
     setDescription(v.description)
     setStatus(v.status)
-    setCategory(v.category)
+    setSelectedTags(v.tags)
     setCoverImage(v.coverImage)
     setVideoUrl(v.videoUrl)
     setGalleryImages(v.galleryImages)
@@ -214,7 +215,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
       title: (title ?? '').trim(),
       description: (description ?? '').trim() || '—',
       status: forcedStatus,
-      category: (category ?? '').trim() || '기타',
+      tags: normalizeAuditionTagsForPayload(selectedTags),
       coverImage: (coverImage ?? '').trim() || undefined,
       videoUrl: (videoUrl ?? '').trim() || undefined,
       galleryImages: trimNonEmpty(galleryImages),
@@ -468,14 +469,39 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
           <label
             style={{ display: 'block', marginBottom: AUDITION_DETAIL.galleryGapPx, fontSize: AUDITION_DETAIL.bodyFontPx, fontWeight: 600 }}
           >
-            {EDITOR_LABELS.category}
+            {EDITOR_LABELS.tags}
           </label>
-          <input
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            style={inputStyle}
-            placeholder="예: 보컬, 댄스, 연기"
-          />
+          <p style={{ margin: '0 0 10px 0', fontSize: 12, color: '#6b7280' }}>{EDITOR_LABELS.tagsHint}</p>
+          <div className="flex flex-wrap gap-2">
+            {AUDITION_TAG_OPTIONS.map((tag) => {
+              const on = selectedTags.includes(tag)
+              return (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() =>
+                    setSelectedTags((prev) =>
+                      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
+                    )
+                  }
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: 9999,
+                    border: on ? 'none' : `1px solid ${SIGNUP.inputBorderColor}`,
+                    background: on
+                      ? `linear-gradient(90deg, ${HERO.primaryGradientStart}, ${HERO.primaryGradientEnd})`
+                      : '#f9fafb',
+                    color: on ? '#fff' : '#374151',
+                    fontSize: SIGNUP.inputFontSizePx,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  #{tag}
+                </button>
+              )
+            })}
+          </div>
         </div>
 
         <h2 style={sectionTitle}>{EDITOR_LABELS.sectionMedia}</h2>
@@ -664,7 +690,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
       <AuditionEditorPreview
         title={title}
         description={description}
-        category={category}
+        tags={selectedTags}
         coverImage={coverImage}
         videoUrl={videoUrl}
         status={

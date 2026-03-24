@@ -6,16 +6,20 @@ import { applyGalleryImageOnError, GALLERY_IMAGE_FALLBACK_SRC } from '@/componen
 import { shouldTriggerSwipeNavigation } from '@/components/gallery/gallerySwipe'
 
 export type AuditionGalleryProps = {
-  coverImage: string
-  /** 대표와 중복 제외된 갤러리 URL 목록 (상세 페이지 SSOT와 동일하게 넘기면 됨) */
-  images?: string[]
+  /** 상세 페이지: 대표 이미지를 제외한 갤러리 URL만 (히어로와 중복 금지) */
+  images: string[]
 }
 
-function buildAllImages(coverImage: string, images: string[] | undefined): string[] {
-  const cover = coverImage.trim()
-  const rest = (images ?? []).map((u) => u.trim()).filter(Boolean)
-  const galleryOnly = cover ? rest.filter((u) => u !== cover) : rest
-  return cover ? [cover, ...galleryOnly] : galleryOnly
+function normalizeGalleryUrls(images: string[]): string[] {
+  const seen = new Set<string>()
+  const out: string[] = []
+  for (const u of images) {
+    const t = (u ?? '').trim()
+    if (!t || seen.has(t)) continue
+    seen.add(t)
+    out.push(t)
+  }
+  return out
 }
 
 function preloadImageUrl(url: string | undefined): void {
@@ -61,8 +65,8 @@ function GalleryMainImage({ src, label }: { src: string; label: string }) {
   )
 }
 
-export default function AuditionGallery({ coverImage, images = [] }: AuditionGalleryProps) {
-  const allImages = useMemo(() => buildAllImages(coverImage, images), [coverImage, images])
+export default function AuditionGallery({ images }: AuditionGalleryProps) {
+  const allImages = useMemo(() => normalizeGalleryUrls(images), [images])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isOpen, setIsOpen] = useState(false)
   const touchStartX = useRef<number | null>(null)
@@ -122,7 +126,7 @@ export default function AuditionGallery({ coverImage, images = [] }: AuditionGal
 
   if (allImages.length === 0) {
     return (
-      <p className="m-0 text-sm text-gray-500">등록된 이미지가 없습니다.</p>
+      <p className="m-0 text-sm text-gray-500">등록된 추가 이미지가 없습니다.</p>
     )
   }
 

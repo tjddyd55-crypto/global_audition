@@ -14,6 +14,8 @@ export function getVideoEmbedSrc(url: string): string | null {
       if (v) return `https://www.youtube.com/embed/${v}`
       const m = parsed.pathname.match(/\/embed\/([^/?]+)/)
       if (m) return `https://www.youtube.com/embed/${m[1]}`
+      const shorts = parsed.pathname.match(/\/shorts\/([^/?]+)/)
+      if (shorts?.[1]) return `https://www.youtube.com/embed/${shorts[1]}`
     }
   } catch {
     return null

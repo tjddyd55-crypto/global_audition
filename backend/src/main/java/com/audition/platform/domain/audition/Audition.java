@@ -11,7 +11,7 @@ import java.util.UUID;
 
 /**
  * SSOT: Flyway auditions · API DTO · Prisma · frontend types 와 컬럼/배열 필드 일치.
- * text[] — recruit_fields, qualifications, schedules, benefits, gallery_images. JSON/detail_content 없음.
+ * text[] — tags, recruit_fields, qualifications, schedules, benefits, gallery_images. JSON/detail_content 없음.
  */
 @Entity
 @Table(name = "auditions")
@@ -47,8 +47,9 @@ public class Audition {
     @Column(name = "deadline_at")
     private Instant deadlineAt;
 
-    @Column(columnDefinition = "TEXT")
-    private String category = "";
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(columnDefinition = "text[]")
+    private String[] tags = new String[0];
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
@@ -118,8 +119,8 @@ public class Audition {
     public void setCountryCode(String countryCode) { this.countryCode = countryCode; }
     public Instant getDeadlineAt() { return deadlineAt; }
     public void setDeadlineAt(Instant deadlineAt) { this.deadlineAt = deadlineAt; }
-    public String getCategory() { return category; }
-    public void setCategory(String category) { this.category = category; }
+    public String[] getTags() { return tags != null ? tags : new String[0]; }
+    public void setTags(String[] tags) { this.tags = tags != null ? tags : new String[0]; }
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
     public String getCoverImage() { return coverImage; }

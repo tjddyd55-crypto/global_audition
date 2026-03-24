@@ -16,8 +16,7 @@ public class UpdateAuditionRequest {
     @Pattern(regexp = "DRAFT|OPEN|CLOSED")
     private String status;
 
-    @Size(max = 120)
-    private String category;
+    private List<String> tags;
 
     @Size(max = 2000)
     private String coverImage;
@@ -58,8 +57,8 @@ public class UpdateAuditionRequest {
     public void setDescription(String description) { this.description = description; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
-    public String getCategory() { return category; }
-    public void setCategory(String category) { this.category = category; }
+    public List<String> getTags() { return tags; }
+    public void setTags(List<String> tags) { this.tags = tags; }
     public String getCoverImage() { return coverImage; }
     public void setCoverImage(String coverImage) { this.coverImage = coverImage; }
     public String getVideoUrl() { return videoUrl; }

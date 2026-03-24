@@ -34,7 +34,7 @@ export default function NewAuditionPage() {
         title: data.title.trim(),
         description: (data.description ?? '').trim() || '—',
         status: data.status,
-        category: '기타',
+        tags: [],
         galleryImages: [],
         agencyName: '미지정',
         recruitFields: [],

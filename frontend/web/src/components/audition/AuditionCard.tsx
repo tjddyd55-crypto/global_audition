@@ -40,7 +40,6 @@ export default function AuditionCard({ audition }: AuditionCardProps) {
   const id = audition?.id ?? ''
   const title = audition?.title ?? FALLBACK_TEXT.videoTitle
   const status = audition?.status ?? 'DRAFT'
-  const category = audition?.category ?? ''
   const description = audition?.description ?? ''
   const coverImage = audition?.coverImage ?? ''
   const createdAt = audition?.createdAt
@@ -83,21 +82,6 @@ export default function AuditionCard({ audition }: AuditionCardProps) {
           </h3>
           <StatusBadge status={status} />
         </div>
-
-        {category ? (
-          <span
-            style={{
-              fontSize: AUDITION_CARD.categoryFontSizePx,
-              border: `1px solid ${AUDITION_CARD.categoryBorderColor}`,
-              padding: `${AUDITION_CARD.categoryPaddingY}px ${AUDITION_CARD.categoryPaddingX}px`,
-              borderRadius: AUDITION_CARD.categoryRadiusPx,
-              display: 'inline-block',
-              marginBottom: 12,
-            }}
-          >
-            {category}
-          </span>
-        ) : null}
 
         <p
           style={{

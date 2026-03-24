@@ -13,7 +13,7 @@ public class AuditionResponse {
     private Instant updatedAt;
     private String countryCode;
     private Instant deadlineAt;
-    private String category;
+    private String[] tags;
     private Instant createdAt;
 
     private String coverImage;
@@ -52,8 +52,8 @@ public class AuditionResponse {
     public void setCountryCode(String countryCode) { this.countryCode = countryCode; }
     public Instant getDeadlineAt() { return deadlineAt; }
     public void setDeadlineAt(Instant deadlineAt) { this.deadlineAt = deadlineAt; }
-    public String getCategory() { return category; }
-    public void setCategory(String category) { this.category = category; }
+    public String[] getTags() { return tags; }
+    public void setTags(String[] tags) { this.tags = tags; }
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
     public String getCoverImage() { return coverImage; }

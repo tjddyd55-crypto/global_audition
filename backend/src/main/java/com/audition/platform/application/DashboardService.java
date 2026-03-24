@@ -49,7 +49,7 @@ public class DashboardService {
         r.setUpdatedAt(a.getUpdatedAt());
         r.setCountryCode(a.getCountryCode());
         r.setDeadlineAt(a.getDeadlineAt());
-        r.setCategory(a.getCategory());
+        r.setTags(a.getTags());
         r.setCreatedAt(a.getCreatedAt());
         return r;
     }
