@@ -242,15 +242,6 @@ export default function AuditionDetailPage() {
     paddingBottom: Math.max(AUDITION_DETAIL.fixedCtaHeightPx * 2, 120) + AUDITION_DETAIL.mainGridGapPx,
   }
 
-  const cardBase: React.CSSProperties = {
-    border: `1px solid ${AUDITION_DETAIL.cardBorderColor}`,
-    borderRadius: AUDITION_DETAIL.cardRadiusPx,
-    padding: AUDITION_DETAIL.cardPaddingPx,
-    background: '#fff',
-  }
-
-  const cardBaseClass = 'max-md:!p-4'
-
   return (
     <div style={{ minHeight: '100vh', background: AUDITION_DETAIL.pageBackgroundMuted }}>
       <AuditionDetailHeroSection
@@ -264,6 +255,42 @@ export default function AuditionDetailPage() {
         applicantsCount={applicants}
       />
 
+      {embed ? (
+        <section className="w-full border-t border-neutral-200">
+          <div className="mx-auto w-full max-w-[1200px] px-4 py-6 md:px-6">
+            <h2
+              style={{
+                margin: '0 0 12px 0',
+                fontSize: AUDITION_DETAIL.sectionTitlePx,
+                fontWeight: AUDITION_DETAIL.sectionTitleWeight,
+              }}
+            >
+              소개 영상
+            </h2>
+            <div
+              style={{
+                position: 'relative',
+                paddingBottom: '56.25%',
+                height: 0,
+                borderRadius: AUDITION_DETAIL.videoRadiusPx,
+                overflow: 'hidden',
+                background: '#000',
+              }}
+            >
+              <iframe
+                title="audition-video"
+                src={embed}
+                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none' }}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          </div>
+        </section>
+      ) : null}
+
+      {galleryExtra.length > 0 ? <AuditionDetailMediaSection galleryUrls={galleryExtra} /> : null}
+
       <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6" style={{ ...container, paddingTop: AUDITION_DETAIL.sectionGapPx }}>
         <div
           className="grid grid-cols-1 lg:grid-cols-[1fr_320px]"
@@ -272,44 +299,7 @@ export default function AuditionDetailPage() {
           }}
         >
           <div>
-            {embed ? (
-              <div className={cardBaseClass} style={{ ...cardBase, marginBottom: AUDITION_DETAIL.mainGridGapPx }}>
-                <h2
-                  style={{
-                    margin: '0 0 12px 0',
-                    fontSize: AUDITION_DETAIL.sectionTitlePx,
-                    fontWeight: AUDITION_DETAIL.sectionTitleWeight,
-                  }}
-                >
-                  소개 영상
-                </h2>
-                <div
-                  style={{
-                    position: 'relative',
-                    paddingBottom: '56.25%',
-                    height: 0,
-                    borderRadius: AUDITION_DETAIL.videoRadiusPx,
-                    overflow: 'hidden',
-                  }}
-                >
-                  <iframe
-                    title="audition-video"
-                    src={embed}
-                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none' }}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
-                </div>
-              </div>
-            ) : null}
-
-            {galleryExtra.length > 0 ? (
-              <div className={cardBaseClass} style={{ ...cardBase, marginBottom: AUDITION_DETAIL.mainGridGapPx }}>
-                <AuditionDetailMediaSection galleryUrls={galleryExtra} />
-              </div>
-            ) : null}
-
-            <div className={cardBaseClass} style={cardBase}>
+            <section className="border-t border-neutral-200 py-6">
               <h2
                 style={{
                   margin: '0 0 16px 0',
@@ -332,11 +322,11 @@ export default function AuditionDetailPage() {
               <SectionBlock iconLabel="R" title="모집 분야" items={recruitList} />
               <SectionBlock iconLabel="Q" title="지원 자격" items={qualifications} />
               <SectionBlock iconLabel="S" title="일정" items={schedules} />
-            </div>
+            </section>
           </div>
 
-          <aside style={{ display: 'flex', flexDirection: 'column', gap: AUDITION_DETAIL.mainGridGapPx }}>
-            <div className={cardBaseClass} style={cardBase}>
+          <aside className="flex flex-col">
+            <div className="border-t border-neutral-200 px-0 py-4">
               <div style={{ display: 'flex', alignItems: 'center', gap: AUDITION_DETAIL.mainGridGapPx }}>
                 <div
                   style={{
@@ -375,7 +365,7 @@ export default function AuditionDetailPage() {
               </div>
             </div>
 
-            <div className={cardBaseClass} style={cardBase}>
+            <div className="border-t border-neutral-200 px-0 py-4">
               <h3
                 style={{
                   margin: '0 0 12px 0',
@@ -415,7 +405,7 @@ export default function AuditionDetailPage() {
               </div>
             </div>
 
-            <div className={cardBaseClass} style={cardBase}>
+            <div className="border-t border-neutral-200 px-0 py-4">
               <h3
                 style={{
                   margin: '0 0 12px 0',
@@ -438,22 +428,13 @@ export default function AuditionDetailPage() {
         </div>
 
         {benefits.length > 0 && (
-          <div style={{ marginTop: AUDITION_DETAIL.sectionGapPx }}>
+          <section className="border-t border-neutral-200 py-6" style={{ marginTop: AUDITION_DETAIL.sectionGapPx }}>
             <h2 style={{ margin: '0 0 16px 0', fontSize: 20, fontWeight: 700 }}>혜택</h2>
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: `repeat(${AUDITION_DETAIL.benefitGridColumns}, 1fr)`,
-                gap: AUDITION_DETAIL.benefitGridGapPx,
-              }}
-              className="max-md:grid-cols-1"
-            >
+            <div className="flex flex-col divide-y divide-neutral-200">
               {benefits.map((b, i) => (
                 <div
                   key={`b-${i}-${b.slice(0, 24)}`}
-                  className={cardBaseClass}
                   style={{
-                    ...cardBase,
                     padding: AUDITION_DETAIL.benefitCardPaddingPx,
                     fontSize: AUDITION_DETAIL.bodyFontPx,
                     color: AUDITION_DETAIL.bodyColor,
@@ -463,7 +444,7 @@ export default function AuditionDetailPage() {
                 </div>
               ))}
             </div>
-          </div>
+          </section>
         )}
 
         {applyError && (

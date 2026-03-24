@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
 import { GalleryModal } from '@/components/gallery/GalleryModal'
 import { applyGalleryImageOnError, GALLERY_IMAGE_FALLBACK_SRC } from '@/components/gallery/galleryFallback'
 import { shouldTriggerSwipeNavigation } from '@/components/gallery/gallerySwipe'
@@ -8,6 +8,8 @@ import { shouldTriggerSwipeNavigation } from '@/components/gallery/gallerySwipe'
 export type AuditionGalleryProps = {
   /** 상세 페이지: 대표 이미지를 제외한 갤러리 URL만 (히어로와 중복 금지) */
   images: string[]
+  /** grid: 풀폭 2열 썸네일 / slider: 단일 프리뷰 슬라이더 */
+  layout?: 'slider' | 'grid'
 }
 
 function normalizeGalleryUrls(images: string[]): string[] {
@@ -40,7 +42,7 @@ function GalleryMainImage({ src, label }: { src: string; label: string }) {
   }, [])
 
   return (
-      <div className="relative z-0 flex h-full min-h-0 w-full min-w-0 items-center justify-center">
+    <div className="relative z-0 flex h-full min-h-0 w-full min-w-0 items-center justify-center">
       {!loaded && (
         <div
           className="absolute inset-0 z-[0] rounded bg-gray-200 animate-pulse"
@@ -65,7 +67,38 @@ function GalleryMainImage({ src, label }: { src: string; label: string }) {
   )
 }
 
-export default function AuditionGallery({ images }: AuditionGalleryProps) {
+function GridThumb({
+  src,
+  index,
+  onOpen,
+}: {
+  src: string
+  index: number
+  onOpen: (i: number) => void
+}) {
+  const [failed, setFailed] = useState(false)
+  const url = failed ? GALLERY_IMAGE_FALLBACK_SRC : src
+
+  return (
+    <button
+      type="button"
+      className="relative aspect-square w-full overflow-hidden border-0 bg-black p-0"
+      onClick={() => onOpen(index)}
+      aria-label={`이미지 ${index + 1} 크게 보기`}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={url}
+        alt=""
+        className="h-full w-full object-cover"
+        loading={index < 4 ? 'eager' : 'lazy'}
+        onError={() => setFailed(true)}
+      />
+    </button>
+  )
+}
+
+export default function AuditionGallery({ images, layout = 'slider' }: AuditionGalleryProps) {
   const allImages = useMemo(() => normalizeGalleryUrls(images), [images])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isOpen, setIsOpen] = useState(false)
@@ -77,7 +110,6 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
     setCurrentIndex((prev) => Math.min(prev, allImages.length - 1))
   }, [allImages.length])
 
-  /** 인접 슬라이드 프리로드 (이전·다음) */
   useEffect(() => {
     const next = allImages[currentIndex + 1]
     const prev = allImages[currentIndex - 1]
@@ -85,17 +117,22 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
     if (prev) preloadImageUrl(prev)
   }, [currentIndex, allImages])
 
+  const openAt = useCallback((i: number) => {
+    setCurrentIndex(i)
+    setIsOpen(true)
+  }, [])
+
   const current = allImages[currentIndex] ?? ''
   const canPrev = currentIndex > 0
   const canNext = currentIndex < allImages.length - 1
 
-  const goPrev = useCallback((e?: React.MouseEvent) => {
+  const goPrev = useCallback((e?: MouseEvent) => {
     e?.stopPropagation()
     setCurrentIndex((i) => Math.max(0, i - 1))
   }, [])
 
   const goNext = useCallback(
-    (e?: React.MouseEvent) => {
+    (e?: MouseEvent) => {
       e?.stopPropagation()
       setCurrentIndex((i) => Math.min(allImages.length - 1, i + 1))
     },
@@ -126,16 +163,36 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
 
   if (allImages.length === 0) {
     return (
-      <p className="m-0 text-sm text-gray-500">등록된 추가 이미지가 없습니다.</p>
+      <p className="m-0 px-4 py-2 text-sm text-gray-500 md:px-6">등록된 추가 이미지가 없습니다.</p>
+    )
+  }
+
+  if (layout === 'grid') {
+    return (
+      <div className="w-full">
+        <div className="grid w-full grid-cols-2 gap-1 bg-neutral-900 p-0">
+          {allImages.map((src, i) => (
+            <GridThumb key={`g-${i}-${src.slice(0, 24)}`} src={src} index={i} onOpen={openAt} />
+          ))}
+        </div>
+        {isOpen && (
+          <GalleryModal
+            images={allImages}
+            currentIndex={currentIndex}
+            setCurrentIndex={setCurrentIndex}
+            onClose={() => setIsOpen(false)}
+          />
+        )}
+      </div>
     )
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full px-0">
       <div
         role="button"
         tabIndex={0}
-        className="group relative flex w-full cursor-pointer flex-col overflow-hidden rounded-lg bg-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+        className="group relative flex w-full cursor-pointer flex-col overflow-hidden bg-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
         onClick={() => setIsOpen(true)}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
