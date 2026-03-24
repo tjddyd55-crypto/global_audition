@@ -9,9 +9,10 @@ app:
   # Railway 등: BOOTSTRAP_SUPER_ADMIN=true 로 한 번 기동해 계정 생성 후 반드시 false 로 복구
   super-admin:
     bootstrap-enabled: ${BOOTSTRAP_SUPER_ADMIN:false}
-  # 쉼표 구분. Railway: APP_CORS_ALLOWED_ORIGINS=https://...,http://localhost:3000
+  # 쉼표 구분(선택). 커스텀 도메인만 나열. Railway·localhost는 WebConfig 패턴으로 이미 허용.
+  # 예: APP_CORS_ALLOWED_ORIGINS=https://my-domain.com
   cors:
-    allowed-origins: "${APP_CORS_ALLOWED_ORIGINS:http://localhost:3000,https://frontend-production-8613a.up.railway.app}"
+    allowed-origins: "${APP_CORS_ALLOWED_ORIGINS:}"
   # 이미지 업로드(S3). Railway: AWS_BUCKET·AWS_REGION·자격증명 필수. bucket 비우면 업로드 API 503.
   # spring.profiles.active 사용 안 함 — 본 파일 + 환경변수만 사용.
   s3:

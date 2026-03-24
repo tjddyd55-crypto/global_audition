@@ -16,6 +16,8 @@ NEXT_PUBLIC_API_URL=https://backend-production-b968.up.railway.app
 ```
 ※ gateway URL이 아닌 **실제 백엔드 URL**을 사용해야 CORS 오류가 발생하지 않습니다.
 
+**백엔드 CORS**: `WebConfig`에서 `https://*.up.railway.app`·`http://localhost:*` 패턴을 허용합니다. 프론트 Railway URL이 `8513a`/`8613a`처럼 바뀌어도 별도 나열 없이 동작합니다. 자체 도메인만 `APP_CORS_ALLOWED_ORIGINS`에 추가하면 됩니다.
+
 **빌드 타임 가드**: ✅ 적용됨 (`src/lib/env.ts`)
 - 누락 시 빌드 즉시 실패
 - 명확한 에러 메시지 제공
