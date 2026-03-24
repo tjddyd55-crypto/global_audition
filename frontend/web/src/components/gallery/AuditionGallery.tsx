@@ -82,14 +82,14 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
 
       {allImages.length > 1 ? (
         <nav
-          className="mt-2 flex justify-center gap-2 rounded-lg bg-black/85 py-2.5"
+          className="mb-3 mt-2 flex items-center justify-center gap-2"
           aria-label="추가 이미지 위치"
         >
           {allImages.map((_, i) => (
             <div
               key={i}
-              className={`h-2 rounded-full transition-all ${
-                i === currentIndex ? 'w-4 bg-white' : 'w-2 bg-white/40'
+              className={`h-2 w-2 rounded-full transition-all duration-200 ${
+                i === currentIndex ? 'scale-110 bg-gray-800' : 'bg-gray-300'
               }`}
               aria-current={i === currentIndex ? 'step' : undefined}
             />
