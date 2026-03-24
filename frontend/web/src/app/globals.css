@@ -20,3 +20,12 @@
 .touch-pan-y {
   touch-action: pan-y;
 }
+
+/* 가로 갤러리 등: 스크롤바 숨김 (스와이프는 유지) */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

@@ -37,24 +37,30 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
 
   return (
     <div className="w-full">
-      {allImages.map((src, i) => (
-        <button
-          key={`${i}-${src.slice(0, 32)}`}
-          type="button"
-          className="block w-full cursor-zoom-in border-0 bg-black p-0"
-          onClick={() => openAt(i)}
-          aria-label={`이미지 ${i + 1} 크게 보기`}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={src}
-            alt=""
-            className="block h-auto w-full object-contain"
-            loading={i < 2 ? 'eager' : 'lazy'}
-            onError={applyGalleryImageOnError}
-          />
-        </button>
-      ))}
+      <div
+        className="scrollbar-hide flex w-full snap-x snap-mandatory gap-2 overflow-x-auto px-4"
+        style={{ WebkitOverflowScrolling: 'touch' }}
+      >
+        {allImages.map((src, i) => (
+          <button
+            key={`${i}-${src.slice(0, 32)}`}
+            type="button"
+            className="w-[85%] shrink-0 snap-center cursor-zoom-in border-0 bg-transparent p-0 text-left"
+            onClick={() => openAt(i)}
+            aria-label={`이미지 ${i + 1} 크게 보기`}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={src}
+              alt=""
+              className="h-auto w-full rounded-lg object-cover"
+              loading={i < 2 ? 'eager' : 'lazy'}
+              draggable={false}
+              onError={applyGalleryImageOnError}
+            />
+          </button>
+        ))}
+      </div>
 
       {isOpen && (
         <GalleryModal
