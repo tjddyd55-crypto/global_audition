@@ -8,6 +8,7 @@ import com.audition.platform.api.dto.CategoryCountDto;
 import com.audition.platform.api.dto.ManageApplicationStatsDto;
 import com.audition.platform.api.dto.ManageApplicationsPageDataDto;
 import com.audition.platform.api.dto.ManageAuditionHeaderDto;
+import com.audition.platform.application.round.ApplicationRoundSubmissionService;
 import com.audition.platform.application.audition.ApplicantCardMetricsLoader;
 import com.audition.platform.application.credit.CreditPolicyKey;
 import com.audition.platform.application.credit.CreditService;
@@ -54,6 +55,7 @@ public class ApplicationService {
     private final ApplicationRankingService applicationRankingService;
     private final ApplicationVideoRepository applicationVideoRepository;
     private final CreditService creditService;
+    private final ApplicationRoundSubmissionService applicationRoundSubmissionService;
 
     public ApplicationService(
             ApplicationRepository applicationRepository,
@@ -63,7 +65,8 @@ public class ApplicationService {
             ApplicationScoreRepository applicationScoreRepository,
             ApplicationRankingService applicationRankingService,
             ApplicationVideoRepository applicationVideoRepository,
-            CreditService creditService) {
+            CreditService creditService,
+            ApplicationRoundSubmissionService applicationRoundSubmissionService) {
         this.applicationRepository = applicationRepository;
         this.auditionRepository = auditionRepository;
         this.userRepository = userRepository;
@@ -72,6 +75,7 @@ public class ApplicationService {
         this.applicationRankingService = applicationRankingService;
         this.applicationVideoRepository = applicationVideoRepository;
         this.creditService = creditService;
+        this.applicationRoundSubmissionService = applicationRoundSubmissionService;
     }
 
     private static ApplicationResponse toResponse(Application app, User applicant) {
@@ -334,6 +338,7 @@ public class ApplicationService {
         } catch (DataIntegrityViolationException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 지원 완료입니다.");
         }
+        applicationRoundSubmissionService.onApplicationCreated(app, audition);
         long cnt = applicationRepository.countByAuditionId(auditionId);
         audition.setApplicantsCount((int) cnt);
         auditionRepository.save(audition);

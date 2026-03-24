@@ -31,6 +31,11 @@ public class AuditionResponse {
     private Instant endDate;
     private String[] benefits;
 
+    private String processMode;
+    private Integer currentRoundNumber;
+    private Integer maxRoundNumber;
+    private String selectionStatus;
+
     /**
      * 로그인한 지원자/관리자일 때만 설정. 해당 오디션에 이미 지원했으면 true.
      */
@@ -84,6 +89,38 @@ public class AuditionResponse {
     public void setEndDate(Instant endDate) { this.endDate = endDate; }
     public String[] getBenefits() { return benefits; }
     public void setBenefits(String[] benefits) { this.benefits = benefits; }
+
+    public String getProcessMode() {
+        return processMode;
+    }
+
+    public void setProcessMode(String processMode) {
+        this.processMode = processMode;
+    }
+
+    public Integer getCurrentRoundNumber() {
+        return currentRoundNumber;
+    }
+
+    public void setCurrentRoundNumber(Integer currentRoundNumber) {
+        this.currentRoundNumber = currentRoundNumber;
+    }
+
+    public Integer getMaxRoundNumber() {
+        return maxRoundNumber;
+    }
+
+    public void setMaxRoundNumber(Integer maxRoundNumber) {
+        this.maxRoundNumber = maxRoundNumber;
+    }
+
+    public String getSelectionStatus() {
+        return selectionStatus;
+    }
+
+    public void setSelectionStatus(String selectionStatus) {
+        this.selectionStatus = selectionStatus;
+    }
 
     public Boolean getHasApplied() {
         return hasApplied;

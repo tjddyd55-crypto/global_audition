@@ -101,6 +101,19 @@ public class Audition {
     @Column(name = "benefits", columnDefinition = "text[]")
     private String[] benefits = new String[0];
 
+    /** SINGLE: 기존 단일 지원 흐름. MULTI_ROUND: audition_rounds 사용 */
+    @Column(name = "process_mode", nullable = false, columnDefinition = "TEXT")
+    private String processMode = "SINGLE";
+
+    @Column(name = "current_round_number")
+    private Integer currentRoundNumber;
+
+    @Column(name = "max_round_number")
+    private Integer maxRoundNumber;
+
+    @Column(name = "selection_status", columnDefinition = "TEXT")
+    private String selectionStatus;
+
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
     public UUID getOwnerId() { return ownerId; }
@@ -152,4 +165,12 @@ public class Audition {
     public void setEndDate(Instant endDate) { this.endDate = endDate; }
     public String[] getBenefits() { return benefits != null ? benefits : new String[0]; }
     public void setBenefits(String[] benefits) { this.benefits = benefits != null ? benefits : new String[0]; }
+    public String getProcessMode() { return processMode; }
+    public void setProcessMode(String processMode) { this.processMode = processMode != null ? processMode : "SINGLE"; }
+    public Integer getCurrentRoundNumber() { return currentRoundNumber; }
+    public void setCurrentRoundNumber(Integer currentRoundNumber) { this.currentRoundNumber = currentRoundNumber; }
+    public Integer getMaxRoundNumber() { return maxRoundNumber; }
+    public void setMaxRoundNumber(Integer maxRoundNumber) { this.maxRoundNumber = maxRoundNumber; }
+    public String getSelectionStatus() { return selectionStatus; }
+    public void setSelectionStatus(String selectionStatus) { this.selectionStatus = selectionStatus; }
 }

@@ -51,6 +51,9 @@ public class UpdateAuditionRequest {
 
     private String deadlineAt;
 
+    @Pattern(regexp = "SINGLE|MULTI_ROUND")
+    private String processMode;
+
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
     public String getDescription() { return description; }
@@ -87,4 +90,6 @@ public class UpdateAuditionRequest {
     public void setCountryCode(String countryCode) { this.countryCode = countryCode; }
     public String getDeadlineAt() { return deadlineAt; }
     public void setDeadlineAt(String deadlineAt) { this.deadlineAt = deadlineAt; }
+    public String getProcessMode() { return processMode; }
+    public void setProcessMode(String processMode) { this.processMode = processMode; }
 }

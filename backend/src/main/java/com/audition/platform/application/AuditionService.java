@@ -3,6 +3,8 @@ package com.audition.platform.application;
 import com.audition.platform.api.dto.AuditionResponse;
 import com.audition.platform.api.dto.CreateAuditionRequest;
 import com.audition.platform.api.dto.UpdateAuditionRequest;
+import com.audition.platform.application.round.AuditionProcessModes;
+import com.audition.platform.application.round.AuditionRoundService;
 import com.audition.platform.domain.audition.ApplicationRepository;
 import com.audition.platform.domain.audition.Audition;
 import com.audition.platform.domain.audition.AuditionTagNormalizer;
@@ -30,13 +32,16 @@ public class AuditionService {
     private final AuditionRepository auditionRepository;
     private final UserRepository userRepository;
     private final ApplicationRepository applicationRepository;
+    private final AuditionRoundService auditionRoundService;
 
     public AuditionService(AuditionRepository auditionRepository,
                            UserRepository userRepository,
-                           ApplicationRepository applicationRepository) {
+                           ApplicationRepository applicationRepository,
+                           AuditionRoundService auditionRoundService) {
         this.auditionRepository = auditionRepository;
         this.userRepository = userRepository;
         this.applicationRepository = applicationRepository;
+        this.auditionRoundService = auditionRoundService;
     }
 
     private static Instant parseInstantRequired(String value, String field) {
@@ -117,6 +122,10 @@ public class AuditionService {
         r.setStartDate(a.getStartDate());
         r.setEndDate(a.getEndDate());
         r.setBenefits(a.getBenefits());
+        r.setProcessMode(a.getProcessMode());
+        r.setCurrentRoundNumber(a.getCurrentRoundNumber());
+        r.setMaxRoundNumber(a.getMaxRoundNumber());
+        r.setSelectionStatus(a.getSelectionStatus());
         return r;
     }
 
@@ -144,6 +153,11 @@ public class AuditionService {
         a.setCountryCode(req.getCountryCode());
         a.setRemainingDays(computeRemainingDays(end));
         a.setApplicantsCount(0);
+        if (req.getProcessMode() != null && AuditionProcessModes.isMultiRound(req.getProcessMode())) {
+            a.setProcessMode(AuditionProcessModes.MULTI_ROUND);
+        } else {
+            a.setProcessMode(AuditionProcessModes.SINGLE);
+        }
     }
 
     private static void assertYoutubeIfVideoPresent(String status, String videoUrl) {
@@ -186,6 +200,13 @@ public class AuditionService {
         a.setUpdatedAt(Instant.now());
         applyCreateBody(a, req);
         a = auditionRepository.save(a);
+        if (AuditionProcessModes.isMultiRound(a.getProcessMode())) {
+            a.setCurrentRoundNumber(1);
+            a.setMaxRoundNumber(1);
+            a.setSelectionStatus("OPEN".equals(a.getStatus()) ? "OPEN" : "DRAFT");
+            a = auditionRepository.save(a);
+            auditionRoundService.bootstrapFirstRound(a.getId(), "OPEN".equals(a.getStatus()));
+        }
         return toResponse(a);
     }
 
@@ -296,6 +317,20 @@ public class AuditionService {
         }
         if (request.getBenefits() != null) {
             audition.setBenefits(listToArray(request.getBenefits()));
+        }
+        if (request.getProcessMode() != null) {
+            if (AuditionProcessModes.isMultiRound(request.getProcessMode())) {
+                audition.setProcessMode(AuditionProcessModes.MULTI_ROUND);
+                if (auditionRoundService.listRounds(id).isEmpty()) {
+                    audition.setCurrentRoundNumber(1);
+                    audition.setMaxRoundNumber(1);
+                    audition.setSelectionStatus("OPEN".equals(audition.getStatus()) ? "OPEN" : "DRAFT");
+                    auditionRepository.save(audition);
+                    auditionRoundService.bootstrapFirstRound(id, "OPEN".equals(audition.getStatus()));
+                }
+            } else {
+                audition.setProcessMode(AuditionProcessModes.SINGLE);
+            }
         }
 
         assertYoutubeIfVideoPresent(audition.getStatus(), audition.getVideoUrl());

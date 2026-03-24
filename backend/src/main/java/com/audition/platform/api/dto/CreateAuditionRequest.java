@@ -60,6 +60,10 @@ public class CreateAuditionRequest {
     private String countryCode;
     private String deadlineAt;
 
+    /** SINGLE(기본) | MULTI_ROUND — 다단계 오디션 시 라운드 1 자동 생성 */
+    @Pattern(regexp = "SINGLE|MULTI_ROUND")
+    private String processMode = "SINGLE";
+
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
     public String getDescription() { return description; }
@@ -96,4 +100,6 @@ public class CreateAuditionRequest {
     public void setCountryCode(String countryCode) { this.countryCode = countryCode; }
     public String getDeadlineAt() { return deadlineAt; }
     public void setDeadlineAt(String deadlineAt) { this.deadlineAt = deadlineAt; }
+    public String getProcessMode() { return processMode; }
+    public void setProcessMode(String processMode) { this.processMode = processMode; }
 }

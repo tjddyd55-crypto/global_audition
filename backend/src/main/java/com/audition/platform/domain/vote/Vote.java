@@ -27,6 +27,13 @@ public class Vote {
     @Column(name = "audition_id", nullable = false)
     private UUID auditionId;
 
+    /** NULL: 레거시 오디션당 1표. 설정 시 해당 라운드당 1표 */
+    @Column(name = "round_id")
+    private UUID roundId;
+
+    @Column(name = "application_round_submission_id")
+    private UUID applicationRoundSubmissionId;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
@@ -60,6 +67,22 @@ public class Vote {
 
     public void setAuditionId(UUID auditionId) {
         this.auditionId = auditionId;
+    }
+
+    public UUID getRoundId() {
+        return roundId;
+    }
+
+    public void setRoundId(UUID roundId) {
+        this.roundId = roundId;
+    }
+
+    public UUID getApplicationRoundSubmissionId() {
+        return applicationRoundSubmissionId;
+    }
+
+    public void setApplicationRoundSubmissionId(UUID applicationRoundSubmissionId) {
+        this.applicationRoundSubmissionId = applicationRoundSubmissionId;
     }
 
     public Instant getCreatedAt() {

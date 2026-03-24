@@ -47,6 +47,22 @@ public class Application {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
+    @Column(name = "current_round_number", nullable = false)
+    private int currentRoundNumber = 1;
+
+    @Column(name = "final_status", nullable = false, columnDefinition = "TEXT")
+    private String finalStatus = "IN_PROGRESS";
+
+    @Column(name = "latest_result_status", nullable = false, columnDefinition = "TEXT")
+    private String latestResultStatus = "PENDING";
+
+    @Column(name = "latest_round_submission_id")
+    private UUID latestRoundSubmissionId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "latest_round_submission_id", insertable = false, updatable = false)
+    private ApplicationRoundSubmission latestRoundSubmission;
+
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
     public UUID getAuditionId() { return auditionId; }
@@ -67,4 +83,14 @@ public class Application {
     public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
+    public int getCurrentRoundNumber() { return currentRoundNumber; }
+    public void setCurrentRoundNumber(int currentRoundNumber) { this.currentRoundNumber = currentRoundNumber; }
+    public String getFinalStatus() { return finalStatus; }
+    public void setFinalStatus(String finalStatus) { this.finalStatus = finalStatus; }
+    public String getLatestResultStatus() { return latestResultStatus; }
+    public void setLatestResultStatus(String latestResultStatus) { this.latestResultStatus = latestResultStatus; }
+    public UUID getLatestRoundSubmissionId() { return latestRoundSubmissionId; }
+    public void setLatestRoundSubmissionId(UUID latestRoundSubmissionId) { this.latestRoundSubmissionId = latestRoundSubmissionId; }
+    public ApplicationRoundSubmission getLatestRoundSubmission() { return latestRoundSubmission; }
+    public void setLatestRoundSubmission(ApplicationRoundSubmission latestRoundSubmission) { this.latestRoundSubmission = latestRoundSubmission; }
 }
