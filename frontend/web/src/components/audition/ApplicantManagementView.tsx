@@ -4,7 +4,11 @@ import { useState } from 'react'
 import Image from 'next/image'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { auditionApi, type ManageApplicantItem, type ManageApplicationsPayload } from '@/lib/api/auditions'
+import {
+  auditionApi,
+  type ManageApplicantItem,
+  type ManageApplicationsPayload,
+} from '@/lib/api/auditions'
 import {
   BTN_PRIMARY,
   BTN_SECONDARY,
@@ -16,6 +20,8 @@ import {
   TITLE_PAGE,
 } from '@/lib/ui/specClasses'
 import { Link } from '@/i18n.config'
+import { VideoEmbedOverlay } from '@/components/video/VideoEmbedOverlay'
+import { getVideoEmbedSrc } from '@/lib/utils/videoEmbed'
 
 function formatCount(n: number) {
   return new Intl.NumberFormat('ko-KR').format(n)
@@ -64,6 +70,7 @@ export function ApplicantManagementView({
   const queryClient = useQueryClient()
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null)
   const [patchingId, setPatchingId] = useState<string | null>(null)
+  const [playApplicant, setPlayApplicant] = useState<ManageApplicantItem | null>(null)
 
   const qk = [queryKeyPrefix, auditionId, categoryFilter ?? '전체'] as const
 
@@ -229,13 +236,22 @@ export function ApplicantManagementView({
                     </span>
                   </div>
 
-                  {app.videoUrl ? (
+                  {app.videoUrl && getVideoEmbedSrc(app.videoUrl) ? (
+                    <button
+                      type="button"
+                      onClick={() => setPlayApplicant(app)}
+                      className="absolute left-1/2 top-1/2 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-violet-600 text-white shadow-lg ring-4 ring-white/30 hover:bg-violet-700"
+                      aria-label="영상 재생"
+                    >
+                      <span className="ml-1 text-2xl">▶</span>
+                    </button>
+                  ) : app.videoUrl ? (
                     <a
                       href={app.videoUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="absolute left-1/2 top-1/2 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-violet-600 text-white shadow-lg ring-4 ring-white/30 hover:bg-violet-700"
-                      aria-label="영상 재생"
+                      className="absolute left-1/2 top-1/2 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-gray-600 text-white shadow-lg ring-4 ring-white/30 hover:bg-gray-700"
+                      aria-label="새 창에서 영상 열기"
                     >
                       <span className="ml-1 text-2xl">▶</span>
                     </a>
@@ -298,6 +314,19 @@ export function ApplicantManagementView({
           </div>
         )}
       </div>
+
+      <VideoEmbedOverlay
+        play={
+          playApplicant
+            ? {
+                url: playApplicant.videoUrl,
+                title: `${playApplicant.userName || '지원자'} 지원 영상`,
+                thumbnail: playApplicant.thumbnailUrl ?? undefined,
+              }
+            : undefined
+        }
+        onClose={() => setPlayApplicant(null)}
+      />
     </div>
   )
 }

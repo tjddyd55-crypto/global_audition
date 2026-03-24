@@ -1,3 +1,5 @@
+import { extractYoutubeVideoId } from '@/lib/audition/youtubeEmbed'
+
 /** videoUrl → iframe src (YouTube 위주) */
 export type VideoEmbedOptions = {
   /** 모달 등 사용자 제스처 직후 재생용. 인라인 페이지 임베드에는 기본 false 권장 */
@@ -29,7 +31,8 @@ export function isYoutubeShortsLikeUrl(url: string): boolean {
   const u = (url ?? '').trim()
   if (!u) return false
   try {
-    const parsed = new URL(u)
+    const normalized = /^https?:\/\//i.test(u) ? u : `https://${u}`
+    const parsed = new URL(normalized)
     const host = parsed.hostname.replace(/^www\./, '')
     if (host !== 'youtu.be' && !host.includes('youtube.com')) return false
     return /\/shorts\//i.test(parsed.pathname)

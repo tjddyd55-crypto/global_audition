@@ -12,7 +12,7 @@ export function extractYoutubeVideoId(raw: string): string | null {
       const id = u.pathname.split('/').filter(Boolean)[0]
       return id && id.length >= 6 ? id : null
     }
-    if (host.includes('youtube.com')) {
+    if (host.includes('youtube.com') || host.includes('youtube-nocookie.com')) {
       const v = u.searchParams.get('v')
       if (v && v.length >= 6) return v
       const parts = u.pathname.split('/').filter(Boolean)
@@ -20,6 +20,10 @@ export function extractYoutubeVideoId(raw: string): string | null {
       if (i >= 0 && parts[i + 1]) return parts[i + 1]
       const si = parts.indexOf('shorts')
       if (si >= 0 && parts[si + 1]) return parts[si + 1]
+      const li = parts.indexOf('live')
+      if (li >= 0 && parts[li + 1]) return parts[li + 1]
+      const vi = parts.indexOf('v')
+      if (vi >= 0 && parts[vi + 1]) return parts[vi + 1]
     }
   } catch {
     /* ignore */

@@ -166,27 +166,45 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback }: Props) {
           <p className={`${TEXT_SUB} text-center`}>표시할 지원자가 없습니다.</p>
         ) : (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {items.map((item) => (
+            {items.map((item) => {
+              const canEmbed = Boolean(getVideoEmbedSrc(item.videoUrl))
+              const canOpenVideo = canEmbed && !voteMutationBusy
+              return (
               <article key={item.applicationId} className="overflow-hidden rounded-xl border border-[#E5E7EB] bg-white shadow-sm">
-                <div className="relative aspect-[16/10] bg-gray-900">
+                <div
+                  className={`relative aspect-[16/10] bg-gray-900${canOpenVideo ? ' cursor-pointer' : ''}`}
+                  role={canOpenVideo ? 'button' : undefined}
+                  tabIndex={canOpenVideo ? 0 : undefined}
+                  aria-label={canOpenVideo ? '영상 재생' : undefined}
+                  onKeyDown={(e) => {
+                    if (!canOpenVideo) return
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      openVideoWithViewBump(item)
+                    }
+                  }}
+                  onClick={() => {
+                    if (!canOpenVideo) return
+                    openVideoWithViewBump(item)
+                  }}
+                >
                   {item.thumbnailUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={item.thumbnailUrl} alt="" className="h-full w-full object-cover" />
                   ) : (
                     <div className="h-full w-full bg-gray-800" />
                   )}
-                  <span className="absolute left-2 top-2 rounded-full bg-black/60 px-2 py-0.5 text-xs font-medium text-white">
+                  <span className="pointer-events-none absolute left-2 top-2 rounded-full bg-black/60 px-2 py-0.5 text-xs font-medium text-white">
                     👁 {formatCount(item.viewCount)}
                   </span>
-                  <button
-                    type="button"
-                    disabled={!getVideoEmbedSrc(item.videoUrl) || voteMutationBusy}
-                    onClick={() => openVideoWithViewBump(item)}
-                    className="absolute left-1/2 top-1/2 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-2xl text-white hover:bg-black/60 disabled:cursor-not-allowed disabled:opacity-40"
-                    aria-label="재생"
+                  <div
+                    className={`pointer-events-none absolute left-1/2 top-1/2 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-2xl text-white ${
+                      canOpenVideo ? 'bg-black/50' : 'bg-black/35 opacity-40'
+                    }`}
+                    aria-hidden
                   >
                     ▶
-                  </button>
+                  </div>
                   <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/80 to-transparent" />
                   {item.category ? (
                     <span className="absolute bottom-3 left-2 rounded-md bg-violet-600/90 px-2 py-0.5 text-xs font-semibold text-white">
@@ -235,7 +253,8 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback }: Props) {
                   </div>
                 </div>
               </article>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>
