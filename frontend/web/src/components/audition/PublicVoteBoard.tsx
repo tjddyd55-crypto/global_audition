@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useState } from 'react'
 import { toast } from 'sonner'
 import { auditionApi, type PublicVoteItem } from '@/lib/api/auditions'
+import { VideoEmbedOverlay } from '@/components/video/VideoEmbedOverlay'
 import { getVideoEmbedSrc } from '@/lib/utils/videoEmbed'
 import { useAuthStore } from '@/lib/auth/authStore'
 import { Link, useRouter } from '@/i18n.config'
@@ -86,7 +87,6 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback }: Props) {
     return true
   }, [accessToken, router, auditionId])
 
-  const embed = playItem ? getVideoEmbedSrc(playItem.videoUrl) : null
   const voteMutationBusy = castMutation.isPending || removeMutation.isPending
 
   if (votesQuery.isLoading) {
@@ -240,33 +240,7 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback }: Props) {
         )}
       </div>
 
-      {playItem && embed ? (
-        <div
-          role="dialog"
-          aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4"
-          onClick={() => setPlayItem(null)}
-        >
-          <div className="relative w-full max-w-3xl overflow-hidden rounded-xl bg-black" onClick={(e) => e.stopPropagation()}>
-            <button
-              type="button"
-              onClick={() => setPlayItem(null)}
-              className="absolute right-2 top-2 z-10 rounded-lg bg-white/90 px-3 py-1 text-sm font-semibold"
-            >
-              닫기
-            </button>
-            <div className="relative pb-[56.25%]">
-              <iframe
-                title="vote-video"
-                src={embed}
-                className="absolute inset-0 h-full w-full border-0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <VideoEmbedOverlay videoUrl={playItem?.videoUrl ?? null} onClose={() => setPlayItem(null)} />
     </div>
   )
 }
