@@ -26,7 +26,7 @@ const IFRAME_ALLOW =
   'autoplay; encrypted-media; picture-in-picture; accelerometer; clipboard-write; gyroscope; fullscreen'
 
 const OVERLAY_Z =
-  'fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 p-2 backdrop-blur-sm transition-opacity duration-200 ease-out sm:p-4'
+  'fixed inset-0 z-[9999] flex items-center justify-center bg-black p-2 transition-opacity duration-200 ease-out sm:p-4'
 
 function resolvePlay(
   play: VideoEmbedPlayPayload | null | undefined,

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { TEXT_SUB } from '@/lib/ui/specClasses'
 import { AUDITION_COVER_PLACEHOLDER_SRC } from '@/components/audition/AuditionEditorPreview'
+import { ImageViewerOverlay } from '@/components/gallery/ImageViewerOverlay'
 
 function GalleryThumb({ src, onOpen }: { src: string; onOpen: () => void }) {
   const [failed, setFailed] = useState(false)
@@ -11,32 +12,16 @@ function GalleryThumb({ src, onOpen }: { src: string; onOpen: () => void }) {
     <button
       type="button"
       onClick={onOpen}
-      className="relative aspect-video w-[min(320px,85vw)] shrink-0 snap-center cursor-pointer overflow-hidden rounded-md border-0 bg-gray-100 p-0"
+      className="relative flex h-44 w-[min(320px,85vw)] shrink-0 snap-center cursor-pointer items-center justify-center overflow-hidden rounded-md border-0 bg-gray-100 p-2"
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={url}
         alt=""
-        className="absolute inset-0 h-full w-full object-cover"
+        className="max-h-full max-w-full object-contain"
         onError={() => setFailed(true)}
       />
     </button>
-  )
-}
-
-function GalleryModalImage({ src }: { src: string }) {
-  const [failed, setFailed] = useState(false)
-  const url = failed ? AUDITION_COVER_PLACEHOLDER_SRC : src
-  return (
-    <div className="flex h-[min(85vh,100%)] w-full items-center justify-center bg-black">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={url}
-        alt=""
-        className="max-h-[85vh] max-w-full object-contain"
-        onError={() => setFailed(true)}
-      />
-    </div>
   )
 }
 
@@ -51,21 +36,14 @@ function preloadUrl(url: string | undefined) {
 }
 
 /**
- * 가로 스크롤 + snap (스펙: snap-x snap-mandatory), 탭 시 전체 화면 모달.
+ * 가로 스크롤 + snap, 탭 시 ImageViewerOverlay(순환·스와이프·도트).
  */
 export function AuditionGalleryViewer({ images }: Props) {
   const [modalIndex, setModalIndex] = useState<number | null>(null)
   const [stripIndex, setStripIndex] = useState(0)
   const scrollerRef = useRef<HTMLDivElement>(null)
-  const touchStartX = useRef<number | null>(null)
 
   const close = useCallback(() => setModalIndex(null), [])
-  const goPrev = useCallback(() => {
-    setModalIndex((i) => (i !== null && i > 0 ? i - 1 : i))
-  }, [])
-  const goNext = useCallback(() => {
-    setModalIndex((i) => (i !== null && i < images.length - 1 ? i + 1 : i))
-  }, [images.length])
 
   const updateStripIndexFromScroll = useCallback(() => {
     const root = scrollerRef.current
@@ -100,45 +78,6 @@ export function AuditionGalleryViewer({ images }: Props) {
     if (prev) preloadUrl(prev)
   }, [stripIndex, images])
 
-  useEffect(() => {
-    if (modalIndex === null) return
-    const next = images[modalIndex + 1]
-    if (next) preloadUrl(next)
-    const prev = images[modalIndex - 1]
-    if (prev) preloadUrl(prev)
-  }, [modalIndex, images])
-
-  useEffect(() => {
-    if (modalIndex === null) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') close()
-      if (e.key === 'ArrowLeft') goPrev()
-      if (e.key === 'ArrowRight') goNext()
-    }
-    window.addEventListener('keydown', onKey)
-    document.body.style.overflow = 'hidden'
-    return () => {
-      window.removeEventListener('keydown', onKey)
-      document.body.style.overflow = ''
-    }
-  }, [modalIndex, close, goPrev, goNext])
-
-  const onModalTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.targetTouches[0]?.clientX ?? null
-  }
-
-  const onModalTouchEnd = (e: React.TouchEvent) => {
-    const start = touchStartX.current
-    touchStartX.current = null
-    if (start == null || modalIndex === null) return
-    const end = e.changedTouches[0]?.clientX
-    if (end == null) return
-    const dx = end - start
-    const threshold = 48
-    if (dx > threshold) goPrev()
-    else if (dx < -threshold) goNext()
-  }
-
   if (images.length === 0) return null
 
   return (
@@ -169,53 +108,13 @@ export function AuditionGalleryViewer({ images }: Props) {
       </div>
 
       {modalIndex !== null && (
-        <div
-          className="fixed inset-0 z-[100] flex cursor-default items-center justify-center bg-black"
-          role="dialog"
-          onClick={close}
-          aria-modal
-          aria-label="갤러리"
-        >
-          <button
-            type="button"
-            onClick={close}
-            className="absolute right-4 top-4 z-[102] flex h-10 w-10 items-center justify-center rounded-full bg-black/45 text-2xl font-light text-white"
-            aria-label="닫기"
-          >
-            ×
-          </button>
-          {modalIndex > 0 && (
-            <button
-              type="button"
-              onClick={goPrev}
-              className="absolute left-2 z-[102] rounded-full bg-black/35 px-3 py-4 text-3xl text-white md:left-6"
-              aria-label="이전"
-            >
-              ‹
-            </button>
-          )}
-          {modalIndex < images.length - 1 && (
-            <button
-              type="button"
-              onClick={goNext}
-              className="absolute right-2 z-[102] rounded-full bg-black/35 px-3 py-4 text-3xl text-white md:right-6"
-              aria-label="다음"
-            >
-              ›
-            </button>
-          )}
-          <div
-            className="relative mx-4 h-[min(85vh,100%)] w-full max-w-5xl touch-pan-x"
-            onClick={(e) => e.stopPropagation()}
-            onTouchStart={onModalTouchStart}
-            onTouchEnd={onModalTouchEnd}
-          >
-            <GalleryModalImage src={images[modalIndex]} />
-          </div>
-          <div className="pointer-events-none absolute bottom-6 left-0 right-0 flex justify-center tabular-nums text-sm text-white/90">
-            {modalIndex + 1} / {images.length}
-          </div>
-        </div>
+        <ImageViewerOverlay
+          images={images}
+          currentIndex={modalIndex}
+          onIndexChange={setModalIndex}
+          onClose={close}
+          ariaLabel="갤러리"
+        />
       )}
     </div>
   )
