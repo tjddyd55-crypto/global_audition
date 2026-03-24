@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useId, useState, type ReactNode } from 'react'
+import { useCallback, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import {
   DndContext,
   closestCenter,
@@ -143,6 +143,7 @@ export function ImageUploader({
 }: ImageUploaderProps) {
   const fileInputId = useId()
   const dndId = useId()
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [isDraggingFile, setIsDraggingFile] = useState(false)
   const [uploadBusy, setUploadBusy] = useState(false)
 
@@ -251,7 +252,19 @@ export function ImageUploader({
     'border-2 border-dashed border-gray-300 rounded-lg p-6 text-center transition-colors cursor-pointer select-none'
   const dropActive = isDraggingFile ? 'border-violet-500 bg-violet-50/50' : 'hover:border-gray-400 bg-gray-50/40'
 
-  const labelDisabledClass = inputDisabled ? 'cursor-not-allowed opacity-60 pointer-events-none' : ''
+  const dropZoneDisabledClass = inputDisabled ? 'cursor-not-allowed opacity-60 pointer-events-none' : ''
+
+  const openFilePicker = useCallback(() => {
+    if (inputDisabled) return
+    fileInputRef.current?.click()
+  }, [inputDisabled])
+
+  const onDropZoneKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      openFilePicker()
+    }
+  }
 
   return (
     <div
@@ -275,6 +288,7 @@ export function ImageUploader({
       {guide ? <div className="mb-3 text-xs leading-relaxed text-gray-600">{guide}</div> : null}
 
       <input
+        ref={fileInputRef}
         id={fileInputId}
         type="file"
         accept={AUDITION_IMAGE_ACCEPT_ATTR}
@@ -286,9 +300,14 @@ export function ImageUploader({
       />
 
       {!multiple && (
-        <label
-          htmlFor={fileInputId}
-          className={`${dropZoneClass} ${dropActive} mb-4 block w-full max-w-md ${labelDisabledClass}`}
+        <div
+          role="button"
+          tabIndex={inputDisabled ? -1 : 0}
+          aria-disabled={inputDisabled}
+          aria-label="이미지 업로드: 드래그하여 놓거나 클릭하여 파일 선택"
+          className={`${dropZoneClass} ${dropActive} mb-4 w-full max-w-md ${dropZoneDisabledClass}`}
+          onClick={openFilePicker}
+          onKeyDown={onDropZoneKeyDown}
           onDragEnter={(e) => {
             e.preventDefault()
             if (!inputDisabled) setIsDraggingFile(true)
@@ -325,7 +344,7 @@ export function ImageUploader({
             )}
           </div>
           <p className="text-sm text-gray-600">JPG · PNG · WebP, 최대 5MB</p>
-        </label>
+        </div>
       )}
 
       {uploadBusy ? (
@@ -335,9 +354,14 @@ export function ImageUploader({
       ) : null}
 
       {multiple && value.length === 0 && (
-        <label
-          htmlFor={fileInputId}
-          className={`${dropZoneClass} ${dropActive} mb-4 block w-full ${labelDisabledClass}`}
+        <div
+          role="button"
+          tabIndex={inputDisabled ? -1 : 0}
+          aria-disabled={inputDisabled}
+          aria-label="갤러리 이미지 업로드: 드래그하여 놓거나 클릭하여 파일 선택"
+          className={`${dropZoneClass} ${dropActive} mb-4 w-full ${dropZoneDisabledClass}`}
+          onClick={openFilePicker}
+          onKeyDown={onDropZoneKeyDown}
           onDragEnter={(e) => {
             e.preventDefault()
             if (!inputDisabled) setIsDraggingFile(true)
@@ -360,7 +384,7 @@ export function ImageUploader({
             )}
           </div>
           <p className="text-sm text-gray-600">JPG · PNG · WebP, 각 최대 5MB · 최대 {resolvedMax}장</p>
-        </label>
+        </div>
       )}
 
       {multiple && value.length > 0 ? (
@@ -382,9 +406,13 @@ export function ImageUploader({
               {uploadBusy ? '업로드 중…' : `최대 ${resolvedMax}장까지 등록됨`}
             </span>
           ) : (
-            <label htmlFor={fileInputId} className="cursor-pointer text-sm font-medium text-violet-700 underline">
+            <button
+              type="button"
+              className="cursor-pointer border-0 bg-transparent p-0 text-sm font-medium text-violet-700 underline"
+              onClick={openFilePicker}
+            >
               {uploadBusy ? '업로드 중…' : '이미지 더 추가 (클릭 또는 드래그)'}
-            </label>
+            </button>
           )}
           <p className="mt-2 text-xs text-gray-500">순서: 좌하단 ⋮⋮ 핸들을 드래그 · 우상단 × 삭제</p>
         </div>
@@ -416,9 +444,13 @@ export function ImageUploader({
           {inputDisabled ? (
             <span className="text-sm font-medium text-gray-400">이미지 변경</span>
           ) : (
-            <label htmlFor={fileInputId} className="cursor-pointer text-sm font-medium text-violet-700 underline">
+            <button
+              type="button"
+              className="cursor-pointer border-0 bg-transparent p-0 text-sm font-medium text-violet-700 underline"
+              onClick={openFilePicker}
+            >
               이미지 변경
-            </label>
+            </button>
           )}
           <button
             type="button"
