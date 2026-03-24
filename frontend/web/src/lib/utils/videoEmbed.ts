@@ -18,10 +18,9 @@ function buildYoutubeEmbedPath(id: string, options?: VideoEmbedOptions): string 
   url = appendQueryParam(url, 'modestbranding', '1')
   url = appendQueryParam(url, 'rel', '0')
   if (options?.autoplay) {
-    // iOS/Safari: autoplay는 대개 mute + playsinline 과 함께여야 동작
+    // 모달은 사용자 클릭 직후 로드 → 음성 포함 자동재생이 허용되는 경우가 많음 (브라우저 정책에 따라 재생만 되고 소리는 막힐 수 있음)
     url = appendQueryParam(url, 'autoplay', '1')
     url = appendQueryParam(url, 'playsinline', '1')
-    url = appendQueryParam(url, 'mute', '1')
   }
   return url
 }
@@ -44,23 +43,7 @@ export function isYoutubeShortsLikeUrl(url: string): boolean {
 export function getVideoEmbedSrc(url: string, options?: VideoEmbedOptions): string | null {
   const u = (url ?? '').trim()
   if (!u) return null
-  try {
-    const parsed = new URL(u)
-    const host = parsed.hostname.replace(/^www\./, '')
-    if (host === 'youtu.be') {
-      const id = parsed.pathname.replace(/^\//, '')
-      return buildYoutubeEmbedPath(id, options)
-    }
-    if (host.includes('youtube.com')) {
-      const v = parsed.searchParams.get('v')
-      if (v) return buildYoutubeEmbedPath(v, options)
-      const m = parsed.pathname.match(/\/embed\/([^/?]+)/)
-      if (m) return buildYoutubeEmbedPath(m[1], options)
-      const shorts = parsed.pathname.match(/\/shorts\/([^/?]+)/)
-      if (shorts?.[1]) return buildYoutubeEmbedPath(shorts[1], options)
-    }
-  } catch {
-    return null
-  }
-  return null
+  const id = extractYoutubeVideoId(u)
+  if (!id) return null
+  return buildYoutubeEmbedPath(id, options)
 }
