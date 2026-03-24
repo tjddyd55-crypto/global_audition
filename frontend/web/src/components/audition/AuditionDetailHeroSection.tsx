@@ -47,7 +47,7 @@ function statusBadgeCopy(status: string): string {
 }
 
 /**
- * 모바일: h-[50vh] cover 히어로 + 어두운 오버레이 + 하단 텍스트/CTA.
+ * 모바일: contain 대표 이미지(bg-black) + 하단 그라데이션 위 텍스트/CTA.
  * PC(lg+): 좌측 cover 포스터 + 우측 정보, 블러 배경.
  */
 export function AuditionDetailHeroSection({
@@ -92,20 +92,25 @@ export function AuditionDetailHeroSection({
 
   return (
     <section className="relative w-full overflow-hidden">
-      {/* ——— 모바일 · cover 히어로 + 오버레이 UI ——— */}
+      {/* ——— 모바일 · contain 히어로(잘림 없음) + 하단 오버레이 UI ——— */}
       <div className="lg:hidden w-full">
-        <div className="relative h-[50vh] w-full overflow-hidden">
+        <div className="relative w-full bg-black">
           {cover ? (
             <AuditionDetailHeroImage src={cover} />
           ) : (
             <div
-              className="absolute inset-0"
+              className="flex min-h-[min(40vh,280px)] w-full items-center justify-center"
               style={{
                 background: `linear-gradient(135deg, ${HERO.gradientStart}, ${HERO.gradientEnd})`,
               }}
-            />
+            >
+              <span className="text-sm font-medium text-white/90">대표 이미지 없음</span>
+            </div>
           )}
-          <div className="pointer-events-none absolute inset-0 bg-black/40" aria-hidden />
+          <div
+            className="pointer-events-none absolute inset-x-0 bottom-0 top-1/3 bg-gradient-to-t from-black/80 via-black/35 to-transparent"
+            aria-hidden
+          />
           <div className="absolute bottom-4 left-4 right-4 z-[1] text-white">
             <span
               className={`mb-2 inline-block rounded-full px-3 py-1 text-xs font-semibold ${
