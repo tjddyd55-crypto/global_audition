@@ -1,8 +1,11 @@
 'use client'
 
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { GalleryModal } from '@/components/gallery/GalleryModal'
 import { applyGalleryImageOnError } from '@/components/gallery/galleryFallback'
+
+/** `gap-2` (0.5rem) — 스크롤 스텝 계산용 */
+const SLIDER_GAP_PX = 8
 
 export type AuditionGalleryProps = {
   /** 상세 페이지: 대표 이미지를 제외한 갤러리 URL만 (히어로와 중복 금지) */
@@ -25,11 +28,24 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
   const allImages = useMemo(() => normalizeGalleryUrls(images), [images])
   const [modalIndex, setModalIndex] = useState(0)
   const [isOpen, setIsOpen] = useState(false)
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const containerRef = useRef<HTMLDivElement | null>(null)
 
   const openAt = useCallback((index: number) => {
     setModalIndex(index)
     setIsOpen(true)
   }, [])
+
+  const handleScroll = useCallback(() => {
+    const el = containerRef.current
+    if (!el || allImages.length === 0) return
+
+    const width = el.clientWidth
+    const step = width * 0.85 + SLIDER_GAP_PX
+    const index = Math.round(el.scrollLeft / step)
+    const clamped = Math.max(0, Math.min(index, allImages.length - 1))
+    setCurrentIndex(clamped)
+  }, [allImages.length])
 
   if (allImages.length === 0) {
     return <p className="m-0 py-2 text-center text-sm text-gray-500">등록된 추가 이미지가 없습니다.</p>
@@ -38,6 +54,8 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
   return (
     <div className="w-full">
       <div
+        ref={containerRef}
+        onScroll={handleScroll}
         className="scrollbar-hide flex w-full snap-x snap-mandatory gap-2 overflow-x-auto px-4"
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
@@ -61,6 +79,23 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
           </button>
         ))}
       </div>
+
+      {allImages.length > 1 ? (
+        <nav
+          className="mt-2 flex justify-center gap-2 rounded-lg bg-black/85 py-2.5"
+          aria-label="추가 이미지 위치"
+        >
+          {allImages.map((_, i) => (
+            <div
+              key={i}
+              className={`h-2 rounded-full transition-all ${
+                i === currentIndex ? 'w-4 bg-white' : 'w-2 bg-white/40'
+              }`}
+              aria-current={i === currentIndex ? 'step' : undefined}
+            />
+          ))}
+        </nav>
+      ) : null}
 
       {isOpen && (
         <GalleryModal
