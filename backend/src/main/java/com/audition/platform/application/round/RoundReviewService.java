@@ -23,6 +23,33 @@ import java.util.UUID;
 @Service
 public class RoundReviewService {
 
+    /**
+     * 제출 상태 기준 심사 전이 규칙.
+     * <ul>
+     *   <li>NOT_SUBMITTED / SUBMITTED / UNDER_REVIEW → PASSED, FAILED, UNDER_REVIEW(보류) 허용</li>
+     *   <li>PASSED / FAILED / SKIPPED → 재심사 불가</li>
+     * </ul>
+     */
+    public static void validateStatusTransition(String fromStatus, String toStatus) {
+        if ("PASSED".equals(fromStatus) || "FAILED".equals(fromStatus)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 처리된 지원자입니다.");
+        }
+        if ("SKIPPED".equals(fromStatus)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "건너뛴 라운드는 심사할 수 없습니다.");
+        }
+        if (!isPendingForReview(fromStatus)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "심사 전이할 수 없는 제출 상태입니다: " + fromStatus);
+        }
+        if (!"PASSED".equals(toStatus) && !"FAILED".equals(toStatus) && !"UNDER_REVIEW".equals(toStatus)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "유효하지 않은 심사 결과입니다.");
+        }
+    }
+
+    private static boolean isPendingForReview(String s) {
+        return "NOT_SUBMITTED".equals(s) || "SUBMITTED".equals(s) || "UNDER_REVIEW".equals(s);
+    }
+
     private final ApplicationRepository applicationRepository;
     private final AuditionRepository auditionRepository;
     private final AuditionRoundRepository roundRepository;
@@ -85,6 +112,10 @@ public class RoundReviewService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 라운드 제출이 없습니다."));
 
         String prev = sub.getSubmissionStatus();
+        if ("PASSED".equals(prev) || "FAILED".equals(prev)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 처리된 지원자입니다.");
+        }
+        validateStatusTransition(prev, nextSubmissionStatus);
         UUID actor = SecurityUtils.getCurrentUserId();
         Instant now = Instant.now();
 

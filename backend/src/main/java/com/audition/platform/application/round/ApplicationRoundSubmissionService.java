@@ -1,21 +1,26 @@
 package com.audition.platform.application.round;
 
+import com.audition.platform.api.dto.me.MeRoundSubmitRequest;
 import com.audition.platform.domain.audition.Application;
 import com.audition.platform.domain.audition.ApplicationRepository;
 import com.audition.platform.domain.audition.ApplicationRoundSubmission;
 import com.audition.platform.domain.audition.ApplicationRoundSubmissionRepository;
 import com.audition.platform.domain.audition.Audition;
+import com.audition.platform.domain.audition.AuditionRepository;
 import com.audition.platform.domain.audition.AuditionRound;
 import com.audition.platform.domain.audition.AuditionRoundRepository;
+import com.audition.platform.domain.util.YoutubeUrls;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
- * MULTI_ROUND 지원 시 1차 제출 행 자동 생성 등 — SINGLE 은 비워 둠.
+ * MULTI_ROUND 지원 시 1차 제출 행 자동 생성 및 라운드 제출 처리 — SINGLE 은 이 서비스의 submit 경로 미사용.
  */
 @Service
 public class ApplicationRoundSubmissionService {
@@ -23,14 +28,20 @@ public class ApplicationRoundSubmissionService {
     private final ApplicationRoundSubmissionRepository submissionRepository;
     private final AuditionRoundRepository roundRepository;
     private final ApplicationRepository applicationRepository;
+    private final AuditionRepository auditionRepository;
+    private final RoundEligibilityService roundEligibilityService;
 
     public ApplicationRoundSubmissionService(
             ApplicationRoundSubmissionRepository submissionRepository,
             AuditionRoundRepository roundRepository,
-            ApplicationRepository applicationRepository) {
+            ApplicationRepository applicationRepository,
+            AuditionRepository auditionRepository,
+            RoundEligibilityService roundEligibilityService) {
         this.submissionRepository = submissionRepository;
         this.roundRepository = roundRepository;
         this.applicationRepository = applicationRepository;
+        this.auditionRepository = auditionRepository;
+        this.roundEligibilityService = roundEligibilityService;
     }
 
     @Transactional
@@ -72,5 +83,122 @@ public class ApplicationRoundSubmissionService {
                     s.setVoteCount(0);
                     return submissionRepository.save(s);
                 });
+    }
+
+    /**
+     * 지원자 본인의 라운드 제출 — 선행 {@link RoundEligibilityService#evaluate} 통과 필수.
+     */
+    @Transactional
+    public ApplicationRoundSubmission submitForApplicant(
+            UUID applicationId, UUID applicantId, UUID roundId, MeRoundSubmitRequest req) {
+        Application app = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 지원서를 찾을 수 없습니다."));
+        if (!app.getApplicantId().equals(applicantId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 지원서를 찾을 수 없습니다.");
+        }
+        Audition audition = auditionRepository.findById(app.getAuditionId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "오디션을 찾을 수 없습니다."));
+        if (!AuditionProcessModes.isMultiRound(audition.getProcessMode())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "단일(SINGLE) 오디션은 이 API를 사용할 수 없습니다.");
+        }
+        AuditionRound round = roundRepository.findById(roundId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "라운드를 찾을 수 없습니다."));
+        if (!round.getAuditionId().equals(audition.getId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "오디션과 라운드가 일치하지 않습니다.");
+        }
+        assertRoundAcceptingSubmissions(round);
+
+        RoundEligibilityService.EligibilityDetail eligibility =
+                roundEligibilityService.evaluate(app, audition, round);
+        if (!eligibility.effectiveCanSubmit()) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    eligibility.reasonCode() != null ? eligibility.reasonCode() : "SUBMIT_NOT_ALLOWED");
+        }
+
+        // 라운드 비활성·심사 시작은 eligibility 이후에도 바뀔 수 있으므로 DB 최신 값으로 재검증
+        AuditionRound roundFresh = roundRepository.findById(roundId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "라운드를 찾을 수 없습니다."));
+        assertRoundAcceptingSubmissions(roundFresh);
+        ApplicationRoundSubmission sub = submissionRepository
+                .findByApplicationIdAndRoundId(applicationId, roundId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.INTERNAL_SERVER_ERROR, "제출 레코드가 없습니다. 관리자에게 문의하세요."));
+        if ("UNDER_REVIEW".equals(sub.getSubmissionStatus())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "UNDER_REVIEW_LOCKED");
+        }
+
+        assertPayloadMatchesRound(roundFresh, req);
+        applyRequestToSubmission(sub, req);
+        sub.setSubmissionStatus("SUBMITTED");
+        sub.setSubmittedAt(Instant.now());
+        sub = submissionRepository.save(sub);
+
+        app.setLatestRoundSubmissionId(sub.getId());
+        app.setUpdatedAt(Instant.now());
+        applicationRepository.save(app);
+        return sub;
+    }
+
+    /** eligibility 의 ROUND_NOT_ACTIVE 와 동일 조건 — 컨트롤러가 아닌 서비스에서만 호출 */
+    private static void assertRoundAcceptingSubmissions(AuditionRound round) {
+        if (!round.isActive()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, ReasonCode.ROUND_NOT_ACTIVE.name());
+        }
+    }
+
+    private static void applyRequestToSubmission(ApplicationRoundSubmission sub, MeRoundSubmitRequest req) {
+        if (req.getVideoUrl() != null) {
+            sub.setVideoUrl(blankToNull(req.getVideoUrl().trim()));
+        }
+        if (req.getFileUrl() != null) {
+            sub.setFileUrl(blankToNull(req.getFileUrl().trim()));
+        }
+        if (req.getTextAnswer() != null) {
+            sub.setTextAnswer(blankToNull(req.getTextAnswer().trim()));
+        }
+    }
+
+    private static String blankToNull(String s) {
+        return s == null || s.isEmpty() ? null : s;
+    }
+
+    private void assertPayloadMatchesRound(AuditionRound round, MeRoundSubmitRequest req) {
+        String v = req.getVideoUrl() != null ? req.getVideoUrl().trim() : "";
+        String f = req.getFileUrl() != null ? req.getFileUrl().trim() : "";
+        String t = req.getTextAnswer() != null ? req.getTextAnswer().trim() : "";
+        String type = round.getRequiredSubmissionType();
+        if ("VIDEO".equals(type)) {
+            if (v.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "영상 링크(videoUrl)가 필요합니다.");
+            }
+            if (!YoutubeUrls.isBlankOrValidYoutube(v)) {
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "영상 링크는 YouTube URL만 입력할 수 있습니다.");
+            }
+            return;
+        }
+        if ("FILE".equals(type)) {
+            if (f.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "파일 URL(fileUrl)이 필요합니다.");
+            }
+            return;
+        }
+        if ("TEXT".equals(type)) {
+            if (t.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "텍스트 답변이 필요합니다.");
+            }
+            return;
+        }
+        if ("MIXED".equals(type)) {
+            if (v.isEmpty() && f.isEmpty() && t.isEmpty()) {
+                throw new ResponseStatusException(
+                        HttpStatus.UNPROCESSABLE_ENTITY, "제출물 중 최소 한 항목(videoUrl, fileUrl, textAnswer)이 필요합니다.");
+            }
+            if (!v.isEmpty() && !YoutubeUrls.isBlankOrValidYoutube(v)) {
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "영상 링크는 YouTube URL만 입력할 수 있습니다.");
+            }
+            return;
+        }
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "알 수 없는 제출 유형입니다: " + type);
     }
 }

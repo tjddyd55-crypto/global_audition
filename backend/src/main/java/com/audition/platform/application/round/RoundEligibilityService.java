@@ -9,9 +9,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
+import java.util.UUID;
 
 /**
- * 특정 라운드 제출 가능 여부 — 이후 사용자 API·프론트 버튼과 공통 사용.
+ * 특정 라운드 제출 가능 여부 — 사용자 API·프론트 버튼·제출 서비스 공통.
  */
 @Service
 public class RoundEligibilityService {
@@ -22,48 +23,81 @@ public class RoundEligibilityService {
         this.submissionRepository = submissionRepository;
     }
 
-    public record Eligibility(boolean eligible, String reasonCode, boolean canSubmit) {
+    /**
+     * @param reasonCode {@link ReasonCode#name()}, 성공 시 {@link ReasonCode#OK}
+     * @param submissionStatus 현재 라운드 제출 상태 (행 없으면 null)
+     */
+    public record EligibilityDetail(
+            boolean eligible,
+            String reasonCode,
+            boolean canSubmit,
+            String submissionStatus) {
+
+        public boolean effectiveCanSubmit() {
+            return eligible && canSubmit;
+        }
+
+        public static EligibilityDetail ok(boolean canSubmit, String submissionStatus) {
+            return new EligibilityDetail(true, ReasonCode.OK.name(), canSubmit, submissionStatus);
+        }
     }
 
     @Transactional(readOnly = true)
-    public Eligibility evaluate(Application application, Audition audition, AuditionRound targetRound) {
+    public EligibilityDetail evaluate(Application application, Audition audition, AuditionRound targetRound) {
+        if (!targetRound.getAuditionId().equals(application.getAuditionId())) {
+            return reject(ReasonCode.AUDITION_ROUND_MISMATCH, null);
+        }
         if (!AuditionProcessModes.isMultiRound(audition.getProcessMode())) {
-            return new Eligibility(false, "NOT_MULTI_ROUND", false);
+            return reject(ReasonCode.NOT_MULTI_ROUND, null);
         }
         if (!"OPEN".equals(audition.getStatus())) {
-            return new Eligibility(false, "AUDITION_NOT_OPEN", false);
+            return reject(ReasonCode.AUDITION_NOT_OPEN, null);
         }
         if (!targetRound.isActive()) {
-            return new Eligibility(false, "ROUND_NOT_ACTIVE", false);
+            return reject(ReasonCode.ROUND_NOT_ACTIVE, snapshotStatus(application.getId(), targetRound.getId()));
         }
         if (application.getFinalStatus() != null
                 && (application.getFinalStatus().equals("ELIMINATED")
                         || application.getFinalStatus().equals("FINAL_PASSED")
                         || application.getFinalStatus().equals("FINAL_FAILED"))) {
-            return new Eligibility(false, "APPLICATION_CLOSED", false);
+            return reject(ReasonCode.APPLICATION_CLOSED, null);
         }
         int n = targetRound.getRoundNumber();
         if (application.getCurrentRoundNumber() != n) {
-            return new Eligibility(false, "WRONG_CURRENT_ROUND", false);
+            return reject(ReasonCode.WRONG_CURRENT_ROUND, snapshotStatus(application.getId(), targetRound.getId()));
         }
         if (n > 1 && !previousRoundPassed(application, n)) {
-            return new Eligibility(false, "PREVIOUS_ROUND_NOT_PASSED", false);
+            return reject(ReasonCode.PREVIOUS_ROUND_NOT_PASSED, snapshotStatus(application.getId(), targetRound.getId()));
         }
         Optional<ApplicationRoundSubmission> subOpt =
                 submissionRepository.findByApplicationIdAndRoundId(application.getId(), targetRound.getId());
         if (subOpt.isEmpty()) {
-            return new Eligibility(false, "NO_SUBMISSION_ROW", false);
+            return reject(ReasonCode.NO_SUBMISSION_ROW, null);
         }
         ApplicationRoundSubmission sub = subOpt.get();
         String st = sub.getSubmissionStatus();
         if ("FAILED".equals(st) || "SKIPPED".equals(st)) {
-            return new Eligibility(false, "SUBMISSION_CLOSED", false);
+            return reject(ReasonCode.SUBMISSION_CLOSED, st);
         }
         if ("PASSED".equals(st)) {
-            return new Eligibility(false, "ROUND_ALREADY_DECIDED", false);
+            return reject(ReasonCode.ROUND_ALREADY_DECIDED, st);
         }
-        boolean canSubmit = "NOT_SUBMITTED".equals(st);
-        return new Eligibility(true, "OK", canSubmit);
+        if ("UNDER_REVIEW".equals(st)) {
+            return reject(ReasonCode.UNDER_REVIEW_LOCKED, st);
+        }
+        boolean canSubmit = "NOT_SUBMITTED".equals(st) || "SUBMITTED".equals(st);
+        return EligibilityDetail.ok(canSubmit, st);
+    }
+
+    private String snapshotStatus(UUID applicationId, UUID roundId) {
+        return submissionRepository
+                .findByApplicationIdAndRoundId(applicationId, roundId)
+                .map(ApplicationRoundSubmission::getSubmissionStatus)
+                .orElse(null);
+    }
+
+    private static EligibilityDetail reject(ReasonCode code, String submissionStatus) {
+        return new EligibilityDetail(false, code.name(), false, submissionStatus);
     }
 
     private boolean previousRoundPassed(Application application, int targetRoundNumber) {

@@ -2,6 +2,7 @@ package com.audition.platform.api;
 
 import com.audition.platform.api.dto.ApiEnvelope;
 import com.audition.platform.api.dto.me.*;
+import com.audition.platform.application.me.MeApplicationRoundService;
 import com.audition.platform.application.me.MeApplicationService;
 import com.audition.platform.application.me.MeDashboardService;
 import com.audition.platform.application.me.MeProfileService;
@@ -23,17 +24,20 @@ public class MeController {
     private final MeApplicationService meApplicationService;
     private final MyChannelService myChannelService;
     private final MeVaultService meVaultService;
+    private final MeApplicationRoundService meApplicationRoundService;
 
     public MeController(MeProfileService meProfileService,
                         MeDashboardService meDashboardService,
                         MeApplicationService meApplicationService,
                         MyChannelService myChannelService,
-                        MeVaultService meVaultService) {
+                        MeVaultService meVaultService,
+                        MeApplicationRoundService meApplicationRoundService) {
         this.meProfileService = meProfileService;
         this.meDashboardService = meDashboardService;
         this.meApplicationService = meApplicationService;
         this.myChannelService = myChannelService;
         this.meVaultService = meVaultService;
+        this.meApplicationRoundService = meApplicationRoundService;
     }
 
     @GetMapping("/profile")
@@ -59,6 +63,21 @@ public class MeController {
     @GetMapping("/applications/{applicationId}")
     public ApiEnvelope<MyApplicationDetailDto> applicationDetail(@PathVariable UUID applicationId) {
         return ApiEnvelope.ok(meApplicationService.getApplication(applicationId));
+    }
+
+    @GetMapping("/applications/{applicationId}/rounds/{roundId}/eligibility")
+    public ApiEnvelope<MeRoundEligibilityDto> roundEligibility(
+            @PathVariable UUID applicationId,
+            @PathVariable UUID roundId) {
+        return ApiEnvelope.ok(meApplicationRoundService.getEligibility(applicationId, roundId));
+    }
+
+    @PostMapping("/applications/{applicationId}/rounds/{roundId}/submit")
+    public ApiEnvelope<MeRoundSubmitResponseDto> roundSubmit(
+            @PathVariable UUID applicationId,
+            @PathVariable UUID roundId,
+            @Valid @RequestBody MeRoundSubmitRequest req) {
+        return ApiEnvelope.ok(meApplicationRoundService.submit(applicationId, roundId, req));
     }
 
     @PostMapping("/applications/{applicationId}/videos")

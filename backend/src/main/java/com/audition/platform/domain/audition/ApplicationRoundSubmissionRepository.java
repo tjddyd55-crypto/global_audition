@@ -28,7 +28,8 @@ public interface ApplicationRoundSubmissionRepository extends JpaRepository<Appl
     long countByRoundIdAndSubmissionStatus(UUID roundId, String submissionStatus);
 
     /**
-     * 라운드 단위 공개 투표 — submission.vote_count 원자 조정.
+     * 라운드 단위 공개 투표 캐시 — {@link com.audition.platform.application.round.PublicVoteRoundService} 에서만 호출.
+     * TODO: vote_count 정합성 검증 batch job 필요 (votes 집계와 대조).
      */
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(value = "UPDATE application_round_submissions SET vote_count = vote_count + :delta "

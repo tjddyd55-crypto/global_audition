@@ -19,8 +19,10 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * 공개 투표 라운드 — votes.application_round_submission_id 를 진실 원천으로 사용.
+ * 공개 투표 라운드 — votes 가 진실 원천, submission.vote_count 는 캐시.
  * round_id IS NULL 인 레거시 흐름은 {@link com.audition.platform.application.vote.PublicVoteService} 유지.
+ *
+ * <p>TODO: vote_count 정합성 검증 batch job 필요 (votes 집계와 submission.vote_count 대조).
  */
 @Service
 public class PublicVoteRoundService {
@@ -101,18 +103,19 @@ public class PublicVoteRoundService {
             voteRepository.delete(pv);
         }
 
-        int inc = submissionRepository.adjustVoteCount(applicationRoundSubmissionId, 1);
-        if (inc != 1) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "투표 반영에 실패했습니다.");
-        }
-
         Vote row = new Vote();
         row.setAuditionId(audition.getId());
         row.setApplicationId(sub.getApplicationId());
         row.setUserId(voterId);
         row.setRoundId(roundId);
         row.setApplicationRoundSubmissionId(applicationRoundSubmissionId);
-        return voteRepository.save(row);
+        voteRepository.save(row);
+
+        int inc = submissionRepository.adjustVoteCount(applicationRoundSubmissionId, 1);
+        if (inc != 1) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "투표 반영에 실패했습니다.");
+        }
+        return row;
     }
 
     @Transactional(readOnly = true)
