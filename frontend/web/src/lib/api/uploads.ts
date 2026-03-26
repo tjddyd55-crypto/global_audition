@@ -43,6 +43,8 @@ async function postAuditionImage(file: File, dir: AuditionUploadDir): Promise<Im
     const { data } = await apiClient.post<ImageUploadApiResponse>('/uploads/image', formData, {
       params: { dir },
       timeout: UPLOAD_TIMEOUT_MS,
+      // 동일 Origin + rewrite여도 스펙 명시: 세션/쿠키 기반 연계·크로스 오리진 대비
+      withCredentials: true,
     })
     const url = data?.url != null ? String(data.url).trim() : ''
     if (!url) {

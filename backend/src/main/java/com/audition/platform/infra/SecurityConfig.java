@@ -54,8 +54,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/credits/public/policies/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/auditions", "/api/auditions/*").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/auditions/*/votes").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/uploads/**")
-                    .hasAnyRole("AGENCY", "ADMIN")
+                // 이미지 업로드: 로그인(JWT)만 필수. 역할 제한 시 지원자 등 정상 세션에서 403 발생함.
+                .requestMatchers(HttpMethod.POST, "/api/uploads/**").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/applications").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/applications/*/public").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/comments").permitAll()

@@ -11,6 +11,7 @@ export const apiClient = axios.create({
     'Content-Type': 'application/json',
   },
   timeout: 30000,
+  /** 세션 쿠키·크로스 오리진 시 자격 증명 전송. 업로드 등은 요청별로도 `withCredentials: true` 명시 가능. */
   withCredentials: true,
 })
 
