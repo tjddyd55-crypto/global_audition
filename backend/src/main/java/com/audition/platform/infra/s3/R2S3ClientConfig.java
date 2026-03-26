@@ -18,8 +18,8 @@ import java.net.URI;
  * Cloudflare R2 (S3 호환 API). <strong>백엔드에서만</strong> 사용 — 브라우저는 R2와 통신하지 않으므로
  * R2 버킷 CORS는 업로드 경로상 필요하지 않다.
  * <p>
- * 필수: {@code app.r2.endpoint}, bucket, access-key, secret-key. 키는 {@code R2_*} 우선,
- * 비어 있으면 {@code AWS_ACCESS_KEY_ID}/{@code AWS_SECRET_ACCESS_KEY} 로 폴백한다.
+ * 필수: {@code app.r2.endpoint}, bucket, access-key, secret-key.
+ * 운영 호환: {@code R2_*} 우선, 비어 있으면 {@code AWS_*}/{@code AWS_S3_*} 로 폴백한다.
  * 미충족 시 빈 미등록(null 반환).
  */
 @Configuration
@@ -36,11 +36,11 @@ public class R2S3ClientConfig {
             @Value("${app.r2.region:auto}") String region
     ) {
         if (!StringUtils.hasText(endpoint)) {
-            log.warn("r2S3Client 미등록: app.r2.endpoint(R2_ENDPOINT) 비어 있음");
+            log.warn("r2S3Client 미등록: app.r2.endpoint(R2_ENDPOINT 또는 AWS_S3_ENDPOINT) 비어 있음");
             return null;
         }
         if (!StringUtils.hasText(bucket)) {
-            log.warn("r2S3Client 미등록: app.r2.bucket(R2_BUCKET) 비어 있음");
+            log.warn("r2S3Client 미등록: app.r2.bucket(R2_BUCKET 또는 AWS_BUCKET) 비어 있음");
             return null;
         }
         if (!StringUtils.hasText(accessKey) || !StringUtils.hasText(secretKey)) {
