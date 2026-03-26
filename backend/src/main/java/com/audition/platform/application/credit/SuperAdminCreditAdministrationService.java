@@ -57,17 +57,24 @@ public class SuperAdminCreditAdministrationService {
             user = userRepository.findByEmail(email)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
         } else {
-            UUID id;
             try {
-                id = UUID.fromString(s);
+                UUID id = UUID.fromString(s);
+                user = userRepository.findById(id)
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
             } catch (IllegalArgumentException e) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "유효한 UUID 또는 이메일을 입력하세요.");
+                user = userRepository.findByNicknameIgnoreCase(s)
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
             }
-            user = userRepository.findById(id)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
         }
         long balance = creditService.getBalance(user.getId());
-        return new UserCreditLookupDto(user.getId().toString(), user.getEmail(), balance);
+        return new UserCreditLookupDto(
+                user.getId().toString(),
+                user.getNickname(),
+                user.getName(),
+                user.getEmail(),
+                balance,
+                user.getAccountStatus(),
+                user.getCreatedAt());
     }
 
     @Transactional
@@ -134,9 +141,25 @@ public class SuperAdminCreditAdministrationService {
                 return cb.conjunction();
             }
             String pattern = "%" + q.trim().toLowerCase(Locale.ROOT) + "%";
-            return cb.like(cb.lower(root.get("email")), pattern);
+            var nameMatch = cb.and(
+                    cb.isNotNull(root.get("name")),
+                    cb.notEqual(root.get("name"), ""),
+                    cb.like(cb.lower(root.get("name")), pattern)
+            );
+            return cb.or(
+                    cb.like(cb.lower(root.get("email")), pattern),
+                    cb.like(cb.lower(root.get("nickname")), pattern),
+                    nameMatch
+            );
         };
         Page<User> users = userRepository.findAll(spec, pageable);
-        return users.map(u -> new UserCreditLookupDto(u.getId().toString(), u.getEmail(), creditService.getBalance(u.getId())));
+        return users.map(u -> new UserCreditLookupDto(
+                u.getId().toString(),
+                u.getNickname(),
+                u.getName(),
+                u.getEmail(),
+                creditService.getBalance(u.getId()),
+                u.getAccountStatus(),
+                u.getCreatedAt()));
     }
 }

@@ -5,6 +5,7 @@ import com.audition.platform.api.dto.AuthResponse;
 import com.audition.platform.api.dto.LoginRequest;
 import com.audition.platform.api.dto.SignupRequest;
 import com.audition.platform.application.me.MeApiMapping;
+import com.audition.platform.application.user.UserNicknameService;
 import com.audition.platform.domain.user.User;
 import com.audition.platform.domain.user.UserRepository;
 import com.audition.platform.infra.JwtService;
@@ -27,13 +28,16 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final UserNicknameService userNicknameService;
 
     public AuthService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
-                       JwtService jwtService) {
+                       JwtService jwtService,
+                       UserNicknameService userNicknameService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.userNicknameService = userNicknameService;
     }
 
     @Transactional
@@ -53,10 +57,13 @@ public class AuthService {
         user.setUpdatedAt(Instant.now());
         String local = extractLocalPart(email);
         user.setUsername(uniqueUsername(local));
-        user.setDisplayName(displayNameFromLocal(local));
+        user.setNickname(userNicknameService.prepareNicknameOrThrow(req.getNickname(), null));
+        if (req.getName() != null && !req.getName().isBlank()) {
+            user.setName(req.getName().trim());
+        }
         user = userRepository.save(user);
         String token = jwtService.createToken(user.getId(), user.getEmail(), user.getRole());
-        return new AuthResponse(token, user.getRole(), user.getId().toString());
+        return authResponse(token, user);
     }
 
     public AuthResponse login(LoginRequest req) {
@@ -66,7 +73,15 @@ public class AuthService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password");
         }
         String token = jwtService.createToken(user.getId(), user.getEmail(), user.getRole());
-        return new AuthResponse(token, user.getRole(), user.getId().toString());
+        return authResponse(token, user);
+    }
+
+    private static AuthResponse authResponse(String token, User user) {
+        AuthResponse res = new AuthResponse(token, user.getRole(), user.getId().toString());
+        res.setEmail(user.getEmail());
+        res.setNickname(user.getNickname());
+        res.setProfileImageUrl(user.getProfileImageUrl());
+        return res;
     }
 
     public AuthMeDataDto meData() {
@@ -80,7 +95,9 @@ public class AuthService {
         d.setId(user.getId().toString());
         d.setEmail(user.getEmail());
         d.setUsername(user.getUsername());
-        d.setDisplayName(user.getDisplayName());
+        d.setNickname(user.getNickname());
+        d.setName(user.getName());
+        d.setDisplayName(user.getPublicDisplayLabel());
         d.setRole(MeApiMapping.userRoleToApi(user.getRole()));
         d.setProfileImageUrl(user.getProfileImageUrl());
         return d;
@@ -103,8 +120,4 @@ public class AuthService {
         return candidate;
     }
 
-    private static String displayNameFromLocal(String localPart) {
-        String s = localPart.replaceAll("[^a-zA-Z0-9가-힣 ._\\-]", "").trim();
-        return s.isEmpty() ? "User" : s;
-    }
 }

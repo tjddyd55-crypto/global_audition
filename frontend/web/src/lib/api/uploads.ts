@@ -3,10 +3,10 @@ import { assertAuditionImageFile } from '@/lib/audition/auditionImageRules'
 import { apiFetch, ApiFetchError } from '@/lib/api/apiFetch'
 
 /**
- * 오디션 에디터 이미지 업로드 전용 `dir` — 백엔드 S3 키 접두사와 1:1
- * - covers → auditions/covers/
- * - gallery → auditions/gallery/
- * - agency_logo → agencies/logos/
+ * 오디션 에디터 이미지 업로드 전용 `dir` — 백엔드가 생성하는 객체 키 접두사와 1:1.
+ * 흐름: 브라우저 → POST `/api/uploads/image` → 서버 → R2(PutObject) → 공개 URL 반환.
+ *
+ * 금지: R2/스토리지에 직접 PUT·POST, presigned URL로의 직접 업로드(현 단계).
  */
 export const AUDITION_UPLOAD_DIRS = ['covers', 'gallery', 'agency_logo'] as const
 export type AuditionUploadDir = (typeof AUDITION_UPLOAD_DIRS)[number]
@@ -28,7 +28,7 @@ function tryParseJson(text: string): unknown {
 
 /**
  * **SSOT**: 모든 이미지 업로드는 이 함수만 사용 (`apiFetch` → Bearer + credentials, FormData boundary 유지).
- * `fetch` 직접 호출 금지.
+ * 백엔드 API 외 경로로 스토리지에 올리지 않는다.
  */
 export async function uploadAuditionImage(file: File, dir: AuditionUploadDir = 'covers'): Promise<string> {
   assertAuditionImageFile(file)
@@ -100,7 +100,7 @@ export function apiUploadErrorMessage(e: unknown): string {
       return body || '업로드 실패: 로그인이 필요합니다. (JWT)'
     }
     if (status === 403) {
-      return body || '업로드 실패: 권한이 없습니다. AGENCY/ADMIN 역할 또는 S3 IAM 정책을 확인하세요.'
+      return body || '업로드 실패: 권한이 없습니다. AGENCY/ADMIN 역할 또는 백엔드·스토리지 설정을 확인하세요.'
     }
     if (status === 503) {
       return body || '이미지 업로드 실패'
@@ -118,7 +118,7 @@ export function apiUploadErrorMessage(e: unknown): string {
       return body || '업로드 실패: 로그인이 필요합니다. (JWT)'
     }
     if (status === 403) {
-      return body || '업로드 실패: 권한이 없습니다. AGENCY/ADMIN 역할 또는 S3 IAM 정책을 확인하세요.'
+      return body || '업로드 실패: 권한이 없습니다. AGENCY/ADMIN 역할 또는 백엔드·스토리지 설정을 확인하세요.'
     }
     if (status === 503) {
       return body || '이미지 업로드 실패'

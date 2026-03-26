@@ -69,7 +69,7 @@ public class AuditionRankingQueryService {
             var m = metricsLoader.resolve(app);
             RankingItemDto dto = new RankingItemDto();
             dto.setApplicationId(app.getId().toString());
-            dto.setUserName(u != null ? u.getDisplayName() : "");
+            dto.setUserName(u != null ? u.getPublicDisplayLabel() : "");
             dto.setCategory(m.category());
             dto.setVoteCount(sc.getVoteCount());
             dto.setViewCount(sc.getTotalViewCount());

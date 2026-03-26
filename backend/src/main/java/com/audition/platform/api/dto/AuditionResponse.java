@@ -1,6 +1,8 @@
 package com.audition.platform.api.dto;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class AuditionResponse {
@@ -40,6 +42,15 @@ public class AuditionResponse {
      * 로그인한 지원자/관리자일 때만 설정. 해당 오디션에 이미 지원했으면 true.
      */
     private Boolean hasApplied;
+
+    /** hasApplied 일 때 본인 지원서 ID (MULTI_ROUND eligibility·제출 경로용). */
+    private String myApplicationId;
+
+    /** 지원자 기준 현재 라운드 번호 — hasApplied 일 때만 설정. */
+    private Integer myCurrentRoundNumber;
+
+    /** MULTI_ROUND 일 때만 비어 있지 않음 (라운드 UUID·번호 목록). */
+    private List<AuditionRoundSummaryDto> roundSummaries = new ArrayList<>();
 
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
@@ -128,5 +139,29 @@ public class AuditionResponse {
 
     public void setHasApplied(Boolean hasApplied) {
         this.hasApplied = hasApplied;
+    }
+
+    public String getMyApplicationId() {
+        return myApplicationId;
+    }
+
+    public void setMyApplicationId(String myApplicationId) {
+        this.myApplicationId = myApplicationId;
+    }
+
+    public Integer getMyCurrentRoundNumber() {
+        return myCurrentRoundNumber;
+    }
+
+    public void setMyCurrentRoundNumber(Integer myCurrentRoundNumber) {
+        this.myCurrentRoundNumber = myCurrentRoundNumber;
+    }
+
+    public List<AuditionRoundSummaryDto> getRoundSummaries() {
+        return roundSummaries;
+    }
+
+    public void setRoundSummaries(List<AuditionRoundSummaryDto> roundSummaries) {
+        this.roundSummaries = roundSummaries != null ? roundSummaries : new ArrayList<>();
     }
 }

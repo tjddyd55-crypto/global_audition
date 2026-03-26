@@ -33,6 +33,14 @@ export type AuditionDto = {
   benefits: string[]
   /** 로그인 지원자/관리자일 때만: 해당 오디션 지원 여부 */
   hasApplied?: boolean
+  /** SINGLE | MULTI_ROUND */
+  processMode?: string
+  /** MULTI_ROUND·지원 완료 시 본인 지원서 ID */
+  myApplicationId?: string | null
+  /** 지원자 현재 라운드 — 지원 완료 시 */
+  myCurrentRoundNumber?: number | null
+  /** MULTI_ROUND 라운드 목록 */
+  roundSummaries?: Array<{ roundId: string; roundNumber: number }>
 }
 
 export type CreateAuditionPayload = {

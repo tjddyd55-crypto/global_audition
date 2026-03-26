@@ -4,18 +4,18 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 /**
- * 업로드 API {@code dir} 쿼리와 S3 객체 키 접두사 매핑.
+ * 업로드 API {@code dir} 쿼리와 객체 키 접두사 매핑(서버에서만 조합).
  * <ul>
- *   <li>{@code covers} → {@code auditions/covers/}</li>
- *   <li>{@code gallery} → {@code auditions/gallery/}</li>
- *   <li>{@code agency_logo} → {@code agencies/logos/}</li>
+ *   <li>{@code covers} → {@code audition/auditions/covers/}</li>
+ *   <li>{@code gallery} → {@code audition/auditions/gallery/}</li>
+ *   <li>{@code agency_logo} → {@code audition/agencies/logos/}</li>
  * </ul>
  */
 public enum ImageUploadDirectory {
 
-    COVERS("auditions/covers/"),
-    GALLERY("auditions/gallery/"),
-    AGENCY_LOGO("agencies/logos/");
+    COVERS("audition/auditions/covers/"),
+    GALLERY("audition/auditions/gallery/"),
+    AGENCY_LOGO("audition/agencies/logos/");
 
     private final String keyPrefix;
 

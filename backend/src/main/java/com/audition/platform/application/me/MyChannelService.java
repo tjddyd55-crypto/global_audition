@@ -51,7 +51,8 @@ public class MyChannelService {
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "사용자를 찾을 수 없습니다."));
             Channel ch = new Channel();
             ch.setOwnerId(ownerId);
-            ch.setName(user.getDisplayName() != null ? user.getDisplayName() : user.getUsername());
+            String publicLabel = user.getPublicDisplayLabel();
+            ch.setName(publicLabel != null && !publicLabel.isBlank() ? publicLabel : user.getUsername());
             ch.setDescription("");
             ch.setCreatedAt(Instant.now());
             ch.setUpdatedAt(Instant.now());

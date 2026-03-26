@@ -8,12 +8,14 @@ import { useQueryClient } from '@tanstack/react-query'
 import { z } from 'zod'
 import { authApi } from '../../../lib/api/auth'
 import { countries, languages, timezones } from '../../../lib/utils/countries'
+import { nicknameZodField } from '../../../lib/user/nicknameZod'
 
 // 지망생 스키마
 const applicantSchema = z.object({
   email: z.string().email('유효한 이메일을 입력해주세요'),
   password: z.string().min(8, '비밀번호는 최소 8자 이상이어야 합니다'),
-  name: z.string().min(2, '이름은 최소 2자 이상이어야 합니다'),
+  nickname: nicknameZodField,
+  name: z.string().max(120).optional().or(z.literal('')),
   userType: z.literal('APPLICANT'),
   country: z.string().length(2, '국가를 선택해주세요'),
   city: z.string().min(1, '도시를 입력해주세요'),
@@ -29,7 +31,8 @@ const applicantSchema = z.object({
 const businessSchema = z.object({
   email: z.string().email('유효한 이메일을 입력해주세요'),
   password: z.string().min(8, '비밀번호는 최소 8자 이상이어야 합니다'),
-  name: z.string().min(2, '이름은 최소 2자 이상이어야 합니다'),
+  nickname: nicknameZodField,
+  name: z.string().max(120).optional().or(z.literal('')),
   userType: z.literal('BUSINESS'),
   businessCountry: z.string().length(2, '국가를 선택해주세요'),
   businessCity: z.string().min(1, '도시를 입력해주세요'),
@@ -183,6 +186,8 @@ export default function RegisterPage() {
         email: submitData.email,
         password: submitData.password,
         role: submitData.userType === 'BUSINESS' ? 'AGENCY' : 'APPLICANT',
+        nickname: submitData.nickname.trim(),
+        name: submitData.name?.trim() ? submitData.name.trim() : undefined,
       })
       if (response.token && response.role) {
         queryClient.invalidateQueries({ queryKey: ['currentUser'] })
@@ -272,14 +277,27 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">이름 *</label>
+            <label className="block text-sm font-medium mb-2">닉네임 *</label>
+            <input
+              type="text"
+              {...register('nickname')}
+              className="w-full px-4 py-2 border rounded-lg"
+              placeholder="화면에 표시될 이름"
+            />
+            {'nickname' in errors && errors.nickname && (
+              <p className="text-red-500 text-sm mt-1">{errors.nickname.message}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">실명 (선택)</label>
             <input
               type="text"
               {...register('name')}
               className="w-full px-4 py-2 border rounded-lg"
-              placeholder="이름"
+              placeholder="관리·결제용"
             />
-            {errors.name && (
+            {'name' in errors && errors.name && (
               <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
             )}
           </div>

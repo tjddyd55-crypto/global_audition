@@ -23,10 +23,15 @@ public class SuperAdminUserAdministrationService {
 
     private final UserRepository userRepository;
     private final AdminAuditLogService adminAuditLogService;
+    private final UserNicknameService userNicknameService;
 
-    public SuperAdminUserAdministrationService(UserRepository userRepository, AdminAuditLogService adminAuditLogService) {
+    public SuperAdminUserAdministrationService(
+            UserRepository userRepository,
+            AdminAuditLogService adminAuditLogService,
+            UserNicknameService userNicknameService) {
         this.userRepository = userRepository;
         this.adminAuditLogService = adminAuditLogService;
+        this.userNicknameService = userNicknameService;
     }
 
     @Transactional
@@ -37,7 +42,8 @@ public class SuperAdminUserAdministrationService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
         }
         boolean any =
-                req.getDisplayName() != null
+                req.getNickname() != null
+                        || req.getName() != null
                         || req.getBio() != null
                         || req.getProfileImageUrl() != null
                         || req.getCountryCode() != null;
@@ -47,8 +53,12 @@ public class SuperAdminUserAdministrationService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
         Map<String, Object> before = userSnapshot(user);
-        if (req.getDisplayName() != null && !req.getDisplayName().isBlank()) {
-            user.setDisplayName(req.getDisplayName().trim());
+        if (req.getNickname() != null && !req.getNickname().isBlank()) {
+            String next = userNicknameService.prepareNicknameOrThrow(req.getNickname(), userId);
+            user.setNickname(next);
+        }
+        if (req.getName() != null) {
+            user.setName(req.getName().trim().isEmpty() ? null : req.getName().trim());
         }
         if (req.getBio() != null) {
             user.setBio(req.getBio().trim().isEmpty() ? null : req.getBio().trim());
@@ -72,7 +82,9 @@ public class SuperAdminUserAdministrationService {
         m.put("id", u.getId().toString());
         m.put("email", u.getEmail());
         m.put("username", u.getUsername());
-        m.put("displayName", u.getDisplayName());
+        m.put("nickname", u.getNickname());
+        m.put("name", u.getName());
+        m.put("displayName", u.getPublicDisplayLabel());
         m.put("bio", u.getBio());
         m.put("profileImageUrl", u.getProfileImageUrl());
         m.put("countryCode", u.getCountryCode());
@@ -85,7 +97,9 @@ public class SuperAdminUserAdministrationService {
         d.setId(u.getId().toString());
         d.setEmail(u.getEmail());
         d.setUsername(u.getUsername());
-        d.setDisplayName(u.getDisplayName());
+        d.setNickname(u.getNickname());
+        d.setName(u.getName());
+        d.setDisplayName(u.getPublicDisplayLabel());
         d.setBio(u.getBio());
         d.setProfileImageUrl(u.getProfileImageUrl());
         d.setCountryCode(u.getCountryCode());

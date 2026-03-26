@@ -4,6 +4,7 @@ import com.audition.platform.api.dto.me.MeRoundEligibilityDto;
 import com.audition.platform.api.dto.me.MeRoundSubmitRequest;
 import com.audition.platform.api.dto.me.MeRoundSubmitResponseDto;
 import com.audition.platform.application.round.ApplicationRoundSubmissionService;
+import com.audition.platform.application.round.ReasonCode;
 import com.audition.platform.application.round.RoundEligibilityService;
 import com.audition.platform.domain.audition.Application;
 import com.audition.platform.domain.audition.ApplicationRepository;
@@ -58,9 +59,9 @@ public class MeApplicationRoundService {
         UUID applicantId = requireApplicant();
         Application app = requireOwnedApplication(applicationId, applicantId);
         Audition audition = auditionRepository.findById(app.getAuditionId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "오디션을 찾을 수 없습니다."));
+                .orElseThrow(() -> ReasonCode.AUDITION_NOT_FOUND.toException());
         AuditionRound round = roundRepository.findById(roundId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "라운드를 찾을 수 없습니다."));
+                .orElseThrow(() -> ReasonCode.ROUND_NOT_FOUND.toException());
         RoundEligibilityService.EligibilityDetail d = roundEligibilityService.evaluate(app, audition, round);
         MeRoundEligibilityDto dto = new MeRoundEligibilityDto();
         dto.setSubmissionStatus(d.submissionStatus());
@@ -82,9 +83,9 @@ public class MeApplicationRoundService {
 
     private Application requireOwnedApplication(UUID applicationId, UUID applicantId) {
         Application app = applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 지원서를 찾을 수 없습니다."));
+                .orElseThrow(() -> ReasonCode.APPLICATION_NOT_FOUND.toException());
         if (!app.getApplicantId().equals(applicantId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 지원서를 찾을 수 없습니다.");
+            throw ReasonCode.APPLICATION_NOT_FOUND.toException();
         }
         return app;
     }

@@ -1,5 +1,13 @@
-# 단위 테스트: CI/로컬에 AWS_BUCKET 미설정 시에도 컨텍스트 로딩 가능하도록 고정값
+# 단위 테스트: R2 플레이스홀더(실 연결 없음). r2S3Client는 엔드포인트 등 비어 있으면 미등록.
 app:
+  r2:
+    endpoint: https://00000000000000000000000000000000.r2.cloudflarestorage.com
+    access-key: test-r2-access
+    secret-key: test-r2-secret
+    bucket: test-placeholder-r2-bucket
+    public-url: https://pub-test-placeholder.r2.dev
+    region: auto
   s3:
+    client-enabled: false
     bucket: test-placeholder-bucket
     region: ap-northeast-2

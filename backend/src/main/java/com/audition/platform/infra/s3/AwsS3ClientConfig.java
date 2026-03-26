@@ -3,6 +3,7 @@ package com.audition.platform.infra.s3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
@@ -16,16 +17,18 @@ import software.amazon.awssdk.services.s3.S3Configuration;
 import java.net.URI;
 
 /**
- * {@code app.s3.bucket}·{@code app.s3.region} 이 유효할 때만 S3 클라이언트 등록.
- * {@code ConditionalOnExpression} 미사용 — Java 조건만 사용.
+ * AWS S3 본연 엔드포인트(또는 호환 스토리지)용 클라이언트.
+ * 이미지는 R2 전용 {@code r2S3Client} 사용 — 영상·대용량 파일 등 향후 업로드에만 켭니다.
+ * {@code app.s3.client-enabled=true} 일 때만 등록됩니다.
  */
 @Configuration
+@ConditionalOnProperty(prefix = "app.s3", name = "client-enabled", havingValue = "true")
 public class AwsS3ClientConfig {
 
     private static final Logger log = LoggerFactory.getLogger(AwsS3ClientConfig.class);
 
-    @Bean
-    public S3Client s3Client(
+    @Bean(name = "awsS3Client")
+    public S3Client awsS3Client(
             @Value("${app.s3.bucket}") String bucket,
             @Value("${app.s3.region}") String region,
             @Value("${app.s3.endpoint:}") String endpoint,
@@ -79,7 +82,7 @@ public class AwsS3ClientConfig {
         }
 
         S3Client client = builder.build();
-        log.info("S3 client created → bucket={}, region={}", b, r);
+        log.info("AWS S3 file client created → bucket={}, region={}", b, r);
         return client;
     }
 }

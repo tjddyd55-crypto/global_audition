@@ -74,18 +74,18 @@ public class PublicVoteRoundService {
         }
         AuditionRound round = loadPublicVoteRound(roundId);
         Audition audition = auditionRepository.findById(round.getAuditionId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "오디션을 찾을 수 없습니다."));
+                .orElseThrow(() -> ReasonCode.AUDITION_NOT_FOUND.toException());
         if (!"OPEN".equals(audition.getStatus())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "모집 중인 오디션에서만 투표할 수 있습니다.");
+            throw ReasonCode.AUDITION_NOT_OPEN.toException();
         }
         ApplicationRoundSubmission sub = submissionRepository
                 .findById(applicationRoundSubmissionId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "제출을 찾을 수 없습니다."));
+                .orElseThrow(() -> ReasonCode.SUBMISSION_NOT_FOUND.toException());
         if (!sub.getRoundId().equals(roundId) || !sub.getAuditionId().equals(audition.getId())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "라운드와 제출이 일치하지 않습니다.");
+            throw ReasonCode.AUDITION_ROUND_MISMATCH.toException();
         }
         if (!VOTEABLE_SUBMISSION.contains(sub.getSubmissionStatus())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "투표 대상이 아닌 제출 상태입니다.");
+            throw ReasonCode.VOTE_SUBMISSION_NOT_VOTEABLE.toException();
         }
 
         Optional<Vote> previous = voteRepository.findByRoundIdAndUserId(roundId, voterId);
@@ -113,7 +113,7 @@ public class PublicVoteRoundService {
 
         int inc = submissionRepository.adjustVoteCount(applicationRoundSubmissionId, 1);
         if (inc != 1) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "투표 반영에 실패했습니다.");
+            throw ReasonCode.VOTE_COUNT_SYNC_ERROR.toException();
         }
         return row;
     }
@@ -125,12 +125,12 @@ public class PublicVoteRoundService {
 
     private AuditionRound loadPublicVoteRound(UUID roundId) {
         AuditionRound round = roundRepository.findById(roundId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "라운드를 찾을 수 없습니다."));
+                .orElseThrow(() -> ReasonCode.ROUND_NOT_FOUND.toException());
         if (!"PUBLIC_VOTE".equals(round.getReviewMethod())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "공개 투표 라운드가 아닙니다.");
+            throw ReasonCode.VOTE_ROUND_NOT_PUBLIC.toException();
         }
         if (!round.isActive()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "활성화되지 않은 라운드입니다.");
+            throw ReasonCode.ROUND_NOT_ACTIVE.toException();
         }
         return round;
     }

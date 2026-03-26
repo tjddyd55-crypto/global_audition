@@ -11,10 +11,8 @@ import com.audition.platform.domain.audition.AuditionRoundRepository;
 import com.audition.platform.domain.audition.AuditionRoundResultLog;
 import com.audition.platform.domain.audition.AuditionRoundResultLogRepository;
 import com.audition.platform.infra.SecurityUtils;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.List;
@@ -32,17 +30,16 @@ public class RoundReviewService {
      */
     public static void validateStatusTransition(String fromStatus, String toStatus) {
         if ("PASSED".equals(fromStatus) || "FAILED".equals(fromStatus)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 처리된 지원자입니다.");
+            throw ReasonCode.REVIEW_SUBMISSION_ALREADY_FINAL.toException();
         }
         if ("SKIPPED".equals(fromStatus)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "건너뛴 라운드는 심사할 수 없습니다.");
+            throw ReasonCode.REVIEW_ROUND_SKIPPED.toException();
         }
         if (!isPendingForReview(fromStatus)) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "심사 전이할 수 없는 제출 상태입니다: " + fromStatus);
+            throw ReasonCode.REVIEW_INVALID_FROM_STATUS.toException();
         }
         if (!"PASSED".equals(toStatus) && !"FAILED".equals(toStatus) && !"UNDER_REVIEW".equals(toStatus)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "유효하지 않은 심사 결과입니다.");
+            throw ReasonCode.REVIEW_INVALID_RESULT_STATUS.toException();
         }
     }
 
@@ -93,28 +90,25 @@ public class RoundReviewService {
     private ApplicationRoundSubmission transition(
             UUID applicationId, UUID roundId, String nextSubmissionStatus, String reason) {
         Application app = applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "지원을 찾을 수 없습니다."));
+                .orElseThrow(() -> ReasonCode.APPLICATION_NOT_FOUND.toException());
         Audition audition = auditionRepository.findById(app.getAuditionId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "오디션을 찾을 수 없습니다."));
+                .orElseThrow(() -> ReasonCode.AUDITION_NOT_FOUND.toException());
         if (!AuditionProcessModes.isMultiRound(audition.getProcessMode())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "다단계 오디션만 라운드 심사를 사용할 수 있습니다.");
+            throw ReasonCode.NOT_MULTI_ROUND.toException();
         }
         AuditionRound round = roundRepository.findById(roundId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "라운드를 찾을 수 없습니다."));
+                .orElseThrow(() -> ReasonCode.ROUND_NOT_FOUND.toException());
         if (!round.getAuditionId().equals(audition.getId())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "오디션·라운드·지원이 일치하지 않습니다.");
+            throw ReasonCode.AUDITION_ROUND_MISMATCH.toException();
         }
         if (app.getCurrentRoundNumber() != round.getRoundNumber()) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "해당 지원자의 현재 라운드와 심사 대상 라운드가 다릅니다.");
+            throw ReasonCode.WRONG_CURRENT_ROUND.toException();
         }
         ApplicationRoundSubmission sub = submissionRepository
                 .findByApplicationIdAndRoundId(applicationId, roundId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 라운드 제출이 없습니다."));
+                .orElseThrow(() -> ReasonCode.SUBMISSION_NOT_FOUND.toException());
 
         String prev = sub.getSubmissionStatus();
-        if ("PASSED".equals(prev) || "FAILED".equals(prev)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 처리된 지원자입니다.");
-        }
         validateStatusTransition(prev, nextSubmissionStatus);
         UUID actor = SecurityUtils.getCurrentUserId();
         Instant now = Instant.now();
@@ -155,8 +149,7 @@ public class RoundReviewService {
             app.setCurrentRoundNumber(nextNum);
             AuditionRound nextRound = roundRepository
                     .findByAuditionIdAndRoundNumber(audition.getId(), nextNum)
-                    .orElseThrow(() -> new ResponseStatusException(
-                            HttpStatus.CONFLICT, "다음 라운드가 아직 생성되지 않았습니다. 라운드를 추가한 뒤 합격 처리하세요."));
+                    .orElseThrow(() -> ReasonCode.NEXT_ROUND_NOT_CREATED.toException());
             ApplicationRoundSubmission nextSub = submissionService.ensureSubmissionForRound(app, nextRound);
             app.setLatestRoundSubmissionId(nextSub.getId());
         }

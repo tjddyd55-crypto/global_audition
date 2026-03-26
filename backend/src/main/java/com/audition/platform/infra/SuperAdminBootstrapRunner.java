@@ -65,7 +65,7 @@ public class SuperAdminBootstrapRunner implements ApplicationListener<Applicatio
                     user.setPasswordHash(passwordEncoder.encode(rawPassword));
                     user.setRole("SUPER_ADMIN");
                     user.setUsername(uniqueUsername("superadmin_bootstrap"));
-                    user.setDisplayName("Super Admin");
+                    user.setNickname("SuperAdmin");
                     user.setUpdatedAt(Instant.now());
                     userRepository.save(user);
                     log.warn(

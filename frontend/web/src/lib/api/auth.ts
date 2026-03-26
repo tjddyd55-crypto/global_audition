@@ -5,6 +5,8 @@ export interface SignupRequest {
   email: string
   password: string
   role: 'APPLICANT' | 'AGENCY'
+  nickname: string
+  name?: string | null
 }
 
 export interface LoginRequest {
@@ -17,13 +19,17 @@ export interface AuthResponse {
   role: string
   userId: string
   email?: string
+  nickname?: string
+  profileImageUrl?: string | null
 }
 
 export interface AuthMeResponse {
   userId: string
   email: string
   role: 'APPLICANT' | 'AGENCY' | 'ADMIN' | 'SUPER_ADMIN' | 'USER'
+  nickname?: string | null
   name?: string | null
+  displayName?: string | null
   profileImageUrl?: string | null
 }
 

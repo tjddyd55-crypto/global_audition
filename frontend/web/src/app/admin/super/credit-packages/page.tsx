@@ -6,23 +6,46 @@ import { AdminCard } from '@/components/admin/AdminCard'
 import { DataTable, type DataTableColumn } from '@/components/admin/DataTable'
 import { superAdminApi, type CreditPackageRow } from '@/lib/api/superAdmin'
 import { LAYOUT } from '@/lib/design-tokens'
+import { formatNumericInput, parseNonNegativeInt } from '@/lib/utils/numberFormat'
 
 type FormState = {
   name: string
-  price: number
-  credits: number
-  bonusCredits: number
+  price: string
+  credits: string
+  bonusCredits: string
   active: boolean
-  sortOrder: number
+  sortOrder: string
 }
 
 const emptyForm: FormState = {
   name: '',
-  price: 0,
-  credits: 0,
-  bonusCredits: 0,
+  price: '0',
+  credits: '0',
+  bonusCredits: '0',
   active: true,
-  sortOrder: 0,
+  sortOrder: '0',
+}
+
+function rowToForm(p: CreditPackageRow): FormState {
+  return {
+    name: p.name,
+    price: formatNumericInput(String(p.price)),
+    credits: formatNumericInput(String(p.credits)),
+    bonusCredits: formatNumericInput(String(p.bonusCredits)),
+    active: p.active,
+    sortOrder: formatNumericInput(String(p.sortOrder ?? 0)),
+  }
+}
+
+function formToPayload(f: FormState) {
+  return {
+    name: f.name,
+    price: parseNonNegativeInt(f.price, 0),
+    credits: parseNonNegativeInt(f.credits, 0),
+    bonusCredits: parseNonNegativeInt(f.bonusCredits, 0),
+    active: f.active,
+    sortOrder: parseNonNegativeInt(f.sortOrder, 0),
+  }
 }
 
 export default function SuperAdminCreditPackagesPage() {
@@ -37,15 +60,7 @@ export default function SuperAdminCreditPackagesPage() {
   const [editForm, setEditForm] = useState<FormState>(emptyForm)
 
   const createMut = useMutation({
-    mutationFn: () =>
-      superAdminApi.createCreditPackage({
-        name: createForm.name,
-        price: createForm.price,
-        credits: createForm.credits,
-        bonusCredits: createForm.bonusCredits,
-        active: createForm.active,
-        sortOrder: createForm.sortOrder,
-      }),
+    mutationFn: () => superAdminApi.createCreditPackage(formToPayload(createForm)),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['superAdmin', 'credit-packages'] })
       setCreateForm(emptyForm)
@@ -54,14 +69,7 @@ export default function SuperAdminCreditPackagesPage() {
 
   const updateMut = useMutation({
     mutationFn: ({ id, body }: { id: string; body: FormState }) =>
-      superAdminApi.updateCreditPackage(id, {
-        name: body.name,
-        price: body.price,
-        credits: body.credits,
-        bonusCredits: body.bonusCredits,
-        active: body.active,
-        sortOrder: body.sortOrder,
-      }),
+      superAdminApi.updateCreditPackage(id, formToPayload(body)),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['superAdmin', 'credit-packages'] })
       setEditingId(null)
@@ -75,24 +83,33 @@ export default function SuperAdminCreditPackagesPage() {
 
   const startEdit = (p: CreditPackageRow) => {
     setEditingId(p.id)
-    setEditForm({
-      name: p.name,
-      price: p.price,
-      credits: p.credits,
-      bonusCredits: p.bonusCredits,
-      active: p.active,
-      sortOrder: p.sortOrder ?? 0,
-    })
+    setEditForm(rowToForm(p))
   }
 
   const fieldStyle = { height: 36, padding: '0 10px', borderRadius: 8, border: '1px solid #ddd', fontSize: 14 } as const
 
   const columns: DataTableColumn<CreditPackageRow>[] = [
-    { id: 'sort', header: 'sort_order', cell: (r) => r.sortOrder ?? 0 },
+    {
+      id: 'sort',
+      header: 'sort_order',
+      cell: (r) => (r.sortOrder ?? 0).toLocaleString('ko-KR'),
+    },
     { id: 'name', header: 'name', cell: (r) => r.name },
-    { id: 'price', header: 'price', cell: (r) => r.price },
-    { id: 'credits', header: 'credits', cell: (r) => r.credits },
-    { id: 'bonus', header: 'bonus_credits', cell: (r) => r.bonusCredits },
+    {
+      id: 'price',
+      header: 'price',
+      cell: (r) => `${Number(r.price).toLocaleString('ko-KR')} 원`,
+    },
+    {
+      id: 'credits',
+      header: 'credits',
+      cell: (r) => `${Number(r.credits).toLocaleString('ko-KR')} 크레딧`,
+    },
+    {
+      id: 'bonus',
+      header: 'bonus_credits',
+      cell: (r) => `${Number(r.bonusCredits).toLocaleString('ko-KR')} 크레딧`,
+    },
     {
       id: 'active',
       header: 'active',
@@ -143,43 +160,56 @@ export default function SuperAdminCreditPackagesPage() {
             />
           </label>
           <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 14 }}>
-            price
-            <input
-              type="number"
-              min={0}
-              style={fieldStyle}
-              value={createForm.price}
-              onChange={(e) => setCreateForm((f) => ({ ...f, price: Number(e.target.value) }))}
-            />
+            price (원)
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <input
+                type="text"
+                inputMode="numeric"
+                autoComplete="off"
+                style={{ ...fieldStyle, flex: 1 }}
+                value={createForm.price}
+                onChange={(e) => setCreateForm((f) => ({ ...f, price: formatNumericInput(e.target.value) }))}
+              />
+              <span style={{ fontSize: 14, color: '#555' }}>원</span>
+            </div>
           </label>
           <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 14 }}>
             credits
-            <input
-              type="number"
-              min={0}
-              style={fieldStyle}
-              value={createForm.credits}
-              onChange={(e) => setCreateForm((f) => ({ ...f, credits: Number(e.target.value) }))}
-            />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <input
+                type="text"
+                inputMode="numeric"
+                autoComplete="off"
+                style={{ ...fieldStyle, flex: 1 }}
+                value={createForm.credits}
+                onChange={(e) => setCreateForm((f) => ({ ...f, credits: formatNumericInput(e.target.value) }))}
+              />
+              <span style={{ fontSize: 14, color: '#555' }}>크레딧</span>
+            </div>
           </label>
           <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 14 }}>
             bonus_credits
-            <input
-              type="number"
-              min={0}
-              style={fieldStyle}
-              value={createForm.bonusCredits}
-              onChange={(e) => setCreateForm((f) => ({ ...f, bonusCredits: Number(e.target.value) }))}
-            />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <input
+                type="text"
+                inputMode="numeric"
+                autoComplete="off"
+                style={{ ...fieldStyle, flex: 1 }}
+                value={createForm.bonusCredits}
+                onChange={(e) => setCreateForm((f) => ({ ...f, bonusCredits: formatNumericInput(e.target.value) }))}
+              />
+              <span style={{ fontSize: 14, color: '#555' }}>크레딧</span>
+            </div>
           </label>
           <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 14 }}>
             sort_order
             <input
-              type="number"
-              min={0}
+              type="text"
+              inputMode="numeric"
+              autoComplete="off"
               style={fieldStyle}
               value={createForm.sortOrder}
-              onChange={(e) => setCreateForm((f) => ({ ...f, sortOrder: Number(e.target.value) }))}
+              onChange={(e) => setCreateForm((f) => ({ ...f, sortOrder: formatNumericInput(e.target.value) }))}
             />
           </label>
           <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14 }}>
@@ -213,23 +243,68 @@ export default function SuperAdminCreditPackagesPage() {
       {editingId && (
         <AdminCard title="패키지 수정">
           <div style={{ display: 'grid', gap: 12, maxWidth: 480 }}>
-            {(['name', 'price', 'credits', 'bonusCredits', 'sortOrder'] as const).map((key) => (
-              <label key={key} style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 14 }}>
-                {key}
+            <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 14 }}>
+              name
+              <input
+                type="text"
+                style={fieldStyle}
+                value={editForm.name}
+                onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))}
+              />
+            </label>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 14 }}>
+              price (원)
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <input
-                  type={key === 'name' ? 'text' : 'number'}
-                  min={key === 'name' ? undefined : 0}
-                  style={fieldStyle}
-                  value={key === 'name' ? editForm.name : String(editForm[key])}
-                  onChange={(e) =>
-                    setEditForm((f) => ({
-                      ...f,
-                      [key]: key === 'name' ? e.target.value : Number(e.target.value),
-                    }))
-                  }
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  style={{ ...fieldStyle, flex: 1 }}
+                  value={editForm.price}
+                  onChange={(e) => setEditForm((f) => ({ ...f, price: formatNumericInput(e.target.value) }))}
                 />
-              </label>
-            ))}
+                <span style={{ fontSize: 14, color: '#555' }}>원</span>
+              </div>
+            </label>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 14 }}>
+              credits
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  style={{ ...fieldStyle, flex: 1 }}
+                  value={editForm.credits}
+                  onChange={(e) => setEditForm((f) => ({ ...f, credits: formatNumericInput(e.target.value) }))}
+                />
+                <span style={{ fontSize: 14, color: '#555' }}>크레딧</span>
+              </div>
+            </label>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 14 }}>
+              bonus_credits
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  style={{ ...fieldStyle, flex: 1 }}
+                  value={editForm.bonusCredits}
+                  onChange={(e) => setEditForm((f) => ({ ...f, bonusCredits: formatNumericInput(e.target.value) }))}
+                />
+                <span style={{ fontSize: 14, color: '#555' }}>크레딧</span>
+              </div>
+            </label>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 14 }}>
+              sort_order
+              <input
+                type="text"
+                inputMode="numeric"
+                autoComplete="off"
+                style={fieldStyle}
+                value={editForm.sortOrder}
+                onChange={(e) => setEditForm((f) => ({ ...f, sortOrder: formatNumericInput(e.target.value) }))}
+              />
+            </label>
             <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14 }}>
               <input
                 type="checkbox"

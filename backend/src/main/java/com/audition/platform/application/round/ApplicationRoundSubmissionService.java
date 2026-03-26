@@ -92,40 +92,40 @@ public class ApplicationRoundSubmissionService {
     public ApplicationRoundSubmission submitForApplicant(
             UUID applicationId, UUID applicantId, UUID roundId, MeRoundSubmitRequest req) {
         Application app = applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 지원서를 찾을 수 없습니다."));
+                .orElseThrow(() -> ReasonCode.APPLICATION_NOT_FOUND.toException());
         if (!app.getApplicantId().equals(applicantId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 지원서를 찾을 수 없습니다.");
+            throw ReasonCode.APPLICATION_NOT_FOUND.toException();
         }
         Audition audition = auditionRepository.findById(app.getAuditionId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "오디션을 찾을 수 없습니다."));
+                .orElseThrow(() -> ReasonCode.AUDITION_NOT_FOUND.toException());
         if (!AuditionProcessModes.isMultiRound(audition.getProcessMode())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "단일(SINGLE) 오디션은 이 API를 사용할 수 없습니다.");
+            throw ReasonCode.NOT_MULTI_ROUND.toException();
         }
         AuditionRound round = roundRepository.findById(roundId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "라운드를 찾을 수 없습니다."));
+                .orElseThrow(() -> ReasonCode.ROUND_NOT_FOUND.toException());
         if (!round.getAuditionId().equals(audition.getId())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "오디션과 라운드가 일치하지 않습니다.");
+            throw ReasonCode.AUDITION_ROUND_MISMATCH.toException();
         }
         assertRoundAcceptingSubmissions(round);
 
         RoundEligibilityService.EligibilityDetail eligibility =
                 roundEligibilityService.evaluate(app, audition, round);
         if (!eligibility.effectiveCanSubmit()) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    eligibility.reasonCode() != null ? eligibility.reasonCode() : "SUBMIT_NOT_ALLOWED");
+            throw ReasonCode.submitEligibilityDenied(eligibility.reasonCode());
         }
 
         // 라운드 비활성·심사 시작은 eligibility 이후에도 바뀔 수 있으므로 DB 최신 값으로 재검증
         AuditionRound roundFresh = roundRepository.findById(roundId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "라운드를 찾을 수 없습니다."));
+                .orElseThrow(() -> ReasonCode.ROUND_NOT_FOUND.toException());
         assertRoundAcceptingSubmissions(roundFresh);
-        ApplicationRoundSubmission sub = submissionRepository
-                .findByApplicationIdAndRoundId(applicationId, roundId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.INTERNAL_SERVER_ERROR, "제출 레코드가 없습니다. 관리자에게 문의하세요."));
+        Optional<ApplicationRoundSubmission> subOpt =
+                submissionRepository.findByApplicationIdAndRoundId(applicationId, roundId);
+        if (subOpt.isEmpty()) {
+            throw ReasonCode.SUBMISSION_NOT_FOUND.toException();
+        }
+        ApplicationRoundSubmission sub = subOpt.get();
         if ("UNDER_REVIEW".equals(sub.getSubmissionStatus())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "UNDER_REVIEW_LOCKED");
+            throw ReasonCode.UNDER_REVIEW_LOCKED.toException();
         }
 
         assertPayloadMatchesRound(roundFresh, req);
@@ -143,7 +143,7 @@ public class ApplicationRoundSubmissionService {
     /** eligibility 의 ROUND_NOT_ACTIVE 와 동일 조건 — 컨트롤러가 아닌 서비스에서만 호출 */
     private static void assertRoundAcceptingSubmissions(AuditionRound round) {
         if (!round.isActive()) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, ReasonCode.ROUND_NOT_ACTIVE.name());
+            throw ReasonCode.ROUND_NOT_ACTIVE.toException();
         }
     }
 

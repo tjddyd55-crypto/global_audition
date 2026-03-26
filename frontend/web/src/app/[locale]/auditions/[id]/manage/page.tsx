@@ -33,5 +33,11 @@ export default function AuditionManagePage() {
     )
   }
 
-  return <AuditionManageList auditionId={auditionId} auditionTitleFallback={audition.title} />
+  return (
+    <AuditionManageList
+      auditionId={auditionId}
+      auditionTitleFallback={audition.title}
+      processMode={audition.processMode ?? 'SINGLE'}
+    />
+  )
 }

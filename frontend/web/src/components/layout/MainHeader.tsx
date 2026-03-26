@@ -7,6 +7,7 @@ import { Link, usePathname, useRouter } from '../../i18n.config'
 import { authApi } from '../../lib/api/auth'
 import { userApi } from '../../lib/api/user'
 import { useAuthStore } from '@/lib/auth/authStore'
+import { getDisplayNickname } from '@/lib/user/getDisplayNickname'
 import { BTN_PRIMARY, DROPDOWN_ITEM } from '@/lib/ui/specClasses'
 
 const locales = ['ko', 'en', 'ja', 'zh', 'es', 'fr', 'de'] as const
@@ -59,7 +60,14 @@ export default function MainHeader() {
 
   const closeUserMenu = () => setIsUserMenuOpen(false)
 
-  const displayName = user?.name?.trim() || user?.email || '내 계정'
+  const displayName = user
+    ? getDisplayNickname({
+        nickname: user.nickname,
+        legalName: user.legalName,
+        email: user.email,
+        displayName: user.displayName,
+      })
+    : '내 계정'
   const loggedIn = Boolean(accessToken)
   const showUserChrome = loggedIn && (!meLoading || !!user)
 

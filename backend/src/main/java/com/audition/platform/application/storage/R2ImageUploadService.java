@@ -2,6 +2,7 @@ package com.audition.platform.application.storage;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.multipart.MultipartFile;
@@ -15,12 +16,13 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * 이미지 바이너리는 S3(또는 S3 호환)에만 저장하고, DB에는 반환된 공개 URL만 남깁니다.
- * Object ACL 미설정 — 버킷 &quot;Bucket owner enforced&quot; 및 퍼블릭 정책만 사용.
+ * 이미지 저장: 브라우저 → 백엔드 API → R2(S3 호환 PutObject) 만 사용합니다.
+ * 객체 key는 서버에서만 생성하고, 공개 URL은 {@code app.r2.public-url} + "/" + key 입니다(presigned 미사용).
+ * 조회는 반환 URL을 이미지 src 등으로 사용; 브라우저의 단순 GET 표시는 일반적으로 R2 CORS와 무관합니다.
  */
-public class S3ImageUploadService {
+public class R2ImageUploadService {
 
-    private static final Logger log = LoggerFactory.getLogger(S3ImageUploadService.class);
+    private static final Logger log = LoggerFactory.getLogger(R2ImageUploadService.class);
 
     private static final long MAX_BYTES = 5L * 1024 * 1024;
 
@@ -30,27 +32,20 @@ public class S3ImageUploadService {
             "image/webp"
     );
 
-    private final S3Client s3Client;
+    private final S3Client r2Client;
 
-    @Value("${app.s3.bucket}")
+    @Value("${app.r2.bucket}")
     private String bucket;
 
-    @Value("${app.s3.region}")
-    private String region;
-
-    /**
-     * 비우면 {@code https://{bucket}.s3.{region}.amazonaws.com/{key}} 형식으로 조합합니다.
-     * CloudFront·커스텀 도메인는 이 값으로 지정하세요.
-     */
-    @Value("${app.s3.public-base-url:}")
+    @Value("${app.r2.public-url}")
     private String publicBaseUrl;
 
-    public S3ImageUploadService(S3Client s3Client) {
-        this.s3Client = s3Client;
+    public R2ImageUploadService(@Qualifier("r2S3Client") S3Client r2Client) {
+        this.r2Client = r2Client;
     }
 
     public String upload(MultipartFile file, ImageUploadDirectory directory) {
-        requireBucketAndRegionConfigured();
+        requireR2Configured();
 
         if (file == null || file.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "파일이 비어 있습니다.");
@@ -67,7 +62,7 @@ public class S3ImageUploadService {
         }
         String ext = extensionFor(file, contentType);
         String key = directory.keyPrefix() + UUID.randomUUID() + ext;
-        log.info("S3 업로드 실행 → bucket={}, region={}", bucket.trim(), region.trim());
+        log.info("R2 업로드 실행 → bucket={}", bucket.trim());
         try {
             PutObjectRequest request = PutObjectRequest.builder()
                     .bucket(bucket.trim())
@@ -75,42 +70,34 @@ public class S3ImageUploadService {
                     .contentType(contentType)
                     .contentLength(file.getSize())
                     .build();
-            s3Client.putObject(
+            r2Client.putObject(
                     request,
                     RequestBody.fromInputStream(file.getInputStream(), file.getSize())
             );
         } catch (Exception e) {
-            log.error("S3 업로드 실패 bucket={} region={} key={}", bucket, region, key, e);
+            log.error("R2 업로드 실패 bucket={} key={}", bucket, key, e);
             throw new RuntimeException(
-                    "S3 업로드 실패 - bucket=" + bucket.trim() + ", region=" + region.trim(),
+                    "R2 업로드 실패 - bucket=" + bucket.trim(),
                     e
             );
         }
         return publicUrlFor(key);
     }
 
-    private void requireBucketAndRegionConfigured() {
+    private void requireR2Configured() {
         if (bucket == null || bucket.isBlank()) {
-            throw new RuntimeException("AWS_BUCKET 없음");
+            throw new RuntimeException("R2_BUCKET 없음");
         }
-        if (region == null || region.isBlank()) {
-            throw new RuntimeException("AWS_REGION 없음");
+        if (publicBaseUrl == null || publicBaseUrl.isBlank()) {
+            throw new RuntimeException("R2_PUBLIC_URL 없음");
         }
     }
 
     private String publicUrlFor(String key) {
-        if (publicBaseUrl != null && !publicBaseUrl.isBlank()) {
-            String base = publicBaseUrl.trim().replaceAll("/+$", "");
-            return base + "/" + key;
-        }
-        String b = bucket.trim();
-        String r = region.trim();
-        return "https://" + b + ".s3." + r + ".amazonaws.com/" + key;
+        String base = publicBaseUrl.trim().replaceAll("/+$", "");
+        return base + "/" + key;
     }
 
-    /**
-     * @return 정규 MIME 또는 null (비허용)
-     */
     private static String normalizeImageContentType(String raw) {
         if (raw == null || raw.isBlank()) {
             return null;

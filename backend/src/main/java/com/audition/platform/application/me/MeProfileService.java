@@ -2,6 +2,7 @@ package com.audition.platform.application.me;
 
 import com.audition.platform.api.dto.me.MeProfileResponse;
 import com.audition.platform.api.dto.me.PatchMeProfileRequest;
+import com.audition.platform.application.user.UserNicknameService;
 import com.audition.platform.domain.user.User;
 import com.audition.platform.domain.user.UserRepository;
 import com.audition.platform.infra.SecurityUtils;
@@ -17,9 +18,11 @@ import java.util.UUID;
 public class MeProfileService {
 
     private final UserRepository userRepository;
+    private final UserNicknameService userNicknameService;
 
-    public MeProfileService(UserRepository userRepository) {
+    public MeProfileService(UserRepository userRepository, UserNicknameService userNicknameService) {
         this.userRepository = userRepository;
+        this.userNicknameService = userNicknameService;
     }
 
     private UUID requireUserId() {
@@ -42,8 +45,12 @@ public class MeProfileService {
         UUID userId = requireUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "사용자를 찾을 수 없습니다."));
-        if (req.getDisplayName() != null && !req.getDisplayName().isBlank()) {
-            user.setDisplayName(req.getDisplayName().trim());
+        if (req.getNickname() != null && !req.getNickname().isBlank()) {
+            String next = userNicknameService.prepareNicknameOrThrow(req.getNickname(), userId);
+            user.setNickname(next);
+        }
+        if (req.getName() != null) {
+            user.setName(req.getName().trim().isEmpty() ? null : req.getName().trim());
         }
         if (req.getProfileImageUrl() != null) {
             user.setProfileImageUrl(req.getProfileImageUrl().trim().isEmpty() ? null : req.getProfileImageUrl().trim());
@@ -60,7 +67,9 @@ public class MeProfileService {
         r.setId(user.getId().toString());
         r.setEmail(user.getEmail());
         r.setUsername(user.getUsername());
-        r.setDisplayName(user.getDisplayName());
+        r.setNickname(user.getNickname());
+        r.setName(user.getName());
+        r.setDisplayName(user.getPublicDisplayLabel());
         r.setRole(MeApiMapping.userRoleToApi(user.getRole()));
         r.setProfileImageUrl(user.getProfileImageUrl());
         r.setBio(user.getBio());

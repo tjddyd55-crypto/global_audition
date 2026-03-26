@@ -17,6 +17,9 @@ import {
   TITLE_PAGE,
 } from '@/lib/ui/specClasses'
 import { VideoEmbedOverlay } from '@/components/video/VideoEmbedOverlay'
+import { ApplicationRoundTimeline } from '@/components/application/ApplicationRoundTimeline'
+import { MultiRoundSubmitCta } from '@/components/application/MultiRoundSubmitCta'
+import { roundIdForRoundNumber } from '@/lib/audition/roundNav'
 
 function statusBadgeClass(status: string) {
   if (status === 'REVIEWING' || status === 'REVIEWED') return 'rounded-full bg-blue-50 px-3 py-1 text-sm text-blue-700'
@@ -76,6 +79,10 @@ export default function MyApplicationDetailPage() {
   }
 
   const app = applicationQuery.data
+  const isMultiRound = app.processMode === 'MULTI_ROUND'
+  const roundSummaries = app.roundSummaries ?? []
+  const applicantRound = app.currentRoundNumber ?? 1
+  const currentRoundId = roundIdForRoundNumber(roundSummaries, applicantRound)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -91,6 +98,37 @@ export default function MyApplicationDetailPage() {
           </div>
           <span className={statusBadgeClass(app.status)}>{statusLabel(app.status)}</span>
         </div>
+
+        {isMultiRound ? (
+          <>
+            <ApplicationRoundTimeline
+              applicationId={app.id}
+              roundSummaries={roundSummaries}
+              currentRoundNumber={applicantRound}
+            />
+            <div className={`${CARD_BASE} flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between`}>
+              <div>
+                <h2 className={`${TITLE_PAGE} mb-1`}>다음 라운드 제출</h2>
+                <p className={TEXT_SUB}>현재 {applicantRound}차 라운드입니다. 제출 가능 여부는 아래에 표시됩니다.</p>
+              </div>
+              <div className="min-w-0 flex-1 sm:text-right">
+                {currentRoundId ? (
+                  <MultiRoundSubmitCta
+                    applicationId={app.id}
+                    auditionId={app.auditionId}
+                    roundId={currentRoundId}
+                    label={`${applicantRound}차 지원하기`}
+                    className={`${BTN_PRIMARY} inline-flex justify-center text-center no-underline`}
+                  />
+                ) : (
+                  <p className="text-sm text-amber-700">
+                    라운드 정보를 찾을 수 없습니다. 새로고침 후 다시 시도하거나 관리자에게 문의해 주세요.
+                  </p>
+                )}
+              </div>
+            </div>
+          </>
+        ) : null}
 
         <div className={CARD_BASE}>
           <h2 className={`${TITLE_PAGE} mb-4`}>영상 URL 관리</h2>

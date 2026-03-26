@@ -21,8 +21,12 @@ export type CreditPackageRow = {
 
 export type UserCreditLookup = {
   userId: string
+  nickname: string
   email: string
   balance: number
+  name?: string | null
+  accountStatus?: string
+  createdAt?: string
 }
 
 export type CreditTransactionRow = {
@@ -216,7 +220,7 @@ export const superAdminApi = {
 
   patchAdminUser: async (
     userId: string,
-    body: Partial<{ displayName: string; bio: string; profileImageUrl: string; countryCode: string }>
+    body: Partial<{ nickname: string; name: string; bio: string; profileImageUrl: string; countryCode: string }>
   ): Promise<unknown> => {
     const { data } = await apiClient.patch(`/admin/users/${userId}`, body)
     return data

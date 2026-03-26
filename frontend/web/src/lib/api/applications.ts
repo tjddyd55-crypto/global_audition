@@ -18,6 +18,10 @@ export interface ApplicationResponseWithAudition extends ApplicationResponse {
 
 export interface ApplicationDetailWithVideos extends ApplicationResponseWithAudition {
   videos?: Array<{ id: string; title: string; videoUrl: string; createdAt?: string }>
+  /** MULTI_ROUND 면 라운드 메타, 아니면 SINGLE */
+  processMode?: string
+  currentRoundNumber?: number
+  roundSummaries?: Array<{ roundId: string; roundNumber: number }>
 }
 
 /** 기획사 지원자 관리 카드 (GET /auditions/:id/applications) */
@@ -100,6 +104,9 @@ export const applicationApi = {
       auditionTitle: string
       appliedAt: string
       status: string
+      processMode?: string
+      currentRoundNumber?: number
+      roundSummaries?: Array<{ roundId: string; roundNumber: number }>
       videos: Array<{ videoId: string; title: string; videoUrl: string }>
     }>(data)
     return {
@@ -110,6 +117,9 @@ export const applicationApi = {
       auditionTitle: d.auditionTitle,
       status: d.status as ApplicationResponse['status'],
       createdAt: typeof d.appliedAt === 'string' ? d.appliedAt : String(d.appliedAt),
+      processMode: d.processMode ?? 'SINGLE',
+      currentRoundNumber: d.currentRoundNumber ?? 1,
+      roundSummaries: Array.isArray(d.roundSummaries) ? d.roundSummaries : [],
       videos: (d.videos ?? []).map((v) => ({
         id: v.videoId,
         title: v.title,

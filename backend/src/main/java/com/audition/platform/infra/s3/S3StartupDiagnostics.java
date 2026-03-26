@@ -1,5 +1,6 @@
 package com.audition.platform.infra.s3;
 
+import com.audition.platform.application.storage.R2ImageUploadService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -9,7 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 /**
- * S3 빈 미등록(버킷 비움) 시에도 기동 후 한 번 출력 — 업로드 503 원인 진단용.
+ * R2(이미지) 및 향후 AWS S3(파일) 설정 요약 — 업로드 API 미동작 시 원인 파악용.
  */
 @Component
 public class S3StartupDiagnostics {
@@ -19,13 +20,32 @@ public class S3StartupDiagnostics {
     @EventListener(ApplicationReadyEvent.class)
     public void onReady(ApplicationReadyEvent event) {
         Environment env = event.getApplicationContext().getEnvironment();
-        String bucket = env.getProperty("app.s3.bucket", "");
-        String region = env.getProperty("app.s3.region", "");
-        log.info("S3 CONFIG → bucket={}, region={}", bucket.isBlank() ? "(empty)" : bucket, region.isBlank() ? "(empty)" : region);
-        if (!StringUtils.hasText(bucket)) {
+
+        String r2Bucket = env.getProperty("app.r2.bucket", "");
+        String r2Public = env.getProperty("app.r2.public-url", "");
+        String r2Endpoint = env.getProperty("app.r2.endpoint", "");
+        boolean r2ServiceUp =
+                event.getApplicationContext().getBeanNamesForType(R2ImageUploadService.class).length > 0;
+
+        log.info(
+                "R2 CONFIG → bucket={}, publicUrlConfigured={}, endpointConfigured={}, imageUploadReady={}",
+                r2Bucket.isBlank() ? "(empty)" : r2Bucket,
+                StringUtils.hasText(r2Public),
+                StringUtils.hasText(r2Endpoint),
+                r2ServiceUp
+        );
+        if (!r2ServiceUp) {
             log.warn(
-                    "S3 upload API disabled: app.s3.bucket is empty. Set Railway env AWS_BUCKET (and AWS_REGION, credentials)."
+                    "R2 image upload disabled: set R2_ENDPOINT, R2_BUCKET, R2_ACCESS_KEY, R2_SECRET_KEY, R2_PUBLIC_URL "
+                            + "(and AWS_REGION for signing, e.g. auto)."
             );
+        }
+
+        boolean s3ClientOn = env.getProperty("app.s3.client-enabled", "false").equalsIgnoreCase("true");
+        if (s3ClientOn) {
+            String s3Bucket = env.getProperty("app.s3.bucket", "");
+            String s3Region = env.getProperty("app.s3.region", "");
+            log.info("AWS S3 file client enabled → bucket={}, region={}", s3Bucket, s3Region);
         }
     }
 }

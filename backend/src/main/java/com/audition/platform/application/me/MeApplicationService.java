@@ -1,6 +1,9 @@
 package com.audition.platform.application.me;
 
+import com.audition.platform.api.dto.AuditionRoundSummaryDto;
 import com.audition.platform.api.dto.me.*;
+import com.audition.platform.application.round.AuditionProcessModes;
+import com.audition.platform.application.round.AuditionRoundService;
 import com.audition.platform.domain.audition.Application;
 import com.audition.platform.domain.audition.ApplicationRepository;
 import com.audition.platform.domain.audition.ApplicationVideo;
@@ -23,13 +26,17 @@ public class MeApplicationService {
     private final ApplicationRepository applicationRepository;
     private final ApplicationVideoRepository applicationVideoRepository;
     private final AuditionRepository auditionRepository;
+    private final AuditionRoundService auditionRoundService;
 
-    public MeApplicationService(ApplicationRepository applicationRepository,
-                                ApplicationVideoRepository applicationVideoRepository,
-                                AuditionRepository auditionRepository) {
+    public MeApplicationService(
+            ApplicationRepository applicationRepository,
+            ApplicationVideoRepository applicationVideoRepository,
+            AuditionRepository auditionRepository,
+            AuditionRoundService auditionRoundService) {
         this.applicationRepository = applicationRepository;
         this.applicationVideoRepository = applicationVideoRepository;
         this.auditionRepository = auditionRepository;
+        this.auditionRoundService = auditionRoundService;
     }
 
     private UUID requireApplicant() {
@@ -91,6 +98,15 @@ public class MeApplicationService {
         dto.setAuditionTitle(audition != null ? audition.getTitle() : "");
         dto.setAppliedAt(app.getCreatedAt());
         dto.setStatus(MeApiMapping.applicationStatusToApi(app.getStatus()));
+        dto.setCurrentRoundNumber(app.getCurrentRoundNumber());
+        if (audition != null) {
+            dto.setProcessMode(audition.getProcessMode() != null ? audition.getProcessMode() : "SINGLE");
+            if (AuditionProcessModes.isMultiRound(audition.getProcessMode())) {
+                dto.setRoundSummaries(auditionRoundService.listRounds(app.getAuditionId()).stream()
+                        .map(x -> new AuditionRoundSummaryDto(x.getId().toString(), x.getRoundNumber()))
+                        .collect(Collectors.toList()));
+            }
+        }
         List<ApplicationVideo> videos = applicationVideoRepository.findByApplicationIdOrderByCreatedAtDesc(app.getId());
         dto.setVideos(videos.stream().map(this::toVideoDto).collect(Collectors.toList()));
         return dto;

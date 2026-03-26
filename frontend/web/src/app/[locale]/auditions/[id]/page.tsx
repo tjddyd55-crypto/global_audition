@@ -18,6 +18,8 @@ import { AuditionDetailHeroSection } from '@/components/audition/AuditionDetailH
 import { AuditionDetailMediaSection } from '@/components/audition/AuditionDetailMedia'
 import { CREDIT_POLICY_AUDITION_APPLY, creditsApi } from '@/lib/api/credits'
 import { canManageAudition as userCanManageAudition } from '@/lib/audition/auditionPermissions'
+import { MultiRoundSubmitCta } from '@/components/application/MultiRoundSubmitCta'
+import { roundIdForRoundNumber } from '@/lib/audition/roundNav'
 
 function SectionBlock({
   iconLabel,
@@ -194,6 +196,14 @@ export default function AuditionDetailPage() {
 
   const isOpen = audition.status === 'OPEN'
   const alreadyApplied = audition.hasApplied === true
+  const isMultiRoundAudition = safeStr(audition.processMode) === 'MULTI_ROUND'
+  const auditionRoundSummaries = audition.roundSummaries ?? []
+  const myApplicationIdForRound = audition.myApplicationId
+  const myApplicantRoundNumber = audition.myCurrentRoundNumber ?? 1
+  const myCurrentRoundUuid: string | null =
+    myApplicationIdForRound != null && myApplicationIdForRound.length > 0
+      ? roundIdForRoundNumber(auditionRoundSummaries, myApplicantRoundNumber)
+      : null
   /** 하단 CTA: 오픈 시 비로그인은 로그인 유도, 지원자/관리자만 실제 지원 버튼 */
   const showApplyLoginCta = isOpen && !accessToken
   const showApplySubmitCta = isOpen && accessToken && (role === 'APPLICANT' || role === 'ADMIN')
@@ -540,6 +550,26 @@ export default function AuditionDetailPage() {
                 <span className="text-center text-xs text-gray-500 min-[480px]:text-left">
                   이 오디션에 이미 지원하셨습니다.
                 </span>
+                {isMultiRoundAudition && myApplicationIdForRound ? (
+                  myCurrentRoundUuid ? (
+                    <MultiRoundSubmitCta
+                      applicationId={myApplicationIdForRound}
+                      auditionId={id}
+                      roundId={myCurrentRoundUuid}
+                      label={`${myApplicantRoundNumber}차 지원하기`}
+                      className="inline-flex h-11 w-full min-[480px]:w-auto items-center justify-center px-6 font-semibold text-white no-underline"
+                      style={{
+                        borderRadius: HERO.buttonRadiusPx,
+                        background: `linear-gradient(90deg, ${HERO.primaryGradientStart}, ${HERO.primaryGradientEnd})`,
+                        fontSize: AUDITION_DETAIL.bodyFontPx,
+                      }}
+                    />
+                  ) : (
+                    <p className="text-center text-xs text-amber-700 min-[480px]:text-left">
+                      라운드 정보를 불러오지 못했습니다. 내 지원서 상세에서 다시 시도해 주세요.
+                    </p>
+                  )
+                ) : null}
               </div>
             ) : showApplySubmitCta ? (
               <div className="flex w-full min-[480px]:w-auto flex-col gap-2">

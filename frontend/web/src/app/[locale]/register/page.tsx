@@ -10,12 +10,15 @@ import { Link } from '../../../i18n.config'
 import RoleSelectCard from '../../../components/auth/RoleSelectCard'
 import AuthCardLayout from '../../../components/auth/AuthCardLayout'
 import { SIGNUP } from '../../../lib/design-tokens'
+import { nicknameZodField } from '../../../lib/user/nicknameZod'
 
 const registerSchema = z.object({
   email: z
     .string({ required_error: '필수값을 입력하세요' })
     .min(1, '필수값을 입력하세요')
     .email('유효한 이메일을 입력해주세요'),
+  nickname: nicknameZodField,
+  legalName: z.string().max(120, '실명은 120자 이하').optional().or(z.literal('')),
   password: z
     .string({ required_error: '필수값을 입력하세요' })
     .min(1, '필수값을 입력하세요')
@@ -56,7 +59,13 @@ export default function RegisterPage() {
     setIsLoading(true)
     setError(null)
     try {
-      await authApi.signup({ email: data.email, password: data.password, role })
+      await authApi.signup({
+        email: data.email,
+        password: data.password,
+        role,
+        nickname: data.nickname.trim(),
+        name: data.legalName?.trim() ? data.legalName.trim() : undefined,
+      })
       if (role === 'AGENCY') router.push('/my/dashboard')
       else router.push('/auditions')
     } catch (err: any) {
@@ -86,6 +95,22 @@ export default function RegisterPage() {
           </label>
           <input id="email" type="email" {...register('email')} placeholder="your@email.com" style={inputStyle} />
           {errors.email && <p style={{ marginTop: 4, fontSize: 12, color: '#b91c1c' }}>{errors.email.message}</p>}
+        </div>
+
+        <div style={{ marginBottom: 16 }}>
+          <label htmlFor="nickname" style={{ display: 'block', fontSize: 14, fontWeight: 500, marginBottom: 4 }}>
+            닉네임 (필수)
+          </label>
+          <input id="nickname" type="text" {...register('nickname')} placeholder="화면에 표시될 이름" style={inputStyle} />
+          {errors.nickname && <p style={{ marginTop: 4, fontSize: 12, color: '#b91c1c' }}>{errors.nickname.message}</p>}
+        </div>
+
+        <div style={{ marginBottom: 16 }}>
+          <label htmlFor="legalName" style={{ display: 'block', fontSize: 14, fontWeight: 500, marginBottom: 4 }}>
+            실명 (선택)
+          </label>
+          <input id="legalName" type="text" {...register('legalName')} placeholder="관리·결제용" style={inputStyle} />
+          {errors.legalName && <p style={{ marginTop: 4, fontSize: 12, color: '#b91c1c' }}>{errors.legalName.message}</p>}
         </div>
 
         <div style={{ marginBottom: 16 }}>

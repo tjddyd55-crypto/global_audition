@@ -1,18 +1,37 @@
 package com.audition.platform.api.dto;
 
+import jakarta.validation.constraints.Size;
+
 public class AdminUserPatchRequest {
 
-    private String displayName;
-    private String bio;
+    @Size(min = 2, max = 20)
+    private String nickname;
+
+    @Size(max = 120)
+    private String name;
+
+    @Size(max = 2048)
     private String profileImageUrl;
+
+    @Size(max = 2000)
+    private String bio;
+
     private String countryCode;
 
-    public String getDisplayName() {
-        return displayName;
+    public String getNickname() {
+        return nickname;
     }
 
-    public void setDisplayName(String displayName) {
-        this.displayName = displayName;
+    public void setNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getBio() {

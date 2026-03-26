@@ -1,10 +1,12 @@
 package com.audition.platform.application;
 
 import com.audition.platform.api.dto.AuditionResponse;
+import com.audition.platform.api.dto.AuditionRoundSummaryDto;
 import com.audition.platform.api.dto.CreateAuditionRequest;
 import com.audition.platform.api.dto.UpdateAuditionRequest;
 import com.audition.platform.application.round.AuditionProcessModes;
 import com.audition.platform.application.round.AuditionRoundService;
+import com.audition.platform.domain.audition.Application;
 import com.audition.platform.domain.audition.ApplicationRepository;
 import com.audition.platform.domain.audition.Audition;
 import com.audition.platform.domain.audition.AuditionTagNormalizer;
@@ -23,6 +25,7 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -247,7 +250,17 @@ public class AuditionService {
         AuditionResponse r = toResponse(a);
         UUID viewerId = SecurityUtils.getCurrentUserId();
         if (viewerId != null && (SecurityUtils.hasRole("APPLICANT") || SecurityUtils.hasRole("ADMIN"))) {
-            r.setHasApplied(applicationRepository.existsByAuditionIdAndApplicantId(id, viewerId));
+            Optional<Application> myApp = applicationRepository.findByAuditionIdAndApplicantId(id, viewerId);
+            r.setHasApplied(myApp.isPresent());
+            myApp.ifPresent(app -> {
+                r.setMyApplicationId(app.getId().toString());
+                r.setMyCurrentRoundNumber(app.getCurrentRoundNumber());
+            });
+        }
+        if (AuditionProcessModes.isMultiRound(a.getProcessMode())) {
+            r.setRoundSummaries(auditionRoundService.listRounds(a.getId()).stream()
+                    .map(x -> new AuditionRoundSummaryDto(x.getId().toString(), x.getRoundNumber()))
+                    .collect(Collectors.toList()));
         }
         return r;
     }

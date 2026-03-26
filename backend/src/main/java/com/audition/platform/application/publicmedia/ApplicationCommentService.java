@@ -69,7 +69,7 @@ public class ApplicationCommentService {
         User author = userRepository.findById(c.getUserId()).orElse(null);
         ApplicationCommentDto dto = new ApplicationCommentDto();
         dto.setId(c.getId().toString());
-        dto.setAuthorDisplayName(author != null ? author.getDisplayName() : "");
+        dto.setAuthorDisplayName(author != null ? author.getPublicDisplayLabel() : "");
         dto.setAuthorProfileImageUrl(author != null ? author.getProfileImageUrl() : null);
         dto.setContent(c.getBody());
         dto.setCreatedAt(c.getCreatedAt());

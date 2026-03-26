@@ -13,9 +13,11 @@ type StatusBtn = 'REVIEWING' | 'ACCEPTED' | 'REJECTED'
 type Props = {
   auditionId: string
   auditionTitleFallback: string
+  /** MULTI_ROUND 일 때 라운드 심사 화면 링크 표시 */
+  processMode?: string
 }
 
-export function AuditionManageList({ auditionId, auditionTitleFallback }: Props) {
+export function AuditionManageList({ auditionId, auditionTitleFallback, processMode }: Props) {
   const queryClient = useQueryClient()
   const [category, setCategory] = useState<string | null>(null)
 
@@ -73,6 +75,14 @@ export function AuditionManageList({ auditionId, auditionTitleFallback }: Props)
           </Link>
           <h1 className="mt-4 text-2xl font-bold text-gray-900">지원자 상태 관리</h1>
           <p className={`${TEXT_SUB} mt-1`}>{auditionTitleFallback}</p>
+          {processMode === 'MULTI_ROUND' ? (
+            <Link
+              href={`/auditions/${auditionId}/round-review`}
+              className="mt-3 inline-flex rounded-lg border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-semibold text-violet-800 no-underline hover:bg-violet-100"
+            >
+              다단계 라운드 심사 · 라운드 열기/닫기
+            </Link>
+          ) : null}
         </div>
       </div>
 

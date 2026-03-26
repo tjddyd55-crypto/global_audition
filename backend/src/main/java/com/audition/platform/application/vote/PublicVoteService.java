@@ -158,7 +158,7 @@ public class PublicVoteService {
 
         PublicVoteItemDto dto = new PublicVoteItemDto();
         dto.setApplicationId(appIdStr);
-        dto.setUserName(applicant != null ? applicant.getDisplayName() : "");
+        dto.setUserName(applicant != null ? applicant.getPublicDisplayLabel() : "");
         dto.setUserEmail(applicant != null ? applicant.getEmail() : "");
         dto.setDescription(applicant != null && applicant.getBio() != null ? applicant.getBio() : "");
         dto.setVideoUrl(m.videoUrl());

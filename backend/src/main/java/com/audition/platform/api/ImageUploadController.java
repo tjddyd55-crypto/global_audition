@@ -2,7 +2,7 @@ package com.audition.platform.api;
 
 import com.audition.platform.api.dto.ImageUploadResponse;
 import com.audition.platform.application.storage.ImageUploadDirectory;
-import com.audition.platform.application.storage.S3ImageUploadService;
+import com.audition.platform.application.storage.R2ImageUploadService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -20,7 +20,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * multipart 파일 업로드 → S3 저장 후 공개 URL 반환.
+ * 이미지 업로드 고정 경로: <strong>클라이언트 → 이 API → R2</strong>.
+ * 프론트에서 R2 엔드포인트·presigned URL로 직접 업로드하지 않습니다.
  */
 @RestController
 @RequestMapping("/api/uploads")
@@ -28,25 +29,26 @@ public class ImageUploadController {
 
     private static final Logger log = LoggerFactory.getLogger(ImageUploadController.class);
 
-    private final ObjectProvider<S3ImageUploadService> uploadService;
+    private final ObjectProvider<R2ImageUploadService> uploadService;
     private final Environment environment;
 
-    public ImageUploadController(ObjectProvider<S3ImageUploadService> uploadService, Environment environment) {
+    public ImageUploadController(ObjectProvider<R2ImageUploadService> uploadService, Environment environment) {
         this.uploadService = uploadService;
         this.environment = environment;
     }
 
     /**
-     * S3 설정·빈 등록 여부 진단 (버킷/리전은 항상 설정값 기준).
+     * R2 설정·빈 등록 여부 진단.
      */
     @GetMapping("/health")
     public Map<String, String> uploadHealth() {
-        String bucket = environment.getProperty("app.s3.bucket", "");
-        String region = environment.getProperty("app.s3.region", "");
+        String bucket = environment.getProperty("app.r2.bucket", "");
+        String publicUrl = environment.getProperty("app.r2.public-url", "");
         boolean ready = uploadService.getIfAvailable() != null;
         Map<String, String> body = new LinkedHashMap<>();
         body.put("bucket", bucket);
-        body.put("region", region);
+        body.put("publicUrl", publicUrl);
+        body.put("storage", "r2");
         body.put("status", ready ? "OK" : "UNAVAILABLE");
         return body;
     }
@@ -56,10 +58,10 @@ public class ImageUploadController {
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "dir", required = false, defaultValue = "covers") String dir
     ) {
-        S3ImageUploadService s3ImageUploadService = uploadService.getIfAvailable();
-        if (s3ImageUploadService == null) {
-            log.error("POST /api/uploads/image: S3ImageUploadService 빈 없음 — S3Client 미등록 여부 확인");
-            throw new IllegalStateException("S3 서비스 초기화 실패");
+        R2ImageUploadService r2ImageUploadService = uploadService.getIfAvailable();
+        if (r2ImageUploadService == null) {
+            log.error("POST /api/uploads/image: R2ImageUploadService 빈 없음 — r2S3Client·R2 환경변수 확인");
+            throw new IllegalStateException("R2 이미지 업로드 서비스 초기화 실패");
         }
 
         ImageUploadDirectory directory;
@@ -70,12 +72,12 @@ public class ImageUploadController {
         }
 
         try {
-            return new ImageUploadResponse(s3ImageUploadService.upload(file, directory));
+            return new ImageUploadResponse(r2ImageUploadService.upload(file, directory));
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
-            log.error("S3 업로드 실패", e);
-            throw new RuntimeException("S3 upload failed: " + e.getMessage(), e);
+            log.error("R2 업로드 실패", e);
+            throw new RuntimeException("R2 upload failed: " + e.getMessage(), e);
         }
     }
 }

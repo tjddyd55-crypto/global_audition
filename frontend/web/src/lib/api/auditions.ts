@@ -145,6 +145,21 @@ export function parseAuditionDto(raw: Record<string, unknown>): AuditionDto {
     endDate: String(raw.endDate ?? ''),
     benefits: safeStringArr(raw.benefits),
     hasApplied: raw.hasApplied === true ? true : raw.hasApplied === false ? false : undefined,
+    processMode: raw.processMode != null ? String(raw.processMode) : 'SINGLE',
+    myApplicationId:
+      raw.myApplicationId != null && String(raw.myApplicationId).length > 0
+        ? String(raw.myApplicationId)
+        : null,
+    myCurrentRoundNumber:
+      raw.myCurrentRoundNumber != null && Number.isFinite(Number(raw.myCurrentRoundNumber))
+        ? Number(raw.myCurrentRoundNumber)
+        : null,
+    roundSummaries: Array.isArray(raw.roundSummaries)
+      ? (raw.roundSummaries as Record<string, unknown>[]).map((row) => ({
+          roundId: String(row.roundId ?? ''),
+          roundNumber: Number(row.roundNumber ?? 0) || 0,
+        }))
+      : [],
   }
 }
 

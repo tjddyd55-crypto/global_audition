@@ -19,6 +19,12 @@ function grantErrorMessage(err: unknown): string {
   return '지급 실패'
 }
 
+function formatJoinedAt(iso?: string): string {
+  if (!iso) return '—'
+  const d = new Date(iso)
+  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString('ko-KR')
+}
+
 export default function UsersPage() {
   const qc = useQueryClient()
   const [q, setQ] = useState('')
@@ -28,6 +34,8 @@ export default function UsersPage() {
 
   const [amount, setAmount] = useState<number>(1)
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
+  const [selectedNickname, setSelectedNickname] = useState<string | null>(null)
+  const [selectedEmail, setSelectedEmail] = useState<string | null>(null)
   const [grantReason, setGrantReason] = useState<CreditGrantReason>('ADMIN_GRANT')
   const [grantError, setGrantError] = useState<string | null>(null)
 
@@ -51,6 +59,8 @@ export default function UsersPage() {
       void qc.invalidateQueries({ queryKey: ['superAdmin', 'credit-transactions'] })
       void qc.invalidateQueries({ queryKey: ['superAdmin', 'admin-logs'] })
       setSelectedUserId(null)
+      setSelectedNickname(null)
+      setSelectedEmail(null)
       setAmount(1)
       alert('지급이 반영되었습니다.')
     },
@@ -76,6 +86,12 @@ export default function UsersPage() {
     setQ(searchInput.trim())
   }
 
+  const selectUser = (u: UserCreditLookup) => {
+    setSelectedUserId(u.userId)
+    setSelectedNickname(u.nickname)
+    setSelectedEmail(u.email)
+  }
+
   return (
     <div>
       <h1 className="mb-4 text-xl font-semibold">유저 관리</h1>
@@ -83,18 +99,18 @@ export default function UsersPage() {
       <div className="mb-4 rounded-lg border bg-white p-4">
         <p className="mb-3 text-xs text-gray-500">
           API: GET <code className="rounded bg-gray-100 px-1">/api/admin/users</code> · POST{' '}
-          <code className="rounded bg-gray-100 px-1">/api/admin/credits/grant</code> · userId는 UUID 문자열
+          <code className="rounded bg-gray-100 px-1">/api/admin/credits/grant</code> · 검색: 이메일·닉네임 부분 일치
         </p>
 
         <div className="mb-4 flex flex-wrap items-end gap-2 border-b border-gray-100 pb-4">
           <label className="flex flex-col gap-1 text-sm">
-            <span className="text-gray-600">이메일 검색 (부분 일치)</span>
+            <span className="text-gray-600">닉네임 / 이메일 / 실명 검색</span>
             <input
-              className="w-64 rounded border border-gray-300 px-2 py-1.5"
+              className="w-72 rounded border border-gray-300 px-2 py-1.5"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && applySearch()}
-              placeholder="email 일부"
+              placeholder="nickname · email · 실명 일부"
             />
           </label>
           <button
@@ -138,7 +154,8 @@ export default function UsersPage() {
           </button>
           {selectedUserId && (
             <span className="text-xs text-gray-500">
-              선택됨: <code className="rounded bg-gray-100 px-1">{selectedUserId}</code>
+              선택됨: <span className="font-medium text-gray-800">{selectedNickname}</span> ·{' '}
+              <span className="text-gray-700">{selectedEmail}</span>
             </span>
           )}
         </div>
@@ -155,11 +172,14 @@ export default function UsersPage() {
 
         {!isLoading && !error && users.length > 0 && (
           <>
-            <table className="w-full min-w-[640px] text-sm">
+            <table className="w-full min-w-[720px] text-sm">
               <thead>
                 <tr className="border-b bg-gray-50 text-left">
-                  <th className="py-2 pl-4 pr-2 font-medium">userId (UUID)</th>
+                  <th className="py-2 pl-4 pr-2 font-medium">닉네임</th>
+                  <th className="py-2 pr-2 font-medium">실명</th>
                   <th className="py-2 pr-2 font-medium">Email</th>
+                  <th className="py-2 pr-2 font-medium">상태</th>
+                  <th className="py-2 pr-2 font-medium">가입일</th>
                   <th className="py-2 pr-2 font-medium">Balance</th>
                   <th className="py-2 pr-4 font-medium">선택</th>
                 </tr>
@@ -167,13 +187,16 @@ export default function UsersPage() {
               <tbody>
                 {users.map((u) => (
                   <tr key={u.userId} className="border-b border-gray-100">
-                    <td className="py-2 pl-4 pr-2 font-mono text-xs text-gray-700">{u.userId}</td>
+                    <td className="py-2 pl-4 pr-2 font-medium text-gray-900">{u.nickname}</td>
+                    <td className="py-2 pr-2 text-gray-800">{u.name?.trim() ? u.name : '—'}</td>
                     <td className="py-2 pr-2">{u.email}</td>
+                    <td className="py-2 pr-2 text-gray-700">{u.accountStatus ?? '—'}</td>
+                    <td className="py-2 pr-2 whitespace-nowrap text-gray-600">{formatJoinedAt(u.createdAt)}</td>
                     <td className="py-2 pr-2 font-medium">{u.balance}</td>
                     <td className="py-2 pr-4">
                       <button
                         type="button"
-                        onClick={() => setSelectedUserId(u.userId)}
+                        onClick={() => selectUser(u)}
                         className={`rounded px-2 py-1 text-xs ${
                           selectedUserId === u.userId
                             ? 'bg-green-600 text-white'

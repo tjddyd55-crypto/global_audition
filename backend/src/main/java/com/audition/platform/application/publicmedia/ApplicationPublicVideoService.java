@@ -88,7 +88,7 @@ public class ApplicationPublicVideoService {
         dto.setLiked(liked);
         dto.setVoted(voted);
         dto.setDescription(app.getMessage() != null ? app.getMessage() : "");
-        dto.setChannelDisplayName(applicant != null ? applicant.getDisplayName() : "");
+        dto.setChannelDisplayName(applicant != null ? applicant.getPublicDisplayLabel() : "");
         dto.setChannelProfileImageUrl(applicant != null ? applicant.getProfileImageUrl() : null);
         dto.setSubscriberCount(0L);
         dto.setPublishedAt(video.getCreatedAt() != null ? video.getCreatedAt() : app.getCreatedAt());
@@ -120,7 +120,7 @@ public class ApplicationPublicVideoService {
             item.setApplicationId(app.getId().toString());
             item.setTitle(video.getTitle() != null ? video.getTitle() : "");
             item.setThumbnailUrl(thumb);
-            item.setChannelDisplayName(applicant != null ? applicant.getDisplayName() : "");
+            item.setChannelDisplayName(applicant != null ? applicant.getPublicDisplayLabel() : "");
             item.setViewCount(m.viewCount());
             item.setPublishedAt(video.getCreatedAt() != null ? video.getCreatedAt() : app.getCreatedAt());
             out.add(item);

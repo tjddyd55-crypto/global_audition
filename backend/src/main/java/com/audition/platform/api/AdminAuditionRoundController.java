@@ -123,7 +123,7 @@ public class AdminAuditionRoundController {
         dto.setApplicationId(app.getId());
         dto.setRoundSubmissionId(sub.getId());
         dto.setApplicantEmail(u != null ? u.getEmail() : null);
-        dto.setApplicantDisplayName(u != null ? u.getDisplayName() : null);
+        dto.setApplicantDisplayName(u != null ? u.getPublicDisplayLabel() : null);
         dto.setApplicationCurrentRoundNumber(app.getCurrentRoundNumber());
         dto.setFinalStatus(app.getFinalStatus());
         dto.setLatestResultStatus(app.getLatestResultStatus());

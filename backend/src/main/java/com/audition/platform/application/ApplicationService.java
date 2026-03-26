@@ -239,7 +239,7 @@ public class ApplicationService {
 
         AgencyApplicantItemDto dto = new AgencyApplicantItemDto();
         dto.setApplicationId(app.getId().toString());
-        dto.setUserName(applicant != null ? applicant.getDisplayName() : "");
+        dto.setUserName(applicant != null ? applicant.getPublicDisplayLabel() : "");
         dto.setUserEmail(applicant != null ? applicant.getEmail() : "");
         dto.setVideoUrl(m.videoUrl());
         dto.setThumbnailUrl(m.thumbnailUrl());
