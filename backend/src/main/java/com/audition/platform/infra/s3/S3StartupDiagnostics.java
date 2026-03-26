@@ -24,8 +24,8 @@ public class S3StartupDiagnostics {
         String r2Bucket = env.getProperty("app.r2.bucket", "");
         String r2Public = env.getProperty("app.r2.public-url", "");
         String r2Endpoint = env.getProperty("app.r2.endpoint", "");
-        boolean r2ServiceUp =
-                event.getApplicationContext().getBeanNamesForType(R2ImageUploadService.class).length > 0;
+        R2ImageUploadService uploadService = event.getApplicationContext().getBeanProvider(R2ImageUploadService.class).getIfAvailable();
+        boolean r2ServiceUp = uploadService != null && uploadService.isReady();
 
         log.info(
                 "R2 CONFIG → bucket={}, publicUrlConfigured={}, endpointConfigured={}, imageUploadReady={}",

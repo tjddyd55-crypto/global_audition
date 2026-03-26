@@ -54,7 +54,8 @@ public class ImageUploadController {
     public Map<String, String> uploadHealth() {
         String bucket = environment.getProperty("app.r2.bucket", "");
         String publicUrl = environment.getProperty("app.r2.public-url", "");
-        boolean ready = uploadService.getIfAvailable() != null;
+        R2ImageUploadService service = uploadService.getIfAvailable();
+        boolean ready = service != null && service.isReady();
         Map<String, String> body = new LinkedHashMap<>();
         body.put("bucket", bucket);
         body.put("publicUrl", publicUrl);
@@ -77,8 +78,8 @@ public class ImageUploadController {
             }
 
             R2ImageUploadService r2ImageUploadService = uploadService.getIfAvailable();
-            if (r2ImageUploadService == null) {
-                log.error("POST /api/uploads/image: R2ImageUploadService 빈 없음 — r2S3Client·R2 환경변수 확인");
+            if (r2ImageUploadService == null || !r2ImageUploadService.isReady()) {
+                log.error("POST /api/uploads/image: R2ImageUploadService 준비 안됨 — r2S3Client·R2 환경변수 확인");
                 return jsonMessage(HttpStatus.SERVICE_UNAVAILABLE, "R2 이미지 업로드 서비스를 사용할 수 없습니다.");
             }
 

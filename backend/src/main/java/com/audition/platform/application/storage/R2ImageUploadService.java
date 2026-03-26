@@ -2,9 +2,9 @@ package com.audition.platform.application.storage;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -37,9 +37,15 @@ public class R2ImageUploadService {
     @Value("${app.r2.public-url}")
     private String publicBaseUrl;
 
-    public R2ImageUploadService(@Qualifier("r2S3Client") S3Client r2Client, UploadProperties uploadProperties) {
+    public R2ImageUploadService(S3Client r2Client, UploadProperties uploadProperties) {
         this.r2Client = r2Client;
         this.uploadProperties = uploadProperties;
+    }
+
+    public boolean isReady() {
+        return r2Client != null
+                && StringUtils.hasText(bucket)
+                && StringUtils.hasText(publicBaseUrl);
     }
 
     public ImageUploadResult upload(MultipartFile file, ImageUploadDirectory directory) {
@@ -162,11 +168,14 @@ public class R2ImageUploadService {
     }
 
     private void requireR2Configured() {
+        if (r2Client == null) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "R2 업로드 클라이언트를 초기화할 수 없습니다.");
+        }
         if (bucket == null || bucket.isBlank()) {
-            throw new RuntimeException("R2_BUCKET 없음");
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "R2_BUCKET 또는 AWS_BUCKET 이 필요합니다.");
         }
         if (publicBaseUrl == null || publicBaseUrl.isBlank()) {
-            throw new RuntimeException("R2_PUBLIC_URL 없음");
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "R2_PUBLIC_URL 또는 AWS_S3_PUBLIC_BASE_URL 이 필요합니다.");
         }
     }
 
