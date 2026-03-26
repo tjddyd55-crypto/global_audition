@@ -17,8 +17,8 @@ app:
   # 업로드는 브라우저→백엔드 API→R2 만 허용 — 브라우저가 R2에 직접 PUT하지 않으므로 R2 버킷 CORS는 불필요(미설정 권장).
   r2:
     endpoint: ${R2_ENDPOINT:}
-    access-key: ${R2_ACCESS_KEY:}
-    secret-key: ${R2_SECRET_KEY:}
+    access-key: ${R2_ACCESS_KEY:${AWS_ACCESS_KEY_ID:}}
+    secret-key: ${R2_SECRET_KEY:${AWS_SECRET_ACCESS_KEY:}}
     bucket: ${R2_BUCKET:}
     public-url: ${R2_PUBLIC_URL:}
     region: ${AWS_REGION:auto}

@@ -39,8 +39,8 @@ public class S3StartupDiagnostics {
         log.info("AWS_SECRET_ACCESS_KEY: {}", System.getenv("AWS_SECRET_ACCESS_KEY") != null);
         if (!r2ServiceUp) {
             log.warn(
-                    "R2 image upload disabled: set R2_ENDPOINT, R2_BUCKET, R2_ACCESS_KEY, R2_SECRET_KEY, R2_PUBLIC_URL "
-                            + "(and AWS_REGION for signing, e.g. auto)."
+                    "R2 image upload disabled: set R2_ENDPOINT, R2_BUCKET, R2_PUBLIC_URL and credentials "
+                            + "(R2_ACCESS_KEY/R2_SECRET_KEY or AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY; AWS_REGION for signing, e.g. auto)."
             );
         }
 

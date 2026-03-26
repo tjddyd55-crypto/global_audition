@@ -45,8 +45,8 @@ public class SecurityConfig {
                         writeApiError(response, 403, "접근 권한이 없습니다."))
             )
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/signup").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/auth/me").permitAll()
+                // 인증 엔드포인트는 최우선 공개. /api/auth/me 는 JwtAuthFilter + AuthService 가 401을 책임진다.
+                .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/uploads/**").permitAll()
                 .requestMatchers("/api/health", "/api/version").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/uploads/health").permitAll()
