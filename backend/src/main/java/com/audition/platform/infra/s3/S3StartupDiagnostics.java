@@ -34,6 +34,9 @@ public class S3StartupDiagnostics {
                 StringUtils.hasText(r2Endpoint),
                 r2ServiceUp
         );
+        // 표준 AWS SDK env (호스팅에서 주입되는지 여부만 확인, 값은 출력하지 않음)
+        log.info("AWS_ACCESS_KEY_ID: {}", System.getenv("AWS_ACCESS_KEY_ID") != null);
+        log.info("AWS_SECRET_ACCESS_KEY: {}", System.getenv("AWS_SECRET_ACCESS_KEY") != null);
         if (!r2ServiceUp) {
             log.warn(
                     "R2 image upload disabled: set R2_ENDPOINT, R2_BUCKET, R2_ACCESS_KEY, R2_SECRET_KEY, R2_PUBLIC_URL "
