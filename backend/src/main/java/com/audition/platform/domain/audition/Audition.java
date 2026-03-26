@@ -54,8 +54,18 @@ public class Audition {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
+    /** 레거시·동기화: 항상 {@link #imageOriginalUrl} 과 동일하게 유지 */
     @Column(name = "cover_image", columnDefinition = "TEXT")
     private String coverImage;
+
+    @Column(name = "image_original_url", columnDefinition = "TEXT")
+    private String imageOriginalUrl;
+
+    @Column(name = "image_medium_url", columnDefinition = "TEXT")
+    private String imageMediumUrl;
+
+    @Column(name = "image_thumb_url", columnDefinition = "TEXT")
+    private String imageThumbUrl;
 
     @Column(name = "video_url", columnDefinition = "TEXT")
     private String videoUrl;
@@ -138,6 +148,12 @@ public class Audition {
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
     public String getCoverImage() { return coverImage; }
     public void setCoverImage(String coverImage) { this.coverImage = coverImage; }
+    public String getImageOriginalUrl() { return imageOriginalUrl; }
+    public void setImageOriginalUrl(String imageOriginalUrl) { this.imageOriginalUrl = imageOriginalUrl; }
+    public String getImageMediumUrl() { return imageMediumUrl; }
+    public void setImageMediumUrl(String imageMediumUrl) { this.imageMediumUrl = imageMediumUrl; }
+    public String getImageThumbUrl() { return imageThumbUrl; }
+    public void setImageThumbUrl(String imageThumbUrl) { this.imageThumbUrl = imageThumbUrl; }
     public String getVideoUrl() { return videoUrl; }
     public void setVideoUrl(String videoUrl) { this.videoUrl = videoUrl; }
     /** DB/Hibernate가 null을 줄 수 있어도 호출부에는 빈 배열만 노출 (API null 금지) */

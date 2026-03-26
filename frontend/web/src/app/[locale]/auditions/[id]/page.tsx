@@ -20,6 +20,7 @@ import { CREDIT_POLICY_AUDITION_APPLY, creditsApi } from '@/lib/api/credits'
 import { canManageAudition as userCanManageAudition } from '@/lib/audition/auditionPermissions'
 import { MultiRoundSubmitCta } from '@/components/application/MultiRoundSubmitCta'
 import { roundIdForRoundNumber } from '@/lib/audition/roundNav'
+import { auditionDetailMediumUrl, auditionDetailOriginalUrl, normalizeAuditionImages } from '@/lib/types/audition'
 
 function SectionBlock({
   iconLabel,
@@ -181,11 +182,16 @@ export default function AuditionDetailPage() {
 
   const embed = getVideoEmbedSrc(safeStr(audition.videoUrl))
   const galleryRaw = safeArr(audition.galleryImages)
-  const cover = safeStr(audition.coverImage)
-  /** 대표와 동일 URL 중복 제거 후 추가 이미지 */
+  const imgs = normalizeAuditionImages(audition.images)
+  const heroMedium = safeStr(auditionDetailMediumUrl(imgs))
+  const heroOriginal = safeStr(auditionDetailOriginalUrl(imgs))
+  /** 갤러리에서 대표 원본·파생과 동일한 URL 제거 */
+  const coverDedupUrls = new Set(
+    [imgs.original, imgs.medium, imgs.thumb].map((u) => (u != null ? safeStr(u) : '')).filter(Boolean),
+  )
   const galleryExtra = galleryRaw
     .map((src) => safeStr(src))
-    .filter((s) => s.length > 0 && s !== cover)
+    .filter((s) => s.length > 0 && !coverDedupUrls.has(s))
     .slice(0, 24)
   const applicants = safeNum(audition.applicantsCount)
   const recruitList = safeArr(audition.recruitFields)
@@ -256,7 +262,8 @@ export default function AuditionDetailPage() {
     <div style={{ minHeight: '100vh', background: AUDITION_DETAIL.pageBackgroundMuted }}>
       <AuditionDetailHeroSection
         auditionId={id}
-        coverUrl={cover}
+        heroImageMediumUrl={heroMedium}
+        heroImageOriginalUrl={heroOriginal}
         title={safeStr(audition.title)}
         status={String(audition.status)}
         tags={auditionTags}

@@ -34,10 +34,7 @@ function tryParseJson(text: string): unknown {
   }
 }
 
-/**
- * **SSOT**: `apiClient.post('/uploads/image', formData)` → baseURL `/api` → multipart + Bearer.
- */
-export async function uploadAuditionImage(file: File, dir: AuditionUploadDir = 'audition'): Promise<string> {
+async function postAuditionImage(file: File, dir: AuditionUploadDir): Promise<ImageUploadApiResponse> {
   assertAuditionImageFile(file)
   const formData = new FormData()
   formData.append('file', file)
@@ -50,11 +47,11 @@ export async function uploadAuditionImage(file: File, dir: AuditionUploadDir = '
     const url = data?.url != null ? String(data.url).trim() : ''
     if (!url) {
       if (process.env.NODE_ENV === 'development') {
-        console.error('[uploadAuditionImage] 응답에 url 없음:', data)
+        console.error('[postAuditionImage] 응답에 url 없음:', data)
       }
       throw new Error('업로드 응답에 URL이 없습니다.')
     }
-    return url
+    return data
   } catch (e) {
     if (axios.isAxiosError(e)) {
       if (e.code === 'ECONNABORTED') {
@@ -69,12 +66,34 @@ export async function uploadAuditionImage(file: File, dir: AuditionUploadDir = '
         if (typeof m === 'string' && m.trim()) detail = m.trim()
       }
       if (process.env.NODE_ENV === 'development') {
-        console.error('[uploadAuditionImage] 업로드 실패:', e.response?.status, raw)
+        console.error('[postAuditionImage] 업로드 실패:', e.response?.status, raw)
       }
       throw new Error(detail || e.message || `이미지 업로드 실패 (${e.response?.status ?? '?'})`)
     }
     throw e
   }
+}
+
+/**
+ * **SSOT**: `apiClient.post('/uploads/image', formData)` → baseURL `/api` → multipart + Bearer.
+ */
+export async function uploadAuditionImage(file: File, dir: AuditionUploadDir = 'audition'): Promise<string> {
+  const data = await postAuditionImage(file, dir)
+  return String(data.url).trim()
+}
+
+/** 대표 이미지 등 `urls` 가 있는 업로드 — DB·API `images` 에 그대로 사용 */
+export async function uploadAuditionImageWithVariants(
+  file: File,
+  dir: AuditionUploadDir = 'audition'
+): Promise<{ original: string; medium: string; thumb: string }> {
+  const data = await postAuditionImage(file, dir)
+  const url = String(data.url).trim()
+  const u = data.urls
+  const original = (u?.original?.trim() || url)
+  const medium = (u?.medium?.trim() || url)
+  const thumb = (u?.thumb?.trim() || url)
+  return { original, medium, thumb }
 }
 
 type UploadErrorBody = {

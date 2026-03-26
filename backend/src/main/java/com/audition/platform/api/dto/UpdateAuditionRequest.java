@@ -1,5 +1,6 @@
 package com.audition.platform.api.dto;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
@@ -18,8 +19,8 @@ public class UpdateAuditionRequest {
 
     private List<String> tags;
 
-    @Size(max = 2000)
-    private String coverImage;
+    @Valid
+    private AuditionImagesDto images;
 
     @Size(max = 2000)
     private String videoUrl;
@@ -62,8 +63,8 @@ public class UpdateAuditionRequest {
     public void setStatus(String status) { this.status = status; }
     public List<String> getTags() { return tags; }
     public void setTags(List<String> tags) { this.tags = tags; }
-    public String getCoverImage() { return coverImage; }
-    public void setCoverImage(String coverImage) { this.coverImage = coverImage; }
+    public AuditionImagesDto getImages() { return images; }
+    public void setImages(AuditionImagesDto images) { this.images = images; }
     public String getVideoUrl() { return videoUrl; }
     public void setVideoUrl(String videoUrl) { this.videoUrl = videoUrl; }
     public List<String> getGalleryImages() { return galleryImages; }

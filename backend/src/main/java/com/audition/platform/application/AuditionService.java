@@ -1,5 +1,6 @@
 package com.audition.platform.application;
 
+import com.audition.platform.api.dto.AuditionImagesDto;
 import com.audition.platform.api.dto.AuditionResponse;
 import com.audition.platform.api.dto.AuditionRoundSummaryDto;
 import com.audition.platform.api.dto.CreateAuditionRequest;
@@ -98,6 +99,61 @@ public class AuditionService {
         a.setTags(a.getTags());
     }
 
+    private static String trimOrNull(String s) {
+        if (s == null) {
+            return null;
+        }
+        String t = s.trim();
+        return t.isEmpty() ? null : t;
+    }
+
+    private static String originalFromDto(AuditionImagesDto img) {
+        if (img == null) {
+            return null;
+        }
+        return trimOrNull(img.getOriginal());
+    }
+
+    private void applyImagesToEntity(Audition a, AuditionImagesDto img) {
+        if (img == null) {
+            a.setImageOriginalUrl(null);
+            a.setImageMediumUrl(null);
+            a.setImageThumbUrl(null);
+            a.setCoverImage(null);
+            return;
+        }
+        String o = trimOrNull(img.getOriginal());
+        String m = trimOrNull(img.getMedium());
+        String t = trimOrNull(img.getThumb());
+        a.setImageOriginalUrl(o);
+        a.setImageMediumUrl(m != null ? m : o);
+        a.setImageThumbUrl(t != null ? t : o);
+        a.setCoverImage(o);
+    }
+
+    private AuditionImagesDto buildImagesForResponse(Audition a) {
+        String o = a.getImageOriginalUrl();
+        String m = a.getImageMediumUrl();
+        String t = a.getImageThumbUrl();
+        String legacy = a.getCoverImage();
+        if ((o == null || o.isBlank()) && legacy != null && !legacy.isBlank()) {
+            o = legacy;
+            m = legacy;
+            t = legacy;
+        }
+        if ((m == null || m.isBlank()) && o != null && !o.isBlank()) {
+            m = o;
+        }
+        if ((t == null || t.isBlank()) && o != null && !o.isBlank()) {
+            t = o;
+        }
+        AuditionImagesDto dto = new AuditionImagesDto();
+        dto.setOriginal(o);
+        dto.setMedium(m);
+        dto.setThumb(t);
+        return dto;
+    }
+
     private AuditionResponse toResponse(Audition a) {
         normalizeAuditionArrayFields(a);
         AuditionResponse r = new AuditionResponse();
@@ -111,7 +167,7 @@ public class AuditionService {
         r.setDeadlineAt(a.getDeadlineAt());
         r.setTags(a.getTags());
         r.setCreatedAt(a.getCreatedAt());
-        r.setCoverImage(a.getCoverImage());
+        r.setImages(buildImagesForResponse(a));
         r.setVideoUrl(a.getVideoUrl());
         r.setGalleryImages(a.getGalleryImages());
         r.setAgencyName(a.getAgencyName() != null ? a.getAgencyName() : "");
@@ -137,7 +193,7 @@ public class AuditionService {
         a.setDescription(req.getDescription().trim());
         a.setStatus(req.getStatus() != null ? req.getStatus() : "DRAFT");
         a.setTags(AuditionTagNormalizer.normalize(req.getTags()));
-        a.setCoverImage(req.getCoverImage());
+        applyImagesToEntity(a, req.getImages());
         a.setVideoUrl(req.getVideoUrl());
         a.setGalleryImages(listToArray(req.getGalleryImages() != null ? req.getGalleryImages() : List.of()));
         a.setAgencyName(req.getAgencyName().trim());
@@ -173,14 +229,14 @@ public class AuditionService {
         }
     }
 
-    /** 게시(OPEN)·마감(CLOSED) 시 대표 이미지 URL 필수 */
-    private static void assertCoverImageForPublished(String status, String coverImage) {
+    /** 게시(OPEN)·마감(CLOSED) 시 대표 이미지 원본 URL 필수 */
+    private static void assertCoverImageForPublished(String status, String imageOriginalUrl) {
         String st = status != null ? status : "DRAFT";
         if (!"OPEN".equals(st) && !"CLOSED".equals(st)) {
             return;
         }
-        if (coverImage == null || coverImage.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "게시·마감 상태에서는 대표 이미지(coverImage)가 필요합니다.");
+        if (imageOriginalUrl == null || imageOriginalUrl.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "게시·마감 상태에서는 대표 이미지(images.original)가 필요합니다.");
         }
     }
 
@@ -197,7 +253,7 @@ public class AuditionService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User not found");
         }
         assertYoutubeIfVideoPresent(req.getStatus(), req.getVideoUrl());
-        assertCoverImageForPublished(req.getStatus(), req.getCoverImage());
+        assertCoverImageForPublished(req.getStatus(), originalFromDto(req.getImages()));
         Audition a = new Audition();
         a.setOwnerId(ownerId);
         a.setUpdatedAt(Instant.now());
@@ -295,8 +351,8 @@ public class AuditionService {
         if (request.getDeadlineAt() != null) {
             audition.setDeadlineAt(parseInstantOrNull(request.getDeadlineAt()));
         }
-        if (request.getCoverImage() != null) {
-            audition.setCoverImage(request.getCoverImage());
+        if (request.getImages() != null) {
+            applyImagesToEntity(audition, request.getImages());
         }
         if (request.getVideoUrl() != null) {
             audition.setVideoUrl(request.getVideoUrl());
@@ -347,7 +403,11 @@ public class AuditionService {
         }
 
         assertYoutubeIfVideoPresent(audition.getStatus(), audition.getVideoUrl());
-        assertCoverImageForPublished(audition.getStatus(), audition.getCoverImage());
+        String publishedOriginal = trimOrNull(audition.getImageOriginalUrl());
+        if (publishedOriginal == null) {
+            publishedOriginal = trimOrNull(audition.getCoverImage());
+        }
+        assertCoverImageForPublished(audition.getStatus(), publishedOriginal);
 
         if (audition.getEndDate() != null) {
             audition.setRemainingDays(computeRemainingDays(audition.getEndDate()));

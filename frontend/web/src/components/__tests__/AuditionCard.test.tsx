@@ -11,7 +11,7 @@ const mockAudition: AuditionDto = {
   createdAt: '2024-01-01T00:00:00.000Z',
   updatedAt: '2024-01-01T00:00:00.000Z',
   tags: ['보컬'],
-  coverImage: null,
+  images: { original: null, medium: null, thumb: null },
   videoUrl: null,
   galleryImages: [],
   agencyName: '테스트 기획사',

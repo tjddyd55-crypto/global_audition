@@ -18,7 +18,7 @@ public class AuditionResponse {
     private String[] tags;
     private Instant createdAt;
 
-    private String coverImage;
+    private AuditionImagesDto images;
     private String videoUrl;
     private String[] galleryImages;
     private String agencyName;
@@ -72,8 +72,8 @@ public class AuditionResponse {
     public void setTags(String[] tags) { this.tags = tags; }
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
-    public String getCoverImage() { return coverImage; }
-    public void setCoverImage(String coverImage) { this.coverImage = coverImage; }
+    public AuditionImagesDto getImages() { return images; }
+    public void setImages(AuditionImagesDto images) { this.images = images; }
     public String getVideoUrl() { return videoUrl; }
     public void setVideoUrl(String videoUrl) { this.videoUrl = videoUrl; }
     public String[] getGalleryImages() { return galleryImages; }

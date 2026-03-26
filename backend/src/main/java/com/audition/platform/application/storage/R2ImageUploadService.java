@@ -11,9 +11,7 @@ import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
-import java.awt.image.BufferedImage;
 import java.util.Locale;
-import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -26,6 +24,9 @@ public class R2ImageUploadService {
 
     /** R2·CDN 앞단 캐시 (객체 키에 UUID 포함으로 immutable 안전) */
     public static final String CDN_CACHE_CONTROL = "public, max-age=31536000, immutable";
+
+    /** 로그/알림에서 필터링하기 위한 고정 토큰 */
+    public static final String LOG_VARIANT_FAILED = "image_upload_variant_failed";
 
     private final S3Client r2Client;
     private final UploadProperties uploadProperties;
@@ -86,23 +87,25 @@ public class R2ImageUploadService {
             String medKey = directory.keyPrefix() + "m/" + id + replaceExtension(tail, derivExt);
             String thumbKey = directory.keyPrefix() + "t/" + id + replaceExtension(tail, derivExt);
 
-            Optional<BufferedImage> decoded = ImageVariantGenerator.read(originalBytes);
-            if (decoded.isEmpty()) {
-                log.warn("이미지 디코딩 실패 — 파생 생략, 원본 URL만 사용 bucket={} key={}", bucket, origKey);
-                return new ImageUploadResult(origUrl, origUrl, origUrl);
-            }
-
             try {
-                BufferedImage img = decoded.get();
                 int medEdge = uploadProperties.getMediumMaxEdgePx();
                 int thumbEdge = uploadProperties.getThumbMaxEdgePx();
-                byte[] mediumBytes = ImageVariantGenerator.resize(img, medEdge, pngDeriv);
-                byte[] thumbBytes = ImageVariantGenerator.resize(img, thumbEdge, pngDeriv);
+                byte[] mediumBytes = ImageVariantGenerator.resizeFromOriginalBytes(originalBytes, medEdge, pngDeriv);
+                byte[] thumbBytes = ImageVariantGenerator.resizeFromOriginalBytes(originalBytes, thumbEdge, pngDeriv);
                 putObject(medKey, mediumBytes, derivMime);
                 putObject(thumbKey, thumbBytes, derivMime);
                 return new ImageUploadResult(origUrl, publicUrlFor(medKey), publicUrlFor(thumbKey));
             } catch (Exception e) {
-                log.warn("이미지 파생 업로드 실패 — 원본만 유효 bucket={} key={}", bucket, origKey, e);
+                log.warn(
+                        "{} reason=resize_or_put bucket={} origKey={} contentType={} medKey={} thumbKey={}",
+                        LOG_VARIANT_FAILED,
+                        bucket.trim(),
+                        origKey,
+                        contentType,
+                        medKey,
+                        thumbKey,
+                        e
+                );
                 return new ImageUploadResult(origUrl, origUrl, origUrl);
             }
         } catch (ResponseStatusException e) {

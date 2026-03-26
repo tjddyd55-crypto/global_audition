@@ -6,23 +6,35 @@ import { AUDITION_COVER_PLACEHOLDER_SRC } from '@/components/audition/AuditionEd
 
 /**
  * 모바일 히어로: 잘림 없음 — bg-white + contain + max 높이.
+ * `fullSizeHref` 가 있으면 탭으로 원본(확대) 열기.
  */
-export function AuditionDetailHeroImage({ src }: { src: string }) {
+export function AuditionDetailHeroImage({ src, fullSizeHref }: { src: string; fullSizeHref?: string }) {
   const [failed, setFailed] = useState(false)
   const trimmed = src.trim()
   const url = !trimmed || failed ? AUDITION_COVER_PLACEHOLDER_SRC : trimmed
+  const href = (fullSizeHref?.trim() || trimmed).trim()
+
+  const img = (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={url}
+      alt=""
+      className="mx-auto block h-auto w-full max-h-[65vh] object-contain"
+      loading="eager"
+      decoding="async"
+      onError={() => setFailed(true)}
+    />
+  )
 
   return (
     <div className="flex w-full justify-center bg-white">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={url}
-        alt=""
-        className="mx-auto block h-auto w-full max-h-[65vh] object-contain"
-        loading="eager"
-        decoding="async"
-        onError={() => setFailed(true)}
-      />
+      {href && !failed && url !== AUDITION_COVER_PLACEHOLDER_SRC ? (
+        <a href={href} target="_blank" rel="noopener noreferrer" className="block w-full">
+          {img}
+        </a>
+      ) : (
+        img
+      )}
     </div>
   )
 }

@@ -20,7 +20,10 @@ model Audition {
   status          String
   tags            String[]
 
-  coverImage      String?  @map("cover_image")
+  coverImage         String?  @map("cover_image")
+  imageOriginalUrl   String?  @map("image_original_url")
+  imageMediumUrl     String?  @map("image_medium_url")
+  imageThumbUrl      String?  @map("image_thumb_url")
   videoUrl        String?  @map("video_url")
   galleryImages   String[] @map("gallery_images")
 

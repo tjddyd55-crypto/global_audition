@@ -1,9 +1,10 @@
 'use client'
 
+import { useCallback, useEffect, useState } from 'react'
 import { Link } from '../../i18n.config'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
-import type { AuditionDto } from '../../lib/types/audition'
+import { auditionListImageUrl, normalizeAuditionImages, type AuditionDto } from '../../lib/types/audition'
 import { FALLBACK_TEXT, DEFAULT_IMAGES } from '../../lib/constants/fallbacks'
 import { AUDITION_CARD } from '../../lib/design-tokens'
 
@@ -40,7 +41,27 @@ export default function AuditionCard({ audition }: AuditionCardProps) {
   const title = audition?.title ?? FALLBACK_TEXT.videoTitle
   const status = audition?.status ?? 'DRAFT'
   const description = audition?.description ?? ''
-  const coverImage = audition?.coverImage ?? ''
+  const im = normalizeAuditionImages(audition?.images)
+  const thumb = (im.thumb ?? '').trim()
+  const medium = (im.medium ?? '').trim()
+  const original = (im.original ?? '').trim()
+  const listPrimary = auditionListImageUrl(im)
+  const fallbackImg = DEFAULT_IMAGES.videoThumbnail
+  const [imgSrc, setImgSrc] = useState(() => listPrimary || fallbackImg)
+
+  useEffect(() => {
+    const p = thumb || medium || original
+    setImgSrc(p || fallbackImg)
+  }, [thumb, medium, original, fallbackImg])
+
+  const onCoverError = useCallback(() => {
+    setImgSrc((cur) => {
+      if (cur === thumb && medium) return medium
+      if ((cur === thumb || cur === medium) && original) return original
+      return fallbackImg
+    })
+  }, [thumb, medium, original, fallbackImg])
+
   const createdAt = audition?.createdAt
   const dateStr = createdAt
     ? (() => {
@@ -103,11 +124,12 @@ export default function AuditionCard({ audition }: AuditionCardProps) {
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={coverImage || DEFAULT_IMAGES.videoThumbnail}
+            src={imgSrc}
             alt=""
             className="block h-auto w-full object-contain"
             loading="lazy"
             decoding="async"
+            onError={onCoverError}
           />
         </div>
 

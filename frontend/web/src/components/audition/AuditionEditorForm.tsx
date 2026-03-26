@@ -3,7 +3,14 @@
 import { useEffect, useState, type FormEvent, type CSSProperties } from 'react'
 import { toast } from 'sonner'
 import { SIGNUP, HERO, AUDITION_DETAIL } from '@/lib/design-tokens'
-import type { AuditionDto, AuditionStatus, CreateAuditionPayload } from '@/lib/types/audition'
+import {
+  buildAuditionImagesPayload,
+  EMPTY_AUDITION_FORM_IMAGES,
+  type AuditionDto,
+  type AuditionFormImages,
+  type AuditionStatus,
+  type CreateAuditionPayload,
+} from '@/lib/types/audition'
 import { auditionApi } from '@/lib/api/auditions'
 import { apiErrorMessage } from '@/lib/api/uploads'
 import { isoToDatetimeLocalValue } from '@/lib/audition/datetimeLocal'
@@ -119,12 +126,18 @@ const textareaStyle: React.CSSProperties = {
 }
 
 function applyInitial(a: AuditionDto) {
+  const im = a.images
+  const images: AuditionFormImages = {
+    original: im?.original ?? '',
+    medium: im?.medium ?? '',
+    thumb: im?.thumb ?? '',
+  }
   return {
     title: a.title ?? '',
     description: a.description ?? '',
     status: (a.status as AuditionStatus) || 'DRAFT',
     tags: [...(a.tags ?? [])],
-    coverImage: a.coverImage ?? '',
+    images,
     videoUrl: a.videoUrl ?? '',
     galleryImages: [...(a.galleryImages ?? [])],
     agencyName: a.agencyName ?? '',
@@ -166,7 +179,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
   const [description, setDescription] = useState('')
   const [status, setStatus] = useState<AuditionStatus>('DRAFT')
   const [selectedTags, setSelectedTags] = useState<string[]>([])
-  const [coverImage, setCoverImage] = useState('')
+  const [images, setImages] = useState<AuditionFormImages>(() => ({ ...EMPTY_AUDITION_FORM_IMAGES }))
   const [videoUrl, setVideoUrl] = useState('')
   const [galleryImages, setGalleryImages] = useState<string[]>([])
   const [agencyName, setAgencyName] = useState('')
@@ -194,7 +207,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
     setDescription(v.description)
     setStatus(v.status)
     setSelectedTags(v.tags)
-    setCoverImage(v.coverImage)
+    setImages(v.images)
     setVideoUrl(v.videoUrl)
     setGalleryImages(v.galleryImages)
     setAgencyName(v.agencyName)
@@ -216,7 +229,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
       description: (description ?? '').trim() || '—',
       status: forcedStatus,
       tags: normalizeAuditionTagsForPayload(selectedTags),
-      coverImage: (coverImage ?? '').trim() || undefined,
+      images: buildAuditionImagesPayload(images),
       videoUrl: (videoUrl ?? '').trim() || undefined,
       galleryImages: trimNonEmpty(galleryImages),
       agencyName: (agencyName ?? '').trim() || '미지정',
@@ -244,7 +257,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
         return '게시하려면 상세 설명을 입력해 주세요.'
       }
       setShowDescriptionError(false)
-      if (!(coverImage ?? '').trim()) {
+      if (!(images.original ?? '').trim() && !(images.medium ?? '').trim() && !(images.thumb ?? '').trim()) {
         setShowCoverError(true)
         return '게시하려면 대표 이미지를 업로드해 주세요.'
       }
@@ -521,9 +534,22 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
           aspect="portrait"
           maxCount={1}
           uploadDir="audition"
-          value={coverImage.trim() ? [coverImage.trim()] : []}
+          value={
+            images.medium.trim()
+              ? [images.medium.trim()]
+              : images.original.trim()
+                ? [images.original.trim()]
+                : []
+          }
           onChange={(urls) => {
-            setCoverImage(urls[0] ?? '')
+            if (!(urls[0] ?? '').trim()) {
+              setImages({ ...EMPTY_AUDITION_FORM_IMAGES })
+            }
+            /* 업로드 성공 시 3종은 onAuditionCoverUrls(setImages)에서만 반영 */
+            setShowCoverError(false)
+          }}
+          onAuditionCoverUrls={(urls) => {
+            setImages({ original: urls.original, medium: urls.medium, thumb: urls.thumb })
             setShowCoverError(false)
           }}
           disabled={isLoading}
@@ -691,7 +717,9 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
         title={title}
         description={description}
         tags={selectedTags}
-        coverImage={coverImage}
+        coverThumbUrl={
+          images.thumb.trim() || images.medium.trim() || images.original.trim()
+        }
         videoUrl={videoUrl}
         status={
           mode === 'create' && !effectiveId

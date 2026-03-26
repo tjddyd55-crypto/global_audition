@@ -1,5 +1,5 @@
 import { apiClient } from './client'
-import type { AuditionDto, CreateAuditionPayload } from '../types/audition'
+import type { AuditionDto, AuditionImages, CreateAuditionPayload } from '../types/audition'
 import { safeStringArr } from '../utils/safe'
 import { unwrapData } from './unwrap'
 
@@ -118,6 +118,33 @@ function parsePublicVoteItem(raw: Record<string, unknown>): PublicVoteItem {
   }
 }
 
+function parseAuditionImages(raw: Record<string, unknown>): AuditionImages {
+  const nest = raw.images
+  if (nest && typeof nest === 'object' && !Array.isArray(nest)) {
+    const n = nest as Record<string, unknown>
+    const o = n.original != null ? String(n.original).trim() : ''
+    const m = n.medium != null ? String(n.medium).trim() : ''
+    const t = n.thumb != null ? String(n.thumb).trim() : ''
+    if (o || m || t) {
+      const base = o || m || t
+      return {
+        original: (o || base) || null,
+        medium: (m || base) || null,
+        thumb: (t || base) || null,
+      }
+    }
+  }
+  const legacy =
+    (raw.coverImage != null && String(raw.coverImage).trim()) ||
+    (raw.cover_image != null && String(raw.cover_image).trim()) ||
+    (raw.imageUrl != null && String(raw.imageUrl).trim()) ||
+    ''
+  if (legacy) {
+    return { original: legacy, medium: legacy, thumb: legacy }
+  }
+  return { original: null, medium: null, thumb: null }
+}
+
 export function parseAuditionDto(raw: Record<string, unknown>): AuditionDto {
   return {
     id: String(raw.id ?? ''),
@@ -130,7 +157,7 @@ export function parseAuditionDto(raw: Record<string, unknown>): AuditionDto {
     deadlineAt: raw.deadlineAt != null ? String(raw.deadlineAt) : null,
     tags: safeStringArr(raw.tags),
     createdAt: String(raw.createdAt ?? ''),
-    coverImage: raw.coverImage != null ? String(raw.coverImage) : null,
+    images: parseAuditionImages(raw),
     videoUrl: raw.videoUrl != null ? String(raw.videoUrl) : null,
     galleryImages: safeStringArr(raw.galleryImages),
     agencyName: String(raw.agencyName ?? ''),

@@ -21,6 +21,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { toast } from 'sonner'
 import {
   uploadAuditionImage,
+  uploadAuditionImageWithVariants,
   apiUploadErrorMessage,
   type AuditionUploadDir,
 } from '@/lib/api/uploads'
@@ -48,6 +49,11 @@ export type ImageUploaderProps = {
   label?: ReactNode
   /** 필수 필드 강조(에디터 대표 이미지용) */
   showFieldError?: boolean
+  /**
+   * 단일(대표) 슬롯 + `multiple===false` 일 때만 사용.
+   * 지정 시 업로드 응답의 original/medium/thumb 를 받고, 미리보기용 `onChange`에는 medium URL을 넘김.
+   */
+  onAuditionCoverUrls?: (urls: { original: string; medium: string; thumb: string }) => void
 }
 
 const DEFAULT_GALLERY_MAX = 10
@@ -144,6 +150,7 @@ export function ImageUploader({
   guide,
   label,
   showFieldError,
+  onAuditionCoverUrls,
 }: ImageUploaderProps) {
   const fileInputId = useId()
   const dndId = useId()
@@ -202,6 +209,12 @@ export function ImageUploader({
       setUploadBusy(true)
       try {
         if (!multiple) {
+          if (onAuditionCoverUrls) {
+            const urls = await uploadAuditionImageWithVariants(valid[0], resolvedUploadDir)
+            onAuditionCoverUrls(urls)
+            onChange([urls.medium])
+            return
+          }
           const url = await uploadAuditionImage(valid[0], resolvedUploadDir)
           onChange([url])
           return
@@ -227,7 +240,7 @@ export function ImageUploader({
         setUploadBusy(false)
       }
     },
-    [multiple, onChange, resolvedMax, resolvedUploadDir, value]
+    [multiple, onAuditionCoverUrls, onChange, resolvedMax, resolvedUploadDir, value]
   )
 
   const onInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {

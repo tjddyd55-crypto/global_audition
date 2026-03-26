@@ -9,7 +9,10 @@ import { AUDITION_COVER_PLACEHOLDER_SRC } from '@/components/audition/AuditionEd
 
 type AuditionDetailHeroSectionProps = {
   auditionId: string
-  coverUrl: string
+  /** 히어로 표시용 — medium 우선 규칙(폴백은 페이지에서 채움) */
+  heroImageMediumUrl: string
+  /** 새 탭 원본 보기 — original */
+  heroImageOriginalUrl: string
   title: string
   status: string
   tags: string[]
@@ -19,23 +22,34 @@ type AuditionDetailHeroSectionProps = {
   applicantsCount: number
 }
 
-/** PC: 포스터 — 상세 모바일과 동일, 잘림 없음(contain) + 흰 배경 */
-function DesktopPosterImage({ src }: { src: string }) {
+/** PC: 포스터 — 상세 모바일과 동일, 잘림 없음(contain) + 흰 배경. 클릭 시 원본 새 탭 */
+function DesktopPosterImage({ src, fullSizeHref }: { src: string; fullSizeHref: string }) {
   const [failed, setFailed] = useState(false)
   const trimmed = src.trim()
   const url = !trimmed || failed ? AUDITION_COVER_PLACEHOLDER_SRC : trimmed
+  const href = (fullSizeHref.trim() || trimmed).trim()
+
+  const img = (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={url}
+      alt=""
+      className="mx-auto block h-auto w-full max-h-[min(70vh,640px)] object-contain"
+      loading="eager"
+      decoding="async"
+      onError={() => setFailed(true)}
+    />
+  )
 
   return (
     <div className="flex w-full justify-center bg-white">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={url}
-        alt=""
-        className="mx-auto block h-auto w-full max-h-[min(70vh,640px)] object-contain"
-        loading="eager"
-        decoding="async"
-        onError={() => setFailed(true)}
-      />
+      {href && !failed && url !== AUDITION_COVER_PLACEHOLDER_SRC ? (
+        <a href={href} target="_blank" rel="noopener noreferrer" className="block w-full">
+          {img}
+        </a>
+      ) : (
+        img
+      )}
     </div>
   )
 }
@@ -52,7 +66,8 @@ function statusBadgeCopy(status: string): string {
  */
 export function AuditionDetailHeroSection({
   auditionId,
-  coverUrl,
+  heroImageMediumUrl,
+  heroImageOriginalUrl,
   title,
   status,
   tags,
@@ -60,7 +75,8 @@ export function AuditionDetailHeroSection({
   location,
   applicantsCount,
 }: AuditionDetailHeroSectionProps) {
-  const cover = safeStr(coverUrl)
+  const cover = safeStr(heroImageMediumUrl)
+  const fullSize = safeStr(heroImageOriginalUrl)
   const [shareHint, setShareHint] = useState<'idle' | 'ok' | 'err'>('idle')
 
   const onShare = useCallback(async () => {
@@ -96,7 +112,7 @@ export function AuditionDetailHeroSection({
       <div className="lg:hidden w-full">
         <div className="relative w-full bg-white">
           {cover ? (
-            <AuditionDetailHeroImage src={cover} />
+            <AuditionDetailHeroImage src={cover} fullSizeHref={fullSize || cover} />
           ) : (
             <div
               className="flex min-h-[min(40vh,280px)] w-full items-center justify-center"
@@ -200,7 +216,7 @@ export function AuditionDetailHeroSection({
           <div className="flex w-full items-start gap-8">
             <div className="w-[360px] shrink-0 overflow-hidden">
               {cover ? (
-                <DesktopPosterImage src={cover} />
+                <DesktopPosterImage src={cover} fullSizeHref={fullSize || cover} />
               ) : (
                 <div
                   className="flex min-h-[280px] w-full items-center justify-center py-3 text-sm text-white/85"

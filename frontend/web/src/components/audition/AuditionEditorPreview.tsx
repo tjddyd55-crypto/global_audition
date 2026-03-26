@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { AuditionStatus } from '@/lib/types/audition'
 import { AUDITION_DETAIL, HERO } from '@/lib/design-tokens'
 import { EDITOR_LABELS, auditionStatusLabelKo } from '@/lib/audition/auditionEditorCopy'
@@ -13,7 +13,8 @@ export type AuditionEditorPreviewProps = {
   title: string
   description: string
   tags: string[]
-  coverImage: string
+  /** 리스트 카드와 동일 규칙: thumb (폴백은 폼에서 이미 채움) */
+  coverThumbUrl: string
   videoUrl: string
   status: AuditionStatus
 }
@@ -22,7 +23,7 @@ export function AuditionEditorPreview({
   title,
   description,
   tags,
-  coverImage,
+  coverThumbUrl,
   videoUrl,
   status,
 }: AuditionEditorPreviewProps) {
@@ -39,7 +40,18 @@ export function AuditionEditorPreview({
     [description],
   )
 
-  const coverTrimmed = coverImage.trim()
+  const coverTrimmed = coverThumbUrl.trim()
+  const [coverFailed, setCoverFailed] = useState(false)
+
+  useEffect(() => {
+    setCoverFailed(false)
+  }, [coverTrimmed])
+
+  const coverPreviewSrc = !coverTrimmed || coverFailed ? AUDITION_COVER_PLACEHOLDER_SRC : coverTrimmed
+
+  const onCoverPreviewError = useCallback(() => {
+    setCoverFailed(true)
+  }, [])
 
   return (
     <aside
@@ -63,18 +75,12 @@ export function AuditionEditorPreview({
             {coverTrimmed ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={coverTrimmed}
+                src={coverPreviewSrc}
                 alt=""
                 className="h-full w-full object-cover"
                 loading="lazy"
                 decoding="async"
-                onError={(e) => {
-                  const el = e.currentTarget
-                  if (el.dataset.fallback === '1') return
-                  el.dataset.fallback = '1'
-                  el.onerror = null
-                  el.src = AUDITION_COVER_PLACEHOLDER_SRC
-                }}
+                onError={onCoverPreviewError}
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-sm text-gray-400">
