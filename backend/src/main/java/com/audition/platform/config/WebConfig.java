@@ -27,10 +27,12 @@ public class WebConfig implements WebMvcConfigurer {
             .allowCredentials(true)
             .maxAge(3600);
 
-        // 프론트는 Next rewrite로 동일 Origin 호출이 기본. 크로스 오리진은 로컬 개발·도구용만.
+        // Railway 프론트 -> 백엔드 외부 rewrite 시 원본 Origin 이 전달될 수 있어 운영 Railway 도메인도 허용.
         mapping.allowedOriginPatterns(
                 "http://localhost:*",
-                "http://127.0.0.1:*"
+                "http://127.0.0.1:*",
+                "https://*.up.railway.app",
+                "https://*.railway.app"
         );
 
         String[] extra = parseAllowedOrigins();
