@@ -1,30 +1,19 @@
-import { API_BASE_URL } from '@/lib/env'
-
 /**
  * ============================================================================
  * API 엔드포인트 상수화
  * ============================================================================
  *
- * Gateway 경유 구조 정합성 검증 (Phase A)
- *
- * 목적:
- * - Frontend → Gateway → Media-Service 경로 전환 가능 구조 확보
- * - 현재는 직접 호출 허용, 향후 Gateway 경유로 전환 가능하도록 상수화
+ * API는 `apiClient`(base `/api`) 또는 `apiFetch` 로 동일 Origin 호출.
  *
  * 사용법:
  * import { MEDIA_ENDPOINTS, MEDIA_API_BASE } from '@/lib/api/endpoints'
- * const url = `${MEDIA_API_BASE}/api/v1${MEDIA_ENDPOINTS.VIDEOS}` (직접) 또는 Gateway prefix 사용
  */
 
 /**
- * Media API 호출 base (Gateway 전환 가능, 실제 라우팅 변경 없음)
- * - NEXT_PUBLIC_USE_GATEWAY !== 'true' → 직접 호출 (API_BASE_URL)
- * - NEXT_PUBLIC_USE_GATEWAY === 'true' → Gateway 경유 prefix (/media)
+ * Media API path prefix (게이트웨이 전환 시 Next에서 `/media` rewrite 추가 가능)
  */
 export const MEDIA_API_BASE =
-  typeof process !== 'undefined' && process.env.NEXT_PUBLIC_USE_GATEWAY === 'true'
-    ? '/media'
-    : API_BASE_URL
+  typeof process !== 'undefined' && process.env.NEXT_PUBLIC_USE_GATEWAY === 'true' ? '/media' : ''
 
 /**
  * Media-Service API 엔드포인트 (상대 경로)
@@ -45,7 +34,7 @@ export const MEDIA_ENDPOINTS = {
    * Videos API
    * Gateway 라우팅: /api/v1/videos/** (설정됨)
    * Media-Service: VideoContentController
-   * 실제 경로: {API_BASE_URL}/api/v1/videos
+   * 실제 경로: /api/videos
    */
   VIDEOS: '/videos',
   
@@ -53,7 +42,7 @@ export const MEDIA_ENDPOINTS = {
    * Vault (Creative Assets) API
    * Gateway 라우팅: 미설정 (향후 추가 필요)
    * Media-Service: CreativeAssetController
-   * 실제 경로: {API_BASE_URL}/api/v1/vault
+   * 실제 경로: /api/vault
    */
   VAULT: '/vault',
   
@@ -61,7 +50,7 @@ export const MEDIA_ENDPOINTS = {
    * Media Upload API
    * Gateway 라우팅: 미설정 (향후 추가 필요)
    * Media-Service: MediaController
-   * 실제 경로: {API_BASE_URL}/api/v1/media
+   * 실제 경로: /api/media
    */
   MEDIA: '/media',
   
@@ -69,7 +58,7 @@ export const MEDIA_ENDPOINTS = {
    * Video Comments API
    * Gateway 라우팅: 미설정 (향후 추가 필요)
    * Media-Service: VideoCommentController
-   * 실제 경로: {API_BASE_URL}/api/v1/videos/{videoId}/comments
+   * 실제 경로: /api/videos/{videoId}/comments
    */
   VIDEO_COMMENTS: '/videos',
   
@@ -77,7 +66,7 @@ export const MEDIA_ENDPOINTS = {
    * Video Search API
    * Gateway 라우팅: 미설정 (향후 추가 필요)
    * Media-Service: VideoSearchController
-   * 실제 경로: {API_BASE_URL}/api/v1/search/videos
+   * 실제 경로: /api/search/videos
    */
   VIDEO_SEARCH: '/search/videos',
   
@@ -85,7 +74,7 @@ export const MEDIA_ENDPOINTS = {
    * Video Ranking API
    * Gateway 라우팅: 미설정 (향후 추가 필요)
    * Media-Service: VideoRankingController
-   * 실제 경로: {API_BASE_URL}/api/v1/videos/ranking
+   * 실제 경로: /api/videos/ranking
    */
   VIDEO_RANKING: '/videos/ranking',
   
@@ -93,7 +82,7 @@ export const MEDIA_ENDPOINTS = {
    * Video Feedback API
    * Gateway 라우팅: 미설정 (향후 추가 필요)
    * Media-Service: VideoFeedbackController
-   * 실제 경로: {API_BASE_URL}/api/v1/videos/feedback
+   * 실제 경로: /api/videos/feedback
    */
   VIDEO_FEEDBACK: '/videos/feedback',
   
@@ -101,7 +90,7 @@ export const MEDIA_ENDPOINTS = {
    * Creator Analytics API
    * Gateway 라우팅: 미설정 (향후 추가 필요)
    * Media-Service: CreatorAnalyticsController
-   * 실제 경로: {API_BASE_URL}/api/v1/analytics/creator
+   * 실제 경로: /api/analytics/creator
    */
   CREATOR_ANALYTICS: '/analytics/creator',
 } as const

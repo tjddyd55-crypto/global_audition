@@ -2,6 +2,17 @@ const createNextIntlPlugin = require('next-intl/plugin')
 
 const withNextIntl = createNextIntlPlugin('./src/i18n.ts')
 
+/**
+ * `/api/*` rewrite 대상 백엔드 Origin (트레일링 슬래시 없음).
+ * 서버 전용(BACKEND_PROXY_ORIGIN) — 브라우저 번들에 노출되지 않음.
+ */
+function backendProxyOrigin() {
+  const fromEnv = (process.env.BACKEND_PROXY_ORIGIN || '').trim().replace(/\/+$/, '')
+  if (fromEnv) return fromEnv
+  if (process.env.NODE_ENV === 'development') return 'http://127.0.0.1:8081'
+  return 'https://backend-production-b968.up.railway.app'
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -23,11 +34,7 @@ const nextConfig = {
   // 환경 변수 설정 (클라이언트 사이드에서 접근 가능)
   env: {
     NEXT_PUBLIC_LOCALE: process.env.NEXT_PUBLIC_LOCALE || 'ko',
-    // next-intl 플러그인이 요구하는 환경 변수
     _next_intl_trailing_slash: 'never',
-    // API URL (Railway에서 설정 필요)
-    // Railway → frontend-web → Variables → NEXT_PUBLIC_API_URL=https://gateway-production-72d6.up.railway.app
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://gateway-production-72d6.up.railway.app',
   },
   
   // 성능 최적화
@@ -68,17 +75,13 @@ const nextConfig = {
     ],
   },
   
-  // API 프록시 설정 (개발 환경 전용 - 프로덕션에서는 사용하지 않음)
+  /** 브라우저는 항상 동일 Origin `/api/*` 만 호출 → Next가 백엔드로 프록시 (CORS 불필요) */
   async rewrites() {
-    // 프로덕션에서는 프록시를 사용하지 않음 (직접 Gateway URL 사용)
-    if (process.env.NODE_ENV === 'production') {
-      return []
-    }
-    
+    const origin = backendProxyOrigin()
     return [
       {
         source: '/api/:path*',
-        destination: 'http://localhost:8081/api/:path*',
+        destination: `${origin}/api/:path*`,
       },
     ]
   },

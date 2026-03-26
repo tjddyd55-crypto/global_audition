@@ -1,13 +1,10 @@
-import { API_BASE_URL } from '@/lib/env'
 import { apiFetchPublic } from './apiFetch'
 import { MEDIA_ENDPOINTS } from './endpoints'
 
 /**
  * Health Check API
  *
- * - Monolith: GET /api/health, GET /api/version (NEXT_PUBLIC_API_URL = backend URL)
- * - Legacy: Gateway + Media-Service (multi-service)
- * GET 요청만 사용하여 안전하게 검증합니다.
+ * - Monolith: GET /api/health, GET /api/version (브라우저는 `/api/...` 동일 Origin)
  */
 
 export interface HealthStatus {
@@ -41,7 +38,7 @@ export async function getBackendVersion(): Promise<{ version: string; buildId: s
   }
 }
 
-/** 인프라/플랫폼 검증: health + version 한 번에 호출 (NEXT_PUBLIC_API_URL 연결 확인) */
+/** 인프라/플랫폼 검증: health + version 한 번에 호출 */
 export async function checkBackendHealthAndVersion(): Promise<{
   health: { ok: boolean }
   version: { version: string; buildId: string }
@@ -63,7 +60,7 @@ export async function checkMediaHealth(): Promise<HealthStatus> {
     // Gateway를 통해 media-service의 videos API를 호출하여 연결 확인
     // GET 요청만 사용하므로 안전합니다
     // Gateway 경유 가능: USE_GATEWAY.VIDEOS = true
-    // 실제 경로: {API_BASE_URL}/api/v1/videos
+    // 실제 경로: /api/videos (apiFetch → 동일 Origin)
     const res = await apiFetchPublic(`${MEDIA_ENDPOINTS.VIDEOS}?page=0&size=1`, {
       method: 'GET',
       cache: 'no-store',
@@ -91,32 +88,28 @@ export async function checkMediaHealth(): Promise<HealthStatus> {
 }
 
 /**
- * Gateway Health Check
- * Gateway 자체의 상태를 확인합니다.
+ * 이전 Gateway actuator 검증용 — 모놀리스에서는 백엔드 `/api/health`와 동일하게 검사.
  */
 export async function checkGatewayHealth(): Promise<HealthStatus> {
   try {
-    const res = await fetch(`${API_BASE_URL}/actuator/health`, {
+    const res = await apiFetchPublic('/health', {
       method: 'GET',
       cache: 'no-store',
-      headers: {
-        'Content-Type': 'application/json',
-      },
     })
 
     if (!res.ok) {
-      throw new Error(`Gateway unavailable: ${res.status} ${res.statusText}`)
+      throw new Error(`Backend unavailable: ${res.status} ${res.statusText}`)
     }
 
     const data = await res.json()
+    const up = data?.ok === true
     return {
-      status: data.status === 'UP' ? 'UP' : 'DOWN',
+      status: up ? 'UP' : 'DOWN',
       timestamp: new Date().toISOString(),
-      service: 'gateway',
-      ...data,
+      service: 'backend',
     }
   } catch (error) {
-    console.error('[Health Check] Gateway error:', error)
+    console.error('[Health Check] Backend (legacy gateway name) error:', error)
     throw error
   }
 }

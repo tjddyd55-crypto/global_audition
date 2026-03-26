@@ -35,7 +35,7 @@ export type ImageUploaderProps = {
   maxCount?: number
   value: string[]
   onChange: (urls: string[]) => void
-  /** S3 경로. 미지정 시 단일→covers, 복수→gallery */
+  /** R2 키 접두사용 dir. 미지정 시 단일→audition, 복수→thumbnail */
   uploadDir?: AuditionUploadDir
   disabled?: boolean
   className?: string
@@ -148,7 +148,7 @@ export function ImageUploader({
   const [uploadBusy, setUploadBusy] = useState(false)
 
   const resolvedMax = maxCountProp ?? (multiple ? DEFAULT_GALLERY_MAX : 1)
-  const resolvedUploadDir: AuditionUploadDir = uploadDirProp ?? (multiple ? 'gallery' : 'covers')
+  const resolvedUploadDir: AuditionUploadDir = uploadDirProp ?? (multiple ? 'thumbnail' : 'audition')
   /** 갤러리만 슬롯 상한 적용. 단일(대표)은 이미지가 있어도 교체 가능해야 함 */
   const galleryFull = multiple && value.length >= resolvedMax
   const inputDisabled = disabled || uploadBusy || galleryFull

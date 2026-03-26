@@ -1,22 +1,22 @@
-import { API_BASE_URL } from '@/lib/env'
 import { getStoredAccessToken } from './authToken'
 
 /**
- * 백엔드 API 절대 URL (`NEXT_PUBLIC_API_URL` + `/api` + path)
- * @param apiPath `/` 로 시작 권장. 예: `/credits/balance`, `/v1/points/balance`
+ * 브라우저·클라이언트 컴포넌트용 API URL (항상 동일 Origin `/api/...`).
+ * Next.js rewrites가 서버에서 실제 백엔드로 전달한다.
+ *
+ * @param apiPath `/` 로 시작 권장. 예: `/health`, `/uploads/image`
  */
 export function apiUrl(apiPath: string): string {
   if (apiPath.startsWith('http://') || apiPath.startsWith('https://')) {
     return apiPath
   }
   const p = apiPath.startsWith('/') ? apiPath : `/${apiPath}`
-  return `${API_BASE_URL}/api${p}`
+  return `/api${p}`
 }
 
 export class ApiFetchError extends Error {
   readonly status: number
   readonly bodyText: string
-  /** 요청 최종 URL (fetch Response.url — 리다이렉트 후 값) */
   readonly url: string
 
   constructor(status: number, bodyText: string, url = '') {
@@ -29,19 +29,9 @@ export class ApiFetchError extends Error {
 }
 
 export type ApiFetchOptions = RequestInit & {
-  /**
-   * 기본: `undefined` → Bearer 부착 시도(토큰 있을 때만).
-   * `false`: Authorization 헤더를 넣지 않음 → **로그인·권한 필수 API에 쓰면 401/403** (서버가 익명 허용하는 공개 GET 전용).
-   * 서버 권한은 항상 서버에서 검증됨; `auth: false`는 “클라이언트가 토큰을 안 보냄”일 뿐, 보호 API를 “뚫어” 주지 않음.
-   */
   auth?: boolean
 }
 
-/**
- * fetch 기반 공통 호출 — credentials + (기본) JSON Content-Type + Bearer
- * - Bearer: `options.auth !== false` 이고 저장된 토큰이 있을 때만 설정.
- * - FormData 본문일 때는 Content-Type을 건드리지 않음(브라우저 boundary 유지).
- */
 export async function apiFetch(apiPath: string, options: ApiFetchOptions = {}): Promise<Response> {
   const { auth: authOption, headers: initHeaders, ...rest } = options
   const attachBearer = authOption !== false
@@ -69,7 +59,6 @@ export async function apiFetch(apiPath: string, options: ApiFetchOptions = {}): 
   })
 }
 
-/** 공개 엔드포인트 전용 — `apiFetch(path, { auth: false })` 와 동일, 의도를 이름으로 드러냄 */
 export function apiFetchPublic(apiPath: string, options: Omit<ApiFetchOptions, 'auth'> = {}): Promise<Response> {
   return apiFetch(apiPath, { ...options, auth: false })
 }

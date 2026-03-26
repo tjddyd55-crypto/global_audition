@@ -1,13 +1,17 @@
 package com.audition.platform.api;
 
 import com.audition.platform.api.dto.ImageUploadResponse;
+import com.audition.platform.application.storage.ImageContentTypes;
 import com.audition.platform.application.storage.ImageUploadDirectory;
 import com.audition.platform.application.storage.R2ImageUploadService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,7 +25,7 @@ import java.util.Map;
 
 /**
  * 이미지 업로드 고정 경로: <strong>클라이언트 → 이 API → R2</strong>.
- * 프론트에서 R2 엔드포인트·presigned URL로 직접 업로드하지 않습니다.
+ * 에러 응답은 항상 JSON <code>{"message":"..."}</code> 로 통일합니다.
  */
 @RestController
 @RequestMapping("/api/uploads")
@@ -37,9 +41,6 @@ public class ImageUploadController {
         this.environment = environment;
     }
 
-    /**
-     * R2 설정·빈 등록 여부 진단.
-     */
     @GetMapping("/health")
     public Map<String, String> uploadHealth() {
         String bucket = environment.getProperty("app.r2.bucket", "");
@@ -54,30 +55,42 @@ public class ImageUploadController {
     }
 
     @PostMapping(value = "/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ImageUploadResponse uploadImage(
-            @RequestParam("file") MultipartFile file,
-            @RequestParam(value = "dir", required = false, defaultValue = "covers") String dir
+    public ResponseEntity<?> uploadImage(
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam(value = "dir", required = false, defaultValue = "audition") String dir
     ) {
-        R2ImageUploadService r2ImageUploadService = uploadService.getIfAvailable();
-        if (r2ImageUploadService == null) {
-            log.error("POST /api/uploads/image: R2ImageUploadService 빈 없음 — r2S3Client·R2 환경변수 확인");
-            throw new IllegalStateException("R2 이미지 업로드 서비스 초기화 실패");
-        }
-
-        ImageUploadDirectory directory;
         try {
-            directory = ImageUploadDirectory.fromParam(dir);
-        } catch (ResponseStatusException e) {
-            throw e;
-        }
+            if (file == null || file.isEmpty()) {
+                return jsonMessage(HttpStatus.BAD_REQUEST, "업로드할 파일(file)이 없거나 비어 있습니다.");
+            }
+            if (!ImageContentTypes.isAllowed(file.getContentType())) {
+                return jsonMessage(HttpStatus.BAD_REQUEST, "이미지 파일만 업로드 가능합니다 (JPEG, PNG, WebP).");
+            }
 
-        try {
-            return new ImageUploadResponse(r2ImageUploadService.upload(file, directory));
+            R2ImageUploadService r2ImageUploadService = uploadService.getIfAvailable();
+            if (r2ImageUploadService == null) {
+                log.error("POST /api/uploads/image: R2ImageUploadService 빈 없음 — r2S3Client·R2 환경변수 확인");
+                return jsonMessage(HttpStatus.SERVICE_UNAVAILABLE, "R2 이미지 업로드 서비스를 사용할 수 없습니다.");
+            }
+
+            ImageUploadDirectory directory = ImageUploadDirectory.fromParam(dir);
+            String url = r2ImageUploadService.upload(file, directory);
+            return ResponseEntity.ok(new ImageUploadResponse(url));
         } catch (ResponseStatusException e) {
-            throw e;
+            HttpStatusCode code = e.getStatusCode();
+            String msg = e.getReason() != null ? e.getReason() : "요청을 처리할 수 없습니다.";
+            return jsonMessage(code, msg);
         } catch (Exception e) {
-            log.error("R2 업로드 실패", e);
-            throw new RuntimeException("R2 upload failed: " + e.getMessage(), e);
+            e.printStackTrace();
+            log.error("POST /api/uploads/image 처리 중 오류", e);
+            String msg = e.getMessage() != null ? e.getMessage() : "업로드 처리 중 오류가 발생했습니다.";
+            return jsonMessage(HttpStatus.INTERNAL_SERVER_ERROR, msg);
         }
+    }
+
+    private static ResponseEntity<Map<String, String>> jsonMessage(HttpStatusCode status, String message) {
+        return ResponseEntity.status(status)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of("message", message));
     }
 }

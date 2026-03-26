@@ -1,97 +1,18 @@
-# 필수 ENV 목록
+# Frontend Web — 필수 환경 변수
 
-## Required ENV
+## BACKEND_PROXY_ORIGIN (프로덕션·커스텀 백엔드 URL 시 권장)
 
-### NEXT_PUBLIC_API_URL (필수)
+Next.js **서버**에서만 사용. 클라이언트 번들에 포함되지 않음.
 
-**용도**: 백엔드 API Base URL (CORS가 허용된 실제 백엔드 도메인 사용)
+- 의미: `GET /api/*` 요청을 받은 Next가 **어느 백엔드 Origin** 으로 넘길지 (`rewrites`).
+- Railway(프론트) Variables 예: `BACKEND_PROXY_ORIGIN=https://backend-production-b968.up.railway.app`
+- 미설정 시: 개발은 `http://127.0.0.1:8081`, 프로덕션은 위 프로덕션 백엔드 기본값.
 
-**설정 위치**:
-- Railway: `frontend-web` 서비스 → Variables
-- 로컬: `.env.local` (gitignore)
+## 동작 요약
 
-**값 예시 (운영)**:
-```
-NEXT_PUBLIC_API_URL=https://backend-production-b968.up.railway.app
-```
-※ gateway URL이 아닌 **실제 백엔드 URL**을 사용해야 CORS 오류가 발생하지 않습니다.
+- 브라우저·axios·fetch: **`/api/...` 만 호출** (동일 Origin → 프리플라이트/CORS 없음).
+- **`NEXT_PUBLIC_API_URL` 은 사용하지 않음.**
 
-**백엔드 CORS**: `WebConfig`에서 `https://*.up.railway.app`·`http://localhost:*` 패턴을 허용합니다. 프론트 Railway URL이 `8513a`/`8613a`처럼 바뀌어도 별도 나열 없이 동작합니다. 자체 도메인만 `APP_CORS_ALLOWED_ORIGINS`에 추가하면 됩니다.
+## 기타 (선택)
 
-**빌드 타임 가드**: ✅ 적용됨 (`src/lib/env.ts`)
-- 누락 시 빌드 즉시 실패
-- 명확한 에러 메시지 제공
-
-**에러 메시지**:
-```
-Error: NEXT_PUBLIC_API_URL is not defined.
-Please set NEXT_PUBLIC_API_URL in Railway Variables.
-Example: https://backend-production-b968.up.railway.app
-```
-
-## Optional ENV
-
-### NEXT_PUBLIC_LOCALE (선택)
-
-**용도**: 기본 로케일 설정
-
-**기본값**: `'ko'`
-
-**설정 위치**: Railway Variables 또는 `.env.local`
-
-**값 예시**:
-```
-NEXT_PUBLIC_LOCALE=ko
-```
-
-**빌드 타임 가드**: ❌ 없음 (기본값 제공)
-
-### NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY (선택)
-
-**용도**: Stripe 결제 기능 (현재 미사용)
-
-**기본값**: `''`
-
-**설정 위치**: Railway Variables 또는 `.env.local`
-
-**값 예시**:
-```
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
-```
-
-**빌드 타임 가드**: ❌ 없음 (기본값 제공)
-
-## ENV 사용 규칙
-
-### ✅ 올바른 사용
-
-```typescript
-// src/lib/env.ts에서 import
-import { API_BASE_URL } from '@/lib/env'
-
-// 사용
-const response = await fetch(`${API_BASE_URL}/api/v1/endpoint`)
-```
-
-### ❌ 잘못된 사용
-
-```typescript
-// process.env 직접 사용 금지
-const url = process.env.NEXT_PUBLIC_API_URL  // ❌
-
-// 클라이언트에서 server-only ENV 접근 금지
-const dbUrl = process.env.DATABASE_URL  // ❌
-```
-
-## Railway 배포 체크리스트
-
-배포 전 확인:
-- [ ] `NEXT_PUBLIC_API_URL` 설정됨
-- [ ] 값이 빈 문자열 아님
-- [ ] 올바른 백엔드 URL (CORS 허용된 실제 API 서버)
-
-## 로컬 개발 체크리스트
-
-로컬 개발 전 확인:
-- [ ] `.env.local` 파일 생성 (선택)
-- [ ] `NEXT_PUBLIC_API_URL` 설정 (선택, 기본값 사용 가능)
+- `NEXT_PUBLIC_LOCALE`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `NEXT_PUBLIC_CREDIT_MOCK_PAYMENT` 등은 기존과 동일.

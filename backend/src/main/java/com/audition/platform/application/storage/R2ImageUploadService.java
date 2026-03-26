@@ -12,25 +12,17 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.util.Locale;
-import java.util.Set;
 import java.util.UUID;
 
 /**
  * 이미지 저장: 브라우저 → 백엔드 API → R2(S3 호환 PutObject) 만 사용합니다.
  * 객체 key는 서버에서만 생성하고, 공개 URL은 {@code app.r2.public-url} + "/" + key 입니다(presigned 미사용).
- * 조회는 반환 URL을 이미지 src 등으로 사용; 브라우저의 단순 GET 표시는 일반적으로 R2 CORS와 무관합니다.
  */
 public class R2ImageUploadService {
 
     private static final Logger log = LoggerFactory.getLogger(R2ImageUploadService.class);
 
     private static final long MAX_BYTES = 5L * 1024 * 1024;
-
-    private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of(
-            "image/jpeg",
-            "image/png",
-            "image/webp"
-    );
 
     private final S3Client r2Client;
 
@@ -50,19 +42,22 @@ public class R2ImageUploadService {
         if (file == null || file.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "파일이 비어 있습니다.");
         }
-        String contentType = normalizeImageContentType(file.getContentType());
+        String contentType = ImageContentTypes.normalize(file.getContentType());
         if (contentType == null) {
             throw new ResponseStatusException(
-                    HttpStatus.UNPROCESSABLE_ENTITY,
-                    "허용 형식은 JPEG, PNG, WebP만 가능합니다."
+                    HttpStatus.BAD_REQUEST,
+                    "이미지 파일만 업로드 가능합니다 (JPEG, PNG, WebP)."
             );
         }
         if (file.getSize() > MAX_BYTES) {
             throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE, "이미지는 최대 5MB까지 업로드할 수 있습니다.");
         }
-        String ext = extensionFor(file, contentType);
-        String key = directory.keyPrefix() + UUID.randomUUID() + ext;
-        log.info("R2 업로드 실행 → bucket={}", bucket.trim());
+
+        String safeOriginal = safeClientFilename(file.getOriginalFilename());
+        String tail = safeOriginal.isEmpty() ? extensionFor(file, contentType) : "_" + safeOriginal;
+        String key = directory.keyPrefix() + UUID.randomUUID() + tail;
+
+        log.info("R2 업로드 실행 → bucket={} key={}", bucket.trim(), key);
         try {
             PutObjectRequest request = PutObjectRequest.builder()
                     .bucket(bucket.trim())
@@ -84,6 +79,28 @@ public class R2ImageUploadService {
         return publicUrlFor(key);
     }
 
+    /**
+     * 경로 구분자·{@code ..} 제거 후 안전한 파일명만 허용. 비정상이면 빈 문자열 → 확장자만 사용.
+     */
+    static String safeClientFilename(String original) {
+        if (original == null || original.isBlank()) {
+            return "";
+        }
+        String n = original.replace('\\', '/');
+        int slash = n.lastIndexOf('/');
+        if (slash >= 0) {
+            n = n.substring(slash + 1);
+        }
+        n = n.trim();
+        if (n.isEmpty() || n.contains("..")) {
+            return "";
+        }
+        if (!n.matches("^[a-zA-Z0-9._-]{1,200}$")) {
+            return "";
+        }
+        return n;
+    }
+
     private void requireR2Configured() {
         if (bucket == null || bucket.isBlank()) {
             throw new RuntimeException("R2_BUCKET 없음");
@@ -96,20 +113,6 @@ public class R2ImageUploadService {
     private String publicUrlFor(String key) {
         String base = publicBaseUrl.trim().replaceAll("/+$", "");
         return base + "/" + key;
-    }
-
-    private static String normalizeImageContentType(String raw) {
-        if (raw == null || raw.isBlank()) {
-            return null;
-        }
-        String ct = raw.toLowerCase(Locale.ROOT).trim();
-        if ("image/jpg".equals(ct) || "image/pjpeg".equals(ct)) {
-            ct = "image/jpeg";
-        }
-        if (!ALLOWED_CONTENT_TYPES.contains(ct)) {
-            return null;
-        }
-        return ct;
     }
 
     private static String extensionFor(MultipartFile file, String normalizedContentType) {

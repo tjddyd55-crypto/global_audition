@@ -9,7 +9,7 @@ app:
   # Railway 등: BOOTSTRAP_SUPER_ADMIN=true 로 한 번 기동해 계정 생성 후 반드시 false 로 복구
   super-admin:
     bootstrap-enabled: ${BOOTSTRAP_SUPER_ADMIN:false}
-  # 쉼표 구분(선택). 커스텀 도메인만 나열. Railway·localhost는 WebConfig 패턴으로 이미 허용.
+  # 쉼표 구분(선택). 커스텀 도메인만 나열. 기본은 localhost 패턴만(프론트는 Next 동일 Origin 프록시).
   # 예: APP_CORS_ALLOWED_ORIGINS=https://my-domain.com
   cors:
     allowed-origins: "${APP_CORS_ALLOWED_ORIGINS:}"
@@ -44,8 +44,9 @@ spring:
 
   servlet:
     multipart:
-      max-file-size: 50MB
-      max-request-size: 55MB
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
 
   # 로컬: 기본 localhost. Railway: SPRING_DATASOURCE_* 또는 PG* 환경변수로 덮어씀 (프로파일 불필요).
   datasource:

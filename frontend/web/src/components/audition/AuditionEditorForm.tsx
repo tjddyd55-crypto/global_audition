@@ -520,7 +520,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
           multiple={false}
           aspect="portrait"
           maxCount={1}
-          uploadDir="covers"
+          uploadDir="audition"
           value={coverImage.trim() ? [coverImage.trim()] : []}
           onChange={(urls) => {
             setCoverImage(urls[0] ?? '')
@@ -554,7 +554,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
           multiple
           aspect="landscape"
           maxCount={10}
-          uploadDir="gallery"
+          uploadDir="thumbnail"
           value={galleryImages}
           onChange={setGalleryImages}
           disabled={isLoading}
@@ -576,7 +576,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
         </div>
         <SingleImageUploadField
           label={EDITOR_LABELS.agencyLogo}
-          uploadDir="agency_logo"
+          uploadDir="profile"
           imageUrl={agencyLogo}
           onImageUrlChange={setAgencyLogo}
           uploading={logoUploading}

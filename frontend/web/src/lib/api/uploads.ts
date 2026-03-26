@@ -1,22 +1,18 @@
 import axios from 'axios'
 import { assertAuditionImageFile } from '@/lib/audition/auditionImageRules'
-import { apiFetch, ApiFetchError } from '@/lib/api/apiFetch'
+import { apiClient } from '@/lib/api/client'
+import { ApiFetchError } from '@/lib/api/apiFetch'
 
 /**
- * 오디션 에디터 이미지 업로드 전용 `dir` — 백엔드가 생성하는 객체 키 접두사와 1:1.
- * 흐름: 브라우저 → POST `/api/uploads/image` → 서버 → R2(PutObject) → 공개 URL 반환.
+ * 업로드 API `dir` 화이트리스트 — 백엔드 `ImageUploadDirectory`와 동일해야 함.
+ * 흐름: 브라우저 → POST 동일 Origin `/api/uploads/image` → Next rewrite → 서버 → R2 → 공개 URL.
  *
  * 금지: R2/스토리지에 직접 PUT·POST, presigned URL로의 직접 업로드(현 단계).
  */
-export const AUDITION_UPLOAD_DIRS = ['covers', 'gallery', 'agency_logo'] as const
+export const AUDITION_UPLOAD_DIRS = ['audition', 'profile', 'thumbnail'] as const
 export type AuditionUploadDir = (typeof AUDITION_UPLOAD_DIRS)[number]
 
 const UPLOAD_TIMEOUT_MS = 120_000
-
-function uploadsImagePath(dir: AuditionUploadDir): string {
-  const q = new URLSearchParams({ dir })
-  return `/uploads/image?${q.toString()}`
-}
 
 function tryParseJson(text: string): unknown {
   try {
@@ -27,56 +23,46 @@ function tryParseJson(text: string): unknown {
 }
 
 /**
- * **SSOT**: 모든 이미지 업로드는 이 함수만 사용 (`apiFetch` → Bearer + credentials, FormData boundary 유지).
- * 백엔드 API 외 경로로 스토리지에 올리지 않는다.
+ * **SSOT**: `apiClient.post('/uploads/image', formData)` → baseURL `/api` → multipart + Bearer.
  */
-export async function uploadAuditionImage(file: File, dir: AuditionUploadDir = 'covers'): Promise<string> {
+export async function uploadAuditionImage(file: File, dir: AuditionUploadDir = 'audition'): Promise<string> {
   assertAuditionImageFile(file)
-  const form = new FormData()
-  form.append('file', file)
+  const formData = new FormData()
+  formData.append('file', file)
 
-  const path = uploadsImagePath(dir)
-  const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), UPLOAD_TIMEOUT_MS)
-  let res: Response
   try {
-    res = await apiFetch(path, {
-      method: 'POST',
-      body: form,
-      signal: controller.signal,
+    const { data } = await apiClient.post<{ url?: string }>('/uploads/image', formData, {
+      params: { dir },
+      timeout: UPLOAD_TIMEOUT_MS,
     })
+    const url = data?.url != null ? String(data.url).trim() : ''
+    if (!url) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[uploadAuditionImage] 응답에 url 없음:', data)
+      }
+      throw new Error('업로드 응답에 URL이 없습니다.')
+    }
+    return url
   } catch (e) {
-    if (e instanceof Error && e.name === 'AbortError') {
-      throw new Error('이미지 업로드 시간이 초과되었습니다.')
+    if (axios.isAxiosError(e)) {
+      if (e.code === 'ECONNABORTED') {
+        throw new Error('이미지 업로드 시간이 초과되었습니다.')
+      }
+      const raw = e.response?.data
+      let detail = ''
+      if (typeof raw === 'string' && raw.trim()) {
+        detail = raw.trim()
+      } else if (raw && typeof raw === 'object' && 'message' in raw) {
+        const m = (raw as { message?: unknown }).message
+        if (typeof m === 'string' && m.trim()) detail = m.trim()
+      }
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[uploadAuditionImage] 업로드 실패:', e.response?.status, raw)
+      }
+      throw new Error(detail || e.message || `이미지 업로드 실패 (${e.response?.status ?? '?'})`)
     }
     throw e
-  } finally {
-    clearTimeout(timeoutId)
   }
-
-  const text = await res.text()
-  if (!res.ok) {
-    if (process.env.NODE_ENV === 'development') {
-      console.error('[uploadAuditionImage] 업로드 실패:', res.status, text)
-    }
-    let msg = ''
-    const parsed = tryParseJson(text)
-    if (parsed && typeof parsed === 'object' && parsed !== null && 'message' in parsed) {
-      const m = (parsed as { message?: unknown }).message
-      if (typeof m === 'string' && m.trim()) msg = m.trim()
-    }
-    throw new Error(msg || text || `이미지 업로드 실패 (${res.status})`)
-  }
-
-  const data = tryParseJson(text) as { url?: unknown } | undefined
-  const url = data?.url != null ? String(data.url).trim() : ''
-  if (!url) {
-    if (process.env.NODE_ENV === 'development') {
-      console.error('[uploadAuditionImage] 응답에 url 없음:', text)
-    }
-    throw new Error('업로드 응답에 URL이 없습니다.')
-  }
-  return url
 }
 
 type UploadErrorBody = {
