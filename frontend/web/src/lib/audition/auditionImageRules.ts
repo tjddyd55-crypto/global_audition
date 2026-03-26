@@ -1,7 +1,8 @@
 /**
- * 오디션 에디터·업로드 API와 동일한 제한 (프론트 선검증)
+ * 오디션 에디터·업로드 API와 동일한 제한 (프론트 선검증).
+ * 백엔드 `app.upload.max-image-bytes`·`spring.servlet.multipart.max-file-size`와 맞출 것.
  */
-export const AUDITION_IMAGE_MAX_BYTES = 5 * 1024 * 1024
+export const AUDITION_IMAGE_MAX_BYTES = 10 * 1024 * 1024
 
 /** S3 PutObject 등에 맞춘 정규 MIME */
 export type AuditionAllowedImageMime = 'image/jpeg' | 'image/png' | 'image/webp'
@@ -16,7 +17,7 @@ export function normalizeAuditionImageMime(file: File): AuditionAllowedImageMime
 
 export function assertAuditionImageFile(file: File): void {
   if (file.size > AUDITION_IMAGE_MAX_BYTES) {
-    throw new Error('파일 크기는 5MB 이하여야 합니다.')
+    throw new Error('파일 크기는 10MB 이하여야 합니다.')
   }
   if (!normalizeAuditionImageMime(file)) {
     throw new Error('JPG, PNG, WebP만 업로드할 수 있습니다.')

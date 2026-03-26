@@ -24,7 +24,11 @@ import {
   apiUploadErrorMessage,
   type AuditionUploadDir,
 } from '@/lib/api/uploads'
-import { AUDITION_IMAGE_ACCEPT_ATTR, assertAuditionImageFile } from '@/lib/audition/auditionImageRules'
+import {
+  AUDITION_IMAGE_ACCEPT_ATTR,
+  AUDITION_IMAGE_MAX_BYTES,
+  assertAuditionImageFile,
+} from '@/lib/audition/auditionImageRules'
 import { AUDITION_COVER_PLACEHOLDER_SRC } from '@/components/audition/AuditionEditorPreview'
 
 export type ImageUploaderAspect = 'portrait' | 'landscape'
@@ -343,7 +347,9 @@ export function ImageUploader({
               </div>
             )}
           </div>
-          <p className="text-sm text-gray-600">JPG · PNG · WebP, 최대 5MB</p>
+          <p className="text-sm text-gray-600">
+            JPG · PNG · WebP, 최대 {Math.round(AUDITION_IMAGE_MAX_BYTES / (1024 * 1024))}MB
+          </p>
         </div>
       )}
 
@@ -383,7 +389,10 @@ export function ImageUploader({
               </div>
             )}
           </div>
-          <p className="text-sm text-gray-600">JPG · PNG · WebP, 각 최대 5MB · 최대 {resolvedMax}장</p>
+          <p className="text-sm text-gray-600">
+            JPG · PNG · WebP, 각 최대 {Math.round(AUDITION_IMAGE_MAX_BYTES / (1024 * 1024))}MB · 최대{' '}
+            {resolvedMax}장
+          </p>
         </div>
       )}
 

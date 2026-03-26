@@ -1,6 +1,7 @@
 package com.audition.platform.infra.s3;
 
 import com.audition.platform.application.storage.R2ImageUploadService;
+import com.audition.platform.application.storage.UploadProperties;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
@@ -16,7 +17,9 @@ public class R2ImageUploadServiceConfig {
 
     @Bean
     @ConditionalOnBean(name = "r2S3Client")
-    public R2ImageUploadService r2ImageUploadService(@Qualifier("r2S3Client") S3Client r2S3Client) {
-        return new R2ImageUploadService(r2S3Client);
+    public R2ImageUploadService r2ImageUploadService(
+            @Qualifier("r2S3Client") S3Client r2S3Client,
+            UploadProperties uploadProperties) {
+        return new R2ImageUploadService(r2S3Client, uploadProperties);
     }
 }

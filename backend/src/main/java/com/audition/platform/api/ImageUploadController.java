@@ -3,7 +3,10 @@ package com.audition.platform.api;
 import com.audition.platform.api.dto.ImageUploadResponse;
 import com.audition.platform.application.storage.ImageContentTypes;
 import com.audition.platform.application.storage.ImageUploadDirectory;
+import com.audition.platform.application.storage.ImageUploadRateLimiter;
+import com.audition.platform.application.storage.ImageUploadResult;
 import com.audition.platform.application.storage.R2ImageUploadService;
+import com.audition.platform.infra.SecurityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -22,6 +25,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * 이미지 업로드 고정 경로: <strong>클라이언트 → 이 API → R2</strong>.
@@ -35,10 +39,15 @@ public class ImageUploadController {
 
     private final ObjectProvider<R2ImageUploadService> uploadService;
     private final Environment environment;
+    private final ImageUploadRateLimiter uploadRateLimiter;
 
-    public ImageUploadController(ObjectProvider<R2ImageUploadService> uploadService, Environment environment) {
+    public ImageUploadController(
+            ObjectProvider<R2ImageUploadService> uploadService,
+            Environment environment,
+            ImageUploadRateLimiter uploadRateLimiter) {
         this.uploadService = uploadService;
         this.environment = environment;
+        this.uploadRateLimiter = uploadRateLimiter;
     }
 
     @GetMapping("/health")
@@ -73,15 +82,23 @@ public class ImageUploadController {
                 return jsonMessage(HttpStatus.SERVICE_UNAVAILABLE, "R2 이미지 업로드 서비스를 사용할 수 없습니다.");
             }
 
+            UUID userId = SecurityUtils.getCurrentUserId();
+            uploadRateLimiter.checkAndRecord(userId);
+
             ImageUploadDirectory directory = ImageUploadDirectory.fromParam(dir);
-            String url = r2ImageUploadService.upload(file, directory);
-            return ResponseEntity.ok(new ImageUploadResponse(url));
+            ImageUploadResult result = r2ImageUploadService.upload(file, directory);
+            log.info(
+                    "image_upload userId={} dir={} url={}",
+                    userId,
+                    directory.apiDirParam(),
+                    result.originalUrl()
+            );
+            return ResponseEntity.ok(new ImageUploadResponse(result));
         } catch (ResponseStatusException e) {
             HttpStatusCode code = e.getStatusCode();
             String msg = e.getReason() != null ? e.getReason() : "요청을 처리할 수 없습니다.";
             return jsonMessage(code, msg);
         } catch (Exception e) {
-            e.printStackTrace();
             log.error("POST /api/uploads/image 처리 중 오류", e);
             String msg = e.getMessage() != null ? e.getMessage() : "업로드 처리 중 오류가 발생했습니다.";
             return jsonMessage(HttpStatus.INTERNAL_SERVER_ERROR, msg);

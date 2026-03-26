@@ -31,6 +31,11 @@ public enum ImageUploadDirectory {
         return keyPrefix;
     }
 
+    /** 로그·메트릭용 API {@code dir} 값 (슬래시 없음) */
+    public String apiDirParam() {
+        return keyPrefix.substring(0, keyPrefix.length() - 1);
+    }
+
     /**
      * @param raw 쿼리 파라미터 {@code dir} (기본: audition)
      */

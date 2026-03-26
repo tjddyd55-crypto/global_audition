@@ -11,20 +11,24 @@ import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
+import java.awt.image.BufferedImage;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
  * 이미지 저장: 브라우저 → 백엔드 API → R2(S3 호환 PutObject) 만 사용합니다.
- * 객체 key는 서버에서만 생성하고, 공개 URL은 {@code app.r2.public-url} + "/" + key 입니다(presigned 미사용).
+ * 원본 1건 + medium(800)·thumb(300) 파생, CDN 장기 캐시 헤더 부여.
  */
 public class R2ImageUploadService {
 
     private static final Logger log = LoggerFactory.getLogger(R2ImageUploadService.class);
 
-    private static final long MAX_BYTES = 5L * 1024 * 1024;
+    /** R2·CDN 앞단 캐시 (객체 키에 UUID 포함으로 immutable 안전) */
+    public static final String CDN_CACHE_CONTROL = "public, max-age=31536000, immutable";
 
     private final S3Client r2Client;
+    private final UploadProperties uploadProperties;
 
     @Value("${app.r2.bucket}")
     private String bucket;
@@ -32,11 +36,12 @@ public class R2ImageUploadService {
     @Value("${app.r2.public-url}")
     private String publicBaseUrl;
 
-    public R2ImageUploadService(@Qualifier("r2S3Client") S3Client r2Client) {
+    public R2ImageUploadService(@Qualifier("r2S3Client") S3Client r2Client, UploadProperties uploadProperties) {
         this.r2Client = r2Client;
+        this.uploadProperties = uploadProperties;
     }
 
-    public String upload(MultipartFile file, ImageUploadDirectory directory) {
+    public ImageUploadResult upload(MultipartFile file, ImageUploadDirectory directory) {
         requireR2Configured();
 
         if (file == null || file.isEmpty()) {
@@ -49,34 +54,86 @@ public class R2ImageUploadService {
                     "이미지 파일만 업로드 가능합니다 (JPEG, PNG, WebP)."
             );
         }
-        if (file.getSize() > MAX_BYTES) {
-            throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE, "이미지는 최대 5MB까지 업로드할 수 있습니다.");
+        long maxBytes = uploadProperties.getMaxImageBytes();
+        if (file.getSize() > maxBytes) {
+            long mbRounded = Math.max(1, (maxBytes + 1024 * 1024 - 1) / (1024 * 1024));
+            throw new ResponseStatusException(
+                    HttpStatus.PAYLOAD_TOO_LARGE,
+                    "이미지는 최대 " + mbRounded + "MB까지 업로드할 수 있습니다."
+            );
+        }
+
+        byte[] originalBytes;
+        try {
+            originalBytes = file.getBytes();
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "파일을 읽을 수 없습니다.");
         }
 
         String safeOriginal = safeClientFilename(file.getOriginalFilename());
         String tail = safeOriginal.isEmpty() ? extensionFor(file, contentType) : "_" + safeOriginal;
-        String key = directory.keyPrefix() + UUID.randomUUID() + tail;
+        String id = UUID.randomUUID().toString();
+        String origKey = directory.keyPrefix() + id + tail;
 
-        log.info("R2 업로드 실행 → bucket={} key={}", bucket.trim(), key);
+        log.info("R2 업로드 실행 → bucket={} key={}", bucket.trim(), origKey);
         try {
-            PutObjectRequest request = PutObjectRequest.builder()
-                    .bucket(bucket.trim())
-                    .key(key)
-                    .contentType(contentType)
-                    .contentLength(file.getSize())
-                    .build();
-            r2Client.putObject(
-                    request,
-                    RequestBody.fromInputStream(file.getInputStream(), file.getSize())
-            );
+            putObject(origKey, originalBytes, contentType);
+
+            String origUrl = publicUrlFor(origKey);
+            boolean pngDeriv = ImageVariantGenerator.usePngDerivatives(contentType);
+            String derivExt = ImageVariantGenerator.derivativeExtension(pngDeriv);
+            String derivMime = ImageVariantGenerator.derivativeMime(pngDeriv);
+            String medKey = directory.keyPrefix() + "m/" + id + replaceExtension(tail, derivExt);
+            String thumbKey = directory.keyPrefix() + "t/" + id + replaceExtension(tail, derivExt);
+
+            Optional<BufferedImage> decoded = ImageVariantGenerator.read(originalBytes);
+            if (decoded.isEmpty()) {
+                log.warn("이미지 디코딩 실패 — 파생 생략, 원본 URL만 사용 bucket={} key={}", bucket, origKey);
+                return new ImageUploadResult(origUrl, origUrl, origUrl);
+            }
+
+            try {
+                BufferedImage img = decoded.get();
+                int medEdge = uploadProperties.getMediumMaxEdgePx();
+                int thumbEdge = uploadProperties.getThumbMaxEdgePx();
+                byte[] mediumBytes = ImageVariantGenerator.resize(img, medEdge, pngDeriv);
+                byte[] thumbBytes = ImageVariantGenerator.resize(img, thumbEdge, pngDeriv);
+                putObject(medKey, mediumBytes, derivMime);
+                putObject(thumbKey, thumbBytes, derivMime);
+                return new ImageUploadResult(origUrl, publicUrlFor(medKey), publicUrlFor(thumbKey));
+            } catch (Exception e) {
+                log.warn("이미지 파생 업로드 실패 — 원본만 유효 bucket={} key={}", bucket, origKey, e);
+                return new ImageUploadResult(origUrl, origUrl, origUrl);
+            }
+        } catch (ResponseStatusException e) {
+            throw e;
         } catch (Exception e) {
-            log.error("R2 업로드 실패 bucket={} key={}", bucket, key, e);
-            throw new RuntimeException(
-                    "R2 업로드 실패 - bucket=" + bucket.trim(),
-                    e
-            );
+            log.error("R2 업로드 실패 bucket={} key={}", bucket, origKey, e);
+            throw new RuntimeException("R2 업로드 실패 - bucket=" + bucket.trim(), e);
         }
-        return publicUrlFor(key);
+    }
+
+    private void putObject(String key, byte[] body, String contentType) {
+        PutObjectRequest request = PutObjectRequest.builder()
+                .bucket(bucket.trim())
+                .key(key)
+                .contentType(contentType)
+                .contentLength((long) body.length)
+                .cacheControl(CDN_CACHE_CONTROL)
+                .build();
+        r2Client.putObject(request, RequestBody.fromBytes(body));
+    }
+
+    static String replaceExtension(String tail, String newExt) {
+        if (tail == null || tail.isBlank()) {
+            return newExt.startsWith(".") ? newExt : "." + newExt;
+        }
+        int d = tail.lastIndexOf('.');
+        String ext = newExt.startsWith(".") ? newExt : "." + newExt;
+        if (d < 0) {
+            return tail + ext;
+        }
+        return tail.substring(0, d) + ext;
     }
 
     /**

@@ -12,6 +12,18 @@ import { ApiFetchError } from '@/lib/api/apiFetch'
 export const AUDITION_UPLOAD_DIRS = ['audition', 'profile', 'thumbnail'] as const
 export type AuditionUploadDir = (typeof AUDITION_UPLOAD_DIRS)[number]
 
+export type ImageUploadVariantUrls = {
+  original?: string
+  medium?: string
+  thumb?: string
+}
+
+/** POST /uploads/image 성공 본문 (파생 URL은 선택) */
+export type ImageUploadApiResponse = {
+  url: string
+  urls?: ImageUploadVariantUrls
+}
+
 const UPLOAD_TIMEOUT_MS = 120_000
 
 function tryParseJson(text: string): unknown {
@@ -31,7 +43,7 @@ export async function uploadAuditionImage(file: File, dir: AuditionUploadDir = '
   formData.append('file', file)
 
   try {
-    const { data } = await apiClient.post<{ url?: string }>('/uploads/image', formData, {
+    const { data } = await apiClient.post<ImageUploadApiResponse>('/uploads/image', formData, {
       params: { dir },
       timeout: UPLOAD_TIMEOUT_MS,
     })
@@ -91,6 +103,12 @@ export function apiUploadErrorMessage(e: unknown): string {
     if (status === 503) {
       return body || '이미지 업로드 실패'
     }
+    if (status === 429) {
+      return body || '업로드 요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.'
+    }
+    if (status === 413) {
+      return body || '파일 크기가 허용 한도를 초과했습니다.'
+    }
     if (status === 500) {
       if (body) return body
     }
@@ -108,6 +126,12 @@ export function apiUploadErrorMessage(e: unknown): string {
     }
     if (status === 503) {
       return body || '이미지 업로드 실패'
+    }
+    if (status === 429) {
+      return body || '업로드 요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.'
+    }
+    if (status === 413) {
+      return body || '파일 크기가 허용 한도를 초과했습니다.'
     }
     if (status === 500) {
       const m = messageFromUploadErrorBody(e.response?.data)

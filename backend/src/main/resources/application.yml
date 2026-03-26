@@ -34,6 +34,14 @@ app:
   jwt:
     secret: "${JWT_SECRET:change-me-in-production-min-32-chars}"
     expiration-ms: 86400000  # 24h
+  # 이미지 업로드: 프론트 선검증·multipart·R2 업로드 모두 동일 상한 권장 (기본 10MB)
+  upload:
+    max-image-bytes: 10485760
+    thumb-max-edge-px: 300
+    medium-max-edge-px: 800
+    # 시간당·일당 0 이하이면 해당 창 제한 비활성화
+    rate-limit-per-user-per-hour: ${APP_UPLOAD_RATE_PER_HOUR:120}
+    rate-limit-per-user-per-day: ${APP_UPLOAD_RATE_PER_DAY:800}
   # 운영: false 권장 — 크레딧 충전은 payment_orders(PAID) 경로만 사용
   credits:
     allow-legacy-self-charge: ${APP_ALLOW_LEGACY_CREDIT_CHARGE:true}

@@ -156,7 +156,8 @@ export function SingleImageUploadField({
         </div>
       ) : null}
       <p style={{ ...inputBaseStyle, marginTop: AUDITION_DETAIL.galleryGapPx, color: '#6b7280' }}>
-        JPG·PNG·WebP, 최대 5MB. 대표 이미지 변경: 「이미지 변경」 또는 「제거」 후 다시 선택. S3 URL만 DB에 저장됩니다.
+        JPG·PNG·WebP, 최대 10MB. 대표 이미지 변경: 「이미지 변경」 또는 「제거」 후 다시 선택. 스토리지 공개
+        URL만 DB에 저장됩니다.
       </p>
     </div>
   )
