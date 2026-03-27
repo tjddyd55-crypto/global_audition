@@ -1,4 +1,5 @@
 import { apiClient } from './client'
+import { unwrapData } from './unwrap'
 import { useAuthStore } from '@/lib/auth/authStore'
 
 export interface SignupRequest {
@@ -63,8 +64,25 @@ export const authApi = {
   },
 
   me: async (): Promise<AuthMeResponse> => {
-    const { data } = await apiClient.get<AuthMeResponse>('/auth/me')
-    return data
+    const { data } = await apiClient.get<unknown>('/auth/me')
+    const raw = unwrapData<{
+      id: string
+      email: string
+      nickname?: string | null
+      name?: string | null
+      displayName?: string | null
+      role: string
+      profileImageUrl?: string | null
+    }>(data)
+    return {
+      userId: raw.id,
+      email: raw.email,
+      nickname: raw.nickname ?? null,
+      name: raw.name ?? null,
+      displayName: raw.displayName ?? null,
+      profileImageUrl: raw.profileImageUrl ?? null,
+      role: (raw.role === 'USER' ? 'APPLICANT' : raw.role) as AuthMeResponse['role'],
+    }
   },
 
   /** HttpOnly 세션 쿠키 제거 + 로컬 스토어 초기화 (withCredentials 로 /auth/logout 전달) */

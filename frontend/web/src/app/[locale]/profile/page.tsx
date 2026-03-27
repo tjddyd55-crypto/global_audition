@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { videoApi } from '../../../lib/api/videos'
 import { authApi } from '../../../lib/api/auth'
+import { userApi } from '../../../lib/api/user'
 import { useRouter } from '../../../i18n.config'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
@@ -33,6 +34,13 @@ export default function ProfilePage() {
     setHasToken(true)
   }, [router])
 
+  const { data: profileUser, isLoading: profileLoading } = useQuery({
+    queryKey: ['profile-page-auth-me'],
+    queryFn: () => userApi.getCurrentUser(),
+    enabled: hasToken,
+    retry: false,
+  })
+
   /** 기획사(AGENCY)는 지원자 전용 /me/channel/* → 403 이므로 지원자·관리자만 조회 */
   const showApplicantVideos = role === 'APPLICANT' || role === 'ADMIN'
   const { data: videos, isLoading } = useQuery({
@@ -49,7 +57,7 @@ export default function ProfilePage() {
     )
   }
 
-  if (hasToken && showApplicantVideos && isLoading) {
+  if (hasToken && profileLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-lg font-semibold text-gray-900">{t('loading')}</div>
@@ -74,9 +82,41 @@ export default function ProfilePage() {
           </button>
         </div>
 
+        {profileUser ? (
+          <section className={`${CARD_BASE} mb-6`}>
+            <h2 className="mb-4 text-lg font-bold text-neutral-900">계정 정보</h2>
+            <dl className="flex flex-col gap-3 text-sm">
+              <div className="flex flex-wrap gap-2 border-b border-neutral-100 pb-2">
+                <dt className="min-w-[4.5rem] font-medium text-neutral-600">이메일</dt>
+                <dd className="text-neutral-900">{profileUser.email}</dd>
+              </div>
+              <div className="flex flex-wrap gap-2 border-b border-neutral-100 pb-2">
+                <dt className="min-w-[4.5rem] font-medium text-neutral-600">이름</dt>
+                <dd className="text-neutral-900">{profileUser.legalName?.trim() || '—'}</dd>
+              </div>
+              <div className="flex flex-wrap gap-2 border-b border-neutral-100 pb-2">
+                <dt className="min-w-[4.5rem] font-medium text-neutral-600">닉네임</dt>
+                <dd className="text-neutral-900">{profileUser.nickname?.trim() || '—'}</dd>
+              </div>
+              <div className="flex flex-wrap gap-2 border-b border-neutral-100 pb-2">
+                <dt className="min-w-[4.5rem] font-medium text-neutral-600">표시 이름</dt>
+                <dd className="text-neutral-900">{profileUser.displayName?.trim() || '—'}</dd>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <dt className="min-w-[4.5rem] font-medium text-neutral-600">역할</dt>
+                <dd className="text-neutral-900">{profileUser.role}</dd>
+              </div>
+            </dl>
+          </section>
+        ) : null}
+
         <div>
           <h2 className={`${TITLE_PAGE} mb-4`}>{t('videos')}</h2>
-          {role === 'AGENCY' ? (
+          {showApplicantVideos && isLoading ? (
+            <div className={CARD_BASE}>
+              <p className={TEXT_SUB}>{t('loading')}</p>
+            </div>
+          ) : role === 'AGENCY' ? (
             <div className={CARD_BASE}>
               <p className={TEXT_SUB}>지원자 전용 채널 영역입니다. 기획사 계정은 오디션 관리 메뉴를 이용해 주세요.</p>
             </div>
