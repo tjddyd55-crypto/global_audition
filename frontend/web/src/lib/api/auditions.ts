@@ -146,6 +146,17 @@ function parseAuditionImages(raw: Record<string, unknown>): AuditionImages {
 }
 
 export function parseAuditionDto(raw: Record<string, unknown>): AuditionDto {
+  const tagRefsRaw = raw.tagRefs
+  const tagRefs = Array.isArray(tagRefsRaw)
+    ? (tagRefsRaw as Record<string, unknown>[]).map((row) => {
+        const tid = row.tagId != null ? String(row.tagId) : ''
+        return {
+          tagId: tid.length > 0 ? tid : null,
+          name: String(row.name ?? '').trim(),
+        }
+      }).filter((r) => r.name.length > 0)
+    : undefined
+
   return {
     id: String(raw.id ?? ''),
     ownerId: String(raw.ownerId ?? ''),
@@ -156,6 +167,7 @@ export function parseAuditionDto(raw: Record<string, unknown>): AuditionDto {
     countryCode: raw.countryCode != null ? String(raw.countryCode) : null,
     deadlineAt: raw.deadlineAt != null ? String(raw.deadlineAt) : null,
     tags: safeStringArr(raw.tags),
+    tagRefs: tagRefs && tagRefs.length > 0 ? tagRefs : undefined,
     createdAt: String(raw.createdAt ?? ''),
     images: parseAuditionImages(raw),
     videoUrl: raw.videoUrl != null ? String(raw.videoUrl) : null,

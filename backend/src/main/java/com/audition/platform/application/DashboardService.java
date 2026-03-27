@@ -7,6 +7,7 @@ import com.audition.platform.api.dto.AuditionResponse;
 import com.audition.platform.domain.audition.Application;
 import com.audition.platform.domain.audition.ApplicationRepository;
 import com.audition.platform.domain.audition.ApplicationVideoRepository;
+import com.audition.platform.application.tag.AuditionTagService;
 import com.audition.platform.domain.audition.Audition;
 import com.audition.platform.domain.audition.AuditionRepository;
 import com.audition.platform.domain.user.User;
@@ -28,18 +29,21 @@ public class DashboardService {
     private final ApplicationRepository applicationRepository;
     private final ApplicationVideoRepository applicationVideoRepository;
     private final UserRepository userRepository;
+    private final AuditionTagService auditionTagService;
 
     public DashboardService(AuditionRepository auditionRepository,
                             ApplicationRepository applicationRepository,
                             ApplicationVideoRepository applicationVideoRepository,
-                            UserRepository userRepository) {
+                            UserRepository userRepository,
+                            AuditionTagService auditionTagService) {
         this.auditionRepository = auditionRepository;
         this.applicationRepository = applicationRepository;
         this.applicationVideoRepository = applicationVideoRepository;
         this.userRepository = userRepository;
+        this.auditionTagService = auditionTagService;
     }
 
-    private static AuditionResponse toAuditionResponse(Audition a) {
+    private AuditionResponse toAuditionResponse(Audition a) {
         AuditionResponse r = new AuditionResponse();
         r.setId(a.getId());
         r.setOwnerId(a.getOwnerId());
@@ -49,7 +53,7 @@ public class DashboardService {
         r.setUpdatedAt(a.getUpdatedAt());
         r.setCountryCode(a.getCountryCode());
         r.setDeadlineAt(a.getDeadlineAt());
-        r.setTags(a.getTags());
+        r.setTags(auditionTagService.resolveMergedDisplayNames(a.getId()).toArray(new String[0]));
         r.setCreatedAt(a.getCreatedAt());
         return r;
     }
@@ -108,7 +112,7 @@ public class DashboardService {
         response.setAccepted(accepted);
         response.setRejected(rejected);
         response.setPending(reviewed + submitted);
-        response.setRecentAuditions(ownedAuditions.stream().limit(5).map(DashboardService::toAuditionResponse).collect(Collectors.toList()));
+        response.setRecentAuditions(ownedAuditions.stream().limit(5).map(this::toAuditionResponse).collect(Collectors.toList()));
         response.setRecentApplications(recentApplications.stream().map(app -> toApplicationResponse(app, auditionMap)).collect(Collectors.toList()));
         return response;
     }

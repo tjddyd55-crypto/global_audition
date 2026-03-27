@@ -52,6 +52,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/uploads/health").permitAll()
                 .requestMatchers("/actuator/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/credits/public/policies/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/tags").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/auditions", "/api/auditions/*").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/auditions/*/votes").permitAll()
                 // 이미지 업로드: 로그인(JWT)만 필수. 역할 제한 시 지원자 등 정상 세션에서 403 발생함.

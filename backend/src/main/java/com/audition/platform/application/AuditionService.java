@@ -10,8 +10,8 @@ import com.audition.platform.application.round.AuditionRoundService;
 import com.audition.platform.domain.audition.Application;
 import com.audition.platform.domain.audition.ApplicationRepository;
 import com.audition.platform.domain.audition.Audition;
-import com.audition.platform.domain.audition.AuditionTagNormalizer;
 import com.audition.platform.domain.audition.AuditionRepository;
+import com.audition.platform.application.tag.AuditionTagService;
 import com.audition.platform.domain.user.UserRepository;
 import com.audition.platform.domain.util.YoutubeUrls;
 import com.audition.platform.infra.SecurityUtils;
@@ -37,15 +37,18 @@ public class AuditionService {
     private final UserRepository userRepository;
     private final ApplicationRepository applicationRepository;
     private final AuditionRoundService auditionRoundService;
+    private final AuditionTagService auditionTagService;
 
     public AuditionService(AuditionRepository auditionRepository,
                            UserRepository userRepository,
                            ApplicationRepository applicationRepository,
-                           AuditionRoundService auditionRoundService) {
+                           AuditionRoundService auditionRoundService,
+                           AuditionTagService auditionTagService) {
         this.auditionRepository = auditionRepository;
         this.userRepository = userRepository;
         this.applicationRepository = applicationRepository;
         this.auditionRoundService = auditionRoundService;
+        this.auditionTagService = auditionTagService;
     }
 
     private static Instant parseInstantRequired(String value, String field) {
@@ -96,7 +99,6 @@ public class AuditionService {
         a.setQualifications(a.getQualifications());
         a.setSchedules(a.getSchedules());
         a.setBenefits(a.getBenefits());
-        a.setTags(a.getTags());
     }
 
     private static String trimOrNull(String s) {
@@ -165,7 +167,8 @@ public class AuditionService {
         r.setUpdatedAt(a.getUpdatedAt());
         r.setCountryCode(a.getCountryCode());
         r.setDeadlineAt(a.getDeadlineAt());
-        r.setTags(a.getTags());
+        r.setTags(auditionTagService.resolveMergedDisplayNames(a.getId()).toArray(new String[0]));
+        r.setTagRefs(auditionTagService.listRefs(a.getId()));
         r.setCreatedAt(a.getCreatedAt());
         r.setImages(buildImagesForResponse(a));
         r.setVideoUrl(a.getVideoUrl());
@@ -188,11 +191,21 @@ public class AuditionService {
         return r;
     }
 
+    private void applyAuditionTagsInput(UUID auditionId, CreateAuditionRequest req) {
+        if (req.getTagIds() != null || req.getCustomTagNames() != null) {
+            auditionTagService.replaceAuditionTags(
+                    auditionId,
+                    req.getTagIds() != null ? req.getTagIds() : List.of(),
+                    req.getCustomTagNames() != null ? req.getCustomTagNames() : List.of());
+        } else {
+            auditionTagService.replaceFromLegacyList(auditionId, req.getTags() != null ? req.getTags() : List.of());
+        }
+    }
+
     private void applyCreateBody(Audition a, CreateAuditionRequest req) {
         a.setTitle(req.getTitle().trim());
         a.setDescription(req.getDescription().trim());
         a.setStatus(req.getStatus() != null ? req.getStatus() : "DRAFT");
-        a.setTags(AuditionTagNormalizer.normalize(req.getTags()));
         applyImagesToEntity(a, req.getImages());
         a.setVideoUrl(req.getVideoUrl());
         a.setGalleryImages(listToArray(req.getGalleryImages() != null ? req.getGalleryImages() : List.of()));
@@ -259,6 +272,7 @@ public class AuditionService {
         a.setUpdatedAt(Instant.now());
         applyCreateBody(a, req);
         a = auditionRepository.save(a);
+        applyAuditionTagsInput(a.getId(), req);
         if (AuditionProcessModes.isMultiRound(a.getProcessMode())) {
             a.setCurrentRoundNumber(1);
             a.setMaxRoundNumber(1);
@@ -345,8 +359,14 @@ public class AuditionService {
         if (request.getCountryCode() != null) {
             audition.setCountryCode(request.getCountryCode());
         }
-        if (request.getTags() != null) {
-            audition.setTags(AuditionTagNormalizer.normalize(request.getTags()));
+        boolean patchNewTags = request.getTagIds() != null || request.getCustomTagNames() != null;
+        if (patchNewTags) {
+            auditionTagService.replaceAuditionTags(
+                    id,
+                    request.getTagIds() != null ? request.getTagIds() : List.of(),
+                    request.getCustomTagNames() != null ? request.getCustomTagNames() : List.of());
+        } else if (request.getTags() != null) {
+            auditionTagService.replaceFromLegacyList(id, request.getTags());
         }
         if (request.getDeadlineAt() != null) {
             audition.setDeadlineAt(parseInstantOrNull(request.getDeadlineAt()));

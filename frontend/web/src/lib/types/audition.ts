@@ -1,6 +1,7 @@
 /**
  * SSOT (5-way 동기화): Flyway auditions · JPA Audition · API DTO · prisma/schema.prisma · 본 타입
- * 배열 필드: tags, recruitFields, qualifications, schedules, benefits, galleryImages — JSON/detail_content 없음
+ * 배열 필드: recruitFields, qualifications, schedules, benefits, galleryImages — JSON/detail_content 없음.
+ * 태그: 서버 `tags`(표시용 병합) + `tagRefs`(catalog id / 직입력 구분).
  */
 export type AuditionStatus = 'DRAFT' | 'OPEN' | 'CLOSED'
 
@@ -58,8 +59,10 @@ export type AuditionDto = {
   updatedAt?: string
   countryCode?: string | null
   deadlineAt?: string | null
-  /** 검색·필터용 태그 (허용 목록만 서버 저장) */
+  /** 검색·필터용 표시 태그 (catalog + 직입력 병합) */
   tags: string[]
+  /** 폼 복원용 — 없으면 tags 문자열로 카탈로그 매칭 */
+  tagRefs?: Array<{ tagId: string | null; name: string }>
   createdAt: string
   images: AuditionImages
   videoUrl?: string | null
@@ -92,8 +95,12 @@ export type CreateAuditionPayload = {
   title: string
   description: string
   status: AuditionStatus
-  /** 검색·필터용 태그 (허용 목록만 서버 저장) */
-  tags: string[]
+  /** 활성 catalog 태그 id */
+  tagIds: string[]
+  /** 직접 입력 태그 */
+  customTagNames: string[]
+  /** @deprecated 레거시 전용 */
+  tags?: string[]
   /** 비우면 서버에서 대표 이미지 제거(빈 문자열 DTO) */
   images?: { original: string; medium: string; thumb: string }
   videoUrl?: string

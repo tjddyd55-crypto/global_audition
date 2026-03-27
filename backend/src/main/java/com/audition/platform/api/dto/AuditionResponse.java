@@ -52,6 +52,9 @@ public class AuditionResponse {
     /** MULTI_ROUND 일 때만 비어 있지 않음 (라운드 UUID·번호 목록). */
     private List<AuditionRoundSummaryDto> roundSummaries = new ArrayList<>();
 
+    /** catalog·직입력 구분용 (폼 초기화). */
+    private List<AuditionTagRefDto> tagRefs = new ArrayList<>();
+
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
     public UUID getOwnerId() { return ownerId; }
@@ -163,5 +166,13 @@ public class AuditionResponse {
 
     public void setRoundSummaries(List<AuditionRoundSummaryDto> roundSummaries) {
         this.roundSummaries = roundSummaries != null ? roundSummaries : new ArrayList<>();
+    }
+
+    public List<AuditionTagRefDto> getTagRefs() {
+        return tagRefs;
+    }
+
+    public void setTagRefs(List<AuditionTagRefDto> tagRefs) {
+        this.tagRefs = tagRefs != null ? tagRefs : new ArrayList<>();
     }
 }

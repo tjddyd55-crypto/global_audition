@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState, type FormEvent, type CSSProperties } from 'react'
+import { useEffect, useMemo, useState, type FormEvent, type CSSProperties } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { SIGNUP, HERO, AUDITION_DETAIL } from '@/lib/design-tokens'
 import {
@@ -12,6 +13,7 @@ import {
   type CreateAuditionPayload,
 } from '@/lib/types/audition'
 import { auditionApi } from '@/lib/api/auditions'
+import { fetchTagCatalog } from '@/lib/api/tags'
 import { apiErrorMessage } from '@/lib/api/uploads'
 import { isoToDatetimeLocalValue } from '@/lib/audition/datetimeLocal'
 import { isBlankOrValidYoutubeUrl } from '@/lib/audition/youtubeEmbed'
@@ -19,7 +21,7 @@ import { AuditionEditorPreview } from '@/components/audition/AuditionEditorPrevi
 import { SingleImageUploadField } from '@/components/audition/AuditionEditorImageUpload'
 import { ImageUploader } from '@/components/common/ImageUploader'
 import { EDITOR_LABELS, AUDITION_STATUS_LABEL_KO } from '@/lib/audition/auditionEditorCopy'
-import { AUDITION_TAG_OPTIONS, normalizeAuditionTagsForPayload } from '@/lib/audition/auditionTags'
+import { normalizeCustomTagNamesForPayload } from '@/lib/audition/auditionTags'
 
 function trimNonEmpty(lines: string[] | undefined): string[] {
   return (lines ?? []).map((s) => (s ?? '').trim()).filter((s) => s.length > 0)
@@ -136,7 +138,6 @@ function applyInitial(a: AuditionDto) {
     title: a.title ?? '',
     description: a.description ?? '',
     status: (a.status as AuditionStatus) || 'DRAFT',
-    tags: [...(a.tags ?? [])],
     images,
     videoUrl: a.videoUrl ?? '',
     galleryImages: [...(a.galleryImages ?? [])],
@@ -178,7 +179,15 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [status, setStatus] = useState<AuditionStatus>('DRAFT')
-  const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [selectedCatalogIds, setSelectedCatalogIds] = useState<string[]>([])
+  const [customTags, setCustomTags] = useState<string[]>([])
+  const [tagCustomInput, setTagCustomInput] = useState('')
+
+  const { data: tagCatalog = [], isLoading: tagCatalogLoading } = useQuery({
+    queryKey: ['tag-catalog'],
+    queryFn: fetchTagCatalog,
+    staleTime: 60_000,
+  })
   const [images, setImages] = useState<AuditionFormImages>(() => ({ ...EMPTY_AUDITION_FORM_IMAGES }))
   const [videoUrl, setVideoUrl] = useState('')
   const [galleryImages, setGalleryImages] = useState<string[]>([])
@@ -206,7 +215,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
     setTitle(v.title)
     setDescription(v.description)
     setStatus(v.status)
-    setSelectedTags(v.tags)
+    setTagCustomInput('')
     setImages(v.images)
     setVideoUrl(v.videoUrl)
     setGalleryImages(v.galleryImages)
@@ -221,6 +230,61 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
     setEndDate(v.endDate || defaultDatetimeLocalEnd())
   }, [mode, initialAudition])
 
+  useEffect(() => {
+    if (mode === 'create') {
+      setSelectedCatalogIds([])
+      setCustomTags([])
+      setTagCustomInput('')
+    }
+  }, [mode])
+
+  useEffect(() => {
+    if (mode !== 'edit' || !initialAudition) return
+
+    const refs = initialAudition.tagRefs
+    if (refs && refs.length > 0) {
+      const ids: string[] = []
+      const customs: string[] = []
+      for (const r of refs) {
+        if (r.tagId) ids.push(r.tagId)
+        else if (r.name.trim()) customs.push(r.name.trim())
+      }
+      setSelectedCatalogIds([...new Set(ids)])
+      setCustomTags(normalizeCustomTagNamesForPayload(customs))
+      return
+    }
+
+    const names = initialAudition.tags ?? []
+    if (names.length === 0) {
+      setSelectedCatalogIds([])
+      setCustomTags([])
+      return
+    }
+    const byName = new Map(tagCatalog.map((t) => [t.name.trim().toLowerCase(), t.id]))
+    const ids: string[] = []
+    const customs: string[] = []
+    for (const raw of names) {
+      const n = raw.trim()
+      if (!n) continue
+      const id = byName.get(n.toLowerCase())
+      if (id) ids.push(id)
+      else customs.push(n)
+    }
+    setSelectedCatalogIds([...new Set(ids)])
+    setCustomTags(normalizeCustomTagNamesForPayload(customs))
+  }, [mode, initialAudition, tagCatalog])
+
+  const previewTagLabels = useMemo(() => {
+    const catMap = new Map(tagCatalog.map((t) => [t.id, t.name]))
+    const out: string[] = []
+    for (const id of selectedCatalogIds) {
+      const n = catMap.get(id)
+      if (n) out.push(n)
+    }
+    out.push(...customTags)
+    return out
+  }, [tagCatalog, selectedCatalogIds, customTags])
+
   const buildPayload = (forcedStatus: AuditionStatus): CreateAuditionPayload => {
     const sd = startDate || defaultDatetimeLocalStart()
     const ed = endDate || defaultDatetimeLocalEnd()
@@ -228,7 +292,8 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
       title: (title ?? '').trim(),
       description: (description ?? '').trim() || '—',
       status: forcedStatus,
-      tags: normalizeAuditionTagsForPayload(selectedTags),
+      tagIds: [...selectedCatalogIds],
+      customTagNames: normalizeCustomTagNamesForPayload(customTags),
       images: buildAuditionImagesPayload(images),
       videoUrl: (videoUrl ?? '').trim() || undefined,
       galleryImages: trimNonEmpty(galleryImages),
@@ -485,35 +550,94 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
             {EDITOR_LABELS.tags}
           </label>
           <p style={{ margin: '0 0 10px 0', fontSize: 12, color: '#6b7280' }}>{EDITOR_LABELS.tagsHint}</p>
-          <div className="flex flex-wrap gap-2">
-            {AUDITION_TAG_OPTIONS.map((tag) => {
-              const on = selectedTags.includes(tag)
-              return (
-                <button
-                  key={tag}
-                  type="button"
-                  onClick={() =>
-                    setSelectedTags((prev) =>
-                      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
-                    )
-                  }
-                  style={{
-                    padding: '6px 12px',
-                    borderRadius: 9999,
-                    border: on ? 'none' : `1px solid ${SIGNUP.inputBorderColor}`,
-                    background: on
-                      ? `linear-gradient(90deg, ${HERO.primaryGradientStart}, ${HERO.primaryGradientEnd})`
-                      : '#f9fafb',
-                    color: on ? '#fff' : '#374151',
-                    fontSize: SIGNUP.inputFontSizePx,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                  }}
+          {tagCatalogLoading ? (
+            <p className="text-sm text-gray-500">태그 목록 불러오는 중…</p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {tagCatalog.map((tag) => {
+                const on = selectedCatalogIds.includes(tag.id)
+                return (
+                  <button
+                    key={tag.id}
+                    type="button"
+                    onClick={() =>
+                      setSelectedCatalogIds((prev) =>
+                        prev.includes(tag.id) ? prev.filter((x) => x !== tag.id) : [...prev, tag.id],
+                      )
+                    }
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: 9999,
+                      border: on ? 'none' : `1px solid ${SIGNUP.inputBorderColor}`,
+                      background: on
+                        ? `linear-gradient(90deg, ${HERO.primaryGradientStart}, ${HERO.primaryGradientEnd})`
+                        : '#f9fafb',
+                      color: on ? '#fff' : '#374151',
+                      fontSize: SIGNUP.inputFontSizePx,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    #{tag.name}
+                  </button>
+                )
+              })}
+            </div>
+          )}
+          <div style={{ marginTop: AUDITION_DETAIL.galleryGapPx }}>
+            <div className="flex flex-wrap gap-2" style={{ marginBottom: AUDITION_DETAIL.galleryGapPx }}>
+              {customTags.map((ct) => (
+                <span
+                  key={`custom-${ct}`}
+                  className="inline-flex items-center gap-1 rounded-full border border-violet-200 bg-violet-50 px-3 py-1 text-sm text-violet-800"
                 >
-                  #{tag}
-                </button>
-              )
-            })}
+                  {ct}
+                  <button
+                    type="button"
+                    className="rounded px-1 text-violet-600 hover:bg-violet-100"
+                    aria-label={`${ct} 제거`}
+                    onClick={() => setCustomTags((prev) => prev.filter((x) => x !== ct))}
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <input
+                value={tagCustomInput}
+                onChange={(e) => setTagCustomInput(e.target.value)}
+                placeholder="직접 입력 후 추가"
+                className="min-w-[12rem] flex-1"
+                style={{
+                  ...inputStyle,
+                  maxWidth: 480,
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    const next = normalizeCustomTagNamesForPayload([tagCustomInput])
+                    if (next.length === 0) return
+                    const label = next[0]!
+                    setCustomTags((prev) => normalizeCustomTagNamesForPayload([...prev, label]))
+                    setTagCustomInput('')
+                  }
+                }}
+              />
+              <button
+                type="button"
+                className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50"
+                onClick={() => {
+                  const next = normalizeCustomTagNamesForPayload([tagCustomInput])
+                  if (next.length === 0) return
+                  const label = next[0]!
+                  setCustomTags((prev) => normalizeCustomTagNamesForPayload([...prev, label]))
+                  setTagCustomInput('')
+                }}
+              >
+                추가
+              </button>
+            </div>
           </div>
         </div>
 
@@ -716,7 +840,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
       <AuditionEditorPreview
         title={title}
         description={description}
-        tags={selectedTags}
+        tags={previewTagLabels}
         coverThumbUrl={
           images.thumb.trim() || images.medium.trim() || images.original.trim()
         }

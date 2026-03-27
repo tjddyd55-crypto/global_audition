@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { SuperAdminAuthGate } from '@/components/admin/SuperAdminAuthGate'
 
 const MENU = [
+  { name: '오디션 태그', path: '/admin/super/tags' },
   { name: '크레딧 정책', path: '/admin/super/credit-policies' },
   { name: '크레딧 패키지', path: '/admin/super/credit-packages' },
   { name: '유저 관리', path: '/admin/super/users' },

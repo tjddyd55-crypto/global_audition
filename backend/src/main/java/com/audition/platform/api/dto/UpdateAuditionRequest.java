@@ -19,6 +19,10 @@ public class UpdateAuditionRequest {
 
     private List<String> tags;
 
+    private List<String> tagIds;
+
+    private List<String> customTagNames;
+
     @Valid
     private AuditionImagesDto images;
 
@@ -63,6 +67,10 @@ public class UpdateAuditionRequest {
     public void setStatus(String status) { this.status = status; }
     public List<String> getTags() { return tags; }
     public void setTags(List<String> tags) { this.tags = tags; }
+    public List<String> getTagIds() { return tagIds; }
+    public void setTagIds(List<String> tagIds) { this.tagIds = tagIds; }
+    public List<String> getCustomTagNames() { return customTagNames; }
+    public void setCustomTagNames(List<String> customTagNames) { this.customTagNames = customTagNames; }
     public AuditionImagesDto getImages() { return images; }
     public void setImages(AuditionImagesDto images) { this.images = images; }
     public String getVideoUrl() { return videoUrl; }

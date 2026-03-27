@@ -23,7 +23,14 @@ public class CreateAuditionRequest {
     @Pattern(regexp = "DRAFT|OPEN|CLOSED")
     private String status = "DRAFT";
 
+    /** @deprecated 레거시: 허용 문자열만. {@code tagIds}/{@code customTagNames} 가 있으면 무시됨 */
     private List<String> tags;
+
+    /** 활성 catalog 태그 UUID 문자열 */
+    private List<String> tagIds;
+
+    /** 직접 입력 태그 (정리·중복 제거는 서버) */
+    private List<String> customTagNames;
 
     @Valid
     private AuditionImagesDto images;
@@ -73,6 +80,10 @@ public class CreateAuditionRequest {
     public void setStatus(String status) { this.status = status; }
     public List<String> getTags() { return tags; }
     public void setTags(List<String> tags) { this.tags = tags; }
+    public List<String> getTagIds() { return tagIds; }
+    public void setTagIds(List<String> tagIds) { this.tagIds = tagIds; }
+    public List<String> getCustomTagNames() { return customTagNames; }
+    public void setCustomTagNames(List<String> customTagNames) { this.customTagNames = customTagNames; }
     public AuditionImagesDto getImages() { return images; }
     public void setImages(AuditionImagesDto images) { this.images = images; }
     public String getVideoUrl() { return videoUrl; }

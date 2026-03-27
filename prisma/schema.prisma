@@ -1,5 +1,5 @@
-// SSOT (5-way): Flyway auditions · JPA Audition · Java DTO · 본 schema · frontend/src/lib/types/audition.ts (tags = text[])
-// text[] 만 사용 — detail_content / JSON 필드 없음. 배포: DB 마이그레이션 → 백엔드 → 프론트 순.
+// SSOT: Flyway 마이그레이션·JPA 엔티티·API DTO·프론트 types와 동기화.
+// 태그: `tags` + `audition_tags` — 오디션의 `tags` text[] 컬럼은 제거됨(V26).
 
 generator client {
   provider = "prisma-client-js"
@@ -10,46 +10,57 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Tag {
+  id           String        @id @default(uuid()) @db.Uuid
+  name         String        @unique @db.VarChar(80)
+  type         String        @db.VarChar(20)
+  isActive     Boolean       @default(true) @map("is_active")
+  auditionTags AuditionTag[]
+
+  @@map("tags")
+}
+
+model AuditionTag {
+  id         String   @id @default(uuid()) @db.Uuid
+  auditionId String   @map("audition_id") @db.Uuid
+  tagId      String?  @map("tag_id") @db.Uuid
+  tagName    String?  @map("tag_name") @db.VarChar(120)
+  audition   Audition @relation(fields: [auditionId], references: [id], onDelete: Cascade)
+  tag        Tag?     @relation(fields: [tagId], references: [id], onDelete: Restrict)
+
+  @@index([auditionId], map: "idx_audition_tags_audition")
+  @@map("audition_tags")
+}
+
 model Audition {
-  id              String   @id @default(uuid())
-  ownerId         String   @map("owner_id")
+  id              String   @id @default(uuid()) @db.Uuid
+  ownerId         String   @map("owner_id") @db.Uuid
   title           String
   description     String
-
-  /// DRAFT | OPEN | CLOSED (API·비즈니스 로직)
   status          String
-  tags            String[]
-
   coverImage         String?  @map("cover_image")
   imageOriginalUrl   String?  @map("image_original_url")
   imageMediumUrl     String?  @map("image_medium_url")
   imageThumbUrl      String?  @map("image_thumb_url")
   videoUrl        String?  @map("video_url")
   galleryImages   String[] @map("gallery_images")
-
   agencyName      String   @map("agency_name")
   agencyLogo      String?  @map("agency_logo")
-
   applicantsCount Int      @default(0) @map("applicants_count")
   remainingDays   Int      @map("remaining_days")
-
   recruitFields   String[] @map("recruit_fields")
   qualifications  String[]
   schedules       String[]
-
   location        String
-
   startDate       DateTime @map("start_date")
   endDate         DateTime @map("end_date")
-
   benefits        String[]
-
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime? @map("updated_at")
-
-  // 레거시 컬럼 (마이그레이션 호환, Prisma에서 선택적 관리)
   countryCode     String?  @map("country_code")
   deadlineAt      DateTime? @map("deadline_at")
+
+  auditionTags AuditionTag[]
 
   @@map("auditions")
 }

@@ -19,7 +19,7 @@ export const EDITOR_LABELS = {
   description: '상세 설명',
   status: '상태',
   tags: '태그',
-  tagsHint: '검색·필터에 쓰입니다. 여러 개 선택할 수 있습니다.',
+  tagsHint: '기본 태그에서 고르거나 직접 입력해 추가할 수 있습니다. 검색·필터에 사용됩니다.',
   coverImage: '대표 이미지',
   videoUrl: 'YouTube 영상 링크',
   galleryImages: '갤러리 이미지',
