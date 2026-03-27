@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect, useMemo, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useRouter, Link } from '../../../../i18n.config'
 import { useQuery } from '@tanstack/react-query'
 import { authApi } from '../../../../lib/api/auth'
 import { dashboardApi } from '../../../../lib/api/dashboard'
 import { useTranslations } from 'next-intl'
+import { useAuthStore } from '@/lib/auth/authStore'
 import {
   BTN_PRIMARY,
   BTN_SECONDARY,
@@ -56,19 +57,25 @@ function StatCard({
 export default function MyDashboardPage() {
   const router = useRouter()
   const t = useTranslations('common')
-  const role = useMemo(
-    () => (typeof window !== 'undefined' ? localStorage.getItem('userRole') : null),
-    []
-  )
+  const accessToken = useAuthStore((s) => s.accessToken)
+  const role = useAuthStore((s) => s.role)
+  const [hydrated, setHydrated] = useState(false)
 
   useEffect(() => {
-    if (!authApi.getToken()) {
+    setHydrated(true)
+  }, [])
+
+  useEffect(() => {
+    if (!hydrated) {
+      return
+    }
+    if (!accessToken && !authApi.getToken()) {
       router.push('/login')
     }
-  }, [router])
+  }, [hydrated, accessToken, router])
 
-  const agencyEnabled = role === 'AGENCY' || role === 'ADMIN'
-  const applicantEnabled = role === 'APPLICANT'
+  const agencyEnabled = hydrated && (role === 'AGENCY' || role === 'ADMIN')
+  const applicantEnabled = hydrated && role === 'APPLICANT'
 
   const agencyQuery = useQuery({
     queryKey: ['dashboard', 'agency'],
@@ -85,7 +92,7 @@ export default function MyDashboardPage() {
   const dashboardLoading =
     (agencyEnabled && agencyQuery.isLoading) || (applicantEnabled && applicantQuery.isLoading)
 
-  if (dashboardLoading) {
+  if (!hydrated || dashboardLoading) {
     return <div className="flex min-h-screen items-center justify-center">{t('loading')}</div>
   }
 
