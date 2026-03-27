@@ -35,6 +35,12 @@ app:
   jwt:
     secret: "${JWT_SECRET:change-me-in-production-min-32-chars}"
     expiration-ms: 86400000  # 24h
+  # 로그인 응답 Set-Cookie(accessToken). Next 동일 Origin /api 프록시에서 Bearer 없이도 인증.
+  auth:
+    cookie:
+      enabled: ${APP_AUTH_COOKIE_ENABLED:true}
+      # 크로스 사이트 xhr + credentials: None + Secure. 로컬 HTTP 는 필터에서 Lax 로 폴백.
+      same-site: ${APP_AUTH_COOKIE_SAMESITE:None}
   # 이미지 업로드: 프론트 선검증·multipart·R2 업로드 모두 동일 상한 권장 (기본 10MB)
   upload:
     max-image-bytes: 10485760

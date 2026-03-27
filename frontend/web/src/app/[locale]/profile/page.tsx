@@ -16,10 +16,12 @@ import {
   TEXT_SUB,
   TITLE_PAGE,
 } from '@/lib/ui/specClasses'
+import { useAuthStore } from '@/lib/auth/authStore'
 
 export default function ProfilePage() {
   const router = useRouter()
   const t = useTranslations('common')
+  const role = useAuthStore((s) => s.role)
   const [hasToken, setHasToken] = useState(false)
 
   useEffect(() => {
@@ -31,13 +33,23 @@ export default function ProfilePage() {
     setHasToken(true)
   }, [router])
 
+  /** 기획사(AGENCY)는 지원자 전용 /me/channel/* → 403 이므로 지원자·관리자만 조회 */
+  const showApplicantVideos = role === 'APPLICANT' || role === 'ADMIN'
   const { data: videos, isLoading } = useQuery({
     queryKey: ['my-channel-videos-profile'],
     queryFn: () => videoApi.getMyChannelVideos(),
-    enabled: hasToken,
+    enabled: hasToken && showApplicantVideos,
   })
 
-  if (isLoading) {
+  if (hasToken && role === null) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-lg font-semibold text-gray-900">{t('loading')}</div>
+      </div>
+    )
+  }
+
+  if (hasToken && showApplicantVideos && isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-lg font-semibold text-gray-900">{t('loading')}</div>
@@ -52,8 +64,8 @@ export default function ProfilePage() {
           <h1 className={TITLE_PAGE}>{t('profile')}</h1>
           <button
             type="button"
-            onClick={() => {
-              authApi.logout()
+            onClick={async () => {
+              await authApi.logout()
               router.push('/')
             }}
             className={BTN_SECONDARY}
@@ -64,7 +76,11 @@ export default function ProfilePage() {
 
         <div>
           <h2 className={`${TITLE_PAGE} mb-4`}>{t('videos')}</h2>
-          {videos && videos.content.length > 0 ? (
+          {role === 'AGENCY' ? (
+            <div className={CARD_BASE}>
+              <p className={TEXT_SUB}>지원자 전용 채널 영역입니다. 기획사 계정은 오디션 관리 메뉴를 이용해 주세요.</p>
+            </div>
+          ) : showApplicantVideos && videos && videos.content.length > 0 ? (
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               {videos.content.map((video) => (
                 <div key={video.id} className={CARD_MEDIA_SHELL}>
@@ -94,11 +110,11 @@ export default function ProfilePage() {
                 </div>
               ))}
             </div>
-          ) : (
+          ) : showApplicantVideos ? (
             <div className={CARD_BASE}>
               <p className={TEXT_SUB}>등록된 영상이 없습니다</p>
             </div>
-          )}
+          ) : null}
         </div>
       </div>
     </div>

@@ -50,8 +50,8 @@ export default function MainHeader() {
     setIsMobileOpen(false)
   }
 
-  const handleLogout = () => {
-    authApi.logout()
+  const handleLogout = async () => {
+    await authApi.logout()
     queryClient.removeQueries({ queryKey: ['currentUser'] })
     setIsUserMenuOpen(false)
     setIsMobileOpen(false)

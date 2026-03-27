@@ -6,9 +6,11 @@ import { authApi } from '../../../lib/api/auth'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
+import { useAuthStore } from '@/lib/auth/authStore'
 
 export default function ProfilePage() {
   const router = useRouter()
+  const role = useAuthStore((s) => s.role)
   const [hasToken, setHasToken] = useState(false)
 
   useEffect(() => {
@@ -20,13 +22,22 @@ export default function ProfilePage() {
     setHasToken(true)
   }, [router])
 
+  const showApplicantVideos = role === 'APPLICANT' || role === 'ADMIN'
   const { data: videos, isLoading } = useQuery({
     queryKey: ['my-channel-videos-mobile-profile'],
     queryFn: () => videoApi.getMyChannelVideos(),
-    enabled: hasToken,
+    enabled: hasToken && showApplicantVideos,
   })
 
-  if (isLoading) {
+  if (hasToken && role === null) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-xl">로딩 중...</div>
+      </div>
+    )
+  }
+
+  if (hasToken && showApplicantVideos && isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-xl">로딩 중...</div>
@@ -41,8 +52,9 @@ export default function ProfilePage() {
 
         <div className="mb-8">
           <button
-            onClick={() => {
-              authApi.logout()
+            type="button"
+            onClick={async () => {
+              await authApi.logout()
               router.push('/')
             }}
             className="px-4 py-2 border rounded-lg hover:bg-gray-50"
@@ -53,7 +65,9 @@ export default function ProfilePage() {
 
         <div>
           <h2 className="text-2xl font-semibold mb-4">내 영상</h2>
-          {videos && videos.content.length > 0 ? (
+          {role === 'AGENCY' ? (
+            <p className="text-gray-500">지원자 전용 채널입니다. 기획사 계정은 오디션 관리 메뉴를 이용해 주세요.</p>
+          ) : showApplicantVideos && videos && videos.content.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {videos.content.map((video) => (
                 <div key={video.id} className="border rounded-lg overflow-hidden">
@@ -78,9 +92,9 @@ export default function ProfilePage() {
                 </div>
               ))}
             </div>
-          ) : (
+          ) : showApplicantVideos ? (
             <p className="text-gray-500">등록된 영상이 없습니다</p>
-          )}
+          ) : null}
         </div>
       </div>
     </div>

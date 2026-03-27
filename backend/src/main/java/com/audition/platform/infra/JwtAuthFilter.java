@@ -35,26 +35,53 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             return;
         }
 
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        String token = resolveToken(request);
+        if (token == null || token.isBlank()) {
             filterChain.doFilter(request, response);
             return;
         }
-        String token = authHeader.substring(7);
         try {
             io.jsonwebtoken.Claims claims = jwtService.parseToken(token);
             UUID userId = UUID.fromString(claims.getSubject());
             String role = claims.get("role", String.class);
-            List<SimpleGrantedAuthority> authorities = Collections.singletonList(
-                    new SimpleGrantedAuthority("ROLE_" + role));
-            var auth = new UsernamePasswordAuthenticationToken(
-                    userId, null, authorities);
-            auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            SecurityContextHolder.getContext().setAuthentication(auth);
+            if (role != null && !role.isBlank()) {
+                List<SimpleGrantedAuthority> authorities = Collections.singletonList(
+                        new SimpleGrantedAuthority("ROLE_" + role));
+                var auth = new UsernamePasswordAuthenticationToken(
+                        userId, null, authorities);
+                auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(auth);
+            }
         } catch (Exception ignored) {
             // invalid token — leave context empty
         }
         filterChain.doFilter(request, response);
+    }
+
+    /**
+     * Authorization: Bearer 우선, 없으면 동일 Origin 프록시·credentials 용 HttpOnly 쿠키.
+     */
+    private static String resolveToken(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7).trim();
+        }
+        jakarta.servlet.http.Cookie[] cookies = request.getCookies();
+        if (cookies == null) {
+            return null;
+        }
+        String[] names = {AuthSessionCookieWriter.COOKIE_ACCESS, "auth_token", "token"};
+        for (String cookieName : names) {
+            for (jakarta.servlet.http.Cookie c : cookies) {
+                if (cookieName.equals(c.getName())) {
+                    String v = c.getValue();
+                    if (v != null && !v.isBlank()) {
+                        return v.trim();
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     private static boolean isPublicAuthWrite(HttpServletRequest request) {

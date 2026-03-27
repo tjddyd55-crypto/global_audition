@@ -67,7 +67,15 @@ export const authApi = {
     return data
   },
 
-  logout: () => {
+  /** HttpOnly 세션 쿠키 제거 + 로컬 스토어 초기화 (withCredentials 로 /auth/logout 전달) */
+  logout: async () => {
+    if (typeof window !== 'undefined') {
+      try {
+        await apiClient.post('/auth/logout')
+      } catch {
+        // ignore
+      }
+    }
     useAuthStore.getState().clearAuth()
   },
 
