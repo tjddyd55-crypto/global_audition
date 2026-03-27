@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Entity
@@ -40,6 +41,25 @@ public class Application {
 
     @Column(columnDefinition = "TEXT")
     private String message;
+
+    /** 지원서에 기재한 표시 이름 (계정 프로필과 별개) */
+    @Column(name = "applicant_name", columnDefinition = "TEXT")
+    private String applicantName;
+
+    @Column(name = "birth_date")
+    private LocalDate birthDate;
+
+    @Column(name = "age")
+    private Integer age;
+
+    @Column(name = "nationality", length = 10)
+    private String nationality;
+
+    @Column(name = "video_url", columnDefinition = "TEXT")
+    private String videoUrl;
+
+    @Column(name = "intro_text", columnDefinition = "TEXT")
+    private String introText;
 
     @Column(name = "updated_at")
     private Instant updatedAt = Instant.now();
@@ -79,6 +99,18 @@ public class Application {
     public void setVoteCount(long voteCount) { this.voteCount = voteCount; }
     public String getMessage() { return message; }
     public void setMessage(String message) { this.message = message; }
+    public String getApplicantName() { return applicantName; }
+    public void setApplicantName(String applicantName) { this.applicantName = applicantName; }
+    public LocalDate getBirthDate() { return birthDate; }
+    public void setBirthDate(LocalDate birthDate) { this.birthDate = birthDate; }
+    public Integer getAge() { return age; }
+    public void setAge(Integer age) { this.age = age; }
+    public String getNationality() { return nationality; }
+    public void setNationality(String nationality) { this.nationality = nationality; }
+    public String getVideoUrl() { return videoUrl; }
+    public void setVideoUrl(String videoUrl) { this.videoUrl = videoUrl; }
+    public String getIntroText() { return introText; }
+    public void setIntroText(String introText) { this.introText = introText; }
     public Instant getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
     public Instant getCreatedAt() { return createdAt; }

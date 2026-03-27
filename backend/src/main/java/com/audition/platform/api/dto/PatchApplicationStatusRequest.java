@@ -4,12 +4,13 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 
 /**
- * PATCH /api/applications/{id}/status — API/DB 모두 REVIEWING | ACCEPTED | REJECTED (심사 상태, 투표와 무관)
+ * PATCH /api/applications/{id}/status — 기획사 보드 상태.
+ * PENDING→DB SUBMITTED, APPROVED·ACCEPTED→ACCEPTED, REVIEWING, REJECTED.
  */
 public class PatchApplicationStatusRequest {
 
     @NotBlank
-    @Pattern(regexp = "REVIEWING|ACCEPTED|REJECTED")
+    @Pattern(regexp = "PENDING|REVIEWING|APPROVED|REJECTED|ACCEPTED")
     private String status;
 
     public String getStatus() {

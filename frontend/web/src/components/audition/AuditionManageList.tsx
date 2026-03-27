@@ -8,7 +8,7 @@ import { Link } from '@/i18n.config'
 import { auditionApi, getManageList, type ManageApplicantItem } from '@/lib/api/auditions'
 import { BTN_SECONDARY, CARD_BASE, PAGE_CONTAINER, TEXT_SUB } from '@/lib/ui/specClasses'
 
-type StatusBtn = 'REVIEWING' | 'ACCEPTED' | 'REJECTED'
+type StatusBtn = 'REVIEWING' | 'APPROVED' | 'REJECTED'
 
 type Props = {
   auditionId: string
@@ -159,7 +159,7 @@ function ManageRow({
 
   const btnClass = (target: StatusBtn) => {
     const active = st === target
-    if (target === 'ACCEPTED') {
+    if (target === 'APPROVED') {
       return active
         ? 'rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white ring-2 ring-emerald-800'
         : 'rounded-lg border border-emerald-200 bg-white px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-50'
@@ -184,7 +184,7 @@ function ManageRow({
         <button type="button" disabled={disabled} className={btnClass('REVIEWING')} onClick={() => onPatch('REVIEWING')}>
           검토
         </button>
-        <button type="button" disabled={disabled} className={btnClass('ACCEPTED')} onClick={() => onPatch('ACCEPTED')}>
+        <button type="button" disabled={disabled} className={btnClass('APPROVED')} onClick={() => onPatch('APPROVED')}>
           합격
         </button>
         <button type="button" disabled={disabled} className={btnClass('REJECTED')} onClick={() => onPatch('REJECTED')}>

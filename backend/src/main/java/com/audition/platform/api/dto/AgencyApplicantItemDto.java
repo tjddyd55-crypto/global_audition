@@ -20,8 +20,20 @@ public class AgencyApplicantItemDto {
     private Integer recommendedRank;
     /** 랭킹 순위 (recommendedRank 와 동일 스냅샷) */
     private Integer rank;
-    /** SUBMITTED | REVIEWING | ACCEPTED | REJECTED */
+    /** 기획사 보드: PENDING | REVIEWING | APPROVED | REJECTED */
     private String status;
+
+    /** 지원서 표시 이름 (userName 과 동일 스냅샷, JSON 호환 alias) */
+    private String name;
+
+    private Integer age;
+
+    private String nationality;
+
+    private int snsCount;
+
+    /** ISO-8601 (Instant 문자열) */
+    private String createdAt;
     private Boolean recommended;
     /** 관리 화면에서는 항상 false (투표 카드와 필드 스키마 통일) */
     private boolean voted;
@@ -137,6 +149,46 @@ public class AgencyApplicantItemDto {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Integer getAge() {
+        return age;
+    }
+
+    public void setAge(Integer age) {
+        this.age = age;
+    }
+
+    public String getNationality() {
+        return nationality;
+    }
+
+    public void setNationality(String nationality) {
+        this.nationality = nationality;
+    }
+
+    public int getSnsCount() {
+        return snsCount;
+    }
+
+    public void setSnsCount(int snsCount) {
+        this.snsCount = snsCount;
+    }
+
+    public String getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(String createdAt) {
+        this.createdAt = createdAt;
     }
 
     public Boolean getRecommended() {

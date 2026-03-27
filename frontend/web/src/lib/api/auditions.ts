@@ -57,9 +57,13 @@ export type ManageApplicationStats = {
   rejected: number
 }
 
+/** 기획사 보드 API 상태 (백엔드 agencyBoardStatusToApi) */
+export type AgencyBoardStatus = 'PENDING' | 'REVIEWING' | 'APPROVED' | 'REJECTED'
+
 export type ManageApplicantItem = {
   applicationId: string
   userName: string
+  name: string
   userEmail: string
   videoUrl: string
   thumbnailUrl: string | null
@@ -67,12 +71,40 @@ export type ManageApplicantItem = {
   viewCount: number
   likeCount: number
   voteCount: number
+  age: number | null
+  nationality: string | null
+  snsCount: number
+  createdAt: string | null
   recommendedScore?: number | null
   recommendedRank?: number | null
   rank?: number | null
   recommended?: boolean | null
   isVoted?: boolean
-  status: 'SUBMITTED' | 'REVIEWING' | 'ACCEPTED' | 'REJECTED'
+  status: AgencyBoardStatus
+}
+
+export type ManageListFilters = {
+  category?: string | null
+  minAge?: number | null
+  maxAge?: number | null
+  nationality?: string | null
+  hasSns?: boolean | null
+  status?: AgencyBoardStatus | '' | null
+}
+
+export type ApplicationAgencyDetail = {
+  id: string
+  auditionId: string
+  name: string
+  birthDate: string | null
+  age: number | null
+  nationality: string | null
+  videoUrl: string
+  thumbnailUrl: string | null
+  introText: string | null
+  status: AgencyBoardStatus
+  createdAt: string | null
+  snsLinks: Array<{ platform: string; url: string }>
 }
 
 export type ManageApplicationsPayload = {
@@ -291,10 +323,24 @@ export const auditionApi = {
   /** AGENCY/ADMIN: 지원자 관리 화면 */
   listManageApplications: async (
     auditionId: string,
-    category?: string | null
+    filters?: ManageListFilters | string | null
   ): Promise<ManageApplicationsPayload> => {
+    const f: ManageListFilters =
+      typeof filters === 'string' || filters == null
+        ? { category: typeof filters === 'string' ? filters : null }
+        : filters
+    const params: Record<string, string | number | boolean> = {}
+    if (f.category && f.category !== '전체') params.category = f.category
+    if (f.minAge != null) params.minAge = Number(f.minAge)
+    if (f.maxAge != null) params.maxAge = Number(f.maxAge)
+    if (f.nationality && f.nationality !== '') params.nationality = f.nationality
+    if (f.hasSns === true || f.hasSns === false) params.hasSns = f.hasSns
+    const boardSt = f.status
+    if (typeof boardSt === 'string' && boardSt.length > 0) {
+      params.status = boardSt
+    }
     const { data } = await apiClient.get<unknown>(`/auditions/${auditionId}/applications/manage`, {
-      params: category && category !== '전체' ? { category } : {},
+      params,
     })
     const body = unwrapData<Record<string, unknown>>(data)
     const audition = (body.audition ?? {}) as Record<string, unknown>
@@ -316,9 +362,12 @@ export const auditionApi = {
       }),
       items: items.map((raw) => {
         const r = raw as Record<string, unknown>
+        const name = String(r.name ?? r.userName ?? '')
+        const st = String(r.status ?? 'PENDING')
         return {
           applicationId: String(r.applicationId ?? ''),
           userName: String(r.userName ?? ''),
+          name,
           userEmail: String(r.userEmail ?? ''),
           videoUrl: String(r.videoUrl ?? ''),
           thumbnailUrl: r.thumbnailUrl != null ? String(r.thumbnailUrl) : null,
@@ -326,20 +375,47 @@ export const auditionApi = {
           viewCount: Number(r.viewCount ?? 0) || 0,
           likeCount: Number(r.likeCount ?? 0) || 0,
           voteCount: Number(r.voteCount ?? 0) || 0,
+          age: r.age != null ? Number(r.age) : null,
+          nationality: r.nationality != null ? String(r.nationality) : null,
+          snsCount: Number(r.snsCount ?? 0) || 0,
+          createdAt: r.createdAt != null ? String(r.createdAt) : null,
           recommendedScore: r.recommendedScore != null ? Number(r.recommendedScore) : null,
           recommendedRank: r.recommendedRank != null ? Number(r.recommendedRank) : null,
           rank: r.rank != null ? Number(r.rank) : null,
           recommended: r.recommended != null ? Boolean(r.recommended) : null,
           isVoted: r.isVoted != null ? Boolean(r.isVoted) : false,
-          status: String(r.status ?? 'SUBMITTED') as ManageApplicantItem['status'],
+          status: st as ManageApplicantItem['status'],
         }
+      }),
+    }
+  },
+
+  getApplicationAgencyDetail: async (applicationId: string): Promise<ApplicationAgencyDetail> => {
+    const { data } = await apiClient.get<unknown>(`/applications/${applicationId}/agency-detail`)
+    const d = unwrapData<Record<string, unknown>>(data)
+    const sns = Array.isArray(d.snsLinks) ? d.snsLinks : []
+    return {
+      id: String(d.id ?? ''),
+      auditionId: String(d.auditionId ?? ''),
+      name: String(d.name ?? ''),
+      birthDate: d.birthDate != null ? String(d.birthDate) : null,
+      age: d.age != null ? Number(d.age) : null,
+      nationality: d.nationality != null ? String(d.nationality) : null,
+      videoUrl: String(d.videoUrl ?? ''),
+      thumbnailUrl: d.thumbnailUrl != null ? String(d.thumbnailUrl) : null,
+      introText: d.introText != null ? String(d.introText) : null,
+      status: String(d.status ?? 'PENDING') as AgencyBoardStatus,
+      createdAt: d.createdAt != null ? String(d.createdAt) : null,
+      snsLinks: sns.map((x) => {
+        const s = x as Record<string, unknown>
+        return { platform: String(s.platform ?? ''), url: String(s.url ?? '') }
       }),
     }
   },
 
   updateApplicationStatus: async (
     applicationId: string,
-    status: 'REVIEWING' | 'ACCEPTED' | 'REJECTED'
+    status: AgencyBoardStatus | 'ACCEPTED'
   ): Promise<{ applicationId: string; status: string }> => {
     const { data } = await apiClient.patch<unknown>(`/applications/${applicationId}/status`, { status })
     return unwrapData<{ applicationId: string; status: string }>(data)
@@ -369,6 +445,6 @@ export const auditionApi = {
 }
 
 /** 스펙 문서용 별칭 — {@link auditionApi.listManageApplications} 와 동일 */
-export function getManageList(auditionId: string, category?: string | null) {
-  return auditionApi.listManageApplications(auditionId, category)
+export function getManageList(auditionId: string, filters?: ManageListFilters | string | null) {
+  return auditionApi.listManageApplications(auditionId, filters)
 }

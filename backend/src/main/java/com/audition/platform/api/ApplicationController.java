@@ -3,7 +3,9 @@ package com.audition.platform.api;
 import com.audition.platform.api.dto.ApiEnvelope;
 import com.audition.platform.api.dto.AgencyApplicantsListDto;
 import com.audition.platform.api.dto.ApplicationDecisionRequest;
+import com.audition.platform.api.dto.CreateApplicationRequest;
 import com.audition.platform.api.dto.ApplicationResponse;
+import com.audition.platform.api.dto.ApplicationAgencyDetailDto;
 import com.audition.platform.api.dto.ApplicationStatusPatchDataDto;
 import com.audition.platform.api.dto.ManageApplicationsPageDataDto;
 import com.audition.platform.api.dto.PatchApplicationStatusRequest;
@@ -36,6 +38,11 @@ public class ApplicationController {
         return applicationService.apply(auditionId);
     }
 
+    @PostMapping("/applications")
+    public ApplicationResponse submitApplication(@Valid @RequestBody CreateApplicationRequest body) {
+        return applicationService.submitApplication(body);
+    }
+
     @GetMapping("/applications/my")
     public List<ApplicationResponse> listMyApplications() {
         return applicationService.listMyApplications();
@@ -54,8 +61,14 @@ public class ApplicationController {
     @GetMapping("/auditions/{auditionId}/applications/manage")
     public ApiEnvelope<ManageApplicationsPageDataDto> listApplicationsManage(
             @PathVariable UUID auditionId,
-            @RequestParam(name = "category", required = false) String category) {
-        return ApiEnvelope.ok(applicationService.listManageApplications(auditionId, category));
+            @RequestParam(name = "category", required = false) String category,
+            @RequestParam(name = "minAge", required = false) Integer minAge,
+            @RequestParam(name = "maxAge", required = false) Integer maxAge,
+            @RequestParam(name = "nationality", required = false) String nationality,
+            @RequestParam(name = "hasSns", required = false) Boolean hasSns,
+            @RequestParam(name = "status", required = false) String boardStatus) {
+        return ApiEnvelope.ok(applicationService.listManageApplications(
+                auditionId, category, minAge, maxAge, nationality, hasSns, boardStatus));
     }
 
     @PostMapping("/applications/{id}/decision")
@@ -90,6 +103,11 @@ public class ApplicationController {
     @PostMapping("/applications/{id}/reject")
     public ApplicationResponse rejectLegacy(@PathVariable UUID id) {
         return applicationService.decide(id, "REJECTED");
+    }
+
+    @GetMapping("/applications/{id}/agency-detail")
+    public ApiEnvelope<ApplicationAgencyDetailDto> getAgencyApplicationDetail(@PathVariable UUID id) {
+        return ApiEnvelope.ok(applicationService.getApplicationAgencyDetail(id));
     }
 
     @GetMapping("/applications/{id}")

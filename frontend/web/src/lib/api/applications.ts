@@ -16,6 +16,17 @@ export interface ApplicationResponseWithAudition extends ApplicationResponse {
   auditionTitle?: string
 }
 
+export type CreateApplicationPayload = {
+  auditionId: string
+  name: string
+  birthDate: string
+  age: number
+  nationality: string
+  videoUrl: string
+  introText: string
+  snsLinks?: Array<{ platform: string; url: string }>
+}
+
 export interface ApplicationDetailWithVideos extends ApplicationResponseWithAudition {
   videos?: Array<{ id: string; title: string; videoUrl: string; createdAt?: string }>
   /** MULTI_ROUND 면 라운드 메타, 아니면 SINGLE */
@@ -63,8 +74,14 @@ export const applicationApi = {
     })
   },
 
+  /** @deprecated 레거시 원클릭 지원 — 서버에서 거부됩니다. `applicationApi.submit`을 사용하세요. */
   apply: async (auditionId: string): Promise<ApplicationResponse> => {
     const { data } = await apiClient.post<ApplicationResponse>(`/auditions/${auditionId}/apply`)
+    return data
+  },
+
+  submit: async (body: CreateApplicationPayload): Promise<ApplicationResponse> => {
+    const { data } = await apiClient.post<ApplicationResponse>('/applications', body)
     return data
   },
 

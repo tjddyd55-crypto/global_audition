@@ -1,14 +1,12 @@
 'use client'
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { auditionApi } from '../../../../lib/api/auditions'
-import { applicationApi } from '../../../../lib/api/applications'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import { Link } from '../../../../i18n.config'
 import { useTranslations } from 'next-intl'
-import { useState } from 'react'
 import Image from 'next/image'
 import { AUDITION_DETAIL, HERO } from '../../../../lib/design-tokens'
 import { getVideoEmbedSrc } from '../../../../lib/utils/videoEmbed'
@@ -103,13 +101,8 @@ function SectionBlock({
 
 export default function AuditionDetailPage() {
   const params = useParams()
-  const router = useRouter()
-  const queryClient = useQueryClient()
   const t = useTranslations('common')
   const id = params.id as string
-  const [applyError, setApplyError] = useState<string | null>(null)
-  /** 클릭 직후 즉시 비활성화 (네트워크 대기 전 이중 클릭 방지) */
-  const [applyClickLock, setApplyClickLock] = useState(false)
   const accessToken = useAuthStore((s) => s.accessToken)
   const myUserId = useAuthStore((s) => s.userId)
   const role = useAuthStore((s) => s.role)
@@ -138,30 +131,6 @@ export default function AuditionDetailPage() {
     queryFn: () => creditsApi.getBalance(),
     enabled: !!id && showApplySubmitCtaEarly,
     staleTime: 30_000,
-  })
-
-  const applyMutation = useMutation({
-    mutationFn: () => applicationApi.apply(id),
-    onMutate: () => {
-      setApplyClickLock(true)
-      setApplyError(null)
-    },
-    onSuccess: () => {
-      setApplyError(null)
-      queryClient.invalidateQueries({ queryKey: ['audition', id] })
-      queryClient.invalidateQueries({ queryKey: ['credits', 'balance'] })
-      router.push('/my/dashboard')
-    },
-    onError: (err: any) => {
-      setApplyClickLock(false)
-      const status = err.response?.status
-      const serverMsg = err.response?.data?.message
-      const msg =
-        status === 409
-          ? serverMsg || '이미 지원 완료입니다.'
-          : serverMsg || err.message || '지원에 실패했습니다.'
-      setApplyError(msg)
-    },
   })
 
   if (isLoading) {
@@ -230,12 +199,10 @@ export default function AuditionDetailPage() {
     !applyPolicySnapshot || !applyPolicySnapshot.active || applyPolicySnapshot.cost <= 0
       ? true
       : creditBalanceAmount >= applyPolicySnapshot.cost
-  const applyButtonDisabledForCredits = Boolean(
+  const applyNavDisabledForCredits = Boolean(
     showApplySubmitCta &&
       !alreadyApplied &&
-      (applyClickLock ||
-        applyMutation.isPending ||
-        applyPolicyLoading ||
+      (applyPolicyLoading ||
         applyPolicyError ||
         !applyPolicySnapshot ||
         !applyPolicySnapshot.active ||
@@ -464,22 +431,6 @@ export default function AuditionDetailPage() {
           </section>
         )}
 
-        {applyError && (
-          <div
-            style={{
-              marginTop: AUDITION_DETAIL.benefitGridGapPx,
-              padding: AUDITION_DETAIL.benefitCardPaddingPx,
-              borderRadius: AUDITION_DETAIL.videoRadiusPx,
-              border: '1px solid #fecaca',
-              background: '#fef2f2',
-              color: '#b91c1c',
-              fontSize: AUDITION_DETAIL.bodyFontPx,
-            }}
-          >
-            {applyError}
-          </div>
-        )}
-
         {canManageAudition && (
           <div
             className="flex w-full max-w-md mx-auto flex-col gap-3 px-2 md:max-w-none md:flex-row md:justify-center md:px-0"
@@ -580,24 +531,34 @@ export default function AuditionDetailPage() {
               </div>
             ) : showApplySubmitCta ? (
               <div className="flex w-full min-[480px]:w-auto flex-col gap-2">
-                <button
-                  type="button"
-                  onClick={() => applyMutation.mutate()}
-                  disabled={applyButtonDisabledForCredits}
-                  className="inline-flex h-11 w-full min-[480px]:w-auto items-center justify-center px-6 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-70"
-                  style={{
-                    borderRadius: HERO.buttonRadiusPx,
-                    border: 'none',
-                    background: `linear-gradient(90deg, ${HERO.primaryGradientStart}, ${HERO.primaryGradientEnd})`,
-                    fontSize: AUDITION_DETAIL.bodyFontPx,
-                  }}
-                >
-                  {applyMutation.isPending || applyClickLock
-                    ? '처리 중...'
-                    : applyPolicyLoading || balanceLoading
-                      ? '확인 중...'
-                      : '지원하기'}
-                </button>
+                {applyNavDisabledForCredits ? (
+                  <button
+                    type="button"
+                    disabled
+                    className="inline-flex h-11 w-full min-[480px]:w-auto cursor-not-allowed items-center justify-center px-6 font-semibold text-white opacity-70"
+                    style={{
+                      borderRadius: HERO.buttonRadiusPx,
+                      border: 'none',
+                      background: `linear-gradient(90deg, ${HERO.primaryGradientStart}, ${HERO.primaryGradientEnd})`,
+                      fontSize: AUDITION_DETAIL.bodyFontPx,
+                    }}
+                  >
+                    {applyPolicyLoading || balanceLoading ? '확인 중...' : '지원하기'}
+                  </button>
+                ) : (
+                  <Link
+                    href={`/auditions/${id}/apply`}
+                    className="inline-flex h-11 w-full min-[480px]:w-auto items-center justify-center px-6 font-semibold text-white no-underline"
+                    style={{
+                      borderRadius: HERO.buttonRadiusPx,
+                      border: 'none',
+                      background: `linear-gradient(90deg, ${HERO.primaryGradientStart}, ${HERO.primaryGradientEnd})`,
+                      fontSize: AUDITION_DETAIL.bodyFontPx,
+                    }}
+                  >
+                    지원하기
+                  </Link>
+                )}
                 {isOpen && applyPolicySnapshot && applyPolicySnapshot.active && applyPolicySnapshot.cost > 0 ? (
                   <span className="text-center text-xs text-gray-500 min-[480px]:text-left">
                     지원 시 크레딧 {applyPolicySnapshot.cost} 소모 · 보유 {creditBalanceAmount}
