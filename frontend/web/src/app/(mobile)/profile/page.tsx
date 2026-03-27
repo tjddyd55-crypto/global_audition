@@ -3,11 +3,11 @@
 import { useQuery } from '@tanstack/react-query'
 import { videoApi } from '../../../lib/api/videos'
 import { authApi } from '../../../lib/api/auth'
-import { userApi } from '../../../lib/api/user'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { useAuthStore } from '@/lib/auth/authStore'
+import { ProfileManageForm } from '@/components/profile/ProfileManageForm'
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -22,13 +22,6 @@ export default function ProfilePage() {
     }
     setHasToken(true)
   }, [router])
-
-  const { data: profileUser, isLoading: profileLoading } = useQuery({
-    queryKey: ['profile-page-auth-me-mobile'],
-    queryFn: () => userApi.getCurrentUser(),
-    enabled: hasToken,
-    retry: false,
-  })
 
   const showApplicantVideos = role === 'APPLICANT' || role === 'ADMIN'
   const { data: videos, isLoading } = useQuery({
@@ -45,20 +38,11 @@ export default function ProfilePage() {
     )
   }
 
-  if (hasToken && profileLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">로딩 중...</div>
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen p-4 md:p-8">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl md:text-4xl font-bold mb-8">내 프로필</h1>
-
-        <div className="mb-8">
+      <div className="max-w-7xl mx-auto flex flex-col gap-6">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <h1 className="text-3xl md:text-4xl font-bold">내 프로필</h1>
           <button
             type="button"
             onClick={async () => {
@@ -71,33 +55,7 @@ export default function ProfilePage() {
           </button>
         </div>
 
-        {profileUser ? (
-          <section className="mb-8 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-            <h2 className="mb-3 text-lg font-semibold text-gray-900">계정 정보</h2>
-            <dl className="space-y-2 text-sm">
-              <div className="flex gap-2 border-b border-gray-100 pb-2">
-                <dt className="w-20 shrink-0 font-medium text-gray-600">이메일</dt>
-                <dd className="text-gray-900">{profileUser.email}</dd>
-              </div>
-              <div className="flex gap-2 border-b border-gray-100 pb-2">
-                <dt className="w-20 shrink-0 font-medium text-gray-600">이름</dt>
-                <dd className="text-gray-900">{profileUser.legalName?.trim() || '—'}</dd>
-              </div>
-              <div className="flex gap-2 border-b border-gray-100 pb-2">
-                <dt className="w-20 shrink-0 font-medium text-gray-600">닉네임</dt>
-                <dd className="text-gray-900">{profileUser.nickname?.trim() || '—'}</dd>
-              </div>
-              <div className="flex gap-2 border-b border-gray-100 pb-2">
-                <dt className="w-20 shrink-0 font-medium text-gray-600">표시 이름</dt>
-                <dd className="text-gray-900">{profileUser.displayName?.trim() || '—'}</dd>
-              </div>
-              <div className="flex gap-2">
-                <dt className="w-20 shrink-0 font-medium text-gray-600">역할</dt>
-                <dd className="text-gray-900">{profileUser.role}</dd>
-              </div>
-            </dl>
-          </section>
-        ) : null}
+        <ProfileManageForm />
 
         <div>
           <h2 className="text-2xl font-semibold mb-4">내 영상</h2>

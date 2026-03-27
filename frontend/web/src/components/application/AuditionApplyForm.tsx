@@ -94,6 +94,7 @@ export function AuditionApplyForm({ auditionId, disabled, meProfile, meProfileRe
     }
 
     const name = meProfile.name?.trim() ?? ''
+    const nickname = meProfile.nickname?.trim() ?? ''
     const birthDate = meProfile.birthDate?.trim() ?? ''
     const rawNat = meProfile.nationality?.trim().toUpperCase() ?? ''
     const nationality =
@@ -114,7 +115,9 @@ export function AuditionApplyForm({ auditionId, disabled, meProfile, meProfileRe
       introText,
     })
     setSnsRows(links.length > 0 ? links : [])
-    setProfileAutofillNotice(Boolean(name || birthDate || nationality || introText || links.length > 0))
+    setProfileAutofillNotice(
+      Boolean(name || nickname || birthDate || nationality || introText || links.length > 0),
+    )
   }, [meProfile, meProfileReady, form])
 
   const birthDate = useWatch({ control: form.control, name: 'birthDate' })
@@ -195,6 +198,18 @@ export function AuditionApplyForm({ auditionId, disabled, meProfile, meProfileRe
             {form.formState.errors.name ? (
               <span className="text-xs text-red-600">{form.formState.errors.name.message}</span>
             ) : null}
+          </label>
+
+          <label className="flex flex-col gap-1">
+            <span className="text-sm font-medium text-neutral-700">닉네임 (프로필)</span>
+            <input
+              readOnly
+              value={meProfile?.nickname?.trim() ?? ''}
+              disabled={blocked}
+              className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-base text-neutral-700 outline-none"
+              placeholder="프로필에서 설정한 닉네임이 표시됩니다"
+            />
+            <span className="text-xs text-neutral-500">지원서 스냅샷의 표시 이름은 위「이름」칸을 사용합니다. 닉네임은 계정 공개 이름입니다.</span>
           </label>
 
           <label className="flex flex-col gap-1">
