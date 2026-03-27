@@ -1,12 +1,14 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { calculateAge } from '@/lib/audition/calculateAge'
+import type { MeProfileForApply } from '@/lib/api/meProfile'
 
 const NATIONALITIES = [
+  { value: '', label: '선택 안 함' },
   { value: 'KR', label: '대한민국' },
   { value: 'MN', label: '몽골' },
   { value: 'JP', label: '일본' },
@@ -22,48 +24,98 @@ const SNS_PLATFORMS = [
   { value: 'other', label: '기타' },
 ] as const
 
-const formSchema = z.object({
-  name: z.string().min(1, '이름을 입력해 주세요.').max(120),
-  birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, '생년월일을 선택해 주세요.'),
-  nationality: z.enum(['KR', 'MN', 'JP', 'OTHER']),
-  videoUrl: z.string().min(1, '영상 링크를 입력해 주세요.'),
-  introText: z.string().min(50, '지원 동기·자기소개는 50자 이상 입력해 주세요.').max(10000),
-})
+const formSchema = z
+  .object({
+    name: z.string().max(120),
+    birthDate: z.string(),
+    nationality: z.enum(['', 'KR', 'MN', 'JP', 'OTHER']),
+    videoUrl: z.string().min(1, '영상 링크를 입력해 주세요.'),
+    introText: z.string().max(10000),
+  })
+  .superRefine((data, ctx) => {
+    if (data.birthDate !== '' && !/^\d{4}-\d{2}-\d{2}$/.test(data.birthDate)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: '생년월일 형식이 올바르지 않습니다.',
+        path: ['birthDate'],
+      })
+    }
+  })
 
 export type AuditionApplyFormValues = z.infer<typeof formSchema>
 
 export type SnsRow = { platform: string; url: string }
 
+export type AuditionApplySubmitPayload = {
+  auditionId: string
+  name?: string | null
+  birthDate?: string | null
+  age?: number | null
+  nationality?: string | null
+  videoUrl: string
+  introText?: string | null
+  snsLinks: Array<{ platform: string; url: string }>
+}
+
 type Props = {
   auditionId: string
   disabled?: boolean
-  onSubmit: (payload: {
-    auditionId: string
-    name: string
-    birthDate: string
-    age: number
-    nationality: string
-    videoUrl: string
-    introText: string
-    snsLinks: Array<{ platform: string; url: string }>
-  }) => Promise<void>
+  /** GET /me 성공 시 지원서 폼에 복사 (프로필 ID 참조 없음) */
+  meProfile?: MeProfileForApply | null
+  /** true이면 /me 요청이 끝난 뒤(성공·실패) 한 번만 초기화 */
+  meProfileReady?: boolean
+  onSubmit: (payload: AuditionApplySubmitPayload) => Promise<void>
 }
 
-export function AuditionApplyForm({ auditionId, disabled, onSubmit }: Props) {
+export function AuditionApplyForm({ auditionId, disabled, meProfile, meProfileReady, onSubmit }: Props) {
   const [snsRows, setSnsRows] = useState<SnsRow[]>([])
   const [submitting, setSubmitting] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
+  const [profileAutofillNotice, setProfileAutofillNotice] = useState(false)
+  const profileAppliedRef = useRef(false)
 
   const form = useForm<AuditionApplyFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
       birthDate: '',
-      nationality: 'KR',
+      nationality: '',
       videoUrl: '',
       introText: '',
     },
   })
+
+  useEffect(() => {
+    if (!meProfileReady || profileAppliedRef.current) return
+    profileAppliedRef.current = true
+
+    if (!meProfile) {
+      return
+    }
+
+    const name = meProfile.name?.trim() ?? ''
+    const birthDate = meProfile.birthDate?.trim() ?? ''
+    const rawNat = meProfile.nationality?.trim().toUpperCase() ?? ''
+    const nationality =
+      rawNat === 'KR' || rawNat === 'MN' || rawNat === 'JP' || rawNat === 'OTHER' ? rawNat : ''
+    const introText = meProfile.introText?.trim() ?? ''
+    const links = (meProfile.snsLinks ?? [])
+      .filter((l) => l && l.platform?.trim() && l.url?.trim())
+      .map((l) => ({
+        platform: l.platform.trim().toLowerCase(),
+        url: l.url.trim(),
+      }))
+
+    form.reset({
+      name,
+      birthDate,
+      nationality,
+      videoUrl: '',
+      introText,
+    })
+    setSnsRows(links.length > 0 ? links : [])
+    setProfileAutofillNotice(Boolean(name || birthDate || nationality || introText || links.length > 0))
+  }, [meProfile, meProfileReady, form])
 
   const birthDate = useWatch({ control: form.control, name: 'birthDate' })
   const computedAge = useMemo(() => (birthDate ? calculateAge(birthDate) : null), [birthDate])
@@ -78,7 +130,8 @@ export function AuditionApplyForm({ auditionId, disabled, onSubmit }: Props) {
 
   const handleSubmit = form.handleSubmit(async (values) => {
     setFormError(null)
-    if (computedAge == null || computedAge < 0) {
+    const birth = values.birthDate.trim()
+    if (birth && (computedAge == null || computedAge < 0)) {
       setFormError('올바른 생년월일을 선택해 주세요.')
       return
     }
@@ -97,12 +150,12 @@ export function AuditionApplyForm({ auditionId, disabled, onSubmit }: Props) {
     try {
       await onSubmit({
         auditionId,
-        name: values.name.trim(),
-        birthDate: values.birthDate,
-        age: computedAge,
-        nationality: values.nationality,
+        name: values.name.trim() || null,
+        birthDate: birth || null,
+        age: birth ? computedAge : null,
+        nationality: values.nationality ? values.nationality : null,
         videoUrl: values.videoUrl.trim(),
-        introText: values.introText.trim(),
+        introText: values.introText.trim() || null,
         snsLinks: normalizedSns,
       })
     } catch (e: unknown) {
@@ -117,6 +170,12 @@ export function AuditionApplyForm({ auditionId, disabled, onSubmit }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+      {profileAutofillNotice ? (
+        <div className="rounded-lg border border-violet-200 bg-violet-50 px-4 py-3 text-sm text-violet-900">
+          프로필 정보 자동 입력됨 — 아래 값은 프로필에서 가져온 내용입니다. 필요하면 수정한 뒤 제출하세요.
+        </div>
+      ) : null}
+
       {formError ? (
         <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{formError}</div>
       ) : null}
@@ -125,13 +184,13 @@ export function AuditionApplyForm({ auditionId, disabled, onSubmit }: Props) {
         <h2 className="mb-4 text-lg font-bold text-neutral-900">기본 정보</h2>
         <div className="flex flex-col gap-4">
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-neutral-700">이름</span>
+            <span className="text-sm font-medium text-neutral-700">이름 (선택)</span>
             <input
               {...form.register('name')}
               autoComplete="name"
               disabled={blocked}
               className="rounded-lg border border-neutral-300 px-3 py-2 text-base outline-none focus:ring-2 focus:ring-violet-400 disabled:bg-neutral-100"
-              placeholder="실명을 입력해 주세요"
+              placeholder="프로필에 없으면 비워도 됩니다"
             />
             {form.formState.errors.name ? (
               <span className="text-xs text-red-600">{form.formState.errors.name.message}</span>
@@ -139,7 +198,7 @@ export function AuditionApplyForm({ auditionId, disabled, onSubmit }: Props) {
           </label>
 
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-neutral-700">생년월일</span>
+            <span className="text-sm font-medium text-neutral-700">생년월일 (선택)</span>
             <input
               type="date"
               {...form.register('birthDate')}
@@ -154,19 +213,21 @@ export function AuditionApplyForm({ auditionId, disabled, onSubmit }: Props) {
           <div className="flex flex-col gap-1">
             <span className="text-sm font-medium text-neutral-700">나이</span>
             <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-base text-neutral-800">
-              {computedAge != null && computedAge >= 0 ? `${computedAge}세 (자동 계산)` : '생년월일을 선택하면 표시됩니다'}
+              {birthDate?.trim() && computedAge != null && computedAge >= 0
+                ? `${computedAge}세 (자동 계산)`
+                : '생년월일을 입력하면 생년월일 기준 나이가 표시됩니다'}
             </div>
           </div>
 
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-neutral-700">국적</span>
+            <span className="text-sm font-medium text-neutral-700">국적 (선택)</span>
             <select
               {...form.register('nationality')}
               disabled={blocked}
               className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-base outline-none focus:ring-2 focus:ring-violet-400 disabled:bg-neutral-100"
             >
               {NATIONALITIES.map((n) => (
-                <option key={n.value} value={n.value}>
+                <option key={n.value === '' ? '_empty' : n.value} value={n.value}>
                   {n.label}
                 </option>
               ))}
@@ -178,7 +239,7 @@ export function AuditionApplyForm({ auditionId, disabled, onSubmit }: Props) {
       <section className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
         <h2 className="mb-4 text-lg font-bold text-neutral-900">영상</h2>
         <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-neutral-700">영상 URL</span>
+          <span className="text-sm font-medium text-neutral-700">영상 URL (필수)</span>
           <input
             type="url"
             inputMode="url"
@@ -211,7 +272,10 @@ export function AuditionApplyForm({ auditionId, disabled, onSubmit }: Props) {
             <p className="text-sm text-neutral-400">등록된 SNS 링크가 없습니다.</p>
           ) : null}
           {snsRows.map((row, index) => (
-            <div key={index} className="flex flex-col gap-2 rounded-lg border border-neutral-100 bg-neutral-50 p-3 min-[480px]:flex-row min-[480px]:items-end">
+            <div
+              key={index}
+              className="flex min-[480px]:flex-row min-[480px]:items-end flex-col gap-2 rounded-lg border border-neutral-100 bg-neutral-50 p-3"
+            >
               <label className="flex min-w-0 flex-1 flex-col gap-1">
                 <span className="text-xs font-medium text-neutral-600">플랫폼</span>
                 <select
@@ -252,18 +316,18 @@ export function AuditionApplyForm({ auditionId, disabled, onSubmit }: Props) {
       </section>
 
       <section className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
-        <h2 className="mb-4 text-lg font-bold text-neutral-900">지원 동기 · 자기소개</h2>
+        <h2 className="mb-4 text-lg font-bold text-neutral-900">지원 동기 · 자기소개 (선택)</h2>
         <label className="flex flex-col gap-1">
           <textarea
             {...form.register('introText')}
             disabled={blocked}
             rows={8}
             className="w-full resize-y rounded-lg border border-neutral-300 px-3 py-2 text-base outline-none focus:ring-2 focus:ring-violet-400 disabled:bg-neutral-100"
-            placeholder="지원 동기와 자기소개를 50자 이상 입력해 주세요."
+            placeholder="프로필 자기소개가 있으면 자동으로 채워집니다. 비워도 지원할 수 있습니다."
           />
           <div className="flex justify-between text-xs text-neutral-500">
             <span>{form.formState.errors.introText?.message}</span>
-            <span>{form.watch('introText')?.length ?? 0} / 최소 50자</span>
+            <span>{form.watch('introText')?.length ?? 0} / 10000</span>
           </div>
         </label>
       </section>
@@ -271,7 +335,7 @@ export function AuditionApplyForm({ auditionId, disabled, onSubmit }: Props) {
       <button
         type="submit"
         disabled={blocked}
-        className="h-12 w-full rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 text-base 
+        className="h-12 w-full rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 text-base
           font-semibold text-white shadow-md disabled:cursor-not-allowed disabled:opacity-60"
       >
         {submitting ? '제출 중…' : '지원서 제출'}

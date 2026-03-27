@@ -67,15 +67,16 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
             onClick={() => openAt(i)}
             aria-label={`이미지 ${i + 1} 크게 보기`}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={src}
-              alt=""
-              className="h-auto w-full rounded-lg object-cover"
-              loading={i < 2 ? 'eager' : 'lazy'}
-              draggable={false}
-              onError={applyGalleryImageOnError}
-            />
+            <div className="image-wrapper">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={src}
+                alt=""
+                loading={i < 2 ? 'eager' : 'lazy'}
+                draggable={false}
+                onError={applyGalleryImageOnError}
+              />
+            </div>
           </button>
         ))}
       </div>

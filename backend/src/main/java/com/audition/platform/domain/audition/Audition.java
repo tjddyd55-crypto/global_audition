@@ -120,6 +120,14 @@ public class Audition {
     @Column(name = "selection_status", columnDefinition = "TEXT")
     private String selectionStatus;
 
+    /** 동일 시리즈(예: 1차·2차 공고)를 묶는 id. 최초 공고는 보통 group_id = id. */
+    @Column(name = "group_id", nullable = false)
+    private UUID groupId;
+
+    /** 시리즈 내 차수(1차=1, 2차=2). audition_rounds의 round_number 와 무관. */
+    @Column(name = "series_round", nullable = false)
+    private int seriesRound = 1;
+
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
     public UUID getOwnerId() { return ownerId; }
@@ -183,4 +191,8 @@ public class Audition {
     public void setMaxRoundNumber(Integer maxRoundNumber) { this.maxRoundNumber = maxRoundNumber; }
     public String getSelectionStatus() { return selectionStatus; }
     public void setSelectionStatus(String selectionStatus) { this.selectionStatus = selectionStatus; }
+    public UUID getGroupId() { return groupId; }
+    public void setGroupId(UUID groupId) { this.groupId = groupId; }
+    public int getSeriesRound() { return seriesRound; }
+    public void setSeriesRound(int seriesRound) { this.seriesRound = seriesRound; }
 }

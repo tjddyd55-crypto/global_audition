@@ -48,4 +48,14 @@ public interface ApplicationRepository extends JpaRepository<Application, UUID> 
 
     /** 영상 허브·추천 사이드바: 공개 가능한 지원만, 최신순 상한 */
     List<Application> findTop50ByStatusInOrderByCreatedAtDesc(Collection<String> statuses);
+
+    /** 시리즈 차수별 합격(ACCEPTED) 여부 — 다음 차 지원 자격 판단 */
+    @Query(
+            "SELECT COUNT(a) FROM Application a, Audition au WHERE a.auditionId = au.id "
+                    + "AND a.applicantId = :applicantId AND au.groupId = :groupId "
+                    + "AND au.seriesRound = :seriesRound AND a.status = 'ACCEPTED'")
+    long countAcceptedInSeriesRound(
+            @Param("applicantId") UUID applicantId,
+            @Param("groupId") UUID groupId,
+            @Param("seriesRound") int seriesRound);
 }

@@ -5,14 +5,20 @@ import { useParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { auditionApi } from '../../../../../lib/api/auditions'
 import { AuditionManageList } from '@/components/audition/AuditionManageList'
+import { useAuthStore } from '@/lib/auth/authStore'
+import { canManageAudition } from '@/lib/audition/auditionPermissions'
+import { auditionHeadlineTitle } from '@/lib/types/audition'
 
 export default function AuditionManagePage() {
   const params = useParams()
   const t = useTranslations('common')
   const auditionId = params.id as string
+  const accessToken = useAuthStore((s) => s.accessToken)
+  const myUserId = useAuthStore((s) => s.userId)
+  const role = useAuthStore((s) => s.role)
 
   const { data: audition, isLoading, error } = useQuery({
-    queryKey: ['audition', auditionId],
+    queryKey: ['audition', auditionId, myUserId ?? 'anon'],
     queryFn: () => auditionApi.getById(auditionId),
     enabled: !!auditionId,
   })
@@ -33,11 +39,19 @@ export default function AuditionManagePage() {
     )
   }
 
+  const showAddSeriesRound = canManageAudition({
+    accessToken,
+    userId: myUserId,
+    ownerId: audition.ownerId,
+    role,
+  })
+
   return (
     <AuditionManageList
       auditionId={auditionId}
-      auditionTitleFallback={audition.title}
+      auditionTitleFallback={auditionHeadlineTitle(audition)}
       processMode={audition.processMode ?? 'SINGLE'}
+      showAddSeriesRound={showAddSeriesRound}
     />
   )
 }

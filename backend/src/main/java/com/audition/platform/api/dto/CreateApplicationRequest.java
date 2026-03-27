@@ -17,21 +17,18 @@ public class CreateApplicationRequest {
     @NotNull
     private UUID auditionId;
 
-    @NotBlank
+    /** 지원서 스냅샷. 빈 값은 null로 저장 (프로필과 무관하게 요청 본문만 사용). */
     @Size(max = 120)
     private String name;
 
-    /** ISO 날짜 YYYY-MM-DD */
-    @NotBlank
-    @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$")
+    /** ISO 날짜 YYYY-MM-DD. 비우면 생년월일·나이 미저장 */
+    @Pattern(regexp = "^$|^\\d{4}-\\d{2}-\\d{2}$")
     private String birthDate;
 
-    @NotNull
     @Min(0)
     @Max(120)
     private Integer age;
 
-    @NotBlank
     @Size(max = 10)
     private String nationality;
 
@@ -39,8 +36,7 @@ public class CreateApplicationRequest {
     @Size(max = 4000)
     private String videoUrl;
 
-    @NotBlank
-    @Size(min = 50, max = 10000)
+    @Size(max = 10000)
     private String introText;
 
     @Valid

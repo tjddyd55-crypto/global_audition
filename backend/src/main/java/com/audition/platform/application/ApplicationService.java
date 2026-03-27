@@ -4,12 +4,18 @@ import com.audition.platform.api.dto.AgencyApplicantItemDto;
 import com.audition.platform.api.dto.AgencyApplicantsListDto;
 import com.audition.platform.api.dto.ApplicationAgencyDetailDto;
 import com.audition.platform.api.dto.ApplicationResponse;
+import com.audition.platform.api.dto.ApplicationSnsLinkItem;
 import com.audition.platform.api.dto.ApplicationStatusPatchDataDto;
+import com.audition.platform.api.dto.ApplicationVideoItem;
 import com.audition.platform.api.dto.CreateApplicationRequest;
 import com.audition.platform.api.dto.CategoryCountDto;
 import com.audition.platform.api.dto.ManageApplicationStatsDto;
 import com.audition.platform.api.dto.ManageApplicationsPageDataDto;
 import com.audition.platform.api.dto.ManageAuditionHeaderDto;
+import com.audition.platform.api.dto.ManageRoundCountDto;
+import com.audition.platform.application.audition.AuditionSeriesEligibilityService;
+import com.audition.platform.application.audition.AuditionSeriesPresentation;
+import com.audition.platform.application.round.AuditionProcessModes;
 import com.audition.platform.application.round.ApplicationRoundSubmissionService;
 import com.audition.platform.application.audition.ApplicantCardMetricsLoader;
 import com.audition.platform.application.credit.CreditPolicyKey;
@@ -18,13 +24,16 @@ import com.audition.platform.application.me.MeApiMapping;
 import com.audition.platform.application.ranking.ApplicationRankingService;
 import com.audition.platform.domain.audition.Application;
 import com.audition.platform.domain.audition.ApplicationRepository;
-import com.audition.platform.domain.audition.ApplicationSnsLink;
+import com.audition.platform.domain.audition.ApplicationStatusHistory;
+import com.audition.platform.domain.audition.ApplicationStatusHistoryRepository;
 import com.audition.platform.domain.audition.ApplicationSnsLink;
 import com.audition.platform.domain.audition.ApplicationSnsLinkRepository;
 import com.audition.platform.domain.audition.ApplicationVideo;
 import com.audition.platform.domain.audition.ApplicationVideoRepository;
 import com.audition.platform.domain.audition.Audition;
 import com.audition.platform.domain.audition.AuditionRepository;
+import com.audition.platform.domain.audition.AuditionRound;
+import com.audition.platform.domain.audition.AuditionRoundRepository;
 import com.audition.platform.domain.score.ApplicationScore;
 import com.audition.platform.domain.score.ApplicationScoreRepository;
 import com.audition.platform.domain.user.User;
@@ -73,8 +82,11 @@ public class ApplicationService {
     private final ApplicationRankingService applicationRankingService;
     private final ApplicationVideoRepository applicationVideoRepository;
     private final ApplicationSnsLinkRepository applicationSnsLinkRepository;
+    private final ApplicationStatusHistoryRepository applicationStatusHistoryRepository;
+    private final AuditionRoundRepository auditionRoundRepository;
     private final CreditService creditService;
     private final ApplicationRoundSubmissionService applicationRoundSubmissionService;
+    private final AuditionSeriesEligibilityService auditionSeriesEligibilityService;
 
     public ApplicationService(
             ApplicationRepository applicationRepository,
@@ -85,8 +97,11 @@ public class ApplicationService {
             ApplicationRankingService applicationRankingService,
             ApplicationVideoRepository applicationVideoRepository,
             ApplicationSnsLinkRepository applicationSnsLinkRepository,
+            ApplicationStatusHistoryRepository applicationStatusHistoryRepository,
+            AuditionRoundRepository auditionRoundRepository,
             CreditService creditService,
-            ApplicationRoundSubmissionService applicationRoundSubmissionService) {
+            ApplicationRoundSubmissionService applicationRoundSubmissionService,
+            AuditionSeriesEligibilityService auditionSeriesEligibilityService) {
         this.applicationRepository = applicationRepository;
         this.auditionRepository = auditionRepository;
         this.userRepository = userRepository;
@@ -95,8 +110,22 @@ public class ApplicationService {
         this.applicationRankingService = applicationRankingService;
         this.applicationVideoRepository = applicationVideoRepository;
         this.applicationSnsLinkRepository = applicationSnsLinkRepository;
+        this.applicationStatusHistoryRepository = applicationStatusHistoryRepository;
+        this.auditionRoundRepository = auditionRoundRepository;
         this.creditService = creditService;
         this.applicationRoundSubmissionService = applicationRoundSubmissionService;
+        this.auditionSeriesEligibilityService = auditionSeriesEligibilityService;
+    }
+
+    private void recordApplicationStatusChange(
+            UUID applicationId, String previousDb, String nextDb, UUID actorId) {
+        ApplicationStatusHistory row = new ApplicationStatusHistory();
+        row.setApplicationId(applicationId);
+        row.setPreviousStatus(previousDb != null ? previousDb : "");
+        row.setNextStatus(nextDb);
+        row.setChangedBy(actorId);
+        row.setChangedAt(Instant.now());
+        applicationStatusHistoryRepository.save(row);
     }
 
     private static ApplicationResponse toResponse(Application app, User applicant) {
@@ -109,7 +138,22 @@ public class ApplicationService {
         r.setMessage(app.getMessage());
         r.setUpdatedAt(app.getUpdatedAt());
         r.setCreatedAt(app.getCreatedAt());
+        r.setName(app.getApplicantName());
+        r.setBirthDate(app.getBirthDate() != null ? app.getBirthDate().toString() : null);
+        r.setAge(app.getAge());
+        r.setNationality(app.getNationality());
+        r.setIntroText(app.getIntroText());
+        r.setVideoUrl(app.getVideoUrl());
         return r;
+    }
+
+    private static ApplicationVideoItem toApplicationVideoItem(ApplicationVideo v) {
+        ApplicationVideoItem item = new ApplicationVideoItem();
+        item.setId(v.getId());
+        item.setTitle(v.getTitle());
+        item.setVideoUrl(v.getVideoUrl());
+        item.setThumbnailUrl(v.getThumbnailUrl());
+        return item;
     }
 
     /**
@@ -176,6 +220,7 @@ public class ApplicationService {
     /**
      * 기획사 지원자 관리 화면 (통계·카테고리·추천 점수 포함).
      * 보드 필터: minAge, maxAge, nationality, hasSns, boardStatus(PENDING|REVIEWING|APPROVED|REJECTED)
+     * @param roundFilter {@code null} 또는 1 미만이면 전체, 그렇지 않으면 {@code applications.current_round_number} 일치만
      */
     public ManageApplicationsPageDataDto listManageApplications(
             UUID auditionId,
@@ -184,7 +229,8 @@ public class ApplicationService {
             Integer maxAge,
             String nationalityFilter,
             Boolean hasSns,
-            String boardStatus) {
+            String boardStatus,
+            Integer roundFilter) {
         UUID currentUserId = SecurityUtils.getCurrentUserId();
         if (currentUserId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
@@ -200,6 +246,10 @@ public class ApplicationService {
         Map<UUID, ApplicationScore> scoreByApp = applicationScoreRepository.findByAuditionId(auditionId).stream()
                 .collect(Collectors.toMap(ApplicationScore::getApplicationId, Function.identity(), (a, b) -> a));
 
+        List<AuditionRound> definedRounds = auditionRoundRepository.findByAuditionIdOrderByRoundNumberAsc(auditionId);
+        int maxRound = resolveMaxRoundForManage(audition, all, definedRounds);
+        List<ManageRoundCountDto> roundCounts = buildRoundCountsForManage(all, maxRound);
+
         Map<UUID, Long> snsMap = snsCountsByApplicationIds(all);
         List<AgencyApplicantItemDto> fullItems = all.stream()
                 .map(app -> toAgencyItem(app, scoreByApp.get(app.getId()), snsMap.getOrDefault(app.getId(), 0L)))
@@ -207,17 +257,65 @@ public class ApplicationService {
 
         List<AgencyApplicantItemDto> boardFiltered =
                 filterManageBoard(fullItems, minAge, maxAge, nationalityFilter, hasSns, boardStatus);
-        List<AgencyApplicantItemDto> visible = filterManageByCategory(boardFiltered, categoryFilter);
+        List<AgencyApplicantItemDto> roundFiltered = filterManageByRound(boardFiltered, roundFilter);
+        List<AgencyApplicantItemDto> visible = filterManageByCategory(roundFiltered, categoryFilter);
 
         ManageApplicationsPageDataDto dto = new ManageApplicationsPageDataDto();
         ManageAuditionHeaderDto header = new ManageAuditionHeaderDto();
         header.setId(audition.getId().toString());
         header.setTitle(audition.getTitle() != null ? audition.getTitle() : "");
+        header.setDescription(audition.getDescription() != null ? audition.getDescription() : "");
+        header.setProcessMode(audition.getProcessMode() != null ? audition.getProcessMode() : "SINGLE");
+        header.setMaxRoundNumber(audition.getMaxRoundNumber());
         dto.setAudition(header);
         dto.setStats(buildManageStats(all));
         dto.setCategories(buildManageCategoryTabs(fullItems));
         dto.setItems(visible);
+        dto.setApplicantTotalCount(all.size());
+        dto.setMaxRound(maxRound);
+        dto.setRoundCounts(roundCounts);
         return dto;
+    }
+
+    private static int resolveMaxRoundForManage(Audition audition, List<Application> apps, List<AuditionRound> definedRounds) {
+        int max = 1;
+        for (Application app : apps) {
+            max = Math.max(max, app.getCurrentRoundNumber());
+        }
+        if (audition.getMaxRoundNumber() != null && audition.getMaxRoundNumber() > 0) {
+            max = Math.max(max, audition.getMaxRoundNumber());
+        }
+        for (AuditionRound r : definedRounds) {
+            max = Math.max(max, r.getRoundNumber());
+        }
+        return Math.max(1, max);
+    }
+
+    private static List<ManageRoundCountDto> buildRoundCountsForManage(List<Application> apps, int maxRound) {
+        long[] counts = new long[maxRound + 1];
+        for (Application app : apps) {
+            int r = app.getCurrentRoundNumber();
+            if (r < 1) {
+                r = 1;
+            }
+            if (r > maxRound) {
+                r = maxRound;
+            }
+            counts[r]++;
+        }
+        List<ManageRoundCountDto> out = new ArrayList<>();
+        for (int i = 1; i <= maxRound; i++) {
+            out.add(new ManageRoundCountDto(i, counts[i]));
+        }
+        return out;
+    }
+
+    private static List<AgencyApplicantItemDto> filterManageByRound(List<AgencyApplicantItemDto> items, Integer round) {
+        if (round == null || round < 1) {
+            return items;
+        }
+        final int want = round;
+        return items.stream().filter(i -> i.getRound() == want).collect(Collectors.toList());
     }
 
     private Map<UUID, Long> snsCountsByApplicationIds(List<Application> apps) {
@@ -342,6 +440,7 @@ public class ApplicationService {
         dto.setSnsCount((int) snsCount);
         dto.setCreatedAt(app.getCreatedAt() != null ? app.getCreatedAt().toString() : null);
         dto.setStatus(MeApiMapping.agencyBoardStatusToApi(app.getStatus()));
+        dto.setRound(app.getCurrentRoundNumber());
         dto.setVoted(false);
         if (score != null) {
             dto.setRecommendedScore(score.getWeightedScore());
@@ -358,8 +457,8 @@ public class ApplicationService {
     }
 
     /**
-     * PATCH: API REVIEWING → DB REVIEWING, ACCEPTED/REJECTED 그대로. 합격/불합격 후 비관리자는 변경 불가.
-     * (지원 심사 상태는 투표와 별개)
+     * PATCH: 기획사 보드 상태. {@link MeApiMapping#agencyBoardStatusToDb} 규칙 적용.
+     * 소유자·관리자는 합격/불합격 이후에도 언제든 상태를 변경할 수 있다.
      */
     @Transactional
     public ApplicationStatusPatchDataDto patchApplicationStatus(UUID applicationId, String apiStatus) {
@@ -377,13 +476,6 @@ public class ApplicationService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "오디션을 찾을 수 없습니다."));
         assertAgencyOrAdminCanManageAudition(audition);
 
-        if (!SecurityUtils.hasRole("ADMIN")) {
-            String cur = app.getStatus();
-            if ("ACCEPTED".equals(cur) || "REJECTED".equals(cur)) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "종료된 지원서는 상태를 변경할 수 없습니다.");
-            }
-        }
-
         if (!"REVIEWING".equals(dbTarget)
                 && !"ACCEPTED".equals(dbTarget)
                 && !"REJECTED".equals(dbTarget)
@@ -391,9 +483,11 @@ public class ApplicationService {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "유효하지 않은 상태입니다.");
         }
 
+        String previousDb = app.getStatus();
         app.setStatus(dbTarget);
         app.setUpdatedAt(java.time.Instant.now());
         app = applicationRepository.save(app);
+        recordApplicationStatusChange(applicationId, previousDb, dbTarget, currentUserId);
         applicationRankingService.recalculateScores(app.getAuditionId());
         return new ApplicationStatusPatchDataDto(
                 app.getId().toString(),
@@ -432,6 +526,7 @@ public class ApplicationService {
         dto.setThumbnailUrl(m.thumbnailUrl());
         dto.setIntroText(app.getIntroText());
         dto.setStatus(MeApiMapping.agencyBoardStatusToApi(app.getStatus()));
+        dto.setRound(app.getCurrentRoundNumber());
         dto.setCreatedAt(app.getCreatedAt() != null ? app.getCreatedAt().toString() : null);
 
         List<ApplicationSnsLink> links = applicationSnsLinkRepository.findByApplicationIdOrderByCreatedAtAsc(applicationId);
@@ -470,42 +565,57 @@ public class ApplicationService {
         if (!"OPEN".equals(audition.getStatus())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "모집 중인 오디션이 아닙니다.");
         }
+        if (!auditionSeriesEligibilityService.canApply(applicantId, audition)) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, AuditionSeriesPresentation.APPLY_BLOCKED_PREV_ROUND_NOT_ACCEPTED);
+        }
         if (applicationRepository.existsByAuditionIdAndApplicantId(auditionId, applicantId)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 지원 완료입니다.");
         }
 
-        String applicantName = req.getName().trim();
+        String applicantName = req.getName() != null ? req.getName().trim() : "";
         if (applicantName.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "이름을 입력해 주세요.");
+            applicantName = null;
         }
-        String nationality = req.getNationality().trim().toUpperCase(Locale.ROOT);
-        if (!ALLOWED_NATIONALITIES.contains(nationality)) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "국적 값이 올바르지 않습니다.");
-        }
-        LocalDate birthDate;
-        try {
-            birthDate = LocalDate.parse(req.getBirthDate());
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "생년월일 형식이 올바르지 않습니다.");
-        }
+
+        LocalDate birthDate = null;
+        Integer computedAge = null;
+        String birthRaw = req.getBirthDate() != null ? req.getBirthDate().trim() : "";
         LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
-        int computedAge;
-        try {
-            computedAge = ApplicationBirthdates.ageOnDate(birthDate, today);
-        } catch (IllegalArgumentException ex) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "생년월일이 올바르지 않습니다.");
+        if (!birthRaw.isEmpty()) {
+            try {
+                birthDate = LocalDate.parse(birthRaw);
+            } catch (Exception e) {
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "생년월일 형식이 올바르지 않습니다.");
+            }
+            try {
+                computedAge = ApplicationBirthdates.ageOnDate(birthDate, today);
+            } catch (IllegalArgumentException ex) {
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "생년월일이 올바르지 않습니다.");
+            }
+            if (req.getAge() != null && !req.getAge().equals(computedAge)) {
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "생년월일과 나이가 일치하지 않습니다.");
+            }
+        } else if (req.getAge() != null) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "생년월일이 없으면 나이를 보낼 수 없습니다.");
         }
-        if (computedAge != req.getAge()) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "생년월일과 나이가 일치하지 않습니다.");
+
+        String nationality = null;
+        if (req.getNationality() != null && !req.getNationality().isBlank()) {
+            nationality = req.getNationality().trim().toUpperCase(Locale.ROOT);
+            if (!ALLOWED_NATIONALITIES.contains(nationality)) {
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "국적 값이 올바르지 않습니다.");
+            }
         }
+
         String videoUrl = req.getVideoUrl().trim();
         if (!SocialVideoUrls.isValidAuditionVideoUrl(videoUrl)) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
                     "영상 링크는 YouTube, TikTok, Instagram 영상 주소만 입력할 수 있습니다.");
         }
-        String introText = req.getIntroText().trim();
-        if (introText.length() < 50) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "지원 동기·자기소개는 50자 이상 입력해 주세요.");
+        String introText = req.getIntroText() != null ? req.getIntroText().trim() : "";
+        if (introText.isEmpty()) {
+            introText = null;
         }
 
         List<NormalizedSnsLink> snsToSave = normalizeSnsPayload(req.snsLinksOrEmpty());
@@ -518,6 +628,13 @@ public class ApplicationService {
         app.setAuditionId(auditionId);
         app.setApplicantId(applicantId);
         app.setStatus("SUBMITTED");
+        if (!AuditionProcessModes.isMultiRound(audition.getProcessMode())) {
+            int initialRound = 1;
+            if (audition.getCurrentRoundNumber() != null && audition.getCurrentRoundNumber() > 0) {
+                initialRound = audition.getCurrentRoundNumber();
+            }
+            app.setCurrentRoundNumber(initialRound);
+        }
         app.setApplicantName(applicantName);
         app.setBirthDate(birthDate);
         app.setAge(computedAge);
@@ -678,15 +795,11 @@ public class ApplicationService {
         if (!audition.getOwnerId().equals(currentUserId) && !SecurityUtils.hasRole("ADMIN")) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only audition owner can accept/reject");
         }
-        if (!SecurityUtils.hasRole("ADMIN")) {
-            String cur = app.getStatus();
-            if ("ACCEPTED".equals(cur) || "REJECTED".equals(cur)) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "종료된 지원서는 상태를 변경할 수 없습니다.");
-            }
-        }
+        String previousDb = app.getStatus();
         app.setStatus(newStatus);
         app.setUpdatedAt(java.time.Instant.now());
         app = applicationRepository.save(app);
+        recordApplicationStatusChange(applicationId, previousDb, newStatus, currentUserId);
         applicationRankingService.recalculateScores(app.getAuditionId());
         User applicant = userRepository.findById(app.getApplicantId()).orElse(null);
         return toResponse(app, applicant);
@@ -712,6 +825,27 @@ public class ApplicationService {
         User applicant = userRepository.findById(app.getApplicantId()).orElse(null);
         ApplicationResponse response = toResponse(app, applicant);
         response.setAuditionTitle(audition.getTitle());
+
+        List<ApplicationVideo> videoRows =
+                applicationVideoRepository.findByApplicationIdOrderByCreatedAtDesc(applicationId);
+        response.setVideos(videoRows.stream()
+                .map(ApplicationService::toApplicationVideoItem)
+                .collect(Collectors.toList()));
+        if (!videoRows.isEmpty()) {
+            response.setVideoUrl(videoRows.get(0).getVideoUrl());
+        }
+
+        List<ApplicationSnsLink> snsRows =
+                applicationSnsLinkRepository.findByApplicationIdOrderByCreatedAtAsc(applicationId);
+        List<ApplicationSnsLinkItem> snsItems = new ArrayList<>();
+        for (ApplicationSnsLink link : snsRows) {
+            ApplicationSnsLinkItem row = new ApplicationSnsLinkItem();
+            row.setPlatform(link.getPlatform());
+            row.setUrl(link.getUrl());
+            snsItems.add(row);
+        }
+        response.setSnsLinks(snsItems);
+
         return response;
     }
 }

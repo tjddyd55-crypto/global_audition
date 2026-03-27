@@ -18,7 +18,13 @@ import { CREDIT_POLICY_AUDITION_APPLY, creditsApi } from '@/lib/api/credits'
 import { canManageAudition as userCanManageAudition } from '@/lib/audition/auditionPermissions'
 import { MultiRoundSubmitCta } from '@/components/application/MultiRoundSubmitCta'
 import { roundIdForRoundNumber } from '@/lib/audition/roundNav'
-import { auditionDetailMediumUrl, auditionDetailOriginalUrl, normalizeAuditionImages } from '@/lib/types/audition'
+import {
+  auditionDetailMediumUrl,
+  auditionDetailOriginalUrl,
+  auditionHeadlineTitle,
+  normalizeAuditionImages,
+  PREV_ROUND_APPLY_BLOCKED_MSG,
+} from '@/lib/types/audition'
 
 function SectionBlock({
   iconLabel,
@@ -168,6 +174,8 @@ export default function AuditionDetailPage() {
   const schedules = safeArr(audition.schedules)
   const benefits = safeArr(audition.benefits)
   const auditionTags = safeArr(audition.tags)
+  const seriesRound = audition.round ?? 1
+  const headlineTitle = auditionHeadlineTitle(audition)
 
   const isOpen = audition.status === 'OPEN'
   const alreadyApplied = audition.hasApplied === true
@@ -210,6 +218,15 @@ export default function AuditionDetailPage() {
         !hasEnoughCredits)
   )
 
+  const applyNavBlockedBySeries = Boolean(
+    showApplySubmitCta &&
+      !alreadyApplied &&
+      seriesRound >= 2 &&
+      audition.canApply === false
+  )
+
+  const applyNavDisabledCombined = applyNavDisabledForCredits || applyNavBlockedBySeries
+
   const fmt = (iso: string) => {
     try {
       return format(new Date(iso), 'yyyy.MM.dd', { locale: ko })
@@ -231,8 +248,11 @@ export default function AuditionDetailPage() {
         auditionId={id}
         heroImageMediumUrl={heroMedium}
         heroImageOriginalUrl={heroOriginal}
-        title={safeStr(audition.title)}
+        title={headlineTitle}
         status={String(audition.status)}
+        statusPillText={audition.recruitmentRoundLabel}
+        disableHeroApply={applyNavBlockedBySeries}
+        heroApplyDisabledReason={audition.applyBlockedMessage ?? PREV_ROUND_APPLY_BLOCKED_MSG}
         tags={auditionTags}
         endDateFormatted={fmt(safeStr(audition.endDate))}
         location={safeStr(audition.location)}
@@ -531,10 +551,15 @@ export default function AuditionDetailPage() {
               </div>
             ) : showApplySubmitCta ? (
               <div className="flex w-full min-[480px]:w-auto flex-col gap-2">
-                {applyNavDisabledForCredits ? (
+                {applyNavDisabledCombined ? (
                   <button
                     type="button"
                     disabled
+                    title={
+                      applyNavBlockedBySeries
+                        ? (audition.applyBlockedMessage ?? PREV_ROUND_APPLY_BLOCKED_MSG)
+                        : undefined
+                    }
                     className="inline-flex h-11 w-full min-[480px]:w-auto cursor-not-allowed items-center justify-center px-6 font-semibold text-white opacity-70"
                     style={{
                       borderRadius: HERO.buttonRadiusPx,
@@ -559,6 +584,11 @@ export default function AuditionDetailPage() {
                     지원하기
                   </Link>
                 )}
+                {applyNavBlockedBySeries ? (
+                  <span className="text-center text-xs text-amber-800 min-[480px]:text-left">
+                    {audition.applyBlockedMessage ?? PREV_ROUND_APPLY_BLOCKED_MSG}
+                  </span>
+                ) : null}
                 {isOpen && applyPolicySnapshot && applyPolicySnapshot.active && applyPolicySnapshot.cost > 0 ? (
                   <span className="text-center text-xs text-gray-500 min-[480px]:text-left">
                     지원 시 크레딧 {applyPolicySnapshot.cost} 소모 · 보유 {creditBalanceAmount}

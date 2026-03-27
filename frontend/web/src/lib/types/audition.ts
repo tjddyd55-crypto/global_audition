@@ -89,6 +89,27 @@ export type AuditionDto = {
   myCurrentRoundNumber?: number | null
   /** MULTI_ROUND 라운드 목록 */
   roundSummaries?: Array<{ roundId: string; roundNumber: number }>
+  /** 시리즈 그룹 id (백엔드 groupId) */
+  groupId?: string
+  /** 시리즈 차수(1차·2차 독립 공고). MULTI_ROUND 의 myCurrentRoundNumber 와 별개 */
+  round?: number
+  /** 표시용 제목 "기본 (2차)" */
+  displayTitle?: string
+  /** 예: "2차 모집 중" */
+  recruitmentRoundLabel?: string
+  /** 상세 조회 + 지원자 로그인 시: 시리즈 이전 차 합격 여부 반영 */
+  canApply?: boolean
+  /** canApply=false 인데 2차 이상일 때 */
+  applyBlockedMessage?: string
+}
+
+/** 시리즈(1·2차 공고) 지원 제한 안내 — API·기획과 동일 문구 */
+export const PREV_ROUND_APPLY_BLOCKED_MSG = '이전 라운드 합격자만 지원 가능합니다'
+
+export function auditionHeadlineTitle(a: Pick<AuditionDto, 'displayTitle' | 'title'>): string {
+  const d = a.displayTitle?.trim()
+  if (d) return d
+  return a.title
 }
 
 export type CreateAuditionPayload = {

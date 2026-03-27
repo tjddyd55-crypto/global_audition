@@ -5,6 +5,7 @@ public class ApplicationVideoDto {
     private String videoId;
     private String title;
     private String videoUrl;
+    private String thumbnailUrl;
 
     public String getVideoId() {
         return videoId;
@@ -28,5 +29,13 @@ public class ApplicationVideoDto {
 
     public void setVideoUrl(String videoUrl) {
         this.videoUrl = videoUrl;
+    }
+
+    public String getThumbnailUrl() {
+        return thumbnailUrl;
+    }
+
+    public void setThumbnailUrl(String thumbnailUrl) {
+        this.thumbnailUrl = thumbnailUrl;
     }
 }

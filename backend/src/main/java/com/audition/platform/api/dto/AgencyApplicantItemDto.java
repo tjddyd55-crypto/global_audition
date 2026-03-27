@@ -32,6 +32,9 @@ public class AgencyApplicantItemDto {
 
     private int snsCount;
 
+    /** 지원서 현재 차수 (DB applications.current_round_number, 1=1차) */
+    private int round = 1;
+
     /** ISO-8601 (Instant 문자열) */
     private String createdAt;
     private Boolean recommended;
@@ -181,6 +184,14 @@ public class AgencyApplicantItemDto {
 
     public void setSnsCount(int snsCount) {
         this.snsCount = snsCount;
+    }
+
+    public int getRound() {
+        return round;
+    }
+
+    public void setRound(int round) {
+        this.round = round;
     }
 
     public String getCreatedAt() {

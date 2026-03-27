@@ -1,5 +1,8 @@
 package com.audition.platform.api.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -54,6 +57,28 @@ public class AuditionResponse {
 
     /** catalog·직입력 구분용 (폼 초기화). */
     private List<AuditionTagRefDto> tagRefs = new ArrayList<>();
+
+    /** 시리즈 그룹 id (동일 시리즈의 1·2·3차 공고가 같은 값). */
+    private UUID groupId;
+
+    /**
+     * 시리즈 차수(1차 공고=1, 2차=2). JSON 필드명 round — MULTI_ROUND 의 currentRoundNumber 와 별개.
+     */
+    private int seriesRound = 1;
+
+    /** 표시용 제목(2차부터는 "기본 (N차)" 형태). */
+    private String displayTitle;
+
+    /** 예: "2차 모집 중" */
+    private String recruitmentRoundLabel;
+
+    /** 로그인 지원자·관리자 조회 시에만: 지원 가능(시리즈 이전 차 합격 조건 반영). */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Boolean canApply;
+
+    /** canApply=false 이고 2차 이상일 때 안내 문구. */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String applyBlockedMessage;
 
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
@@ -174,5 +199,55 @@ public class AuditionResponse {
 
     public void setTagRefs(List<AuditionTagRefDto> tagRefs) {
         this.tagRefs = tagRefs != null ? tagRefs : new ArrayList<>();
+    }
+
+    public UUID getGroupId() {
+        return groupId;
+    }
+
+    public void setGroupId(UUID groupId) {
+        this.groupId = groupId;
+    }
+
+    @JsonProperty("round")
+    public int getSeriesRound() {
+        return seriesRound;
+    }
+
+    @JsonProperty("round")
+    public void setSeriesRound(int seriesRound) {
+        this.seriesRound = seriesRound;
+    }
+
+    public String getDisplayTitle() {
+        return displayTitle;
+    }
+
+    public void setDisplayTitle(String displayTitle) {
+        this.displayTitle = displayTitle;
+    }
+
+    public String getRecruitmentRoundLabel() {
+        return recruitmentRoundLabel;
+    }
+
+    public void setRecruitmentRoundLabel(String recruitmentRoundLabel) {
+        this.recruitmentRoundLabel = recruitmentRoundLabel;
+    }
+
+    public Boolean getCanApply() {
+        return canApply;
+    }
+
+    public void setCanApply(Boolean canApply) {
+        this.canApply = canApply;
+    }
+
+    public String getApplyBlockedMessage() {
+        return applyBlockedMessage;
+    }
+
+    public void setApplyBlockedMessage(String applyBlockedMessage) {
+        this.applyBlockedMessage = applyBlockedMessage;
     }
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import Image from 'next/image'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { format } from 'date-fns'
@@ -13,6 +13,7 @@ import {
   type ManageApplicantItem,
   type ManageApplicationsPayload,
   type ManageListFilters,
+  type ManageRoundCount,
 } from '@/lib/api/auditions'
 import {
   BTN_PRIMARY,
@@ -56,9 +57,45 @@ function statusBadgeClass(status: AgencyBoardStatus) {
 function statusLabel(status: AgencyBoardStatus) {
   if (status === 'REVIEWING') return '검토중'
   if (status === 'APPROVED') return '합격'
-  if (status === 'REJECTED') return '탈락'
+  if (status === 'REJECTED') return '불합격'
   return '대기'
 }
+
+function currentStatusEmphasisClass(status: AgencyBoardStatus) {
+  if (status === 'APPROVED') return 'text-green-700'
+  if (status === 'REJECTED') return 'text-red-700'
+  if (status === 'REVIEWING') return 'text-blue-700'
+  return 'text-amber-800'
+}
+
+function confirmMessageForPatch(status: AgencyBoardStatus) {
+  if (status === 'APPROVED') return '이 지원자를 합격 처리하시겠습니까?'
+  if (status === 'REJECTED') return '이 지원자를 불합격 처리하시겠습니까?'
+  if (status === 'REVIEWING') return '이 지원자를 검토중 상태로 변경하시겠습니까?'
+  return '상태를 변경하시겠습니까?'
+}
+
+function toastMessageForPatchSuccess(status: AgencyBoardStatus) {
+  if (status === 'APPROVED') return '합격 처리되었습니다.'
+  if (status === 'REJECTED') return '불합격 처리되었습니다.'
+  if (status === 'REVIEWING') return '검토중으로 변경되었습니다.'
+  if (status === 'PENDING') return '대기 상태로 변경되었습니다.'
+  return '저장되었습니다.'
+}
+
+function subtitleFromDescription(description: string) {
+  const t = (description ?? '').trim()
+  if (!t) return ''
+  const firstLine = t.split(/\r?\n/).find((line) => line.trim().length > 0) ?? t
+  const s = firstLine.trim()
+  return s.length > 200 ? `${s.slice(0, 197)}…` : s
+}
+
+function countForRound(roundCounts: ManageRoundCount[], n: number): number {
+  return roundCounts.find((x) => x.round === n)?.count ?? 0
+}
+
+type RoundTabValue = 'all' | number
 
 type Props = {
   auditionId: string
@@ -82,6 +119,7 @@ export function ApplicantManagementView({
   const [nationalityFilter, setNationalityFilter] = useState<string>('')
   const [hasSnsFilter, setHasSnsFilter] = useState<'all' | 'yes' | 'no'>('all')
   const [statusFilter, setStatusFilter] = useState<string>('')
+  const [roundTab, setRoundTab] = useState<RoundTabValue>('all')
   const [patchingId, setPatchingId] = useState<string | null>(null)
   const [panelAppId, setPanelAppId] = useState<string | null>(null)
 
@@ -99,8 +137,9 @@ export function ApplicantManagementView({
     if (hasSnsFilter === 'yes') f.hasSns = true
     if (hasSnsFilter === 'no') f.hasSns = false
     if (statusFilter) f.status = statusFilter as AgencyBoardStatus
+    if (roundTab !== 'all') f.round = roundTab
     return f
-  }, [categoryFilter, minAge, maxAge, nationalityFilter, hasSnsFilter, statusFilter])
+  }, [categoryFilter, minAge, maxAge, nationalityFilter, hasSnsFilter, statusFilter, roundTab])
 
   const qk = [queryKeyPrefix, auditionId, listFilters] as const
 
@@ -126,6 +165,12 @@ export function ApplicantManagementView({
 
   const categories = payload?.categories ?? []
   const items = payload?.items ?? []
+  const auditionHeader = payload?.audition
+  const applicantTotalCount = payload?.applicantTotalCount ?? items.length
+  const maxRound = Math.max(1, payload?.maxRound ?? 1)
+  const roundCounts = payload?.roundCounts ?? []
+
+  const detailQueryKey = (applicationId: string) => ['application-agency-detail', applicationId] as const
 
   const patchMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: AgencyBoardStatus }) =>
@@ -133,7 +178,9 @@ export function ApplicantManagementView({
     onMutate: async ({ id, status }) => {
       setPatchingId(id)
       await queryClient.cancelQueries({ queryKey: qk })
+      await queryClient.cancelQueries({ queryKey: detailQueryKey(id) })
       const previous = queryClient.getQueryData<ManageApplicationsPayload>(qk)
+      const previousDetail = queryClient.getQueryData<ApplicationAgencyDetail>(detailQueryKey(id))
       queryClient.setQueryData<ManageApplicationsPayload>(qk, (old) => {
         if (!old) return old
         return {
@@ -141,22 +188,29 @@ export function ApplicantManagementView({
           items: old.items.map((it) => (it.applicationId === id ? { ...it, status } : it)),
         }
       })
-      return { previous }
+      queryClient.setQueryData<ApplicationAgencyDetail>(detailQueryKey(id), (old) => {
+        if (!old || old.id !== id) return old
+        return { ...old, status }
+      })
+      return { previous, previousDetail }
     },
-    onError: (_err, _vars, context) => {
+    onError: (_err, vars, context) => {
       if (context?.previous !== undefined) {
         queryClient.setQueryData(qk, context.previous)
       }
+      if (context?.previousDetail !== undefined) {
+        queryClient.setQueryData(detailQueryKey(vars.id), context.previousDetail)
+      }
       toast.error('상태 변경에 실패했습니다.')
     },
-    onSuccess: () => {
-      toast.success('저장되었습니다.')
+    onSuccess: (_data, variables) => {
+      toast.success(toastMessageForPatchSuccess(variables.status))
     },
     onSettled: () => {
       setPatchingId(null)
       queryClient.invalidateQueries({ queryKey: [queryKeyPrefix, auditionId] })
       if (panelAppId) {
-        queryClient.invalidateQueries({ queryKey: ['application-agency-detail', panelAppId] })
+        queryClient.invalidateQueries({ queryKey: detailQueryKey(panelAppId) })
       }
     },
   })
@@ -165,9 +219,8 @@ export function ApplicantManagementView({
     patchMutation.mutate({ id, status })
   }
 
-  const terminal = (s: AgencyBoardStatus) => s === 'APPROVED' || s === 'REJECTED'
-
-  const titleFromApi = payload?.audition?.title
+  const displayTitle = (auditionHeader?.title?.trim() && auditionHeader.title) || auditionTitle
+  const displaySubtitle = subtitleFromDescription(auditionHeader?.description ?? '')
 
   useEffect(() => {
     if (!panelAppId) return
@@ -196,26 +249,71 @@ export function ApplicantManagementView({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div
-        className="border-b border-violet-100 bg-gradient-to-b from-violet-50 to-white"
-        style={{ paddingTop: 32, paddingBottom: 28 }}
-      >
-        <div className={PAGE_CONTAINER}>
-          <Link href={backHref} className="text-sm font-medium text-violet-600 no-underline hover:underline">
+      <div className="sticky top-0 z-30 border-b border-violet-200/80 bg-gradient-to-b from-violet-100/95 to-white/98 shadow-sm backdrop-blur-md">
+        <div className={`${PAGE_CONTAINER}`} style={{ paddingTop: 24, paddingBottom: 20 }}>
+          <Link href={backHref} className="text-sm font-medium text-violet-700 no-underline hover:underline">
             {backLabel}
           </Link>
-          <h1 className={`${TITLE_PAGE} mt-3 text-2xl font-bold text-gray-900`}>지원자 관리</h1>
-          <p className={`${TEXT_SUB} mt-1 text-base text-gray-700`}>{titleFromApi || auditionTitle}</p>
+          <p className="mt-4 text-xs font-semibold uppercase tracking-[0.12em] text-violet-600">지원자 관리</p>
+          <h1 className="mt-1 text-3xl font-bold leading-tight tracking-tight text-gray-900 md:text-4xl">
+            {displayTitle}
+          </h1>
+          {displaySubtitle ? (
+            <p className="mt-3 max-w-3xl text-base leading-relaxed text-gray-600 md:text-lg">{displaySubtitle}</p>
+          ) : null}
+          <p className={`${TEXT_SUB} mt-3 text-sm font-medium text-gray-700`}>
+            총 지원자 {applicantTotalCount}명
+            {auditionHeader?.maxRoundNumber != null ? (
+              <span className="text-gray-500"> · 최대 {auditionHeader.maxRoundNumber}차</span>
+            ) : null}
+          </p>
         </div>
       </div>
 
       <div className={`${PAGE_CONTAINER} py-6 ${SECTION_GAP}`}>
+        <div className="flex flex-col gap-3">
+          <div className="-mx-1 flex gap-2 overflow-x-auto pb-1">
+            <button
+              type="button"
+              onClick={() => setRoundTab('all')}
+              className={
+                roundTab === 'all'
+                  ? 'shrink-0 rounded-full bg-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-sm'
+                  : 'shrink-0 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50'
+              }
+            >
+              전체({applicantTotalCount})
+            </button>
+            {Array.from({ length: maxRound }, (_, i) => i + 1).map((n) => {
+              const c = countForRound(roundCounts, n)
+              const active = roundTab === n
+              return (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setRoundTab(n)}
+                  className={
+                    active
+                      ? 'shrink-0 rounded-full bg-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-sm'
+                      : 'shrink-0 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50'
+                  }
+                >
+                  {n}차({c})
+                </button>
+              )
+            })}
+          </div>
+          <p className="text-sm font-medium text-gray-800">
+            {roundTab === 'all' ? '현재: 전체 지원자' : `현재: ${roundTab}차 지원자`}
+          </p>
+        </div>
+
         <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
           <StatCard label="전체" value={stats.total} tone="violet" />
           <StatCard label="대기(미심사)" value={stats.submitted} tone="neutral" />
           <StatCard label="검토중" value={stats.reviewing} tone="blue" />
           <StatCard label="합격" value={stats.accepted} tone="green" />
-          <StatCard label="탈락" value={stats.rejected} tone="red" />
+          <StatCard label="불합격" value={stats.rejected} tone="red" />
         </div>
 
         <div className={`${CARD_BASE} flex flex-col gap-4`}>
@@ -331,7 +429,6 @@ export function ApplicantManagementView({
           onClose={() => setPanelAppId(null)}
           patchingId={patchingId}
           onPatch={runPatch}
-          terminal={terminal}
         />
       ) : null}
     </div>
@@ -372,6 +469,7 @@ function ApplicantListRow({ app, onOpen }: { app: ManageApplicantItem; onOpen: (
             {app.nationality ? NATIONALITY_LABEL[app.nationality] ?? app.nationality : '국적 —'}
           </span>
         </div>
+        <p className="mt-0.5 text-xs font-semibold text-violet-700">{app.round}차 지원</p>
         <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-gray-500">
           <span>SNS {formatCount(app.snsCount)}</span>
           <span>·</span>
@@ -396,7 +494,6 @@ function AgencyDetailPanel({
   onClose,
   patchingId,
   onPatch,
-  terminal,
 }: {
   applicationId: string
   detail: ApplicationAgencyDetail | undefined
@@ -405,8 +502,10 @@ function AgencyDetailPanel({
   onClose: () => void
   patchingId: string | null
   onPatch: (id: string, s: AgencyBoardStatus) => void
-  terminal: (s: AgencyBoardStatus) => boolean
 }) {
+  const [confirmStatus, setConfirmStatus] = useState<AgencyBoardStatus | null>(null)
+  const patching = patchingId === applicationId
+
   const embed = detail?.videoUrl ? getVideoEmbedSrc(detail.videoUrl) : ''
 
   const birth = detail?.birthDate
@@ -423,6 +522,64 @@ function AgencyDetailPanel({
     ? NATIONALITY_LABEL[detail.nationality] ?? detail.nationality
     : '—'
 
+  const statusActionButtons: { target: AgencyBoardStatus; label: string; primaryClass: string }[] = [
+    {
+      target: 'REVIEWING',
+      label: '검토중으로 변경',
+      primaryClass: 'bg-blue-600 hover:bg-blue-700',
+    },
+    {
+      target: 'APPROVED',
+      label: '합격 처리',
+      primaryClass: 'bg-emerald-600 hover:bg-emerald-700',
+    },
+    {
+      target: 'REJECTED',
+      label: '불합격 처리',
+      primaryClass: 'bg-red-600 hover:bg-red-700',
+    },
+  ]
+
+  let confirmOverlay: ReactNode = null
+  if (confirmStatus != null) {
+    confirmOverlay = (
+      <div
+        className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-4"
+        role="presentation"
+        onClick={() => setConfirmStatus(null)}
+      >
+        <div
+          className="w-full max-w-sm rounded-xl bg-white p-5 shadow-xl"
+          role="dialog"
+          aria-modal="true"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <p className="text-sm leading-relaxed text-gray-900">{confirmMessageForPatch(confirmStatus)}</p>
+          <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <button
+              type="button"
+              className={`${BTN_SECONDARY} sm:!w-auto`}
+              onClick={() => setConfirmStatus(null)}
+            >
+              취소
+            </button>
+            <button
+              type="button"
+              disabled={patching}
+              className={`${BTN_PRIMARY} sm:!w-auto`}
+              onClick={() => {
+                onPatch(applicationId, confirmStatus)
+                setConfirmStatus(null)
+              }}
+            >
+              확인
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <>
       <button
@@ -436,7 +593,7 @@ function AgencyDetailPanel({
         role="dialog"
         aria-modal="true"
       >
-        <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+        <div className="flex shrink-0 items-center justify-between border-b border-gray-100 px-4 py-3">
           <h2 className="text-lg font-bold text-gray-900">지원자 상세</h2>
           <button
             type="button"
@@ -511,10 +668,8 @@ function AgencyDetailPanel({
                   <span className="font-medium text-gray-900">{nat}</span>
                 </p>
                 <p>
-                  <span className="text-gray-500">상태 </span>
-                  <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${statusBadgeClass(detail.status)}`}>
-                    {statusLabel(detail.status)}
-                  </span>
+                  <span className="text-gray-500">지원 차수 </span>
+                  <span className="font-semibold text-violet-800">{detail.round}차</span>
                 </p>
               </section>
 
@@ -546,50 +701,42 @@ function AgencyDetailPanel({
                   {detail.introText?.trim() ? detail.introText : '작성 내용이 없습니다.'}
                 </p>
               </section>
-
-              {!terminal(detail.status) && (
-                <div className="flex flex-col gap-2 border-t border-gray-100 pt-4 sm:flex-row">
-                  <button
-                    type="button"
-                    disabled={patchingId === applicationId}
-                    className={`${BTN_PRIMARY} flex-1 justify-center bg-amber-600 hover:bg-amber-700`}
-                    onClick={() => onPatch(applicationId, 'PENDING')}
-                  >
-                    대기
-                  </button>
-                  <button
-                    type="button"
-                    disabled={patchingId === applicationId}
-                    className={`${BTN_SECONDARY} flex-1 justify-center`}
-                    onClick={() => onPatch(applicationId, 'REVIEWING')}
-                  >
-                    검토(보류)
-                  </button>
-                  <button
-                    type="button"
-                    disabled={patchingId === applicationId}
-                    className="flex-1 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
-                    onClick={() => onPatch(applicationId, 'APPROVED')}
-                  >
-                    합격
-                  </button>
-                  <button
-                    type="button"
-                    disabled={patchingId === applicationId}
-                    className="flex-1 rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
-                    onClick={() => onPatch(applicationId, 'REJECTED')}
-                  >
-                    탈락
-                  </button>
-                </div>
-              )}
-              {terminal(detail.status) && (
-                <p className={`${TEXT_SUB} text-center text-xs`}>처리가 완료된 지원서입니다.</p>
-              )}
             </div>
           )}
         </div>
+
+        {detail ? (
+          <div className="shrink-0 space-y-3 border-t border-gray-200 bg-gray-50/80 px-4 py-4">
+            <p className="text-sm text-gray-800">
+              현재 상태:{' '}
+              <span className={`font-semibold ${currentStatusEmphasisClass(detail.status)}`}>
+                {statusLabel(detail.status)}
+              </span>
+            </p>
+            <div className="flex flex-col gap-2">
+              {statusActionButtons.map(({ target, label, primaryClass }) => {
+                const isCurrent = detail.status === target
+                return (
+                  <button
+                    key={target}
+                    type="button"
+                    disabled={patching}
+                    className={
+                      isCurrent
+                        ? `${BTN_PRIMARY} w-full justify-center ${primaryClass}`
+                        : `${BTN_SECONDARY} w-full justify-center`
+                    }
+                    onClick={() => setConfirmStatus(target)}
+                  >
+                    {label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        ) : null}
       </aside>
+      {confirmOverlay}
     </>
   )
 }

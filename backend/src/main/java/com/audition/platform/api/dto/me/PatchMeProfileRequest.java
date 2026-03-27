@@ -1,6 +1,9 @@
 package com.audition.platform.api.dto.me;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
+
+import java.util.List;
 
 public class PatchMeProfileRequest {
 
@@ -16,6 +19,23 @@ public class PatchMeProfileRequest {
 
     @Size(max = 2000)
     private String bio;
+
+    /** ISO-8601 날짜(yyyy-MM-dd). 빈 문자열이면 삭제. */
+    @Size(max = 32)
+    private String birthDate;
+
+    /** KR | MN | JP | OTHER. 빈 문자열이면 삭제. */
+    @Size(max = 16)
+    private String nationality;
+
+    @Size(max = 8000)
+    private String introText;
+
+    /**
+     * 전송 시 기존 SNS 전체 교체. null 이면 SNS 미변경.
+     */
+    @Valid
+    private List<MeUserSnsLinkDto> snsLinks;
 
     public String getNickname() {
         return nickname;
@@ -47,5 +67,37 @@ public class PatchMeProfileRequest {
 
     public void setBio(String bio) {
         this.bio = bio;
+    }
+
+    public String getBirthDate() {
+        return birthDate;
+    }
+
+    public void setBirthDate(String birthDate) {
+        this.birthDate = birthDate;
+    }
+
+    public String getNationality() {
+        return nationality;
+    }
+
+    public void setNationality(String nationality) {
+        this.nationality = nationality;
+    }
+
+    public String getIntroText() {
+        return introText;
+    }
+
+    public void setIntroText(String introText) {
+        this.introText = introText;
+    }
+
+    public List<MeUserSnsLinkDto> getSnsLinks() {
+        return snsLinks;
+    }
+
+    public void setSnsLinks(List<MeUserSnsLinkDto> snsLinks) {
+        this.snsLinks = snsLinks;
     }
 }

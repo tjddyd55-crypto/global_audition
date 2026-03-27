@@ -63,4 +63,10 @@ public class AuditionController {
     public void delete(@PathVariable UUID id) {
         auditionService.delete(id);
     }
+
+    /** 기획사·관리자: 동일 group_id 로 다음 시리즈 차수 공고 생성(DRAFT). */
+    @PostMapping("/{id}/series/next-round")
+    public AuditionResponse createNextSeriesRound(@PathVariable UUID id) {
+        return auditionService.createNextSeriesRound(id);
+    }
 }

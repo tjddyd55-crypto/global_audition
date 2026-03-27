@@ -9,6 +9,7 @@ import com.audition.platform.domain.audition.ApplicationRepository;
 import com.audition.platform.domain.audition.ApplicationVideoRepository;
 import com.audition.platform.application.tag.AuditionTagService;
 import com.audition.platform.domain.audition.Audition;
+import com.audition.platform.application.audition.AuditionSeriesPresentation;
 import com.audition.platform.domain.audition.AuditionRepository;
 import com.audition.platform.domain.user.User;
 import com.audition.platform.domain.user.UserRepository;
@@ -55,6 +56,11 @@ public class DashboardService {
         r.setDeadlineAt(a.getDeadlineAt());
         r.setTags(auditionTagService.resolveMergedDisplayNames(a.getId()).toArray(new String[0]));
         r.setCreatedAt(a.getCreatedAt());
+        r.setGroupId(a.getGroupId());
+        r.setSeriesRound(a.getSeriesRound());
+        r.setDisplayTitle(AuditionSeriesPresentation.displayTitle(a.getTitle(), a.getSeriesRound()));
+        r.setRecruitmentRoundLabel(
+                AuditionSeriesPresentation.recruitmentRoundLabel(a.getStatus(), a.getSeriesRound()));
         return r;
     }
 

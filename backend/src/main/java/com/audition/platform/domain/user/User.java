@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Entity
@@ -51,6 +52,16 @@ public class User {
     /** 대량 지급 필터용 (선택) */
     @Column(name = "country_code", columnDefinition = "TEXT")
     private String countryCode;
+
+    @Column(name = "birth_date")
+    private LocalDate birthDate;
+
+    /** 지원서와 동일 코드: KR | MN | JP | OTHER */
+    @Column(columnDefinition = "TEXT")
+    private String nationality;
+
+    @Column(name = "intro_text", columnDefinition = "TEXT")
+    private String introText;
 
     /** ACTIVE | SUSPENDED | DELETED */
     @Column(name = "account_status", nullable = false, length = 32)
@@ -101,6 +112,30 @@ public class User {
     public void setProfileImageUrl(String profileImageUrl) { this.profileImageUrl = profileImageUrl; }
     public String getCountryCode() { return countryCode; }
     public void setCountryCode(String countryCode) { this.countryCode = countryCode; }
+
+    public LocalDate getBirthDate() {
+        return birthDate;
+    }
+
+    public void setBirthDate(LocalDate birthDate) {
+        this.birthDate = birthDate;
+    }
+
+    public String getNationality() {
+        return nationality;
+    }
+
+    public void setNationality(String nationality) {
+        this.nationality = nationality;
+    }
+
+    public String getIntroText() {
+        return introText;
+    }
+
+    public void setIntroText(String introText) {
+        this.introText = introText;
+    }
 
     public String getAccountStatus() {
         return accountStatus;

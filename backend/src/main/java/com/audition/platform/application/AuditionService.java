@@ -5,6 +5,9 @@ import com.audition.platform.api.dto.AuditionResponse;
 import com.audition.platform.api.dto.AuditionRoundSummaryDto;
 import com.audition.platform.api.dto.CreateAuditionRequest;
 import com.audition.platform.api.dto.UpdateAuditionRequest;
+import com.audition.platform.application.audition.AuditionSeriesEligibilityService;
+import com.audition.platform.application.audition.AuditionSeriesPresentation;
+import com.audition.platform.api.dto.AuditionTagRefDto;
 import com.audition.platform.application.round.AuditionProcessModes;
 import com.audition.platform.application.round.AuditionRoundService;
 import com.audition.platform.domain.audition.Application;
@@ -26,6 +29,7 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -38,17 +42,20 @@ public class AuditionService {
     private final ApplicationRepository applicationRepository;
     private final AuditionRoundService auditionRoundService;
     private final AuditionTagService auditionTagService;
+    private final AuditionSeriesEligibilityService auditionSeriesEligibilityService;
 
     public AuditionService(AuditionRepository auditionRepository,
                            UserRepository userRepository,
                            ApplicationRepository applicationRepository,
                            AuditionRoundService auditionRoundService,
-                           AuditionTagService auditionTagService) {
+                           AuditionTagService auditionTagService,
+                           AuditionSeriesEligibilityService auditionSeriesEligibilityService) {
         this.auditionRepository = auditionRepository;
         this.userRepository = userRepository;
         this.applicationRepository = applicationRepository;
         this.auditionRoundService = auditionRoundService;
         this.auditionTagService = auditionTagService;
+        this.auditionSeriesEligibilityService = auditionSeriesEligibilityService;
     }
 
     private static Instant parseInstantRequired(String value, String field) {
@@ -188,6 +195,11 @@ public class AuditionService {
         r.setCurrentRoundNumber(a.getCurrentRoundNumber());
         r.setMaxRoundNumber(a.getMaxRoundNumber());
         r.setSelectionStatus(a.getSelectionStatus());
+        r.setGroupId(a.getGroupId());
+        r.setSeriesRound(a.getSeriesRound());
+        r.setDisplayTitle(AuditionSeriesPresentation.displayTitle(a.getTitle(), a.getSeriesRound()));
+        r.setRecruitmentRoundLabel(
+                AuditionSeriesPresentation.recruitmentRoundLabel(a.getStatus(), a.getSeriesRound()));
         return r;
     }
 
@@ -267,7 +279,11 @@ public class AuditionService {
         }
         assertYoutubeIfVideoPresent(req.getStatus(), req.getVideoUrl());
         assertCoverImageForPublished(req.getStatus(), originalFromDto(req.getImages()));
+        UUID newId = UUID.randomUUID();
         Audition a = new Audition();
+        a.setId(newId);
+        a.setGroupId(newId);
+        a.setSeriesRound(1);
         a.setOwnerId(ownerId);
         a.setUpdatedAt(Instant.now());
         applyCreateBody(a, req);
@@ -326,6 +342,11 @@ public class AuditionService {
                 r.setMyApplicationId(app.getId().toString());
                 r.setMyCurrentRoundNumber(app.getCurrentRoundNumber());
             });
+            boolean eligible = auditionSeriesEligibilityService.canApply(viewerId, a);
+            r.setCanApply(eligible);
+            if (!eligible && a.getSeriesRound() > 1) {
+                r.setApplyBlockedMessage(AuditionSeriesPresentation.APPLY_BLOCKED_PREV_ROUND_NOT_ACCEPTED);
+            }
         }
         if (AuditionProcessModes.isMultiRound(a.getProcessMode())) {
             r.setRoundSummaries(auditionRoundService.listRounds(a.getId()).stream()
@@ -447,5 +468,90 @@ public class AuditionService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only owner or ADMIN can delete this audition");
         }
         throw new ResponseStatusException(HttpStatus.CONFLICT, "Audition delete is not supported yet");
+    }
+
+    /**
+     * 동일 시리즈의 다음 차 공고 생성(DRAFT). 태그 복제, MULTI_ROUND 이면 1라운드 부트스트랩.
+     */
+    @Transactional
+    public AuditionResponse createNextSeriesRound(UUID sourceAuditionId) {
+        UUID userId = SecurityUtils.getCurrentUserId();
+        if (userId == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+        }
+        Audition source = auditionRepository.findById(sourceAuditionId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Audition not found"));
+        if (!SecurityUtils.hasRole("ADMIN") && !source.getOwnerId().equals(userId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only owner or ADMIN can add a series round");
+        }
+        int maxRound = auditionRepository.findMaxSeriesRoundByGroupId(source.getGroupId());
+        int nextRound = maxRound + 1;
+        String baseTitle = AuditionSeriesPresentation.stripTrailingSeriesRoundSuffix(source.getTitle());
+        String newTitle = baseTitle + " (" + nextRound + "차)";
+
+        UUID newId = UUID.randomUUID();
+        Audition n = new Audition();
+        n.setId(newId);
+        n.setGroupId(source.getGroupId());
+        n.setSeriesRound(nextRound);
+        n.setOwnerId(source.getOwnerId());
+        n.setTitle(newTitle);
+        n.setDescription(source.getDescription());
+        n.setStatus("DRAFT");
+        n.setCountryCode(source.getCountryCode());
+        n.setDeadlineAt(source.getDeadlineAt());
+        n.setCoverImage(source.getCoverImage());
+        n.setImageOriginalUrl(source.getImageOriginalUrl());
+        n.setImageMediumUrl(source.getImageMediumUrl());
+        n.setImageThumbUrl(source.getImageThumbUrl());
+        n.setVideoUrl(source.getVideoUrl());
+        n.setGalleryImages(source.getGalleryImages());
+        n.setAgencyName(source.getAgencyName());
+        n.setAgencyLogo(source.getAgencyLogo());
+        n.setApplicantsCount(0);
+        n.setRecruitFields(source.getRecruitFields());
+        n.setQualifications(source.getQualifications());
+        n.setSchedules(source.getSchedules());
+        n.setLocation(source.getLocation());
+        n.setStartDate(source.getStartDate());
+        n.setEndDate(source.getEndDate());
+        n.setBenefits(source.getBenefits());
+        n.setProcessMode(source.getProcessMode());
+        if (source.getEndDate() != null) {
+            n.setRemainingDays(computeRemainingDays(source.getEndDate()));
+        } else {
+            n.setRemainingDays(0);
+        }
+        if (AuditionProcessModes.isMultiRound(source.getProcessMode())) {
+            n.setCurrentRoundNumber(1);
+            n.setMaxRoundNumber(1);
+            n.setSelectionStatus("DRAFT");
+        } else {
+            n.setCurrentRoundNumber(null);
+            n.setMaxRoundNumber(null);
+            n.setSelectionStatus(null);
+        }
+        n.setUpdatedAt(Instant.now());
+        n = auditionRepository.save(n);
+
+        List<AuditionTagRefDto> refs = auditionTagService.listRefs(source.getId());
+        List<String> tagIds = refs.stream()
+                .map(AuditionTagRefDto::getTagId)
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toList());
+        List<String> customNames = refs.stream()
+                .filter(r -> r.getTagId() == null || r.getTagId().isBlank())
+                .map(AuditionTagRefDto::getName)
+                .filter(name -> name != null && !name.isBlank())
+                .map(String::trim)
+                .collect(Collectors.toList());
+        auditionTagService.replaceAuditionTags(n.getId(), tagIds, customNames);
+
+        if (AuditionProcessModes.isMultiRound(n.getProcessMode())) {
+            auditionRoundService.bootstrapFirstRound(n.getId(), false);
+        }
+        return toResponse(n);
     }
 }

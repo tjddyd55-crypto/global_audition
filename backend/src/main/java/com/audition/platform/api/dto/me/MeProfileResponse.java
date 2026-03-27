@@ -1,5 +1,8 @@
 package com.audition.platform.api.dto.me;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class MeProfileResponse {
 
     private String id;
@@ -11,6 +14,10 @@ public class MeProfileResponse {
     private String role;
     private String profileImageUrl;
     private String bio;
+    private String birthDate;
+    private String nationality;
+    private String introText;
+    private List<MeUserSnsLinkDto> snsLinks = new ArrayList<>();
 
     public String getId() {
         return id;
@@ -82,5 +89,37 @@ public class MeProfileResponse {
 
     public void setBio(String bio) {
         this.bio = bio;
+    }
+
+    public String getBirthDate() {
+        return birthDate;
+    }
+
+    public void setBirthDate(String birthDate) {
+        this.birthDate = birthDate;
+    }
+
+    public String getNationality() {
+        return nationality;
+    }
+
+    public void setNationality(String nationality) {
+        this.nationality = nationality;
+    }
+
+    public String getIntroText() {
+        return introText;
+    }
+
+    public void setIntroText(String introText) {
+        this.introText = introText;
+    }
+
+    public List<MeUserSnsLinkDto> getSnsLinks() {
+        return snsLinks;
+    }
+
+    public void setSnsLinks(List<MeUserSnsLinkDto> snsLinks) {
+        this.snsLinks = snsLinks != null ? snsLinks : new ArrayList<>();
     }
 }

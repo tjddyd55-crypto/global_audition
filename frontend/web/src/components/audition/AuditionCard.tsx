@@ -4,7 +4,12 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link } from '../../i18n.config'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
-import { auditionListImageUrl, normalizeAuditionImages, type AuditionDto } from '../../lib/types/audition'
+import {
+  auditionHeadlineTitle,
+  auditionListImageUrl,
+  normalizeAuditionImages,
+  type AuditionDto,
+} from '../../lib/types/audition'
 import { FALLBACK_TEXT, DEFAULT_IMAGES } from '../../lib/constants/fallbacks'
 import { AUDITION_CARD } from '../../lib/design-tokens'
 
@@ -18,7 +23,7 @@ const statusLabels: Record<string, string> = {
   CLOSED: '마감',
 }
 
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({ status, label }: { status: string; label: string }) {
   return (
     <span
       style={{
@@ -30,7 +35,7 @@ function StatusBadge({ status }: { status: string }) {
         fontWeight: 500,
       }}
     >
-      {statusLabels[status] ?? status}
+      {label}
     </span>
   )
 }
@@ -38,8 +43,13 @@ function StatusBadge({ status }: { status: string }) {
 export default function AuditionCard({ audition }: AuditionCardProps) {
   if (!audition) return null
   const id = audition?.id ?? ''
-  const title = audition?.title ?? FALLBACK_TEXT.videoTitle
+  const title =
+    auditionHeadlineTitle(audition).trim() || audition.title.trim() || FALLBACK_TEXT.videoTitle
   const status = audition?.status ?? 'DRAFT'
+  const statusBadgeLabel =
+    status === 'OPEN' && audition?.recruitmentRoundLabel?.trim()
+      ? audition.recruitmentRoundLabel.trim()
+      : statusLabels[status] ?? status
   const description = audition?.description ?? ''
   const im = normalizeAuditionImages(audition?.images)
   const thumb = (im.thumb ?? '').trim()
@@ -100,7 +110,7 @@ export default function AuditionCard({ audition }: AuditionCardProps) {
           >
             {title}
           </h3>
-          <StatusBadge status={status} />
+          <StatusBadge status={status} label={statusBadgeLabel} />
         </div>
 
         <p

@@ -74,6 +74,8 @@ export type ManageApplicantItem = {
   age: number | null
   nationality: string | null
   snsCount: number
+  /** 지원서 현재 차수 (1=1차) */
+  round: number
   createdAt: string | null
   recommendedScore?: number | null
   recommendedRank?: number | null
@@ -90,6 +92,8 @@ export type ManageListFilters = {
   nationality?: string | null
   hasSns?: boolean | null
   status?: AgencyBoardStatus | '' | null
+  /** 특정 차수만 (미전달 시 전체) */
+  round?: number | null
 }
 
 export type ApplicationAgencyDetail = {
@@ -103,15 +107,29 @@ export type ApplicationAgencyDetail = {
   thumbnailUrl: string | null
   introText: string | null
   status: AgencyBoardStatus
+  round: number
   createdAt: string | null
   snsLinks: Array<{ platform: string; url: string }>
 }
 
+export type ManageRoundCount = { round: number; count: number }
+
+export type ManageAuditionHeader = {
+  id: string
+  title: string
+  description: string
+  processMode: string
+  maxRoundNumber: number | null
+}
+
 export type ManageApplicationsPayload = {
-  audition: { id: string; title: string }
+  audition: ManageAuditionHeader
   stats: ManageApplicationStats
   categories: VotePageCategory[]
   items: ManageApplicantItem[]
+  applicantTotalCount: number
+  maxRound: number
+  roundCounts: ManageRoundCount[]
 }
 
 export type RankingItem = {
@@ -231,6 +249,19 @@ export function parseAuditionDto(raw: Record<string, unknown>): AuditionDto {
           roundNumber: Number(row.roundNumber ?? 0) || 0,
         }))
       : [],
+    groupId: raw.groupId != null && String(raw.groupId).length > 0 ? String(raw.groupId) : undefined,
+    round:
+      raw.round != null && Number.isFinite(Number(raw.round))
+        ? Number(raw.round)
+        : raw.seriesRound != null && Number.isFinite(Number(raw.seriesRound))
+          ? Number(raw.seriesRound)
+          : 1,
+    displayTitle: raw.displayTitle != null ? String(raw.displayTitle).trim() || undefined : undefined,
+    recruitmentRoundLabel:
+      raw.recruitmentRoundLabel != null ? String(raw.recruitmentRoundLabel).trim() || undefined : undefined,
+    canApply: raw.canApply === true ? true : raw.canApply === false ? false : undefined,
+    applyBlockedMessage:
+      raw.applyBlockedMessage != null ? String(raw.applyBlockedMessage) : undefined,
   }
 }
 
@@ -247,6 +278,12 @@ export const auditionApi = {
 
   create: async (body: CreateAuditionPayload): Promise<AuditionDto> => {
     const { data } = await apiClient.post<Record<string, unknown>>('/auditions', body)
+    return parseAuditionDto(data ?? {})
+  },
+
+  /** 기획사·관리자: 동일 시리즈 다음 차 공고 생성(DRAFT) */
+  createNextSeriesRound: async (id: string): Promise<AuditionDto> => {
+    const { data } = await apiClient.post<Record<string, unknown>>(`/auditions/${id}/series/next-round`)
     return parseAuditionDto(data ?? {})
   },
 
@@ -339,6 +376,9 @@ export const auditionApi = {
     if (typeof boardSt === 'string' && boardSt.length > 0) {
       params.status = boardSt
     }
+    if (f.round != null && f.round >= 1) {
+      params.round = f.round
+    }
     const { data } = await apiClient.get<unknown>(`/auditions/${auditionId}/applications/manage`, {
       params,
     })
@@ -347,8 +387,20 @@ export const auditionApi = {
     const stats = (body.stats ?? {}) as Record<string, unknown>
     const categories = Array.isArray(body.categories) ? body.categories : []
     const items = Array.isArray(body.items) ? body.items : []
+    const roundCountsRaw = Array.isArray(body.roundCounts) ? body.roundCounts : []
     return {
-      audition: { id: String(audition.id ?? ''), title: String(audition.title ?? '') },
+      audition: {
+        id: String(audition.id ?? ''),
+        title: String(audition.title ?? ''),
+        description: audition.description != null ? String(audition.description) : '',
+        processMode: audition.processMode != null ? String(audition.processMode) : 'SINGLE',
+        maxRoundNumber: (() => {
+          const v = audition.maxRoundNumber
+          if (v == null || v === '') return null
+          const n = Number(v)
+          return Number.isNaN(n) ? null : n
+        })(),
+      },
       stats: {
         total: Number(stats.total ?? 0) || 0,
         submitted: Number(stats.submitted ?? 0) || 0,
@@ -359,6 +411,15 @@ export const auditionApi = {
       categories: categories.map((c) => {
         const x = c as Record<string, unknown>
         return { name: String(x.name ?? ''), count: Number(x.count ?? 0) || 0 }
+      }),
+      applicantTotalCount: Number(body.applicantTotalCount ?? 0) || 0,
+      maxRound: Math.max(1, Number(body.maxRound ?? 1) || 1),
+      roundCounts: roundCountsRaw.map((x) => {
+        const row = x as Record<string, unknown>
+        return {
+          round: Number(row.round ?? 1) || 1,
+          count: Number(row.count ?? 0) || 0,
+        }
       }),
       items: items.map((raw) => {
         const r = raw as Record<string, unknown>
@@ -378,6 +439,7 @@ export const auditionApi = {
           age: r.age != null ? Number(r.age) : null,
           nationality: r.nationality != null ? String(r.nationality) : null,
           snsCount: Number(r.snsCount ?? 0) || 0,
+          round: r.round != null ? Number(r.round) : 1,
           createdAt: r.createdAt != null ? String(r.createdAt) : null,
           recommendedScore: r.recommendedScore != null ? Number(r.recommendedScore) : null,
           recommendedRank: r.recommendedRank != null ? Number(r.recommendedRank) : null,
@@ -405,6 +467,7 @@ export const auditionApi = {
       thumbnailUrl: d.thumbnailUrl != null ? String(d.thumbnailUrl) : null,
       introText: d.introText != null ? String(d.introText) : null,
       status: String(d.status ?? 'PENDING') as AgencyBoardStatus,
+      round: d.round != null ? Number(d.round) : 1,
       createdAt: d.createdAt != null ? String(d.createdAt) : null,
       snsLinks: sns.map((x) => {
         const s = x as Record<string, unknown>

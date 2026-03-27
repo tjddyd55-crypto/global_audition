@@ -15,6 +15,17 @@ public class MyApplicationDetailDto {
     private String status;
     private List<ApplicationVideoDto> videos = new ArrayList<>();
 
+    /** 지원서에 기재한 표시 이름 */
+    private String name;
+    /** ISO-8601 날짜 (yyyy-MM-dd) */
+    private String birthDate;
+    private Integer age;
+    private String nationality;
+    private String introText;
+    /** 대표 영상 URL (목록 첫 항목 또는 레거시 application.video_url) */
+    private String videoUrl;
+    private List<MeSnsLinkDto> snsLinks = new ArrayList<>();
+
     /** 오디션 processMode — SINGLE 이면 다단계 UI 미표시 */
     private String processMode = "SINGLE";
 
@@ -94,5 +105,61 @@ public class MyApplicationDetailDto {
 
     public void setRoundSummaries(List<AuditionRoundSummaryDto> roundSummaries) {
         this.roundSummaries = roundSummaries != null ? roundSummaries : new ArrayList<>();
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getBirthDate() {
+        return birthDate;
+    }
+
+    public void setBirthDate(String birthDate) {
+        this.birthDate = birthDate;
+    }
+
+    public Integer getAge() {
+        return age;
+    }
+
+    public void setAge(Integer age) {
+        this.age = age;
+    }
+
+    public String getNationality() {
+        return nationality;
+    }
+
+    public void setNationality(String nationality) {
+        this.nationality = nationality;
+    }
+
+    public String getIntroText() {
+        return introText;
+    }
+
+    public void setIntroText(String introText) {
+        this.introText = introText;
+    }
+
+    public String getVideoUrl() {
+        return videoUrl;
+    }
+
+    public void setVideoUrl(String videoUrl) {
+        this.videoUrl = videoUrl;
+    }
+
+    public List<MeSnsLinkDto> getSnsLinks() {
+        return snsLinks;
+    }
+
+    public void setSnsLinks(List<MeSnsLinkDto> snsLinks) {
+        this.snsLinks = snsLinks != null ? snsLinks : new ArrayList<>();
     }
 }

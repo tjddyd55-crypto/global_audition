@@ -66,9 +66,10 @@ public class ApplicationController {
             @RequestParam(name = "maxAge", required = false) Integer maxAge,
             @RequestParam(name = "nationality", required = false) String nationality,
             @RequestParam(name = "hasSns", required = false) Boolean hasSns,
-            @RequestParam(name = "status", required = false) String boardStatus) {
+            @RequestParam(name = "status", required = false) String boardStatus,
+            @RequestParam(name = "round", required = false) Integer round) {
         return ApiEnvelope.ok(applicationService.listManageApplications(
-                auditionId, category, minAge, maxAge, nationality, hasSns, boardStatus));
+                auditionId, category, minAge, maxAge, nationality, hasSns, boardStatus, round));
     }
 
     @PostMapping("/applications/{id}/decision")

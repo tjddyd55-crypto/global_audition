@@ -19,6 +19,8 @@ public class ApplicationAgencyDetailDto {
     private String introText;
     /** PENDING | REVIEWING | APPROVED | REJECTED */
     private String status;
+    /** 현재 차수 (1=1차) */
+    private int round = 1;
     private String createdAt;
     private List<SnsLinkRow> snsLinks = new ArrayList<>();
 
@@ -100,6 +102,14 @@ public class ApplicationAgencyDetailDto {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public int getRound() {
+        return round;
+    }
+
+    public void setRound(int round) {
+        this.round = round;
     }
 
     public String getCreatedAt() {

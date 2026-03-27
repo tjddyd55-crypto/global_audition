@@ -15,6 +15,11 @@ type AuditionDetailHeroSectionProps = {
   heroImageOriginalUrl: string
   title: string
   status: string
+  /** 있으면 뱃지에 사용(예: "2차 모집 중") */
+  statusPillText?: string | null
+  /** 시리즈 2차+ 지원 불가 시 히어로 CTA 비활성 */
+  disableHeroApply?: boolean
+  heroApplyDisabledReason?: string | null
   tags: string[]
   /** 이미 포맷된 마감일 문자열 */
   endDateFormatted: string
@@ -70,6 +75,9 @@ export function AuditionDetailHeroSection({
   heroImageOriginalUrl,
   title,
   status,
+  statusPillText,
+  disableHeroApply = false,
+  heroApplyDisabledReason,
   tags,
   endDateFormatted,
   location,
@@ -105,6 +113,11 @@ export function AuditionDetailHeroSection({
 
   const isOpen = status === 'OPEN'
   const applicants = applicantsCount.toLocaleString()
+  const pillLabel = (statusPillText != null && String(statusPillText).trim().length > 0
+    ? String(statusPillText).trim()
+    : statusBadgeCopy(status)
+  ).trim()
+  const heroApplyBlocked = Boolean(isOpen && disableHeroApply)
 
   return (
     <section className="relative w-full overflow-hidden">
@@ -137,7 +150,7 @@ export function AuditionDetailHeroSection({
                     : 'bg-amber-100 text-amber-900'
               }`}
             >
-              {statusBadgeCopy(status)}
+              {pillLabel}
             </span>
             <h1
               className="mb-1 text-balance text-xl font-bold leading-snug"
@@ -161,7 +174,7 @@ export function AuditionDetailHeroSection({
               마감 {endDateFormatted} · {safeStr(location)} · 지원자 {applicants}명
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
-              {isOpen ? (
+              {isOpen && !heroApplyBlocked ? (
                 <a
                   href="#audition-detail-apply"
                   onClick={scrollToApplyBar}
@@ -173,6 +186,14 @@ export function AuditionDetailHeroSection({
                 >
                   지원하기
                 </a>
+              ) : isOpen && heroApplyBlocked ? (
+                <span
+                  className="inline-flex cursor-not-allowed items-center px-4 py-2 text-xs font-semibold text-white/60"
+                  title={heroApplyDisabledReason ?? undefined}
+                  aria-disabled="true"
+                >
+                  지원하기
+                </span>
               ) : (
                 <span className="inline-flex items-center px-4 py-2 text-xs font-semibold text-white/50">
                   {status === 'CLOSED' ? '마감됨' : '지원 불가'}
@@ -248,7 +269,7 @@ export function AuditionDetailHeroSection({
                           : '#b45309',
                   }}
                 >
-                  {statusBadgeCopy(status)}
+                  {pillLabel}
                 </span>
               </div>
 
@@ -281,7 +302,7 @@ export function AuditionDetailHeroSection({
               </p>
 
               <div className="mt-2 flex flex-wrap gap-3">
-                {isOpen ? (
+                {isOpen && !heroApplyBlocked ? (
                   <a
                     href="#audition-detail-apply"
                     onClick={scrollToApplyBar}
@@ -293,6 +314,14 @@ export function AuditionDetailHeroSection({
                   >
                     지원하기
                   </a>
+                ) : isOpen && heroApplyBlocked ? (
+                  <span
+                    className="inline-flex cursor-not-allowed items-center rounded-lg border border-gray-200 bg-gray-100 px-5 py-2.5 text-sm font-semibold text-gray-400"
+                    title={heroApplyDisabledReason ?? undefined}
+                    aria-disabled="true"
+                  >
+                    지원하기
+                  </span>
                 ) : (
                   <button
                     type="button"

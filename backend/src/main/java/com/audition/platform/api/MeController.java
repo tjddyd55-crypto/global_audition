@@ -40,6 +40,23 @@ public class MeController {
         this.meApplicationRoundService = meApplicationRoundService;
     }
 
+    /** 내 정보 관리 SSOT (프로필 + SNS 등) */
+    @GetMapping({ "", "/" })
+    public ApiEnvelope<MeProfileResponse> getMe() {
+        return ApiEnvelope.ok(meProfileService.getProfile());
+    }
+
+    @PatchMapping({ "", "/" })
+    public ApiEnvelope<MeProfileResponse> patchMe(@Valid @RequestBody PatchMeProfileRequest req) {
+        return ApiEnvelope.ok(meProfileService.patchProfile(req));
+    }
+
+    @PatchMapping("/password")
+    public ApiEnvelope<Boolean> patchPassword(@Valid @RequestBody com.audition.platform.api.dto.me.PatchMePasswordRequest req) {
+        meProfileService.changePassword(req);
+        return ApiEnvelope.ok(true);
+    }
+
     @GetMapping("/profile")
     public ApiEnvelope<MeProfileResponse> profile() {
         return ApiEnvelope.ok(meProfileService.getProfile());

@@ -6,6 +6,8 @@ import com.audition.platform.application.round.AuditionProcessModes;
 import com.audition.platform.application.round.AuditionRoundService;
 import com.audition.platform.domain.audition.Application;
 import com.audition.platform.domain.audition.ApplicationRepository;
+import com.audition.platform.domain.audition.ApplicationSnsLink;
+import com.audition.platform.domain.audition.ApplicationSnsLinkRepository;
 import com.audition.platform.domain.audition.ApplicationVideo;
 import com.audition.platform.domain.audition.ApplicationVideoRepository;
 import com.audition.platform.domain.audition.Audition;
@@ -25,16 +27,19 @@ public class MeApplicationService {
 
     private final ApplicationRepository applicationRepository;
     private final ApplicationVideoRepository applicationVideoRepository;
+    private final ApplicationSnsLinkRepository applicationSnsLinkRepository;
     private final AuditionRepository auditionRepository;
     private final AuditionRoundService auditionRoundService;
 
     public MeApplicationService(
             ApplicationRepository applicationRepository,
             ApplicationVideoRepository applicationVideoRepository,
+            ApplicationSnsLinkRepository applicationSnsLinkRepository,
             AuditionRepository auditionRepository,
             AuditionRoundService auditionRoundService) {
         this.applicationRepository = applicationRepository;
         this.applicationVideoRepository = applicationVideoRepository;
+        this.applicationSnsLinkRepository = applicationSnsLinkRepository;
         this.auditionRepository = auditionRepository;
         this.auditionRoundService = auditionRoundService;
     }
@@ -107,8 +112,29 @@ public class MeApplicationService {
                         .collect(Collectors.toList()));
             }
         }
+        dto.setName(app.getApplicantName());
+        if (app.getBirthDate() != null) {
+            dto.setBirthDate(app.getBirthDate().toString());
+        }
+        dto.setAge(app.getAge());
+        dto.setNationality(app.getNationality());
+        dto.setIntroText(app.getIntroText());
+
         List<ApplicationVideo> videos = applicationVideoRepository.findByApplicationIdOrderByCreatedAtDesc(app.getId());
         dto.setVideos(videos.stream().map(this::toVideoDto).collect(Collectors.toList()));
+        if (!videos.isEmpty()) {
+            dto.setVideoUrl(videos.get(0).getVideoUrl());
+        } else if (app.getVideoUrl() != null && !app.getVideoUrl().isBlank()) {
+            dto.setVideoUrl(app.getVideoUrl().trim());
+        }
+
+        List<ApplicationSnsLink> snsLinks = applicationSnsLinkRepository.findByApplicationIdOrderByCreatedAtAsc(app.getId());
+        dto.setSnsLinks(snsLinks.stream().map(link -> {
+            MeSnsLinkDto row = new MeSnsLinkDto();
+            row.setPlatform(link.getPlatform());
+            row.setUrl(link.getUrl());
+            return row;
+        }).collect(Collectors.toList()));
         return dto;
     }
 
@@ -117,6 +143,7 @@ public class MeApplicationService {
         dto.setVideoId(v.getId().toString());
         dto.setTitle(v.getTitle() != null ? v.getTitle() : "Audition Video");
         dto.setVideoUrl(v.getVideoUrl());
+        dto.setThumbnailUrl(v.getThumbnailUrl());
         return dto;
     }
 

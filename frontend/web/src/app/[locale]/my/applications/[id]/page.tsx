@@ -1,25 +1,26 @@
 'use client'
 
-import { useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { useParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Link } from '../../../../../i18n.config'
 import { applicationApi } from '../../../../../lib/api/applications'
-import { applicationVideoApi } from '../../../../../lib/api/applicationVideos'
 import {
   BTN_PRIMARY,
+  BTN_SECONDARY,
   CARD_BASE,
-  INPUT_BASE,
   PAGE_CONTAINER,
   SECTION_GAP,
   TEXT_SUB,
   TITLE_PAGE,
 } from '@/lib/ui/specClasses'
-import { VideoEmbedOverlay } from '@/components/video/VideoEmbedOverlay'
 import { ApplicationRoundTimeline } from '@/components/application/ApplicationRoundTimeline'
 import { MultiRoundSubmitCta } from '@/components/application/MultiRoundSubmitCta'
 import { roundIdForRoundNumber } from '@/lib/audition/roundNav'
+import { BasicInfoSection } from '@/components/my-application/BasicInfoSection'
+import { VideoSection } from '@/components/my-application/VideoSection'
+import { SnsSection } from '@/components/my-application/SnsSection'
+import { IntroSection } from '@/components/my-application/IntroSection'
 
 function statusBadgeClass(status: string) {
   if (status === 'REVIEWING' || status === 'REVIEWED') return 'rounded-full bg-blue-50 px-3 py-1 text-sm text-blue-700'
@@ -39,36 +40,11 @@ export default function MyApplicationDetailPage() {
   const t = useTranslations('common')
   const params = useParams()
   const id = params.id as string
-  const queryClient = useQueryClient()
-  const [videoUrl, setVideoUrl] = useState('')
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  /** 재생 오버레이: 페이지 이동 없이 iframe으로만 재생 */
-  const [playVideoUrl, setPlayVideoUrl] = useState<string | null>(null)
 
   const applicationQuery = useQuery({
     queryKey: ['my-application', id],
     queryFn: () => applicationApi.getById(id),
     enabled: !!id,
-  })
-
-  const videos = applicationQuery.data?.videos ?? []
-
-  const createVideoMutation = useMutation({
-    mutationFn: () => applicationVideoApi.create(id, (videoUrl ?? '').trim()),
-    onSuccess: () => {
-      setVideoUrl('')
-      setErrorMessage(null)
-      queryClient.invalidateQueries({ queryKey: ['my-application', id] })
-    },
-    onError: (e: unknown) => {
-      const err = e as { response?: { data?: { message?: string } } }
-      setErrorMessage(err?.response?.data?.message ?? '영상 URL 등록에 실패했습니다.')
-    },
-  })
-
-  const removeVideoMutation = useMutation({
-    mutationFn: (videoId: string) => applicationVideoApi.remove(id, videoId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['my-application', id] }),
   })
 
   if (applicationQuery.isLoading) {
@@ -84,6 +60,9 @@ export default function MyApplicationDetailPage() {
   const applicantRound = app.currentRoundNumber ?? 1
   const currentRoundId = roundIdForRoundNumber(roundSummaries, applicantRound)
 
+  const videos = app.videos ?? []
+  const canEditVideos = app.status !== 'ACCEPTED' && app.status !== 'REJECTED'
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className={`${PAGE_CONTAINER} py-6 ${SECTION_GAP}`}>
@@ -91,13 +70,27 @@ export default function MyApplicationDetailPage() {
           ← 내 지원서 목록
         </Link>
 
-        <div className={`${CARD_BASE} flex items-center justify-between gap-4`}>
+        <section className={`${CARD_BASE} flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between`}>
           <div>
+            <p className={`${TEXT_SUB} mb-1`}>오디션 정보</p>
             <h1 className={TITLE_PAGE}>{app.auditionTitle ?? '지원서 상세'}</h1>
-            <p className={TEXT_SUB}>지원일: {new Date(app.createdAt).toLocaleDateString('ko-KR')}</p>
+            <p className={`${TEXT_SUB} mt-1`}>지원일: {new Date(app.createdAt).toLocaleDateString('ko-KR')}</p>
           </div>
-          <span className={statusBadgeClass(app.status)}>{statusLabel(app.status)}</span>
-        </div>
+          <div className="flex flex-col items-stretch gap-2 sm:items-end">
+            <span className={`${statusBadgeClass(app.status)} text-center sm:text-right`}>
+              {statusLabel(app.status)}
+            </span>
+            {canEditVideos ? (
+              <Link href={`/my/applications/${id}/edit`} className={`${BTN_SECONDARY} no-underline`}>
+                지원 수정
+              </Link>
+            ) : (
+              <p className="max-w-[220px] text-right text-xs text-neutral-500">
+                검토가 완료되어 이 화면에서 수정할 수 없습니다.
+              </p>
+            )}
+          </div>
+        </section>
 
         {isMultiRound ? (
           <>
@@ -130,53 +123,26 @@ export default function MyApplicationDetailPage() {
           </>
         ) : null}
 
-        <div className={CARD_BASE}>
-          <h2 className={`${TITLE_PAGE} mb-4`}>영상 URL 관리</h2>
-          <p className={`${TEXT_SUB} mb-2`}>YouTube URL 추가</p>
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-3">
-            <input
-              value={videoUrl}
-              onChange={(e) => setVideoUrl(e.target.value)}
-              placeholder="https://youtube.com/watch?v=..."
-              className={`${INPUT_BASE} min-w-0 md:flex-1`}
-            />
-            <button
-              type="button"
-              onClick={() => createVideoMutation.mutate()}
-              disabled={!(videoUrl ?? '').trim() || createVideoMutation.isPending}
-              className={BTN_PRIMARY}
-            >
-              {createVideoMutation.isPending ? '추가 중...' : '+ 추가'}
-            </button>
-          </div>
-          {errorMessage && <p className="mt-2 text-sm text-red-600">{errorMessage}</p>}
-
-          <p className={`${TEXT_SUB} mb-2 mt-6`}>등록된 영상</p>
-          <ul className="flex flex-col gap-2">
-            {videos.map((video) => (
-              <li key={video.id} className={`${CARD_BASE} flex items-center justify-between gap-2`}>
-                <button
-                  type="button"
-                  onClick={() => setPlayVideoUrl(video.videoUrl)}
-                  className="min-w-0 flex-1 text-left text-sm font-medium text-[#3B82F6] underline-offset-2 hover:underline"
-                >
-                  {video.title?.trim() ? video.title : video.videoUrl}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => removeVideoMutation.mutate(video.id)}
-                  className="shrink-0 rounded-lg border border-red-100 px-3 py-2 text-sm text-red-600"
-                >
-                  삭제
-                </button>
-              </li>
-            ))}
-            {videos.length === 0 && <li className={TEXT_SUB}>등록된 영상이 없습니다.</li>}
-          </ul>
+        <div className={SECTION_GAP}>
+          <h2 className={`${TITLE_PAGE} text-base text-neutral-800`}>내 지원서 정보</h2>
+          <BasicInfoSection
+            name={app.name}
+            birthDate={app.birthDate}
+            age={app.age}
+            nationality={app.nationality}
+          />
+          <VideoSection
+            videos={videos.map((v) => ({
+              id: v.id,
+              title: v.title,
+              videoUrl: v.videoUrl,
+              thumbnailUrl: v.thumbnailUrl,
+            }))}
+          />
+          <SnsSection snsLinks={app.snsLinks ?? []} />
+          <IntroSection introText={app.introText} />
         </div>
       </div>
-
-      <VideoEmbedOverlay videoUrl={playVideoUrl} onClose={() => setPlayVideoUrl(null)} />
     </div>
   )
 }

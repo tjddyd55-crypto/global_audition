@@ -18,17 +18,33 @@ export interface ApplicationResponseWithAudition extends ApplicationResponse {
 
 export type CreateApplicationPayload = {
   auditionId: string
-  name: string
-  birthDate: string
-  age: number
-  nationality: string
+  /** 비우면 미저장 (영상만 제출 UX) */
+  name?: string | null
+  birthDate?: string | null
+  age?: number | null
+  nationality?: string | null
   videoUrl: string
-  introText: string
+  introText?: string | null
   snsLinks?: Array<{ platform: string; url: string }>
 }
 
+export type ApplicationSnsLink = { platform: string; url: string }
+
 export interface ApplicationDetailWithVideos extends ApplicationResponseWithAudition {
-  videos?: Array<{ id: string; title: string; videoUrl: string; createdAt?: string }>
+  name?: string | null
+  birthDate?: string | null
+  age?: number | null
+  nationality?: string | null
+  introText?: string | null
+  videoUrl?: string | null
+  snsLinks?: ApplicationSnsLink[]
+  videos?: Array<{
+    id: string
+    title: string
+    videoUrl: string
+    thumbnailUrl?: string | null
+    createdAt?: string
+  }>
   /** MULTI_ROUND 면 라운드 메타, 아니면 SINGLE */
   processMode?: string
   currentRoundNumber?: number
@@ -121,10 +137,17 @@ export const applicationApi = {
       auditionTitle: string
       appliedAt: string
       status: string
+      name?: string | null
+      birthDate?: string | null
+      age?: number | null
+      nationality?: string | null
+      introText?: string | null
+      videoUrl?: string | null
+      snsLinks?: Array<{ platform: string; url: string }>
       processMode?: string
       currentRoundNumber?: number
       roundSummaries?: Array<{ roundId: string; roundNumber: number }>
-      videos: Array<{ videoId: string; title: string; videoUrl: string }>
+      videos: Array<{ videoId: string; title: string; videoUrl: string; thumbnailUrl?: string | null }>
     }>(data)
     return {
       id: d.applicationId,
@@ -134,6 +157,13 @@ export const applicationApi = {
       auditionTitle: d.auditionTitle,
       status: d.status as ApplicationResponse['status'],
       createdAt: typeof d.appliedAt === 'string' ? d.appliedAt : String(d.appliedAt),
+      name: d.name ?? null,
+      birthDate: d.birthDate ?? null,
+      age: d.age ?? null,
+      nationality: d.nationality ?? null,
+      introText: d.introText ?? null,
+      videoUrl: d.videoUrl ?? null,
+      snsLinks: Array.isArray(d.snsLinks) ? d.snsLinks : [],
       processMode: d.processMode ?? 'SINGLE',
       currentRoundNumber: d.currentRoundNumber ?? 1,
       roundSummaries: Array.isArray(d.roundSummaries) ? d.roundSummaries : [],
@@ -141,6 +171,7 @@ export const applicationApi = {
         id: v.videoId,
         title: v.title,
         videoUrl: v.videoUrl,
+        thumbnailUrl: v.thumbnailUrl ?? null,
       })),
     }
   },

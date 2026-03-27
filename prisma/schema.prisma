@@ -35,6 +35,8 @@ model AuditionTag {
 model Audition {
   id              String   @id @default(uuid()) @db.Uuid
   ownerId         String   @map("owner_id") @db.Uuid
+  groupId         String   @map("group_id") @db.Uuid
+  seriesRound     Int      @default(1) @map("series_round")
   title           String
   description     String
   status          String

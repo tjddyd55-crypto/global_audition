@@ -7,8 +7,10 @@ import { auditionApi } from '@/lib/api/auditions'
 import { applicationApi } from '@/lib/api/applications'
 import { authApi } from '@/lib/api/auth'
 import { AuditionApplyForm } from '@/components/application/AuditionApplyForm'
+import { meProfileApi } from '@/lib/api/meProfile'
 import { CREDIT_POLICY_AUDITION_APPLY, creditsApi } from '@/lib/api/credits'
 import { useAuthStore } from '@/lib/auth/authStore'
+import { auditionHeadlineTitle, PREV_ROUND_APPLY_BLOCKED_MSG } from '@/lib/types/audition'
 
 export default function MobileApplyPage() {
   const params = useParams()
@@ -26,6 +28,13 @@ export default function MobileApplyPage() {
   const isOpenAudition = audition?.status === 'OPEN'
   const showCreditQueries =
     !!auditionId && isOpenAudition && !!authApi.getToken() && (role === 'APPLICANT' || role === 'ADMIN')
+
+  const { data: meProfile, isFetched: meProfileFetched } = useQuery({
+    queryKey: ['me-profile', 'apply-prefill'],
+    queryFn: () => meProfileApi.get(),
+    enabled: showCreditQueries,
+    staleTime: 60_000,
+  })
 
   const { data: applyPolicy, isLoading: applyPolicyLoading, isError: applyPolicyError } = useQuery({
     queryKey: ['credit-policy-public', CREDIT_POLICY_AUDITION_APPLY],
@@ -82,6 +91,19 @@ export default function MobileApplyPage() {
     )
   }
 
+  const seriesRound = audition.round ?? 1
+  if (seriesRound >= 2 && audition.canApply === false) {
+    const msg = audition.applyBlockedMessage ?? PREV_ROUND_APPLY_BLOCKED_MSG
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-neutral-50 p-4 text-center">
+        <p className="mb-2 max-w-md text-neutral-800">{msg}</p>
+        <Link href={`/auditions/${auditionId}`} className="text-violet-600 hover:underline">
+          오디션 상세로
+        </Link>
+      </div>
+    )
+  }
+
   const applyPolicySnapshot = applyPolicy
   const creditBalanceAmount = creditBalance?.balance ?? 0
   const needCreditsForApply =
@@ -106,7 +128,7 @@ export default function MobileApplyPage() {
           <Link href={`/auditions/${auditionId}`} className="text-sm font-medium text-violet-700 hover:underline">
             ← 오디션 상세
           </Link>
-          <h1 className="mt-3 text-2xl font-bold text-neutral-900">{audition.title}</h1>
+          <h1 className="mt-3 text-2xl font-bold text-neutral-900">{auditionHeadlineTitle(audition)}</h1>
         </div>
 
         {applyPolicySnapshot && applyPolicySnapshot.active && applyPolicySnapshot.cost > 0 ? (
@@ -137,6 +159,8 @@ export default function MobileApplyPage() {
         <AuditionApplyForm
           auditionId={auditionId}
           disabled={submitDisabled}
+          meProfile={meProfile}
+          meProfileReady={showCreditQueries && meProfileFetched}
           onSubmit={async (payload) => {
             try {
               await applicationApi.submit(payload)
@@ -145,6 +169,9 @@ export default function MobileApplyPage() {
               const serverMsg = ax.response?.data?.message
               if (ax.response?.status === 409) {
                 throw new Error(serverMsg || '이미 지원 완료입니다.')
+              }
+              if (ax.response?.status === 403) {
+                throw new Error(serverMsg || PREV_ROUND_APPLY_BLOCKED_MSG)
               }
               throw new Error(serverMsg || (err instanceof Error ? err.message : '지원에 실패했습니다.'))
             }
