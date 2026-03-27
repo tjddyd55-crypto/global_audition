@@ -1,12 +1,116 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from '../../../../i18n.config'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { auditionApi, type AuditionResponse } from '../../../../lib/api/auditions'
 import { authApi } from '../../../../lib/api/auth'
+import { DEFAULT_IMAGES } from '../../../../lib/constants/fallbacks'
+import { auditionListImageUrl, normalizeAuditionImages } from '../../../../lib/types/audition'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
+
+type StatusStyleFn = (status: string) => string
+type StatusTextFn = (status: string) => string
+
+function MyAuditionManageCard({
+  audition,
+  getStatusBadgeColor,
+  getStatusText,
+  onDelete,
+  deletePending,
+}: {
+  audition: AuditionResponse
+  getStatusBadgeColor: StatusStyleFn
+  getStatusText: StatusTextFn
+  onDelete: (id: string) => void
+  deletePending: boolean
+}) {
+  const im = normalizeAuditionImages(audition.images)
+  const thumb = (im.thumb ?? '').trim()
+  const medium = (im.medium ?? '').trim()
+  const original = (im.original ?? '').trim()
+  const listPrimary = auditionListImageUrl(im)
+  const initialSrc = listPrimary || DEFAULT_IMAGES.videoThumbnail
+  const [imgSrc, setImgSrc] = useState(initialSrc)
+
+  useEffect(() => {
+    setImgSrc(listPrimary || DEFAULT_IMAGES.videoThumbnail)
+  }, [listPrimary])
+
+  const onCoverError = useCallback(() => {
+    setImgSrc((cur) => {
+      if (cur === thumb && medium) return medium
+      if ((cur === thumb || cur === medium) && original) return original
+      return DEFAULT_IMAGES.videoThumbnail
+    })
+  }, [thumb, medium, original])
+
+  return (
+    <div className="flex flex-col gap-4 rounded-lg bg-white p-6 shadow-lg transition-shadow hover:shadow-xl md:flex-row md:items-start md:gap-6">
+      <div className="w-full shrink-0 md:w-44">
+        <div className="relative aspect-[16/10] w-full overflow-hidden rounded-lg bg-gray-100 md:aspect-auto md:h-32">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={imgSrc}
+            alt=""
+            className="size-full object-cover"
+            loading="lazy"
+            decoding="async"
+            onError={onCoverError}
+          />
+        </div>
+      </div>
+
+      <div className="flex min-w-0 flex-1 flex-col gap-3">
+        <div className="flex min-w-0 flex-wrap items-start gap-x-3 gap-y-2">
+          <h3
+            className="min-w-0 flex-1 text-xl font-semibold break-keep break-words text-gray-900"
+            style={{ writingMode: 'horizontal-tb' }}
+          >
+            {audition.title}
+          </h3>
+          <span
+            className={`shrink-0 rounded-full px-3 py-1 text-sm font-medium ${getStatusBadgeColor(audition.status)}`}
+          >
+            {getStatusText(audition.status)}
+          </span>
+        </div>
+
+        {audition.description ? (
+          <p className="line-clamp-2 text-gray-700">{audition.description}</p>
+        ) : null}
+
+        <div className="text-sm text-gray-500">
+          <span>등록: {new Date(audition.createdAt).toLocaleDateString()}</span>
+        </div>
+
+        <div className="flex flex-nowrap gap-2 overflow-x-auto pt-1 [scrollbar-width:thin]">
+          <Link
+            href={`/auditions/${audition.id}`}
+            className="shrink-0 whitespace-nowrap rounded bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
+          >
+            상세보기
+          </Link>
+          <Link
+            href={`/auditions/${audition.id}/applications`}
+            className="shrink-0 whitespace-nowrap rounded bg-green-600 px-4 py-2 text-sm text-white hover:bg-green-700"
+          >
+            지원자 관리
+          </Link>
+          <button
+            type="button"
+            onClick={() => onDelete(audition.id)}
+            className="shrink-0 whitespace-nowrap rounded bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 disabled:opacity-50"
+            disabled={deletePending}
+          >
+            삭제
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default function MyAuditionsPage() {
   const router = useRouter()
@@ -129,54 +233,14 @@ export default function MyAuditionsPage() {
         ) : auditions && auditions.content.length > 0 ? (
           <div className="space-y-4">
             {auditions.content.map((audition: AuditionResponse) => (
-              <div
+              <MyAuditionManageCard
                 key={audition.id}
-                className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow"
-              >
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-xl font-semibold">{audition.title}</h3>
-                      <span
-                        className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusBadgeColor(
-                          audition.status
-                        )}`}
-                      >
-                        {getStatusText(audition.status)}
-                      </span>
-                    </div>
-                    {audition.description && (
-                      <p className="text-gray-700 mb-3 line-clamp-2">
-                        {audition.description}
-                      </p>
-                    )}
-                    <div className="flex flex-wrap gap-4 text-sm text-gray-500">
-                      <span>등록: {new Date(audition.createdAt).toLocaleDateString()}</span>
-                    </div>
-                  </div>
-                  <div className="flex gap-2 ml-4">
-                    <Link
-                      href={`/auditions/${audition.id}`}
-                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
-                    >
-                      상세보기
-                    </Link>
-                    <Link
-                      href={`/auditions/${audition.id}/applications`}
-                      className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
-                    >
-                      지원자 관리
-                    </Link>
-                    <button
-                      onClick={() => handleDelete(audition.id)}
-                      className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
-                      disabled={deleteMutation.isPending}
-                    >
-                      삭제
-                    </button>
-                  </div>
-                </div>
-              </div>
+                audition={audition}
+                getStatusBadgeColor={getStatusBadgeColor}
+                getStatusText={getStatusText}
+                onDelete={handleDelete}
+                deletePending={deleteMutation.isPending}
+              />
             ))}
 
             {/* 페이지네이션 */}
