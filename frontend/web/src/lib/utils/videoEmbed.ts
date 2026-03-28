@@ -1,6 +1,9 @@
-import { extractYoutubeVideoId } from '@/lib/audition/youtubeEmbed'
+import { extractYoutubeVideoId, getYoutubeId } from '@/lib/audition/youtubeEmbed'
 
-/** videoUrl → iframe src (YouTube 위주) */
+/**
+ * videoUrl → iframe embed src (YouTube).
+ * watch·youtu.be 는 정규식만으로 ID 추출 — fetch/axios로 youtube.com 요청하지 않음.
+ */
 export type VideoEmbedOptions = {
   /** 모달 등 사용자 제스처 직후 재생용. 인라인 페이지 임베드에는 기본 false 권장 */
   autoplay?: boolean
@@ -43,7 +46,7 @@ export function isYoutubeShortsLikeUrl(url: string): boolean {
 export function getVideoEmbedSrc(url: string, options?: VideoEmbedOptions): string | null {
   const u = (url ?? '').trim()
   if (!u) return null
-  const id = extractYoutubeVideoId(u)
+  const id = getYoutubeId(u) ?? extractYoutubeVideoId(u)
   if (!id) return null
   return buildYoutubeEmbedPath(id, options)
 }

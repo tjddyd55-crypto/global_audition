@@ -1,5 +1,6 @@
 package com.audition.platform.api.dto.channel;
 
+import com.audition.platform.api.dto.me.MeUserSnsLinkDto;
 import com.audition.platform.api.dto.me.MyChannelVideoDto;
 
 import java.util.ArrayList;
@@ -27,6 +28,7 @@ public class PublicChannelResponse {
     /** 공개 영상 조회수 합 */
     private long viewCount;
     private List<MyChannelVideoDto> videos = new ArrayList<>();
+    private List<MeUserSnsLinkDto> snsLinks = new ArrayList<>();
 
     public String getUserId() {
         return userId;
@@ -138,5 +140,13 @@ public class PublicChannelResponse {
 
     public void setVideos(List<MyChannelVideoDto> videos) {
         this.videos = videos != null ? videos : new ArrayList<>();
+    }
+
+    public List<MeUserSnsLinkDto> getSnsLinks() {
+        return snsLinks;
+    }
+
+    public void setSnsLinks(List<MeUserSnsLinkDto> snsLinks) {
+        this.snsLinks = snsLinks != null ? snsLinks : new ArrayList<>();
     }
 }

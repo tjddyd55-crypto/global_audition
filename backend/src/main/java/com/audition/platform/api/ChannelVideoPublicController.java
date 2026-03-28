@@ -3,11 +3,14 @@ package com.audition.platform.api;
 import com.audition.platform.api.dto.ApiEnvelope;
 import com.audition.platform.api.dto.channel.ChannelVideoCommentDto;
 import com.audition.platform.api.dto.channel.ChannelVideoReactionResponse;
+import com.audition.platform.api.dto.channel.ChannelVideoViewBumpResult;
 import com.audition.platform.api.dto.channel.PostChannelVideoCommentRequest;
 import com.audition.platform.api.dto.channel.PublicChannelVideoDetailDto;
 import com.audition.platform.api.dto.channel.PublicChannelVideoSummaryDto;
 import com.audition.platform.application.channel.ChannelVideoPublicService;
+import com.audition.platform.infra.ClientIpResolver;
 import com.audition.platform.infra.SecurityUtils;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -43,14 +46,16 @@ public class ChannelVideoPublicController {
     }
 
     @PostMapping("/{videoId}/view")
-    public ApiEnvelope<Boolean> bumpView(@PathVariable UUID videoId) {
-        channelVideoPublicService.bumpView(videoId);
-        return ApiEnvelope.ok(true);
+    public ApiEnvelope<ChannelVideoViewBumpResult> bumpView(
+            @PathVariable UUID videoId,
+            HttpServletRequest request) {
+        return ApiEnvelope.ok(channelVideoPublicService.bumpView(
+                videoId, SecurityUtils.getCurrentUserId(), ClientIpResolver.resolve(request)));
     }
 
     @GetMapping("/{videoId}/comments")
     public ApiEnvelope<List<ChannelVideoCommentDto>> listComments(@PathVariable UUID videoId) {
-        return ApiEnvelope.ok(channelVideoPublicService.listComments(videoId));
+        return ApiEnvelope.ok(channelVideoPublicService.listComments(videoId, SecurityUtils.getCurrentUserId()));
     }
 
     @PostMapping("/{videoId}/comments")

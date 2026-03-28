@@ -6,8 +6,13 @@ import com.audition.platform.domain.channel.Channel;
 import com.audition.platform.domain.channel.ChannelRepository;
 import com.audition.platform.domain.channel.ChannelVideo;
 import com.audition.platform.domain.channel.ChannelVideoRepository;
+import com.audition.platform.domain.channel.ChannelVideoVisibility;
+import com.audition.platform.application.user.UserNicknameService;
+import com.audition.platform.application.user.UserSnsLinkReplacementService;
 import com.audition.platform.domain.user.User;
 import com.audition.platform.domain.user.UserRepository;
+import com.audition.platform.domain.user.UserSnsLink;
+import com.audition.platform.domain.user.UserSnsLinkRepository;
 import com.audition.platform.infra.SecurityUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -26,13 +31,22 @@ public class MyChannelService {
     private final ChannelRepository channelRepository;
     private final ChannelVideoRepository channelVideoRepository;
     private final UserRepository userRepository;
+    private final UserSnsLinkRepository userSnsLinkRepository;
+    private final UserNicknameService userNicknameService;
+    private final UserSnsLinkReplacementService userSnsLinkReplacementService;
 
     public MyChannelService(ChannelRepository channelRepository,
                             ChannelVideoRepository channelVideoRepository,
-                            UserRepository userRepository) {
+                            UserRepository userRepository,
+                            UserSnsLinkRepository userSnsLinkRepository,
+                            UserNicknameService userNicknameService,
+                            UserSnsLinkReplacementService userSnsLinkReplacementService) {
         this.channelRepository = channelRepository;
         this.channelVideoRepository = channelVideoRepository;
         this.userRepository = userRepository;
+        this.userSnsLinkRepository = userSnsLinkRepository;
+        this.userNicknameService = userNicknameService;
+        this.userSnsLinkReplacementService = userSnsLinkReplacementService;
     }
 
     private UUID requireApplicant() {
@@ -79,6 +93,17 @@ public class MyChannelService {
         r.setSubscriberCount(ch.getSubscriberCount());
         r.setViewCount(viewSum);
         r.setChannelPublic(user.isChannelPublic());
+        r.setNickname(user.getNickname());
+        r.setIntroText(user.getIntroText());
+        String mergedProfile = firstNonBlankTrimmed(user.getProfileImageUrl(), ch.getProfileImageUrl());
+        r.setProfileImageUrl(trimToNull(mergedProfile));
+        List<UserSnsLink> links = userSnsLinkRepository.findByUserIdOrderByCreatedAtAsc(ownerId);
+        r.setSnsLinks(links.stream().map(l -> {
+            MeUserSnsLinkDto d = new MeUserSnsLinkDto();
+            d.setPlatform(l.getPlatform());
+            d.setUrl(l.getUrl());
+            return d;
+        }).collect(Collectors.toList()));
         return r;
     }
 
@@ -101,6 +126,13 @@ public class MyChannelService {
         out.setNickname(user.getNickname());
         out.setIntroText(user.getIntroText());
         String userProfileImage = user.getProfileImageUrl();
+        List<UserSnsLink> userSns = userSnsLinkRepository.findByUserIdOrderByCreatedAtAsc(userId);
+        out.setSnsLinks(userSns.stream().map(l -> {
+            MeUserSnsLinkDto d = new MeUserSnsLinkDto();
+            d.setPlatform(l.getPlatform());
+            d.setUrl(l.getUrl());
+            return d;
+        }).collect(Collectors.toList()));
 
         channelRepository.findByOwnerId(userId).ifPresentOrElse(ch -> {
             List<ChannelVideo> pub = channelVideoRepository.findByChannelIdAndVisibilityOrderByCreatedAtDesc(
@@ -142,28 +174,46 @@ public class MyChannelService {
     @Transactional
     public MyChannelResponse patchChannel(PatchMyChannelRequest req) {
         UUID ownerId = requireApplicant();
+        User user = userRepository.findById(ownerId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "사용자를 찾을 수 없습니다."));
         Channel ch = getOrCreateChannel(ownerId);
-        if (req.getChannelName() != null) {
+
+        if (req.getNickname() != null) {
+            String rawNick = req.getNickname().trim();
+            if (rawNick.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "닉네임이 필요합니다.");
+            }
+            String next = userNicknameService.prepareNicknameOrThrow(rawNick, ownerId);
+            user.setNickname(next);
+            ch.setName(next);
+        } else if (req.getChannelName() != null) {
             ch.setName(req.getChannelName().trim());
         }
         if (req.getChannelDescription() != null) {
             ch.setDescription(req.getChannelDescription().trim());
         }
+        if (req.getIntroText() != null) {
+            user.setIntroText(req.getIntroText().trim().isEmpty() ? null : req.getIntroText().trim());
+        }
         if (req.getProfileImageUrl() != null) {
-            ch.setProfileImageUrl(req.getProfileImageUrl().trim().isEmpty() ? null : req.getProfileImageUrl().trim());
+            String p = req.getProfileImageUrl().trim().isEmpty() ? null : req.getProfileImageUrl().trim();
+            user.setProfileImageUrl(p);
+            ch.setProfileImageUrl(p);
         }
         if (req.getBannerImageUrl() != null) {
             ch.setBannerImageUrl(req.getBannerImageUrl().trim().isEmpty() ? null : req.getBannerImageUrl().trim());
         }
-        ch.setUpdatedAt(Instant.now());
-        channelRepository.save(ch);
-        if (req.getIsPublic() != null) {
-            User user = userRepository.findById(ownerId)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "사용자를 찾을 수 없습니다."));
-            user.setChannelPublic(Boolean.TRUE.equals(req.getIsPublic()));
-            user.setUpdatedAt(Instant.now());
-            userRepository.save(user);
+        Boolean pub = req.resolveChannelPublic();
+        if (pub != null) {
+            user.setChannelPublic(Boolean.TRUE.equals(pub));
         }
+        if (req.getSnsLinks() != null) {
+            userSnsLinkReplacementService.replaceAll(ownerId, req.getSnsLinks());
+        }
+        ch.setUpdatedAt(Instant.now());
+        user.setUpdatedAt(Instant.now());
+        channelRepository.save(ch);
+        userRepository.save(user);
         return getChannel();
     }
 
@@ -208,7 +258,8 @@ public class MyChannelService {
             vis = "PRIVATE";
         } else {
             vis = vis.trim().toUpperCase(Locale.ROOT);
-            if (!"PUBLIC".equals(vis) && !"PRIVATE".equals(vis)) {
+            if (!ChannelVideoVisibility.PUBLIC.equals(vis) && !ChannelVideoVisibility.PRIVATE.equals(vis)
+                    && !ChannelVideoVisibility.SUBSCRIBERS_ONLY.equals(vis)) {
                 throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "visibility 값이 올바르지 않습니다.");
             }
         }
@@ -241,7 +292,8 @@ public class MyChannelService {
         }
         if (req.getVisibility() != null && !req.getVisibility().isBlank()) {
             String vis = req.getVisibility().trim().toUpperCase(Locale.ROOT);
-            if (!"PUBLIC".equals(vis) && !"PRIVATE".equals(vis)) {
+            if (!ChannelVideoVisibility.PUBLIC.equals(vis) && !ChannelVideoVisibility.PRIVATE.equals(vis)
+                    && !ChannelVideoVisibility.SUBSCRIBERS_ONLY.equals(vis)) {
                 throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "visibility 값이 올바르지 않습니다.");
             }
             v.setVisibility(vis);

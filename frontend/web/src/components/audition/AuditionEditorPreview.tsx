@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { AuditionStatus } from '@/lib/types/audition'
 import { AUDITION_DETAIL, HERO } from '@/lib/design-tokens'
 import { EDITOR_LABELS, auditionStatusLabelKo } from '@/lib/audition/auditionEditorCopy'
-import { extractYoutubeVideoId } from '@/lib/audition/youtubeEmbed'
+import { getVideoEmbedSrc } from '@/lib/utils/videoEmbed'
 
 /** public 정적 자산 — 깨진 URL 시 onError fallback (무한 루프 방지: 한 번만 교체) */
 export const AUDITION_COVER_PLACEHOLDER_SRC = '/audition-cover-placeholder.svg'
@@ -27,11 +27,7 @@ export function AuditionEditorPreview({
   videoUrl,
   status,
 }: AuditionEditorPreviewProps) {
-  const videoId = useMemo(() => extractYoutubeVideoId(videoUrl), [videoUrl])
-  const embedSrc = useMemo(
-    () => (videoId ? `https://www.youtube.com/embed/${videoId}` : ''),
-    [videoId],
-  )
+  const embedSrc = useMemo(() => getVideoEmbedSrc(videoUrl) ?? '', [videoUrl])
 
   const displayTitle = useMemo(() => title.trim() || '제목을 입력하세요', [title])
   const displayTags = useMemo(() => tags.map((t) => t.trim()).filter(Boolean), [tags])

@@ -44,3 +44,26 @@
   object-fit: cover;
   display: block;
 }
+
+/* 오디션 상세 가로 갤러리: 부모 폭 초과 방지 + 트랙 가로 스크롤 */
+.gallery-container {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.gallery-track {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  min-width: 0;
+  -webkit-overflow-scrolling: touch;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.gallery-track::-webkit-scrollbar {
+  display: none;
+}

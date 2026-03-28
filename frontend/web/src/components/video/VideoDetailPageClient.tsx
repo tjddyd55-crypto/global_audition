@@ -4,7 +4,7 @@ import axios from 'axios'
 import { useParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { fetchApplicationPublic } from '@/lib/api/applicationPublicVideo'
-import { probeChannelVideoPublicAvailable } from '@/lib/api/channelVideoPublic'
+import { fetchChannelVideoPublic, type ChannelVideoPublicDetail } from '@/lib/api/channelVideoPublic'
 import { LAYOUT } from '@/lib/design-tokens'
 import { ApplicationVideoDetailClient } from './ApplicationVideoDetailClient'
 import { ChannelVideoDetailClient } from './ChannelVideoDetailClient'
@@ -13,37 +13,44 @@ function isAxiosNotFound(e: unknown): boolean {
   return axios.isAxiosError(e) && e.response?.status === 404
 }
 
+type RouteState =
+  | { kind: 'loading' }
+  | { kind: 'none' }
+  | { kind: 'channel'; detail: ChannelVideoPublicDetail }
+  | { kind: 'application' }
+
 export function VideoDetailPageClient() {
   const params = useParams()
   const id = typeof params?.applicationId === 'string' ? params.applicationId : ''
-  const [mode, setMode] = useState<'loading' | 'channel' | 'application' | 'none'>('loading')
+  const [route, setRoute] = useState<RouteState>({ kind: 'loading' })
 
   useEffect(() => {
     if (!id) {
-      setMode('none')
+      setRoute({ kind: 'none' })
       return
     }
     let cancelled = false
     ;(async () => {
-      setMode('loading')
+      setRoute({ kind: 'loading' })
       try {
-        const isChannel = await probeChannelVideoPublicAvailable(id)
-        if (cancelled) return
-        if (isChannel) {
-          setMode('channel')
+        const detail = await fetchChannelVideoPublic(id)
+        if (!cancelled) {
+          setRoute({ kind: 'channel', detail })
+        }
+        return
+      } catch (e) {
+        if (!isAxiosNotFound(e)) {
+          console.error(e)
+          if (!cancelled) setRoute({ kind: 'none' })
           return
         }
-      } catch (e) {
-        console.error(e)
-        if (!cancelled) setMode('none')
-        return
       }
       try {
         await fetchApplicationPublic(id)
-        if (!cancelled) setMode('application')
+        if (!cancelled) setRoute({ kind: 'application' })
       } catch (e2) {
         if (!cancelled) {
-          setMode('none')
+          setRoute({ kind: 'none' })
           if (!isAxiosNotFound(e2)) console.error(e2)
         }
       }
@@ -60,16 +67,16 @@ export function VideoDetailPageClient() {
     paddingTop: 88,
   } as const
 
-  if (!id || mode === 'none') {
+  if (!id || route.kind === 'none') {
     return <div style={outer}>영상을 찾을 수 없습니다.</div>
   }
 
-  if (mode === 'loading') {
+  if (route.kind === 'loading') {
     return <div style={outer}>불러오는 중…</div>
   }
 
-  if (mode === 'channel') {
-    return <ChannelVideoDetailClient videoId={id} />
+  if (route.kind === 'channel') {
+    return <ChannelVideoDetailClient videoId={id} initialDetail={route.detail} />
   }
 
   return <ApplicationVideoDetailClient />

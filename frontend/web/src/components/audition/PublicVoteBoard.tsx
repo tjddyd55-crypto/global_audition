@@ -5,6 +5,7 @@ import { useCallback, useState } from 'react'
 import { toast } from 'sonner'
 import { auditionApi, type PublicVoteItem } from '@/lib/api/auditions'
 import { VideoEmbedOverlay } from '@/components/video/VideoEmbedOverlay'
+import { resolveVideoThumbnailUrl } from '@/lib/audition/videoThumbnail'
 import { getVideoEmbedSrc } from '@/lib/utils/videoEmbed'
 import { useAuthStore } from '@/lib/auth/authStore'
 import { Link, useRouter } from '@/i18n.config'
@@ -167,6 +168,7 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback }: Props) {
         ) : (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {items.map((item) => {
+              const cardThumb = resolveVideoThumbnailUrl(item.videoUrl, item.thumbnailUrl)
               const canEmbed = Boolean(getVideoEmbedSrc(item.videoUrl))
               const canOpenVideo = canEmbed && !voteMutationBusy
               return (
@@ -188,9 +190,9 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback }: Props) {
                     openVideoWithViewBump(item)
                   }}
                 >
-                  {item.thumbnailUrl ? (
+                  {cardThumb ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={item.thumbnailUrl} alt="" className="h-full w-full object-cover" />
+                    <img src={cardThumb} alt="" className="h-full w-full object-cover" />
                   ) : (
                     <div className="h-full w-full bg-gray-800" />
                   )}

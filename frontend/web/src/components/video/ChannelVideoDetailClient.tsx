@@ -5,12 +5,12 @@ import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'r
 import { Link } from '@/i18n.config'
 import { LAYOUT } from '@/lib/design-tokens'
 import { DEFAULT_IMAGES } from '@/lib/constants/fallbacks'
+import { resolveThumbnailDisplayUrl } from '@/lib/audition/videoThumbnail'
 import { getVideoEmbedSrc } from '@/lib/utils/videoEmbed'
 import { useAuthStore } from '@/lib/auth/authStore'
 import {
   bumpChannelVideoView,
   deleteChannelSubscribe,
-  fetchChannelVideoPublic,
   listChannelVideoComments,
   listChannelVideosByCategory,
   postChannelSubscribe,
@@ -67,13 +67,15 @@ function actionBtnBase(active?: boolean): CSSProperties {
 
 type Props = {
   videoId: string
+  /** 상위에서 GET /videos/{id}/public 1회로 받은 상세(라우팅과 동일 데이터). */
+  initialDetail: ChannelVideoPublicDetail
 }
 
-export function ChannelVideoDetailClient({ videoId }: Props) {
+export function ChannelVideoDetailClient({ videoId, initialDetail }: Props) {
   const accessToken = useAuthStore((s) => s.accessToken)
 
   const [isLoading, setIsLoading] = useState(true)
-  const [detail, setDetail] = useState<ChannelVideoPublicDetail | null>(null)
+  const [detail, setDetail] = useState<ChannelVideoPublicDetail>(() => initialDetail)
   const [likeBusy, setLikeBusy] = useState(false)
   const [dislikeBusy, setDislikeBusy] = useState(false)
   const [subscribeBusy, setSubscribeBusy] = useState(false)
@@ -101,16 +103,24 @@ export function ChannelVideoDetailClient({ videoId }: Props) {
   }, [videoId])
 
   useEffect(() => {
+    setDetail(initialDetail)
+  }, [initialDetail, videoId])
+
+  useEffect(() => {
     if (!videoId) return
     let cancelled = false
     ;(async () => {
       setIsLoading(true)
       try {
-        await bumpChannelVideoView(videoId).catch((e) => console.error(e))
-        const d = await fetchChannelVideoPublic(videoId)
+        const bumpRes = await bumpChannelVideoView(videoId).catch((e) => {
+          console.error(e)
+          return null
+        })
         if (cancelled) return
-        setDetail(d)
-        const cat = d.category?.trim() ?? ''
+        if (bumpRes) {
+          setDetail((prev) => (prev ? { ...prev, viewCount: bumpRes.viewCount } : prev))
+        }
+        const cat = initialDetail.category?.trim() ?? ''
         const [com, rec] = await Promise.all([
           listChannelVideoComments(videoId),
           cat ? listChannelVideosByCategory(cat, videoId) : Promise.resolve([] as ChannelVideoRecommendItem[]),
@@ -128,7 +138,7 @@ export function ChannelVideoDetailClient({ videoId }: Props) {
     return () => {
       cancelled = true
     }
-  }, [videoId])
+  }, [videoId, initialDetail])
 
   const onLike = useCallback(async () => {
     if (!videoId) return
@@ -274,6 +284,7 @@ export function ChannelVideoDetailClient({ videoId }: Props) {
                 src={embedSrc}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
+                frameBorder={0}
                 style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none' }}
               />
             ) : (
@@ -490,7 +501,9 @@ export function ChannelVideoDetailClient({ videoId }: Props) {
               >
                 <div style={{ position: 'relative', width: 160, height: 90, flexShrink: 0, borderRadius: 8, overflow: 'hidden', background: '#eee' }}>
                   <Image
-                    src={item.thumbnailUrl || DEFAULT_IMAGES.videoThumbnail}
+                    src={
+                      resolveThumbnailDisplayUrl(item.thumbnailUrl) ?? DEFAULT_IMAGES.videoThumbnail
+                    }
                     alt=""
                     fill
                     style={{ objectFit: 'cover' }}

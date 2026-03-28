@@ -1,7 +1,9 @@
 package com.audition.platform.domain.channel;
 
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -24,6 +26,10 @@ public interface ChannelVideoRepository extends JpaRepository<ChannelVideo, UUID
 
     Optional<ChannelVideo> findByIdAndOwnerId(UUID id, UUID ownerId);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT v FROM ChannelVideo v WHERE v.id = :id")
+    Optional<ChannelVideo> lockByIdForUpdate(@Param("id") UUID id);
+
     @Query("""
             SELECT v FROM ChannelVideo v
             JOIN User u ON u.id = v.ownerId
@@ -34,7 +40,7 @@ public interface ChannelVideoRepository extends JpaRepository<ChannelVideo, UUID
               AND TRIM(v.category) <> ''
               AND v.category = :category
               AND v.id <> :excludeId
-            ORDER BY v.createdAt DESC
+            ORDER BY v.viewCount DESC, v.createdAt DESC
             """)
     List<ChannelVideo> findPublicRecommendations(
             @Param("category") String category,

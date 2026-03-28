@@ -50,12 +50,9 @@ export type ChannelSubscribeState = {
   subscriberCount: number
 }
 
-/** 라우팅 분기용: 200이면 채널 공개 영상. */
-export async function probeChannelVideoPublicAvailable(videoId: string): Promise<boolean> {
-  const { status } = await apiClient.get<unknown>(`/videos/${videoId}/public`, {
-    validateStatus: (s) => s === 200 || s === 404,
-  })
-  return status === 200
+export type ChannelVideoViewBumpResult = {
+  counted: boolean
+  viewCount: number
 }
 
 export async function fetchChannelVideoPublic(videoId: string): Promise<ChannelVideoPublicDetail> {
@@ -86,9 +83,13 @@ function parsePublicDetail(raw: Record<string, unknown>): ChannelVideoPublicDeta
   }
 }
 
-export async function bumpChannelVideoView(videoId: string): Promise<void> {
+export async function bumpChannelVideoView(videoId: string): Promise<ChannelVideoViewBumpResult> {
   const { data } = await apiClient.post<unknown>(`/videos/${videoId}/view`)
-  unwrapData<boolean>(data)
+  const raw = unwrapData<Record<string, unknown>>(data)
+  return {
+    counted: Boolean(raw.counted),
+    viewCount: Number(raw.viewCount ?? 0) || 0,
+  }
 }
 
 export async function listChannelVideosByCategory(category: string, excludeVideoId: string): Promise<ChannelVideoRecommendItem[]> {

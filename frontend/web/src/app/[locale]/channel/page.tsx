@@ -12,10 +12,7 @@ import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
-  BTN_PRIMARY,
   BTN_SECONDARY,
-  CARD_BASE,
-  CARD_MEDIA_SHELL,
   INPUT_BASE,
   PAGE_CONTAINER,
   SECTION_GAP,
@@ -23,8 +20,17 @@ import {
   TITLE_PAGE,
 } from '@/lib/ui/specClasses'
 import { resolveVideoThumbnailUrl } from '@/lib/audition/videoThumbnail'
-import { ChannelPublicSettings } from '@/components/channel/ChannelPublicSettings'
+import { ChannelSettingsPanel } from '@/components/channel/ChannelSettingsPanel'
 import { VideoVisibilitySwitch } from '@/components/channel/VideoVisibilitySwitch'
+
+/** 채널 설정 패널과 통일: 카드 16px, primary 그라데이션 버튼 */
+const CARD_VIDEO =
+  'overflow-hidden rounded-2xl border border-violet-100/90 bg-white shadow-[0_4px_24px_-4px_rgba(109,40,217,0.12)]'
+const BTN_UPLOAD_PRIMARY =
+  'rounded-xl bg-gradient-to-r from-violet-600 via-fuchsia-600 to-pink-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/25 transition hover:brightness-105 active:scale-[0.99]'
+const CARD_CHANNEL_FORM =
+  'rounded-2xl border border-violet-100/90 bg-white p-5 shadow-[0_4px_24px_-4px_rgba(109,40,217,0.12)] sm:p-6'
+const SECTION_DIVIDER = 'my-8 border-t border-violet-100'
 
 const videoSchema = z.object({
   title: z.string().min(1, '제목을 입력해주세요'),
@@ -166,26 +172,30 @@ export default function ChannelPage() {
     return null
   }
 
+  const openUploadForm = () => {
+    setEditingVideo(null)
+    reset()
+    setShowCreateForm(true)
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-b from-violet-50/40 to-neutral-50">
       <div className={`${PAGE_CONTAINER} py-6 ${SECTION_GAP}`}>
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <h1 className={TITLE_PAGE}>내 채널 관리</h1>
-          <button
-            type="button"
-            onClick={() => {
-              setEditingVideo(null)
-              reset()
-              setShowCreateForm(true)
-            }}
-            className={BTN_PRIMARY}
-          >
+        <h1 className={TITLE_PAGE}>내 채널 관리</h1>
+
+        <ChannelSettingsPanel />
+
+        <div className={SECTION_DIVIDER} aria-hidden />
+
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-base font-bold text-neutral-900">영상 관리</h2>
+          <button type="button" onClick={openUploadForm} className={`${BTN_UPLOAD_PRIMARY} w-full shrink-0 sm:w-auto`}>
             + 영상 업로드
           </button>
         </div>
 
         {showCreateForm && (
-          <div className={CARD_BASE}>
+          <div className={CARD_CHANNEL_FORM}>
             <h2 className={`${TITLE_PAGE} mb-4`}>{editingVideo ? '영상 수정' : '새 영상 추가'}</h2>
             <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
               <div>
@@ -216,7 +226,11 @@ export default function ChannelPage() {
                 </select>
               </div>
               <div className="flex flex-col gap-3 md:flex-row">
-                <button type="submit" disabled={createMutation.isPending || updateMutation.isPending} className={BTN_PRIMARY}>
+                <button
+                  type="submit"
+                  disabled={createMutation.isPending || updateMutation.isPending}
+                  className={`${BTN_UPLOAD_PRIMARY} w-full md:flex-1`}
+                >
                   {createMutation.isPending || updateMutation.isPending ? '저장 중...' : editingVideo ? '수정' : '등록'}
                 </button>
                 <button
@@ -242,7 +256,7 @@ export default function ChannelPage() {
             {videos.content.map((video) => {
               const thumbnailUrl = resolveVideoThumbnailUrl(video.videoUrl, video.thumbnailUrl)
               return (
-              <div key={video.id} className={CARD_MEDIA_SHELL}>
+              <div key={video.id} className={CARD_VIDEO}>
                 {thumbnailUrl ? (
                   <div className="relative aspect-[16/9] w-full">
                     <Image
@@ -251,11 +265,11 @@ export default function ChannelPage() {
                       fill
                       unoptimized
                       sizes="(max-width: 768px) 100vw, 33vw"
-                      className="rounded-t-xl object-cover"
+                      className="rounded-t-2xl object-cover"
                     />
                   </div>
                 ) : (
-                  <div className="flex aspect-[16/9] w-full items-center justify-center rounded-t-xl bg-gray-100 text-sm text-gray-600">
+                  <div className="flex aspect-[16/9] w-full items-center justify-center rounded-t-2xl bg-violet-50 text-sm text-violet-700/80">
                     썸네일 없음
                   </div>
                 )}
@@ -264,7 +278,9 @@ export default function ChannelPage() {
                     <h3 className="text-sm font-semibold text-gray-900 line-clamp-2">{video.title}</h3>
                   </div>
                   {video.category ? (
-                    <span className="mb-2 inline-block rounded-full bg-gray-100 px-2 py-0.5 text-sm text-gray-700">{video.category}</span>
+                    <span className="mb-2 inline-block rounded-full bg-violet-100/90 px-2.5 py-0.5 text-xs font-medium text-violet-800">
+                      {video.category}
+                    </span>
                   ) : null}
                   {video.description ? <p className={`${TEXT_SUB} mb-2 line-clamp-2`}>{video.description}</p> : null}
                   <div className="mb-3">
@@ -275,13 +291,17 @@ export default function ChannelPage() {
                     <span>좋아요: {video.likeCount}</span>
                   </div>
                   <div className="flex gap-2">
-                    <button type="button" onClick={() => handleEdit(video)} className={`${BTN_SECONDARY} flex-1 justify-center`}>
+                    <button
+                      type="button"
+                      onClick={() => handleEdit(video)}
+                      className="flex-1 rounded-xl border border-violet-200 bg-violet-50/60 px-4 py-2 text-sm font-semibold text-violet-800 transition hover:bg-violet-100/80"
+                    >
                       수정
                     </button>
                     <button
                       type="button"
                       onClick={() => handleDelete(video.id)}
-                      className="flex-1 rounded-lg border border-red-100 bg-white px-4 py-2 text-sm font-medium text-red-600"
+                      className="flex-1 rounded-xl border border-red-100 bg-white px-4 py-2 text-sm font-medium text-red-600"
                     >
                       삭제
                     </button>
@@ -292,9 +312,9 @@ export default function ChannelPage() {
             })}
           </div>
         ) : (
-          <div className={CARD_BASE}>
+          <div className={CARD_CHANNEL_FORM}>
             <p className={`${TEXT_SUB} mb-4 text-center text-base`}>등록된 영상이 없습니다</p>
-            <button type="button" onClick={() => setShowCreateForm(true)} className={`${BTN_PRIMARY} mx-auto flex`}>
+            <button type="button" onClick={openUploadForm} className={`${BTN_UPLOAD_PRIMARY} mx-auto flex w-full max-w-xs justify-center`}>
               첫 영상 추가하기
             </button>
           </div>

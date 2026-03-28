@@ -25,6 +25,7 @@ import {
   TITLE_PAGE,
 } from '@/lib/ui/specClasses'
 import { Link } from '@/i18n.config'
+import { resolveVideoThumbnailUrl } from '@/lib/audition/videoThumbnail'
 import { getVideoEmbedSrc } from '@/lib/utils/videoEmbed'
 
 function formatCount(n: number) {
@@ -436,6 +437,7 @@ export function ApplicantManagementView({
 }
 
 function ApplicantListRow({ app, onOpen }: { app: ManageApplicantItem; onOpen: () => void }) {
+  const listThumb = resolveVideoThumbnailUrl(app.videoUrl, app.thumbnailUrl)
   const applied = app.createdAt
     ? (() => {
         try {
@@ -453,8 +455,8 @@ function ApplicantListRow({ app, onOpen }: { app: ManageApplicantItem; onOpen: (
       className="flex w-full cursor-pointer gap-3 rounded-xl border border-gray-200 bg-white p-3 text-left shadow-sm transition hover:border-violet-200 hover:bg-violet-50/40 md:items-center md:gap-4 md:p-4"
     >
       <div className="relative h-16 w-14 shrink-0 overflow-hidden rounded-lg bg-gray-200 md:h-20 md:w-[4.5rem]">
-        {app.thumbnailUrl ? (
-          <Image src={app.thumbnailUrl} alt="" fill className="object-cover" sizes="72px" unoptimized />
+        {listThumb ? (
+          <Image src={listThumb} alt="" fill className="object-cover" sizes="72px" unoptimized />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-violet-700/80 to-fuchsia-700/80 text-lg text-white">
             ▶
@@ -507,6 +509,7 @@ function AgencyDetailPanel({
   const patching = patchingId === applicationId
 
   const embed = detail?.videoUrl ? getVideoEmbedSrc(detail.videoUrl) : ''
+  const detailThumb = detail ? resolveVideoThumbnailUrl(detail.videoUrl ?? '', detail.thumbnailUrl ?? null) : null
 
   const birth = detail?.birthDate
     ? (() => {
@@ -622,14 +625,14 @@ function AgencyDetailPanel({
                         allowFullScreen
                       />
                     </div>
-                  ) : detail.thumbnailUrl ? (
+                  ) : detailThumb ? (
                     <a
                       href={detail.videoUrl}
                       target="_blank"
                       rel="noreferrer"
                       className="relative block aspect-video w-full"
                     >
-                      <Image src={detail.thumbnailUrl} alt="" fill className="object-cover" unoptimized />
+                      <Image src={detailThumb} alt="" fill className="object-cover" unoptimized />
                       <span className="absolute inset-0 flex items-center justify-center bg-black/35 text-4xl text-white">
                         ▶
                       </span>

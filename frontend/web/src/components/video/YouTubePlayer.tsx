@@ -1,5 +1,7 @@
 'use client'
 
+import { getVideoEmbedSrc } from '@/lib/utils/videoEmbed'
+
 interface YouTubePlayerProps {
   videoUrl: string
   embedUrl?: string
@@ -9,8 +11,7 @@ interface YouTubePlayerProps {
 }
 
 /**
- * YouTube 영상 재생 컴포넌트
- * videoUrl 또는 embedUrl을 받아서 YouTube iframe으로 재생
+ * YouTube 영상: watch URL은 파싱만 하고 iframe embed로만 로드 (youtube.com에 XHR/fetch 없음)
  */
 export default function YouTubePlayer({
   videoUrl,
@@ -19,8 +20,7 @@ export default function YouTubePlayer({
   height = 400,
   className = '',
 }: YouTubePlayerProps) {
-  // embedUrl이 제공되면 사용, 없으면 videoUrl에서 추출
-  const finalEmbedUrl = embedUrl || extractEmbedUrl(videoUrl)
+  const finalEmbedUrl = embedUrl?.trim() || getVideoEmbedSrc(videoUrl) || ''
 
   if (!finalEmbedUrl) {
     return (
@@ -39,35 +39,8 @@ export default function YouTubePlayer({
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowFullScreen
         className="absolute inset-0"
-        frameBorder="0"
+        frameBorder={0}
       />
     </div>
   )
-}
-
-/**
- * YouTube URL에서 임베드 URL 추출
- */
-function extractEmbedUrl(url: string): string | null {
-  if (!url) return null
-
-  // 이미 embed URL인 경우
-  if (url.includes('youtube.com/embed/')) {
-    return url
-  }
-
-  // YouTube 영상 ID 추출
-  const patterns = [
-    /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/,
-    /youtube\.com\/embed\/([^&\n?#]+)/,
-  ]
-
-  for (const pattern of patterns) {
-    const match = url.match(pattern)
-    if (match && match[1]) {
-      return `https://www.youtube.com/embed/${match[1]}`
-    }
-  }
-
-  return null
 }

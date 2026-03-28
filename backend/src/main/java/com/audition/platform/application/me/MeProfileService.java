@@ -5,6 +5,7 @@ import com.audition.platform.api.dto.me.MeUserSnsLinkDto;
 import com.audition.platform.api.dto.me.PatchMePasswordRequest;
 import com.audition.platform.api.dto.me.PatchMeProfileRequest;
 import com.audition.platform.application.user.UserNicknameService;
+import com.audition.platform.application.user.UserSnsLinkReplacementService;
 import com.audition.platform.domain.user.User;
 import com.audition.platform.domain.user.UserRepository;
 import com.audition.platform.domain.user.UserSnsLink;
@@ -20,7 +21,6 @@ import java.net.URI;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -31,22 +31,23 @@ import java.util.stream.Collectors;
 public class MeProfileService {
 
     private static final Set<String> ALLOWED_NATIONALITIES = Set.of("KR", "MN", "JP", "OTHER");
-    private static final Set<String> ALLOWED_SNS_PLATFORMS = Set.of(
-            "instagram", "tiktok", "youtube", "twitter", "facebook", "other");
 
     private final UserRepository userRepository;
     private final UserNicknameService userNicknameService;
     private final UserSnsLinkRepository userSnsLinkRepository;
+    private final UserSnsLinkReplacementService userSnsLinkReplacementService;
     private final PasswordEncoder passwordEncoder;
 
     public MeProfileService(
             UserRepository userRepository,
             UserNicknameService userNicknameService,
             UserSnsLinkRepository userSnsLinkRepository,
+            UserSnsLinkReplacementService userSnsLinkReplacementService,
             PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.userNicknameService = userNicknameService;
         this.userSnsLinkRepository = userSnsLinkRepository;
+        this.userSnsLinkReplacementService = userSnsLinkReplacementService;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -111,7 +112,7 @@ public class MeProfileService {
         }
 
         if (req.getSnsLinks() != null) {
-            replaceUserSnsLinks(userId, req.getSnsLinks());
+            userSnsLinkReplacementService.replaceAll(userId, req.getSnsLinks());
         }
 
         user.setUpdatedAt(Instant.now());
@@ -132,65 +133,6 @@ public class MeProfileService {
         user.setPasswordHash(passwordEncoder.encode(req.getNewPassword()));
         user.setUpdatedAt(Instant.now());
         userRepository.save(user);
-    }
-
-    private void replaceUserSnsLinks(UUID userId, List<MeUserSnsLinkDto> rows) {
-        List<MeUserSnsLinkDto> normalized = normalizeSnsRows(rows);
-        userSnsLinkRepository.deleteByUserId(userId);
-        userSnsLinkRepository.flush();
-        for (MeUserSnsLinkDto row : normalized) {
-            UserSnsLink link = new UserSnsLink();
-            link.setUserId(userId);
-            link.setPlatform(row.getPlatform().trim().toLowerCase(Locale.ROOT));
-            link.setUrl(row.getUrl().trim());
-            userSnsLinkRepository.save(link);
-        }
-    }
-
-    private static List<MeUserSnsLinkDto> normalizeSnsRows(List<MeUserSnsLinkDto> raw) {
-        if (raw == null || raw.isEmpty()) {
-            return List.of();
-        }
-        List<MeUserSnsLinkDto> out = new ArrayList<>();
-        for (MeUserSnsLinkDto item : raw) {
-            if (item == null) {
-                continue;
-            }
-            String platform = item.getPlatform() != null ? item.getPlatform().trim().toLowerCase(Locale.ROOT) : "";
-            String url = item.getUrl() != null ? item.getUrl().trim() : "";
-            if (platform.isEmpty() && url.isEmpty()) {
-                continue;
-            }
-            if (platform.isEmpty() || url.isEmpty()) {
-                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "SNS는 플랫폼과 URL을 함께 입력해 주세요.");
-            }
-            if (!ALLOWED_SNS_PLATFORMS.contains(platform)) {
-                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "지원하지 않는 SNS 플랫폼입니다.");
-            }
-            assertHttpUrl(url);
-            MeUserSnsLinkDto dto = new MeUserSnsLinkDto();
-            dto.setPlatform(platform);
-            dto.setUrl(url);
-            out.add(dto);
-        }
-        return out;
-    }
-
-    private static void assertHttpUrl(String url) {
-        try {
-            URI u = URI.create(url);
-            String scheme = u.getScheme();
-            if (scheme == null || !(scheme.equalsIgnoreCase("http") || scheme.equalsIgnoreCase("https"))) {
-                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "SNS URL은 http(s) 주소여야 합니다.");
-            }
-            if (u.getHost() == null || u.getHost().isBlank()) {
-                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "SNS URL이 올바르지 않습니다.");
-            }
-        } catch (ResponseStatusException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "SNS URL이 올바르지 않습니다.");
-        }
     }
 
     private MeProfileResponse toResponse(User user) {

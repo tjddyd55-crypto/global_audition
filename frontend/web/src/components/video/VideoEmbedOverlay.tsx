@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { resolveVideoThumbnailUrl } from '@/lib/audition/videoThumbnail'
 import { getVideoEmbedSrc, isYoutubeShortsLikeUrl } from '@/lib/utils/videoEmbed'
 
 /** 플레이리스트·추천 영상 등 확장용 — url 필수, 나머지 선택 */
@@ -204,7 +205,7 @@ export function VideoEmbedOverlay({ videoUrl, play, onClose }: VideoEmbedOverlay
     )
   }
 
-  const thumb = resolved.thumbnail?.trim()
+  const thumb = resolveVideoThumbnailUrl(resolved.url, resolved.thumbnail ?? null)
   const showThumb = !iframeLoaded && Boolean(thumb)
   const hasPrev = typeof resolved.prev === 'function'
   const hasNext = typeof resolved.next === 'function'
@@ -254,7 +255,7 @@ export function VideoEmbedOverlay({ videoUrl, play, onClose }: VideoEmbedOverlay
         <div
           className={`relative w-full max-sm:max-h-[min(100dvh,100vh)] overflow-hidden rounded-xl bg-black ${aspectClass}`}
         >
-          {showThumb ? (
+          {showThumb && thumb ? (
             <img
               src={thumb}
               alt=""

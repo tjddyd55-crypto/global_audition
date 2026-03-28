@@ -186,6 +186,25 @@ export default function ChannelByUserIdPage() {
                   <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-neutral-800">{data.channelDescription.trim()}</p>
                 </section>
               ) : null}
+              {data.snsLinks && data.snsLinks.length > 0 ? (
+                <section>
+                  <h2 className="text-xs font-bold uppercase tracking-wide text-neutral-500">SNS</h2>
+                  <ul className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                    {data.snsLinks.map((l, i) => (
+                      <li key={`${l.platform}-${i}`}>
+                        <a
+                          href={l.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center rounded-full border border-violet-200 bg-violet-50 px-3 py-1.5 text-sm font-medium text-violet-800 transition-colors hover:bg-violet-100"
+                        >
+                          {l.platform}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              ) : null}
               <section className="rounded-xl border border-neutral-100 bg-neutral-50/80 p-4 text-sm text-neutral-700">
                 <dl className="grid gap-3 sm:grid-cols-2">
                   <div>

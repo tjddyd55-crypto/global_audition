@@ -2,20 +2,24 @@ package com.audition.platform.application.channel;
 
 import com.audition.platform.api.dto.channel.ChannelVideoCommentDto;
 import com.audition.platform.api.dto.channel.ChannelVideoReactionResponse;
+import com.audition.platform.api.dto.channel.ChannelVideoViewBumpResult;
 import com.audition.platform.api.dto.channel.PublicChannelVideoDetailDto;
 import com.audition.platform.api.dto.channel.PublicChannelVideoSummaryDto;
 import com.audition.platform.domain.channel.*;
 import com.audition.platform.domain.user.User;
 import com.audition.platform.domain.user.UserRepository;
+import com.audition.platform.infra.IpAddressHash;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -23,11 +27,14 @@ import java.util.UUID;
 public class ChannelVideoPublicService {
 
     private static final int RECOMMEND_PAGE_SIZE = 24;
+    /** 동일 시청자(회원 또는 IP) 기준 조회수 중복 증가 방지 간격 */
+    private static final Duration VIEW_COUNT_COOLDOWN = Duration.ofHours(24);
 
     private final ChannelVideoRepository channelVideoRepository;
     private final ChannelVideoCommentRepository channelVideoCommentRepository;
     private final ChannelVideoReactionRepository channelVideoReactionRepository;
     private final ChannelSubscriptionRepository channelSubscriptionRepository;
+    private final ChannelVideoViewDedupRepository channelVideoViewDedupRepository;
     private final ChannelRepository channelRepository;
     private final UserRepository userRepository;
 
@@ -35,33 +42,73 @@ public class ChannelVideoPublicService {
                                      ChannelVideoCommentRepository channelVideoCommentRepository,
                                      ChannelVideoReactionRepository channelVideoReactionRepository,
                                      ChannelSubscriptionRepository channelSubscriptionRepository,
+                                     ChannelVideoViewDedupRepository channelVideoViewDedupRepository,
                                      ChannelRepository channelRepository,
                                      UserRepository userRepository) {
         this.channelVideoRepository = channelVideoRepository;
         this.channelVideoCommentRepository = channelVideoCommentRepository;
         this.channelVideoReactionRepository = channelVideoReactionRepository;
         this.channelSubscriptionRepository = channelSubscriptionRepository;
+        this.channelVideoViewDedupRepository = channelVideoViewDedupRepository;
         this.channelRepository = channelRepository;
         this.userRepository = userRepository;
     }
 
     @Transactional(readOnly = true)
     public PublicChannelVideoDetailDto getPublicDetail(UUID videoId, UUID viewerId) {
-        ChannelVideo video = loadPublicVideoOrThrow(videoId);
+        ChannelVideo video = loadPlayableVideoOrThrow(videoId, viewerId);
         return toDetailDto(video, viewerId);
     }
 
+    /**
+     * 조회수 반영. 로그인 시 (videoId,userId), 비로그인 시 (videoId,ip 해시)당
+     * {@link #VIEW_COUNT_COOLDOWN} 내 재요청은 카운트하지 않는다.
+     */
     @Transactional
-    public void bumpView(UUID videoId) {
-        ChannelVideo video = loadPublicVideoOrThrow(videoId);
+    public ChannelVideoViewBumpResult bumpView(UUID videoId, UUID viewerUserId, String clientIpRaw) {
+        ChannelVideo video = loadPlayableVideoOrThrow(videoId, viewerUserId);
+        Instant now = Instant.now();
+        Instant cooldownEnd = now.minus(VIEW_COUNT_COOLDOWN);
+
+        if (viewerUserId != null) {
+            Optional<ChannelVideoViewDedup> existing = channelVideoViewDedupRepository
+                    .findByVideoIdAndUserId(videoId, viewerUserId);
+            if (existing.isPresent() && !existing.get().getLastCountedAt().isBefore(cooldownEnd)) {
+                return new ChannelVideoViewBumpResult(false, video.getViewCount());
+            }
+            video.setViewCount(video.getViewCount() + 1);
+            video.setUpdatedAt(now);
+            channelVideoRepository.save(video);
+            ChannelVideoViewDedup row = existing.orElseGet(ChannelVideoViewDedup::new);
+            row.setVideoId(videoId);
+            row.setUserId(viewerUserId);
+            row.setIpHash(null);
+            row.setLastCountedAt(now);
+            channelVideoViewDedupRepository.save(row);
+            return new ChannelVideoViewBumpResult(true, video.getViewCount());
+        }
+
+        String ipHash = IpAddressHash.sha256Hex(clientIpRaw);
+        Optional<ChannelVideoViewDedup> existing = channelVideoViewDedupRepository
+                .findByVideoIdAndIpHash(videoId, ipHash);
+        if (existing.isPresent() && !existing.get().getLastCountedAt().isBefore(cooldownEnd)) {
+            return new ChannelVideoViewBumpResult(false, video.getViewCount());
+        }
         video.setViewCount(video.getViewCount() + 1);
-        video.setUpdatedAt(Instant.now());
+        video.setUpdatedAt(now);
         channelVideoRepository.save(video);
+        ChannelVideoViewDedup row = existing.orElseGet(ChannelVideoViewDedup::new);
+        row.setVideoId(videoId);
+        row.setUserId(null);
+        row.setIpHash(ipHash);
+        row.setLastCountedAt(now);
+        channelVideoViewDedupRepository.save(row);
+        return new ChannelVideoViewBumpResult(true, video.getViewCount());
     }
 
     @Transactional(readOnly = true)
-    public List<ChannelVideoCommentDto> listComments(UUID videoId) {
-        loadPublicVideoOrThrow(videoId);
+    public List<ChannelVideoCommentDto> listComments(UUID videoId, UUID viewerId) {
+        loadPlayableVideoOrThrow(videoId, viewerId);
         List<ChannelVideoComment> rows = channelVideoCommentRepository.findByVideoIdOrderByCreatedAtDesc(videoId);
         List<ChannelVideoCommentDto> out = new ArrayList<>();
         for (ChannelVideoComment c : rows) {
@@ -75,7 +122,7 @@ public class ChannelVideoPublicService {
         if (authorId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
         }
-        loadPublicVideoOrThrow(videoId);
+        loadPlayableVideoOrThrow(videoId, authorId);
         String content = rawContent == null ? "" : rawContent.trim();
         if (content.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "댓글 내용이 필요합니다.");
@@ -96,7 +143,9 @@ public class ChannelVideoPublicService {
         if (userId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
         }
-        ChannelVideo video = loadPublicVideoOrThrow(videoId);
+        loadPlayableVideoOrThrow(videoId, userId);
+        ChannelVideo video = channelVideoRepository.lockByIdForUpdate(videoId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "영상을 찾을 수 없습니다."));
         Optional<ChannelVideoReaction> opt = channelVideoReactionRepository.findByVideoIdAndUserId(videoId, userId);
         String current = opt.map(ChannelVideoReaction::getReaction).orElse(null);
 
@@ -131,7 +180,9 @@ public class ChannelVideoPublicService {
         if (userId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
         }
-        ChannelVideo video = loadPublicVideoOrThrow(videoId);
+        loadPlayableVideoOrThrow(videoId, userId);
+        ChannelVideo video = channelVideoRepository.lockByIdForUpdate(videoId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "영상을 찾을 수 없습니다."));
         Optional<ChannelVideoReaction> opt = channelVideoReactionRepository.findByVideoIdAndUserId(videoId, userId);
         String current = opt.map(ChannelVideoReaction::getReaction).orElse(null);
 
@@ -181,21 +232,41 @@ public class ChannelVideoPublicService {
         return out;
     }
 
-    private ChannelVideo loadPublicVideoOrThrow(UUID id) {
-        ChannelVideo v = channelVideoRepository.findById(id)
+    /**
+     * 공개 API에서 시청·상세 가능한 영상만 통과.
+     * {@link ChannelVideoVisibility#SUBSCRIBERS_ONLY} 는 구독자 또는 소유자만 허용.
+     */
+    private ChannelVideo loadPlayableVideoOrThrow(UUID videoId, UUID viewerId) {
+        ChannelVideo v = channelVideoRepository.findById(videoId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "영상을 찾을 수 없습니다."));
-        if (!"PUBLIC".equalsIgnoreCase(v.getVisibility())) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "영상을 찾을 수 없습니다.");
-        }
         User owner = userRepository.findById(v.getOwnerId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "영상을 찾을 수 없습니다."));
-        if (!owner.isChannelPublic()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "영상을 찾을 수 없습니다.");
-        }
         if (!"APPLICANT".equals(owner.getRole()) && !"ADMIN".equals(owner.getRole())) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "영상을 찾을 수 없습니다.");
         }
-        return v;
+        if (!owner.isChannelPublic()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "영상을 찾을 수 없습니다.");
+        }
+        String vis = v.getVisibility() == null ? "" : v.getVisibility().trim().toUpperCase(Locale.ROOT);
+        if (ChannelVideoVisibility.PRIVATE.equals(vis)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "영상을 찾을 수 없습니다.");
+        }
+        if (ChannelVideoVisibility.PUBLIC.equals(vis)) {
+            return v;
+        }
+        if (ChannelVideoVisibility.SUBSCRIBERS_ONLY.equals(vis)) {
+            if (viewerId == null) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "영상을 찾을 수 없습니다.");
+            }
+            if (viewerId.equals(v.getOwnerId())) {
+                return v;
+            }
+            if (channelSubscriptionRepository.existsBySubscriberIdAndChannelOwnerId(viewerId, v.getOwnerId())) {
+                return v;
+            }
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "영상을 찾을 수 없습니다.");
+        }
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "영상을 찾을 수 없습니다.");
     }
 
     private PublicChannelVideoDetailDto toDetailDto(ChannelVideo v, UUID viewerId) {
