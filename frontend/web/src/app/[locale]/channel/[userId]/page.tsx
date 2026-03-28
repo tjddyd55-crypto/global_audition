@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query'
 import Image from 'next/image'
 import { Link } from '@/i18n.config'
 import { channelApi } from '@/lib/api/channel'
+import { listPublicVideosForChannel } from '@/lib/api/channelVideoPublic'
 import { resolveVideoThumbnailUrl } from '@/lib/audition/videoThumbnail'
 import { PAGE_CONTAINER } from '@/lib/ui/specClasses'
 import type { MyChannelVideoRow } from '@/lib/api/videos'
@@ -40,15 +41,26 @@ export default function ChannelByUserIdPage() {
     retry: false,
   })
 
+  const {
+    data: publicVideos = [],
+    isLoading: videosLoading,
+    isError: videosError,
+  } = useQuery({
+    queryKey: ['public-channel-videos', userId],
+    queryFn: () => listPublicVideosForChannel(userId),
+    enabled: userId.length > 0 && Boolean(data),
+    retry: false,
+  })
+
   const stats = useMemo(() => {
     if (!data) return { videos: 0, subs: 0, views: 0 }
-    const vCount = data.videoCount ?? data.videos.length
-    const views =
-      data.viewCount ??
-      data.videos.reduce((acc, raw) => acc + Number((raw as MyChannelVideoRow).viewCount ?? 0), 0)
     const subs = data.subscriberCount ?? 0
+    const vCount = videosLoading ? (data.videoCount ?? 0) : publicVideos.length
+    const views = videosLoading
+      ? (data.viewCount ?? 0)
+      : publicVideos.reduce((acc, v) => acc + Number(v.viewCount ?? 0), 0)
     return { videos: vCount, subs, views }
-  }, [data])
+  }, [data, publicVideos, videosLoading])
 
   if (!userId) {
     return (
@@ -224,12 +236,18 @@ export default function ChannelByUserIdPage() {
                 <p className="text-center text-sm text-neutral-500">등록된 상세 정보가 없습니다.</p>
               ) : null}
             </div>
-          ) : data.videos.length === 0 ? (
-            <p className="py-12 text-center text-sm text-neutral-500">공개된 영상이 없습니다.</p>
+          ) : videosLoading ? (
+            <p className="py-12 text-center text-sm text-neutral-500">영상 목록을 불러오는 중…</p>
+          ) : videosError ? (
+            <p className="py-12 text-center text-sm text-red-600">영상 목록을 불러오지 못했습니다.</p>
+          ) : publicVideos.length === 0 ? (
+            <div className="mx-auto max-w-md rounded-2xl border border-neutral-200 bg-neutral-50/80 px-6 py-10 text-center">
+              <p className="text-base font-semibold text-neutral-900">아직 공개된 영상이 없습니다</p>
+              <p className="mt-2 text-sm text-neutral-600">크리에이터가 영상을 공개하면 여기에 표시됩니다.</p>
+            </div>
           ) : (
             <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {data.videos.map((raw) => {
-                const v = raw as MyChannelVideoRow
+              {publicVideos.map((v) => {
                 const thumb = resolveVideoThumbnailUrl(v.videoUrl ?? '', v.thumbnailUrl)
                 const cat = v.category?.trim()
                 return (

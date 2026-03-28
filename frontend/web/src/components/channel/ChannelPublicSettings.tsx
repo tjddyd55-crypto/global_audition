@@ -50,6 +50,9 @@ export function ChannelPublicSettings() {
       await queryClient.invalidateQueries({ queryKey: ['my-channel-videos'] })
       await queryClient.invalidateQueries({ queryKey: ['my-channel-videos-profile'] })
       await queryClient.invalidateQueries({ queryKey: ['my-channel-videos-mobile-profile'] })
+      await queryClient.invalidateQueries({ queryKey: ['public-channel'] })
+      await queryClient.invalidateQueries({ queryKey: ['public-channel-videos'] })
+      await queryClient.invalidateQueries({ queryKey: ['channels-public'] })
     },
   })
 

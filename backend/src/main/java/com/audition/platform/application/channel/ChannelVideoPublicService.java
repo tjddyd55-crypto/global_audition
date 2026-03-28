@@ -5,6 +5,7 @@ import com.audition.platform.api.dto.channel.ChannelVideoReactionResponse;
 import com.audition.platform.api.dto.channel.ChannelVideoViewBumpResult;
 import com.audition.platform.api.dto.channel.PublicChannelVideoDetailDto;
 import com.audition.platform.api.dto.channel.PublicChannelVideoSummaryDto;
+import com.audition.platform.api.dto.me.MyChannelVideoDto;
 import com.audition.platform.domain.channel.*;
 import com.audition.platform.domain.user.User;
 import com.audition.platform.domain.user.UserRepository;
@@ -210,6 +211,44 @@ public class ChannelVideoPublicService {
         video.setDislikeCount(video.getDislikeCount() + 1);
         channelVideoRepository.save(video);
         return reactionResponse(video, userId);
+    }
+
+    /**
+     * 공개 채널 페이지용: {@code owner_id = channelOwnerId} 이고 {@code visibility = PUBLIC} 인 영상만, {@code created_at DESC}.
+     * 비공개·부적격 채널은 404 ({@code GET /api/channels/{userId}} 와 동일 정책).
+     */
+    @Transactional(readOnly = true)
+    public List<MyChannelVideoDto> listPublicVideosForChannelOwner(UUID channelOwnerId) {
+        User user = userRepository.findById(channelOwnerId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "채널을 찾을 수 없습니다."));
+        if (!user.isChannelPublic()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "채널을 찾을 수 없습니다.");
+        }
+        if (!"APPLICANT".equals(user.getRole()) && !"ADMIN".equals(user.getRole())) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "채널을 찾을 수 없습니다.");
+        }
+        List<ChannelVideo> list = channelVideoRepository.findByOwnerIdAndVisibilityOrderByCreatedAtDesc(
+                channelOwnerId, ChannelVideoVisibility.PUBLIC);
+        List<MyChannelVideoDto> out = new ArrayList<>();
+        for (ChannelVideo v : list) {
+            out.add(toMyChannelListDto(v));
+        }
+        return out;
+    }
+
+    private MyChannelVideoDto toMyChannelListDto(ChannelVideo v) {
+        MyChannelVideoDto dto = new MyChannelVideoDto();
+        dto.setVideoId(v.getId().toString());
+        dto.setTitle(v.getTitle());
+        dto.setVideoUrl(v.getVideoUrl());
+        dto.setDescription(v.getDescription());
+        dto.setCategory(v.getCategory());
+        dto.setThumbnailUrl(v.getThumbnailUrl());
+        dto.setVisibility(v.getVisibility());
+        dto.setViewCount(v.getViewCount());
+        dto.setLikeCount(v.getLikeCount());
+        dto.setCreatedAt(v.getCreatedAt());
+        return dto;
     }
 
     @Transactional(readOnly = true)

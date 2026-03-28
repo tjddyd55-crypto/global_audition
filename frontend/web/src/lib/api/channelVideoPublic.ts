@@ -1,5 +1,6 @@
 import { apiClient } from './client'
 import { unwrapData } from './unwrap'
+import type { MyChannelVideoRow } from './videos'
 
 export type ChannelVideoPublicDetail = {
   videoId: string
@@ -53,6 +54,31 @@ export type ChannelSubscribeState = {
 export type ChannelVideoViewBumpResult = {
   counted: boolean
   viewCount: number
+}
+
+function parseMyChannelVideoRow(raw: Record<string, unknown>): MyChannelVideoRow {
+  return {
+    videoId: String(raw.videoId ?? ''),
+    title: String(raw.title ?? ''),
+    videoUrl: String(raw.videoUrl ?? ''),
+    description: raw.description != null ? String(raw.description) : null,
+    category: raw.category != null ? String(raw.category) : null,
+    thumbnailUrl: raw.thumbnailUrl != null ? String(raw.thumbnailUrl) : null,
+    visibility: String(raw.visibility ?? 'PUBLIC'),
+    viewCount: Number(raw.viewCount ?? 0) || 0,
+    likeCount: Number(raw.likeCount ?? 0) || 0,
+    createdAt: raw.createdAt != null ? String(raw.createdAt) : '',
+  }
+}
+
+/** GET /videos/public?channelOwnerId= — 공개 채널의 PUBLIC 영상만, 최신순 */
+export async function listPublicVideosForChannel(channelOwnerId: string): Promise<MyChannelVideoRow[]> {
+  const { data } = await apiClient.get<unknown>('/videos/public', {
+    params: { channelOwnerId },
+  })
+  const unwrapped = unwrapData<unknown>(data)
+  if (!Array.isArray(unwrapped)) return []
+  return unwrapped.map((x) => parseMyChannelVideoRow(x as Record<string, unknown>))
 }
 
 export async function fetchChannelVideoPublic(videoId: string): Promise<ChannelVideoPublicDetail> {

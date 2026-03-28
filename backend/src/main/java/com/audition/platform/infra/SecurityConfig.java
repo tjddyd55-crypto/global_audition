@@ -57,6 +57,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/auditions/*/votes").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/channels", "/api/channels/*").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/videos").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/videos/public").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/videos/*/public").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/videos/*/comments").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/videos/*/view").permitAll()

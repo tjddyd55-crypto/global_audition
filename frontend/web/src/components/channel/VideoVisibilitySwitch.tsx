@@ -50,6 +50,7 @@ export function VideoVisibilitySwitch({ video }: { video: VideoContent }) {
         ['my-channel-videos-mobile-profile'],
         ['channels-public'],
         ['public-channel'],
+        ['public-channel-videos'],
       ]
       for (const k of keys) {
         await queryClient.invalidateQueries({ queryKey: k })

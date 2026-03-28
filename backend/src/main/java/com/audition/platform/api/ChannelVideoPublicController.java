@@ -7,6 +7,7 @@ import com.audition.platform.api.dto.channel.ChannelVideoViewBumpResult;
 import com.audition.platform.api.dto.channel.PostChannelVideoCommentRequest;
 import com.audition.platform.api.dto.channel.PublicChannelVideoDetailDto;
 import com.audition.platform.api.dto.channel.PublicChannelVideoSummaryDto;
+import com.audition.platform.api.dto.me.MyChannelVideoDto;
 import com.audition.platform.application.channel.ChannelVideoPublicService;
 import com.audition.platform.infra.ClientIpResolver;
 import com.audition.platform.infra.SecurityUtils;
@@ -31,6 +32,11 @@ public class ChannelVideoPublicController {
 
     public ChannelVideoPublicController(ChannelVideoPublicService channelVideoPublicService) {
         this.channelVideoPublicService = channelVideoPublicService;
+    }
+
+    @GetMapping("/public")
+    public ApiEnvelope<List<MyChannelVideoDto>> listPublicForChannelOwner(@RequestParam UUID channelOwnerId) {
+        return ApiEnvelope.ok(channelVideoPublicService.listPublicVideosForChannelOwner(channelOwnerId));
     }
 
     @GetMapping
