@@ -1,5 +1,5 @@
-import { ApplicationVideoDetailClient } from '@/components/video/ApplicationVideoDetailClient'
+import { VideoDetailPageClient } from '@/components/video/VideoDetailPageClient'
 
 export default function VideoApplicationDetailPage() {
-  return <ApplicationVideoDetailClient />
+  return <VideoDetailPageClient />
 }

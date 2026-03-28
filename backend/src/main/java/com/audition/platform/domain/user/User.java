@@ -67,6 +67,10 @@ public class User {
     @Column(name = "account_status", nullable = false, length = 32)
     private String accountStatus = "ACTIVE";
 
+    /** 타인에게 채널(공개 영상 목록) 노출 여부 */
+    @Column(name = "is_channel_public", nullable = false)
+    private boolean channelPublic = false;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
@@ -143,6 +147,14 @@ public class User {
 
     public void setAccountStatus(String accountStatus) {
         this.accountStatus = accountStatus;
+    }
+
+    public boolean isChannelPublic() {
+        return channelPublic;
+    }
+
+    public void setChannelPublic(boolean channelPublic) {
+        this.channelPublic = channelPublic;
     }
 
     public Instant getCreatedAt() { return createdAt; }

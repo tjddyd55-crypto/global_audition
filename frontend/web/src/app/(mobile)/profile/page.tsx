@@ -8,6 +8,9 @@ import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { useAuthStore } from '@/lib/auth/authStore'
 import { ProfileManageForm } from '@/components/profile/ProfileManageForm'
+import { ChannelPublicSettings } from '@/components/channel/ChannelPublicSettings'
+import { VideoVisibilitySwitch } from '@/components/channel/VideoVisibilitySwitch'
+import { resolveVideoThumbnailUrl } from '@/lib/audition/videoThumbnail'
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -57,6 +60,8 @@ export default function ProfilePage() {
 
         <ProfileManageForm />
 
+        {showApplicantVideos ? <ChannelPublicSettings /> : null}
+
         <div>
           <h2 className="text-2xl font-semibold mb-4">내 영상</h2>
           {showApplicantVideos && isLoading ? (
@@ -65,11 +70,13 @@ export default function ProfilePage() {
             <p className="text-gray-500">지원자 전용 채널입니다. 기획사 계정은 오디션 관리 메뉴를 이용해 주세요.</p>
           ) : showApplicantVideos && videos && videos.content.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {videos.content.map((video) => (
+              {videos.content.map((video) => {
+                const thumbnailUrl = resolveVideoThumbnailUrl(video.videoUrl, video.thumbnailUrl)
+                return (
                 <div key={video.id} className="border rounded-lg overflow-hidden">
-                  {video.thumbnailUrl && (
+                  {thumbnailUrl ? (
                     <Image
-                      src={video.thumbnailUrl}
+                      src={thumbnailUrl}
                       alt={video.title}
                       width={640}
                       height={192}
@@ -77,16 +84,24 @@ export default function ProfilePage() {
                       sizes="(max-width: 768px) 100vw, 33vw"
                       className="w-full h-48 object-cover"
                     />
+                  ) : (
+                    <div className="flex h-48 w-full items-center justify-center bg-gray-100 text-sm text-gray-600">
+                      썸네일 없음
+                    </div>
                   )}
                   <div className="p-4">
                     <h3 className="font-semibold mb-2">{video.title}</h3>
+                    <div className="mb-2">
+                      <VideoVisibilitySwitch video={video} />
+                    </div>
                     <div className="text-sm text-gray-600">
                       <p>조회수: {video.viewCount}</p>
                       <p>좋아요: {video.likeCount}</p>
                     </div>
                   </div>
                 </div>
-              ))}
+                )
+              })}
             </div>
           ) : showApplicantVideos ? (
             <p className="text-gray-500">등록된 영상이 없습니다</p>

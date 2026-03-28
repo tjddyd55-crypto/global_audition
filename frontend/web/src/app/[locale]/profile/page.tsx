@@ -18,6 +18,9 @@ import {
 } from '@/lib/ui/specClasses'
 import { useAuthStore } from '@/lib/auth/authStore'
 import { ProfileManageForm } from '@/components/profile/ProfileManageForm'
+import { ChannelPublicSettings } from '@/components/channel/ChannelPublicSettings'
+import { VideoVisibilitySwitch } from '@/components/channel/VideoVisibilitySwitch'
+import { resolveVideoThumbnailUrl } from '@/lib/audition/videoThumbnail'
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -80,12 +83,14 @@ export default function ProfilePage() {
             </div>
           ) : showApplicantVideos && videos && videos.content.length > 0 ? (
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {videos.content.map((video) => (
+              {videos.content.map((video) => {
+                const thumbnailUrl = resolveVideoThumbnailUrl(video.videoUrl, video.thumbnailUrl)
+                return (
                 <div key={video.id} className={CARD_MEDIA_SHELL}>
-                  {video.thumbnailUrl ? (
+                  {thumbnailUrl ? (
                     <div className="relative aspect-[16/9] w-full">
                       <Image
-                        src={video.thumbnailUrl}
+                        src={thumbnailUrl}
                         alt={video.title}
                         fill
                         unoptimized
@@ -100,13 +105,17 @@ export default function ProfilePage() {
                   )}
                   <div className="p-4">
                     <h3 className="text-sm font-semibold text-gray-900">{video.title}</h3>
+                    <div className="mt-2">
+                      <VideoVisibilitySwitch video={video} />
+                    </div>
                     <div className={`${TEXT_SUB} mt-2 flex flex-col gap-1`}>
                       <span>조회수: {video.viewCount}</span>
                       <span>좋아요: {video.likeCount}</span>
                     </div>
                   </div>
                 </div>
-              ))}
+                )
+              })}
             </div>
           ) : showApplicantVideos ? (
             <div className={CARD_BASE}>

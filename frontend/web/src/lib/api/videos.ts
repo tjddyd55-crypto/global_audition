@@ -3,6 +3,19 @@ import { MEDIA_ENDPOINTS } from './endpoints'
 import { unwrapData } from './unwrap'
 import type { PageResponse } from '../../types'
 
+export type MyChannelVideoRow = {
+  videoId: string
+  title: string
+  videoUrl: string
+  description?: string | null
+  category?: string | null
+  thumbnailUrl?: string | null
+  visibility: string
+  viewCount: number
+  likeCount: number
+  createdAt: string
+}
+
 export interface VideoContent {
   id: string
   userId: number
@@ -18,22 +31,12 @@ export interface VideoContent {
   commentCount: number
   category?: string
   status: string
+  visibility?: 'PUBLIC' | 'PRIVATE'
   createdAt: string
   updatedAt: string
 }
 
-function mapMeChannelVideoRow(v: {
-  videoId: string
-  title: string
-  videoUrl: string
-  description?: string | null
-  category?: string | null
-  thumbnailUrl?: string | null
-  visibility: string
-  viewCount: number
-  likeCount: number
-  createdAt: string
-}): VideoContent {
+function mapMeChannelVideoRow(v: MyChannelVideoRow): VideoContent {
   const created = typeof v.createdAt === 'string' ? v.createdAt : String(v.createdAt)
   const pub = v.visibility === 'PUBLIC'
   return {
@@ -49,6 +52,7 @@ function mapMeChannelVideoRow(v: {
     commentCount: 0,
     category: v.category ?? undefined,
     status: pub ? 'PUBLISHED' : 'PRIVATE',
+    visibility: pub ? 'PUBLIC' : 'PRIVATE',
     createdAt: created,
     updatedAt: created,
   }
@@ -80,7 +84,7 @@ export const videoApi = {
 
   getMyChannelVideos: async (): Promise<PageResponse<VideoContent>> => {
     const { data } = await apiClient.get<unknown>('/me/channel/videos')
-    const p = unwrapData<{ items: Parameters<typeof mapMeChannelVideoRow>[0][]; total: number }>(data)
+    const p = unwrapData<{ items: MyChannelVideoRow[]; total: number }>(data)
     const items = (p.items ?? []).map(mapMeChannelVideoRow)
     return {
       content: items,
@@ -111,7 +115,13 @@ export const videoApi = {
       category: video.category,
       visibility: visibilityFromFormStatus(video.status),
     })
-    const row = unwrapData<Parameters<typeof mapMeChannelVideoRow>[0]>(data)
+    const row = unwrapData<MyChannelVideoRow>(data)
+    return mapMeChannelVideoRow(row)
+  },
+
+  patchVideoVisibility: async (id: string, visibility: 'PUBLIC' | 'PRIVATE'): Promise<VideoContent> => {
+    const { data } = await apiClient.patch<unknown>(`/videos/${id}`, { visibility })
+    const row = unwrapData<MyChannelVideoRow>(data)
     return mapMeChannelVideoRow(row)
   },
 
@@ -138,7 +148,7 @@ export const videoApi = {
     if (video.category != null) body.category = video.category
     if (video.status != null) body.visibility = visibilityFromFormStatus(video.status)
     const { data } = await apiClient.patch<unknown>(`/me/channel/videos/${id}`, body)
-    const row = unwrapData<Parameters<typeof mapMeChannelVideoRow>[0]>(data)
+    const row = unwrapData<MyChannelVideoRow>(data)
     return mapMeChannelVideoRow(row)
   },
 

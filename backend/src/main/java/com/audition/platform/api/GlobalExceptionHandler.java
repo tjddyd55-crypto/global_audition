@@ -166,6 +166,8 @@ public class GlobalExceptionHandler {
         boolean creditsPath = uri.startsWith("/api/credits");
         boolean adminApiPath = uri.startsWith("/api/admin/");
         boolean uploadsPath = uri.startsWith("/api/uploads/");
+        boolean channelVideosApi = uri.startsWith("/api/videos");
+        boolean subscribeApi = "/api/subscribe".equals(uri);
         String method = request.getMethod() != null ? request.getMethod() : "";
         return uri.contains("/api/me/")
                 || uri.endsWith("/api/me")
@@ -182,6 +184,8 @@ public class GlobalExceptionHandler {
                 || likesPath
                 || creditsPath
                 || adminApiPath
-                || uploadsPath;
+                || uploadsPath
+                || channelVideosApi
+                || subscribeApi;
     }
 }

@@ -49,6 +49,9 @@ public class ChannelVideo {
     @Column(name = "like_count", nullable = false)
     private long likeCount = 0;
 
+    @Column(name = "dislike_count", nullable = false)
+    private long dislikeCount = 0;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
@@ -149,6 +152,14 @@ public class ChannelVideo {
 
     public void setLikeCount(long likeCount) {
         this.likeCount = likeCount;
+    }
+
+    public long getDislikeCount() {
+        return dislikeCount;
+    }
+
+    public void setDislikeCount(long dislikeCount) {
+        this.dislikeCount = dislikeCount;
     }
 
     public Instant getCreatedAt() {

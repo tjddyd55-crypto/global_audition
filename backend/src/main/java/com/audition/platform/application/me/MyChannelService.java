@@ -1,5 +1,6 @@
 package com.audition.platform.application.me;
 
+import com.audition.platform.api.dto.channel.PublicChannelResponse;
 import com.audition.platform.api.dto.me.*;
 import com.audition.platform.domain.channel.Channel;
 import com.audition.platform.domain.channel.ChannelRepository;
@@ -15,6 +16,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -62,6 +64,8 @@ public class MyChannelService {
 
     public MyChannelResponse getChannel() {
         UUID ownerId = requireApplicant();
+        User user = userRepository.findById(ownerId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "사용자를 찾을 수 없습니다."));
         Channel ch = getOrCreateChannel(ownerId);
         long videoCount = channelVideoRepository.findByChannelIdOrderByCreatedAtDesc(ch.getId()).size();
         long viewSum = channelVideoRepository.sumViewCountByChannelId(ch.getId());
@@ -74,7 +78,65 @@ public class MyChannelService {
         r.setVideoCount(videoCount);
         r.setSubscriberCount(ch.getSubscriberCount());
         r.setViewCount(viewSum);
+        r.setChannelPublic(user.isChannelPublic());
         return r;
+    }
+
+    /**
+     * 공개 채널 페이지. 비공개·미존재는 404(존재 여부 노출 최소화).
+     */
+    public PublicChannelResponse getPublicChannelByUserId(UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "채널을 찾을 수 없습니다."));
+        if (!user.isChannelPublic()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "채널을 찾을 수 없습니다.");
+        }
+        if (!"APPLICANT".equals(user.getRole()) && !"ADMIN".equals(user.getRole())) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "채널을 찾을 수 없습니다.");
+        }
+        PublicChannelResponse out = new PublicChannelResponse();
+        out.setUserId(user.getId().toString());
+        out.setDisplayName(user.getPublicDisplayLabel());
+        out.setName(user.getName());
+        out.setNickname(user.getNickname());
+        out.setIntroText(user.getIntroText());
+        String userProfileImage = user.getProfileImageUrl();
+
+        channelRepository.findByOwnerId(userId).ifPresentOrElse(ch -> {
+            List<ChannelVideo> pub = channelVideoRepository.findByChannelIdAndVisibilityOrderByCreatedAtDesc(
+                    ch.getId(), "PUBLIC");
+            out.setVideos(pub.stream().map(this::toVideoDto).collect(Collectors.toList()));
+            out.setChannelId(ch.getId().toString());
+            out.setChannelName(ch.getName() != null ? ch.getName() : "");
+            out.setChannelDescription(ch.getDescription() != null ? ch.getDescription() : "");
+            out.setProfileImageUrl(firstNonBlankTrimmed(userProfileImage, ch.getProfileImageUrl()));
+            out.setBannerImageUrl(ch.getBannerImageUrl());
+            out.setSubscriberCount(ch.getSubscriberCount());
+            out.setVideoCount(pub.size());
+            out.setViewCount(pub.stream().mapToLong(ChannelVideo::getViewCount).sum());
+        }, () -> {
+            out.setVideos(List.of());
+            out.setProfileImageUrl(trimToNull(userProfileImage));
+            out.setVideoCount(0);
+            out.setViewCount(0);
+            out.setSubscriberCount(0);
+        });
+        return out;
+    }
+
+    private static String trimToNull(String s) {
+        if (s == null || s.isBlank()) {
+            return null;
+        }
+        return s.trim();
+    }
+
+    private static String firstNonBlankTrimmed(String a, String b) {
+        String t = trimToNull(a);
+        if (t != null) {
+            return t;
+        }
+        return trimToNull(b);
     }
 
     @Transactional
@@ -95,6 +157,13 @@ public class MyChannelService {
         }
         ch.setUpdatedAt(Instant.now());
         channelRepository.save(ch);
+        if (req.getIsPublic() != null) {
+            User user = userRepository.findById(ownerId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "사용자를 찾을 수 없습니다."));
+            user.setChannelPublic(Boolean.TRUE.equals(req.getIsPublic()));
+            user.setUpdatedAt(Instant.now());
+            userRepository.save(user);
+        }
         return getChannel();
     }
 
@@ -134,9 +203,19 @@ public class MyChannelService {
         v.setDescription(req.getDescription() != null ? req.getDescription().trim() : null);
         v.setCategory(req.getCategory() != null ? req.getCategory().trim() : null);
         v.setVideoUrl(req.getVideoUrl().trim());
-        v.setVisibility(req.getVisibility());
+        String vis = req.getVisibility();
+        if (vis == null || vis.isBlank()) {
+            vis = "PRIVATE";
+        } else {
+            vis = vis.trim().toUpperCase(Locale.ROOT);
+            if (!"PUBLIC".equals(vis) && !"PRIVATE".equals(vis)) {
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "visibility 값이 올바르지 않습니다.");
+            }
+        }
+        v.setVisibility(vis);
         v.setViewCount(0);
         v.setLikeCount(0);
+        v.setDislikeCount(0);
         v.setCreatedAt(Instant.now());
         v.setUpdatedAt(Instant.now());
         v = channelVideoRepository.save(v);
@@ -160,8 +239,12 @@ public class MyChannelService {
         if (req.getThumbnailUrl() != null) {
             v.setThumbnailUrl(req.getThumbnailUrl().trim().isEmpty() ? null : req.getThumbnailUrl().trim());
         }
-        if (req.getVisibility() != null) {
-            v.setVisibility(req.getVisibility());
+        if (req.getVisibility() != null && !req.getVisibility().isBlank()) {
+            String vis = req.getVisibility().trim().toUpperCase(Locale.ROOT);
+            if (!"PUBLIC".equals(vis) && !"PRIVATE".equals(vis)) {
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "visibility 값이 올바르지 않습니다.");
+            }
+            v.setVisibility(vis);
         }
         if (req.getVideoUrl() != null && !req.getVideoUrl().isBlank()) {
             String url = req.getVideoUrl().trim();

@@ -22,6 +22,9 @@ import {
   TEXT_SUB,
   TITLE_PAGE,
 } from '@/lib/ui/specClasses'
+import { resolveVideoThumbnailUrl } from '@/lib/audition/videoThumbnail'
+import { ChannelPublicSettings } from '@/components/channel/ChannelPublicSettings'
+import { VideoVisibilitySwitch } from '@/components/channel/VideoVisibilitySwitch'
 
 const videoSchema = z.object({
   title: z.string().min(1, '제목을 입력해주세요'),
@@ -50,7 +53,7 @@ export default function ChannelPage() {
   } = useForm<VideoFormData>({
     resolver: zodResolver(videoSchema),
     defaultValues: {
-      status: 'PUBLISHED',
+      status: 'PRIVATE',
     },
   })
 
@@ -97,6 +100,7 @@ export default function ChannelPage() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-channel-videos'] })
+      queryClient.invalidateQueries({ queryKey: ['me-channel-meta'] })
       setShowCreateForm(false)
       reset()
     },
@@ -106,6 +110,7 @@ export default function ChannelPage() {
     mutationFn: (id: string) => videoApi.deleteVideo(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-channel-videos'] })
+      queryClient.invalidateQueries({ queryKey: ['me-channel-meta'] })
     },
   })
 
@@ -113,6 +118,7 @@ export default function ChannelPage() {
     mutationFn: ({ id, data }: { id: string; data: VideoFormData }) => videoApi.updateVideo(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-channel-videos'] })
+      queryClient.invalidateQueries({ queryKey: ['me-channel-meta'] })
       setEditingVideo(null)
       setShowCreateForm(false)
       reset()
@@ -233,12 +239,14 @@ export default function ChannelPage() {
           <div className="py-12 text-center text-lg font-semibold text-gray-900">{t('loading')}</div>
         ) : videos && videos.content.length > 0 ? (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {videos.content.map((video) => (
+            {videos.content.map((video) => {
+              const thumbnailUrl = resolveVideoThumbnailUrl(video.videoUrl, video.thumbnailUrl)
+              return (
               <div key={video.id} className={CARD_MEDIA_SHELL}>
-                {video.thumbnailUrl ? (
+                {thumbnailUrl ? (
                   <div className="relative aspect-[16/9] w-full">
                     <Image
-                      src={video.thumbnailUrl}
+                      src={thumbnailUrl}
                       alt={video.title}
                       fill
                       unoptimized
@@ -254,14 +262,14 @@ export default function ChannelPage() {
                 <div className="p-4">
                   <div className="mb-2 flex items-start justify-between gap-2">
                     <h3 className="text-sm font-semibold text-gray-900 line-clamp-2">{video.title}</h3>
-                    {video.status === 'PUBLISHED' && (
-                      <span className="shrink-0 rounded-full bg-green-50 px-2 py-0.5 text-sm text-green-700">공개</span>
-                    )}
                   </div>
                   {video.category ? (
                     <span className="mb-2 inline-block rounded-full bg-gray-100 px-2 py-0.5 text-sm text-gray-700">{video.category}</span>
                   ) : null}
                   {video.description ? <p className={`${TEXT_SUB} mb-2 line-clamp-2`}>{video.description}</p> : null}
+                  <div className="mb-3">
+                    <VideoVisibilitySwitch video={video} />
+                  </div>
                   <div className={`${TEXT_SUB} mb-4 flex flex-col gap-1`}>
                     <span>조회수: {video.viewCount}</span>
                     <span>좋아요: {video.likeCount}</span>
@@ -280,7 +288,8 @@ export default function ChannelPage() {
                   </div>
                 </div>
               </div>
-            ))}
+              )
+            })}
           </div>
         ) : (
           <div className={CARD_BASE}>

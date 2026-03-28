@@ -16,6 +16,9 @@ public class PatchMyChannelRequest {
     @Size(max = 2048)
     private String bannerImageUrl;
 
+    /** null 이면 변경 없음 */
+    private Boolean isPublic;
+
     public String getChannelName() {
         return channelName;
     }
@@ -46,5 +49,13 @@ public class PatchMyChannelRequest {
 
     public void setBannerImageUrl(String bannerImageUrl) {
         this.bannerImageUrl = bannerImageUrl;
+    }
+
+    public Boolean getIsPublic() {
+        return isPublic;
+    }
+
+    public void setIsPublic(Boolean isPublic) {
+        this.isPublic = isPublic;
     }
 }

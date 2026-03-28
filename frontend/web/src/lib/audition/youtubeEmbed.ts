@@ -1,3 +1,10 @@
+/** youtube.com/watch?v= · youtu.be/ 형식(단순 공유 URL) */
+export function getYoutubeId(url: string): string | null {
+  const regExp = /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/
+  const match = (url ?? '').trim().match(regExp)
+  return match ? match[1] : null
+}
+
 /**
  * YouTube 공유/shorts/embed URL에서 11자 video id 추출 (미리보기용)
  */
@@ -28,7 +35,7 @@ export function extractYoutubeVideoId(raw: string): string | null {
   } catch {
     /* ignore */
   }
-  return null
+  return getYoutubeId(s)
 }
 
 /** 비어 있으면 true, 값이 있으면 YouTube로 해석 가능할 때만 true */

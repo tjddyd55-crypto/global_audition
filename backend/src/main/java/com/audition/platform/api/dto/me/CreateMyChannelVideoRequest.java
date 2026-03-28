@@ -20,8 +20,8 @@ public class CreateMyChannelVideoRequest {
     @Size(max = 100)
     private String category;
 
-    @NotBlank
-    @Pattern(regexp = "PUBLIC|PRIVATE")
+    /** 생략 시 PRIVATE */
+    @Pattern(regexp = "^$|PUBLIC|PRIVATE")
     private String visibility;
 
     public String getTitle() {

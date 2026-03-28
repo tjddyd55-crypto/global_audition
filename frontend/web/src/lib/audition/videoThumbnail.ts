@@ -9,5 +9,5 @@ export function resolveVideoThumbnailUrl(
   if (stored) return stored
   const id = extractYoutubeVideoId(videoUrl)
   if (!id) return null
-  return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`
+  return `https://img.youtube.com/vi/${id}/hqdefault.jpg`
 }
