@@ -54,6 +54,8 @@ export async function apiFetch(apiPath: string, options: ApiFetchOptions = {}): 
 
   return fetch(url, {
     ...rest,
+    /** Next.js 서버·클라이언트 fetch 기본 캐시로 목록이 고정되는 것 방지 */
+    cache: rest.cache ?? 'no-store',
     credentials: rest.credentials ?? 'include',
     headers,
   })

@@ -3,12 +3,11 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from '../../../i18n.config'
 import { useRouter as useNextRouter } from 'next/navigation'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { videoApi, VideoContent } from '../../../lib/api/videos'
 import { userApi } from '../../../lib/api/user'
 import { authApi } from '../../../lib/api/auth'
 import { useTranslations } from 'next-intl'
-import Image from 'next/image'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -20,14 +19,11 @@ import {
   TEXT_SUB,
   TITLE_PAGE,
 } from '@/lib/ui/specClasses'
-import { resolveVideoThumbnailUrl } from '@/lib/audition/videoThumbnail'
 import { ChannelSettingsPanel } from '@/components/channel/ChannelSettingsPanel'
-import { VideoVisibilitySwitch } from '@/components/channel/VideoVisibilitySwitch'
-import { channelVideoKeys, invalidateAfterChannelVideoMutation } from '@/lib/query/channelVideoQuery'
+import { invalidateAfterChannelVideoMutation } from '@/lib/query/channelVideoQuery'
+import { ChannelMyVideoList } from '@/components/channel/ChannelMyVideoList'
 
 /** 채널 설정 패널과 통일: 카드 16px, primary 그라데이션 버튼 */
-const CARD_VIDEO =
-  'overflow-hidden rounded-2xl border border-violet-100/90 bg-white shadow-[0_4px_24px_-4px_rgba(109,40,217,0.12)]'
 const BTN_UPLOAD_PRIMARY =
   'rounded-xl bg-gradient-to-r from-violet-600 via-fuchsia-600 to-pink-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/25 transition hover:brightness-105 active:scale-[0.99]'
 const CARD_CHANNEL_FORM =
@@ -94,14 +90,6 @@ export default function ChannelPage() {
 
     checkAuth()
   }, [router])
-
-  const { data: videos, isLoading } = useQuery({
-    queryKey: channelVideoKeys.mine,
-    queryFn: () => videoApi.getMyChannelVideos(),
-    enabled: userType === 'APPLICANT',
-    staleTime: 0,
-    refetchOnMount: 'always',
-  })
 
   const createMutation = useMutation({
     mutationFn: (data: VideoFormData) =>
@@ -254,76 +242,12 @@ export default function ChannelPage() {
           </div>
         )}
 
-        {isLoading ? (
-          <div className="py-12 text-center text-lg font-semibold text-gray-900">{t('loading')}</div>
-        ) : videos && videos.content.length > 0 ? (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {videos.content.map((video) => {
-              const thumbnailUrl = resolveVideoThumbnailUrl(video.videoUrl, video.thumbnailUrl)
-              return (
-              <div key={video.id} className={CARD_VIDEO}>
-                {thumbnailUrl ? (
-                  <div className="relative aspect-[16/9] w-full">
-                    <Image
-                      src={thumbnailUrl}
-                      alt={video.title}
-                      fill
-                      unoptimized
-                      sizes="(max-width: 768px) 100vw, 33vw"
-                      className="rounded-t-2xl object-cover"
-                    />
-                  </div>
-                ) : (
-                  <div className="flex aspect-[16/9] w-full items-center justify-center rounded-t-2xl bg-violet-50 text-sm text-violet-700/80">
-                    썸네일 없음
-                  </div>
-                )}
-                <div className="p-4">
-                  <div className="mb-2 flex items-start justify-between gap-2">
-                    <h3 className="text-sm font-semibold text-gray-900 line-clamp-2">{video.title}</h3>
-                  </div>
-                  {video.category ? (
-                    <span className="mb-2 inline-block rounded-full bg-violet-100/90 px-2.5 py-0.5 text-xs font-medium text-violet-800">
-                      {video.category}
-                    </span>
-                  ) : null}
-                  {video.description ? <p className={`${TEXT_SUB} mb-2 line-clamp-2`}>{video.description}</p> : null}
-                  <div className="mb-3">
-                    <VideoVisibilitySwitch video={video} />
-                  </div>
-                  <div className={`${TEXT_SUB} mb-4 flex flex-col gap-1`}>
-                    <span>조회수: {video.viewCount}</span>
-                    <span>좋아요: {video.likeCount}</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleEdit(video)}
-                      className="flex-1 rounded-xl border border-violet-200 bg-violet-50/60 px-4 py-2 text-sm font-semibold text-violet-800 transition hover:bg-violet-100/80"
-                    >
-                      수정
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(video.id)}
-                      className="flex-1 rounded-xl border border-red-100 bg-white px-4 py-2 text-sm font-medium text-red-600"
-                    >
-                      삭제
-                    </button>
-                  </div>
-                </div>
-              </div>
-              )
-            })}
-          </div>
-        ) : (
-          <div className={CARD_CHANNEL_FORM}>
-            <p className={`${TEXT_SUB} mb-4 text-center text-base`}>등록된 영상이 없습니다</p>
-            <button type="button" onClick={openUploadForm} className={`${BTN_UPLOAD_PRIMARY} mx-auto flex w-full max-w-xs justify-center`}>
-              첫 영상 추가하기
-            </button>
-          </div>
-        )}
+        <ChannelMyVideoList
+          loadingLabel={t('loading')}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          onOpenUploadForm={openUploadForm}
+        />
       </div>
     </div>
   )
