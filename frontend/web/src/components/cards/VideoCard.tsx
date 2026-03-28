@@ -1,13 +1,23 @@
 'use client'
 
 import Image from 'next/image'
-import { Link } from '../../i18n.config'
-import type { MockVideo } from '../../lib/mocks/videos'
 import { DEFAULT_IMAGES, FALLBACK_TEXT } from '../../lib/constants/fallbacks'
 import { AUDITION_CARD, VIDEO_CARD } from '../../lib/design-tokens'
 
+/** 목업·API 공통 카드 입력 (메인·목록 등에서 재사용) */
+export type VideoCardModel = {
+  id: string
+  title: string
+  channelName: string
+  channelAvatar: string
+  thumbnail: string | null
+  views: number
+  likes: number
+  category?: string
+}
+
 interface VideoCardProps {
-  video: MockVideo
+  video: VideoCardModel
   compact?: boolean
 }
 
