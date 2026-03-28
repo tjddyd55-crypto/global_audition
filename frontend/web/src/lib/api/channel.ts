@@ -4,6 +4,9 @@ import type { MyChannelVideoRow } from './videos'
 
 export type { MyChannelVideoRow }
 
+/** PATCH/GET 공통. PATCH 시 서버는 대문자·소문자 모두 허용(저장 시 소문자 정규화). */
+export type SnsPlatformCode = 'YOUTUBE' | 'INSTAGRAM' | 'TIKTOK' | 'TWITTER' | 'FACEBOOK' | 'OTHER'
+
 export type SnsLinkRow = {
   platform: string
   url: string
@@ -37,10 +40,80 @@ export type PatchMyChannelBody = {
   profileImage?: string | null
   profileImageUrl?: string | null
   bannerImageUrl?: string | null
-  /** 스펙 필드명 */
+  /** 채널 공개 여부(권장). `sanitizePatchMyChannelBody`에서 전송 시 정규화됨. */
+  isChannelPublic?: boolean
+  /** 레거시 (sanitize 시 isChannelPublic 으로 통합) */
   is_channel_public?: boolean
   isPublic?: boolean
   snsLinks?: SnsLinkRow[]
+}
+
+/**
+ * PATCH /me/channel 요청 본문 정리: 빈 문자열 필드 제거, 공개 플래그·SNS 플랫폼 키 통일.
+ * 백엔드 `is_channel_public` / `isChannelPublic` / `isPublic` 모두 수용.
+ */
+export function sanitizePatchMyChannelBody(body: PatchMyChannelBody): Record<string, unknown> {
+  const out: Record<string, unknown> = {}
+
+  const putNonEmptyString = (key: string, v: string | undefined) => {
+    if (v === undefined) return
+    const t = v.trim()
+    if (t === '') return
+    out[key] = t
+  }
+
+  putNonEmptyString('nickname', body.nickname)
+  putNonEmptyString('channelName', body.channelName)
+  putNonEmptyString('channelDescription', body.channelDescription)
+
+  if (body.introText !== undefined) {
+    if (body.introText === null) {
+      out.introText = null
+    } else {
+      const t = body.introText.trim()
+      out.introText = t === '' ? null : t
+    }
+  }
+
+  const channelPublic = body.isChannelPublic ?? body.is_channel_public ?? body.isPublic
+  if (channelPublic !== undefined) {
+    out.isChannelPublic = channelPublic
+  }
+
+  if (body.profileImage !== undefined) {
+    if (body.profileImage === null) {
+      out.profileImage = null
+    } else {
+      putNonEmptyString('profileImage', body.profileImage)
+    }
+  }
+  if (body.profileImageUrl !== undefined) {
+    if (body.profileImageUrl === null) {
+      out.profileImageUrl = null
+    } else {
+      putNonEmptyString('profileImageUrl', body.profileImageUrl)
+    }
+  }
+  if (body.bannerImageUrl !== undefined) {
+    if (body.bannerImageUrl === null) {
+      out.bannerImageUrl = null
+    } else {
+      putNonEmptyString('bannerImageUrl', body.bannerImageUrl)
+    }
+  }
+
+  if (body.snsLinks !== undefined) {
+    out.snsLinks = body.snsLinks
+      .map((row) => ({
+        platform: String(row.platform ?? '')
+          .trim()
+          .toUpperCase(),
+        url: String(row.url ?? '').trim(),
+      }))
+      .filter((row) => row.platform.length > 0 && row.url.length > 0)
+  }
+
+  return out
 }
 
 function normalizeChannel(raw: Record<string, unknown>): MyChannelSummary {
@@ -142,7 +215,7 @@ export const channelApi = {
   },
 
   patchMine: async (body: PatchMyChannelBody): Promise<MyChannelSummary> => {
-    const { data } = await apiClient.patch<unknown>('/me/channel', body)
+    const { data } = await apiClient.patch<unknown>('/me/channel', sanitizePatchMyChannelBody(body))
     return normalizeChannel(unwrapData(data) as Record<string, unknown>)
   },
 

@@ -3,39 +3,43 @@ package com.audition.platform.api.dto.me;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
 
 import java.util.List;
 
 public class PatchMyChannelRequest {
 
-    @Size(max = 200)
+    @Size(max = 200, message = "채널명은 200자 이하여야 합니다.")
     private String channelName;
 
-    @Size(max = 4000)
+    @Size(max = 4000, message = "채널 설명은 4000자 이하여야 합니다.")
     private String channelDescription;
 
     @JsonAlias("profileImage")
-    @Size(max = 2048)
+    @Size(max = 2048, message = "프로필 이미지 URL은 2048자 이하여야 합니다.")
     private String profileImageUrl;
 
-    @Size(max = 2048)
+    @Size(max = 2048, message = "배너 이미지 URL은 2048자 이하여야 합니다.")
     private String bannerImageUrl;
 
     /** null 이면 변경 없음 */
     private Boolean isPublic;
 
+    /** JSON: {@code is_channel_public}(권장) 또는 {@code isChannelPublic} */
     @JsonProperty("is_channel_public")
+    @JsonAlias({ "isChannelPublic", "channelPublic" })
     private Boolean isChannelPublic;
 
     /** 화면 채널 이름(닉네임 정책과 동일). 미전송 시 닉네임 미변경 */
-    @Size(max = 50)
+    @Size(max = 50, message = "채널 이름(닉네임)은 50자 이하여야 합니다.")
     private String nickname;
 
-    @Size(max = 4000)
+    @Size(max = 4000, message = "채널 소개는 4000자 이하여야 합니다.")
     private String introText;
 
     /** null 이면 SNS 미변경, 빈 배열이면 전체 삭제 */
+    @Valid
     private List<MeUserSnsLinkDto> snsLinks;
 
     public String getChannelName() {

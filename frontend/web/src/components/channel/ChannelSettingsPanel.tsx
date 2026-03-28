@@ -3,7 +3,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import Image from 'next/image'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { channelApi, type MyChannelSummary, type PatchMyChannelBody, type SnsLinkRow } from '@/lib/api/channel'
+import {
+  channelApi,
+  type MyChannelSummary,
+  type PatchMyChannelBody,
+  type SnsLinkRow,
+  type SnsPlatformCode,
+} from '@/lib/api/channel'
 import { uploadAuditionImage } from '@/lib/api/uploads'
 import { DEFAULT_IMAGES } from '@/lib/constants/fallbacks'
 
@@ -17,17 +23,33 @@ const BTN_GHOST =
 const BTN_SAVE =
   'w-full rounded-xl bg-gradient-to-r from-violet-600 via-fuchsia-600 to-pink-500 py-3.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/25 transition hover:brightness-105 active:scale-[0.99] disabled:opacity-50 disabled:hover:brightness-100'
 
-const SNS_BASE: { value: string; label: string }[] = [
-  { value: 'youtube', label: 'YouTube' },
-  { value: 'instagram', label: 'Instagram' },
-  { value: 'tiktok', label: 'TikTok' },
-  { value: 'other', label: '기타' },
+const SNS_BASE: { value: SnsPlatformCode; label: string }[] = [
+  { value: 'YOUTUBE', label: 'YouTube' },
+  { value: 'INSTAGRAM', label: 'Instagram' },
+  { value: 'TIKTOK', label: 'TikTok' },
+  { value: 'TWITTER', label: 'X (Twitter)' },
+  { value: 'FACEBOOK', label: 'Facebook' },
+  { value: 'OTHER', label: '기타' },
 ]
+
+/** GET 응답은 소문자 플랫폼일 수 있음 → 선택 값은 대문자 enum 과 맞춤 */
+function normalizePlatformFromApi(platform: string): string {
+  const lower = platform.trim().toLowerCase()
+  const map: Record<string, SnsPlatformCode> = {
+    youtube: 'YOUTUBE',
+    instagram: 'INSTAGRAM',
+    tiktok: 'TIKTOK',
+    twitter: 'TWITTER',
+    facebook: 'FACEBOOK',
+    other: 'OTHER',
+  }
+  return map[lower] ?? platform.trim()
+}
 
 function selectOptionsForRow(currentPlatform: string): { value: string; label: string }[] {
   const inBase = SNS_BASE.some((p) => p.value === currentPlatform)
   if (inBase) return SNS_BASE
-  return [...SNS_BASE, { value: currentPlatform, label: currentPlatform }]
+  return [...SNS_BASE, { value: currentPlatform as SnsPlatformCode, label: currentPlatform }]
 }
 
 const SWITCH =
@@ -62,13 +84,16 @@ function PublicToggle({
 }
 
 function mapSummaryToState(data: MyChannelSummary) {
-  const links = (data.snsLinks ?? []).map((l) => ({ platform: l.platform, url: l.url }))
+  const links = (data.snsLinks ?? []).map((l) => ({
+    platform: normalizePlatformFromApi(l.platform),
+    url: l.url,
+  }))
   return {
     nickname: data.nickname ?? data.channelName ?? '',
     introText: data.introText ?? '',
     profileImageUrl: data.profileImageUrl ?? data.profileImage ?? '',
     isPublic: Boolean(data.channelPublic ?? data.isPublic),
-    snsLinks: links.length > 0 ? links : [{ platform: 'youtube', url: '' }],
+    snsLinks: links.length > 0 ? links : [{ platform: 'YOUTUBE', url: '' }],
   }
 }
 
@@ -83,7 +108,7 @@ export function ChannelSettingsPanel() {
   const [introText, setIntroText] = useState('')
   const [profileImageUrl, setProfileImageUrl] = useState('')
   const [isPublic, setIsPublic] = useState(false)
-  const [snsLinks, setSnsLinks] = useState<SnsLinkRow[]>([{ platform: 'youtube', url: '' }])
+  const [snsLinks, setSnsLinks] = useState<SnsLinkRow[]>([{ platform: 'YOUTUBE', url: '' }])
   const [uploadBusy, setUploadBusy] = useState(false)
   const [dirty, setDirty] = useState(false)
 
@@ -138,13 +163,13 @@ export function ChannelSettingsPanel() {
       return
     }
     const payloadSns = snsLinks
-      .map((r) => ({ platform: r.platform.trim().toLowerCase(), url: r.url.trim() }))
+      .map((r) => ({ platform: r.platform.trim().toUpperCase(), url: r.url.trim() }))
       .filter((r) => r.platform.length > 0 && r.url.length > 0)
 
     const body: PatchMyChannelBody = {
       nickname: trimmedNick,
       introText: introText.trim() === '' ? null : introText.trim(),
-      is_channel_public: isPublic,
+      isChannelPublic: isPublic,
       profileImage: profileImageUrl.trim() === '' ? null : profileImageUrl.trim(),
       snsLinks: payloadSns,
     }
@@ -152,14 +177,14 @@ export function ChannelSettingsPanel() {
   }
 
   const addSnsRow = () => {
-    setSnsLinks((prev) => [...prev, { platform: 'youtube', url: '' }])
+    setSnsLinks((prev) => [...prev, { platform: 'YOUTUBE', url: '' }])
     markDirty()
   }
 
   const removeSnsRow = (idx: number) => {
     setSnsLinks((prev) => {
       const next = prev.filter((_, i) => i !== idx)
-      return next.length > 0 ? next : [{ platform: 'youtube', url: '' }]
+      return next.length > 0 ? next : [{ platform: 'YOUTUBE', url: '' }]
     })
     markDirty()
   }

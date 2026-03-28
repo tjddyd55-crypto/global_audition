@@ -59,7 +59,8 @@ public class UserSnsLinkReplacementService {
                 throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "SNS는 플랫폼과 URL을 함께 입력해 주세요.");
             }
             if (!ALLOWED_SNS_PLATFORMS.contains(platform)) {
-                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "지원하지 않는 SNS 플랫폼입니다.");
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                        "지원하지 않는 SNS 플랫폼입니다. 허용 값: YOUTUBE, INSTAGRAM, TIKTOK, TWITTER, FACEBOOK, OTHER");
             }
             assertHttpUrl(url);
             MeUserSnsLinkDto dto = new MeUserSnsLinkDto();

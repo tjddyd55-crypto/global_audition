@@ -44,7 +44,7 @@ export function ChannelPublicSettings() {
   })
 
   const patchMutation = useMutation({
-    mutationFn: (isPublic: boolean) => channelApi.patchMine({ isPublic }),
+    mutationFn: (isPublic: boolean) => channelApi.patchMine({ isChannelPublic: isPublic }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['me-channel-meta'] })
       await queryClient.invalidateQueries({ queryKey: ['my-channel-videos'] })

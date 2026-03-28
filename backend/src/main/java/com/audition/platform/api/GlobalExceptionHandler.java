@@ -11,12 +11,15 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
@@ -41,11 +44,17 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<?> handleValidation(MethodArgumentNotValidException ex, HttpServletRequest request) {
-        String message = ex.getBindingResult().getFieldErrors().stream()
-                .map(this::formatFieldError)
-                .collect(Collectors.joining(", "));
+        List<String> parts = new ArrayList<>();
+        for (FieldError fe : ex.getBindingResult().getFieldErrors()) {
+            parts.add(formatFieldError(fe));
+        }
+        for (ObjectError oe : ex.getBindingResult().getGlobalErrors()) {
+            String m = oe.getDefaultMessage();
+            parts.add(m != null && !m.isBlank() ? m : oe.getObjectName());
+        }
+        String message = parts.stream().filter(s -> s != null && !s.isBlank()).collect(Collectors.joining("; "));
         if (message.isBlank()) {
-            message = "Validation failed";
+            message = "입력 값을 확인해 주세요.";
         }
         log.warn("Validation failed on {} {}: {}", request.getMethod(), request.getRequestURI(), message);
         if (useSsotEnvelope(request)) {
@@ -146,8 +155,17 @@ public class GlobalExceptionHandler {
     }
 
     private String formatFieldError(FieldError fieldError) {
-        String defaultMessage = fieldError.getDefaultMessage() == null ? "is invalid" : fieldError.getDefaultMessage();
-        return fieldError.getField() + " " + defaultMessage;
+        String field = fieldError.getField();
+        String defaultMessage = fieldError.getDefaultMessage() == null ? "유효하지 않습니다." : fieldError.getDefaultMessage();
+        Object rej = fieldError.getRejectedValue();
+        if (rej != null && !(rej instanceof String s && s.isBlank())) {
+            String snippet = String.valueOf(rej);
+            if (snippet.length() > 80) {
+                snippet = snippet.substring(0, 80) + "…";
+            }
+            return field + ": " + defaultMessage + " (입력: \"" + snippet + "\")";
+        }
+        return field + ": " + defaultMessage;
     }
 
     /** /api/me/* 및 GET /api/auth/me — 프론트 SSOT 실패 포맷 */
