@@ -6,7 +6,6 @@ import { useQuery } from '@tanstack/react-query'
 import Image from 'next/image'
 import { channelApi } from '@/lib/api/channel'
 import { listPublicVideosForChannel } from '@/lib/api/channelVideoPublic'
-import { PAGE_CONTAINER } from '@/lib/ui/specClasses'
 import { channelVideoKeys } from '@/lib/query/channelVideoQuery'
 import { ChannelPublicVideoList } from '@/components/channel/ChannelPublicVideoList'
 
@@ -68,7 +67,7 @@ export default function ChannelByUserIdPage() {
 
   if (!userId) {
     return (
-      <div className={`${PAGE_CONTAINER} py-12`}>
+      <div className="w-full px-3 py-12">
         <p className="text-sm text-neutral-600">잘못된 주소입니다.</p>
       </div>
     )
@@ -76,7 +75,7 @@ export default function ChannelByUserIdPage() {
 
   if (isLoading) {
     return (
-      <div className={`${PAGE_CONTAINER} py-16`}>
+      <div className="w-full px-3 py-16">
         <p className="text-base font-medium text-neutral-700">프로필을 불러오는 중…</p>
       </div>
     )
@@ -88,7 +87,7 @@ export default function ChannelByUserIdPage() {
         ? (error as { response?: { status?: number } }).response?.status === 404
         : false
     return (
-      <div className={`${PAGE_CONTAINER} py-16`}>
+      <div className="w-full px-3 py-16">
         <div className="rounded-2xl border border-neutral-200 bg-white px-6 py-10 text-center shadow-sm">
           <p className="text-lg font-semibold text-neutral-900">
             {blocked ? '이 채널은 비공개입니다' : '채널을 불러오지 못했습니다'}
@@ -108,7 +107,7 @@ export default function ChannelByUserIdPage() {
 
   return (
     <div className="min-h-screen bg-neutral-100">
-      <div className={PAGE_CONTAINER}>
+      <div className="w-full px-3">
         {/* 프로필 헤더 */}
         <section className="relative mt-4 overflow-hidden rounded-2xl bg-gradient-to-br from-violet-600 via-fuchsia-600 to-indigo-800 px-4 py-6 shadow-xl sm:px-6 sm:py-8 md:px-8 md:py-10">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(255,255,255,0.12),_transparent_55%)]" />
@@ -188,7 +187,11 @@ export default function ChannelByUserIdPage() {
           ))}
         </div>
 
-        <div className="border border-t-0 border-neutral-200/80 bg-white px-3 py-6 sm:rounded-b-xl sm:px-6 sm:py-8">
+        <div
+          className={`border border-t-0 border-neutral-200/80 bg-white sm:rounded-b-xl ${
+            tab === 'videos' ? 'py-4' : 'px-3 py-6 sm:py-8'
+          }`}
+        >
           {tab === 'info' ? (
             <div className="mx-auto max-w-2xl space-y-6">
               {intro ? (
@@ -245,6 +248,8 @@ export default function ChannelByUserIdPage() {
               videosLoading={videosLoading}
               videosError={videosError}
               displayVideos={displayVideos}
+              channelDisplayName={nickname}
+              channelProfileImageUrl={profileUrl ?? null}
             />
           )}
         </div>

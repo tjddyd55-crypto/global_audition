@@ -1,13 +1,11 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import Image from 'next/image'
 import { useQuery } from '@tanstack/react-query'
-import { Link } from '@/i18n.config'
 import EmptyState from '@/components/ui/EmptyState'
+import { VideoListItem } from '@/components/video/VideoListItem'
 import { listBrowsePublicVideos } from '@/lib/api/channelVideoPublic'
 import { resolveVideoThumbnailUrl } from '@/lib/audition/videoThumbnail'
-import { DEFAULT_IMAGES } from '@/lib/constants/fallbacks'
 import { formatRelativeKo } from '@/lib/formatRelativeKo'
 import { channelVideoKeys } from '@/lib/query/channelVideoQuery'
 
@@ -71,74 +69,21 @@ export function VideosBrowsePageClient() {
       ) : sorted.length === 0 ? (
         <EmptyState message="아직 업로드된 공개 영상이 없습니다" />
       ) : (
-        <div>
-          {sorted.map((video, index) => {
-            const thumbnail = resolveVideoThumbnailUrl(video.videoUrl, video.thumbnailUrl)
-            const meta = [
-              video.channelDisplayName || '채널',
-              `${Number(video.viewCount ?? 0).toLocaleString('ko-KR')}회`,
-              formatRelativeKo(video.publishedAt ?? ''),
-            ]
-              .filter(Boolean)
-              .join(' · ')
-
-            return (
-              <article key={video.videoId} className={index > 0 ? 'mt-5 md:mt-6' : ''}>
-                <Link href={`/videos/${video.videoId}`} className="block">
-                  <div className="relative w-full overflow-hidden bg-black aspect-video">
-                    {thumbnail ? (
-                      <Image
-                        src={thumbnail}
-                        alt={video.title}
-                        fill
-                        className="object-cover"
-                        sizes="100vw"
-                        unoptimized
-                      />
-                    ) : (
-                      <div className="flex h-full min-h-[10rem] items-center justify-center text-sm text-neutral-500">
-                        썸네일 없음
-                      </div>
-                    )}
-                    {video.category ? (
-                      <span className="absolute right-2 top-2 rounded bg-black/70 px-2 py-0.5 text-xs font-medium text-white">
-                        {video.category}
-                      </span>
-                    ) : null}
-                  </div>
-                </Link>
-                <div className="flex items-start gap-3 px-3 py-2">
-                  <Link
-                    href={`/videos/${video.videoId}`}
-                    className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full bg-neutral-200"
-                    aria-label={`${video.channelDisplayName || '채널'} 프로필`}
-                  >
-                    {video.channelProfileImageUrl ? (
-                      <Image src={video.channelProfileImageUrl} alt="" fill className="object-cover" unoptimized />
-                    ) : (
-                      <Image src={DEFAULT_IMAGES.avatar} alt="" fill className="object-cover" unoptimized />
-                    )}
-                  </Link>
-                  <Link
-                    href={`/videos/${video.videoId}`}
-                    className="min-w-0 flex-1 text-inherit no-underline"
-                    aria-label={video.title}
-                  >
-                    <div className="text-sm font-semibold leading-snug text-neutral-900 line-clamp-2">{video.title}</div>
-                    <div className="mt-1 text-xs text-neutral-500">{meta}</div>
-                  </Link>
-                  <button
-                    type="button"
-                    className="-mr-1 shrink-0 rounded-full p-2 text-lg leading-none text-neutral-600 hover:bg-neutral-100"
-                    aria-label="메뉴"
-                    onClick={(e) => e.preventDefault()}
-                  >
-                    ⋮
-                  </button>
-                </div>
-              </article>
-            )
-          })}
+        <div className="w-full">
+          {sorted.map((video, index) => (
+            <div key={video.videoId} className={index > 0 ? 'mt-4' : ''}>
+              <VideoListItem
+                href={`/videos/${video.videoId}`}
+                title={video.title}
+                thumbnailSrc={resolveVideoThumbnailUrl(video.videoUrl, video.thumbnailUrl)}
+                channelName={video.channelDisplayName || '채널'}
+                channelImageSrc={video.channelProfileImageUrl}
+                viewCount={Number(video.viewCount ?? 0)}
+                dateLabel={formatRelativeKo(video.publishedAt ?? '')}
+                categoryBadge={video.category?.trim() || null}
+              />
+            </div>
+          ))}
         </div>
       )}
     </div>

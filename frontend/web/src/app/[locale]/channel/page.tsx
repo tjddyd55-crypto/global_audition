@@ -14,7 +14,6 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import {
   BTN_SECONDARY,
   INPUT_BASE,
-  PAGE_CONTAINER,
   SECTION_GAP,
   TEXT_SUB,
   TITLE_PAGE,
@@ -173,7 +172,7 @@ export default function ChannelPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-violet-50/40 to-neutral-50">
-      <div className={`${PAGE_CONTAINER} py-6 ${SECTION_GAP}`}>
+      <div className={`w-full px-3 py-6 ${SECTION_GAP}`}>
         <h1 className={TITLE_PAGE}>내 채널 관리</h1>
 
         <ChannelSettingsPanel />

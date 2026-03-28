@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { useParams } from 'next/navigation'
-import { Link } from '@/i18n.config'
+import { VideoListItem } from '@/components/video/VideoListItem'
 import { DEFAULT_IMAGES } from '@/lib/constants/fallbacks'
 import { getVideoEmbedSrc } from '@/lib/utils/videoEmbed'
 import { useAuthStore } from '@/lib/auth/authStore'
@@ -421,28 +421,21 @@ export function ApplicationVideoDetailClient() {
           </section>
         </div>
 
-        <aside className="w-full border-t border-neutral-200 px-3 py-6 lg:w-[360px] lg:flex-shrink-0 lg:border-t-0 lg:border-l lg:border-neutral-200 lg:py-4 lg:pl-4 lg:pr-3">
-          <h2 className="mb-3 text-base font-bold">추천 영상</h2>
-          <div className="flex flex-col gap-4">
-            {recommendations.map((item) => (
-              <Link key={item.applicationId} href={`/videos/${item.applicationId}`} className="flex gap-3 text-inherit no-underline">
-                <div className="relative h-[5.625rem] w-40 shrink-0 overflow-hidden bg-black">
-                  <Image
-                    src={item.thumbnailUrl || DEFAULT_IMAGES.videoThumbnail}
-                    alt=""
-                    fill
-                    className="object-cover"
-                    unoptimized
-                  />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="line-clamp-2 text-sm font-semibold leading-snug">{item.title}</div>
-                  <div className="mt-1 text-xs text-neutral-500">{item.channelDisplayName}</div>
-                  <div className="mt-0.5 text-xs text-neutral-500">
-                    {item.viewCount.toLocaleString('ko-KR')}회 · {formatRelativeKo(item.publishedAt)}
-                  </div>
-                </div>
-              </Link>
+        <aside className="w-full border-t border-neutral-200 px-0 py-6 lg:w-[360px] lg:flex-shrink-0 lg:border-t-0 lg:border-l lg:border-neutral-200 lg:py-4 lg:pl-4 lg:pr-3">
+          <h2 className="mb-3 px-3 text-base font-bold lg:px-0">추천 영상</h2>
+          <div className="w-full">
+            {recommendations.map((item, index) => (
+              <div key={item.applicationId} className={index > 0 ? 'mt-4' : ''}>
+                <VideoListItem
+                  href={`/videos/${item.applicationId}`}
+                  title={item.title}
+                  thumbnailSrc={item.thumbnailUrl}
+                  channelName={item.channelDisplayName}
+                  channelImageSrc={null}
+                  viewCount={item.viewCount}
+                  dateLabel={formatRelativeKo(item.publishedAt)}
+                />
+              </div>
             ))}
           </div>
         </aside>

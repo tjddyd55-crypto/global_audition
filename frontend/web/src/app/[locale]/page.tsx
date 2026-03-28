@@ -6,27 +6,15 @@ import { Link } from '../../i18n.config'
 import { useTranslations } from 'next-intl'
 import { auditionApi } from '../../lib/api/auditions'
 import AuditionCard from '../../components/cards/AuditionCard'
-import VideoCard, { type VideoCardModel } from '../../components/cards/VideoCard'
 import HeroSection from '../../components/home/HeroSection'
-import { listBrowsePublicVideos, type ChannelVideoBrowseItem } from '../../lib/api/channelVideoPublic'
+import { VideoListItem } from '../../components/video/VideoListItem'
+import { listBrowsePublicVideos } from '../../lib/api/channelVideoPublic'
 import { resolveVideoThumbnailUrl } from '../../lib/audition/videoThumbnail'
 import { channelVideoKeys } from '../../lib/query/channelVideoQuery'
 import { SkeletonAuditionCard, SkeletonVideoCard } from '../../components/ui/SkeletonCard'
 import EmptyState from '../../components/ui/EmptyState'
 import { LAYOUT } from '../../lib/design-tokens'
-
-function mapBrowseItemToVideoCard(v: ChannelVideoBrowseItem): VideoCardModel {
-  return {
-    id: v.videoId,
-    title: v.title,
-    channelName: v.channelDisplayName,
-    channelAvatar: v.channelProfileImageUrl ?? '',
-    thumbnail: resolveVideoThumbnailUrl(v.videoUrl, v.thumbnailUrl),
-    views: v.viewCount,
-    likes: v.likeCount,
-    category: v.category?.trim() || undefined,
-  }
-}
+import { formatRelativeKo } from '../../lib/formatRelativeKo'
 
 const containerStyle: React.CSSProperties = {
   maxWidth: LAYOUT.containerMaxWidth,
@@ -47,7 +35,7 @@ export default function HomePage() {
     queryFn: () => auditionApi.listOpen(),
     retry: 1,
   })
-  const { data: browseVideos = [], isLoading: videosLoading, isError: videosError } = useQuery({
+  const { data: browseVideosList = [], isLoading: videosLoading, isError: videosError } = useQuery({
     queryKey: channelVideoKeys.browse(null),
     queryFn: () => listBrowsePublicVideos(),
     staleTime: 0,
@@ -58,11 +46,11 @@ export default function HomePage() {
   const auditList = auditions ?? []
   const displayAuditions = auditList.slice(0, 3)
   const latestVideos = useMemo(() => {
-    const sorted = [...browseVideos].sort(
-      (a, b) => new Date(b.publishedAt ?? 0).getTime() - new Date(a.publishedAt ?? 0).getTime()
+    const sorted = [...browseVideosList].sort(
+      (a, b) => new Date(b.publishedAt ?? 0).getTime() - new Date(a.publishedAt ?? 0).getTime(),
     )
-    return sorted.slice(0, 3).map(mapBrowseItemToVideoCard)
-  }, [browseVideos])
+    return sorted.slice(0, 3)
+  }, [browseVideosList])
 
   const auditionsEmpty = !auditionsLoading && displayAuditions.length === 0
   const videosEmpty = !videosLoading && !videosError && latestVideos.length === 0
@@ -124,16 +112,18 @@ export default function HomePage() {
       </section>
 
       <section style={sectionStyle}>
-        <div style={containerStyle}>
+        <div className="w-full px-3">
           <div style={{ marginBottom: 24, textAlign: 'center' }}>
             <h2 style={{ fontSize: 24, fontWeight: 700, margin: '0 0 8px 0' }}>최신 영상</h2>
             <p style={{ fontSize: 14, color: '#666', margin: 0 }}>최근 업로드된 영상을 확인하세요</p>
           </div>
 
           {videosLoading ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 24 }}>
+            <div className="w-full">
               {[1, 2, 3].map((i) => (
-                <SkeletonVideoCard key={i} />
+                <div key={i} className={i > 1 ? 'mt-4' : ''}>
+                  <SkeletonVideoCard />
+                </div>
               ))}
             </div>
           ) : videosError ? (
@@ -141,15 +131,20 @@ export default function HomePage() {
           ) : videosEmpty ? (
             <EmptyState message="아직 공개된 영상이 없습니다" />
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 24 }}>
-              {latestVideos.map((video, i) => (
-                <Link
-                  key={video?.id ?? `video-${i}`}
-                  href={`/videos/${video.id}`}
-                  style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
-                >
-                  <VideoCard video={video} />
-                </Link>
+            <div className="w-full">
+              {latestVideos.map((v, i) => (
+                <div key={v.videoId} className={i > 0 ? 'mt-4' : ''}>
+                  <VideoListItem
+                    href={`/videos/${v.videoId}`}
+                    title={v.title}
+                    thumbnailSrc={resolveVideoThumbnailUrl(v.videoUrl, v.thumbnailUrl)}
+                    channelName={v.channelDisplayName || '채널'}
+                    channelImageSrc={v.channelProfileImageUrl}
+                    viewCount={Number(v.viewCount ?? 0)}
+                    dateLabel={formatRelativeKo(v.publishedAt ?? '')}
+                    categoryBadge={v.category?.trim() || null}
+                  />
+                </div>
               ))}
             </div>
           )}

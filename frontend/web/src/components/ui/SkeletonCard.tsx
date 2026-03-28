@@ -34,28 +34,25 @@ export function SkeletonAuditionCard() {
   )
 }
 
-export function SkeletonVideoCard() {
+/** 유튜브형 영상 행 스켈레톤(카드·테두리 없음) */
+export function SkeletonVideoListItem() {
   return (
-    <div
-      style={{
-        background: 'white',
-        border: `1px solid ${AUDITION_CARD.borderColor}`,
-        borderRadius: AUDITION_CARD.borderRadiusPx,
-        overflow: 'hidden',
-      }}
-      className="animate-pulse"
-    >
-      <div className="aspect-video w-full bg-[#e5e7eb]" />
-      <div style={{ padding: 16 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-          <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#e5e7eb' }} />
-          <div style={{ width: 80, height: 14, background: '#e5e7eb', borderRadius: 4 }} />
+    <div className="w-full animate-pulse">
+      <div className="aspect-video w-full bg-neutral-200" />
+      <div className="flex gap-3 px-3 py-2">
+        <div className="h-9 w-9 shrink-0 rounded-full bg-neutral-200" />
+        <div className="min-w-0 flex-1 space-y-2 pt-0.5">
+          <div className="h-4 w-full rounded bg-neutral-200" />
+          <div className="h-3 w-2/3 rounded bg-neutral-100" />
         </div>
-        <div style={{ height: 16, background: '#e5e7eb', borderRadius: 4, marginBottom: 8 }} />
-        <div style={{ height: 12, width: 120, background: '#f3f4f6', borderRadius: 4 }} />
+        <div className="h-8 w-8 shrink-0 rounded-full bg-neutral-100" />
       </div>
     </div>
   )
+}
+
+export function SkeletonVideoCard() {
+  return <SkeletonVideoListItem />
 }
 
 export function SkeletonChannelCard() {
