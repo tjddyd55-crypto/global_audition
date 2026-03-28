@@ -5,7 +5,6 @@ import { useParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { fetchApplicationPublic } from '@/lib/api/applicationPublicVideo'
 import { fetchChannelVideoPublic, type ChannelVideoPublicDetail } from '@/lib/api/channelVideoPublic'
-import { LAYOUT } from '@/lib/design-tokens'
 import { ApplicationVideoDetailClient } from './ApplicationVideoDetailClient'
 import { ChannelVideoDetailClient } from './ChannelVideoDetailClient'
 
@@ -60,19 +59,14 @@ export function VideoDetailPageClient() {
     }
   }, [id])
 
-  const outer = {
-    maxWidth: LAYOUT.containerMaxWidth,
-    margin: '0 auto',
-    padding: `24px ${LAYOUT.containerPaddingPx}px 80px`,
-    paddingTop: 88,
-  } as const
+  const outerClass = 'w-full px-3 pb-20 pt-[88px]'
 
   if (!id || route.kind === 'none') {
-    return <div style={outer}>영상을 찾을 수 없습니다.</div>
+    return <div className={outerClass}>영상을 찾을 수 없습니다.</div>
   }
 
   if (route.kind === 'loading') {
-    return <div style={outer}>불러오는 중…</div>
+    return <div className={outerClass}>불러오는 중…</div>
   }
 
   if (route.kind === 'channel') {

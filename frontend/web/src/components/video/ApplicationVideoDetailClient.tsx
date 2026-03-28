@@ -4,11 +4,11 @@ import Image from 'next/image'
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { useParams } from 'next/navigation'
 import { Link } from '@/i18n.config'
-import { LAYOUT } from '@/lib/design-tokens'
 import { DEFAULT_IMAGES } from '@/lib/constants/fallbacks'
 import { getVideoEmbedSrc } from '@/lib/utils/videoEmbed'
 import { useAuthStore } from '@/lib/auth/authStore'
 import { auditionApi } from '@/lib/api/auditions'
+import { formatRelativeKo } from '@/lib/formatRelativeKo'
 import {
   bumpApplicationViewPublic,
   deleteApplicationLike,
@@ -24,23 +24,7 @@ import {
 
 const ACCENT = '#7c3aed'
 const DESC_PREVIEW_CHARS = 140
-
-function formatRelativeKo(iso: string): string {
-  if (!iso) return ''
-  const t = Date.parse(iso)
-  if (Number.isNaN(t)) return ''
-  const diff = Date.now() - t
-  const sec = Math.floor(diff / 1000)
-  if (sec < 60) return '방금 전'
-  const min = Math.floor(sec / 60)
-  if (min < 60) return `${min}분 전`
-  const hr = Math.floor(min / 60)
-  if (hr < 24) return `${hr}시간 전`
-  const day = Math.floor(hr / 24)
-  if (day < 30) return `${day}일 전`
-  const mon = Math.floor(day / 30)
-  return `${mon}개월 전`
-}
+const BOOKMARK_STORAGE_KEY = 'ga-bookmarked-application-videos'
 
 function splitDescription(full: string): { preview: string; needsMore: boolean } {
   const t = (full ?? '').trim()
@@ -62,7 +46,24 @@ function actionBtnBase(active?: boolean): CSSProperties {
     color: '#111',
     fontSize: 14,
     cursor: 'pointer',
+    flexShrink: 0,
+    whiteSpace: 'nowrap',
   }
+}
+
+function readBookmarkIds(): Set<string> {
+  if (typeof window === 'undefined') return new Set()
+  try {
+    const raw = window.localStorage.getItem(BOOKMARK_STORAGE_KEY)
+    const parsed = raw ? JSON.parse(raw) : []
+    return new Set(Array.isArray(parsed) ? parsed.filter((x: unknown) => typeof x === 'string') : [])
+  } catch {
+    return new Set()
+  }
+}
+
+function writeBookmarkIds(ids: Set<string>) {
+  window.localStorage.setItem(BOOKMARK_STORAGE_KEY, JSON.stringify([...ids]))
 }
 
 export function ApplicationVideoDetailClient() {
@@ -82,6 +83,8 @@ export function ApplicationVideoDetailClient() {
   const [commentBusy, setCommentBusy] = useState(false)
   const [descriptionExpanded, setDescriptionExpanded] = useState(false)
   const [recommendations, setRecommendations] = useState<ApplicationRecommendItem[]>([])
+  const [shareHint, setShareHint] = useState(false)
+  const [savedLocal, setSavedLocal] = useState(false)
 
   const embedSrc = useMemo(() => {
     const url = detail?.videoUrl ?? ''
@@ -111,6 +114,10 @@ export function ApplicationVideoDetailClient() {
     } catch (e) {
       console.error(e)
     }
+  }, [applicationId])
+
+  useEffect(() => {
+    setSavedLocal(readBookmarkIds().has(applicationId))
   }, [applicationId])
 
   useEffect(() => {
@@ -184,6 +191,32 @@ export function ApplicationVideoDetailClient() {
     }
   }, [accessToken, applicationId, detail, isVoted, refreshDetail])
 
+  const onShare = useCallback(async () => {
+    const url = typeof window !== 'undefined' ? window.location.href : ''
+    const title = detail?.title ?? ''
+    try {
+      if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+        await navigator.share({ title, url })
+        return
+      }
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url)
+      }
+      setShareHint(true)
+      window.setTimeout(() => setShareHint(false), 2000)
+    } catch (e) {
+      if ((e as Error).name !== 'AbortError') console.error(e)
+    }
+  }, [detail?.title])
+
+  const onToggleSave = useCallback(() => {
+    const next = readBookmarkIds()
+    if (next.has(applicationId)) next.delete(applicationId)
+    else next.add(applicationId)
+    writeBookmarkIds(next)
+    setSavedLocal(next.has(applicationId))
+  }, [applicationId])
+
   const onSubmitComment = useCallback(async () => {
     if (!applicationId) return
     const text = commentDraft.trim()
@@ -208,127 +241,100 @@ export function ApplicationVideoDetailClient() {
     return null
   }
 
-  const outer: CSSProperties = {
-    maxWidth: LAYOUT.containerMaxWidth,
-    margin: '0 auto',
-    padding: `24px ${LAYOUT.containerPaddingPx}px 80px`,
-    paddingTop: 88,
-  }
+  const shellClass = 'w-full pb-20 pt-[88px]'
 
   if (isLoading && !detail) {
-    return <div style={outer}>불러오는 중…</div>
+    return <div className={shellClass}>불러오는 중…</div>
   }
 
   if (!detail) {
-    return <div style={outer}>영상을 찾을 수 없습니다.</div>
+    return <div className={shellClass}>영상을 찾을 수 없습니다.</div>
   }
 
   const showDesc = descriptionExpanded ? (detail.description ?? '') : descParts.preview
 
   return (
-    <div style={outer}>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, alignItems: 'flex-start' }}>
-        <div style={{ flex: '1 1 560px', minWidth: 0 }}>
-          <div
-            style={{
-              position: 'relative',
-              width: '100%',
-              paddingBottom: '56.25%',
-              background: '#000',
-              borderRadius: 12,
-              overflow: 'hidden',
-            }}
-          >
+    <div className={shellClass}>
+      <div className="flex flex-col lg:flex-row lg:items-start lg:gap-4">
+        <div className="min-w-0 flex-1">
+          <div className="aspect-video w-full bg-black">
             {embedSrc ? (
               <iframe
                 title={detail.title}
                 src={embedSrc}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
-                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none' }}
+                className="h-full w-full border-0"
               />
             ) : (
-              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+              <div className="flex h-full min-h-[12rem] items-center justify-center px-3 text-center text-sm text-white">
                 재생할 수 있는 영상 URL이 없습니다.
               </div>
             )}
           </div>
 
           {detail.category ? (
-            <span
-              style={{
-                display: 'inline-block',
-                marginTop: 12,
-                fontSize: 12,
-                fontWeight: 600,
-                color: ACCENT,
-              }}
-            >
-              {detail.category}
-            </span>
+            <div className="px-3 pt-2">
+              <span className="text-xs font-semibold" style={{ color: ACCENT }}>
+                {detail.category}
+              </span>
+            </div>
           ) : null}
 
-          <h1 style={{ fontSize: 22, fontWeight: 700, margin: '8px 0 12px', lineHeight: 1.3 }}>{detail.title}</h1>
-
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-            <p style={{ margin: 0, fontSize: 14, color: '#555' }}>
-              {detail.viewCount.toLocaleString('ko-KR')} 조회 · {formatRelativeKo(detail.publishedAt)}
-            </p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
-              <button type="button" disabled={likeBusy} onClick={() => void onLike()} style={actionBtnBase(isLiked)}>
-                <span aria-hidden>👍</span>
-                <span>{likeCount.toLocaleString('ko-KR')}</span>
-              </button>
-              <button type="button" style={actionBtnBase()}>
-                <span aria-hidden>👎</span>
-              </button>
-              <button type="button" disabled={voteBusy} onClick={() => void onVote()} style={actionBtnBase(isVoted)}>
-                {isVoted ? '투표 취소' : '투표하기'}
-              </button>
-              <button type="button" style={actionBtnBase()}>
-                공유
-              </button>
-              <button type="button" style={actionBtnBase()}>
-                ⚑
-              </button>
+          <div className="px-3 py-3">
+            <h1 className="text-base font-semibold leading-snug">{detail.title}</h1>
+            <div className="mt-1 text-sm text-neutral-500">
+              조회 {detail.viewCount.toLocaleString('ko-KR')}회 · {formatRelativeKo(detail.publishedAt)}
             </div>
           </div>
 
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 12,
-              marginTop: 20,
-              paddingBottom: 16,
-              borderBottom: '1px solid #eee',
-            }}
-          >
-            <div style={{ position: 'relative', width: 48, height: 48, borderRadius: '50%', overflow: 'hidden', flexShrink: 0 }}>
-              <Image
-                src={detail.channelProfileImageUrl || DEFAULT_IMAGES.avatar}
-                alt=""
-                fill
-                style={{ objectFit: 'cover' }}
-                unoptimized
-              />
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontWeight: 600, fontSize: 15 }}>{detail.channelDisplayName}</div>
-              <div style={{ fontSize: 13, color: '#666' }}>
-                구독자 {detail.subscriberCount.toLocaleString('ko-KR')}명
+          <div className="flex items-center gap-4 overflow-x-auto px-3 py-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <button type="button" disabled={likeBusy} onClick={() => void onLike()} style={actionBtnBase(isLiked)}>
+              <span aria-hidden>👍</span>
+              <span>{likeCount.toLocaleString('ko-KR')}</span>
+            </button>
+            <button type="button" style={actionBtnBase()}>
+              <span aria-hidden>👎</span>
+              <span>싫어요</span>
+            </button>
+            <button type="button" disabled={voteBusy} onClick={() => void onVote()} style={actionBtnBase(isVoted)}>
+              {isVoted ? '투표 취소' : '투표하기'}
+            </button>
+            <button type="button" onClick={() => void onShare()} style={actionBtnBase(shareHint)}>
+              <span aria-hidden>🔗</span>
+              <span>{shareHint ? '링크 복사됨' : '공유'}</span>
+            </button>
+            <button type="button" onClick={() => onToggleSave()} style={actionBtnBase(savedLocal)}>
+              <span aria-hidden>⭐</span>
+              <span>{savedLocal ? '저장됨' : '저장'}</span>
+            </button>
+          </div>
+
+          <div className="flex items-center justify-between gap-3 border-b border-neutral-200 px-3 py-3">
+            <div className="flex min-w-0 flex-1 items-center gap-3">
+              <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full">
+                <Image
+                  src={detail.channelProfileImageUrl || DEFAULT_IMAGES.avatar}
+                  alt=""
+                  fill
+                  className="object-cover"
+                  unoptimized
+                />
+              </div>
+              <div className="min-w-0">
+                <div className="text-sm font-semibold">{detail.channelDisplayName}</div>
+                <div className="text-xs text-neutral-500">
+                  구독자 {detail.subscriberCount.toLocaleString('ko-KR')}명
+                </div>
               </div>
             </div>
             <button
               type="button"
+              className="shrink-0 px-4 py-1 text-sm font-semibold text-white"
               style={{
-                padding: '10px 20px',
                 borderRadius: 999,
                 border: 'none',
                 background: `linear-gradient(90deg, ${ACCENT}, #ec4899)`,
-                color: '#fff',
-                fontWeight: 600,
-                fontSize: 14,
                 cursor: 'pointer',
               }}
             >
@@ -336,89 +342,75 @@ export function ApplicationVideoDetailClient() {
             </button>
           </div>
 
-          <div style={{ marginTop: 16, padding: 16, background: '#f3f4f6', borderRadius: 12, fontSize: 14, lineHeight: 1.6, color: '#222' }}>
-            <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{showDesc}</p>
+          <div className="border-b border-neutral-200 px-3 py-3 text-sm leading-relaxed text-neutral-800">
+            <p className="m-0 whitespace-pre-wrap">{showDesc}</p>
             {descParts.needsMore ? (
               <button
                 type="button"
                 onClick={() => setDescriptionExpanded((v) => !v)}
-                style={{ marginTop: 8, border: 'none', background: 'none', padding: 0, color: ACCENT, fontWeight: 600, cursor: 'pointer' }}
+                className="mt-2 border-0 bg-transparent p-0 text-sm font-semibold"
+                style={{ color: ACCENT, cursor: 'pointer' }}
               >
                 {descriptionExpanded ? '접기' : '더보기'}
               </button>
             ) : null}
           </div>
 
-          <section style={{ marginTop: 28 }}>
-            <h2 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 16px' }}>댓글 {comments.length}개</h2>
-            <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: 20, padding: 12, background: '#f3f4f6', borderRadius: 12 }}>
-              <div style={{ position: 'relative', width: 40, height: 40, borderRadius: '50%', overflow: 'hidden', flexShrink: 0 }}>
-                <Image src={DEFAULT_IMAGES.avatar} alt="" fill style={{ objectFit: 'cover' }} unoptimized />
+          <section className="px-3 pt-4">
+            <h2 className="mb-3 text-base font-bold">댓글 {comments.length}개</h2>
+            <div className="mb-4 flex gap-3 border-b border-neutral-200 pb-4">
+              <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full">
+                <Image src={DEFAULT_IMAGES.avatar} alt="" fill className="object-cover" unoptimized />
               </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="min-w-0 flex-1">
                 <input
                   type="text"
                   value={commentDraft}
                   onChange={(e) => setCommentDraft(e.target.value)}
                   placeholder="댓글을 입력하세요..."
-                  style={{
-                    width: '100%',
-                    boxSizing: 'border-box',
-                    padding: '10px 12px',
-                    borderRadius: 8,
-                    border: '1px solid #ddd',
-                    fontSize: 14,
-                    marginBottom: 8,
-                  }}
+                  className="mb-2 box-border w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
                 />
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-                  <button type="button" onClick={() => setCommentDraft('')} style={{ border: 'none', background: 'none', color: '#666', cursor: 'pointer' }}>
+                <div className="flex justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setCommentDraft('')}
+                    className="cursor-pointer border-0 bg-transparent text-sm text-neutral-600"
+                  >
                     취소
                   </button>
                   <button
                     type="button"
                     disabled={commentBusy}
                     onClick={() => void onSubmitComment()}
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 6,
-                      padding: '8px 16px',
-                      borderRadius: 999,
-                      border: 'none',
-                      background: ACCENT,
-                      color: '#fff',
-                      fontWeight: 600,
-                      fontSize: 14,
-                      cursor: 'pointer',
-                    }}
+                    className="cursor-pointer rounded-full border-0 px-4 py-2 text-sm font-semibold text-white"
+                    style={{ background: ACCENT }}
                   >
                     댓글
                   </button>
                 </div>
               </div>
             </div>
-            <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+            <ul className="m-0 list-none p-0">
               {comments.map((c) => (
-                <li key={c.id} style={{ display: 'flex', gap: 12, padding: '16px 0', borderBottom: '1px solid #eee' }}>
-                  <div style={{ position: 'relative', width: 40, height: 40, borderRadius: '50%', overflow: 'hidden', flexShrink: 0 }}>
+                <li key={c.id} className="flex gap-3 border-b border-neutral-200 py-4 last:border-b-0">
+                  <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full">
                     <Image
                       src={c.authorProfileImageUrl || DEFAULT_IMAGES.avatar}
                       alt=""
                       fill
-                      style={{ objectFit: 'cover' }}
+                      className="object-cover"
                       unoptimized
                     />
                   </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
-                      <span style={{ fontWeight: 600, fontSize: 14 }}>{c.authorDisplayName}</span>
-                      <span style={{ fontSize: 12, color: '#888' }}>{formatRelativeKo(c.createdAt)}</span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-baseline gap-2">
+                      <span className="text-sm font-semibold">{c.authorDisplayName}</span>
+                      <span className="text-xs text-neutral-500">{formatRelativeKo(c.createdAt)}</span>
                     </div>
-                    <p style={{ margin: '6px 0 8px', fontSize: 14, lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{c.content}</p>
-                    <div style={{ display: 'flex', gap: 12, alignItems: 'center', fontSize: 13, color: '#666' }}>
+                    <p className="mt-1 mb-0 text-sm leading-relaxed whitespace-pre-wrap">{c.content}</p>
+                    <div className="mt-2 flex items-center gap-3 text-xs text-neutral-500">
                       <span>👍 0</span>
-                      <button type="button" style={{ border: 'none', background: 'none', padding: 0, color: '#666', cursor: 'pointer' }}>
+                      <button type="button" className="cursor-pointer border-0 bg-transparent p-0 text-neutral-500">
                         답글
                       </button>
                     </div>
@@ -429,29 +421,25 @@ export function ApplicationVideoDetailClient() {
           </section>
         </div>
 
-        <aside style={{ flex: '0 0 300px', width: '100%', maxWidth: 360 }}>
-          <h2 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 16px' }}>추천 영상</h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <aside className="w-full border-t border-neutral-200 px-3 py-6 lg:w-[360px] lg:flex-shrink-0 lg:border-t-0 lg:border-l lg:border-neutral-200 lg:py-4 lg:pl-4 lg:pr-3">
+          <h2 className="mb-3 text-base font-bold">추천 영상</h2>
+          <div className="flex flex-col gap-4">
             {recommendations.map((item) => (
-              <Link
-                key={item.applicationId}
-                href={`/videos/${item.applicationId}`}
-                style={{ textDecoration: 'none', color: 'inherit', display: 'flex', gap: 10 }}
-              >
-                <div style={{ position: 'relative', width: 160, height: 90, flexShrink: 0, borderRadius: 8, overflow: 'hidden', background: '#eee' }}>
+              <Link key={item.applicationId} href={`/videos/${item.applicationId}`} className="flex gap-3 text-inherit no-underline">
+                <div className="relative h-[5.625rem] w-40 shrink-0 overflow-hidden bg-black">
                   <Image
                     src={item.thumbnailUrl || DEFAULT_IMAGES.videoThumbnail}
                     alt=""
                     fill
-                    style={{ objectFit: 'cover' }}
+                    className="object-cover"
                     unoptimized
                   />
                 </div>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.35, marginBottom: 6 }}>{item.title}</div>
-                  <div style={{ fontSize: 12, color: '#666' }}>{item.channelDisplayName}</div>
-                  <div style={{ fontSize: 12, color: '#888', marginTop: 4 }}>
-                    {item.viewCount.toLocaleString('ko-KR')} 조회 · {formatRelativeKo(item.publishedAt)}
+                <div className="min-w-0 flex-1">
+                  <div className="line-clamp-2 text-sm font-semibold leading-snug">{item.title}</div>
+                  <div className="mt-1 text-xs text-neutral-500">{item.channelDisplayName}</div>
+                  <div className="mt-0.5 text-xs text-neutral-500">
+                    {item.viewCount.toLocaleString('ko-KR')}회 · {formatRelativeKo(item.publishedAt)}
                   </div>
                 </div>
               </Link>

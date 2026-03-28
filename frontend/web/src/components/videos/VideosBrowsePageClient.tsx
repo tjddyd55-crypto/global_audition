@@ -1,6 +1,5 @@
 'use client'
 
-import type { CSSProperties } from 'react'
 import { useMemo, useState } from 'react'
 import Image from 'next/image'
 import { useQuery } from '@tanstack/react-query'
@@ -8,16 +7,11 @@ import { Link } from '@/i18n.config'
 import EmptyState from '@/components/ui/EmptyState'
 import { listBrowsePublicVideos } from '@/lib/api/channelVideoPublic'
 import { resolveVideoThumbnailUrl } from '@/lib/audition/videoThumbnail'
-import { LAYOUT } from '@/lib/design-tokens'
+import { DEFAULT_IMAGES } from '@/lib/constants/fallbacks'
+import { formatRelativeKo } from '@/lib/formatRelativeKo'
 import { channelVideoKeys } from '@/lib/query/channelVideoQuery'
 
 const CATEGORIES = ['전체 카테고리', 'Vocal', 'Dance', 'Rap'] as const
-
-const containerStyle: CSSProperties = {
-  maxWidth: LAYOUT.containerMaxWidth,
-  margin: '0 auto',
-  padding: `0 ${LAYOUT.containerPaddingPx}px`,
-}
 
 export function VideosBrowsePageClient() {
   const [sortBy, setSortBy] = useState<'latest' | 'popular'>('latest')
@@ -35,22 +29,22 @@ export function VideosBrowsePageClient() {
     return list.sort((a, b) =>
       sortBy === 'latest'
         ? new Date(b.publishedAt ?? 0).getTime() - new Date(a.publishedAt ?? 0).getTime()
-        : (b.viewCount ?? 0) - (a.viewCount ?? 0)
+        : (b.viewCount ?? 0) - (a.viewCount ?? 0),
     )
   }, [sortBy, videos])
 
   return (
-    <div style={{ ...containerStyle, paddingTop: 80, paddingBottom: 80 }}>
-      <div style={{ marginBottom: 32 }}>
-        <h1 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 8px 0' }}>영상 둘러보기</h1>
-        <p style={{ fontSize: 16, color: '#666', margin: 0 }}>실제 공개 영상이 최신 상태로 반영됩니다</p>
+    <div className="w-full pb-16 pt-20">
+      <div className="px-3 pb-6">
+        <h1 className="text-[28px] font-bold leading-tight">영상 둘러보기</h1>
+        <p className="mt-2 text-base text-neutral-600">실제 공개 영상이 최신 상태로 반영됩니다</p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12, marginBottom: 24 }}>
+      <div className="mb-4 flex flex-wrap gap-2 px-3">
         <select
           value={filterCategory}
           onChange={(e) => setFilterCategory(e.target.value as (typeof CATEGORIES)[number])}
-          style={{ height: 40, borderRadius: 8, border: '1px solid #ddd', padding: '0 12px', fontSize: 14 }}
+          className="h-10 min-w-0 flex-1 rounded-lg border border-neutral-300 px-3 text-sm sm:flex-none sm:min-w-[160px]"
         >
           {CATEGORIES.map((c) => (
             <option key={c} value={c}>
@@ -61,7 +55,7 @@ export function VideosBrowsePageClient() {
         <select
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value as 'latest' | 'popular')}
-          style={{ height: 40, borderRadius: 8, border: '1px solid #ddd', padding: '0 12px', fontSize: 14 }}
+          className="h-10 min-w-0 flex-1 rounded-lg border border-neutral-300 px-3 text-sm sm:flex-none sm:min-w-[120px]"
         >
           <option value="latest">최신순</option>
           <option value="popular">인기순</option>
@@ -71,55 +65,78 @@ export function VideosBrowsePageClient() {
       {isLoading ? (
         <div className="py-12 text-center text-sm text-neutral-500">영상을 불러오는 중…</div>
       ) : isError ? (
-        <div className="rounded-2xl border border-red-100 bg-red-50 px-6 py-10 text-center text-sm text-red-600">
+        <div className="border border-red-100 bg-red-50 px-3 py-8 text-center text-sm text-red-600">
           영상 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.
         </div>
       ) : sorted.length === 0 ? (
         <EmptyState message="아직 업로드된 공개 영상이 없습니다" />
       ) : (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {sorted.map((video) => {
+        <div>
+          {sorted.map((video, index) => {
             const thumbnail = resolveVideoThumbnailUrl(video.videoUrl, video.thumbnailUrl)
+            const meta = [
+              video.channelDisplayName || '채널',
+              `${Number(video.viewCount ?? 0).toLocaleString('ko-KR')}회`,
+              formatRelativeKo(video.publishedAt ?? ''),
+            ]
+              .filter(Boolean)
+              .join(' · ')
+
             return (
-              <Link
-                key={video.videoId}
-                href={`/videos/${video.videoId}`}
-                className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-md"
-              >
-                <div className="relative aspect-video w-full overflow-hidden bg-neutral-100">
-                  {thumbnail ? (
-                    <Image
-                      src={thumbnail}
-                      alt={video.title}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
-                      unoptimized
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center text-sm text-neutral-500">썸네일 없음</div>
-                  )}
-                  {video.category ? (
-                    <span className="absolute right-3 top-3 rounded-full bg-black/70 px-2.5 py-1 text-xs font-medium text-white">
-                      {video.category}
-                    </span>
-                  ) : null}
-                </div>
-                <div className="space-y-3 p-4">
-                  <div className="flex items-center gap-2">
-                    <div className="relative h-8 w-8 overflow-hidden rounded-full bg-neutral-100">
-                      {video.channelProfileImageUrl ? (
-                        <Image src={video.channelProfileImageUrl} alt="" fill className="object-cover" unoptimized />
-                      ) : null}
-                    </div>
-                    <span className="truncate text-sm text-neutral-600">{video.channelDisplayName || '채널'}</span>
+              <article key={video.videoId} className={index > 0 ? 'mt-5 md:mt-6' : ''}>
+                <Link href={`/videos/${video.videoId}`} className="block">
+                  <div className="relative w-full overflow-hidden bg-black aspect-video">
+                    {thumbnail ? (
+                      <Image
+                        src={thumbnail}
+                        alt={video.title}
+                        fill
+                        className="object-cover"
+                        sizes="100vw"
+                        unoptimized
+                      />
+                    ) : (
+                      <div className="flex h-full min-h-[10rem] items-center justify-center text-sm text-neutral-500">
+                        썸네일 없음
+                      </div>
+                    )}
+                    {video.category ? (
+                      <span className="absolute right-2 top-2 rounded bg-black/70 px-2 py-0.5 text-xs font-medium text-white">
+                        {video.category}
+                      </span>
+                    ) : null}
                   </div>
-                  <h2 className="line-clamp-2 text-base font-semibold text-neutral-900">{video.title}</h2>
-                  <p className="text-sm text-neutral-500">
-                    조회 {Number(video.viewCount ?? 0).toLocaleString()} · 좋아요 {Number(video.likeCount ?? 0).toLocaleString()}
-                  </p>
+                </Link>
+                <div className="flex items-start gap-3 px-3 py-2">
+                  <Link
+                    href={`/videos/${video.videoId}`}
+                    className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full bg-neutral-200"
+                    aria-label={`${video.channelDisplayName || '채널'} 프로필`}
+                  >
+                    {video.channelProfileImageUrl ? (
+                      <Image src={video.channelProfileImageUrl} alt="" fill className="object-cover" unoptimized />
+                    ) : (
+                      <Image src={DEFAULT_IMAGES.avatar} alt="" fill className="object-cover" unoptimized />
+                    )}
+                  </Link>
+                  <Link
+                    href={`/videos/${video.videoId}`}
+                    className="min-w-0 flex-1 text-inherit no-underline"
+                    aria-label={video.title}
+                  >
+                    <div className="text-sm font-semibold leading-snug text-neutral-900 line-clamp-2">{video.title}</div>
+                    <div className="mt-1 text-xs text-neutral-500">{meta}</div>
+                  </Link>
+                  <button
+                    type="button"
+                    className="-mr-1 shrink-0 rounded-full p-2 text-lg leading-none text-neutral-600 hover:bg-neutral-100"
+                    aria-label="메뉴"
+                    onClick={(e) => e.preventDefault()}
+                  >
+                    ⋮
+                  </button>
                 </div>
-              </Link>
+              </article>
             )
           })}
         </div>
