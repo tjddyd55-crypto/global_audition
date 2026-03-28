@@ -1,6 +1,7 @@
 package com.audition.platform.api;
 
 import com.audition.platform.api.dto.ApiEnvelope;
+import com.audition.platform.api.dto.channel.PublicChannelListItemResponse;
 import com.audition.platform.api.dto.channel.PublicChannelResponse;
 import com.audition.platform.application.me.MyChannelService;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -8,6 +9,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -18,6 +20,11 @@ public class PublicChannelController {
 
     public PublicChannelController(MyChannelService myChannelService) {
         this.myChannelService = myChannelService;
+    }
+
+    @GetMapping("/public")
+    public ApiEnvelope<List<PublicChannelListItemResponse>> listPublicChannels() {
+        return ApiEnvelope.ok(myChannelService.listPublicChannelsForDiscovery());
     }
 
     @GetMapping("/{userId}")

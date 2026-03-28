@@ -2,25 +2,24 @@
 
 import Image from 'next/image'
 import { Link } from '../../i18n.config'
-import type { MockChannel } from '../../lib/mocks/channels'
+import type { PublicChannelListItem } from '../../lib/api/channel'
 import { DEFAULT_IMAGES, FALLBACK_TEXT } from '../../lib/constants/fallbacks'
 import { AUDITION_CARD, CHANNEL_CARD } from '../../lib/design-tokens'
 
 interface ChannelCardProps {
-  channel: MockChannel
+  channel: PublicChannelListItem
 }
 
 const safeStr = (v: unknown): string => (v != null && typeof v === 'string' ? v : '')
 
 export default function ChannelCard({ channel }: ChannelCardProps) {
   if (!channel) return null
-  const name = safeStr(channel.name)
-  const description = safeStr(channel.description)
-  const avatar = channel?.avatar ?? ''
-  const id = channel?.id ?? ''
-  const subscribers = Number(channel?.subscribers ?? 0)
-  const videoCount = Number(channel?.videoCount ?? 0)
-  const totalViews = Number(channel?.totalViews ?? 0)
+  const name = safeStr(channel.nickname)
+  const description = safeStr(channel.introText)
+  const avatar = channel.profileImage?.trim() ?? ''
+  const id = channel.userId
+  const subscribers = Number(channel.subscriberCount ?? 0)
+  const videoCount = Number(channel.videoCount ?? 0)
 
   return (
     <article
@@ -74,7 +73,7 @@ export default function ChannelCard({ channel }: ChannelCardProps) {
           color: CHANNEL_CARD.statsColor,
         }}
       >
-        구독자 {subscribers.toLocaleString()} · 영상 {videoCount.toLocaleString()} · 조회 {totalViews.toLocaleString()}
+        구독자 {subscribers.toLocaleString()} · 영상 {videoCount.toLocaleString()}
       </div>
 
       <Link

@@ -93,6 +93,7 @@ export function ChannelSettingsPanel() {
       await queryClient.invalidateQueries({ queryKey: ['me-channel-meta'] })
       await queryClient.invalidateQueries({ queryKey: ['my-channel-videos'] })
       await queryClient.invalidateQueries({ queryKey: ['public-channel'] })
+      await queryClient.invalidateQueries({ queryKey: ['channels-public'] })
       setDirty(false)
     },
   })

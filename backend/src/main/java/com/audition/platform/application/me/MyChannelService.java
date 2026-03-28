@@ -1,5 +1,6 @@
 package com.audition.platform.application.me;
 
+import com.audition.platform.api.dto.channel.PublicChannelListItemResponse;
 import com.audition.platform.api.dto.channel.PublicChannelResponse;
 import com.audition.platform.api.dto.me.*;
 import com.audition.platform.domain.channel.Channel;
@@ -20,8 +21,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -110,6 +114,51 @@ public class MyChannelService {
     /**
      * 공개 채널 페이지. 비공개·미존재는 404(존재 여부 노출 최소화).
      */
+    /**
+     * 디스커버리: 채널 공개 ON + 공개 영상 1개 이상인 지원자(·관리자) 채널만.
+     */
+    @Transactional(readOnly = true)
+    public List<PublicChannelListItemResponse> listPublicChannelsForDiscovery() {
+        List<UUID> ownerIds = channelVideoRepository.findDistinctOwnerIdsForPublicChannelListing(
+                ChannelVideoVisibility.PUBLIC);
+        if (ownerIds.isEmpty()) {
+            return List.of();
+        }
+        Map<UUID, User> users = userRepository.findAllById(ownerIds).stream()
+                .collect(Collectors.toMap(User::getId, u -> u));
+        List<PublicChannelListItemResponse> rows = new ArrayList<>();
+        for (UUID ownerId : ownerIds) {
+            User u = users.get(ownerId);
+            if (u == null || !u.isChannelPublic()) {
+                continue;
+            }
+            long pubCount = channelVideoRepository.countByOwnerIdAndVisibility(ownerId,
+                    ChannelVideoVisibility.PUBLIC);
+            if (pubCount <= 0) {
+                continue;
+            }
+            var ch = channelRepository.findByOwnerId(ownerId);
+            long sub = ch.map(Channel::getSubscriberCount).orElse(0L);
+            String profile = firstNonBlankTrimmed(u.getProfileImageUrl(),
+                    ch.map(Channel::getProfileImageUrl).orElse(null));
+            PublicChannelListItemResponse row = new PublicChannelListItemResponse();
+            row.setUserId(ownerId.toString());
+            row.setNickname(u.getNickname());
+            row.setProfileImage(profile);
+            row.setIntroText(trimToNull(u.getIntroText()));
+            row.setSubscriberCount(sub);
+            row.setVideoCount(pubCount);
+            rows.add(row);
+        }
+        rows.sort(Comparator.comparing(
+                r -> {
+                    User ux = users.get(UUID.fromString(r.getUserId()));
+                    return ux != null ? ux.getDisplayName() : "";
+                },
+                String.CASE_INSENSITIVE_ORDER));
+        return rows;
+    }
+
     public PublicChannelResponse getPublicChannelByUserId(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "채널을 찾을 수 없습니다."));

@@ -46,4 +46,19 @@ public interface ChannelVideoRepository extends JpaRepository<ChannelVideo, UUID
             @Param("category") String category,
             @Param("excludeId") UUID excludeId,
             Pageable pageable);
+
+    long countByOwnerIdAndVisibility(UUID ownerId, String visibility);
+
+    /**
+     * 채널 공개 사용자 중, 공개(PUBLIC) 영상이 1개 이상 있는 소유자 ID (중복 제거).
+     */
+    @Query("""
+            SELECT DISTINCT v.ownerId FROM ChannelVideo v, User u
+            WHERE v.ownerId = u.id
+              AND v.visibility = :visibility
+              AND u.channelPublic = true
+              AND (u.role = 'APPLICANT' OR u.role = 'ADMIN')
+              AND u.accountStatus = 'ACTIVE'
+            """)
+    List<UUID> findDistinctOwnerIdsForPublicChannelListing(@Param("visibility") String visibility);
 }

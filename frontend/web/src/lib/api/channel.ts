@@ -85,6 +85,16 @@ function normalizeChannel(raw: Record<string, unknown>): MyChannelSummary {
 
 export type PublicChannelVideo = MyChannelVideoRow
 
+/** GET /channels/public 리스트 항목 */
+export type PublicChannelListItem = {
+  userId: string
+  nickname: string
+  profileImage: string | null
+  introText: string | null
+  subscriberCount: number
+  videoCount: number
+}
+
 export type PublicChannelResponse = {
   userId: string
   displayName: string
@@ -103,7 +113,29 @@ export type PublicChannelResponse = {
   snsLinks?: SnsLinkRow[]
 }
 
+function parsePublicChannelListItem(raw: Record<string, unknown>): PublicChannelListItem {
+  const prof =
+    (raw.profileImage as string | null | undefined) ??
+    (raw.profileImageUrl as string | null | undefined) ??
+    null
+  return {
+    userId: String(raw.userId ?? ''),
+    nickname: String(raw.nickname ?? ''),
+    profileImage: prof != null && String(prof).trim() !== '' ? String(prof) : null,
+    introText: raw.introText != null ? String(raw.introText) : null,
+    subscriberCount: Number(raw.subscriberCount ?? 0) || 0,
+    videoCount: Number(raw.videoCount ?? 0) || 0,
+  }
+}
+
 export const channelApi = {
+  listPublic: async (): Promise<PublicChannelListItem[]> => {
+    const { data } = await apiClient.get<unknown>('/channels/public')
+    const unwrapped = unwrapData(data)
+    if (!Array.isArray(unwrapped)) return []
+    return unwrapped.map((x) => parsePublicChannelListItem(x as Record<string, unknown>))
+  },
+
   getMine: async (): Promise<MyChannelSummary> => {
     const { data } = await apiClient.get<unknown>('/me/channel')
     return normalizeChannel(unwrapData(data) as Record<string, unknown>)

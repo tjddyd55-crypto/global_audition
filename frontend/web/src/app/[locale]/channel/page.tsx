@@ -107,6 +107,8 @@ export default function ChannelPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-channel-videos'] })
       queryClient.invalidateQueries({ queryKey: ['me-channel-meta'] })
+      queryClient.invalidateQueries({ queryKey: ['channels-public'] })
+      queryClient.invalidateQueries({ queryKey: ['public-channel'] })
       setShowCreateForm(false)
       reset()
     },
@@ -117,6 +119,8 @@ export default function ChannelPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-channel-videos'] })
       queryClient.invalidateQueries({ queryKey: ['me-channel-meta'] })
+      queryClient.invalidateQueries({ queryKey: ['channels-public'] })
+      queryClient.invalidateQueries({ queryKey: ['public-channel'] })
     },
   })
 
@@ -125,6 +129,8 @@ export default function ChannelPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-channel-videos'] })
       queryClient.invalidateQueries({ queryKey: ['me-channel-meta'] })
+      queryClient.invalidateQueries({ queryKey: ['channels-public'] })
+      queryClient.invalidateQueries({ queryKey: ['public-channel'] })
       setEditingVideo(null)
       setShowCreateForm(false)
       reset()
