@@ -6,9 +6,13 @@ public class PublicChannelVideoSummaryDto {
 
     private String videoId;
     private String title;
+    private String videoUrl;
     private String thumbnailUrl;
+    private String category;
     private String channelDisplayName;
+    private String channelProfileImageUrl;
     private long viewCount;
+    private long likeCount;
     private Instant publishedAt;
 
     public String getVideoId() {
@@ -27,12 +31,28 @@ public class PublicChannelVideoSummaryDto {
         this.title = title;
     }
 
+    public String getVideoUrl() {
+        return videoUrl;
+    }
+
+    public void setVideoUrl(String videoUrl) {
+        this.videoUrl = videoUrl;
+    }
+
     public String getThumbnailUrl() {
         return thumbnailUrl;
     }
 
     public void setThumbnailUrl(String thumbnailUrl) {
         this.thumbnailUrl = thumbnailUrl;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
     }
 
     public String getChannelDisplayName() {
@@ -43,12 +63,28 @@ public class PublicChannelVideoSummaryDto {
         this.channelDisplayName = channelDisplayName;
     }
 
+    public String getChannelProfileImageUrl() {
+        return channelProfileImageUrl;
+    }
+
+    public void setChannelProfileImageUrl(String channelProfileImageUrl) {
+        this.channelProfileImageUrl = channelProfileImageUrl;
+    }
+
     public long getViewCount() {
         return viewCount;
     }
 
     public void setViewCount(long viewCount) {
         this.viewCount = viewCount;
+    }
+
+    public long getLikeCount() {
+        return likeCount;
+    }
+
+    public void setLikeCount(long likeCount) {
+        this.likeCount = likeCount;
     }
 
     public Instant getPublishedAt() {

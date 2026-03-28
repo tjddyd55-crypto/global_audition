@@ -6,6 +6,7 @@ import type { QueryClient } from '@tanstack/react-query'
  */
 export const channelVideoKeys = {
   all: ['channelVideos'] as const,
+  browse: (category: string | null) => ['channelVideos', 'browse', category ?? 'all'] as const,
   mine: ['channelVideos', 'mine'] as const,
   mineProfile: ['channelVideos', 'mine', 'profile'] as const,
   mineMobileProfile: ['channelVideos', 'mine', 'mobileProfile'] as const,

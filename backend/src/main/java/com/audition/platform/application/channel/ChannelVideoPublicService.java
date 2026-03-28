@@ -27,6 +27,7 @@ import java.util.UUID;
 @Service
 public class ChannelVideoPublicService {
 
+    private static final int BROWSE_PAGE_SIZE = 60;
     private static final int RECOMMEND_PAGE_SIZE = 24;
     /** 동일 시청자(회원 또는 IP) 기준 조회수 중복 증가 방지 간격 */
     private static final Duration VIEW_COUNT_COOLDOWN = Duration.ofHours(24);
@@ -271,6 +272,19 @@ public class ChannelVideoPublicService {
         return out;
     }
 
+    @Transactional(readOnly = true)
+    public List<PublicChannelVideoSummaryDto> listPublicBrowseVideos(String category) {
+        String normalizedCategory = category == null ? null : category.trim();
+        List<ChannelVideo> slice = channelVideoRepository.findPublicBrowseVideos(
+                normalizedCategory == null || normalizedCategory.isBlank() ? null : normalizedCategory,
+                PageRequest.of(0, BROWSE_PAGE_SIZE));
+        List<PublicChannelVideoSummaryDto> out = new ArrayList<>();
+        for (ChannelVideo v : slice) {
+            out.add(toSummaryDto(v));
+        }
+        return out;
+    }
+
     /**
      * 공개 API에서 시청·상세 가능한 영상만 통과.
      * {@link ChannelVideoVisibility#SUBSCRIBERS_ONLY} 는 구독자 또는 소유자만 허용.
@@ -360,12 +374,19 @@ public class ChannelVideoPublicService {
         String displayName = owner != null
                 ? firstNonBlank(trimToNull(channelName), owner.getPublicDisplayLabel())
                 : trimToNull(channelName);
+        String profileImageUrl = firstNonBlank(
+                owner != null ? trimToNull(owner.getProfileImageUrl()) : null,
+                ch.map(c -> trimToNull(c.getProfileImageUrl())).orElse(null));
         PublicChannelVideoSummaryDto dto = new PublicChannelVideoSummaryDto();
         dto.setVideoId(v.getId().toString());
         dto.setTitle(v.getTitle());
+        dto.setVideoUrl(v.getVideoUrl());
         dto.setThumbnailUrl(v.getThumbnailUrl());
+        dto.setCategory(v.getCategory());
         dto.setChannelDisplayName(displayName != null ? displayName : "");
+        dto.setChannelProfileImageUrl(profileImageUrl);
         dto.setViewCount(v.getViewCount());
+        dto.setLikeCount(v.getLikeCount());
         dto.setPublishedAt(v.getCreatedAt());
         return dto;
     }

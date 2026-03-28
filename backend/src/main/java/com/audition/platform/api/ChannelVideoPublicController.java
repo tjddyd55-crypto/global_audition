@@ -39,6 +39,12 @@ public class ChannelVideoPublicController {
         return ApiEnvelope.ok(channelVideoPublicService.listPublicVideosForChannelOwner(channelOwnerId));
     }
 
+    @GetMapping("/browse")
+    public ApiEnvelope<List<PublicChannelVideoSummaryDto>> browsePublicVideos(
+            @RequestParam(required = false) String category) {
+        return ApiEnvelope.ok(channelVideoPublicService.listPublicBrowseVideos(category));
+    }
+
     @GetMapping
     public ApiEnvelope<List<PublicChannelVideoSummaryDto>> listByCategory(
             @RequestParam String category,

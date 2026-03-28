@@ -50,6 +50,20 @@ public interface ChannelVideoRepository extends JpaRepository<ChannelVideo, UUID
             @Param("excludeId") UUID excludeId,
             Pageable pageable);
 
+    @Query("""
+            SELECT v FROM ChannelVideo v
+            JOIN User u ON u.id = v.ownerId
+            WHERE v.visibility = 'PUBLIC'
+              AND u.channelPublic = true
+              AND (u.role = 'APPLICANT' OR u.role = 'ADMIN')
+              AND u.accountStatus = 'ACTIVE'
+              AND (:category IS NULL OR :category = '' OR v.category = :category)
+            ORDER BY v.createdAt DESC
+            """)
+    List<ChannelVideo> findPublicBrowseVideos(
+            @Param("category") String category,
+            Pageable pageable);
+
     long countByOwnerIdAndVisibility(UUID ownerId, String visibility);
 
     /**

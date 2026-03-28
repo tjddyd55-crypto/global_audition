@@ -46,6 +46,19 @@ export type ChannelVideoRecommendItem = {
   publishedAt: string
 }
 
+export type ChannelVideoBrowseItem = {
+  videoId: string
+  title: string
+  videoUrl: string
+  thumbnailUrl: string | null
+  category: string
+  channelDisplayName: string
+  channelProfileImageUrl: string | null
+  viewCount: number
+  likeCount: number
+  publishedAt: string
+}
+
 export type ChannelSubscribeState = {
   subscribed: boolean
   subscriberCount: number
@@ -110,6 +123,16 @@ export async function listPublicVideosForChannel(channelOwnerId: string): Promis
   return []
 }
 
+/** GET /videos/browse?category= — 공개 채널의 전체 공개 영상 목록(둘러보기 페이지용). */
+export async function listBrowsePublicVideos(category?: string): Promise<ChannelVideoBrowseItem[]> {
+  const { data } = await apiClient.get<unknown>('/videos/browse', {
+    params: category && category !== '전체 카테고리' ? { category } : undefined,
+  })
+  const arr = unwrapData<unknown[]>(data)
+  if (!Array.isArray(arr)) return []
+  return arr.map((x) => parseBrowseItem(x as Record<string, unknown>)).filter((row) => row.videoId.trim() !== '')
+}
+
 export async function fetchChannelVideoPublic(videoId: string): Promise<ChannelVideoPublicDetail> {
   const { data } = await apiClient.get<unknown>(`/videos/${videoId}/public`)
   const raw = unwrapData<Record<string, unknown>>(data)
@@ -135,6 +158,21 @@ function parsePublicDetail(raw: Record<string, unknown>): ChannelVideoPublicDeta
     subscribed: Boolean(raw.subscribed),
     liked: Boolean(raw.liked),
     disliked: Boolean(raw.disliked),
+  }
+}
+
+function parseBrowseItem(raw: Record<string, unknown>): ChannelVideoBrowseItem {
+  return {
+    videoId: String(raw.videoId ?? ''),
+    title: String(raw.title ?? ''),
+    videoUrl: String(raw.videoUrl ?? ''),
+    thumbnailUrl: raw.thumbnailUrl != null ? String(raw.thumbnailUrl) : null,
+    category: String(raw.category ?? ''),
+    channelDisplayName: String(raw.channelDisplayName ?? ''),
+    channelProfileImageUrl: raw.channelProfileImageUrl != null ? String(raw.channelProfileImageUrl) : null,
+    viewCount: Number(raw.viewCount ?? 0) || 0,
+    likeCount: Number(raw.likeCount ?? 0) || 0,
+    publishedAt: String(raw.publishedAt ?? ''),
   }
 }
 
