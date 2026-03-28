@@ -1,4 +1,5 @@
 import { apiClient } from './client'
+import { normalizePublicChannelVideoListPayload } from './channelVideoPublic'
 import { unwrapData } from './unwrap'
 import type { MyChannelVideoRow } from './videos'
 
@@ -222,7 +223,7 @@ export const channelApi = {
   getPublic: async (userId: string): Promise<PublicChannelResponse> => {
     const { data } = await apiClient.get<unknown>(`/channels/${userId}`)
     const raw = unwrapData(data) as Record<string, unknown>
-    const videos = (Array.isArray(raw.videos) ? raw.videos : []) as PublicChannelVideo[]
+    const videos = normalizePublicChannelVideoListPayload(raw.videos)
     const snsRaw = raw.snsLinks
     let snsLinks: SnsLinkRow[] | undefined
     if (Array.isArray(snsRaw)) {

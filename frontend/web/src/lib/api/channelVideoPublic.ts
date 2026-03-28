@@ -56,9 +56,26 @@ export type ChannelVideoViewBumpResult = {
   viewCount: number
 }
 
-function parseMyChannelVideoRow(raw: Record<string, unknown>): MyChannelVideoRow {
+/** 백엔드 MyChannelVideoDto / 채널 응답 JSON을 리스트 행으로 통일 (필드 누락·타입 방어) */
+export function parseMyChannelVideoRow(raw: Record<string, unknown>): MyChannelVideoRow {
+  const created = raw.createdAt
+  let createdAt = ''
+  if (created != null) {
+    if (typeof created === 'string') {
+      createdAt = created
+    } else if (typeof created === 'number') {
+      createdAt = new Date(created).toISOString()
+    } else if (typeof created === 'object' && created !== null) {
+      const o = created as Record<string, unknown>
+      if (typeof o.epochSecond === 'number') {
+        const sec = o.epochSecond as number
+        const nano = typeof o.nano === 'number' ? (o.nano as number) : 0
+        createdAt = new Date(sec * 1000 + nano / 1e6).toISOString()
+      }
+    }
+  }
   return {
-    videoId: String(raw.videoId ?? ''),
+    videoId: String(raw.videoId ?? raw.id ?? ''),
     title: String(raw.title ?? ''),
     videoUrl: String(raw.videoUrl ?? ''),
     description: raw.description != null ? String(raw.description) : null,
@@ -67,8 +84,15 @@ function parseMyChannelVideoRow(raw: Record<string, unknown>): MyChannelVideoRow
     visibility: String(raw.visibility ?? 'PUBLIC'),
     viewCount: Number(raw.viewCount ?? 0) || 0,
     likeCount: Number(raw.likeCount ?? 0) || 0,
-    createdAt: raw.createdAt != null ? String(raw.createdAt) : '',
+    createdAt,
   }
+}
+
+export function normalizePublicChannelVideoListPayload(raw: unknown): MyChannelVideoRow[] {
+  if (!Array.isArray(raw)) return []
+  return raw
+    .map((x) => parseMyChannelVideoRow(x as Record<string, unknown>))
+    .filter((row) => row.videoId.trim() !== '')
 }
 
 /** GET /videos/public?channelOwnerId= — 공개 채널의 PUBLIC 영상만, 최신순 */
@@ -76,9 +100,14 @@ export async function listPublicVideosForChannel(channelOwnerId: string): Promis
   const { data } = await apiClient.get<unknown>('/videos/public', {
     params: { channelOwnerId },
   })
-  const unwrapped = unwrapData<unknown>(data)
-  if (!Array.isArray(unwrapped)) return []
-  return unwrapped.map((x) => parseMyChannelVideoRow(x as Record<string, unknown>))
+  const body = unwrapData<unknown>(data)
+  if (Array.isArray(body)) {
+    return normalizePublicChannelVideoListPayload(body)
+  }
+  if (body && typeof body === 'object' && Array.isArray((body as { items?: unknown }).items)) {
+    return normalizePublicChannelVideoListPayload((body as { items: unknown[] }).items)
+  }
+  return []
 }
 
 export async function fetchChannelVideoPublic(videoId: string): Promise<ChannelVideoPublicDetail> {
