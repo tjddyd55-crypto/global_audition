@@ -86,9 +86,16 @@ export function VideosBrowsePageClient() {
                 href={`/videos/${video.videoId}`}
                 className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-md"
               >
-                <div className="relative aspect-video bg-neutral-100">
+                <div className="relative aspect-video w-full overflow-hidden bg-neutral-100">
                   {thumbnail ? (
-                    <Image src={thumbnail} alt={video.title} fill className="object-cover" unoptimized />
+                    <Image
+                      src={thumbnail}
+                      alt={video.title}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                      unoptimized
+                    />
                   ) : (
                     <div className="flex h-full items-center justify-center text-sm text-neutral-500">썸네일 없음</div>
                   )}

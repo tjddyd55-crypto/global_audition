@@ -91,18 +91,18 @@ export default function ProfilePage() {
                 return (
                 <div key={video.id} className={CARD_MEDIA_SHELL}>
                   {thumbnailUrl ? (
-                    <div className="relative aspect-[16/9] w-full">
+                    <div className="relative aspect-video w-full overflow-hidden">
                       <Image
                         src={thumbnailUrl}
                         alt={video.title}
                         fill
                         unoptimized
                         sizes="(max-width: 768px) 100vw, 33vw"
-                        className="rounded-t-xl object-cover"
+                        className="object-cover"
                       />
                     </div>
                   ) : (
-                    <div className="flex aspect-[16/9] w-full items-center justify-center rounded-t-xl bg-gray-100 text-sm text-gray-600">
+                    <div className="flex aspect-video w-full items-center justify-center bg-gray-100 text-sm text-gray-600">
                       썸네일 없음
                     </div>
                   )}

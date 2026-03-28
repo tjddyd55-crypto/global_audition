@@ -77,7 +77,7 @@ export function ChannelPublicVideoList({
                 href={`/videos/${v.videoId}`}
                 className="group flex h-full flex-col overflow-hidden rounded-xl border border-neutral-200/90 bg-white shadow-sm transition hover:border-violet-200 hover:shadow-md"
               >
-                <div className="relative aspect-video w-full bg-neutral-200">
+                <div className="relative aspect-video w-full overflow-hidden bg-neutral-200">
                   {thumb ? (
                     <Image
                       src={thumb}

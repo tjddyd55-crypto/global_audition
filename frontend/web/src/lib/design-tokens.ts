@@ -80,8 +80,6 @@ export const AUDITION_CARD = {
 } as const
 
 export const VIDEO_CARD = {
-  thumbnailHeightPx: 180,
-  thumbnailRadiusPx: 10,
   badgeTopPx: 8,
   badgeRightPx: 8,
   badgeBg: '#9333ea',

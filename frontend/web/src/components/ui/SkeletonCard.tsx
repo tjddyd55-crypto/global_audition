@@ -45,7 +45,7 @@ export function SkeletonVideoCard() {
       }}
       className="animate-pulse"
     >
-      <div style={{ height: 180, background: '#e5e7eb' }} />
+      <div className="aspect-video w-full bg-[#e5e7eb]" />
       <div style={{ padding: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
           <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#e5e7eb' }} />

@@ -47,13 +47,17 @@ export default function VideoCard({ video, compact = false }: VideoCardProps) {
         flexDirection: 'column',
       }}
     >
-      <div style={{ position: 'relative', height: VIDEO_CARD.thumbnailHeightPx, background: AUDITION_CARD.imageBg }}>
+      <div
+        className="relative aspect-video w-full shrink-0 overflow-hidden"
+        style={{ background: AUDITION_CARD.imageBg }}
+      >
         {thumbnail ? (
           <Image
             src={thumbnail}
             alt={title || FALLBACK_TEXT.videoTitle}
             fill
-            style={{ objectFit: 'cover', borderRadius: VIDEO_CARD.thumbnailRadiusPx }}
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, 33vw"
             unoptimized
           />
         ) : (
@@ -61,7 +65,8 @@ export default function VideoCard({ video, compact = false }: VideoCardProps) {
             src={DEFAULT_IMAGES.videoThumbnail}
             alt=""
             fill
-            style={{ objectFit: 'cover', borderRadius: VIDEO_CARD.thumbnailRadiusPx }}
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, 33vw"
             unoptimized
           />
         )}

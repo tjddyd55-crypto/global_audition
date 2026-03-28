@@ -78,17 +78,18 @@ export default function ProfilePage() {
                 return (
                 <div key={video.id} className="border rounded-lg overflow-hidden">
                   {thumbnailUrl ? (
-                    <Image
-                      src={thumbnailUrl}
-                      alt={video.title}
-                      width={640}
-                      height={192}
-                      unoptimized
-                      sizes="(max-width: 768px) 100vw, 33vw"
-                      className="w-full h-48 object-cover"
-                    />
+                    <div className="relative aspect-video w-full overflow-hidden">
+                      <Image
+                        src={thumbnailUrl}
+                        alt={video.title}
+                        fill
+                        unoptimized
+                        sizes="(max-width: 768px) 100vw, 33vw"
+                        className="object-cover"
+                      />
+                    </div>
                   ) : (
-                    <div className="flex h-48 w-full items-center justify-center bg-gray-100 text-sm text-gray-600">
+                    <div className="flex aspect-video w-full items-center justify-center bg-gray-100 text-sm text-gray-600">
                       썸네일 없음
                     </div>
                   )}
