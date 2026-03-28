@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import Image from 'next/image'
+import { Link } from '@/i18n.config'
 import { channelApi } from '@/lib/api/channel'
 import { resolveVideoThumbnailUrl } from '@/lib/audition/videoThumbnail'
 import { PAGE_CONTAINER } from '@/lib/ui/specClasses'
@@ -233,10 +234,8 @@ export default function ChannelByUserIdPage() {
                 const cat = v.category?.trim()
                 return (
                   <li key={v.videoId}>
-                    <a
-                      href={v.videoUrl}
-                      target="_blank"
-                      rel="noreferrer noopener"
+                    <Link
+                      href={`/videos/${v.videoId}`}
                       className="group flex h-full flex-col overflow-hidden rounded-xl border border-neutral-200/90 bg-white shadow-sm transition hover:border-violet-200 hover:shadow-md"
                     >
                       <div className="relative aspect-video w-full bg-neutral-200">
@@ -270,7 +269,7 @@ export default function ChannelByUserIdPage() {
                           <span>{formatPublishedAt(v.createdAt)}</span>
                         </div>
                       </div>
-                    </a>
+                    </Link>
                   </li>
                 )
               })}
