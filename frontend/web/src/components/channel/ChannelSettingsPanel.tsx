@@ -10,6 +10,8 @@ import {
   type SnsLinkRow,
   type SnsPlatformCode,
 } from '@/lib/api/channel'
+import { useRouter } from 'next/navigation'
+import { invalidateAfterChannelVideoMutation } from '@/lib/query/channelVideoQuery'
 import { uploadAuditionImage } from '@/lib/api/uploads'
 import { DEFAULT_IMAGES } from '@/lib/constants/fallbacks'
 
@@ -99,6 +101,7 @@ function mapSummaryToState(data: MyChannelSummary) {
 
 export function ChannelSettingsPanel() {
   const queryClient = useQueryClient()
+  const router = useRouter()
   const { data, isLoading, isError } = useQuery({
     queryKey: ['me-channel-meta'],
     queryFn: () => channelApi.getMine(),
@@ -116,10 +119,8 @@ export function ChannelSettingsPanel() {
     mutationFn: (body: PatchMyChannelBody) => channelApi.patchMine(body),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['me-channel-meta'] })
-      await queryClient.invalidateQueries({ queryKey: ['my-channel-videos'] })
-      await queryClient.invalidateQueries({ queryKey: ['public-channel'] })
-      await queryClient.invalidateQueries({ queryKey: ['public-channel-videos'] })
-      await queryClient.invalidateQueries({ queryKey: ['channels-public'] })
+      await invalidateAfterChannelVideoMutation(queryClient)
+      router.refresh()
       setDirty(false)
     },
   })

@@ -11,6 +11,7 @@ import { ProfileManageForm } from '@/components/profile/ProfileManageForm'
 import { ChannelPublicSettings } from '@/components/channel/ChannelPublicSettings'
 import { VideoVisibilitySwitch } from '@/components/channel/VideoVisibilitySwitch'
 import { resolveVideoThumbnailUrl } from '@/lib/audition/videoThumbnail'
+import { channelVideoKeys } from '@/lib/query/channelVideoQuery'
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -28,9 +29,11 @@ export default function ProfilePage() {
 
   const showApplicantVideos = role === 'APPLICANT' || role === 'ADMIN'
   const { data: videos, isLoading } = useQuery({
-    queryKey: ['my-channel-videos-mobile-profile'],
+    queryKey: channelVideoKeys.mineMobileProfile,
     queryFn: () => videoApi.getMyChannelVideos(),
     enabled: hasToken && showApplicantVideos,
+    staleTime: 0,
+    refetchOnMount: 'always',
   })
 
   if (hasToken && role === null) {

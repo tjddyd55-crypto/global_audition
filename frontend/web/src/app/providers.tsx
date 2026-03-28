@@ -12,11 +12,12 @@ export function Providers({ children }: { children: React.ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 5 * 60 * 1000, // 5분으로 증가 (더 적은 리패치)
-            gcTime: 10 * 60 * 1000, // 가비지 컬렉션 시간 10분 (v5에서 cacheTime -> gcTime으로 변경됨)
-            refetchOnWindowFocus: false,
-            refetchOnMount: false, // 마운트 시 리패치 비활성화
-            retry: 1, // 재시도 횟수 감소
+            /** 목록·상세가 서버와 바로 맞도록 기본은 즉시 stale (영상/채널은 키별로 덮어쓰기 가능) */
+            staleTime: 0,
+            gcTime: 10 * 60 * 1000,
+            refetchOnWindowFocus: true,
+            refetchOnMount: true,
+            retry: 1,
           },
         },
       })

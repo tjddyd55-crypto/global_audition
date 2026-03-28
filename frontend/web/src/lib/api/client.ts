@@ -9,6 +9,9 @@ export const apiClient = axios.create({
   baseURL: API_PATH_PREFIX,
   headers: {
     'Content-Type': 'application/json',
+    /** 브라우저·프록시 캐시로 인해 UI만 오래 보이는 현상 방지 */
+    'Cache-Control': 'no-cache',
+    Pragma: 'no-cache',
   },
   timeout: 30000,
   /** 세션 쿠키·크로스 오리진 시 자격 증명 전송. 업로드 등은 요청별로도 `withCredentials: true` 명시 가능. */

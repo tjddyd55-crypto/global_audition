@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from '../../../i18n.config'
+import { useRouter as useNextRouter } from 'next/navigation'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { videoApi, VideoContent } from '../../../lib/api/videos'
 import { userApi } from '../../../lib/api/user'
@@ -22,6 +23,7 @@ import {
 import { resolveVideoThumbnailUrl } from '@/lib/audition/videoThumbnail'
 import { ChannelSettingsPanel } from '@/components/channel/ChannelSettingsPanel'
 import { VideoVisibilitySwitch } from '@/components/channel/VideoVisibilitySwitch'
+import { channelVideoKeys, invalidateAfterChannelVideoMutation } from '@/lib/query/channelVideoQuery'
 
 /** 채널 설정 패널과 통일: 카드 16px, primary 그라데이션 버튼 */
 const CARD_VIDEO =
@@ -44,6 +46,7 @@ type VideoFormData = z.infer<typeof videoSchema>
 
 export default function ChannelPage() {
   const router = useRouter()
+  const nextRouter = useNextRouter()
   const t = useTranslations('common')
   const queryClient = useQueryClient()
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
@@ -93,9 +96,11 @@ export default function ChannelPage() {
   }, [router])
 
   const { data: videos, isLoading } = useQuery({
-    queryKey: ['my-channel-videos'],
+    queryKey: channelVideoKeys.mine,
     queryFn: () => videoApi.getMyChannelVideos(),
     enabled: userType === 'APPLICANT',
+    staleTime: 0,
+    refetchOnMount: 'always',
   })
 
   const createMutation = useMutation({
@@ -104,12 +109,9 @@ export default function ChannelPage() {
         ...data,
         status: data.status as 'PUBLISHED' | 'DRAFT' | 'PRIVATE',
       }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['my-channel-videos'] })
-      queryClient.invalidateQueries({ queryKey: ['me-channel-meta'] })
-      queryClient.invalidateQueries({ queryKey: ['channels-public'] })
-      queryClient.invalidateQueries({ queryKey: ['public-channel'] })
-      queryClient.invalidateQueries({ queryKey: ['public-channel-videos'] })
+    onSuccess: async () => {
+      await invalidateAfterChannelVideoMutation(queryClient)
+      nextRouter.refresh()
       setShowCreateForm(false)
       reset()
     },
@@ -117,23 +119,17 @@ export default function ChannelPage() {
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => videoApi.deleteVideo(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['my-channel-videos'] })
-      queryClient.invalidateQueries({ queryKey: ['me-channel-meta'] })
-      queryClient.invalidateQueries({ queryKey: ['channels-public'] })
-      queryClient.invalidateQueries({ queryKey: ['public-channel'] })
-      queryClient.invalidateQueries({ queryKey: ['public-channel-videos'] })
+    onSuccess: async () => {
+      await invalidateAfterChannelVideoMutation(queryClient)
+      nextRouter.refresh()
     },
   })
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: VideoFormData }) => videoApi.updateVideo(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['my-channel-videos'] })
-      queryClient.invalidateQueries({ queryKey: ['me-channel-meta'] })
-      queryClient.invalidateQueries({ queryKey: ['channels-public'] })
-      queryClient.invalidateQueries({ queryKey: ['public-channel'] })
-      queryClient.invalidateQueries({ queryKey: ['public-channel-videos'] })
+    onSuccess: async () => {
+      await invalidateAfterChannelVideoMutation(queryClient)
+      nextRouter.refresh()
       setEditingVideo(null)
       setShowCreateForm(false)
       reset()

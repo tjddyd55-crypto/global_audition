@@ -9,6 +9,7 @@ import { channelApi } from '@/lib/api/channel'
 import { listPublicVideosForChannel } from '@/lib/api/channelVideoPublic'
 import { resolveVideoThumbnailUrl } from '@/lib/audition/videoThumbnail'
 import { PAGE_CONTAINER } from '@/lib/ui/specClasses'
+import { channelVideoKeys } from '@/lib/query/channelVideoQuery'
 
 type TabId = 'videos' | 'info'
 
@@ -45,10 +46,12 @@ export default function ChannelByUserIdPage() {
     isLoading: videosLoading,
     isError: videosError,
   } = useQuery({
-    queryKey: ['public-channel-videos', userId],
+    queryKey: channelVideoKeys.publicList(userId),
     queryFn: () => listPublicVideosForChannel(userId),
     enabled: userId.length > 0,
     retry: 1,
+    staleTime: 0,
+    refetchOnMount: 'always',
   })
 
   const embeddedVideos = useMemo(() => data?.videos ?? [], [data?.videos])

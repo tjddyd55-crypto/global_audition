@@ -1,7 +1,9 @@
 'use client'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useRouter } from 'next/navigation'
 import { videoApi, type VideoContent } from '@/lib/api/videos'
+import { invalidateAfterChannelVideoMutation } from '@/lib/query/channelVideoQuery'
 
 const SWITCH_TRACK =
   'relative inline-flex h-6 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 disabled:cursor-not-allowed disabled:opacity-50'
@@ -34,27 +36,17 @@ function MiniToggle({
   )
 }
 
-type QueryPrefix = readonly unknown[]
-
 export function VideoVisibilitySwitch({ video }: { video: VideoContent }) {
   const queryClient = useQueryClient()
+  const router = useRouter()
   const vis = video.visibility ?? (video.status === 'PUBLISHED' ? 'PUBLIC' : 'PRIVATE')
   const isPublic = vis === 'PUBLIC'
 
   const mut = useMutation({
     mutationFn: (next: 'PUBLIC' | 'PRIVATE') => videoApi.patchVideoVisibility(video.id, next),
     onSuccess: async () => {
-      const keys: QueryPrefix[] = [
-        ['my-channel-videos'],
-        ['my-channel-videos-profile'],
-        ['my-channel-videos-mobile-profile'],
-        ['channels-public'],
-        ['public-channel'],
-        ['public-channel-videos'],
-      ]
-      for (const k of keys) {
-        await queryClient.invalidateQueries({ queryKey: k })
-      }
+      await invalidateAfterChannelVideoMutation(queryClient)
+      router.refresh()
     },
   })
 
