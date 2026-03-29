@@ -23,13 +23,19 @@ const statusLabels: Record<string, string> = {
   CLOSED: '마감',
 }
 
+function statusBadgeClass(status: string): string {
+  if (status === 'OPEN') return 'bg-emerald-600 text-white'
+  if (status === 'CLOSED') return 'bg-neutral-700 text-white'
+  return 'bg-amber-600 text-white'
+}
+
 export default function AuditionCard({ audition }: AuditionCardProps) {
   if (!audition) return null
   const id = audition?.id ?? ''
   const title =
     auditionHeadlineTitle(audition).trim() || audition.title.trim() || FALLBACK_TEXT.videoTitle
   const status = audition?.status ?? 'DRAFT'
-  const statusMeta =
+  const statusBadgeLabel =
     status === 'OPEN' && audition?.recruitmentRoundLabel?.trim()
       ? audition.recruitmentRoundLabel.trim()
       : statusLabels[status] ?? status
@@ -67,25 +73,32 @@ export default function AuditionCard({ audition }: AuditionCardProps) {
 
   const location = (audition?.location ?? '').trim() || '—'
   const applicants = safeNum(audition?.applicantsCount).toLocaleString()
-  const metaLine = `${statusMeta} · ${dateStr} · ${location} · 지원자 ${applicants}명`
+  const metaLine = `${dateStr} · ${location} · 지원자 ${applicants}명`
 
   return (
     <Link href={`/auditions/${id}`} className="block w-full text-inherit no-underline">
-      <article className="w-full">
-        <div className="w-full overflow-hidden bg-neutral-200">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={imgSrc}
-            alt=""
-            className="w-full h-auto object-cover"
-            loading="lazy"
-            decoding="async"
-            onError={onCoverError}
-          />
+      <article className="relative w-full overflow-hidden bg-neutral-900">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={imgSrc}
+          alt={title}
+          className="block w-full h-auto object-cover"
+          loading="lazy"
+          decoding="async"
+          onError={onCoverError}
+        />
+
+        <div
+          className={`absolute left-3 top-3 z-[2] rounded-full px-2 py-1 text-xs font-semibold ${statusBadgeClass(status)}`}
+        >
+          {statusBadgeLabel}
         </div>
-        <div className="px-4 py-3">
-          <h3 className="line-clamp-2 text-base font-semibold leading-snug">{title}</h3>
-          <p className="mt-1 text-sm text-gray-500">{metaLine}</p>
+
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] bg-gradient-to-t from-black/70 via-black/40 to-transparent p-4 pt-16">
+          <h3 className="pointer-events-none line-clamp-2 text-balance text-lg font-bold leading-snug text-white">
+            {title}
+          </h3>
+          <p className="pointer-events-none mt-1 text-sm text-white/80">{metaLine}</p>
         </div>
       </article>
     </Link>

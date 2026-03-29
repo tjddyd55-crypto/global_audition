@@ -2,15 +2,16 @@
 
 import { AUDITION_CARD } from '../../lib/design-tokens'
 
-/** 오디션 목록 행 스켈레톤(카드·테두리 없음; 썸네일은 고정 비율 없음) */
+/** 오디션 포스터 행 스켈레톤(풀폭, 하단 오버레이 영역만 시각 힌트) */
 export function SkeletonAuditionCard() {
   return (
-    <div className="w-full animate-pulse">
+    <div className="relative w-full animate-pulse overflow-hidden bg-neutral-800">
       <div className="w-full bg-neutral-200 py-28" />
-      <div className="space-y-2 px-4 py-3">
-        <div className="h-4 w-4/5 rounded bg-neutral-200" />
-        <div className="h-3 w-3/5 rounded bg-neutral-100" />
+      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 via-black/25 to-transparent p-4 pt-12">
+        <div className="h-5 w-4/5 rounded bg-white/20" />
+        <div className="mt-2 h-3 w-3/5 rounded bg-white/15" />
       </div>
+      <div className="absolute left-3 top-3 h-6 w-20 rounded-full bg-white/25" />
     </div>
   )
 }

@@ -259,7 +259,15 @@ export default function AuditionDetailPage() {
 
       {embed ? (
         <section className="mt-4 w-full">
-          <h2 className="mb-2 px-4 text-lg font-semibold">소개 영상</h2>
+          <h2
+            className="mb-2 w-full text-lg font-semibold"
+            style={{
+              paddingLeft: 'max(1rem, env(safe-area-inset-left))',
+              paddingRight: 'max(1rem, env(safe-area-inset-right))',
+            }}
+          >
+            소개 영상
+          </h2>
           <div className="aspect-video w-full bg-black">
             <iframe
               title="audition-video"
@@ -292,16 +300,6 @@ export default function AuditionDetailPage() {
               >
                 상세 안내
               </h2>
-              <p
-                style={{
-                  margin: '0 0 20px 0',
-                  fontSize: AUDITION_DETAIL.bodyFontPx,
-                  color: AUDITION_DETAIL.bodyColor,
-                  lineHeight: 1.6,
-                }}
-              >
-                {safeStr(audition.description)}
-              </p>
               <SectionBlock iconLabel="R" title="모집 분야" items={recruitList} />
               <SectionBlock iconLabel="Q" title="지원 자격" items={qualifications} />
               <SectionBlock iconLabel="S" title="일정" items={schedules} />

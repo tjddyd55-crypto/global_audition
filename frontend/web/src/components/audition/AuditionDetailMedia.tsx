@@ -51,7 +51,15 @@ export function AuditionDetailMediaSection({ galleryUrls }: AuditionDetailMediaP
 
   return (
     <section className="mt-4 w-full">
-      <h2 className="mb-2 px-4 text-lg font-semibold">이미지</h2>
+      <h2
+        className="mb-2 w-full text-lg font-semibold"
+        style={{
+          paddingLeft: 'max(1rem, env(safe-area-inset-left))',
+          paddingRight: 'max(1rem, env(safe-area-inset-right))',
+        }}
+      >
+        이미지
+      </h2>
       <AuditionGallery images={galleryUrls} />
     </section>
   )

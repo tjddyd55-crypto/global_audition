@@ -70,27 +70,27 @@ export default function HomePage() {
             <h2 style={{ fontSize: 24, fontWeight: 700, margin: '0 0 8px 0' }}>진행 중인 오디션</h2>
             <p style={{ fontSize: 14, color: '#666', margin: 0 }}>지금 바로 지원 가능한 오디션을 확인하세요</p>
           </div>
+        </div>
 
-          {auditionsLoading ? (
-            <div className="flex w-full flex-col">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className={i === 1 ? '' : 'mt-4'}>
-                  <SkeletonAuditionCard />
-                </div>
-              ))}
-            </div>
-          ) : auditionsEmpty ? (
+        {auditionsLoading ? (
+          <div className="flex w-full flex-col">
+            {[1, 2, 3].map((i) => (
+              <SkeletonAuditionCard key={i} />
+            ))}
+          </div>
+        ) : auditionsEmpty ? (
+          <div style={containerStyle}>
             <EmptyState message="등록된 오디션이 없습니다" />
-          ) : (
-            <div className="flex w-full flex-col">
-              {displayAuditions.map((audition, i) => (
-                <div key={audition?.id ?? `audition-${i}`} className={i === 0 ? '' : 'mt-4'}>
-                  <AuditionCard audition={audition} />
-                </div>
-              ))}
-            </div>
-          )}
+          </div>
+        ) : (
+          <div className="flex w-full flex-col">
+            {displayAuditions.map((audition, i) => (
+              <AuditionCard key={audition?.id ?? `audition-${i}`} audition={audition} />
+            ))}
+          </div>
+        )}
 
+        <div style={containerStyle}>
           <div style={{ marginTop: 24, textAlign: 'center' }}>
             <Link
               href="/auditions"

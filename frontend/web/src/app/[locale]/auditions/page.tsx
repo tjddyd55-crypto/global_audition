@@ -13,16 +13,22 @@ export default async function AuditionsPage({
   
   const t = await getTranslations('common')
 
-  const containerStyle = {
+  const pageStyle = {
     width: '100%' as const,
-    padding: '0 16px',
     paddingTop: 80,
     paddingBottom: 80,
   }
 
   return (
-    <div style={containerStyle}>
-      <div style={{ marginBottom: 32 }}>
+    <div style={pageStyle}>
+      <div
+        className="w-full"
+        style={{
+          marginBottom: 24,
+          paddingLeft: 'max(1rem, env(safe-area-inset-left))',
+          paddingRight: 'max(1rem, env(safe-area-inset-right))',
+        }}
+      >
         <h1 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 8px 0' }}>{t('auditions')}</h1>
         <p style={{ fontSize: 16, color: '#666', margin: 0 }}>전 세계 기획사의 오디션에 지원해보세요</p>
       </div>

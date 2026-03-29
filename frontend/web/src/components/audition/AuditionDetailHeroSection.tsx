@@ -32,9 +32,14 @@ function statusBadgeCopy(status: string): string {
   return '초안 · DRAFT'
 }
 
+function statusBadgeClass(status: string): string {
+  if (status === 'OPEN') return 'bg-emerald-600 text-white'
+  if (status === 'CLOSED') return 'bg-neutral-700 text-white'
+  return 'bg-amber-600 text-white'
+}
+
 /**
- * 풀폭 대표 이미지(원본 세로 비율, w-full h-auto) + 하단 그라데이션 위 제목·상태·CTA.
- * 소개 영상만 16:9 유지(페이지 하단 섹션).
+ * 풀폭 포스터(w-full h-auto) + 좌상단 상태 뱃지 + 하단 그라데이션 오버레이(제목·메타·CTA).
  */
 export function AuditionDetailHeroSection({
   auditionId,
@@ -93,11 +98,12 @@ export function AuditionDetailHeroSection({
   const openOriginalHref =
     hasCover && !imgFailed ? (fullSize || cover).trim() : ''
 
+  const safeTitle = safeStr(title)
   const bannerImage = (
     // eslint-disable-next-line @next/next/no-img-element
     <img
       src={displaySrc || AUDITION_COVER_PLACEHOLDER_SRC}
-      alt=""
+      alt={safeTitle}
       className="block w-full h-auto object-cover"
       loading="eager"
       decoding="async"
@@ -135,26 +141,17 @@ export function AuditionDetailHeroSection({
         </div>
 
         <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 top-1/3 bg-gradient-to-t from-black/80 via-black/35 to-transparent"
-          aria-hidden
-        />
-        <div className="absolute bottom-4 left-4 right-4 z-[1] text-white">
-          <span
-            className={`mb-2 inline-block rounded-full px-3 py-1 text-xs font-semibold ${
-              status === 'OPEN'
-                ? 'bg-green-100 text-green-800'
-                : status === 'CLOSED'
-                  ? 'bg-gray-200 text-gray-700'
-                  : 'bg-amber-100 text-amber-900'
-            }`}
-          >
-            {pillLabel}
-          </span>
+          className={`absolute left-3 top-3 z-[2] rounded-full px-2 py-1 text-xs font-semibold ${statusBadgeClass(status)}`}
+        >
+          {pillLabel}
+        </div>
+
+        <div className="absolute bottom-0 left-0 right-0 z-[1] bg-gradient-to-t from-black/70 via-black/40 to-transparent p-4 pt-20 text-white">
           <h1
             className="mb-1 text-balance text-xl font-bold leading-snug md:text-2xl"
             style={{ fontWeight: AUDITION_DETAIL.heroTitleWeight }}
           >
-            {safeStr(title)}
+            {safeTitle}
           </h1>
           {tags.length > 0 ? (
             <div className="mb-2 flex flex-wrap gap-1.5" aria-label="오디션 태그">
@@ -168,7 +165,7 @@ export function AuditionDetailHeroSection({
               ))}
             </div>
           ) : null}
-          <p className="m-0 text-sm opacity-90">
+          <p className="m-0 text-sm text-white/80">
             마감 {endDateFormatted} · {safeStr(location)} · 지원자 {applicants}명
           </p>
           <div className="mt-3 flex flex-wrap gap-2">

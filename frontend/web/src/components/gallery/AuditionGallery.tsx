@@ -216,7 +216,7 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
           aria-label="추가 이미지 갤러리"
           onScroll={handleScroll}
           onPointerDown={onTrackPointerDown}
-          className="gallery-track scrollbar-hide max-w-full min-w-0 flex-1 snap-x snap-mandatory px-4"
+          className="gallery-track scrollbar-hide max-w-full min-w-0 flex-1 snap-x snap-mandatory"
           style={{ WebkitOverflowScrolling: 'touch' }}
         >
           {allImages.map((src, i) => (
