@@ -4,7 +4,6 @@ import { useCallback, useState, type MouseEvent } from 'react'
 import { Link } from '@/i18n.config'
 import { AUDITION_DETAIL, HERO } from '@/lib/design-tokens'
 import { safeStr } from '@/lib/utils/safe'
-import { AuditionDetailHeroImage } from '@/components/audition/AuditionDetailMedia'
 import { AUDITION_COVER_PLACEHOLDER_SRC } from '@/components/audition/AuditionEditorPreview'
 
 type AuditionDetailHeroSectionProps = {
@@ -27,38 +26,6 @@ type AuditionDetailHeroSectionProps = {
   applicantsCount: number
 }
 
-/** PC: 포스터 — 상세 모바일과 동일, 잘림 없음(contain) + 흰 배경. 클릭 시 원본 새 탭 */
-function DesktopPosterImage({ src, fullSizeHref }: { src: string; fullSizeHref: string }) {
-  const [failed, setFailed] = useState(false)
-  const trimmed = src.trim()
-  const url = !trimmed || failed ? AUDITION_COVER_PLACEHOLDER_SRC : trimmed
-  const href = (fullSizeHref.trim() || trimmed).trim()
-
-  const img = (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={url}
-      alt=""
-      className="block h-auto w-full max-h-[min(70vh,640px)] object-contain"
-      loading="eager"
-      decoding="async"
-      onError={() => setFailed(true)}
-    />
-  )
-
-  return (
-    <div className="flex w-full justify-center bg-white">
-      {href && !failed && url !== AUDITION_COVER_PLACEHOLDER_SRC ? (
-        <a href={href} target="_blank" rel="noopener noreferrer" className="block w-full">
-          {img}
-        </a>
-      ) : (
-        img
-      )}
-    </div>
-  )
-}
-
 function statusBadgeCopy(status: string): string {
   if (status === 'OPEN') return '모집중 · OPEN'
   if (status === 'CLOSED') return '마감 · CLOSED'
@@ -66,8 +33,8 @@ function statusBadgeCopy(status: string): string {
 }
 
 /**
- * 모바일: contain 대표 이미지(bg-white) + 하단 그라데이션 위 텍스트/CTA.
- * PC(lg+): 좌측 contain 포스터 + 우측 정보, 블러 배경.
+ * 풀폭 16:9 배너(object-cover) + 하단 그라데이션 위 제목·상태·CTA.
+ * 모바일·데스크톱 동일 레이아웃(유튜브형 상단 히어로).
  */
 export function AuditionDetailHeroSection({
   auditionId,
@@ -86,6 +53,7 @@ export function AuditionDetailHeroSection({
   const cover = safeStr(heroImageMediumUrl)
   const fullSize = safeStr(heroImageOriginalUrl)
   const [shareHint, setShareHint] = useState<'idle' | 'ok' | 'err'>('idle')
+  const [imgFailed, setImgFailed] = useState(false)
 
   const onShare = useCallback(async () => {
     const url = typeof window !== 'undefined' ? window.location.href : ''
@@ -113,22 +81,50 @@ export function AuditionDetailHeroSection({
 
   const isOpen = status === 'OPEN'
   const applicants = applicantsCount.toLocaleString()
-  const pillLabel = (statusPillText != null && String(statusPillText).trim().length > 0
-    ? String(statusPillText).trim()
-    : statusBadgeCopy(status)
+  const pillLabel = (
+    statusPillText != null && String(statusPillText).trim().length > 0
+      ? String(statusPillText).trim()
+      : statusBadgeCopy(status)
   ).trim()
   const heroApplyBlocked = Boolean(isOpen && disableHeroApply)
 
+  const hasCover = cover.length > 0
+  const displaySrc = hasCover && !imgFailed ? cover : hasCover ? AUDITION_COVER_PLACEHOLDER_SRC : ''
+  const openOriginalHref =
+    hasCover && !imgFailed ? (fullSize || cover).trim() : ''
+
+  const bannerImage = (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={displaySrc || AUDITION_COVER_PLACEHOLDER_SRC}
+      alt=""
+      className="block h-full w-full object-cover"
+      loading="eager"
+      decoding="async"
+      onError={() => setImgFailed(true)}
+    />
+  )
+
   return (
     <section className="relative w-full overflow-hidden">
-      {/* ——— 모바일 · contain 히어로(잘림 없음) + 하단 오버레이 UI ——— */}
-      <div className="lg:hidden w-full">
-        <div className="relative w-full bg-white">
-          {cover ? (
-            <AuditionDetailHeroImage src={cover} fullSizeHref={fullSize || cover} />
+      <div className="relative w-full">
+        <div className="relative aspect-video w-full bg-neutral-200">
+          {hasCover ? (
+            openOriginalHref.length > 0 ? (
+              <a
+                href={openOriginalHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="absolute inset-0 block"
+              >
+                {bannerImage}
+              </a>
+            ) : (
+              <div className="absolute inset-0">{bannerImage}</div>
+            )
           ) : (
             <div
-              className="flex min-h-[min(40vh,280px)] w-full items-center justify-center"
+              className="flex h-full w-full items-center justify-center"
               style={{
                 background: `linear-gradient(135deg, ${HERO.gradientStart}, ${HERO.gradientEnd})`,
               }}
@@ -136,217 +132,86 @@ export function AuditionDetailHeroSection({
               <span className="text-sm font-medium text-white/90">대표 이미지 없음</span>
             </div>
           )}
-          <div
-            className="pointer-events-none absolute inset-x-0 bottom-0 top-1/3 bg-gradient-to-t from-black/80 via-black/35 to-transparent"
-            aria-hidden
-          />
-          <div className="absolute bottom-4 left-4 right-4 z-[1] text-white">
-            <span
-              className={`mb-2 inline-block rounded-full px-3 py-1 text-xs font-semibold ${
-                status === 'OPEN'
-                  ? 'bg-green-100 text-green-800'
-                  : status === 'CLOSED'
-                    ? 'bg-gray-200 text-gray-700'
-                    : 'bg-amber-100 text-amber-900'
-              }`}
-            >
-              {pillLabel}
-            </span>
-            <h1
-              className="mb-1 text-balance text-xl font-bold leading-snug"
-              style={{ fontWeight: AUDITION_DETAIL.heroTitleWeight }}
-            >
-              {safeStr(title)}
-            </h1>
-            {tags.length > 0 ? (
-              <div className="mb-2 flex flex-wrap gap-1.5" aria-label="오디션 태그">
-                {tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-full border border-white/35 bg-white/10 px-2 py-0.5 text-[11px] font-medium text-white"
-                  >
-                    #{tag}
-                  </span>
-                ))}
-              </div>
-            ) : null}
-            <p className="m-0 text-sm opacity-90">
-              마감 {endDateFormatted} · {safeStr(location)} · 지원자 {applicants}명
-            </p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {isOpen && !heroApplyBlocked ? (
-                <a
-                  href="#audition-detail-apply"
-                  onClick={scrollToApplyBar}
-                  className="inline-flex items-center justify-center px-4 py-2 text-xs font-semibold text-white no-underline"
-                  style={{
-                    borderRadius: HERO.buttonRadiusPx,
-                    background: `linear-gradient(90deg, ${HERO.primaryGradientStart}, ${HERO.primaryGradientEnd})`,
-                  }}
-                >
-                  지원하기
-                </a>
-              ) : isOpen && heroApplyBlocked ? (
-                <span
-                  className="inline-flex cursor-not-allowed items-center px-4 py-2 text-xs font-semibold text-white/60"
-                  title={heroApplyDisabledReason ?? undefined}
-                  aria-disabled="true"
-                >
-                  지원하기
-                </span>
-              ) : (
-                <span className="inline-flex items-center px-4 py-2 text-xs font-semibold text-white/50">
-                  {status === 'CLOSED' ? '마감됨' : '지원 불가'}
-                </span>
-              )}
-              <button
-                type="button"
-                onClick={onShare}
-                className="inline-flex items-center border border-white/40 bg-white/10 px-4 py-2 text-xs font-semibold text-white"
-                style={{ borderRadius: HERO.buttonRadiusPx }}
-              >
-                {shareHint === 'ok' ? '복사됨' : shareHint === 'err' ? '실패' : '공유'}
-              </button>
-              <Link
-                href={`/auditions/${auditionId}/vote`}
-                className="inline-flex items-center border border-white/40 px-4 py-2 text-xs font-semibold text-white no-underline"
-                style={{ borderRadius: HERO.buttonRadiusPx }}
-              >
-                투표
-              </Link>
-            </div>
-          </div>
         </div>
-      </div>
 
-      {/* ——— PC · 포스터 카드 + 정보 컬럼 ——— */}
-      <div className="relative hidden lg:block">
-        {cover ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={cover}
-            alt=""
-            aria-hidden
-            className="pointer-events-none absolute inset-0 h-full w-full scale-105 object-cover object-top opacity-20 blur-3xl md:object-center"
-          />
-        ) : null}
         <div
-          className="relative w-full px-4 py-10"
-          style={{ background: 'linear-gradient(180deg, rgba(249,250,251,0.92) 0%, rgba(243,244,246,0.98) 100%)' }}
-        >
-          <div className="flex w-full items-start gap-8">
-            <div className="w-[360px] shrink-0 overflow-hidden">
-              {cover ? (
-                <DesktopPosterImage src={cover} fullSizeHref={fullSize || cover} />
-              ) : (
-                <div
-                  className="flex min-h-[280px] w-full items-center justify-center py-3 text-sm text-white/85"
-                  style={{
-                    background: `linear-gradient(135deg, ${HERO.gradientStart}, ${HERO.gradientEnd})`,
-                  }}
-                >
-                  대표 이미지 없음
-                </div>
-              )}
-            </div>
-
-            <div className="flex min-w-0 flex-1 flex-col justify-center gap-4 py-1">
-              <div>
+          className="pointer-events-none absolute inset-x-0 bottom-0 top-1/3 bg-gradient-to-t from-black/80 via-black/35 to-transparent"
+          aria-hidden
+        />
+        <div className="absolute bottom-4 left-4 right-4 z-[1] text-white">
+          <span
+            className={`mb-2 inline-block rounded-full px-3 py-1 text-xs font-semibold ${
+              status === 'OPEN'
+                ? 'bg-green-100 text-green-800'
+                : status === 'CLOSED'
+                  ? 'bg-gray-200 text-gray-700'
+                  : 'bg-amber-100 text-amber-900'
+            }`}
+          >
+            {pillLabel}
+          </span>
+          <h1
+            className="mb-1 text-balance text-xl font-bold leading-snug md:text-2xl"
+            style={{ fontWeight: AUDITION_DETAIL.heroTitleWeight }}
+          >
+            {safeStr(title)}
+          </h1>
+          {tags.length > 0 ? (
+            <div className="mb-2 flex flex-wrap gap-1.5" aria-label="오디션 태그">
+              {tags.map((tag) => (
                 <span
-                  className="inline-block rounded-full px-3 py-1 text-sm font-semibold"
-                  style={{
-                    background:
-                      status === 'OPEN'
-                        ? '#dcfce7'
-                        : status === 'CLOSED'
-                          ? '#f3f4f6'
-                          : '#fef3c7',
-                    color:
-                      status === 'OPEN'
-                        ? '#15803d'
-                        : status === 'CLOSED'
-                          ? '#4b5563'
-                          : '#b45309',
-                  }}
+                  key={tag}
+                  className="rounded-full border border-white/35 bg-white/10 px-2 py-0.5 text-[11px] font-medium text-white"
                 >
-                  {pillLabel}
+                  #{tag}
                 </span>
-              </div>
-
-              <h1
-                className="text-balance text-3xl font-bold leading-tight text-gray-900 xl:text-4xl"
-                style={{ fontWeight: AUDITION_DETAIL.heroTitleWeight }}
-              >
-                {safeStr(title)}
-              </h1>
-
-              {tags.length > 0 ? (
-                <div className="flex flex-wrap gap-2" aria-label="오디션 태그">
-                  {tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="rounded-full border border-gray-200 bg-gray-50 px-2.5 py-0.5 text-xs font-medium text-gray-700"
-                    >
-                      #{tag}
-                    </span>
-                  ))}
-                </div>
-              ) : null}
-
-              <p className="text-base text-gray-600">
-                마감 {endDateFormatted}
-                <span className="mx-2 text-gray-300">·</span>
-                {safeStr(location)}
-                <span className="mx-2 text-gray-300">·</span>
-                지원자 {applicants}명
-              </p>
-
-              <div className="mt-2 flex flex-wrap gap-3">
-                {isOpen && !heroApplyBlocked ? (
-                  <a
-                    href="#audition-detail-apply"
-                    onClick={scrollToApplyBar}
-                    className="inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold text-white no-underline"
-                    style={{
-                      borderRadius: HERO.buttonRadiusPx,
-                      background: `linear-gradient(90deg, ${HERO.primaryGradientStart}, ${HERO.primaryGradientEnd})`,
-                    }}
-                  >
-                    지원하기
-                  </a>
-                ) : isOpen && heroApplyBlocked ? (
-                  <span
-                    className="inline-flex cursor-not-allowed items-center rounded-lg border border-gray-200 bg-gray-100 px-5 py-2.5 text-sm font-semibold text-gray-400"
-                    title={heroApplyDisabledReason ?? undefined}
-                    aria-disabled="true"
-                  >
-                    지원하기
-                  </span>
-                ) : (
-                  <button
-                    type="button"
-                    disabled
-                    className="cursor-not-allowed rounded-lg border border-gray-200 bg-gray-100 px-5 py-2.5 text-sm font-semibold text-gray-400"
-                  >
-                    {status === 'CLOSED' ? '마감됨' : '지원 불가'}
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={onShare}
-                  className="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-800 hover:bg-gray-50"
-                >
-                  {shareHint === 'ok' ? '링크 복사됨' : shareHint === 'err' ? '복사 실패' : '공유'}
-                </button>
-                <Link
-                  href={`/auditions/${auditionId}/vote`}
-                  className="inline-flex items-center justify-center rounded-lg border px-5 py-2.5 text-sm font-semibold text-gray-800 no-underline hover:bg-gray-50"
-                  style={{ borderColor: AUDITION_DETAIL.cardBorderColor }}
-                >
-                  지원자 보기 · 투표
-                </Link>
-              </div>
+              ))}
             </div>
+          ) : null}
+          <p className="m-0 text-sm opacity-90">
+            마감 {endDateFormatted} · {safeStr(location)} · 지원자 {applicants}명
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {isOpen && !heroApplyBlocked ? (
+              <a
+                href="#audition-detail-apply"
+                onClick={scrollToApplyBar}
+                className="inline-flex items-center justify-center px-4 py-2 text-xs font-semibold text-white no-underline md:text-sm"
+                style={{
+                  borderRadius: HERO.buttonRadiusPx,
+                  background: `linear-gradient(90deg, ${HERO.primaryGradientStart}, ${HERO.primaryGradientEnd})`,
+                }}
+              >
+                지원하기
+              </a>
+            ) : isOpen && heroApplyBlocked ? (
+              <span
+                className="inline-flex cursor-not-allowed items-center px-4 py-2 text-xs font-semibold text-white/60 md:text-sm"
+                title={heroApplyDisabledReason ?? undefined}
+                aria-disabled="true"
+              >
+                지원하기
+              </span>
+            ) : (
+              <span className="inline-flex items-center px-4 py-2 text-xs font-semibold text-white/50 md:text-sm">
+                {status === 'CLOSED' ? '마감됨' : '지원 불가'}
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={onShare}
+              className="inline-flex items-center border border-white/40 bg-white/10 px-4 py-2 text-xs font-semibold text-white md:text-sm"
+              style={{ borderRadius: HERO.buttonRadiusPx }}
+            >
+              {shareHint === 'ok' ? '복사됨' : shareHint === 'err' ? '실패' : '공유'}
+            </button>
+            <Link
+              href={`/auditions/${auditionId}/vote`}
+              className="inline-flex items-center border border-white/40 px-4 py-2 text-xs font-semibold text-white no-underline md:text-sm"
+              style={{ borderRadius: HERO.buttonRadiusPx }}
+            >
+              투표
+            </Link>
           </div>
         </div>
       </div>

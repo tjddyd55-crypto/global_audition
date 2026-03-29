@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react'
+import { NextIntlClientProvider } from 'next-intl'
 import AuditionCard from '../audition/AuditionCard'
 import type { AuditionDto } from '../../lib/types/audition'
 
@@ -27,19 +28,27 @@ const mockAudition: AuditionDto = {
   benefits: [],
 }
 
+function renderAuditionCard(audition: AuditionDto) {
+  return render(
+    <NextIntlClientProvider locale="ko" messages={{}}>
+      <AuditionCard audition={audition} />
+    </NextIntlClientProvider>,
+  )
+}
+
 describe('AuditionCard', () => {
   it('should render audition title', () => {
-    render(<AuditionCard audition={mockAudition} />)
+    renderAuditionCard(mockAudition)
     expect(screen.getByText('테스트 오디션')).toBeInTheDocument()
   })
 
   it('should render status label', () => {
-    render(<AuditionCard audition={mockAudition} />)
-    expect(screen.getByText('모집중')).toBeInTheDocument()
+    renderAuditionCard(mockAudition)
+    expect(screen.getByText(/모집중/)).toBeInTheDocument()
   })
 
   it('should link to audition detail page', () => {
-    render(<AuditionCard audition={mockAudition} />)
-    expect(screen.getByRole('link')).toHaveAttribute('href', '/auditions/1')
+    renderAuditionCard(mockAudition)
+    expect(screen.getByRole('link').getAttribute('href')).toMatch(/\/auditions\/1$/)
   })
 })

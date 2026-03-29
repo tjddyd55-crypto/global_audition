@@ -258,7 +258,8 @@ export default function AuditionDetailPage() {
       />
 
       {embed ? (
-        <section className="w-full border-t border-neutral-200">
+        <section className="mt-4 w-full">
+          <h2 className="mb-2 px-4 text-lg font-semibold">소개 영상</h2>
           <div className="aspect-video w-full bg-black">
             <iframe
               title="audition-video"
@@ -267,17 +268,6 @@ export default function AuditionDetailPage() {
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
             />
-          </div>
-          <div className="px-4 py-3">
-            <h2
-              style={{
-                margin: 0,
-                fontSize: AUDITION_DETAIL.sectionTitlePx,
-                fontWeight: AUDITION_DETAIL.sectionTitleWeight,
-              }}
-            >
-              소개 영상
-            </h2>
           </div>
         </section>
       ) : null}

@@ -5,8 +5,7 @@ import AuditionGallery from '@/components/gallery/AuditionGallery'
 import { AUDITION_COVER_PLACEHOLDER_SRC } from '@/components/audition/AuditionEditorPreview'
 
 /**
- * 모바일 히어로: 잘림 없음 — bg-white + contain + max 높이.
- * `fullSizeHref` 가 있으면 탭으로 원본(확대) 열기.
+ * 16:9 풀폭 커버(잠재적 재사용). `fullSizeHref` 가 있으면 탭으로 원본 열기.
  */
 export function AuditionDetailHeroImage({ src, fullSizeHref }: { src: string; fullSizeHref?: string }) {
   const [failed, setFailed] = useState(false)
@@ -19,7 +18,7 @@ export function AuditionDetailHeroImage({ src, fullSizeHref }: { src: string; fu
     <img
       src={url}
       alt=""
-      className="block h-auto w-full max-h-[65vh] object-contain"
+      className="block aspect-video h-full w-full object-cover"
       loading="eager"
       decoding="async"
       onError={() => setFailed(true)}
@@ -27,7 +26,7 @@ export function AuditionDetailHeroImage({ src, fullSizeHref }: { src: string; fu
   )
 
   return (
-    <div className="flex w-full justify-center bg-white">
+    <div className="relative w-full overflow-hidden bg-neutral-200">
       {href && !failed && url !== AUDITION_COVER_PLACEHOLDER_SRC ? (
         <a href={href} target="_blank" rel="noopener noreferrer" className="block w-full">
           {img}
@@ -44,15 +43,15 @@ type AuditionDetailMediaProps = {
   galleryUrls: string[]
 }
 
-/** 히어로와 추가 이미지 사이 시각 구분 + 세로 스택 갤러리(잘림 없음) */
+/** 풀폭 가로 스크롤 갤러리(히어로·소개 영상과 동일 폭 규칙) */
 export function AuditionDetailMediaSection({ galleryUrls }: AuditionDetailMediaProps) {
   if (galleryUrls.length === 0) {
     return null
   }
 
   return (
-    <section className="w-full">
-      <div className="my-4 h-2 w-full bg-gray-100" aria-hidden />
+    <section className="mt-4 w-full">
+      <h2 className="mb-2 px-4 text-lg font-semibold">이미지</h2>
       <AuditionGallery images={galleryUrls} />
     </section>
   )

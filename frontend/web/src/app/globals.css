@@ -55,7 +55,7 @@
 
 .gallery-track {
   display: flex;
-  gap: 16px;
+  gap: 8px;
   overflow-x: auto;
   scroll-behavior: smooth;
   min-width: 0;

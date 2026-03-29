@@ -10,8 +10,8 @@ import {
   normalizeAuditionImages,
   type AuditionDto,
 } from '../../lib/types/audition'
+import { safeNum } from '../../lib/utils/safe'
 import { FALLBACK_TEXT, DEFAULT_IMAGES } from '../../lib/constants/fallbacks'
-import { AUDITION_CARD } from '../../lib/design-tokens'
 
 interface AuditionCardProps {
   audition: AuditionDto
@@ -23,34 +23,16 @@ const statusLabels: Record<string, string> = {
   CLOSED: '마감',
 }
 
-function StatusBadge({ status, label }: { status: string; label: string }) {
-  return (
-    <span
-      style={{
-        fontSize: AUDITION_CARD.badgeFontSizePx,
-        padding: `${AUDITION_CARD.badgePaddingY}px ${AUDITION_CARD.badgePaddingX}px`,
-        borderRadius: AUDITION_CARD.badgeRadius,
-        background: AUDITION_CARD.badgeBg,
-        color: AUDITION_CARD.badgeColor,
-        fontWeight: 500,
-      }}
-    >
-      {label}
-    </span>
-  )
-}
-
 export default function AuditionCard({ audition }: AuditionCardProps) {
   if (!audition) return null
   const id = audition?.id ?? ''
   const title =
     auditionHeadlineTitle(audition).trim() || audition.title.trim() || FALLBACK_TEXT.videoTitle
   const status = audition?.status ?? 'DRAFT'
-  const statusBadgeLabel =
+  const statusMeta =
     status === 'OPEN' && audition?.recruitmentRoundLabel?.trim()
       ? audition.recruitmentRoundLabel.trim()
       : statusLabels[status] ?? status
-  const description = audition?.description ?? ''
   const im = normalizeAuditionImages(audition?.images)
   const thumb = (im.thumb ?? '').trim()
   const medium = (im.medium ?? '').trim()
@@ -83,76 +65,28 @@ export default function AuditionCard({ audition }: AuditionCardProps) {
       })()
     : FALLBACK_TEXT.date
 
+  const location = (audition?.location ?? '').trim() || '—'
+  const applicants = safeNum(audition?.applicantsCount).toLocaleString()
+  const metaLine = `${statusMeta} · ${dateStr} · ${location} · 지원자 ${applicants}명`
+
   return (
-    <Link href={`/auditions/${id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-      <article
-        style={{
-          background: 'white',
-          border: `1px solid ${AUDITION_CARD.borderColor}`,
-          borderRadius: AUDITION_CARD.borderRadiusPx,
-          padding: AUDITION_CARD.paddingPx,
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
-          <h3
-            style={{
-              fontSize: AUDITION_CARD.titleFontSizePx,
-              fontWeight: AUDITION_CARD.titleFontWeight,
-              margin: 0,
-              flex: 1,
-              lineHeight: 1.4,
-              paddingRight: 8,
-            }}
-            className="line-clamp-2"
-          >
-            {title}
-          </h3>
-          <StatusBadge status={status} label={statusBadgeLabel} />
-        </div>
-
-        <p
-          style={{
-            fontSize: AUDITION_CARD.descFontSizePx,
-            color: AUDITION_CARD.descColor,
-            lineHeight: AUDITION_CARD.descLineHeight,
-            margin: '0 0 16px 0',
-          }}
-          className="line-clamp-2"
-        >
-          {description || FALLBACK_TEXT.description}
-        </p>
-
-        <div
-          className="mb-3 w-full bg-white"
-          style={{
-            borderRadius: AUDITION_CARD.imageRadiusPx,
-            overflow: 'hidden',
-          }}
-        >
+    <Link href={`/auditions/${id}`} className="block w-full text-inherit no-underline">
+      <article className="w-full">
+        <div className="aspect-video w-full overflow-hidden bg-neutral-200">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={imgSrc}
             alt=""
-            className="block h-auto w-full object-contain"
+            className="h-full w-full object-cover"
             loading="lazy"
             decoding="async"
             onError={onCoverError}
           />
         </div>
-
-        <p
-          style={{
-            fontSize: AUDITION_CARD.dateFontSizePx,
-            color: AUDITION_CARD.dateColor,
-            textAlign: 'right',
-            margin: 0,
-          }}
-        >
-          {dateStr}
-        </p>
+        <div className="px-4 py-3">
+          <h3 className="line-clamp-2 text-base font-semibold leading-snug">{title}</h3>
+          <p className="mt-1 text-sm text-gray-500">{metaLine}</p>
+        </div>
       </article>
     </Link>
   )

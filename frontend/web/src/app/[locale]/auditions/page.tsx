@@ -14,9 +14,8 @@ export default async function AuditionsPage({
   const t = await getTranslations('common')
 
   const containerStyle = {
-    maxWidth: 1200,
-    margin: '0 auto' as const,
-    padding: '0 24px',
+    width: '100%' as const,
+    padding: '0 16px',
     paddingTop: 80,
     paddingBottom: 80,
   }

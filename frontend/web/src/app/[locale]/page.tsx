@@ -72,17 +72,21 @@ export default function HomePage() {
           </div>
 
           {auditionsLoading ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 24 }}>
+            <div className="flex w-full flex-col">
               {[1, 2, 3].map((i) => (
-                <SkeletonAuditionCard key={i} />
+                <div key={i} className={i === 1 ? '' : 'mt-4'}>
+                  <SkeletonAuditionCard />
+                </div>
               ))}
             </div>
           ) : auditionsEmpty ? (
             <EmptyState message="등록된 오디션이 없습니다" />
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 24 }}>
+            <div className="flex w-full flex-col">
               {displayAuditions.map((audition, i) => (
-                <AuditionCard key={audition?.id ?? `audition-${i}`} audition={audition} />
+                <div key={audition?.id ?? `audition-${i}`} className={i === 0 ? '' : 'mt-4'}>
+                  <AuditionCard audition={audition} />
+                </div>
               ))}
             </div>
           )}

@@ -4,8 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { GalleryModal } from '@/components/gallery/GalleryModal'
 import { applyGalleryImageOnError } from '@/components/gallery/galleryFallback'
 
-/** `gap: 16px` — 스텝·스크롤 계산용 */
-const SLIDER_GAP_PX = 16
+/** `gap: 8px` (gap-2) — 스텝·스크롤 계산용 */
+const SLIDER_GAP_PX = 8
 const DRAG_CLICK_THRESHOLD_PX = 8
 
 export type AuditionGalleryProps = {
@@ -70,7 +70,7 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
     if (!el || allImages.length === 0) return
 
     const width = el.clientWidth
-    const step = width * 0.85 + SLIDER_GAP_PX
+    const step = width * 0.8 + SLIDER_GAP_PX
     const index = Math.round(el.scrollLeft / step)
     const clamped = Math.max(0, Math.min(index, allImages.length - 1))
     setCurrentIndex(clamped)
@@ -80,7 +80,7 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
   const scrollStepPx = useCallback(() => {
     const el = trackRef.current
     if (!el) return 320
-    return el.clientWidth * 0.85 + SLIDER_GAP_PX
+    return el.clientWidth * 0.8 + SLIDER_GAP_PX
   }, [])
 
   const scrollPrev = useCallback(() => {
@@ -197,9 +197,15 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
 
   return (
     <div className="gallery-container w-full">
-      <div className="flex w-full min-w-0 max-w-full items-center gap-2">
+      <div className="flex w-full min-w-0 max-w-full items-stretch gap-2">
         {showArrows ? (
-          <button type="button" className={navBtnClass} aria-label="이전 이미지" onClick={scrollPrev} disabled={!canScrollPrev}>
+          <button
+            type="button"
+            className={`${navBtnClass} hidden shrink-0 md:flex`}
+            aria-label="이전 이미지"
+            onClick={scrollPrev}
+            disabled={!canScrollPrev}
+          >
             ←
           </button>
         ) : null}
@@ -210,14 +216,14 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
           aria-label="추가 이미지 갤러리"
           onScroll={handleScroll}
           onPointerDown={onTrackPointerDown}
-          className="gallery-track max-w-full min-w-0 flex-1 snap-x snap-mandatory"
+          className="gallery-track scrollbar-hide max-w-full min-w-0 flex-1 snap-x snap-mandatory px-4"
           style={{ WebkitOverflowScrolling: 'touch' }}
         >
           {allImages.map((src, i) => (
             <button
               key={`${i}-${src.slice(0, 32)}`}
               type="button"
-              className="w-[85%] max-w-[85%] shrink-0 snap-center cursor-zoom-in border-0 bg-transparent p-0 text-left"
+              className="w-[80%] max-w-[80%] shrink-0 snap-center cursor-zoom-in border-0 bg-transparent p-0 text-left"
               onClick={() => onImageActivate(i)}
               aria-label={`이미지 ${i + 1} 크게 보기`}
             >
@@ -237,7 +243,13 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
         </div>
 
         {showArrows ? (
-          <button type="button" className={navBtnClass} aria-label="다음 이미지" onClick={scrollNext} disabled={!canScrollNext}>
+          <button
+            type="button"
+            className={`${navBtnClass} hidden shrink-0 md:flex`}
+            aria-label="다음 이미지"
+            onClick={scrollNext}
+            disabled={!canScrollNext}
+          >
             →
           </button>
         ) : null}

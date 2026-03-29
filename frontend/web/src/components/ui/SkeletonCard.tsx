@@ -2,34 +2,15 @@
 
 import { AUDITION_CARD } from '../../lib/design-tokens'
 
-/** 오디션 카드 스켈레톤 - 픽셀 스펙 동일 */
+/** 오디션 목록 행 스켈레톤(카드·테두리 없음, 유튜브형) */
 export function SkeletonAuditionCard() {
   return (
-    <div
-      style={{
-        background: 'white',
-        border: `1px solid ${AUDITION_CARD.borderColor}`,
-        borderRadius: AUDITION_CARD.borderRadiusPx,
-        padding: AUDITION_CARD.paddingPx,
-        height: '100%',
-      }}
-      className="animate-pulse"
-    >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
-        <div style={{ flex: 1, height: 18, background: '#e5e7eb', borderRadius: 4 }} />
-        <div style={{ width: 56, height: 22, background: '#e5e7eb', borderRadius: 999 }} />
+    <div className="w-full animate-pulse">
+      <div className="aspect-video w-full bg-neutral-200" />
+      <div className="space-y-2 px-4 py-3">
+        <div className="h-4 w-4/5 rounded bg-neutral-200" />
+        <div className="h-3 w-3/5 rounded bg-neutral-100" />
       </div>
-      <div style={{ width: 72, height: 18, background: '#f3f4f6', borderRadius: 4, marginBottom: 12 }} />
-      <div style={{ height: 36, background: '#f3f4f6', borderRadius: 4, marginBottom: 16 }} />
-      <div
-        style={{
-          height: AUDITION_CARD.imageHeightPx,
-          borderRadius: AUDITION_CARD.imageRadiusPx,
-          background: AUDITION_CARD.imageBg,
-          marginBottom: 12,
-        }}
-      />
-      <div style={{ height: 14, width: 72, background: '#f3f4f6', borderRadius: 4, marginLeft: 'auto' }} />
     </div>
   )
 }
