@@ -10,53 +10,17 @@ export type ImageViewerOverlayProps = {
   currentIndex: number
   onIndexChange: (index: number) => void
   onClose: () => void
-  /** dialog 접근성 라벨 */
   ariaLabel?: string
 }
 
 function preloadImageUrl(url: string | undefined): void {
   if (!url || url === GALLERY_IMAGE_FALLBACK_SRC) return
   const img = new Image()
-  img.src = url
-}
-
-function ViewerImage({ src, label }: { src: string; label: string }) {
-  const [loaded, setLoaded] = useState(false)
-
-  useEffect(() => {
-    setLoaded(false)
-  }, [src])
-
-  const finishLoad = useCallback(() => setLoaded(true), [])
-
-  return (
-    <div className="relative flex max-h-[85vh] w-full max-w-[min(100vw-2rem,1200px)] items-center justify-center">
-      {!loaded && (
-        <div className="absolute inset-0 z-0 min-h-[30vh] rounded bg-gray-800/80 animate-pulse" aria-hidden />
-      )}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        key={src}
-        src={stripImageUrlResizeParams(src)}
-        alt={label}
-        loading="eager"
-        fetchPriority="high"
-        draggable={false}
-        className="relative z-[1] max-h-[85vh] w-auto max-w-full object-contain transition-opacity duration-200 data-[loaded=false]:opacity-0 data-[loaded=true]:opacity-100"
-        data-loaded={loaded}
-        onLoad={finishLoad}
-        onError={(e) => {
-          applyGalleryImageOnError(e)
-          finishLoad()
-        }}
-      />
-    </div>
-  )
+  img.src = stripImageUrlResizeParams(url)
 }
 
 /**
- * 풀스크린 이미지 뷰어: 세로·가로 contain, 스와이프, PC 좌우 버튼, 인덱스·도트, 순환 네비.
- * 오디션 갤러리 / 프로필 등 공통 사용.
+ * 풀스크린 이미지 뷰어(검정 배경): 모바일 스와이프, PC 좌·우 이동, 인덱스 표시.
  */
 export function ImageViewerOverlay({
   images,
@@ -73,23 +37,27 @@ export function ImageViewerOverlay({
   const n = images.length
   const safeIndex = n === 0 ? 0 : Math.min(Math.max(0, currentIndex), n - 1)
   const current = images[safeIndex] ?? ''
+  const displaySrc = stripImageUrlResizeParams(current)
+
+  const [imgLoaded, setImgLoaded] = useState(false)
+  useEffect(() => {
+    setImgLoaded(false)
+  }, [displaySrc])
 
   const goPrev = useCallback(() => {
     if (n <= 1) return
-    onIndexChange(safeIndex === 0 ? n - 1 : safeIndex - 1)
+    onIndexChange((safeIndex - 1 + n) % n)
   }, [n, onIndexChange, safeIndex])
 
   const goNext = useCallback(() => {
     if (n <= 1) return
-    onIndexChange(safeIndex >= n - 1 ? 0 : safeIndex + 1)
+    onIndexChange((safeIndex + 1) % n)
   }, [n, onIndexChange, safeIndex])
 
   useEffect(() => {
     if (n === 0) return
-    const nextIdx = (safeIndex + 1) % n
-    const prevIdx = (safeIndex - 1 + n) % n
-    preloadImageUrl(images[nextIdx])
-    preloadImageUrl(images[prevIdx])
+    preloadImageUrl(images[(safeIndex + 1) % n])
+    preloadImageUrl(images[(safeIndex - 1 + n) % n])
   }, [safeIndex, images, n])
 
   useEffect(() => {
@@ -142,7 +110,7 @@ export function ImageViewerOverlay({
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex cursor-default items-center justify-center bg-black p-4"
+      className="fixed inset-0 z-50 flex cursor-default flex-col bg-black"
       role="dialog"
       aria-modal
       aria-label={ariaLabel}
@@ -154,13 +122,13 @@ export function ImageViewerOverlay({
           e.stopPropagation()
           onClose()
         }}
-        className="absolute right-3 top-3 z-[10002] flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-2xl text-white hover:bg-white/20 md:right-4 md:top-4"
+        className="absolute right-4 top-4 z-[2] text-3xl leading-none text-white hover:opacity-90"
         aria-label="닫기"
       >
         ×
       </button>
 
-      {n > 1 && (
+      {n > 1 ? (
         <>
           <button
             type="button"
@@ -168,10 +136,10 @@ export function ImageViewerOverlay({
               e.stopPropagation()
               goPrev()
             }}
-            className="absolute left-1 z-[10002] hidden min-h-12 min-w-12 rounded-full bg-white/10 text-3xl text-white hover:bg-white/20 md:left-4 md:flex md:items-center md:justify-center md:px-4 md:py-6"
+            className="absolute left-4 top-1/2 z-[2] hidden -translate-y-1/2 text-3xl text-white hover:opacity-90 md:block"
             aria-label="이전 이미지"
           >
-            ‹
+            ←
           </button>
           <button
             type="button"
@@ -179,25 +147,53 @@ export function ImageViewerOverlay({
               e.stopPropagation()
               goNext()
             }}
-            className="absolute right-1 z-[10002] hidden min-h-12 min-w-12 rounded-full bg-white/10 text-3xl text-white hover:bg-white/20 md:right-4 md:flex md:items-center md:justify-center md:px-4 md:py-6"
+            className="absolute right-4 top-1/2 z-[2] hidden -translate-y-1/2 text-3xl text-white hover:opacity-90 md:block"
             aria-label="다음 이미지"
           >
-            ›
+            →
           </button>
         </>
-      )}
+      ) : null}
 
       <div
-        className="relative flex w-full max-w-5xl flex-col items-center"
+        className="flex min-h-0 flex-1 flex-col"
         onClick={(e) => e.stopPropagation()}
-        onTouchStart={onTouchStart}
-        onTouchEnd={onTouchEnd}
       >
-        <ViewerImage src={current} label={`이미지 ${safeIndex + 1} / ${n}`} />
+        <div
+          className="relative flex min-h-0 flex-1 items-center justify-center"
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+        >
+          {!imgLoaded && (
+            <div
+              className="pointer-events-none absolute inset-8 rounded bg-neutral-800/80 animate-pulse"
+              aria-hidden
+            />
+          )}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            key={displaySrc}
+            src={displaySrc}
+            alt=""
+            loading="eager"
+            fetchPriority="high"
+            draggable={false}
+            className="relative z-[1] max-h-full max-w-full object-contain data-[loaded=false]:opacity-0 data-[loaded=true]:opacity-100"
+            data-loaded={imgLoaded}
+            onLoad={() => setImgLoaded(true)}
+            onError={(e) => {
+              applyGalleryImageOnError(e)
+              setImgLoaded(true)
+            }}
+          />
+        </div>
 
-        <div className="mt-3 flex w-full flex-col items-center gap-2">
-          {n > 1 && (
-            <div className="flex max-w-full flex-wrap justify-center gap-1.5 px-2" role="tablist" aria-label="이미지 선택">
+        {n > 1 ? (
+          <div
+            className="flex shrink-0 flex-col items-center gap-2 py-3"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex flex-wrap justify-center gap-1.5" role="tablist" aria-label="이미지 선택">
               {images.map((_, i) => (
                 <button
                   key={`viewer-dot-${i}`}
@@ -206,17 +202,17 @@ export function ImageViewerOverlay({
                   aria-selected={i === safeIndex}
                   aria-label={`${i + 1}번 이미지`}
                   className={`h-2 w-2 shrink-0 rounded-full transition-colors ${
-                    i === safeIndex ? 'bg-white' : 'bg-white/35 hover:bg-white/55'
+                    i === safeIndex ? 'bg-white' : 'bg-white/40 hover:bg-white/60'
                   }`}
                   onClick={() => onIndexChange(i)}
                 />
               ))}
             </div>
-          )}
-          <div className="tabular-nums text-sm text-white/90">
-            {safeIndex + 1} / {n}
+            <div className="tabular-nums text-sm text-white/90">
+              {safeIndex + 1} / {n}
+            </div>
           </div>
-        </div>
+        ) : null}
       </div>
     </div>
   )
