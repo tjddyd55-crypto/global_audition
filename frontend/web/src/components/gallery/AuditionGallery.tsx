@@ -20,13 +20,8 @@ function normalizeGalleryUrls(images: string[]): string[] {
   return out
 }
 
-/** PC 썸네일 100px + gap-4 — 스크롤 인덱스 계산용 */
-const DESKTOP_GALLERY_THUMB_PX = 100
-const DESKTOP_GALLERY_GAP_PX = 16
-
 /**
- * 모바일 베이스: 슬라이드당 wrapper w-full · img block·w-full·h-auto (object-fit 없음), 스토리 스냅.
- * md+: 100×100 썸네일 object-cover·가로 스크롤만 데스크톱에 적용.
+ * 피드형 슬라이드(모바일·PC 동일): globals.css 고정 높이 + cover. 클릭 시 라이트박스 `.fullscreen-image` contain.
  */
 export default function AuditionGallery({ images }: AuditionGalleryProps) {
   const allImages = useMemo(() => normalizeGalleryUrls(images), [images])
@@ -87,8 +82,9 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
   const onDesktopScroll = useCallback(() => {
     const el = desktopTrackRef.current
     if (!el || n === 0) return
-    const step = DESKTOP_GALLERY_THUMB_PX + DESKTOP_GALLERY_GAP_PX
-    const idx = Math.round(el.scrollLeft / step)
+    const w = el.clientWidth
+    if (w <= 0) return
+    const idx = Math.round(el.scrollLeft / w)
     setCurrentIndex(Math.min(Math.max(0, idx), n - 1))
   }, [n])
 
@@ -143,9 +139,9 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
   }
 
   return (
-    <div className="mx-auto w-full lg:max-w-[1280px]">
-      <div className="lg:hidden">
-        <div className="w-full overflow-hidden">
+    <div className="mx-auto w-full max-w-full md:max-w-[1280px]">
+      <div className="md:hidden">
+        <div className="gallery-container w-full">
           <div
             ref={mobileTrackRef}
             role="region"
@@ -160,12 +156,12 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
                   key={`m-${i}-${url.slice(0, 32)}`}
                   className="min-w-full shrink-0 snap-center"
                 >
-                  <div className="w-full overflow-hidden">
+                  <div className="audition-detail-gallery-slide-wrap">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={url}
                       alt=""
-                      className="h-auto w-full max-w-full cursor-pointer object-contain"
+                      className="cursor-pointer"
                       loading={i === 0 ? 'eager' : 'lazy'}
                       draggable={false}
                       onError={applyGalleryImageOnError}
@@ -179,36 +175,38 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
         </div>
       </div>
 
-      <div className="hidden lg:block w-full">
-        <div
-          ref={desktopTrackRef}
-          role="region"
-          aria-label="이미지 슬라이드"
-          onScroll={onDesktopScroll}
-          className="scrollbar-hide flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth [-webkit-overflow-scrolling:touch]"
-        >
-          {allImages.map((src, i) => {
-            const url = stripImageUrlResizeParams(src)
-            return (
+      <div className="hidden w-full md:block">
+        <div className="gallery-container w-full">
+          <div
+            ref={desktopTrackRef}
+            role="region"
+            aria-label="이미지 슬라이드"
+            onScroll={onDesktopScroll}
+            className="scrollbar-hide flex snap-x snap-mandatory overflow-x-auto scroll-smooth [-webkit-overflow-scrolling:touch]"
+          >
+            {allImages.map((src, i) => {
+              const url = stripImageUrlResizeParams(src)
+              return (
                 <div
                   key={`d-${i}-${url.slice(0, 32)}`}
-                  className="w-[300px] shrink-0 snap-start"
+                  className="min-w-full shrink-0 snap-center"
                 >
-                  <div className="h-[120px] w-full overflow-hidden rounded-lg">
+                  <div className="audition-detail-gallery-slide-wrap">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={url}
                       alt=""
-                      className="h-full w-full cursor-pointer object-cover"
-                    loading={i === 0 ? 'eager' : 'lazy'}
-                    draggable={false}
-                    onError={applyGalleryImageOnError}
-                    onClick={() => openLightbox(i)}
-                  />
+                      className="cursor-pointer"
+                      loading={i === 0 ? 'eager' : 'lazy'}
+                      draggable={false}
+                      onError={applyGalleryImageOnError}
+                      onClick={() => openLightbox(i)}
+                    />
+                  </div>
                 </div>
-              </div>
-            )
-          })}
+              )
+            })}
+          </div>
         </div>
       </div>
 
@@ -249,7 +247,7 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
                   <img
                     src={u}
                     alt=""
-                    className="block h-auto max-h-full w-auto max-w-full"
+                    className="fullscreen-image"
                     draggable={false}
                     onError={applyGalleryImageOnError}
                   />
