@@ -8,6 +8,10 @@ import { videoApi, type VideoContent } from '@/lib/api/videos'
 import { INPUT_BASE } from '@/lib/ui/specClasses'
 import { uploadAuditionImage } from '@/lib/api/uploads'
 import { DEFAULT_IMAGES } from '@/lib/constants/fallbacks'
+import {
+  mapChannelCategoriesForApi,
+  resolveFeaturedVideoIdForMePatch,
+} from '@/lib/channel/channelProfilePatch'
 
 const NATIONALITIES = [
   { value: '', label: '선택 안 함' },
@@ -237,13 +241,15 @@ export function ChannelMeStudioForm() {
 
         <div>
           <label className="mb-1 block text-sm font-medium text-neutral-800">대표 영상</label>
-          <p className="mb-2 text-xs text-neutral-500">목록에서 선택하거나 영상 ID를 직접 입력하세요. 비우면 저장 시 해제됩니다.</p>
+          <p className="mb-2 text-xs text-neutral-500">
+            목록에서 선택하거나, 내 채널에 등록한 YouTube URL·영상 ID·채널 영상 UUID를 입력하세요. 비우면 저장 시 해제됩니다.
+          </p>
           <input
             type="text"
             value={featuredVideoIdManual}
             onChange={(e) => setFeaturedVideoIdManual(e.target.value)}
             className={`${INPUT_BASE} mb-3 font-mono text-sm`}
-            placeholder="video UUID (선택)"
+            placeholder="UUID 또는 YouTube URL"
           />
 
           {videosLoading ? (

@@ -1,7 +1,9 @@
 package com.audition.platform.application.me;
 
+import com.audition.platform.domain.channel.ChannelVideo;
 import com.audition.platform.domain.channel.ChannelVideoRepository;
 import com.audition.platform.domain.user.User;
+import com.audition.platform.domain.util.YoutubeUrls;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -99,7 +101,8 @@ public final class UserChannelProfilePatchSupport {
     }
 
     /**
-     * {@code featuredVideoIdRaw}: null 이면 변경 없음, 빈 문자열이면 해제, UUID 문자열이면 해당 영상(소유자 일치)으로 설정.
+     * {@code featuredVideoIdRaw}: null 이면 변경 없음, 빈 문자열이면 해제.
+     * 그 외: {@code channel_videos.id}(UUID) 또는 YouTube 전체 URL/영상 ID — 소유 영상과 매칭될 때만 설정.
      */
     public static void applyFeaturedVideo(
             User user,
@@ -114,15 +117,34 @@ public final class UserChannelProfilePatchSupport {
             user.setFeaturedVideoId(null);
             return;
         }
-        UUID vid;
         try {
-            vid = UUID.fromString(raw);
-        } catch (IllegalArgumentException e) {
+            UUID vid = UUID.fromString(raw);
+            channelVideoRepository.findByIdAndOwnerId(vid, ownerId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                            "대표 영상을 찾을 수 없거나 권한이 없습니다."));
+            user.setFeaturedVideoId(vid);
+            return;
+        } catch (IllegalArgumentException ignored) {
+            // not a UUID — try YouTube URL / watch id
+        }
+        String ytId = YoutubeUrls.tryExtractYoutubeVideoId(raw);
+        if (ytId == null) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "대표 영상 ID 형식이 올바르지 않습니다.");
         }
-        channelVideoRepository.findByIdAndOwnerId(vid, ownerId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
-                        "대표 영상을 찾을 수 없거나 권한이 없습니다."));
-        user.setFeaturedVideoId(vid);
+        String normalizedTarget = ytId.trim();
+        List<ChannelVideo> mine = channelVideoRepository.findByOwnerIdOrderByCreatedAtDesc(ownerId);
+        for (ChannelVideo v : mine) {
+            String url = v.getVideoUrl();
+            if (url == null || url.isBlank()) {
+                continue;
+            }
+            String inUrl = YoutubeUrls.tryExtractYoutubeVideoId(url);
+            if (inUrl != null && normalizedTarget.equalsIgnoreCase(inUrl.trim())) {
+                user.setFeaturedVideoId(v.getId());
+                return;
+            }
+        }
+        throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                "대표 영상을 찾을 수 없거나 권한이 없습니다. 내 채널에 등록한 YouTube 영상 URL 또는 영상 ID를 입력해 주세요.");
     }
 }

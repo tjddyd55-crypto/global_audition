@@ -54,7 +54,7 @@ public class PatchMyChannelRequest {
     @Size(max = 3, message = "분야는 최대 3개까지입니다.")
     private List<@Size(max = 50) String> categories;
 
-    @Size(max = 40)
+    @Size(max = 2048)
     private String featuredVideoId;
 
     /** null 이면 SNS 미변경, 빈 배열이면 전체 삭제 */

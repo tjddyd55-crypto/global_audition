@@ -44,8 +44,11 @@ public class PatchMeProfileRequest {
     @Size(max = 3, message = "분야는 최대 3개까지입니다.")
     private List<@Size(max = 50) String> categories;
 
-    /** 내 소유 channel_videos.id. 빈 문자열이면 대표 영상 해제. */
-    @Size(max = 40)
+    /**
+     * 내 소유 {@code channel_videos.id}(UUID) 또는 YouTube URL/영상 ID.
+     * 빈 문자열이면 대표 영상 해제.
+     */
+    @Size(max = 2048)
     private String featuredVideoId;
 
     /**

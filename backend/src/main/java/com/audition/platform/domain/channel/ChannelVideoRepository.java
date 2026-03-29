@@ -20,6 +20,8 @@ public interface ChannelVideoRepository extends JpaRepository<ChannelVideo, UUID
     /** 소유자·공개 여부별 목록 (채널 공개 페이지용). */
     List<ChannelVideo> findByOwnerIdAndVisibilityOrderByCreatedAtDesc(UUID ownerId, String visibility);
 
+    List<ChannelVideo> findByOwnerIdOrderByCreatedAtDesc(UUID ownerId);
+
     Optional<ChannelVideo> findFirstByOwnerIdOrderByUpdatedAtDesc(UUID ownerId);
 
     long countByOwnerId(UUID ownerId);
