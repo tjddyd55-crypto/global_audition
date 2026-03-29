@@ -1,45 +1,37 @@
 'use client'
 
-import { useQuery } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
-import { useTranslations } from 'next-intl'
-import { auditionApi } from '../../../../../lib/api/auditions'
-import { ApplicantManagementView } from '@/components/audition/ApplicantManagementView'
+import { useRouter } from '@/i18n.config'
+import { useAuthStore } from '@/lib/auth/authStore'
 
-export default function AuditionApplicationsPage() {
+/**
+ * 공개 URL 유지 호환 — 기획사·관리자는 기획사 허브로 보냄.
+ */
+export default function AuditionApplicationsRedirectPage() {
   const params = useParams()
-  const t = useTranslations('common')
+  const router = useRouter()
+  const role = useAuthStore((s) => s.role)
+  const [ready, setReady] = useState(false)
   const auditionId = params.id as string
 
-  const { data: audition, isLoading, error } = useQuery({
-    queryKey: ['audition', auditionId],
-    queryFn: () => auditionApi.getById(auditionId),
-    enabled: !!auditionId,
-  })
+  useEffect(() => {
+    useAuthStore.getState().syncFromStorage()
+    setReady(true)
+  }, [])
 
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-xl">{t('loading')}</div>
-      </div>
-    )
-  }
-
-  if (error || !audition) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-xl text-red-600">{t('error')}</div>
-      </div>
-    )
-  }
+  useEffect(() => {
+    if (!ready || !auditionId) return
+    if (role === 'AGENCY' || role === 'ADMIN') {
+      router.replace(`/my/applicants?auditionId=${encodeURIComponent(auditionId)}`)
+    } else {
+      router.replace(`/auditions/${auditionId}`)
+    }
+  }, [auditionId, ready, role, router])
 
   return (
-    <ApplicantManagementView
-      auditionId={auditionId}
-      auditionTitle={audition.title}
-      backHref={`/auditions/${auditionId}`}
-      backLabel="← 오디션 상세"
-      queryKeyPrefix="audition-applications"
-    />
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 text-sm text-gray-600">
+      이동 중…
+    </div>
   )
 }

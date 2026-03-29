@@ -14,9 +14,20 @@ import { BTN_PRIMARY, BTN_SECONDARY, CARD_BASE, PAGE_CONTAINER, TEXT_SUB } from 
 type Props = {
   auditionId: string
   auditionTitle: string
+  /** 기본: 기획사 허브 지원자 관리 */
+  applicantsHubHref?: string
+  /** 기본: 시리즈·간편 상태 관리 */
+  statusManageHref?: string
 }
 
-export function AuditionRoundReviewPanel({ auditionId, auditionTitle }: Props) {
+export function AuditionRoundReviewPanel({
+  auditionId,
+  auditionTitle,
+  applicantsHubHref,
+  statusManageHref,
+}: Props) {
+  const applicantsHref = applicantsHubHref ?? `/my/applicants?auditionId=${encodeURIComponent(auditionId)}`
+  const manageHref = statusManageHref ?? `/my/auditions/${auditionId}/manage`
   const queryClient = useQueryClient()
   const [selectedRoundId, setSelectedRoundId] = useState<string | null>(null)
 
@@ -103,7 +114,7 @@ export function AuditionRoundReviewPanel({ auditionId, auditionTitle }: Props) {
     return (
       <div className={`${PAGE_CONTAINER} py-12 text-center`}>
         <p className="text-sm text-red-600">라운드 목록을 불러오지 못했습니다. 권한을 확인해 주세요.</p>
-        <Link href={`/auditions/${auditionId}/manage`} className="mt-4 inline-block text-sm font-medium text-violet-700 no-underline">
+        <Link href={manageHref} className="mt-4 inline-block text-sm font-medium text-violet-700 no-underline">
           ← 상태 관리
         </Link>
       </div>
@@ -119,8 +130,8 @@ export function AuditionRoundReviewPanel({ auditionId, auditionTitle }: Props) {
           </Link>
           <h1 className="mt-4 text-2xl font-bold text-gray-900">다단계 라운드 관리</h1>
           <p className={`${TEXT_SUB} mt-1`}>{auditionTitle}</p>
-          <Link href={`/auditions/${auditionId}/manage`} className="mt-3 inline-block text-sm text-violet-600 no-underline hover:underline">
-            지원자 상태 관리 →
+          <Link href={applicantsHref} className="mt-3 inline-block text-sm text-violet-600 no-underline hover:underline">
+            지원자 관리(보드) →
           </Link>
         </div>
       </div>

@@ -7,6 +7,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { userApi } from '../../../../lib/api/user'
 import { authApi } from '../../../../lib/api/auth'
 import { useTranslations } from 'next-intl'
+import { AgencyDashboardShell } from '@/components/agency/AgencyDashboardShell'
 
 interface BusinessProfileForm {
   name: string
@@ -44,7 +45,7 @@ export default function BusinessProfilePage() {
         }
 
         const user = await userApi.getCurrentUser()
-        if (user.role !== 'AGENCY') {
+        if (user.role !== 'AGENCY' && user.role !== 'ADMIN') {
           router.push('/')
           return
         }
@@ -98,8 +99,9 @@ export default function BusinessProfilePage() {
   }
 
   return (
-    <div className="min-h-screen p-4 md:p-8 bg-gray-50">
-      <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-8">
+    <AgencyDashboardShell>
+      <div className="min-h-screen p-4 md:p-8">
+        <div className="mx-auto max-w-4xl border border-gray-200 bg-white p-8">
         <h1 className="text-3xl font-bold mb-8">내 정보 관리</h1>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -228,7 +230,8 @@ export default function BusinessProfilePage() {
             </button>
           </div>
         </form>
+        </div>
       </div>
-    </div>
+    </AgencyDashboardShell>
   )
 }

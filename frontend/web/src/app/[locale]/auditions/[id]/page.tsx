@@ -15,7 +15,6 @@ import { useAuthStore } from '@/lib/auth/authStore'
 import { AuditionDetailHeroSection } from '@/components/audition/AuditionDetailHeroSection'
 import { AuditionDetailMediaSection } from '@/components/audition/AuditionDetailMedia'
 import { CREDIT_POLICY_AUDITION_APPLY, creditsApi } from '@/lib/api/credits'
-import { canManageAudition as userCanManageAudition } from '@/lib/audition/auditionPermissions'
 import { MultiRoundSubmitCta } from '@/components/application/MultiRoundSubmitCta'
 import { roundIdForRoundNumber } from '@/lib/audition/roundNav'
 import { toast } from 'sonner'
@@ -193,12 +192,6 @@ export default function AuditionDetailPage() {
   const showApplyLoginCta = isOpen && !accessToken
   const showApplySubmitCta = isOpen && accessToken && (role === 'APPLICANT' || role === 'ADMIN')
   const showApplyDisabledCta = isOpen && accessToken && !showApplySubmitCta
-  const canManageAudition = userCanManageAudition({
-    accessToken,
-    userId: myUserId,
-    ownerId: audition.ownerId,
-    role,
-  })
 
   const applyPolicySnapshot = applyPolicy
   const creditBalanceAmount = creditBalance?.balance ?? 0
@@ -480,42 +473,6 @@ export default function AuditionDetailPage() {
           </section>
         )}
 
-        {canManageAudition && (
-          <div
-            className="flex w-full flex-col gap-3 md:flex-row md:justify-center"
-            style={{ marginTop: AUDITION_DETAIL.benefitGridGapPx, textAlign: 'center' }}
-          >
-            <Link
-              href={`/auditions/${id}/edit`}
-              className="inline-flex w-full md:w-auto items-center justify-center"
-              style={{
-                padding: '12px 24px',
-                borderRadius: HERO.buttonRadiusPx,
-                border: `1px solid ${AUDITION_DETAIL.cardBorderColor}`,
-                color: '#111',
-                fontWeight: 600,
-                textDecoration: 'none',
-                background: '#fff',
-              }}
-            >
-              수정하기
-            </Link>
-            <Link
-              href={`/auditions/${id}/applications`}
-              className="inline-flex w-full md:w-auto items-center justify-center"
-              style={{
-                padding: '12px 24px',
-                borderRadius: HERO.buttonRadiusPx,
-                background: AUDITION_DETAIL.ownerLinkBg,
-                color: '#fff',
-                fontWeight: 600,
-                textDecoration: 'none',
-              }}
-            >
-              지원자 관리
-            </Link>
-          </div>
-        )}
       </div>
 
       <div
@@ -524,16 +481,7 @@ export default function AuditionDetailPage() {
         className="fixed bottom-0 left-0 right-0 z-50 border-t border-neutral-200 bg-white px-3 pt-3 pb-[max(12px,env(safe-area-inset-bottom))] outline-none"
       >
         <div className="flex gap-2">
-          {canManageAudition ? (
-            <>
-              <Link href={`/auditions/${id}/manage`} className={`${mainCtaClass} no-underline`}>
-                상태 관리
-              </Link>
-              <Link href={`/auditions/${id}/applications`} className={`${subCtaClass} no-underline`}>
-                지원자 관리
-              </Link>
-            </>
-          ) : showApplySubmitCta && alreadyApplied ? (
+          {showApplySubmitCta && alreadyApplied ? (
             <>
               <button type="button" disabled className={mainCtaClass}>
                 지원 완료
@@ -613,11 +561,11 @@ export default function AuditionDetailPage() {
           )}
         </div>
 
-        {showApplySubmitCta && alreadyApplied && !canManageAudition ? (
+        {showApplySubmitCta && alreadyApplied ? (
           <p className="mt-2 text-center text-xs text-neutral-500">이 오디션에 이미 지원하셨습니다.</p>
         ) : null}
 
-        {showApplySubmitCta && alreadyApplied && isMultiRoundAudition && myApplicationIdForRound && !canManageAudition ? (
+        {showApplySubmitCta && alreadyApplied && isMultiRoundAudition && myApplicationIdForRound ? (
           myCurrentRoundUuid ? (
             <div className="mt-2">
               <MultiRoundSubmitCta

@@ -1,36 +1,24 @@
 'use client'
 
-import { useQuery } from '@tanstack/react-query'
+import { useEffect } from 'react'
 import { useParams } from 'next/navigation'
-import { useTranslations } from 'next-intl'
-import { auditionApi } from '../../../../../../lib/api/auditions'
-import { ApplicantManagementView } from '@/components/audition/ApplicantManagementView'
+import { useRouter } from '@/i18n.config'
 
-export default function MyAuditionApplicationsPage() {
+/** 레거시 경로 — 지원자 관리 허브로 통합 */
+export default function MyAuditionApplicationsLegacyRedirect() {
   const params = useParams()
+  const router = useRouter()
   const id = params.id as string
-  const t = useTranslations('common')
 
-  const auditionQuery = useQuery({
-    queryKey: ['my-audition', id],
-    queryFn: () => auditionApi.getById(id),
-    enabled: !!id,
-  })
-
-  if (auditionQuery.isLoading) {
-    return <div className="flex min-h-screen items-center justify-center">{t('loading')}</div>
-  }
-  if (!auditionQuery.data) {
-    return <div className="flex min-h-screen items-center justify-center text-red-500">{t('error')}</div>
-  }
+  useEffect(() => {
+    if (id) {
+      router.replace(`/my/applicants?auditionId=${encodeURIComponent(id)}`)
+    }
+  }, [id, router])
 
   return (
-    <ApplicantManagementView
-      auditionId={id}
-      auditionTitle={auditionQuery.data.title}
-      backHref="/my/auditions"
-      backLabel="← 내 오디션 목록"
-      queryKeyPrefix="my-audition-applications"
-    />
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 text-sm text-gray-600">
+      이동 중…
+    </div>
   )
 }

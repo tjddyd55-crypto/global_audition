@@ -77,8 +77,10 @@ export default function LoginPage() {
       let path: string
       if (nextRaw && isSafeInternalNextPath(nextRaw)) {
         path = nextRaw.startsWith('/') ? nextRaw : `/${nextRaw}`
-      } else if (userRole === 'BUSINESS' || userRole === 'AGENCY') {
+      } else if (userRole === 'BUSINESS' || userRole === 'AGENCY' || userRole === 'ADMIN') {
         path = '/my/dashboard'
+      } else if (userRole === 'APPLICANT') {
+        path = '/my/applications'
       } else {
         path = '/'
       }

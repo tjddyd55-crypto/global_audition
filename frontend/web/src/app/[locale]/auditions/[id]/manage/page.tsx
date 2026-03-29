@@ -1,57 +1,35 @@
 'use client'
 
-import { useQuery } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
-import { useTranslations } from 'next-intl'
-import { auditionApi } from '../../../../../lib/api/auditions'
-import { AuditionManageList } from '@/components/audition/AuditionManageList'
+import { useRouter } from '@/i18n.config'
 import { useAuthStore } from '@/lib/auth/authStore'
-import { canManageAudition } from '@/lib/audition/auditionPermissions'
-import { auditionHeadlineTitle } from '@/lib/types/audition'
 
-export default function AuditionManagePage() {
+/** 공개 URL — 기획사 허브의 상태·지원자 관리로 이동 */
+export default function AuditionManageRedirectPage() {
   const params = useParams()
-  const t = useTranslations('common')
-  const auditionId = params.id as string
-  const accessToken = useAuthStore((s) => s.accessToken)
-  const myUserId = useAuthStore((s) => s.userId)
+  const router = useRouter()
   const role = useAuthStore((s) => s.role)
+  const [ready, setReady] = useState(false)
+  const auditionId = params.id as string
 
-  const { data: audition, isLoading, error } = useQuery({
-    queryKey: ['audition', auditionId, myUserId ?? 'anon'],
-    queryFn: () => auditionApi.getById(auditionId),
-    enabled: !!auditionId,
-  })
+  useEffect(() => {
+    useAuthStore.getState().syncFromStorage()
+    setReady(true)
+  }, [])
 
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-xl">{t('loading')}</div>
-      </div>
-    )
-  }
-
-  if (error || !audition) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-xl text-red-600">{t('error')}</div>
-      </div>
-    )
-  }
-
-  const showAddSeriesRound = canManageAudition({
-    accessToken,
-    userId: myUserId,
-    ownerId: audition.ownerId,
-    role,
-  })
+  useEffect(() => {
+    if (!ready || !auditionId) return
+    if (role === 'AGENCY' || role === 'ADMIN') {
+      router.replace(`/my/auditions/${auditionId}/manage`)
+    } else {
+      router.replace(`/auditions/${auditionId}`)
+    }
+  }, [auditionId, ready, role, router])
 
   return (
-    <AuditionManageList
-      auditionId={auditionId}
-      auditionTitleFallback={auditionHeadlineTitle(audition)}
-      processMode={audition.processMode ?? 'SINGLE'}
-      showAddSeriesRound={showAddSeriesRound}
-    />
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 text-sm text-gray-600">
+      이동 중…
+    </div>
   )
 }

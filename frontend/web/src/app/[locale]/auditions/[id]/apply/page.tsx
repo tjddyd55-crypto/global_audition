@@ -185,7 +185,7 @@ export default function ApplyPage() {
             }
             queryClient.invalidateQueries({ queryKey: ['audition', auditionId] })
             queryClient.invalidateQueries({ queryKey: ['credits', 'balance'] })
-            router.push('/my/dashboard')
+            router.push('/my/applications')
           }}
         />
       </div>

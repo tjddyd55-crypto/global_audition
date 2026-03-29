@@ -19,6 +19,7 @@ export default function MainHeader() {
   const pathname = usePathname()
   const queryClient = useQueryClient()
   const accessToken = useAuthStore((s) => s.accessToken)
+  const userRole = useAuthStore((s) => s.role)
   const [isMobileOpen, setIsMobileOpen] = useState(false)
   const [isLanguageOpen, setIsLanguageOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
@@ -28,6 +29,10 @@ export default function MainHeader() {
       queryClient.removeQueries({ queryKey: ['currentUser'] })
     }
   }, [accessToken, queryClient])
+
+  useEffect(() => {
+    useAuthStore.getState().syncFromStorage()
+  }, [accessToken])
 
   const { data: user, isLoading: meLoading } = useQuery({
     queryKey: ['currentUser', accessToken],
@@ -149,9 +154,15 @@ export default function MainHeader() {
                   <Link href="/profile" className={DROPDOWN_ITEM} onClick={closeUserMenu}>
                     프로필
                   </Link>
-                  <Link href="/my/dashboard" className={DROPDOWN_ITEM} onClick={closeUserMenu}>
-                    대시보드
-                  </Link>
+                  {userRole === 'AGENCY' || userRole === 'ADMIN' ? (
+                    <Link href="/my/dashboard" className={DROPDOWN_ITEM} onClick={closeUserMenu}>
+                      기획사 대시보드
+                    </Link>
+                  ) : userRole === 'APPLICANT' ? (
+                    <Link href="/my/applications" className={DROPDOWN_ITEM} onClick={closeUserMenu}>
+                      내 지원
+                    </Link>
+                  ) : null}
                   <Link href="/channel" className={DROPDOWN_ITEM} onClick={closeUserMenu}>
                     내 채널 관리
                   </Link>
@@ -222,13 +233,23 @@ export default function MainHeader() {
                 >
                   프로필
                 </Link>
-                <Link
-                  href="/my/dashboard"
-                  onClick={() => setIsMobileOpen(false)}
-                  className="w-full rounded-lg border border-[#E5E7EB] py-3 text-center text-sm text-gray-900"
-                >
-                  대시보드
-                </Link>
+                {userRole === 'AGENCY' || userRole === 'ADMIN' ? (
+                  <Link
+                    href="/my/dashboard"
+                    onClick={() => setIsMobileOpen(false)}
+                    className="w-full rounded-lg border border-[#E5E7EB] py-3 text-center text-sm text-gray-900"
+                  >
+                    기획사 대시보드
+                  </Link>
+                ) : userRole === 'APPLICANT' ? (
+                  <Link
+                    href="/my/applications"
+                    onClick={() => setIsMobileOpen(false)}
+                    className="w-full rounded-lg border border-[#E5E7EB] py-3 text-center text-sm text-gray-900"
+                  >
+                    내 지원
+                  </Link>
+                ) : null}
                 <Link
                   href="/channel"
                   onClick={() => setIsMobileOpen(false)}

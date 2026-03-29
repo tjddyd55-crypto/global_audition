@@ -16,6 +16,7 @@ import {
   TEXT_SUB,
   TITLE_PAGE,
 } from '@/lib/ui/specClasses'
+import { AgencyDashboardShell } from '@/components/agency/AgencyDashboardShell'
 
 function statusLabel(status?: string) {
   if (status === 'ACCEPTED') return '합격'
@@ -62,6 +63,7 @@ export default function MyDashboardPage() {
   const [hydrated, setHydrated] = useState(false)
 
   useEffect(() => {
+    useAuthStore.getState().syncFromStorage()
     setHydrated(true)
   }, [])
 
@@ -73,6 +75,13 @@ export default function MyDashboardPage() {
       router.push('/login')
     }
   }, [hydrated, accessToken, router])
+
+  useEffect(() => {
+    if (!hydrated) return
+    if (role === 'APPLICANT') {
+      router.replace('/my/applications')
+    }
+  }, [hydrated, role, router])
 
   const agencyEnabled = hydrated && (role === 'AGENCY' || role === 'ADMIN')
   const applicantEnabled = hydrated && role === 'APPLICANT'
@@ -94,6 +103,14 @@ export default function MyDashboardPage() {
 
   if (!hydrated || dashboardLoading) {
     return <div className="flex min-h-screen items-center justify-center">{t('loading')}</div>
+  }
+
+  if (role === 'APPLICANT') {
+    return (
+      <div className="flex min-h-screen items-center justify-center text-sm text-gray-600">
+        내 지원으로 이동 중…
+      </div>
+    )
   }
 
   /** 백엔드 대시보드 API는 AGENCY/ADMIN·APPLICANT 전용. SUPER_ADMIN 등은 별도 허브만 표시 */
@@ -136,63 +153,52 @@ export default function MyDashboardPage() {
     const data = agencyQuery.data
     if (!data) return <div className="flex min-h-screen items-center justify-center text-red-500">{t('error')}</div>
     return (
-      <div className="min-h-screen bg-gray-50">
+      <AgencyDashboardShell>
         <div className={`${PAGE_CONTAINER} py-6 ${SECTION_GAP}`}>
-          <h1 className={TITLE_PAGE}>기획자/관리자 대시보드</h1>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-            <div className={CARD_BASE}>
-              <div className="text-xl font-bold text-gray-900">{data.totalAuditions}</div>
-              <div className={TEXT_SUB}>공고수</div>
-            </div>
-            <div className={CARD_BASE}>
-              <div className="text-xl font-bold text-gray-900">{data.openAuditions}</div>
-              <div className={TEXT_SUB}>진행중</div>
-            </div>
-            <div className={CARD_BASE}>
-              <div className="text-xl font-bold text-gray-900">{data.totalApplications}</div>
-              <div className={TEXT_SUB}>지원수</div>
-            </div>
-            <div className={CARD_BASE}>
-              <div className="text-xl font-bold text-gray-900">{data.accepted}</div>
-              <div className={TEXT_SUB}>합격</div>
-            </div>
-            <div className={CARD_BASE}>
-              <div className="text-xl font-bold text-gray-900">{data.rejected}</div>
-              <div className={TEXT_SUB}>불합격</div>
-            </div>
-            <div className={CARD_BASE}>
-              <div className="text-xl font-bold text-gray-900">{data.pending}</div>
-              <div className={TEXT_SUB}>대기</div>
-            </div>
-          </div>
-          <div className="flex flex-col gap-3 md:flex-row">
+          <h1 className={TITLE_PAGE}>기획사 대시보드</h1>
+          <p className={`${TEXT_SUB} mt-2 max-w-2xl`}>
+            공고·지원자 처리는 상단 메뉴에서 이동할 수 있습니다. 숫자 요약은 통계 메뉴에서 확인하세요.
+          </p>
+          <div className="flex flex-col gap-3 md:flex-row md:flex-wrap">
             <Link href="/dashboard/auditions/create" className={BTN_PRIMARY}>
               공고 등록
             </Link>
             <Link href="/my/auditions" className={BTN_SECONDARY}>
-              내 공고 관리
+              오디션 관리
+            </Link>
+            <Link href="/my/applicants" className={BTN_SECONDARY}>
+              지원자 관리
+            </Link>
+            <Link href="/my/stats" className={BTN_SECONDARY}>
+              통계
             </Link>
             <Link href="/credits" className={BTN_SECONDARY}>
               크레딧
             </Link>
           </div>
-          <div className={CARD_BASE}>
-            <h2 className={`${TITLE_PAGE} mb-4`}>최근 지원</h2>
-            <ul className="flex flex-col gap-0 divide-y divide-[#E5E7EB]">
+          <div>
+            <h2 className={`${TITLE_PAGE} mb-2`}>최근 지원</h2>
+            <ul className="divide-y divide-gray-200 border border-gray-200 bg-white">
               {data.recentApplications.map((a) => (
-                <li key={a.id} className="flex items-center justify-between py-4 first:pt-0 last:pb-0">
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900">{a.auditionTitle ?? a.auditionId}</p>
-                    <p className={TEXT_SUB}>{a.applicantEmail ?? a.applicantId}</p>
+                <li key={a.id} className="flex items-center justify-between gap-3 px-4 py-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-gray-900">
+                      {a.auditionTitle ?? a.auditionId}
+                    </p>
+                    <p className={`${TEXT_SUB} truncate text-xs`}>{a.applicantEmail ?? a.applicantId}</p>
                   </div>
-                  <span className="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-700">{statusLabel(a.status)}</span>
+                  <span className="shrink-0 rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-700">
+                    {statusLabel(a.status)}
+                  </span>
                 </li>
               ))}
-              {data.recentApplications.length === 0 && <li className={TEXT_SUB}>데이터 없음</li>}
+              {data.recentApplications.length === 0 && (
+                <li className={`${TEXT_SUB} px-4 py-6 text-center`}>데이터 없음</li>
+              )}
             </ul>
           </div>
         </div>
-      </div>
+      </AgencyDashboardShell>
     )
   }
 

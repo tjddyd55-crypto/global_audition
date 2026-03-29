@@ -17,6 +17,10 @@ type Props = {
   processMode?: string
   /** 기획사·관리자: 다음 시리즈 차수 공고 생성 */
   showAddSeriesRound?: boolean
+  /** 상단 뒤로가기(기본: 공개 상세) */
+  backHref?: string
+  /** 다단계 라운드 심사 링크(기본: /my/auditions/… 경로) */
+  roundReviewHref?: string
 }
 
 export function AuditionManageList({
@@ -24,7 +28,11 @@ export function AuditionManageList({
   auditionTitleFallback,
   processMode,
   showAddSeriesRound = false,
+  backHref,
+  roundReviewHref,
 }: Props) {
+  const resolvedBackHref = backHref ?? `/auditions/${auditionId}`
+  const resolvedRoundReviewHref = roundReviewHref ?? `/my/auditions/${auditionId}/round-review`
   const queryClient = useQueryClient()
   const router = useRouter()
   const [category, setCategory] = useState<string | null>(null)
@@ -77,8 +85,8 @@ export function AuditionManageList({
         <p className="text-sm text-red-600">
           {forbidden ? '이 페이지는 기획사·관리자만 이용할 수 있습니다.' : '목록을 불러오지 못했습니다.'}
         </p>
-        <Link href={`/auditions/${auditionId}`} className="mt-4 inline-block text-sm font-medium text-violet-700 no-underline">
-          ← 오디션 상세
+        <Link href={resolvedBackHref} className="mt-4 inline-block text-sm font-medium text-violet-700 no-underline">
+          ← 뒤로
         </Link>
       </div>
     )
@@ -93,9 +101,9 @@ export function AuditionManageList({
     <div className="min-h-screen bg-gray-50 pb-10">
       <div className="border-b border-violet-100 bg-white py-8">
         <div className={PAGE_CONTAINER}>
-          <Link href={`/auditions/${auditionId}`} className="text-sm font-medium text-violet-700 no-underline hover:underline">
-            ← 오디션 상세
-          </Link>
+        <Link href={resolvedBackHref} className="text-sm font-medium text-violet-700 no-underline hover:underline">
+          ← 뒤로
+        </Link>
           <h1 className="mt-4 text-2xl font-bold text-gray-900">지원자 상태 관리</h1>
           <p className={`${TEXT_SUB} mt-1`}>{auditionTitleFallback}</p>
           <div className="mt-3 flex flex-wrap gap-2">
@@ -111,7 +119,7 @@ export function AuditionManageList({
             ) : null}
             {processMode === 'MULTI_ROUND' ? (
               <Link
-                href={`/auditions/${auditionId}/round-review`}
+                href={resolvedRoundReviewHref}
                 className="inline-flex rounded-lg border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-semibold text-violet-800 no-underline hover:bg-violet-100"
               >
                 다단계 라운드 심사 · 라운드 열기/닫기
