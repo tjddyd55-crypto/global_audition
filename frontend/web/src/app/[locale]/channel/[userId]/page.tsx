@@ -67,16 +67,16 @@ export default function ChannelByUserIdPage() {
 
   if (!userId) {
     return (
-      <div className="w-full px-3 py-12">
-        <p className="text-sm text-neutral-600">잘못된 주소입니다.</p>
+      <div className="w-full py-12">
+        <p className="px-4 text-sm text-neutral-600">잘못된 주소입니다.</p>
       </div>
     )
   }
 
   if (isLoading) {
     return (
-      <div className="w-full px-3 py-16">
-        <p className="text-base font-medium text-neutral-700">프로필을 불러오는 중…</p>
+      <div className="w-full py-16">
+        <p className="px-4 text-base font-medium text-neutral-700">프로필을 불러오는 중…</p>
       </div>
     )
   }
@@ -87,8 +87,8 @@ export default function ChannelByUserIdPage() {
         ? (error as { response?: { status?: number } }).response?.status === 404
         : false
     return (
-      <div className="w-full px-3 py-16">
-        <div className="rounded-2xl border border-neutral-200 bg-white px-6 py-10 text-center shadow-sm">
+      <div className="w-full py-16">
+        <div className="mx-4 rounded-2xl border border-neutral-200 bg-white px-4 py-10 text-center shadow-sm">
           <p className="text-lg font-semibold text-neutral-900">
             {blocked ? '이 채널은 비공개입니다' : '채널을 불러오지 못했습니다'}
           </p>
@@ -113,7 +113,7 @@ export default function ChannelByUserIdPage() {
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(255,255,255,0.12),_transparent_55%)]" />
           <div className="relative flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
             <div className="flex min-w-0 flex-1 flex-col gap-5 sm:flex-row sm:items-start sm:gap-6">
-              <div className="relative mx-auto h-24 w-24 shrink-0 overflow-hidden rounded-2xl ring-4 ring-white/35 sm:mx-0 sm:h-28 sm:w-28 md:h-32 md:w-32">
+              <div className="relative h-24 w-24 shrink-0 self-center overflow-hidden rounded-2xl ring-4 ring-white/35 sm:self-start sm:h-28 sm:w-28 md:h-32 md:w-32">
                 {profileUrl ? (
                   <Image src={profileUrl} alt="" fill className="object-cover" unoptimized sizes="128px" />
                 ) : (
@@ -193,7 +193,7 @@ export default function ChannelByUserIdPage() {
           }`}
         >
           {tab === 'info' ? (
-            <div className="mx-auto max-w-2xl space-y-6">
+            <div className="w-full space-y-6 px-4 py-3">
               {intro ? (
                 <section>
                   <h2 className="text-xs font-bold uppercase tracking-wide text-neutral-500">소개</h2>

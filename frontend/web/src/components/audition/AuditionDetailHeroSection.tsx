@@ -39,7 +39,7 @@ function DesktopPosterImage({ src, fullSizeHref }: { src: string; fullSizeHref: 
     <img
       src={url}
       alt=""
-      className="mx-auto block h-auto w-full max-h-[min(70vh,640px)] object-contain"
+      className="block h-auto w-full max-h-[min(70vh,640px)] object-contain"
       loading="eager"
       decoding="async"
       onError={() => setFailed(true)}
@@ -231,7 +231,7 @@ export function AuditionDetailHeroSection({
           />
         ) : null}
         <div
-          className="relative mx-auto w-full max-w-6xl px-6 py-10"
+          className="relative w-full px-4 py-10"
           style={{ background: 'linear-gradient(180deg, rgba(249,250,251,0.92) 0%, rgba(243,244,246,0.98) 100%)' }}
         >
           <div className="flex w-full items-start gap-8">

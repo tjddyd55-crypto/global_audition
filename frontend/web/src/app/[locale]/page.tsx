@@ -112,7 +112,7 @@ export default function HomePage() {
       </section>
 
       <section style={sectionStyle}>
-        <div className="w-full px-3">
+        <div className="w-full">
           <div style={{ marginBottom: 24, textAlign: 'center' }}>
             <h2 style={{ fontSize: 24, fontWeight: 700, margin: '0 0 8px 0' }}>최신 영상</h2>
             <p style={{ fontSize: 14, color: '#666', margin: 0 }}>최근 업로드된 영상을 확인하세요</p>
@@ -149,7 +149,7 @@ export default function HomePage() {
             </div>
           )}
 
-          <div style={{ marginTop: 24, textAlign: 'center' }}>
+          <div className="px-4 text-center" style={{ marginTop: 24 }}>
             <Link
               href="/videos"
               style={{

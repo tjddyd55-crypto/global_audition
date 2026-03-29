@@ -27,7 +27,7 @@ const IFRAME_ALLOW =
   'autoplay; encrypted-media; picture-in-picture; accelerometer; clipboard-write; gyroscope; fullscreen'
 
 const OVERLAY_Z =
-  'fixed inset-0 z-[9999] flex items-center justify-center bg-black p-2 transition-opacity duration-200 ease-out sm:p-4'
+  'fixed inset-0 z-[9999] flex items-center justify-center bg-black p-0 transition-opacity duration-200 ease-out'
 
 function resolvePlay(
   play: VideoEmbedPlayPayload | null | undefined,
@@ -152,10 +152,8 @@ export function VideoEmbedOverlay({ videoUrl, play, onClose }: VideoEmbedOverlay
   const overlayOpacity = entered ? 'opacity-100' : 'opacity-0'
   const panelMotion = entered ? 'scale-100' : 'scale-95 opacity-0'
   const panelMotionReady = 'transition-[transform,opacity] duration-200 ease-out'
-  /** 모바일: 가로 폭·높이 활용, sm 이상에서만 max-w 캡 */
-  const panelMax = isShorts
-    ? 'mx-auto w-full max-w-none sm:max-w-md'
-    : 'w-full max-w-none sm:max-w-3xl'
+  /** 풀폭 패널(최대 너비 제한 없음) */
+  const panelMax = 'w-full max-w-none'
   const aspectClass = isShorts ? 'aspect-[9/16]' : 'aspect-video'
 
   if (!embedSrc) {
@@ -253,7 +251,7 @@ export function VideoEmbedOverlay({ videoUrl, play, onClose }: VideoEmbedOverlay
         ) : null}
 
         <div
-          className={`relative w-full max-sm:max-h-[min(100dvh,100vh)] overflow-hidden rounded-xl bg-black ${aspectClass}`}
+          className={`relative w-full max-sm:max-h-[min(100dvh,100vh)] overflow-hidden bg-black ${aspectClass}`}
         >
           {showThumb && thumb ? (
             <img

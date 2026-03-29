@@ -172,7 +172,7 @@ export default function ChannelPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-violet-50/40 to-neutral-50">
-      <div className={`w-full px-3 py-6 ${SECTION_GAP}`}>
+      <div className={`w-full px-4 py-6 ${SECTION_GAP}`}>
         <h1 className={TITLE_PAGE}>내 채널 관리</h1>
 
         <ChannelSettingsPanel />

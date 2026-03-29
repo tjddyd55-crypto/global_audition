@@ -59,14 +59,22 @@ export function VideoDetailPageClient() {
     }
   }, [id])
 
-  const outerClass = 'w-full px-3 pb-20 pt-[88px]'
+  const outerClass = 'w-full pb-20 pt-[88px]'
 
   if (!id || route.kind === 'none') {
-    return <div className={outerClass}>영상을 찾을 수 없습니다.</div>
+    return (
+      <div className={outerClass}>
+        <p className="px-4 py-3">영상을 찾을 수 없습니다.</p>
+      </div>
+    )
   }
 
   if (route.kind === 'loading') {
-    return <div className={outerClass}>불러오는 중…</div>
+    return (
+      <div className={outerClass}>
+        <p className="px-4 py-3">불러오는 중…</p>
+      </div>
+    )
   }
 
   if (route.kind === 'channel') {

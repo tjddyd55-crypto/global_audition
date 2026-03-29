@@ -33,12 +33,12 @@ export function VideosBrowsePageClient() {
 
   return (
     <div className="w-full pb-16 pt-20">
-      <div className="px-3 pb-6">
+      <div className="px-4 pb-6">
         <h1 className="text-[28px] font-bold leading-tight">영상 둘러보기</h1>
         <p className="mt-2 text-base text-neutral-600">실제 공개 영상이 최신 상태로 반영됩니다</p>
       </div>
 
-      <div className="mb-4 flex flex-wrap gap-2 px-3">
+      <div className="mb-4 flex flex-wrap gap-2 px-4">
         <select
           value={filterCategory}
           onChange={(e) => setFilterCategory(e.target.value as (typeof CATEGORIES)[number])}
@@ -63,7 +63,7 @@ export function VideosBrowsePageClient() {
       {isLoading ? (
         <div className="py-12 text-center text-sm text-neutral-500">영상을 불러오는 중…</div>
       ) : isError ? (
-        <div className="border border-red-100 bg-red-50 px-3 py-8 text-center text-sm text-red-600">
+        <div className="border border-red-100 bg-red-50 px-4 py-8 text-center text-sm text-red-600">
           영상 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.
         </div>
       ) : sorted.length === 0 ? (

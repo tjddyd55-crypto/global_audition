@@ -260,7 +260,7 @@ export function ApplicantManagementView({
             {displayTitle}
           </h1>
           {displaySubtitle ? (
-            <p className="mt-3 max-w-3xl text-base leading-relaxed text-gray-600 md:text-lg">{displaySubtitle}</p>
+            <p className="mt-3 w-full text-base leading-relaxed text-gray-600 md:text-lg">{displaySubtitle}</p>
           ) : null}
           <p className={`${TEXT_SUB} mt-3 text-sm font-medium text-gray-700`}>
             총 지원자 {applicantTotalCount}명

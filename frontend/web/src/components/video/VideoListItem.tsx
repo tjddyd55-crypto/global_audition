@@ -50,7 +50,7 @@ export function VideoListItem({
         </div>
       </Link>
 
-      <div className="flex gap-3 px-3 py-2">
+      <div className="flex gap-3 px-4 py-3">
         <Link
           href={href}
           className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full bg-neutral-200"
@@ -80,7 +80,7 @@ export function VideoListItem({
         </button>
       </div>
 
-      {footer ? <div className="px-3 pb-2">{footer}</div> : null}
+      {footer ? <div className="px-4 pb-3">{footer}</div> : null}
     </article>
   )
 }

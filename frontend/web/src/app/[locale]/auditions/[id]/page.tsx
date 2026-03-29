@@ -237,8 +237,6 @@ export default function AuditionDetailPage() {
 
   /** 하단 고정 CTA(모바일 2열 대비) 여백 */
   const container: React.CSSProperties = {
-    maxWidth: AUDITION_DETAIL.containerMaxWidthPx,
-    margin: '0 auto',
     paddingBottom: Math.max(AUDITION_DETAIL.fixedCtaHeightPx * 2, 120) + AUDITION_DETAIL.mainGridGapPx,
   }
 
@@ -261,41 +259,32 @@ export default function AuditionDetailPage() {
 
       {embed ? (
         <section className="w-full border-t border-neutral-200">
-          <div className="mx-auto w-full max-w-[1200px] px-4 py-6 md:px-6">
+          <div className="aspect-video w-full bg-black">
+            <iframe
+              title="audition-video"
+              src={embed}
+              className="h-full w-full border-0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+          <div className="px-4 py-3">
             <h2
               style={{
-                margin: '0 0 12px 0',
+                margin: 0,
                 fontSize: AUDITION_DETAIL.sectionTitlePx,
                 fontWeight: AUDITION_DETAIL.sectionTitleWeight,
               }}
             >
               소개 영상
             </h2>
-            <div
-              style={{
-                position: 'relative',
-                paddingBottom: '56.25%',
-                height: 0,
-                borderRadius: AUDITION_DETAIL.videoRadiusPx,
-                overflow: 'hidden',
-                background: '#000',
-              }}
-            >
-              <iframe
-                title="audition-video"
-                src={embed}
-                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none' }}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            </div>
           </div>
         </section>
       ) : null}
 
       {galleryExtra.length > 0 ? <AuditionDetailMediaSection galleryUrls={galleryExtra} /> : null}
 
-      <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6" style={{ ...container, paddingTop: AUDITION_DETAIL.sectionGapPx }}>
+      <div className="w-full px-4" style={{ ...container, paddingTop: AUDITION_DETAIL.sectionGapPx }}>
         <div
           className="grid grid-cols-1 lg:grid-cols-[1fr_320px]"
           style={{
@@ -453,7 +442,7 @@ export default function AuditionDetailPage() {
 
         {canManageAudition && (
           <div
-            className="flex w-full max-w-md mx-auto flex-col gap-3 px-2 md:max-w-none md:flex-row md:justify-center md:px-0"
+            className="flex w-full flex-col gap-3 md:flex-row md:justify-center"
             style={{ marginTop: AUDITION_DETAIL.benefitGridGapPx, textAlign: 'center' }}
           >
             <Link
@@ -505,7 +494,7 @@ export default function AuditionDetailPage() {
         }}
       >
         <div
-          className="mx-auto flex max-w-[1200px] flex-col gap-3 px-4 py-4 md:flex-row md:items-center md:justify-between"
+          className="flex w-full flex-col gap-3 px-4 py-4 md:flex-row md:items-center md:justify-between"
           style={{ paddingLeft: AUDITION_DETAIL.fixedCtaPaddingPx, paddingRight: AUDITION_DETAIL.fixedCtaPaddingPx }}
         >
           <div className="flex w-full flex-col gap-2 min-[480px]:flex-row min-[480px]:items-center md:w-auto">

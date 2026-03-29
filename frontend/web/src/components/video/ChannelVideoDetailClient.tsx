@@ -283,11 +283,19 @@ export function ChannelVideoDetailClient({ videoId, initialDetail }: Props) {
   const shellClass = 'w-full pb-20 pt-[88px]'
 
   if (isLoading && !detail) {
-    return <div className={shellClass}>불러오는 중…</div>
+    return (
+      <div className={shellClass}>
+        <p className="px-4 py-3">불러오는 중…</p>
+      </div>
+    )
   }
 
   if (!detail) {
-    return <div className={shellClass}>영상을 찾을 수 없습니다.</div>
+    return (
+      <div className={shellClass}>
+        <p className="px-4 py-3">영상을 찾을 수 없습니다.</p>
+      </div>
+    )
   }
 
   const showDesc = descriptionExpanded ? (detail.description ?? '') : descParts.preview
@@ -307,28 +315,28 @@ export function ChannelVideoDetailClient({ videoId, initialDetail }: Props) {
                 className="h-full w-full border-0"
               />
             ) : (
-              <div className="flex h-full min-h-[12rem] items-center justify-center px-3 text-center text-sm text-white">
+              <div className="flex h-full min-h-[12rem] items-center justify-center px-4 text-center text-sm text-white">
                 재생할 수 있는 영상 URL이 없습니다.
               </div>
             )}
           </div>
 
           {detail.category ? (
-            <div className="px-3 pt-2">
+            <div className="px-4 pt-2">
               <span className="text-xs font-semibold" style={{ color: ACCENT }}>
                 {detail.category}
               </span>
             </div>
           ) : null}
 
-          <div className="px-3 py-3">
+          <div className="px-4 py-3">
             <h1 className="text-base font-semibold leading-snug">{detail.title}</h1>
             <div className="mt-1 text-sm text-neutral-500">
               조회 {detail.viewCount.toLocaleString('ko-KR')}회 · {formatRelativeKo(detail.publishedAt)}
             </div>
           </div>
 
-          <div className="flex items-center gap-4 overflow-x-auto px-3 py-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex items-center gap-4 overflow-x-auto px-4 py-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <button type="button" disabled={likeBusy} onClick={() => void onLike()} style={actionBtnBase(detail.liked)}>
               <span aria-hidden>👍</span>
               <span>{detail.likeCount.toLocaleString('ko-KR')}</span>
@@ -347,7 +355,7 @@ export function ChannelVideoDetailClient({ videoId, initialDetail }: Props) {
             </button>
           </div>
 
-          <div className="flex items-center justify-between gap-3 border-b border-neutral-200 px-3 py-3">
+          <div className="flex items-center justify-between gap-3 border-b border-neutral-200 px-4 py-3">
             <Link
               href={channelHref}
               className="flex min-w-0 flex-1 items-center gap-3 text-inherit no-underline"
@@ -385,7 +393,7 @@ export function ChannelVideoDetailClient({ videoId, initialDetail }: Props) {
             </button>
           </div>
 
-          <div className="border-b border-neutral-200 px-3 py-3 text-sm leading-relaxed text-neutral-800">
+          <div className="border-b border-neutral-200 px-4 py-3 text-sm leading-relaxed text-neutral-800">
             <p className="m-0 whitespace-pre-wrap">{showDesc}</p>
             {descParts.needsMore ? (
               <button
@@ -399,7 +407,7 @@ export function ChannelVideoDetailClient({ videoId, initialDetail }: Props) {
             ) : null}
           </div>
 
-          <section className="px-3 pt-4">
+          <section className="px-4 pt-4">
             <h2 className="mb-3 text-base font-bold">댓글 {comments.length}개</h2>
             <div className="mb-4 flex gap-3 border-b border-neutral-200 pb-4">
               <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full">
@@ -411,7 +419,7 @@ export function ChannelVideoDetailClient({ videoId, initialDetail }: Props) {
                   value={commentDraft}
                   onChange={(e) => setCommentDraft(e.target.value)}
                   placeholder="댓글을 입력하세요..."
-                  className="mb-2 box-border w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+                  className="mb-2 box-border w-full rounded-lg border border-neutral-300 px-4 py-2 text-sm"
                 />
                 <div className="flex justify-end gap-2">
                   <button
@@ -459,7 +467,7 @@ export function ChannelVideoDetailClient({ videoId, initialDetail }: Props) {
         </div>
 
         <aside className="w-full border-t border-neutral-200 px-0 py-6 lg:w-[360px] lg:flex-shrink-0 lg:border-t-0 lg:border-l lg:border-neutral-200 lg:py-4 lg:pl-4 lg:pr-3">
-          <h2 className="mb-3 px-3 text-base font-bold lg:px-0">추천 영상</h2>
+          <h2 className="mb-3 px-4 text-base font-bold lg:px-0">추천 영상</h2>
           <div className="w-full">
             {recommendations.map((item, index) => (
               <div key={item.videoId} className={index > 0 ? 'mt-4' : ''}>

@@ -47,7 +47,7 @@ export function ChannelMyVideoList({
 
   return (
     <div className="w-full space-y-3">
-      <div className="flex flex-wrap items-center justify-end gap-2 px-3">
+      <div className="flex flex-wrap items-center justify-end gap-2 px-4">
         <button type="button" className={BTN_RELOAD} onClick={() => globalThis.location?.reload()}>
           reload
         </button>
@@ -98,12 +98,12 @@ export function ChannelMyVideoList({
           })}
         </div>
       ) : (
-        <div className="border-y border-neutral-200 px-3 py-8">
+        <div className="border-y border-neutral-200 px-4 py-8">
           <p className={`${TEXT_SUB} mb-4 text-center text-base`}>등록된 영상이 없습니다</p>
           <button
             type="button"
             onClick={onOpenUploadForm}
-            className={`${BTN_UPLOAD_PRIMARY} mx-auto flex w-full max-w-xs justify-center`}
+            className={`${BTN_UPLOAD_PRIMARY} flex w-full justify-center`}
           >
             첫 영상 추가하기
           </button>

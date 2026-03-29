@@ -32,7 +32,7 @@ export function ChannelPublicVideoList({
 
   if (videosError && displayVideos.length === 0) {
     return (
-      <div className="space-y-2 px-3 py-8 text-center">
+      <div className="space-y-2 px-4 py-8 text-center">
         <p className="text-sm text-red-600">영상 목록 API를 불러오지 못했습니다.</p>
         <p className="text-xs text-neutral-500">잠시 후 새로고침 하거나, 네트워크를 확인해 주세요.</p>
       </div>
@@ -52,7 +52,7 @@ export function ChannelPublicVideoList({
 
   return (
     <div className="w-full">
-      <div className="flex justify-end px-3 pb-2">
+      <div className="flex justify-end px-4 pb-2">
         <button type="button" className={BTN_RELOAD} onClick={() => globalThis.location?.reload()}>
           reload
         </button>
