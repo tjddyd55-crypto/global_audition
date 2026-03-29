@@ -20,13 +20,13 @@ function normalizeGalleryUrls(images: string[]): string[] {
   return out
 }
 
-/** 데스크톱 카드 폭 + gap-4(1rem) — 스크롤 인덱스 계산용 */
-const DESKTOP_GALLERY_CARD_PX = 300
+/** PC 썸네일 100px + gap-4 — 스크롤 인덱스 계산용 */
+const DESKTOP_GALLERY_THUMB_PX = 100
 const DESKTOP_GALLERY_GAP_PX = 16
 
 /**
- * 모바일: aspect 금지 · w-full h-auto object-contain 풀폭 스냅 슬라이드.
- * lg+: 300×120 썸네일 카드 가로 스크롤 + snap-start, object-cover.
+ * 모바일 베이스: 슬라이드당 wrapper w-full · img block·w-full·h-auto (object-fit 없음), 스토리 스냅.
+ * md+: 100×100 썸네일 object-cover·가로 스크롤만 데스크톱에 적용.
  */
 export default function AuditionGallery({ images }: AuditionGalleryProps) {
   const allImages = useMemo(() => normalizeGalleryUrls(images), [images])
@@ -87,7 +87,7 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
   const onDesktopScroll = useCallback(() => {
     const el = desktopTrackRef.current
     if (!el || n === 0) return
-    const step = DESKTOP_GALLERY_CARD_PX + DESKTOP_GALLERY_GAP_PX
+    const step = DESKTOP_GALLERY_THUMB_PX + DESKTOP_GALLERY_GAP_PX
     const idx = Math.round(el.scrollLeft / step)
     setCurrentIndex(Math.min(Math.max(0, idx), n - 1))
   }, [n])
@@ -243,13 +243,13 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
               return (
                 <div
                   key={`lb-${index}-${u.slice(0, 32)}`}
-                  className="relative h-full w-full shrink-0 snap-center overflow-hidden"
+                  className="flex h-full w-full shrink-0 snap-center items-center justify-center overflow-auto p-4"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={u}
                     alt=""
-                    className="h-full w-full object-cover"
+                    className="block h-auto max-h-full w-auto max-w-full"
                     draggable={false}
                     onError={applyGalleryImageOnError}
                   />
