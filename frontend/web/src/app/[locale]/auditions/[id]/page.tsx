@@ -18,6 +18,7 @@ import { CREDIT_POLICY_AUDITION_APPLY, creditsApi } from '@/lib/api/credits'
 import { canManageAudition as userCanManageAudition } from '@/lib/audition/auditionPermissions'
 import { MultiRoundSubmitCta } from '@/components/application/MultiRoundSubmitCta'
 import { roundIdForRoundNumber } from '@/lib/audition/roundNav'
+import { toast } from 'sonner'
 import {
   auditionDetailMediumUrl,
   auditionDetailOriginalUrl,
@@ -235,9 +236,32 @@ export default function AuditionDetailPage() {
     }
   }
 
-  /** 하단 고정 CTA(모바일 2열 대비) 여백 */
-  const container: React.CSSProperties = {
-    paddingBottom: Math.max(AUDITION_DETAIL.fixedCtaHeightPx * 2, 120) + AUDITION_DETAIL.mainGridGapPx,
+  const mainCtaClass =
+    'flex min-h-12 flex-1 items-center justify-center rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 py-3 text-center text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60 sm:text-base'
+  const mainCtaFullWidthClass =
+    'flex min-h-12 w-full items-center justify-center rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 py-3 text-center text-sm font-semibold text-white sm:text-base'
+  const subCtaClass =
+    'inline-flex min-h-12 shrink-0 items-center justify-center rounded-lg border border-neutral-300 bg-white px-4 py-3 text-center text-sm font-semibold text-neutral-900 sm:text-base'
+
+  const shareAudition = async () => {
+    const url = typeof window !== 'undefined' ? window.location.href : ''
+    try {
+      if (typeof navigator !== 'undefined' && navigator.share) {
+        await navigator.share({ title: headlineTitle, url })
+        return
+      }
+      await navigator.clipboard.writeText(url)
+      toast.success('링크가 복사되었습니다.')
+    } catch (e) {
+      const err = e as { name?: string }
+      if (err?.name === 'AbortError') return
+      try {
+        await navigator.clipboard.writeText(url)
+        toast.success('링크가 복사되었습니다.')
+      } catch {
+        toast.error('공유에 실패했습니다.')
+      }
+    }
   }
 
   return (
@@ -282,7 +306,10 @@ export default function AuditionDetailPage() {
 
       {galleryExtra.length > 0 ? <AuditionDetailMediaSection galleryUrls={galleryExtra} /> : null}
 
-      <div className="w-full px-4" style={{ ...container, paddingTop: AUDITION_DETAIL.sectionGapPx }}>
+      <div
+        className="w-full px-4 pb-[calc(120px+env(safe-area-inset-bottom))]"
+        style={{ paddingTop: AUDITION_DETAIL.sectionGapPx }}
+      >
         <div
           className="grid grid-cols-1 lg:grid-cols-[1fr_320px]"
           style={{
@@ -469,241 +496,146 @@ export default function AuditionDetailPage() {
       <div
         id="audition-detail-apply"
         tabIndex={-1}
-        className="max-md:pb-[max(16px,env(safe-area-inset-bottom,0px))] scroll-mt-4 outline-none"
-        style={{
-          position: 'fixed',
-          left: 0,
-          right: 0,
-          bottom: 0,
-          zIndex: 40,
-          background: '#fff',
-          borderTop: `1px solid ${AUDITION_DETAIL.cardBorderColor}`,
-          boxShadow: '0 -4px 24px rgba(0,0,0,0.06)',
-        }}
+        className="fixed bottom-0 left-0 right-0 z-50 border-t border-neutral-200 bg-white px-3 pt-3 pb-[max(12px,env(safe-area-inset-bottom))] outline-none"
       >
-        <div
-          className="flex w-full flex-col gap-3 px-4 py-4 md:flex-row md:items-center md:justify-between"
-          style={{ paddingLeft: AUDITION_DETAIL.fixedCtaPaddingPx, paddingRight: AUDITION_DETAIL.fixedCtaPaddingPx }}
-        >
-          <div className="flex w-full flex-col gap-2 min-[480px]:flex-row min-[480px]:items-center md:w-auto">
-            {showApplySubmitCta && alreadyApplied ? (
-              <div className="flex w-full min-[480px]:w-auto flex-col gap-2">
+        <div className="flex gap-2">
+          {canManageAudition ? (
+            <>
+              <Link href={`/auditions/${id}/manage`} className={`${mainCtaClass} no-underline`}>
+                상태 관리
+              </Link>
+              <Link href={`/auditions/${id}/applications`} className={`${subCtaClass} no-underline`}>
+                지원자 관리
+              </Link>
+            </>
+          ) : showApplySubmitCta && alreadyApplied ? (
+            <>
+              <button type="button" disabled className={mainCtaClass}>
+                지원 완료
+              </button>
+              <Link href={`/auditions/${id}/vote`} className={`${subCtaClass} no-underline`}>
+                지원자 보기 &amp; 투표
+              </Link>
+            </>
+          ) : !isOpen ? (
+            <>
+              <button type="button" disabled className={mainCtaClass}>
+                마감됨
+              </button>
+              <Link href={`/auditions/${id}/ranking`} className={`${subCtaClass} no-underline`}>
+                랭킹 보기
+              </Link>
+            </>
+          ) : showApplySubmitCta ? (
+            <>
+              {applyNavDisabledCombined ? (
                 <button
                   type="button"
                   disabled
-                  className="inline-flex h-11 w-full min-[480px]:w-auto cursor-not-allowed items-center justify-center px-6 font-semibold opacity-80"
-                  style={{
-                    borderRadius: HERO.buttonRadiusPx,
-                    border: `1px solid ${AUDITION_DETAIL.cardBorderColor}`,
-                    background: '#ecfdf5',
-                    color: '#047857',
-                    fontSize: AUDITION_DETAIL.bodyFontPx,
-                  }}
+                  title={
+                    applyNavBlockedBySeries
+                      ? (audition.applyBlockedMessage ?? PREV_ROUND_APPLY_BLOCKED_MSG)
+                      : undefined
+                  }
+                  className={mainCtaClass}
                 >
-                  지원 완료
+                  {applyPolicyLoading || balanceLoading ? '확인 중...' : '지원하기'}
                 </button>
-                <span className="text-center text-xs text-gray-500 min-[480px]:text-left">
-                  이 오디션에 이미 지원하셨습니다.
-                </span>
-                {isMultiRoundAudition && myApplicationIdForRound ? (
-                  myCurrentRoundUuid ? (
-                    <MultiRoundSubmitCta
-                      applicationId={myApplicationIdForRound}
-                      auditionId={id}
-                      roundId={myCurrentRoundUuid}
-                      label={`${myApplicantRoundNumber}차 지원하기`}
-                      className="inline-flex h-11 w-full min-[480px]:w-auto items-center justify-center px-6 font-semibold text-white no-underline"
-                      style={{
-                        borderRadius: HERO.buttonRadiusPx,
-                        background: `linear-gradient(90deg, ${HERO.primaryGradientStart}, ${HERO.primaryGradientEnd})`,
-                        fontSize: AUDITION_DETAIL.bodyFontPx,
-                      }}
-                    />
-                  ) : (
-                    <p className="text-center text-xs text-amber-700 min-[480px]:text-left">
-                      라운드 정보를 불러오지 못했습니다. 내 지원서 상세에서 다시 시도해 주세요.
-                    </p>
-                  )
-                ) : null}
-              </div>
-            ) : showApplySubmitCta ? (
-              <div className="flex w-full min-[480px]:w-auto flex-col gap-2">
-                {applyNavDisabledCombined ? (
-                  <button
-                    type="button"
-                    disabled
-                    title={
-                      applyNavBlockedBySeries
-                        ? (audition.applyBlockedMessage ?? PREV_ROUND_APPLY_BLOCKED_MSG)
-                        : undefined
-                    }
-                    className="inline-flex h-11 w-full min-[480px]:w-auto cursor-not-allowed items-center justify-center px-6 font-semibold text-white opacity-70"
-                    style={{
-                      borderRadius: HERO.buttonRadiusPx,
-                      border: 'none',
-                      background: `linear-gradient(90deg, ${HERO.primaryGradientStart}, ${HERO.primaryGradientEnd})`,
-                      fontSize: AUDITION_DETAIL.bodyFontPx,
-                    }}
-                  >
-                    {applyPolicyLoading || balanceLoading ? '확인 중...' : '지원하기'}
-                  </button>
-                ) : (
-                  <Link
-                    href={`/auditions/${id}/apply`}
-                    className="inline-flex h-11 w-full min-[480px]:w-auto items-center justify-center px-6 font-semibold text-white no-underline"
-                    style={{
-                      borderRadius: HERO.buttonRadiusPx,
-                      border: 'none',
-                      background: `linear-gradient(90deg, ${HERO.primaryGradientStart}, ${HERO.primaryGradientEnd})`,
-                      fontSize: AUDITION_DETAIL.bodyFontPx,
-                    }}
-                  >
-                    지원하기
-                  </Link>
-                )}
-                {applyNavBlockedBySeries ? (
-                  <span className="text-center text-xs text-amber-800 min-[480px]:text-left">
-                    {audition.applyBlockedMessage ?? PREV_ROUND_APPLY_BLOCKED_MSG}
-                  </span>
-                ) : null}
-                {isOpen && applyPolicySnapshot && applyPolicySnapshot.active && applyPolicySnapshot.cost > 0 ? (
-                  <span className="text-center text-xs text-gray-500 min-[480px]:text-left">
-                    지원 시 크레딧 {applyPolicySnapshot.cost} 소모 · 보유 {creditBalanceAmount}
-                  </span>
-                ) : null}
-                {isOpen &&
-                needCreditsForApply &&
-                creditGateReady &&
-                !hasEnoughCredits &&
-                applyPolicySnapshot?.active ? (
-                  <Link
-                    href="/credits/charge"
-                    className="inline-flex h-10 w-full min-[480px]:w-auto items-center justify-center rounded-lg border-2 border-violet-600 bg-white px-4 text-sm font-semibold text-violet-700 no-underline hover:bg-violet-50"
-                  >
-                    크레딧 충전하기
-                  </Link>
-                ) : null}
-                {isOpen && applyPolicySnapshot && !applyPolicySnapshot.active ? (
-                  <span className="text-center text-xs text-amber-700 min-[480px]:text-left">
-                    지원 비용 정책이 비활성화되어 지원할 수 없습니다.
-                  </span>
-                ) : null}
-                {isOpen && applyPolicyError ? (
-                  <span className="text-center text-xs text-red-600 min-[480px]:text-left">
-                    지원 비용 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.
-                  </span>
-                ) : null}
-              </div>
-            ) : showApplyLoginCta ? (
+              ) : (
+                <Link href={`/auditions/${id}/apply`} className={`${mainCtaClass} no-underline`}>
+                  지원하기
+                </Link>
+              )}
+              <button type="button" className={subCtaClass} onClick={() => void shareAudition()}>
+                공유
+              </button>
+            </>
+          ) : showApplyLoginCta ? (
+            <>
               <Link
                 href={`/login?next=${encodeURIComponent(`/auditions/${id}`)}`}
-                className="inline-flex h-11 w-full min-[480px]:w-auto items-center justify-center px-6 font-semibold text-white no-underline"
-                style={{
-                  borderRadius: HERO.buttonRadiusPx,
-                  background: `linear-gradient(90deg, ${HERO.primaryGradientStart}, ${HERO.primaryGradientEnd})`,
-                  fontSize: AUDITION_DETAIL.bodyFontPx,
-                }}
+                className={`${mainCtaClass} no-underline`}
               >
                 지원하기
               </Link>
-            ) : showApplyDisabledCta ? (
+              <button type="button" className={subCtaClass} onClick={() => void shareAudition()}>
+                공유
+              </button>
+            </>
+          ) : showApplyDisabledCta ? (
+            <>
               <button
                 type="button"
                 disabled
                 title="지원자 계정으로 로그인 후 이용할 수 있습니다."
-                className="inline-flex h-11 w-full min-[480px]:w-auto cursor-not-allowed items-center justify-center px-6 font-semibold opacity-50"
-                style={{
-                  borderRadius: HERO.buttonRadiusPx,
-                  border: `1px solid ${AUDITION_DETAIL.cardBorderColor}`,
-                  background: '#f9fafb',
-                  color: '#6b7280',
-                  fontSize: AUDITION_DETAIL.bodyFontPx,
-                }}
+                className={mainCtaClass}
               >
                 지원하기
               </button>
-            ) : (
-              <button
-                type="button"
-                disabled
-                className="inline-flex h-11 w-full min-[480px]:w-auto cursor-not-allowed items-center justify-center px-6 font-semibold opacity-50"
-                style={{
-                  borderRadius: HERO.buttonRadiusPx,
-                  border: `1px solid ${AUDITION_DETAIL.cardBorderColor}`,
-                  background: '#f9fafb',
-                  color: '#6b7280',
-                  fontSize: AUDITION_DETAIL.bodyFontPx,
-                }}
-              >
+              <button type="button" className={subCtaClass} onClick={() => void shareAudition()}>
+                공유
+              </button>
+            </>
+          ) : (
+            <>
+              <button type="button" disabled className={mainCtaClass}>
                 마감됨
               </button>
-            )}
-          </div>
-          <div className="flex w-full flex-col gap-2 min-[480px]:flex-row min-[480px]:flex-wrap min-[480px]:justify-end md:w-auto md:justify-end">
-            <Link
-              href={`/auditions/${id}/vote`}
-              className="inline-flex h-11 w-full min-[480px]:min-w-[200px] items-center justify-center border font-semibold no-underline md:w-auto"
-              style={{
-                borderRadius: HERO.buttonRadiusPx,
-                borderColor: AUDITION_DETAIL.cardBorderColor,
-                background: '#fff',
-                color: '#111',
-                fontSize: AUDITION_DETAIL.bodyFontPx,
-                paddingLeft: 20,
-                paddingRight: 20,
-              }}
-            >
-              지원자 보기 &amp; 투표
-            </Link>
-            {canManageAudition ? (
-              <>
-                <Link
-                  href={`/auditions/${id}/ranking`}
-                  className="inline-flex h-11 w-full min-[480px]:min-w-[120px] items-center justify-center border font-semibold no-underline md:w-auto"
-                  style={{
-                    borderRadius: HERO.buttonRadiusPx,
-                    borderColor: AUDITION_DETAIL.cardBorderColor,
-                    background: '#f5f3ff',
-                    color: '#5b21b6',
-                    fontSize: AUDITION_DETAIL.bodyFontPx,
-                    paddingLeft: 16,
-                    paddingRight: 16,
-                  }}
-                >
-                  랭킹
-                </Link>
-                <Link
-                  href={`/auditions/${id}/manage`}
-                  className="inline-flex h-11 w-full min-[480px]:min-w-[120px] items-center justify-center border font-semibold no-underline md:w-auto"
-                  style={{
-                    borderRadius: HERO.buttonRadiusPx,
-                    borderColor: AUDITION_DETAIL.cardBorderColor,
-                    background: '#fff',
-                    color: '#111',
-                    fontSize: AUDITION_DETAIL.bodyFontPx,
-                    paddingLeft: 16,
-                    paddingRight: 16,
-                  }}
-                >
-                  상태 관리
-                </Link>
-                <Link
-                  href={`/auditions/${id}/applications`}
-                  className="inline-flex h-11 w-full min-[480px]:min-w-[160px] items-center justify-center font-semibold text-white no-underline md:w-auto"
-                  style={{
-                    borderRadius: HERO.buttonRadiusPx,
-                    background: AUDITION_DETAIL.ownerLinkBg,
-                    fontSize: AUDITION_DETAIL.bodyFontPx,
-                    paddingLeft: 20,
-                    paddingRight: 20,
-                  }}
-                >
-                  지원자 관리
-                </Link>
-              </>
+              <Link href={`/auditions/${id}/ranking`} className={`${subCtaClass} no-underline`}>
+                랭킹 보기
+              </Link>
+            </>
+          )}
+        </div>
+
+        {showApplySubmitCta && alreadyApplied && !canManageAudition ? (
+          <p className="mt-2 text-center text-xs text-neutral-500">이 오디션에 이미 지원하셨습니다.</p>
+        ) : null}
+
+        {showApplySubmitCta && alreadyApplied && isMultiRoundAudition && myApplicationIdForRound && !canManageAudition ? (
+          myCurrentRoundUuid ? (
+            <div className="mt-2">
+              <MultiRoundSubmitCta
+                applicationId={myApplicationIdForRound}
+                auditionId={id}
+                roundId={myCurrentRoundUuid}
+                label={`${myApplicantRoundNumber}차 지원하기`}
+                className={`${mainCtaFullWidthClass} no-underline`}
+              />
+            </div>
+          ) : (
+            <p className="mt-2 text-center text-xs text-amber-700">
+              라운드 정보를 불러오지 못했습니다. 내 지원서 상세에서 다시 시도해 주세요.
+            </p>
+          )
+        ) : null}
+
+        {isOpen && showApplySubmitCta && !alreadyApplied ? (
+          <div className="mt-2 space-y-1 text-xs">
+            {applyNavBlockedBySeries ? (
+              <p className="text-center text-amber-800">{audition.applyBlockedMessage ?? PREV_ROUND_APPLY_BLOCKED_MSG}</p>
+            ) : null}
+            {applyPolicySnapshot && applyPolicySnapshot.active && applyPolicySnapshot.cost > 0 ? (
+              <p className="text-center text-neutral-500">
+                지원 시 크레딧 {applyPolicySnapshot.cost} 소모 · 보유 {creditBalanceAmount}
+              </p>
+            ) : null}
+            {needCreditsForApply && creditGateReady && !hasEnoughCredits && applyPolicySnapshot?.active ? (
+              <Link
+                href="/credits/charge"
+                className="flex min-h-10 items-center justify-center rounded-lg border-2 border-violet-600 bg-white text-sm font-semibold text-violet-700 no-underline hover:bg-violet-50"
+              >
+                크레딧 충전하기
+              </Link>
+            ) : null}
+            {applyPolicySnapshot && !applyPolicySnapshot.active ? (
+              <p className="text-center text-amber-700">지원 비용 정책이 비활성화되어 지원할 수 없습니다.</p>
+            ) : null}
+            {applyPolicyError ? (
+              <p className="text-center text-red-600">지원 비용 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</p>
             ) : null}
           </div>
-        </div>
+        ) : null}
       </div>
     </div>
   )
