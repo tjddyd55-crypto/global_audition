@@ -72,12 +72,12 @@ export default function AuditionCard({ audition }: AuditionCardProps) {
   return (
     <Link href={`/auditions/${id}`} className="block w-full text-inherit no-underline">
       <article className="w-full">
-        <div className="aspect-video w-full overflow-hidden bg-neutral-200">
+        <div className="w-full overflow-hidden bg-neutral-200">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={imgSrc}
             alt=""
-            className="h-full w-full object-cover"
+            className="w-full h-auto object-cover"
             loading="lazy"
             decoding="async"
             onError={onCoverError}

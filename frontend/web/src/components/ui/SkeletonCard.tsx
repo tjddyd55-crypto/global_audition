@@ -2,11 +2,11 @@
 
 import { AUDITION_CARD } from '../../lib/design-tokens'
 
-/** 오디션 목록 행 스켈레톤(카드·테두리 없음, 유튜브형) */
+/** 오디션 목록 행 스켈레톤(카드·테두리 없음; 썸네일은 고정 비율 없음) */
 export function SkeletonAuditionCard() {
   return (
     <div className="w-full animate-pulse">
-      <div className="aspect-video w-full bg-neutral-200" />
+      <div className="w-full bg-neutral-200 py-28" />
       <div className="space-y-2 px-4 py-3">
         <div className="h-4 w-4/5 rounded bg-neutral-200" />
         <div className="h-3 w-3/5 rounded bg-neutral-100" />

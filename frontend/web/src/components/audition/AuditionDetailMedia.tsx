@@ -5,7 +5,7 @@ import AuditionGallery from '@/components/gallery/AuditionGallery'
 import { AUDITION_COVER_PLACEHOLDER_SRC } from '@/components/audition/AuditionEditorPreview'
 
 /**
- * 16:9 풀폭 커버(잠재적 재사용). `fullSizeHref` 가 있으면 탭으로 원본 열기.
+ * 풀폭 이미지(원본 비율). `fullSizeHref` 가 있으면 탭으로 원본 열기.
  */
 export function AuditionDetailHeroImage({ src, fullSizeHref }: { src: string; fullSizeHref?: string }) {
   const [failed, setFailed] = useState(false)
@@ -18,7 +18,7 @@ export function AuditionDetailHeroImage({ src, fullSizeHref }: { src: string; fu
     <img
       src={url}
       alt=""
-      className="block aspect-video h-full w-full object-cover"
+      className="block w-full h-auto object-cover"
       loading="eager"
       decoding="async"
       onError={() => setFailed(true)}

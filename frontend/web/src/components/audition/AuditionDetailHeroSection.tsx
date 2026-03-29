@@ -33,8 +33,8 @@ function statusBadgeCopy(status: string): string {
 }
 
 /**
- * 풀폭 16:9 배너(object-cover) + 하단 그라데이션 위 제목·상태·CTA.
- * 모바일·데스크톱 동일 레이아웃(유튜브형 상단 히어로).
+ * 풀폭 대표 이미지(원본 세로 비율, w-full h-auto) + 하단 그라데이션 위 제목·상태·CTA.
+ * 소개 영상만 16:9 유지(페이지 하단 섹션).
  */
 export function AuditionDetailHeroSection({
   auditionId,
@@ -98,7 +98,7 @@ export function AuditionDetailHeroSection({
     <img
       src={displaySrc || AUDITION_COVER_PLACEHOLDER_SRC}
       alt=""
-      className="block h-full w-full object-cover"
+      className="block w-full h-auto object-cover"
       loading="eager"
       decoding="async"
       onError={() => setImgFailed(true)}
@@ -108,23 +108,23 @@ export function AuditionDetailHeroSection({
   return (
     <section className="relative w-full overflow-hidden">
       <div className="relative w-full">
-        <div className="relative aspect-video w-full bg-neutral-200">
+        <div className="relative w-full bg-neutral-200">
           {hasCover ? (
             openOriginalHref.length > 0 ? (
               <a
                 href={openOriginalHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="absolute inset-0 block"
+                className="block w-full"
               >
                 {bannerImage}
               </a>
             ) : (
-              <div className="absolute inset-0">{bannerImage}</div>
+              <div className="w-full">{bannerImage}</div>
             )
           ) : (
             <div
-              className="flex h-full w-full items-center justify-center"
+              className="flex w-full items-center justify-center py-24"
               style={{
                 background: `linear-gradient(135deg, ${HERO.gradientStart}, ${HERO.gradientEnd})`,
               }}
