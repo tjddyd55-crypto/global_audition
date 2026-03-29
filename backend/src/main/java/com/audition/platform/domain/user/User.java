@@ -48,6 +48,10 @@ public class User {
     @Column(columnDefinition = "TEXT")
     private String bio;
 
+    /** 채널 헤더 한줄 소개(최대 30자). 상세 소개는 {@link #bio}. */
+    @Column(name = "short_bio", length = 30)
+    private String shortBio;
+
     @Column(name = "profile_image_url", columnDefinition = "TEXT")
     private String profileImageUrl;
 
@@ -121,6 +125,15 @@ public class User {
     }
     public String getBio() { return bio; }
     public void setBio(String bio) { this.bio = bio; }
+
+    public String getShortBio() {
+        return shortBio;
+    }
+
+    public void setShortBio(String shortBio) {
+        this.shortBio = shortBio;
+    }
+
     public String getProfileImageUrl() { return profileImageUrl; }
     public void setProfileImageUrl(String profileImageUrl) { this.profileImageUrl = profileImageUrl; }
     public String getCountryCode() { return countryCode; }

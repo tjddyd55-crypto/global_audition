@@ -45,7 +45,10 @@ public class PatchMyChannelRequest {
     @Size(max = 16)
     private String country;
 
-    @Size(max = 100)
+    @Size(max = 30)
+    private String shortBio;
+
+    @Size(max = 8000)
     private String bio;
 
     @Size(max = 3, message = "분야는 최대 3개까지입니다.")
@@ -143,6 +146,14 @@ public class PatchMyChannelRequest {
             return nationality;
         }
         return country;
+    }
+
+    public String getShortBio() {
+        return shortBio;
+    }
+
+    public void setShortBio(String shortBio) {
+        this.shortBio = shortBio;
     }
 
     public String getBio() {

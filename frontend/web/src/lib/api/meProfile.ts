@@ -8,10 +8,13 @@ export type MeProfileResponse = {
   username?: string | null
   nickname?: string | null
   name?: string | null
+  profileImageUrl?: string | null
   birthDate?: string | null
   nationality?: string | null
   country?: string | null
-  /** 채널 헤더 한줄 소개(최대 100자) */
+  /** 채널 헤더 한줄 소개(최대 30자) */
+  shortBio?: string | null
+  /** 채널 상세 소개(정보 탭) */
   bio?: string | null
   categories?: string[]
   featuredVideoId?: string | null
@@ -32,8 +35,10 @@ export type PatchMeProfilePayload = {
   birthDate?: string
   nationality?: string
   country?: string
+  profileImageUrl?: string | null
   introText?: string
   snsLinks?: Array<{ platform: string; url: string }>
+  shortBio?: string | null
   bio?: string | null
   categories?: string[]
   featuredVideoId?: string | null

@@ -12,7 +12,8 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * PATCH /api/me 및 PATCH /api/me/channel 에서 공유하는 채널 프로필 필드(국적·한줄 소개·분야·대표 영상).
+ * PATCH /api/me 및 PATCH /api/me/channel 에서 공유하는 채널 프로필 필드
+ * (국적·shortBio·긴 bio·분야·대표 영상).
  */
 public final class UserChannelProfilePatchSupport {
 
@@ -36,11 +37,41 @@ public final class UserChannelProfilePatchSupport {
         user.setNationality(n);
     }
 
-    public static void applyBioChannelTagline(User user, String bio) {
+    private static final int SHORT_BIO_MAX_LEN = 30;
+    private static final int LONG_BIO_MAX_LEN = 8000;
+
+    /**
+     * 한줄 소개: 줄바꿈·제어문자 제거 후 공백 정리, 최대 30자. 빈 문자열이면 null.
+     */
+    public static void applyShortBio(User user, String shortBio) {
+        if (shortBio == null) {
+            return;
+        }
+        String normalized = shortBio.replaceAll("[\\r\\n\\u000B\\f]+", " ").trim().replaceAll("\\s+", " ");
+        if (normalized.isEmpty()) {
+            user.setShortBio(null);
+            return;
+        }
+        if (normalized.length() > SHORT_BIO_MAX_LEN) {
+            normalized = normalized.substring(0, SHORT_BIO_MAX_LEN);
+        }
+        user.setShortBio(normalized);
+    }
+
+    /** 채널 상세 소개(/정보 탭). 서버에서 길이 상한만 방어적으로 적용. */
+    public static void applyChannelLongBio(User user, String bio) {
         if (bio == null) {
             return;
         }
-        user.setBio(bio.trim().isEmpty() ? null : bio.trim());
+        String t = bio.trim();
+        if (t.isEmpty()) {
+            user.setBio(null);
+            return;
+        }
+        if (t.length() > LONG_BIO_MAX_LEN) {
+            t = t.substring(0, LONG_BIO_MAX_LEN);
+        }
+        user.setBio(t);
     }
 
     public static void applyCategories(User user, List<String> categories) {

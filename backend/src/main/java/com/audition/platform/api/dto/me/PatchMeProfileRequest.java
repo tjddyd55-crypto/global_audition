@@ -17,8 +17,12 @@ public class PatchMeProfileRequest {
     @Size(max = 2048)
     private String profileImageUrl;
 
-    /** 채널 헤더 한줄 소개 (최대 100자). */
-    @Size(max = 100)
+    /** 채널 헤더 한줄 소개 (최대 30자, 줄바꿈 불가). */
+    @Size(max = 30)
+    private String shortBio;
+
+    /** 채널 상세 소개 (정보 탭). */
+    @Size(max = 8000)
     private String bio;
 
     /** ISO-8601 날짜(yyyy-MM-dd). 빈 문자열이면 삭제. */
@@ -72,6 +76,14 @@ public class PatchMeProfileRequest {
 
     public void setProfileImageUrl(String profileImageUrl) {
         this.profileImageUrl = profileImageUrl;
+    }
+
+    public String getShortBio() {
+        return shortBio;
+    }
+
+    public void setShortBio(String shortBio) {
+        this.shortBio = shortBio;
     }
 
     public String getBio() {

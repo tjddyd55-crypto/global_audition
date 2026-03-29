@@ -105,6 +105,7 @@ public class MyChannelService {
         r.setNickname(user.getNickname());
         r.setIntroText(user.getIntroText());
         r.setNationality(user.getNationality());
+        r.setShortBio(trimToNull(user.getShortBio()));
         r.setBio(trimToNull(user.getBio()));
         String[] catt = user.getChannelCategories();
         r.setCategories(catt != null && catt.length > 0 ? Arrays.asList(catt) : List.of());
@@ -185,6 +186,7 @@ public class MyChannelService {
         out.setNickname(user.getNickname());
         out.setIntroText(user.getIntroText());
         out.setNationality(user.getNationality());
+        out.setShortBio(trimToNull(user.getShortBio()));
         out.setBio(trimToNull(user.getBio()));
         String[] catArr = user.getChannelCategories();
         out.setCategories(catArr != null && catArr.length > 0 ? Arrays.asList(catArr) : List.of());
@@ -308,8 +310,11 @@ public class MyChannelService {
         if (req.resolveNationalityInput() != null) {
             UserChannelProfilePatchSupport.applyNationality(user, req.resolveNationalityInput());
         }
+        if (req.getShortBio() != null) {
+            UserChannelProfilePatchSupport.applyShortBio(user, req.getShortBio());
+        }
         if (req.getBio() != null) {
-            UserChannelProfilePatchSupport.applyBioChannelTagline(user, req.getBio());
+            UserChannelProfilePatchSupport.applyChannelLongBio(user, req.getBio());
         }
         UserChannelProfilePatchSupport.applyCategories(user, req.getCategories());
         UserChannelProfilePatchSupport.applyFeaturedVideo(user, ownerId, channelVideoRepository, req.getFeaturedVideoId());

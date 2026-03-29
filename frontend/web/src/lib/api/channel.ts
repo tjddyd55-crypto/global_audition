@@ -31,6 +31,7 @@ export type MyChannelSummary = {
   nickname?: string
   introText?: string | null
   nationality?: string | null
+  shortBio?: string | null
   bio?: string | null
   categories?: string[]
   featuredVideoId?: string | null
@@ -53,6 +54,7 @@ export type PatchMyChannelBody = {
   snsLinks?: SnsLinkRow[]
   nationality?: string
   country?: string
+  shortBio?: string | null
   bio?: string | null
   categories?: string[]
   featuredVideoId?: string | null
@@ -128,6 +130,9 @@ export function sanitizePatchMyChannelBody(body: PatchMyChannelBody): Record<str
   }
   if (body.country !== undefined) {
     out.country = body.country.trim().toUpperCase()
+  }
+  if (body.shortBio !== undefined) {
+    out.shortBio = body.shortBio === null ? null : String(body.shortBio).trim() === '' ? null : String(body.shortBio).trim()
   }
   if (body.bio !== undefined) {
     out.bio = body.bio === null ? null : body.bio.trim() === '' ? null : body.bio.trim()
@@ -211,6 +216,7 @@ export type PublicChannelResponse = {
   introText?: string | null
   nationality?: string | null
   country?: string | null
+  shortBio?: string | null
   bio?: string | null
   categories?: string[]
   featuredVideoId?: string | null
@@ -288,6 +294,7 @@ export const channelApi = {
       introText: raw.introText != null ? String(raw.introText) : null,
       nationality: raw.nationality != null ? String(raw.nationality) : null,
       country: raw.country != null ? String(raw.country) : null,
+      shortBio: raw.shortBio != null ? String(raw.shortBio) : null,
       bio: raw.bio != null ? String(raw.bio) : null,
       categories,
       featuredVideoId: raw.featuredVideoId != null ? String(raw.featuredVideoId) : null,

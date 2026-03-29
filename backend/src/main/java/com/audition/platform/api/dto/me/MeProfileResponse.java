@@ -15,6 +15,7 @@ public class MeProfileResponse {
     private String displayName;
     private String role;
     private String profileImageUrl;
+    private String shortBio;
     private String bio;
     private String birthDate;
     private String nationality;
@@ -85,6 +86,14 @@ public class MeProfileResponse {
 
     public void setProfileImageUrl(String profileImageUrl) {
         this.profileImageUrl = profileImageUrl;
+    }
+
+    public String getShortBio() {
+        return shortBio;
+    }
+
+    public void setShortBio(String shortBio) {
+        this.shortBio = shortBio;
     }
 
     public String getBio() {

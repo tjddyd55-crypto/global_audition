@@ -23,6 +23,7 @@ public class MyChannelResponse {
     private String nickname;
     private String introText;
     private String nationality;
+    private String shortBio;
     private String bio;
     private List<String> categories = new ArrayList<>();
     private String featuredVideoId;
@@ -129,6 +130,14 @@ public class MyChannelResponse {
     @JsonProperty("country")
     public String getCountry() {
         return nationality;
+    }
+
+    public String getShortBio() {
+        return shortBio;
+    }
+
+    public void setShortBio(String shortBio) {
+        this.shortBio = shortBio;
     }
 
     public String getBio() {

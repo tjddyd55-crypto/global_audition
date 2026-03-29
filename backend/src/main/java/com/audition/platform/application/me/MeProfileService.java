@@ -6,6 +6,8 @@ import com.audition.platform.api.dto.me.PatchMePasswordRequest;
 import com.audition.platform.api.dto.me.PatchMeProfileRequest;
 import com.audition.platform.application.user.UserNicknameService;
 import com.audition.platform.application.user.UserSnsLinkReplacementService;
+import com.audition.platform.domain.channel.Channel;
+import com.audition.platform.domain.channel.ChannelRepository;
 import com.audition.platform.domain.channel.ChannelVideoRepository;
 import com.audition.platform.domain.user.User;
 import com.audition.platform.domain.user.UserRepository;
@@ -35,6 +37,7 @@ public class MeProfileService {
     private final UserSnsLinkReplacementService userSnsLinkReplacementService;
     private final PasswordEncoder passwordEncoder;
     private final ChannelVideoRepository channelVideoRepository;
+    private final ChannelRepository channelRepository;
 
     public MeProfileService(
             UserRepository userRepository,
@@ -42,13 +45,15 @@ public class MeProfileService {
             UserSnsLinkRepository userSnsLinkRepository,
             UserSnsLinkReplacementService userSnsLinkReplacementService,
             PasswordEncoder passwordEncoder,
-            ChannelVideoRepository channelVideoRepository) {
+            ChannelVideoRepository channelVideoRepository,
+            ChannelRepository channelRepository) {
         this.userRepository = userRepository;
         this.userNicknameService = userNicknameService;
         this.userSnsLinkRepository = userSnsLinkRepository;
         this.userSnsLinkReplacementService = userSnsLinkReplacementService;
         this.passwordEncoder = passwordEncoder;
         this.channelVideoRepository = channelVideoRepository;
+        this.channelRepository = channelRepository;
     }
 
     private UUID requireUserId() {
@@ -74,15 +79,29 @@ public class MeProfileService {
         if (req.getNickname() != null && !req.getNickname().isBlank()) {
             String next = userNicknameService.prepareNicknameOrThrow(req.getNickname(), userId);
             user.setNickname(next);
+            channelRepository.findByOwnerId(userId).ifPresent(ch -> {
+                ch.setName(next);
+                ch.setUpdatedAt(Instant.now());
+                channelRepository.save(ch);
+            });
         }
         if (req.getName() != null) {
             user.setName(req.getName().trim().isEmpty() ? null : req.getName().trim());
         }
         if (req.getProfileImageUrl() != null) {
-            user.setProfileImageUrl(req.getProfileImageUrl().trim().isEmpty() ? null : req.getProfileImageUrl().trim());
+            String p = req.getProfileImageUrl().trim().isEmpty() ? null : req.getProfileImageUrl().trim();
+            user.setProfileImageUrl(p);
+            channelRepository.findByOwnerId(userId).ifPresent(ch -> {
+                ch.setProfileImageUrl(p);
+                ch.setUpdatedAt(Instant.now());
+                channelRepository.save(ch);
+            });
+        }
+        if (req.getShortBio() != null) {
+            UserChannelProfilePatchSupport.applyShortBio(user, req.getShortBio());
         }
         if (req.getBio() != null) {
-            UserChannelProfilePatchSupport.applyBioChannelTagline(user, req.getBio());
+            UserChannelProfilePatchSupport.applyChannelLongBio(user, req.getBio());
         }
         if (req.getBirthDate() != null) {
             String raw = req.getBirthDate().trim();
@@ -140,6 +159,7 @@ public class MeProfileService {
         r.setDisplayName(user.getPublicDisplayLabel());
         r.setRole(MeApiMapping.userRoleToApi(user.getRole()));
         r.setProfileImageUrl(user.getProfileImageUrl());
+        r.setShortBio(user.getShortBio());
         r.setBio(user.getBio());
         r.setBirthDate(user.getBirthDate() != null ? user.getBirthDate().toString() : null);
         r.setNationality(user.getNationality());

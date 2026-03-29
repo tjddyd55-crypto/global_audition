@@ -1,7 +1,6 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import Image from 'next/image'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   channelApi,
@@ -12,8 +11,6 @@ import {
 } from '@/lib/api/channel'
 import { useRouter } from 'next/navigation'
 import { invalidateAfterChannelVideoMutation } from '@/lib/query/channelVideoQuery'
-import { uploadAuditionImage } from '@/lib/api/uploads'
-import { DEFAULT_IMAGES } from '@/lib/constants/fallbacks'
 
 /** 풀 가로·유튜브형 채널 UI와 통일: 카드/그림자 없음 */
 const SECTION =
@@ -91,9 +88,7 @@ function mapSummaryToState(data: MyChannelSummary) {
     url: l.url,
   }))
   return {
-    nickname: data.nickname ?? data.channelName ?? '',
     introText: data.introText ?? '',
-    profileImageUrl: data.profileImageUrl ?? data.profileImage ?? '',
     isPublic: Boolean(data.channelPublic ?? data.isPublic),
     snsLinks: links.length > 0 ? links : [{ platform: 'YOUTUBE', url: '' }],
   }
@@ -107,12 +102,9 @@ export function ChannelSettingsPanel() {
     queryFn: () => channelApi.getMine(),
   })
 
-  const [nickname, setNickname] = useState('')
   const [introText, setIntroText] = useState('')
-  const [profileImageUrl, setProfileImageUrl] = useState('')
   const [isPublic, setIsPublic] = useState(false)
   const [snsLinks, setSnsLinks] = useState<SnsLinkRow[]>([{ platform: 'YOUTUBE', url: '' }])
-  const [uploadBusy, setUploadBusy] = useState(false)
   const [dirty, setDirty] = useState(false)
 
   const saveMutation = useMutation({
@@ -128,9 +120,7 @@ export function ChannelSettingsPanel() {
   useEffect(() => {
     if (!data) return
     const s = mapSummaryToState(data)
-    setNickname(s.nickname)
     setIntroText(s.introText)
-    setProfileImageUrl(s.profileImageUrl)
     setIsPublic(s.isPublic)
     setSnsLinks(s.snsLinks)
     setDirty(false)
@@ -142,37 +132,14 @@ export function ChannelSettingsPanel() {
     saveMutation.reset()
   }, [saveMutation])
 
-  const onPickProfileImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    e.target.value = ''
-    if (!file) return
-    setUploadBusy(true)
-    try {
-      const url = await uploadAuditionImage(file, 'profile')
-      setProfileImageUrl(url)
-      markDirty()
-    } catch (err) {
-      console.error(err)
-    } finally {
-      setUploadBusy(false)
-    }
-  }
-
   const onSave = () => {
-    const trimmedNick = nickname.trim()
-    if (!trimmedNick) {
-      alert('채널 이름(닉네임)을 입력해 주세요.')
-      return
-    }
     const payloadSns = snsLinks
       .map((r) => ({ platform: r.platform.trim().toUpperCase(), url: r.url.trim() }))
       .filter((r) => r.platform.length > 0 && r.url.length > 0)
 
     const body: PatchMyChannelBody = {
-      nickname: trimmedNick,
       introText: introText.trim() === '' ? null : introText.trim(),
       isChannelPublic: isPublic,
-      profileImage: profileImageUrl.trim() === '' ? null : profileImageUrl.trim(),
       snsLinks: payloadSns,
     }
     saveMutation.mutate(body)
@@ -219,44 +186,20 @@ export function ChannelSettingsPanel() {
     )
   }
 
-  const previewSrc = profileImageUrl?.trim() || DEFAULT_IMAGES.avatar
-
   return (
     <section className={`${SECTION} flex flex-col gap-4`}>
       <header>
         <h2 className="text-lg font-semibold text-neutral-900">채널 설정</h2>
-        <p className="mt-1 text-sm text-neutral-500">프로필과 공개 여부는 저장 즉시 공개 채널 페이지(`/channel/...`)에 반영됩니다.</p>
+        <p className="mt-1 text-sm text-neutral-500">
+          닉네임·프로필·채널 소개(정보 탭)은 위 「채널 프로필」에서 저장합니다. 여기서는 공개 여부·SNS·추가 소개만
+          다룹니다.
+        </p>
       </header>
 
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-        <div className="flex shrink-0 flex-col gap-2 sm:w-36">
-          <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-full border border-neutral-200 bg-neutral-100">
-            <Image src={previewSrc} alt="" fill className="object-cover" unoptimized sizes="96px" />
-          </div>
-          <label className="cursor-pointer">
-            <span className={`inline-flex ${BTN_GHOST} w-full justify-center sm:w-auto`}>{uploadBusy ? '업로드 중…' : '이미지 변경'}</span>
-            <input type="file" accept="image/*" className="hidden" disabled={uploadBusy} onChange={(e) => void onPickProfileImage(e)} />
-          </label>
-        </div>
-
-        <div className="min-w-0 flex-1 space-y-4">
+      <div className="min-w-0 flex-1 space-y-4">
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-neutral-800">채널 이름</label>
-            <input
-              type="text"
-              value={nickname}
-              onChange={(e) => {
-                setNickname(e.target.value)
-                markDirty()
-              }}
-              className={INPUT_STYLE}
-              maxLength={50}
-              placeholder="닉네임"
-              autoComplete="nickname"
-            />
-          </div>
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-neutral-800">채널 소개글</label>
+            <label className="mb-1.5 block text-sm font-medium text-neutral-800">추가 소개 (선택)</label>
+            <p className="mb-1.5 text-xs text-neutral-500">정보 탭에 표시될 수 있는 보조 텍스트입니다.</p>
             <textarea
               value={introText}
               onChange={(e) => {
@@ -265,7 +208,7 @@ export function ChannelSettingsPanel() {
               }}
               rows={4}
               className={INPUT_STYLE}
-              placeholder="채널을 소개해 주세요."
+              placeholder="추가로 남기고 싶은 소개가 있으면 입력하세요."
               maxLength={4000}
             />
           </div>
@@ -294,7 +237,6 @@ export function ChannelSettingsPanel() {
             </div>
           </div>
         </div>
-      </div>
 
       <div className="border-t border-neutral-100 pt-4">
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">

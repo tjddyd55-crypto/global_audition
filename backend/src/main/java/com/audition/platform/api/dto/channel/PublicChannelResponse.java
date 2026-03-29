@@ -20,6 +20,8 @@ public class PublicChannelResponse {
     /** KR | MN | JP | OTHER */
     private String nationality;
     /** 채널 헤더 한줄 소개 */
+    private String shortBio;
+    /** 채널 상세 소개(정보 탭) */
     private String bio;
     private List<String> categories = new ArrayList<>();
     private String featuredVideoId;
@@ -91,6 +93,14 @@ public class PublicChannelResponse {
     @JsonProperty("country")
     public String getCountry() {
         return nationality;
+    }
+
+    public String getShortBio() {
+        return shortBio;
+    }
+
+    public void setShortBio(String shortBio) {
+        this.shortBio = shortBio;
     }
 
     public String getBio() {

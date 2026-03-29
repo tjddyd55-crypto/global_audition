@@ -1,10 +1,13 @@
 'use client'
 
+import Image from 'next/image'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { meProfileApi } from '@/lib/api/meProfile'
 import { videoApi, type VideoContent } from '@/lib/api/videos'
 import { INPUT_BASE } from '@/lib/ui/specClasses'
+import { uploadAuditionImage } from '@/lib/api/uploads'
+import { DEFAULT_IMAGES } from '@/lib/constants/fallbacks'
 
 const NATIONALITIES = [
   { value: '', label: '선택 안 함' },
@@ -17,14 +20,20 @@ const NATIONALITIES = [
 const BTN_PRIMARY = 'rounded-md bg-neutral-900 px-4 py-2 text-sm font-semibold text-white hover:bg-neutral-800 disabled:opacity-50'
 const BTN_GHOST = 'rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-sm font-medium text-neutral-800 hover:bg-neutral-50'
 
+const LONG_BIO_MAX = 8000
+
 function normalizeNationality(raw: string | null | undefined): string {
   const n = (raw ?? '').trim().toUpperCase()
   if (n === 'KR' || n === 'MN' || n === 'JP' || n === 'OTHER') return n
   return ''
 }
 
+function oneLine30(raw: string): string {
+  return raw.replace(/\r?\n/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 30)
+}
+
 /**
- * PATCH /api/me — 국적·한줄 소개(100)·분야(3)·대표 영상
+ * PATCH /api/me — 닉네임·프로필 이미지·국적·shortBio·bio·분야·대표 영상
  */
 export function ChannelMeStudioForm() {
   const queryClient = useQueryClient()
@@ -42,29 +51,44 @@ export function ChannelMeStudioForm() {
 
   const videos = useMemo(() => videosPayload?.content ?? [], [videosPayload?.content])
 
+  const [nickname, setNickname] = useState('')
+  const [profileImageUrl, setProfileImageUrl] = useState('')
+  const [uploadBusy, setUploadBusy] = useState(false)
   const [country, setCountry] = useState('')
-  const [bio, setBio] = useState('')
+  const [shortBio, setShortBio] = useState('')
+  const [longBio, setLongBio] = useState('')
   const [categoryInput, setCategoryInput] = useState('')
   const [categories, setCategories] = useState<string[]>([])
   const [featuredVideoIdManual, setFeaturedVideoIdManual] = useState('')
 
   useEffect(() => {
     if (!me) return
+    setNickname((me.nickname ?? '').trim())
+    setProfileImageUrl((me as { profileImageUrl?: string }).profileImageUrl?.trim() ?? '')
     setCountry(normalizeNationality(me.nationality ?? me.country))
-    setBio((me.bio ?? '').slice(0, 100))
+    setShortBio(oneLine30(me.shortBio ?? ''))
+    setLongBio((me.bio ?? '').slice(0, LONG_BIO_MAX))
     setCategories((me.categories ?? []).slice(0, 3))
     const fid = me.featuredVideoId?.trim() ?? ''
     setFeaturedVideoIdManual(fid)
   }, [me])
 
   const saveMutation = useMutation({
-    mutationFn: () =>
-      meProfileApi.patch({
+    mutationFn: () => {
+      const nick = nickname.trim()
+      if (!nick) {
+        return Promise.reject(new Error('닉네임이 필요합니다.'))
+      }
+      return meProfileApi.patch({
+        nickname: nick,
+        profileImageUrl: profileImageUrl.trim() === '' ? null : profileImageUrl.trim(),
         country: country || '',
-        bio: bio.trim() === '' ? null : bio.trim().slice(0, 100),
+        shortBio: shortBio.trim() === '' ? null : oneLine30(shortBio),
+        bio: longBio.trim() === '' ? null : longBio.trim().slice(0, LONG_BIO_MAX),
         categories,
         featuredVideoId: featuredVideoIdManual.trim(),
-      }),
+      })
+    },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['me-profile-channel-studio'] })
       await queryClient.invalidateQueries({ queryKey: ['me-profile-manage'] })
@@ -73,6 +97,21 @@ export function ChannelMeStudioForm() {
       await queryClient.invalidateQueries({ queryKey: ['channelVideos'] })
     },
   })
+
+  const onPickProfileImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setUploadBusy(true)
+    try {
+      const url = await uploadAuditionImage(file, 'profile')
+      setProfileImageUrl(url)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setUploadBusy(false)
+    }
+  }
 
   const addCategory = useCallback(() => {
     const t = categoryInput.trim()
@@ -90,6 +129,8 @@ export function ChannelMeStudioForm() {
     setFeaturedVideoIdManual(v.id)
   }, [])
 
+  const previewSrc = profileImageUrl?.trim() || DEFAULT_IMAGES.avatar
+
   if (isLoading || !me) {
     return <p className="px-3 py-2 text-sm text-neutral-600">프로필을 불러오는 중…</p>
   }
@@ -97,9 +138,36 @@ export function ChannelMeStudioForm() {
   return (
     <section className="w-full border-b border-neutral-200 py-4">
       <h2 className="px-3 text-lg font-semibold text-neutral-900">채널 프로필</h2>
-      <p className="mt-1 px-3 text-sm text-neutral-500">공개 채널 상단에 노출됩니다. (저장: PATCH /api/me)</p>
+      <p className="mt-1 px-3 text-sm text-neutral-500">공개 채널에 반영됩니다. (저장: PATCH /api/me)</p>
 
       <div className="mt-4 space-y-4 px-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+          <div className="flex shrink-0 flex-col gap-2">
+            <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-full border border-neutral-200 bg-neutral-100">
+              <Image src={previewSrc} alt="" fill className="object-cover" unoptimized sizes="96px" />
+            </div>
+            <label className="cursor-pointer">
+              <span className={`inline-flex ${BTN_GHOST} justify-center`}>
+                {uploadBusy ? '업로드 중…' : '프로필 이미지'}
+              </span>
+              <input type="file" accept="image/*" className="hidden" disabled={uploadBusy} onChange={(e) => void onPickProfileImage(e)} />
+            </label>
+          </div>
+          <div className="min-w-0 flex-1 space-y-4">
+            <div>
+              <label className="mb-1 block text-sm font-medium text-neutral-800">닉네임</label>
+              <input
+                type="text"
+                value={nickname}
+                maxLength={50}
+                onChange={(e) => setNickname(e.target.value)}
+                className={INPUT_BASE}
+                autoComplete="nickname"
+              />
+            </div>
+          </div>
+        </div>
+
         <div>
           <label className="mb-1 block text-sm font-medium text-neutral-800">국적</label>
           <select value={country} onChange={(e) => setCountry(e.target.value)} className={INPUT_BASE}>
@@ -112,16 +180,29 @@ export function ChannelMeStudioForm() {
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-neutral-800">한줄 소개 (최대 100자)</label>
+          <label className="mb-1 block text-sm font-medium text-neutral-800">한줄 소개 (최대 30자)</label>
           <input
             type="text"
-            value={bio}
-            maxLength={100}
-            onChange={(e) => setBio(e.target.value.slice(0, 100))}
+            value={shortBio}
+            maxLength={30}
+            onChange={(e) => setShortBio(e.target.value.replace(/\r?\n/g, ' ').slice(0, 30))}
             className={INPUT_BASE}
             placeholder="채널을 한 줄로 소개해 주세요"
           />
-          <p className="mt-0.5 text-xs text-neutral-500">{bio.length} / 100</p>
+          <p className="mt-0.5 text-xs text-neutral-500">{shortBio.length} / 30</p>
+        </div>
+
+        <div>
+          <label className="mb-1 block text-sm font-medium text-neutral-800">채널 소개 (정보 탭)</label>
+          <textarea
+            value={longBio}
+            maxLength={LONG_BIO_MAX}
+            onChange={(e) => setLongBio(e.target.value.slice(0, LONG_BIO_MAX))}
+            rows={5}
+            className={INPUT_BASE}
+            placeholder="상세 소개를 입력해 주세요"
+          />
+          <p className="mt-0.5 text-xs text-neutral-500">{longBio.length} / {LONG_BIO_MAX}</p>
         </div>
 
         <div>
@@ -172,11 +253,7 @@ export function ChannelMeStudioForm() {
               {videos.map((v) => (
                 <li key={v.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
                   <span className="min-w-0 flex-1 truncate text-sm text-neutral-900">{v.title}</span>
-                  <button
-                    type="button"
-                    className={BTN_GHOST}
-                    onClick={() => setFeaturedFromRow(v)}
-                  >
+                  <button type="button" className={BTN_GHOST} onClick={() => setFeaturedFromRow(v)}>
                     대표로 설정
                   </button>
                 </li>
