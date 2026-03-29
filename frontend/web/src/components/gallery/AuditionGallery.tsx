@@ -31,8 +31,43 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
   const [viewerEntryIndex, setViewerEntryIndex] = useState(0)
   const trackRef = useRef<HTMLDivElement | null>(null)
   const lightboxTrackRef = useRef<HTMLDivElement | null>(null)
+  const viewerOpenRef = useRef(false)
 
   const n = allImages.length
+
+  useEffect(() => {
+    viewerOpenRef.current = viewerOpen
+  }, [viewerOpen])
+
+  const closeLightbox = useCallback(() => {
+    viewerOpenRef.current = false
+    setViewerOpen(false)
+    if (typeof window === 'undefined') return
+    const st = window.history.state as { viewer?: boolean } | null
+    if (st?.viewer) {
+      window.history.back()
+    }
+  }, [])
+
+  const openLightbox = useCallback((index: number) => {
+    setViewerEntryIndex(index)
+    viewerOpenRef.current = true
+    setViewerOpen(true)
+    if (typeof window !== 'undefined') {
+      window.history.pushState({ viewer: true }, '')
+    }
+  }, [])
+
+  useEffect(() => {
+    const handlePopState = () => {
+      if (viewerOpenRef.current) {
+        viewerOpenRef.current = false
+        setViewerOpen(false)
+      }
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [])
 
   const updateIndexFromScroll = useCallback(() => {
     const el = trackRef.current
@@ -62,7 +97,7 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault()
-        setViewerOpen(false)
+        closeLightbox()
       }
     }
     window.addEventListener('keydown', onKey)
@@ -70,7 +105,7 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
       document.body.style.overflow = prevOverflow
       window.removeEventListener('keydown', onKey)
     }
-  }, [viewerOpen])
+  }, [viewerOpen, closeLightbox])
 
   useEffect(() => {
     if (!viewerOpen) return
@@ -114,10 +149,7 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
                   loading={i === 0 ? 'eager' : 'lazy'}
                   draggable={false}
                   onError={applyGalleryImageOnError}
-                  onClick={() => {
-                    setViewerEntryIndex(i)
-                    setViewerOpen(true)
-                  }}
+                  onClick={() => openLightbox(i)}
                 />
               </div>
             )
@@ -141,7 +173,7 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
           <button
             type="button"
             className="absolute right-4 top-4 z-50 border-0 bg-transparent text-xl text-white"
-            onClick={() => setViewerOpen(false)}
+            onClick={closeLightbox}
             aria-label="전체화면 닫기"
           >
             ✕
