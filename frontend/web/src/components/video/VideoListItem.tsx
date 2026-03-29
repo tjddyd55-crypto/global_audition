@@ -35,22 +35,31 @@ export function VideoListItem({
 
   return (
     <article className="w-full">
-      <Link href={href} className="block">
-        <div className="relative aspect-video w-full overflow-hidden bg-black">
+      <Link href={href} className="block w-full">
+        <div className="relative aspect-[16/9] w-full overflow-hidden bg-neutral-900">
           {thumbnailSrc ? (
-            <Image src={thumbnailSrc} alt={title} fill className="object-cover" sizes="100vw" unoptimized />
+            <Image
+              src={thumbnailSrc}
+              alt={title}
+              fill
+              className="object-cover"
+              sizes="100vw"
+              unoptimized
+            />
           ) : (
-            <div className="flex h-full min-h-[8rem] items-center justify-center text-sm text-neutral-500">썸네일 없음</div>
+            <div className="flex h-full min-h-[10rem] w-full items-center justify-center text-sm text-neutral-400">
+              썸네일 없음
+            </div>
           )}
           {categoryBadge ? (
-            <span className="absolute right-2 top-2 rounded bg-black/70 px-2 py-0.5 text-xs font-medium text-white">
+            <span className="absolute right-1.5 top-1.5 bg-black/75 px-1.5 py-0.5 text-[11px] font-medium text-white">
               {categoryBadge}
             </span>
           ) : null}
         </div>
       </Link>
 
-      <div className="flex gap-3 px-4 py-3">
+      <div className="flex gap-2.5 px-3 py-2">
         <Link
           href={href}
           className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full bg-neutral-200"
@@ -66,21 +75,12 @@ export function VideoListItem({
         </Link>
 
         <Link href={href} className="min-w-0 flex-1 text-inherit no-underline" aria-label={title}>
-          <div className="line-clamp-2 text-sm font-semibold leading-snug text-neutral-900">{title}</div>
-          <div className="mt-1 text-xs text-gray-500">{meta}</div>
+          <div className="line-clamp-2 text-sm font-medium leading-snug text-neutral-900">{title}</div>
+          <div className="mt-0.5 text-xs text-neutral-600">{meta}</div>
         </Link>
-
-        <button
-          type="button"
-          className="shrink-0 rounded-full p-2 text-lg leading-none text-gray-400 hover:bg-neutral-100"
-          aria-label="메뉴"
-          onClick={(e) => e.preventDefault()}
-        >
-          ⋮
-        </button>
       </div>
 
-      {footer ? <div className="px-4 pb-3">{footer}</div> : null}
+      {footer ? <div className="px-3 pb-2">{footer}</div> : null}
     </article>
   )
 }

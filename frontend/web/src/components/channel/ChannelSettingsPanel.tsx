@@ -15,15 +15,15 @@ import { invalidateAfterChannelVideoMutation } from '@/lib/query/channelVideoQue
 import { uploadAuditionImage } from '@/lib/api/uploads'
 import { DEFAULT_IMAGES } from '@/lib/constants/fallbacks'
 
-/** 모바일 기준 카드·보라/핑크 primary, radius 16px / 버튼 12px */
-const CARD_SETTINGS =
-  'rounded-2xl border border-violet-100/90 bg-white p-5 shadow-[0_4px_24px_-4px_rgba(109,40,217,0.12)] sm:p-6'
+/** 풀 가로·유튜브형 채널 UI와 통일: 카드/그림자 없음 */
+const SECTION =
+  'w-full border-b border-neutral-200 py-4'
 const INPUT_STYLE =
-  'w-full rounded-xl border border-neutral-200 bg-white px-3.5 py-2.5 text-sm text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-violet-400 focus:ring-2 focus:ring-violet-500/20'
+  'w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-neutral-400 focus:ring-1 focus:ring-neutral-900/10'
 const BTN_GHOST =
-  'rounded-xl border border-violet-200 bg-violet-50/60 px-4 py-2.5 text-sm font-semibold text-violet-800 transition hover:bg-violet-100/80 disabled:opacity-50'
+  'rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm font-medium text-neutral-800 transition hover:bg-neutral-50 disabled:opacity-50'
 const BTN_SAVE =
-  'w-full rounded-xl bg-gradient-to-r from-violet-600 via-fuchsia-600 to-pink-500 py-3.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/25 transition hover:brightness-105 active:scale-[0.99] disabled:opacity-50 disabled:hover:brightness-100'
+  'w-full rounded-md bg-neutral-900 py-2.5 text-sm font-semibold text-white transition hover:bg-neutral-800 disabled:opacity-50'
 
 const SNS_BASE: { value: SnsPlatformCode; label: string }[] = [
   { value: 'YOUTUBE', label: 'YouTube' },
@@ -55,7 +55,7 @@ function selectOptionsForRow(currentPlatform: string): { value: string; label: s
 }
 
 const SWITCH =
-  'relative inline-flex h-8 w-[52px] shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
+  'relative inline-flex h-8 w-[52px] shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
 
 function PublicToggle({
   checked,
@@ -74,7 +74,7 @@ function PublicToggle({
       aria-label="채널 공개"
       disabled={disabled}
       onClick={() => onChange(!checked)}
-      className={`${SWITCH} ${checked ? 'bg-gradient-to-r from-violet-500 to-fuchsia-500' : 'bg-neutral-300'}`}
+      className={`${SWITCH} ${checked ? 'bg-neutral-900' : 'bg-neutral-300'}`}
     >
       <span
         className={`pointer-events-none inline-block h-7 w-7 transform rounded-full bg-white shadow-md transition duration-200 ease-out ${
@@ -198,14 +198,14 @@ export function ChannelSettingsPanel() {
 
   const statusHint = useMemo(() => {
     if (saveMutation.isError) return { tone: 'text-red-600' as const, text: '저장에 실패했습니다.' }
-    if (saveMutation.isSuccess && !saveMutation.isPending) return { tone: 'text-violet-700' as const, text: '저장되었습니다.' }
+    if (saveMutation.isSuccess && !saveMutation.isPending) return { tone: 'text-neutral-700' as const, text: '저장되었습니다.' }
     if (!dirty) return { tone: 'text-neutral-500' as const, text: '변경 사항이 없습니다.' }
     return null
   }, [dirty, saveMutation.isError, saveMutation.isPending, saveMutation.isSuccess])
 
   if (isLoading || !data) {
     return (
-      <section className={CARD_SETTINGS}>
+      <section className={SECTION}>
         <p className="text-sm text-neutral-500">채널 설정을 불러오는 중…</p>
       </section>
     )
@@ -213,7 +213,7 @@ export function ChannelSettingsPanel() {
 
   if (isError) {
     return (
-      <section className={CARD_SETTINGS}>
+      <section className={SECTION}>
         <p className="text-sm text-red-600">채널 설정을 불러오지 못했습니다.</p>
       </section>
     )
@@ -222,24 +222,24 @@ export function ChannelSettingsPanel() {
   const previewSrc = profileImageUrl?.trim() || DEFAULT_IMAGES.avatar
 
   return (
-    <section className={`${CARD_SETTINGS} flex flex-col gap-6`}>
+    <section className={`${SECTION} flex flex-col gap-4`}>
       <header>
-        <h2 className="text-lg font-bold text-neutral-900">채널 설정</h2>
+        <h2 className="text-lg font-semibold text-neutral-900">채널 설정</h2>
         <p className="mt-1 text-sm text-neutral-500">프로필과 공개 여부는 저장 즉시 공개 채널 페이지(`/channel/...`)에 반영됩니다.</p>
       </header>
 
-      <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
-        <div className="flex flex-col items-center gap-3">
-          <div className="relative h-28 w-28 shrink-0 overflow-hidden rounded-full border-4 border-violet-100 bg-violet-50 ring-2 ring-violet-200/60">
-            <Image src={previewSrc} alt="" fill className="object-cover" unoptimized sizes="112px" />
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+        <div className="flex shrink-0 flex-col gap-2 sm:w-36">
+          <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-full border border-neutral-200 bg-neutral-100">
+            <Image src={previewSrc} alt="" fill className="object-cover" unoptimized sizes="96px" />
           </div>
           <label className="cursor-pointer">
-            <span className={`inline-flex ${BTN_GHOST}`}>{uploadBusy ? '업로드 중…' : '프로필 이미지 변경'}</span>
+            <span className={`inline-flex ${BTN_GHOST} w-full justify-center sm:w-auto`}>{uploadBusy ? '업로드 중…' : '이미지 변경'}</span>
             <input type="file" accept="image/*" className="hidden" disabled={uploadBusy} onChange={(e) => void onPickProfileImage(e)} />
           </label>
         </div>
 
-        <div className="min-w-0 flex-1 space-y-4 w-full">
+        <div className="min-w-0 flex-1 space-y-4">
           <div>
             <label className="mb-1.5 block text-sm font-medium text-neutral-800">채널 이름</label>
             <input
@@ -270,16 +270,16 @@ export function ChannelSettingsPanel() {
             />
           </div>
 
-          <div className="rounded-2xl border border-violet-100 bg-gradient-to-br from-violet-50/80 to-fuchsia-50/50 p-4">
+          <div className="border-t border-neutral-100 pt-4">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-neutral-900">채널 공개</p>
-                <p className="mt-1.5 text-xs leading-relaxed text-neutral-600 sm:text-sm">
+                <p className="mt-1 text-xs leading-relaxed text-neutral-600 sm:text-sm">
                   공개 시 다른 사용자가 내 채널과 영상을 볼 수 있습니다
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-2">
-                <span className={`text-xs font-semibold sm:text-sm ${isPublic ? 'text-violet-700' : 'text-neutral-500'}`}>
+                <span className={`text-xs font-semibold sm:text-sm ${isPublic ? 'text-neutral-900' : 'text-neutral-500'}`}>
                   {isPublic ? 'ON' : 'OFF'}
                 </span>
                 <PublicToggle
@@ -296,22 +296,22 @@ export function ChannelSettingsPanel() {
         </div>
       </div>
 
-      <div>
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+      <div className="border-t border-neutral-100 pt-4">
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
           <span className="text-sm font-medium text-neutral-800">SNS 링크</span>
           <button
             type="button"
-            className="rounded-xl bg-violet-100 px-3 py-2 text-xs font-semibold text-violet-800 sm:text-sm"
+            className="rounded-md border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-800 sm:text-sm"
             onClick={addSnsRow}
           >
             + SNS 추가
           </button>
         </div>
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col divide-y divide-neutral-200">
           {snsLinks.map((row, idx) => (
             <div
               key={idx}
-              className="flex flex-col gap-2 rounded-2xl border border-neutral-100 bg-neutral-50/80 p-3 sm:flex-row sm:items-stretch"
+              className="flex flex-col gap-2 py-3 sm:flex-row sm:items-stretch sm:gap-2"
             >
               <select
                 value={row.platform}
@@ -333,7 +333,7 @@ export function ChannelSettingsPanel() {
               />
               <button
                 type="button"
-                className="rounded-xl border border-red-100 bg-white px-3 py-2.5 text-sm font-medium text-red-600 sm:w-20 sm:shrink-0"
+                className="rounded-md border border-neutral-200 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 sm:w-20 sm:shrink-0"
                 onClick={() => removeSnsRow(idx)}
               >
                 삭제
@@ -344,11 +344,11 @@ export function ChannelSettingsPanel() {
         <p className="mt-2 text-xs text-neutral-500">https URL만 저장됩니다. 빈 행은 저장 시 제외됩니다.</p>
       </div>
 
-      <div className="space-y-2 border-t border-violet-100/80 pt-5">
+      <div className="space-y-2 border-t border-neutral-100 pt-4">
         <button type="button" className={BTN_SAVE} disabled={saveMutation.isPending || !dirty} onClick={() => void onSave()}>
           {saveMutation.isPending ? '저장 중…' : '저장하기'}
         </button>
-        {statusHint ? <p className={`text-center text-xs sm:text-sm ${statusHint.tone}`}>{statusHint.text}</p> : null}
+        {statusHint ? <p className={`text-left text-xs sm:text-sm ${statusHint.tone}`}>{statusHint.text}</p> : null}
       </div>
     </section>
   )

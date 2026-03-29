@@ -22,12 +22,11 @@ import { ChannelSettingsPanel } from '@/components/channel/ChannelSettingsPanel'
 import { invalidateAfterChannelVideoMutation } from '@/lib/query/channelVideoQuery'
 import { ChannelMyVideoList } from '@/components/channel/ChannelMyVideoList'
 
-/** 채널 설정 패널과 통일: 카드 16px, primary 그라데이션 버튼 */
-const BTN_UPLOAD_PRIMARY =
-  'rounded-xl bg-gradient-to-r from-violet-600 via-fuchsia-600 to-pink-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/25 transition hover:brightness-105 active:scale-[0.99]'
-const CARD_CHANNEL_FORM =
-  'rounded-2xl border border-violet-100/90 bg-white p-5 shadow-[0_4px_24px_-4px_rgba(109,40,217,0.12)] sm:p-6'
-const SECTION_DIVIDER = 'my-8 border-t border-violet-100'
+/** 공개 채널/관리 화면 통일: 풀 가로·플랫, 그림자·그라데이션 없음 */
+const BTN_PRIMARY =
+  'rounded-md bg-neutral-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-neutral-800 disabled:opacity-50'
+const BLOCK_FORM = 'w-full border-b border-neutral-200 py-4'
+const SECTION_DIVIDER = 'border-b border-neutral-200'
 
 const videoSchema = z.object({
   title: z.string().min(1, '제목을 입력해주세요'),
@@ -171,24 +170,24 @@ export default function ChannelPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-violet-50/40 to-neutral-50">
-      <div className={`w-full px-4 py-6 ${SECTION_GAP}`}>
+    <div className="min-h-screen w-full bg-white">
+      <div className={`w-full px-3 py-3 ${SECTION_GAP}`}>
         <h1 className={TITLE_PAGE}>내 채널 관리</h1>
 
         <ChannelSettingsPanel />
 
         <div className={SECTION_DIVIDER} aria-hidden />
 
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-base font-bold text-neutral-900">영상 관리</h2>
-          <button type="button" onClick={openUploadForm} className={`${BTN_UPLOAD_PRIMARY} w-full shrink-0 sm:w-auto`}>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-base font-semibold text-neutral-900">영상 관리</h2>
+          <button type="button" onClick={openUploadForm} className={`${BTN_PRIMARY} w-full shrink-0 sm:w-auto`}>
             + 영상 업로드
           </button>
         </div>
 
         {showCreateForm && (
-          <div className={CARD_CHANNEL_FORM}>
-            <h2 className={`${TITLE_PAGE} mb-4`}>{editingVideo ? '영상 수정' : '새 영상 추가'}</h2>
+          <div className={BLOCK_FORM}>
+            <h2 className={`${TITLE_PAGE} mb-3`}>{editingVideo ? '영상 수정' : '새 영상 추가'}</h2>
             <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
               <div>
                 <label className="mb-2 block text-sm font-medium text-gray-900">제목 *</label>
@@ -221,7 +220,7 @@ export default function ChannelPage() {
                 <button
                   type="submit"
                   disabled={createMutation.isPending || updateMutation.isPending}
-                  className={`${BTN_UPLOAD_PRIMARY} w-full md:flex-1`}
+                  className={`${BTN_PRIMARY} w-full md:flex-1`}
                 >
                   {createMutation.isPending || updateMutation.isPending ? '저장 중...' : editingVideo ? '수정' : '등록'}
                 </button>
