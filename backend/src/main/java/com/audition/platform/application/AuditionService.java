@@ -18,6 +18,8 @@ import com.audition.platform.application.tag.AuditionTagService;
 import com.audition.platform.domain.user.UserRepository;
 import com.audition.platform.domain.util.YoutubeUrls;
 import com.audition.platform.infra.SecurityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +30,7 @@ import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -36,6 +39,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class AuditionService {
+
+    private static final Logger log = LoggerFactory.getLogger(AuditionService.class);
 
     private final AuditionRepository auditionRepository;
     private final UserRepository userRepository;
@@ -168,38 +173,50 @@ public class AuditionService {
         AuditionResponse r = new AuditionResponse();
         r.setId(a.getId());
         r.setOwnerId(a.getOwnerId());
-        r.setTitle(a.getTitle());
-        r.setDescription(a.getDescription());
+        r.setTitle(a.getTitle() != null ? a.getTitle() : "");
+        r.setDescription(a.getDescription() != null ? a.getDescription() : "");
         r.setStatus(a.getStatus());
         r.setUpdatedAt(a.getUpdatedAt());
         r.setCountryCode(a.getCountryCode());
         r.setDeadlineAt(a.getDeadlineAt());
-        r.setTags(auditionTagService.resolveMergedDisplayNames(a.getId()).toArray(new String[0]));
-        r.setTagRefs(auditionTagService.listRefs(a.getId()));
+        try {
+            r.setTags(auditionTagService.resolveMergedDisplayNames(a.getId()).toArray(new String[0]));
+        } catch (Exception e) {
+            log.warn("resolveMergedDisplayNames failed for audition {}", a.getId(), e);
+            r.setTags(new String[0]);
+        }
+        try {
+            r.setTagRefs(auditionTagService.listRefs(a.getId()));
+        } catch (Exception e) {
+            log.warn("listRefs failed for audition {}", a.getId(), e);
+            r.setTagRefs(new ArrayList<>());
+        }
         r.setCreatedAt(a.getCreatedAt());
         r.setImages(buildImagesForResponse(a));
         r.setVideoUrl(a.getVideoUrl());
-        r.setGalleryImages(a.getGalleryImages());
+        r.setGalleryImages(a.getGalleryImages() != null ? a.getGalleryImages() : new String[0]);
         r.setAgencyName(a.getAgencyName() != null ? a.getAgencyName() : "");
         r.setAgencyLogo(a.getAgencyLogo());
         r.setApplicantsCount((int) applicationRepository.countByAuditionId(a.getId()));
-        r.setRemainingDays(computeRemainingDays(a.getEndDate()));
-        r.setRecruitFields(a.getRecruitFields());
-        r.setQualifications(a.getQualifications());
-        r.setSchedules(a.getSchedules());
+        Instant endDate = a.getEndDate();
+        r.setRemainingDays(computeRemainingDays(endDate));
+        r.setRecruitFields(a.getRecruitFields() != null ? a.getRecruitFields() : new String[0]);
+        r.setQualifications(a.getQualifications() != null ? a.getQualifications() : new String[0]);
+        r.setSchedules(a.getSchedules() != null ? a.getSchedules() : new String[0]);
         r.setLocation(a.getLocation() != null ? a.getLocation() : "");
         r.setStartDate(a.getStartDate());
-        r.setEndDate(a.getEndDate());
-        r.setBenefits(a.getBenefits());
+        r.setEndDate(endDate);
+        r.setBenefits(a.getBenefits() != null ? a.getBenefits() : new String[0]);
         r.setProcessMode(a.getProcessMode());
         r.setCurrentRoundNumber(a.getCurrentRoundNumber());
         r.setMaxRoundNumber(a.getMaxRoundNumber());
         r.setSelectionStatus(a.getSelectionStatus());
         r.setGroupId(a.getGroupId());
         r.setSeriesRound(a.getSeriesRound());
+        String statusForLabel = a.getStatus() != null ? a.getStatus() : "";
         r.setDisplayTitle(AuditionSeriesPresentation.displayTitle(a.getTitle(), a.getSeriesRound()));
         r.setRecruitmentRoundLabel(
-                AuditionSeriesPresentation.recruitmentRoundLabel(a.getStatus(), a.getSeriesRound()));
+                AuditionSeriesPresentation.recruitmentRoundLabel(statusForLabel, a.getSeriesRound()));
         return r;
     }
 
@@ -332,26 +349,36 @@ public class AuditionService {
 
     public AuditionResponse getById(UUID id) {
         Audition a = auditionRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Audition not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Not found"));
+        log.info("AUDITION DETAIL: {}", a.getId());
         AuditionResponse r = toResponse(a);
         UUID viewerId = SecurityUtils.getCurrentUserId();
         if (viewerId != null && (SecurityUtils.hasRole("APPLICANT") || SecurityUtils.hasRole("ADMIN"))) {
-            Optional<Application> myApp = applicationRepository.findByAuditionIdAndApplicantId(id, viewerId);
-            r.setHasApplied(myApp.isPresent());
-            myApp.ifPresent(app -> {
-                r.setMyApplicationId(app.getId().toString());
-                r.setMyCurrentRoundNumber(app.getCurrentRoundNumber());
-            });
-            boolean eligible = auditionSeriesEligibilityService.canApply(viewerId, a);
-            r.setCanApply(eligible);
-            if (!eligible && a.getSeriesRound() > 1) {
-                r.setApplyBlockedMessage(AuditionSeriesPresentation.APPLY_BLOCKED_PREV_ROUND_NOT_ACCEPTED);
+            try {
+                Optional<Application> myApp = applicationRepository.findByAuditionIdAndApplicantId(id, viewerId);
+                r.setHasApplied(myApp.isPresent());
+                myApp.ifPresent(app -> {
+                    r.setMyApplicationId(app.getId().toString());
+                    r.setMyCurrentRoundNumber(app.getCurrentRoundNumber());
+                });
+                boolean eligible = auditionSeriesEligibilityService.canApply(viewerId, a);
+                r.setCanApply(eligible);
+                if (!eligible && a.getSeriesRound() > 1) {
+                    r.setApplyBlockedMessage(AuditionSeriesPresentation.APPLY_BLOCKED_PREV_ROUND_NOT_ACCEPTED);
+                }
+            } catch (Exception e) {
+                log.warn("viewer-specific audition detail enrichment failed for audition {} viewer {}", id, viewerId, e);
             }
         }
         if (AuditionProcessModes.isMultiRound(a.getProcessMode())) {
-            r.setRoundSummaries(auditionRoundService.listRounds(a.getId()).stream()
-                    .map(x -> new AuditionRoundSummaryDto(x.getId().toString(), x.getRoundNumber()))
-                    .collect(Collectors.toList()));
+            try {
+                r.setRoundSummaries(auditionRoundService.listRounds(a.getId()).stream()
+                        .map(x -> new AuditionRoundSummaryDto(x.getId().toString(), x.getRoundNumber()))
+                        .collect(Collectors.toList()));
+            } catch (Exception e) {
+                log.warn("listRounds failed for audition {}", a.getId(), e);
+                r.setRoundSummaries(new ArrayList<>());
+            }
         }
         return r;
     }

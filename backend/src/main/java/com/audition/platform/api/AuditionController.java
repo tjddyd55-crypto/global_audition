@@ -1,12 +1,16 @@
 package com.audition.platform.api;
 
+import com.audition.platform.api.dto.ApiFailResponse;
 import com.audition.platform.api.dto.AuditionResponse;
 import com.audition.platform.api.dto.CreateAuditionRequest;
 import com.audition.platform.api.dto.UpdateAuditionRequest;
 import com.audition.platform.application.AuditionService;
 import com.audition.platform.infra.SecurityUtils;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -16,6 +20,8 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/auditions")
 public class AuditionController {
+
+    private static final Logger log = LoggerFactory.getLogger(AuditionController.class);
 
     private final AuditionService auditionService;
 
@@ -50,8 +56,16 @@ public class AuditionController {
     }
 
     @GetMapping("/{id}")
-    public AuditionResponse getById(@PathVariable UUID id) {
-        return auditionService.getById(id);
+    public ResponseEntity<?> getById(@PathVariable UUID id) {
+        try {
+            return ResponseEntity.ok(auditionService.getById(id));
+        } catch (ResponseStatusException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            log.error("AUDITION DETAIL ERROR:", ex);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiFailResponse("오디션 상세 조회 실패"));
+        }
     }
 
     @PatchMapping("/{id}")

@@ -187,6 +187,7 @@ public class GlobalExceptionHandler {
         boolean channelVideosApi = uri.startsWith("/api/videos");
         boolean subscribeApi = "/api/subscribe".equals(uri);
         String method = request.getMethod() != null ? request.getMethod() : "";
+        boolean auditionDetailById = isGetAuditionDetailById(uri, method);
         return uri.contains("/api/me/")
                 || uri.endsWith("/api/me")
                 || uri.contains("/api/auth/me")
@@ -204,6 +205,22 @@ public class GlobalExceptionHandler {
                 || adminApiPath
                 || uploadsPath
                 || channelVideosApi
-                || subscribeApi;
+                || subscribeApi
+                || auditionDetailById;
+    }
+
+    /** GET /api/auditions/{uuid} 단건(하위 경로 없음) — SSOT 실패 포맷 */
+    private static boolean isGetAuditionDetailById(String uri, String method) {
+        if (uri == null || !"GET".equalsIgnoreCase(method)) {
+            return false;
+        }
+        if (!uri.startsWith("/api/auditions/")) {
+            return false;
+        }
+        if (uri.endsWith("/my") || uri.endsWith("/mine")) {
+            return false;
+        }
+        String tail = uri.substring("/api/auditions/".length());
+        return !tail.contains("/");
     }
 }
