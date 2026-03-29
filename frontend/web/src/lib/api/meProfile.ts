@@ -10,6 +10,11 @@ export type MeProfileResponse = {
   name?: string | null
   birthDate?: string | null
   nationality?: string | null
+  country?: string | null
+  /** 채널 헤더 한줄 소개(최대 100자) */
+  bio?: string | null
+  categories?: string[]
+  featuredVideoId?: string | null
   introText?: string | null
   snsLinks?: Array<{ platform: string; url: string }>
 }
@@ -20,13 +25,18 @@ export type MeProfileForApply = Pick<
   'name' | 'nickname' | 'birthDate' | 'nationality' | 'introText' | 'snsLinks'
 >
 
+/** PATCH 시 포함한 필드만 변경. 프로필 폼은 전체 전송, 채널 스튜디오는 부분 전송. */
 export type PatchMeProfilePayload = {
-  name: string | null
-  nickname: string
-  birthDate: string
-  nationality: string
-  introText: string
-  snsLinks: Array<{ platform: string; url: string }>
+  name?: string | null
+  nickname?: string
+  birthDate?: string
+  nationality?: string
+  country?: string
+  introText?: string
+  snsLinks?: Array<{ platform: string; url: string }>
+  bio?: string | null
+  categories?: string[]
+  featuredVideoId?: string | null
 }
 
 export const meProfileApi = {
@@ -40,3 +50,4 @@ export const meProfileApi = {
     return unwrapData(data) as MeProfileResponse
   },
 }
+

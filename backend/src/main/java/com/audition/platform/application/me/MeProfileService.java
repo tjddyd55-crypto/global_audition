@@ -6,6 +6,7 @@ import com.audition.platform.api.dto.me.PatchMePasswordRequest;
 import com.audition.platform.api.dto.me.PatchMeProfileRequest;
 import com.audition.platform.application.user.UserNicknameService;
 import com.audition.platform.application.user.UserSnsLinkReplacementService;
+import com.audition.platform.domain.channel.ChannelVideoRepository;
 import com.audition.platform.domain.user.User;
 import com.audition.platform.domain.user.UserRepository;
 import com.audition.platform.domain.user.UserSnsLink;
@@ -17,38 +18,37 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.net.URI;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
 public class MeProfileService {
 
-    private static final Set<String> ALLOWED_NATIONALITIES = Set.of("KR", "MN", "JP", "OTHER");
-
     private final UserRepository userRepository;
     private final UserNicknameService userNicknameService;
     private final UserSnsLinkRepository userSnsLinkRepository;
     private final UserSnsLinkReplacementService userSnsLinkReplacementService;
     private final PasswordEncoder passwordEncoder;
+    private final ChannelVideoRepository channelVideoRepository;
 
     public MeProfileService(
             UserRepository userRepository,
             UserNicknameService userNicknameService,
             UserSnsLinkRepository userSnsLinkRepository,
             UserSnsLinkReplacementService userSnsLinkReplacementService,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder,
+            ChannelVideoRepository channelVideoRepository) {
         this.userRepository = userRepository;
         this.userNicknameService = userNicknameService;
         this.userSnsLinkRepository = userSnsLinkRepository;
         this.userSnsLinkReplacementService = userSnsLinkReplacementService;
         this.passwordEncoder = passwordEncoder;
+        this.channelVideoRepository = channelVideoRepository;
     }
 
     private UUID requireUserId() {
@@ -82,7 +82,7 @@ public class MeProfileService {
             user.setProfileImageUrl(req.getProfileImageUrl().trim().isEmpty() ? null : req.getProfileImageUrl().trim());
         }
         if (req.getBio() != null) {
-            user.setBio(req.getBio().trim().isEmpty() ? null : req.getBio().trim());
+            UserChannelProfilePatchSupport.applyBioChannelTagline(user, req.getBio());
         }
         if (req.getBirthDate() != null) {
             String raw = req.getBirthDate().trim();
@@ -96,20 +96,15 @@ public class MeProfileService {
                 }
             }
         }
-        if (req.getNationality() != null) {
-            String n = req.getNationality().trim().toUpperCase(Locale.ROOT);
-            if (n.isEmpty()) {
-                user.setNationality(null);
-            } else {
-                if (!ALLOWED_NATIONALITIES.contains(n)) {
-                    throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "국적 값이 올바르지 않습니다.");
-                }
-                user.setNationality(n);
-            }
+        if (req.resolveNationalityInput() != null) {
+            UserChannelProfilePatchSupport.applyNationality(user, req.resolveNationalityInput());
         }
         if (req.getIntroText() != null) {
             user.setIntroText(req.getIntroText().trim().isEmpty() ? null : req.getIntroText().trim());
         }
+
+        UserChannelProfilePatchSupport.applyCategories(user, req.getCategories());
+        UserChannelProfilePatchSupport.applyFeaturedVideo(user, userId, channelVideoRepository, req.getFeaturedVideoId());
 
         if (req.getSnsLinks() != null) {
             userSnsLinkReplacementService.replaceAll(userId, req.getSnsLinks());
@@ -149,6 +144,9 @@ public class MeProfileService {
         r.setBirthDate(user.getBirthDate() != null ? user.getBirthDate().toString() : null);
         r.setNationality(user.getNationality());
         r.setIntroText(user.getIntroText());
+        String[] cats = user.getChannelCategories();
+        r.setCategories(cats != null && cats.length > 0 ? Arrays.asList(cats) : List.of());
+        r.setFeaturedVideoId(user.getFeaturedVideoId() != null ? user.getFeaturedVideoId().toString() : null);
         List<UserSnsLink> links = userSnsLinkRepository.findByUserIdOrderByCreatedAtAsc(user.getId());
         r.setSnsLinks(links.stream().map(l -> {
             MeUserSnsLinkDto d = new MeUserSnsLinkDto();

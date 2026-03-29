@@ -2,6 +2,7 @@ package com.audition.platform.api.dto.channel;
 
 import com.audition.platform.api.dto.me.MeUserSnsLinkDto;
 import com.audition.platform.api.dto.me.MyChannelVideoDto;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +17,15 @@ public class PublicChannelResponse {
     private String nickname;
     /** /me 프로필 자기소개 */
     private String introText;
+    /** KR | MN | JP | OTHER */
+    private String nationality;
+    /** 채널 헤더 한줄 소개 */
+    private String bio;
+    private List<String> categories = new ArrayList<>();
+    private String featuredVideoId;
+    private MyChannelVideoDto featuredVideo;
+    /** 로그인 사용자 기준, 타인 채널만 의미 있음 */
+    private boolean subscribed;
     private String channelId;
     private String channelName;
     private String channelDescription;
@@ -68,6 +78,59 @@ public class PublicChannelResponse {
 
     public void setIntroText(String introText) {
         this.introText = introText;
+    }
+
+    public String getNationality() {
+        return nationality;
+    }
+
+    public void setNationality(String nationality) {
+        this.nationality = nationality;
+    }
+
+    @JsonProperty("country")
+    public String getCountry() {
+        return nationality;
+    }
+
+    public String getBio() {
+        return bio;
+    }
+
+    public void setBio(String bio) {
+        this.bio = bio;
+    }
+
+    public List<String> getCategories() {
+        return categories;
+    }
+
+    public void setCategories(List<String> categories) {
+        this.categories = categories != null ? categories : new ArrayList<>();
+    }
+
+    public String getFeaturedVideoId() {
+        return featuredVideoId;
+    }
+
+    public void setFeaturedVideoId(String featuredVideoId) {
+        this.featuredVideoId = featuredVideoId;
+    }
+
+    public MyChannelVideoDto getFeaturedVideo() {
+        return featuredVideo;
+    }
+
+    public void setFeaturedVideo(MyChannelVideoDto featuredVideo) {
+        this.featuredVideo = featuredVideo;
+    }
+
+    public boolean isSubscribed() {
+        return subscribed;
+    }
+
+    public void setSubscribed(boolean subscribed) {
+        this.subscribed = subscribed;
     }
 
     public String getChannelId() {

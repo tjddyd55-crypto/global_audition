@@ -22,6 +22,10 @@ public class MyChannelResponse {
     /** 화면 표시용 닉네임(채널 이름과 동기화) */
     private String nickname;
     private String introText;
+    private String nationality;
+    private String bio;
+    private List<String> categories = new ArrayList<>();
+    private String featuredVideoId;
     private List<MeUserSnsLinkDto> snsLinks = new ArrayList<>();
 
     public String getChannelId() {
@@ -112,6 +116,43 @@ public class MyChannelResponse {
 
     public void setIntroText(String introText) {
         this.introText = introText;
+    }
+
+    public String getNationality() {
+        return nationality;
+    }
+
+    public void setNationality(String nationality) {
+        this.nationality = nationality;
+    }
+
+    @JsonProperty("country")
+    public String getCountry() {
+        return nationality;
+    }
+
+    public String getBio() {
+        return bio;
+    }
+
+    public void setBio(String bio) {
+        this.bio = bio;
+    }
+
+    public List<String> getCategories() {
+        return categories;
+    }
+
+    public void setCategories(List<String> categories) {
+        this.categories = categories != null ? categories : new ArrayList<>();
+    }
+
+    public String getFeaturedVideoId() {
+        return featuredVideoId;
+    }
+
+    public void setFeaturedVideoId(String featuredVideoId) {
+        this.featuredVideoId = featuredVideoId;
     }
 
     public List<MeUserSnsLinkDto> getSnsLinks() {

@@ -1,5 +1,5 @@
 import { apiClient } from './client'
-import { normalizePublicChannelVideoListPayload } from './channelVideoPublic'
+import { normalizePublicChannelVideoListPayload, parseMyChannelVideoRow } from './channelVideoPublic'
 import { unwrapData } from './unwrap'
 import type { MyChannelVideoRow } from './videos'
 
@@ -30,6 +30,10 @@ export type MyChannelSummary = {
   /** 채널 이름으로 쓰는 닉네임 */
   nickname?: string
   introText?: string | null
+  nationality?: string | null
+  bio?: string | null
+  categories?: string[]
+  featuredVideoId?: string | null
   snsLinks?: SnsLinkRow[]
 }
 
@@ -47,6 +51,11 @@ export type PatchMyChannelBody = {
   is_channel_public?: boolean
   isPublic?: boolean
   snsLinks?: SnsLinkRow[]
+  nationality?: string
+  country?: string
+  bio?: string | null
+  categories?: string[]
+  featuredVideoId?: string | null
 }
 
 /**
@@ -114,6 +123,22 @@ export function sanitizePatchMyChannelBody(body: PatchMyChannelBody): Record<str
       .filter((row) => row.platform.length > 0 && row.url.length > 0)
   }
 
+  if (body.nationality !== undefined) {
+    out.nationality = body.nationality.trim().toUpperCase()
+  }
+  if (body.country !== undefined) {
+    out.country = body.country.trim().toUpperCase()
+  }
+  if (body.bio !== undefined) {
+    out.bio = body.bio === null ? null : body.bio.trim() === '' ? null : body.bio.trim()
+  }
+  if (body.categories !== undefined) {
+    out.categories = body.categories
+  }
+  if (body.featuredVideoId !== undefined) {
+    out.featuredVideoId = body.featuredVideoId === null ? null : String(body.featuredVideoId).trim()
+  }
+
   return out
 }
 
@@ -153,6 +178,15 @@ function normalizeChannel(raw: Record<string, unknown>): MyChannelSummary {
     isPublic,
     nickname: raw.nickname != null ? String(raw.nickname) : undefined,
     introText: raw.introText != null ? String(raw.introText) : null,
+    nationality: raw.nationality != null ? String(raw.nationality) : null,
+    bio: raw.bio != null ? String(raw.bio) : null,
+    categories: Array.isArray(raw.categories)
+      ? (raw.categories as unknown[]).map((x) => String(x ?? '').trim()).filter((s) => s.length > 0)
+      : [],
+    featuredVideoId:
+      raw.featuredVideoId != null && String(raw.featuredVideoId).trim() !== ''
+        ? String(raw.featuredVideoId)
+        : undefined,
     snsLinks,
   }
 }
@@ -175,6 +209,13 @@ export type PublicChannelResponse = {
   name?: string | null
   nickname?: string | null
   introText?: string | null
+  nationality?: string | null
+  country?: string | null
+  bio?: string | null
+  categories?: string[]
+  featuredVideoId?: string | null
+  featuredVideo?: PublicChannelVideo | null
+  subscribed?: boolean
   channelId?: string
   channelName?: string
   channelDescription?: string
@@ -224,6 +265,10 @@ export const channelApi = {
     const { data } = await apiClient.get<unknown>(`/channels/${userId}`)
     const raw = unwrapData(data) as Record<string, unknown>
     const videos = normalizePublicChannelVideoListPayload(raw.videos)
+    let featuredVideo: PublicChannelVideo | null = null
+    if (raw.featuredVideo != null && typeof raw.featuredVideo === 'object') {
+      featuredVideo = parseMyChannelVideoRow(raw.featuredVideo as Record<string, unknown>)
+    }
     const snsRaw = raw.snsLinks
     let snsLinks: SnsLinkRow[] | undefined
     if (Array.isArray(snsRaw)) {
@@ -232,12 +277,22 @@ export const channelApi = {
         return { platform: String(o.platform ?? ''), url: String(o.url ?? '') }
       })
     }
+    const categories = Array.isArray(raw.categories)
+      ? (raw.categories as unknown[]).map((x) => String(x ?? '').trim()).filter((s) => s.length > 0)
+      : []
     return {
       userId: String(raw.userId ?? ''),
       displayName: String(raw.displayName ?? ''),
       name: raw.name != null ? String(raw.name) : null,
       nickname: raw.nickname != null ? String(raw.nickname) : null,
       introText: raw.introText != null ? String(raw.introText) : null,
+      nationality: raw.nationality != null ? String(raw.nationality) : null,
+      country: raw.country != null ? String(raw.country) : null,
+      bio: raw.bio != null ? String(raw.bio) : null,
+      categories,
+      featuredVideoId: raw.featuredVideoId != null ? String(raw.featuredVideoId) : null,
+      featuredVideo,
+      subscribed: typeof raw.subscribed === 'boolean' ? raw.subscribed : false,
       channelId: raw.channelId != null ? String(raw.channelId) : undefined,
       channelName: raw.channelName != null ? String(raw.channelName) : undefined,
       channelDescription: raw.channelDescription != null ? String(raw.channelDescription) : undefined,

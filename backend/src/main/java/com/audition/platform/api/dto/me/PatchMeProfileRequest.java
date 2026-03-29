@@ -17,7 +17,8 @@ public class PatchMeProfileRequest {
     @Size(max = 2048)
     private String profileImageUrl;
 
-    @Size(max = 2000)
+    /** 채널 헤더 한줄 소개 (최대 100자). */
+    @Size(max = 100)
     private String bio;
 
     /** ISO-8601 날짜(yyyy-MM-dd). 빈 문자열이면 삭제. */
@@ -28,8 +29,20 @@ public class PatchMeProfileRequest {
     @Size(max = 16)
     private String nationality;
 
+    /** {@link #nationality} 와 동일 (API 필드명 country). */
+    @Size(max = 16)
+    private String country;
+
     @Size(max = 8000)
     private String introText;
+
+    /** 채널 분야, 최대 3개 (각 항목은 서비스에서 50자까지 정규화). */
+    @Size(max = 3, message = "분야는 최대 3개까지입니다.")
+    private List<@Size(max = 50) String> categories;
+
+    /** 내 소유 channel_videos.id. 빈 문자열이면 대표 영상 해제. */
+    @Size(max = 40)
+    private String featuredVideoId;
 
     /**
      * 전송 시 기존 SNS 전체 교체. null 이면 SNS 미변경.
@@ -85,6 +98,22 @@ public class PatchMeProfileRequest {
         this.nationality = nationality;
     }
 
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
+    }
+
+    /** nationality 우선, 없으면 country */
+    public String resolveNationalityInput() {
+        if (nationality != null) {
+            return nationality;
+        }
+        return country;
+    }
+
     public String getIntroText() {
         return introText;
     }
@@ -99,5 +128,21 @@ public class PatchMeProfileRequest {
 
     public void setSnsLinks(List<MeUserSnsLinkDto> snsLinks) {
         this.snsLinks = snsLinks;
+    }
+
+    public List<String> getCategories() {
+        return categories;
+    }
+
+    public void setCategories(List<String> categories) {
+        this.categories = categories;
+    }
+
+    public String getFeaturedVideoId() {
+        return featuredVideoId;
+    }
+
+    public void setFeaturedVideoId(String featuredVideoId) {
+        this.featuredVideoId = featuredVideoId;
     }
 }

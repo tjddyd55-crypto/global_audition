@@ -1,5 +1,7 @@
 package com.audition.platform.api.dto.me;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,6 +19,8 @@ public class MeProfileResponse {
     private String birthDate;
     private String nationality;
     private String introText;
+    private List<String> categories = new ArrayList<>();
+    private String featuredVideoId;
     private List<MeUserSnsLinkDto> snsLinks = new ArrayList<>();
 
     public String getId() {
@@ -105,6 +109,27 @@ public class MeProfileResponse {
 
     public void setNationality(String nationality) {
         this.nationality = nationality;
+    }
+
+    @JsonProperty("country")
+    public String getCountry() {
+        return nationality;
+    }
+
+    public List<String> getCategories() {
+        return categories;
+    }
+
+    public void setCategories(List<String> categories) {
+        this.categories = categories != null ? categories : new ArrayList<>();
+    }
+
+    public String getFeaturedVideoId() {
+        return featuredVideoId;
+    }
+
+    public void setFeaturedVideoId(String featuredVideoId) {
+        this.featuredVideoId = featuredVideoId;
     }
 
     public String getIntroText() {

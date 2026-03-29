@@ -2,12 +2,16 @@
 
 import { useMemo, useState } from 'react'
 import { useParams } from 'next/navigation'
-import { useQuery } from '@tanstack/react-query'
-import Image from 'next/image'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useRouter } from '@/i18n.config'
 import { channelApi } from '@/lib/api/channel'
-import { listPublicVideosForChannel } from '@/lib/api/channelVideoPublic'
+import { listPublicVideosForChannel, postChannelSubscribe, deleteChannelSubscribe } from '@/lib/api/channelVideoPublic'
 import { channelVideoKeys } from '@/lib/query/channelVideoQuery'
 import { ChannelPublicVideoList } from '@/components/channel/ChannelPublicVideoList'
+import { getVideoEmbedSrc } from '@/lib/utils/videoEmbed'
+import { nationalityLabelKo } from '@/lib/channel/nationalityDisplay'
+import { userApi } from '@/lib/api/user'
+import { authApi } from '@/lib/api/auth'
 
 type TabId = 'videos' | 'info'
 
@@ -15,20 +19,24 @@ function formatCount(n: number): string {
   return new Intl.NumberFormat('ko-KR').format(n)
 }
 
-function avatarFallbackLabel(nickname: string | undefined, displayName: string): string {
-  const s = (nickname ?? displayName ?? '?').trim()
-  return s.slice(0, 1).toUpperCase()
-}
-
 export default function ChannelByUserIdPage() {
   const params = useParams()
   const userId = typeof params.userId === 'string' ? params.userId : ''
   const [tab, setTab] = useState<TabId>('videos')
+  const queryClient = useQueryClient()
+  const router = useRouter()
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ['public-channel', userId],
     queryFn: () => channelApi.getPublic(userId),
     enabled: userId.length > 0,
+    retry: false,
+  })
+
+  const { data: me } = useQuery({
+    queryKey: ['channel-viewer-me', userId],
+    queryFn: () => userApi.getCurrentUser(),
+    enabled: userId.length > 0 && !!authApi.getToken(),
     retry: false,
   })
 
@@ -47,18 +55,42 @@ export default function ChannelByUserIdPage() {
 
   const embeddedVideos = useMemo(() => data?.videos ?? [], [data?.videos])
 
+  const featuredId = data?.featuredVideo?.videoId ?? null
+
   const displayVideos = useMemo(() => {
-    if (publicVideosFromApi.length > 0) return publicVideosFromApi
-    return embeddedVideos
-  }, [publicVideosFromApi, embeddedVideos])
+    const raw = publicVideosFromApi.length > 0 ? publicVideosFromApi : embeddedVideos
+    if (!featuredId) return raw
+    return raw.filter((v) => v.videoId !== featuredId)
+  }, [publicVideosFromApi, embeddedVideos, featuredId])
+
+  const embedSrc = useMemo(() => {
+    const url = data?.featuredVideo?.videoUrl
+    if (!url) return null
+    return getVideoEmbedSrc(url)
+  }, [data?.featuredVideo?.videoUrl])
 
   const stats = useMemo(() => {
     if (!data) return { videos: 0, subs: 0 }
-    const subs = data.subscriberCount ?? 0
-    const list = displayVideos
-    const vCount = videosLoading && list.length === 0 ? (data.videoCount ?? 0) : list.length
-    return { videos: vCount, subs }
-  }, [data, displayVideos, videosLoading])
+    return {
+      videos: data.videoCount ?? 0,
+      subs: data.subscriberCount ?? 0,
+    }
+  }, [data])
+
+  const isOwnChannel = Boolean(me?.userId && userId && me.userId === userId)
+
+  const subMutation = useMutation({
+    mutationFn: async () => {
+      if (data?.subscribed) {
+        return deleteChannelSubscribe(userId)
+      }
+      return postChannelSubscribe(userId)
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['public-channel', userId] })
+      await queryClient.invalidateQueries({ queryKey: channelVideoKeys.publicList(userId) })
+    },
+  })
 
   if (!userId) {
     return (
@@ -96,42 +128,65 @@ export default function ChannelByUserIdPage() {
   }
 
   const nickname = data.nickname?.trim() || data.displayName
-  const name = data.name?.trim()
+  const nat = (data.nationality ?? data.country ?? '').trim()
+  const natLabel = nationalityLabelKo(nat || null)
+  const bio = data.bio?.trim()
+  const categories = data.categories ?? []
   const intro = data.introText?.trim()
-  const profileUrl = data.profileImageUrl ?? undefined
 
   return (
     <div className="min-h-screen w-full bg-white">
-      {/* 슬림 채널 헤더 — 풀 가로 */}
-      <header className="w-full border-b border-neutral-200 bg-white px-3 py-2">
-        <div className="flex w-full items-center gap-3">
-          <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full bg-neutral-200">
-            {profileUrl ? (
-              <Image src={profileUrl} alt="" fill className="object-cover" unoptimized sizes="56px" />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center text-lg font-semibold text-neutral-600">
-                {avatarFallbackLabel(data.nickname ?? undefined, data.displayName)}
-              </div>
-            )}
-          </div>
-          <div className="min-w-0 flex-1">
-            <h1 className="truncate text-base font-semibold text-neutral-900">{nickname}</h1>
-            <p className="mt-0.5 text-xs text-neutral-600">
-              구독자 {formatCount(stats.subs)}명 · 영상 {formatCount(stats.videos)}개
-            </p>
-          </div>
+      {embedSrc ? (
+        <div className="w-full aspect-video bg-black">
+          <iframe
+            title="대표 영상"
+            src={embedSrc}
+            className="h-full w-full"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen
+          />
+        </div>
+      ) : null}
+
+      <div className="px-4 py-3 text-left">
+        <h1 className="text-lg font-semibold text-neutral-900">{nickname}</h1>
+        {natLabel ? <p className="mt-1 text-sm text-neutral-700">{natLabel}</p> : null}
+        {bio ? <p className="mt-1 text-sm text-neutral-800">{bio}</p> : null}
+        {categories.length > 0 ? (
+          <p className="mt-2 text-sm text-neutral-800">{categories.join(' · ')}</p>
+        ) : null}
+        <p className="mt-2 text-xs text-neutral-600">
+          구독자 {formatCount(stats.subs)}명 · 영상 {formatCount(stats.videos)}개
+        </p>
+      </div>
+
+      <div className="px-4 pb-3">
+        {isOwnChannel ? (
           <button
             type="button"
-            disabled
-            title="곧 제공 예정"
-            className="shrink-0 rounded-full border border-neutral-300 bg-neutral-100 px-4 py-1.5 text-xs font-semibold text-neutral-600 cursor-not-allowed"
+            className="w-full rounded-md border border-neutral-300 py-2.5 text-sm font-semibold text-neutral-800"
+            onClick={() => router.push('/my/channel')}
           >
-            구독
+            채널 관리
           </button>
-        </div>
-      </header>
+        ) : (
+          <button
+            type="button"
+            disabled={!me || subMutation.isPending}
+            onClick={() => {
+              if (!me) {
+                router.push('/login')
+                return
+              }
+              subMutation.mutate()
+            }}
+            className="w-full rounded-md bg-neutral-900 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+          >
+            {!me ? '로그인 후 구독' : data.subscribed ? '구독 취소' : '구독'}
+          </button>
+        )}
+      </div>
 
-      {/* 탭 — 풀 가로, 하단 보더만 */}
       <div className="flex w-full border-b border-neutral-200 px-1">
         {(
           [
@@ -150,9 +205,7 @@ export default function ChannelByUserIdPage() {
             }`}
           >
             {label}
-            {tab === id ? (
-              <span className="absolute inset-x-1 bottom-0 h-0.5 bg-neutral-900" />
-            ) : null}
+            {tab === id ? <span className="absolute inset-x-1 bottom-0 h-0.5 bg-neutral-900" /> : null}
           </button>
         ))}
       </div>
@@ -193,21 +246,7 @@ export default function ChannelByUserIdPage() {
                 </ul>
               </section>
             ) : null}
-            <section className="py-4">
-              <dl className="grid gap-3 text-sm sm:grid-cols-2">
-                <div>
-                  <dt className="text-xs text-neutral-500">닉네임</dt>
-                  <dd className="mt-0.5 font-medium text-neutral-900">{nickname}</dd>
-                </div>
-                {name ? (
-                  <div>
-                    <dt className="text-xs text-neutral-500">이름</dt>
-                    <dd className="mt-0.5 font-medium text-neutral-900">{name}</dd>
-                  </div>
-                ) : null}
-              </dl>
-            </section>
-            {!intro && !data.channelDescription?.trim() ? (
+            {!intro && !data.channelDescription?.trim() && (!data.snsLinks || data.snsLinks.length === 0) ? (
               <p className="py-2 text-sm text-neutral-500">등록된 상세 정보가 없습니다.</p>
             ) : null}
           </div>
@@ -217,7 +256,7 @@ export default function ChannelByUserIdPage() {
             videosError={videosError}
             displayVideos={displayVideos}
             channelDisplayName={nickname}
-            channelProfileImageUrl={profileUrl ?? null}
+            channelProfileImageUrl={data.profileImageUrl ?? null}
           />
         )}
       </div>

@@ -1,7 +1,9 @@
 package com.audition.platform.domain.user;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -70,6 +72,13 @@ public class User {
     /** 타인에게 채널(공개 영상 목록) 노출 여부 */
     @Column(name = "is_channel_public", nullable = false)
     private boolean channelPublic = false;
+
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "channel_categories", columnDefinition = "text[]", nullable = false)
+    private String[] channelCategories = new String[0];
+
+    @Column(name = "featured_video_id")
+    private UUID featuredVideoId;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
@@ -155,6 +164,22 @@ public class User {
 
     public void setChannelPublic(boolean channelPublic) {
         this.channelPublic = channelPublic;
+    }
+
+    public String[] getChannelCategories() {
+        return channelCategories != null ? channelCategories : new String[0];
+    }
+
+    public void setChannelCategories(String[] channelCategories) {
+        this.channelCategories = channelCategories != null ? channelCategories : new String[0];
+    }
+
+    public UUID getFeaturedVideoId() {
+        return featuredVideoId;
+    }
+
+    public void setFeaturedVideoId(UUID featuredVideoId) {
+        this.featuredVideoId = featuredVideoId;
     }
 
     public Instant getCreatedAt() { return createdAt; }

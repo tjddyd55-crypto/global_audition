@@ -38,6 +38,22 @@ public class PatchMyChannelRequest {
     @Size(max = 4000, message = "채널 소개는 4000자 이하여야 합니다.")
     private String introText;
 
+    /** KR | MN | JP | OTHER */
+    @Size(max = 16)
+    private String nationality;
+
+    @Size(max = 16)
+    private String country;
+
+    @Size(max = 100)
+    private String bio;
+
+    @Size(max = 3, message = "분야는 최대 3개까지입니다.")
+    private List<@Size(max = 50) String> categories;
+
+    @Size(max = 40)
+    private String featuredVideoId;
+
     /** null 이면 SNS 미변경, 빈 배열이면 전체 삭제 */
     @Valid
     private List<MeUserSnsLinkDto> snsLinks;
@@ -104,6 +120,53 @@ public class PatchMyChannelRequest {
 
     public void setIntroText(String introText) {
         this.introText = introText;
+    }
+
+    public String getNationality() {
+        return nationality;
+    }
+
+    public void setNationality(String nationality) {
+        this.nationality = nationality;
+    }
+
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
+    }
+
+    public String resolveNationalityInput() {
+        if (nationality != null) {
+            return nationality;
+        }
+        return country;
+    }
+
+    public String getBio() {
+        return bio;
+    }
+
+    public void setBio(String bio) {
+        this.bio = bio;
+    }
+
+    public List<String> getCategories() {
+        return categories;
+    }
+
+    public void setCategories(List<String> categories) {
+        this.categories = categories;
+    }
+
+    public String getFeaturedVideoId() {
+        return featuredVideoId;
+    }
+
+    public void setFeaturedVideoId(String featuredVideoId) {
+        this.featuredVideoId = featuredVideoId;
     }
 
     public List<MeUserSnsLinkDto> getSnsLinks() {

@@ -5,6 +5,7 @@ import com.audition.platform.api.dto.channel.PublicChannelResponse;
 import com.audition.platform.api.dto.me.*;
 import com.audition.platform.domain.channel.Channel;
 import com.audition.platform.domain.channel.ChannelRepository;
+import com.audition.platform.domain.channel.ChannelSubscriptionRepository;
 import com.audition.platform.domain.channel.ChannelVideo;
 import com.audition.platform.domain.channel.ChannelVideoRepository;
 import com.audition.platform.domain.channel.ChannelVideoVisibility;
@@ -21,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -38,19 +40,22 @@ public class MyChannelService {
     private final UserSnsLinkRepository userSnsLinkRepository;
     private final UserNicknameService userNicknameService;
     private final UserSnsLinkReplacementService userSnsLinkReplacementService;
+    private final ChannelSubscriptionRepository channelSubscriptionRepository;
 
     public MyChannelService(ChannelRepository channelRepository,
                             ChannelVideoRepository channelVideoRepository,
                             UserRepository userRepository,
                             UserSnsLinkRepository userSnsLinkRepository,
                             UserNicknameService userNicknameService,
-                            UserSnsLinkReplacementService userSnsLinkReplacementService) {
+                            UserSnsLinkReplacementService userSnsLinkReplacementService,
+                            ChannelSubscriptionRepository channelSubscriptionRepository) {
         this.channelRepository = channelRepository;
         this.channelVideoRepository = channelVideoRepository;
         this.userRepository = userRepository;
         this.userSnsLinkRepository = userSnsLinkRepository;
         this.userNicknameService = userNicknameService;
         this.userSnsLinkReplacementService = userSnsLinkReplacementService;
+        this.channelSubscriptionRepository = channelSubscriptionRepository;
     }
 
     private UUID requireApplicant() {
@@ -99,6 +104,11 @@ public class MyChannelService {
         r.setChannelPublic(user.isChannelPublic());
         r.setNickname(user.getNickname());
         r.setIntroText(user.getIntroText());
+        r.setNationality(user.getNationality());
+        r.setBio(trimToNull(user.getBio()));
+        String[] catt = user.getChannelCategories();
+        r.setCategories(catt != null && catt.length > 0 ? Arrays.asList(catt) : List.of());
+        r.setFeaturedVideoId(user.getFeaturedVideoId() != null ? user.getFeaturedVideoId().toString() : null);
         String mergedProfile = firstNonBlankTrimmed(user.getProfileImageUrl(), ch.getProfileImageUrl());
         r.setProfileImageUrl(trimToNull(mergedProfile));
         List<UserSnsLink> links = userSnsLinkRepository.findByUserIdOrderByCreatedAtAsc(ownerId);
@@ -174,6 +184,11 @@ public class MyChannelService {
         out.setName(user.getName());
         out.setNickname(user.getNickname());
         out.setIntroText(user.getIntroText());
+        out.setNationality(user.getNationality());
+        out.setBio(trimToNull(user.getBio()));
+        String[] catArr = user.getChannelCategories();
+        out.setCategories(catArr != null && catArr.length > 0 ? Arrays.asList(catArr) : List.of());
+        out.setFeaturedVideoId(user.getFeaturedVideoId() != null ? user.getFeaturedVideoId().toString() : null);
         String userProfileImage = user.getProfileImageUrl();
         List<UserSnsLink> userSns = userSnsLinkRepository.findByUserIdOrderByCreatedAtAsc(userId);
         out.setSnsLinks(userSns.stream().map(l -> {
@@ -185,8 +200,16 @@ public class MyChannelService {
 
         channelRepository.findByOwnerId(userId).ifPresentOrElse(ch -> {
             List<ChannelVideo> pub = channelVideoRepository.findByChannelIdAndVisibilityOrderByCreatedAtDesc(
-                    ch.getId(), "PUBLIC");
-            out.setVideos(pub.stream().map(this::toVideoDto).collect(Collectors.toList()));
+                    ch.getId(), ChannelVideoVisibility.PUBLIC);
+            MyChannelVideoDto featuredDto = pickFeaturedVideo(user, pub);
+            List<MyChannelVideoDto> allDtos = pub.stream().map(this::toVideoDto).collect(Collectors.toList());
+            List<MyChannelVideoDto> rest = featuredDto == null
+                    ? allDtos
+                    : allDtos.stream()
+                    .filter(d -> !d.getVideoId().equals(featuredDto.getVideoId()))
+                    .collect(Collectors.toList());
+            out.setFeaturedVideo(featuredDto);
+            out.setVideos(rest);
             out.setChannelId(ch.getId().toString());
             out.setChannelName(ch.getName() != null ? ch.getName() : "");
             out.setChannelDescription(ch.getDescription() != null ? ch.getDescription() : "");
@@ -196,13 +219,36 @@ public class MyChannelService {
             out.setVideoCount(pub.size());
             out.setViewCount(pub.stream().mapToLong(ChannelVideo::getViewCount).sum());
         }, () -> {
+            out.setFeaturedVideo(null);
             out.setVideos(List.of());
             out.setProfileImageUrl(trimToNull(userProfileImage));
             out.setVideoCount(0);
             out.setViewCount(0);
             out.setSubscriberCount(0);
         });
+
+        UUID viewerId = SecurityUtils.getCurrentUserId();
+        boolean sub = false;
+        if (viewerId != null && !viewerId.equals(userId)) {
+            sub = channelSubscriptionRepository.existsBySubscriberIdAndChannelOwnerId(viewerId, userId);
+        }
+        out.setSubscribed(sub);
         return out;
+    }
+
+    private MyChannelVideoDto pickFeaturedVideo(User user, List<ChannelVideo> pub) {
+        if (pub.isEmpty()) {
+            return null;
+        }
+        UUID fid = user.getFeaturedVideoId();
+        if (fid != null) {
+            for (ChannelVideo v : pub) {
+                if (v.getId().equals(fid)) {
+                    return toVideoDto(v);
+                }
+            }
+        }
+        return toVideoDto(pub.get(0));
     }
 
     private static String trimToNull(String s) {
@@ -259,6 +305,15 @@ public class MyChannelService {
         if (req.getSnsLinks() != null) {
             userSnsLinkReplacementService.replaceAll(ownerId, req.getSnsLinks());
         }
+        if (req.resolveNationalityInput() != null) {
+            UserChannelProfilePatchSupport.applyNationality(user, req.resolveNationalityInput());
+        }
+        if (req.getBio() != null) {
+            UserChannelProfilePatchSupport.applyBioChannelTagline(user, req.getBio());
+        }
+        UserChannelProfilePatchSupport.applyCategories(user, req.getCategories());
+        UserChannelProfilePatchSupport.applyFeaturedVideo(user, ownerId, channelVideoRepository, req.getFeaturedVideoId());
+
         ch.setUpdatedAt(Instant.now());
         user.setUpdatedAt(Instant.now());
         channelRepository.save(ch);
