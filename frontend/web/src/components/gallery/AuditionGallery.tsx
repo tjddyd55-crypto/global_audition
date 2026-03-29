@@ -20,6 +20,12 @@ function normalizeGalleryUrls(images: string[]): string[] {
   return out
 }
 
+const SWIPE_THRESHOLD_PX = 56
+
+/**
+ * 인스타그램 스타일: 고정 높이 가로 썸네일 스트립 + 풀스크린 뷰어(스와이프·키보드·좌우 버튼).
+ * 썸네일은 w-[28vw](≈ 뷰포트 28% 폭)로 퍼센트 순환 레이아웃 버그를 피함.
+ */
 export default function AuditionGallery({ images }: AuditionGalleryProps) {
   const allImages = useMemo(() => normalizeGalleryUrls(images), [images])
   const [viewerOpen, setViewerOpen] = useState(false)
@@ -85,7 +91,7 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
     return () => window.removeEventListener('keydown', onKey)
   }, [viewerOpen, n])
 
-  const onTouchStart = useCallback((e: React.TouchEvent) => {
+  const onTouchStart = useCallback((e: TouchEvent) => {
     const x = e.changedTouches[0]?.clientX
     touchStartXRef.current = x ?? null
   }, [])
@@ -98,8 +104,8 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
       const endX = e.changedTouches[0]?.clientX
       if (endX === undefined) return
       const delta = endX - startX
-      if (delta > 56) goPrev()
-      else if (delta < -56) goNext()
+      if (delta > SWIPE_THRESHOLD_PX) goPrev()
+      else if (delta < -SWIPE_THRESHOLD_PX) goNext()
     },
     [goNext, goPrev, n],
   )
@@ -112,91 +118,92 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
 
   return (
     <div className="w-full">
-      <div className="scrollbar-hide w-full overflow-x-auto">
-        <div className="flex w-max gap-2">
-          {allImages.map((src, i) => (
-            <button
-              key={`${i}-${src.slice(0, 32)}`}
-              type="button"
-              className="h-[100px] w-[30vw] shrink-0 cursor-pointer overflow-hidden rounded-md border-0 bg-neutral-200 p-0 text-left"
-              onClick={() => openViewer(i)}
-              aria-label={`이미지 ${i + 1} 크게 보기`}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={stripImageUrlResizeParams(src)}
-                alt=""
-                className="h-full w-full object-cover"
-                loading={i < 4 ? 'eager' : 'lazy'}
-                draggable={false}
-                onError={applyGalleryImageOnError}
-              />
-            </button>
-          ))}
+      <div className="scrollbar-hide w-full overflow-x-auto [-webkit-overflow-scrolling:touch]">
+        <div className="flex w-max gap-2 px-0">
+          {allImages.map((src, i) => {
+            const url = stripImageUrlResizeParams(src)
+            return (
+              <button
+                key={`${i}-${url.slice(0, 32)}`}
+                type="button"
+                className="h-[90px] w-[28vw] shrink-0 cursor-pointer overflow-hidden rounded-md border-0 bg-neutral-200 p-0 text-left"
+                onClick={() => openViewer(i)}
+                aria-label={`이미지 ${i + 1} 크게 보기`}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={url}
+                  alt=""
+                  className="h-full w-full object-cover"
+                  loading={i < 4 ? 'eager' : 'lazy'}
+                  draggable={false}
+                  onError={applyGalleryImageOnError}
+                />
+              </button>
+            )
+          })}
         </div>
       </div>
 
       {viewerOpen ? (
         <div
-          className="fixed inset-0 z-50 flex h-full w-full flex-col bg-black"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black"
           role="dialog"
-          aria-modal={true}
+          aria-modal
           aria-label="갤러리 이미지 보기"
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
         >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={displaySrc}
+            alt=""
+            className="max-h-full max-w-full object-contain"
+            draggable={false}
+            onError={applyGalleryImageOnError}
+          />
+
           <button
             type="button"
-            className="absolute right-4 top-4 z-[60] border-0 bg-transparent p-2 text-2xl leading-none text-white"
+            className="absolute right-4 top-4 z-[60] border-0 bg-transparent text-2xl leading-none text-white"
             onClick={closeViewer}
             aria-label="닫기"
           >
-            ×
+            ✕
           </button>
 
-          <button
-            type="button"
-            className="absolute left-4 top-1/2 z-[60] hidden -translate-y-1/2 border-0 bg-transparent p-2 text-3xl text-white md:block"
-            onClick={goPrev}
-            aria-label="이전 이미지"
-            disabled={n <= 1}
-          >
-            ←
-          </button>
-          <button
-            type="button"
-            className="absolute right-4 top-1/2 z-[60] hidden -translate-y-1/2 border-0 bg-transparent p-2 text-3xl text-white md:block"
-            onClick={goNext}
-            aria-label="다음 이미지"
-            disabled={n <= 1}
-          >
-            →
-          </button>
+          {n > 1 ? (
+            <>
+              <button
+                type="button"
+                className="absolute left-4 top-1/2 z-[60] -translate-y-1/2 border-0 bg-transparent text-2xl text-white"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  goPrev()
+                }}
+                aria-label="이전 이미지"
+              >
+                ←
+              </button>
+              <button
+                type="button"
+                className="absolute right-4 top-1/2 z-[60] -translate-y-1/2 border-0 bg-transparent text-2xl text-white"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  goNext()
+                }}
+                aria-label="다음 이미지"
+              >
+                →
+              </button>
+            </>
+          ) : null}
 
-          <div className="flex h-full w-full flex-1 items-center justify-center">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={displaySrc}
-              alt=""
-              className="max-h-full max-w-full object-contain"
-              draggable={false}
-              onError={applyGalleryImageOnError}
-            />
-          </div>
-
-          <div className="pointer-events-none absolute bottom-16 left-0 right-0 flex justify-center gap-2">
-            {allImages.map((_, i) => (
-              <span
-                key={i}
-                className={`h-2 w-2 rounded-full ${i === safeIndex ? 'bg-white' : 'bg-white/35'}`}
-                aria-hidden
-              />
-            ))}
-          </div>
-
-          <p className="pointer-events-none absolute bottom-6 left-0 right-0 m-0 text-center text-sm text-white">
-            {safeIndex + 1} / {n}
-          </p>
+          {n > 1 ? (
+            <div className="pointer-events-none absolute bottom-4 left-0 right-0 z-[60] text-center text-sm text-white">
+              {safeIndex + 1} / {n}
+            </div>
+          ) : null}
         </div>
       ) : null}
     </div>
