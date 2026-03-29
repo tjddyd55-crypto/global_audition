@@ -39,7 +39,8 @@ function statusBadgeClass(status: string): string {
 }
 
 /**
- * 풀폭 포스터(w-full h-auto) + 좌상단 상태 뱃지 + 하단 그라데이션 오버레이(제목·메타·CTA).
+ * 포스터 4:5 비율(aspect) + object-cover, PC에서만 max-width 800px 중앙.
+ * 좌상단 상태 뱃지 + 하단 그라데이션 오버레이(제목·메타·CTA).
  */
 export function AuditionDetailHeroSection({
   auditionId,
@@ -100,21 +101,23 @@ export function AuditionDetailHeroSection({
 
   const safeTitle = safeStr(title)
   const bannerImage = (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={displaySrc || AUDITION_COVER_PLACEHOLDER_SRC}
-      alt={safeTitle}
-      className="block h-auto w-full max-w-full object-cover"
-      loading="eager"
-      decoding="async"
-      onError={() => setImgFailed(true)}
-    />
+    <div className="aspect-[4/5] w-full overflow-hidden">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={displaySrc || AUDITION_COVER_PLACEHOLDER_SRC}
+        alt={safeTitle}
+        className="block h-full w-full object-cover"
+        loading="eager"
+        decoding="async"
+        onError={() => setImgFailed(true)}
+      />
+    </div>
   )
 
   return (
     <section className="relative w-full overflow-hidden">
-      <div className="relative w-full">
-        <div className="relative w-full bg-neutral-200">
+      <div className="relative mx-auto w-full lg:max-w-[800px]">
+        <div className="relative w-full overflow-hidden bg-neutral-200 lg:rounded-lg">
           {hasCover ? (
             openOriginalHref.length > 0 ? (
               <a

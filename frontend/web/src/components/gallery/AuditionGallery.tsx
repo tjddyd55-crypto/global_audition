@@ -21,7 +21,7 @@ function normalizeGalleryUrls(images: string[]): string[] {
 }
 
 /**
- * 인스타 스토리/슬라이드: 한 장씩 풀폭(h 고정) · snap-x 스와이프 · 하단 dot만(네비 버튼 없음).
+ * 인스타 스토리/슬라이드: 한 장씩 4:5 비율 · snap-x 스와이프 · PC에서 max-width 800px 중앙.
  */
 export default function AuditionGallery({ images }: AuditionGalleryProps) {
   const allImages = useMemo(() => normalizeGalleryUrls(images), [images])
@@ -125,8 +125,8 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
   }
 
   return (
-    <div className="w-full">
-      <div className="w-full overflow-hidden">
+    <div className="mx-auto w-full lg:max-w-[800px]">
+      <div className="w-full overflow-hidden lg:rounded-lg">
         <div
           ref={trackRef}
           role="region"
@@ -141,16 +141,18 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
                 key={`${i}-${url.slice(0, 32)}`}
                 className="min-w-full shrink-0 snap-center"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={url}
-                  alt=""
-                  className="h-[260px] w-full max-w-full object-cover"
-                  loading={i === 0 ? 'eager' : 'lazy'}
-                  draggable={false}
-                  onError={applyGalleryImageOnError}
-                  onClick={() => openLightbox(i)}
-                />
+                <div className="aspect-[4/5] w-full overflow-hidden">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={url}
+                    alt=""
+                    className="h-full w-full cursor-pointer object-cover"
+                    loading={i === 0 ? 'eager' : 'lazy'}
+                    draggable={false}
+                    onError={applyGalleryImageOnError}
+                    onClick={() => openLightbox(i)}
+                  />
+                </div>
               </div>
             )
           })}
