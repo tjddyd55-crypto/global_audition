@@ -26,7 +26,11 @@ function normalizeGalleryUrls(images: string[]): string[] {
 export default function AuditionGallery({ images }: AuditionGalleryProps) {
   const allImages = useMemo(() => normalizeGalleryUrls(images), [images])
   const [currentIndex, setCurrentIndex] = useState(0)
+  const [viewerOpen, setViewerOpen] = useState(false)
+  /** 라이트박스를 연 슬라이드 인덱스(메인 트랙 `currentIndex`와 별도) */
+  const [viewerEntryIndex, setViewerEntryIndex] = useState(0)
   const trackRef = useRef<HTMLDivElement | null>(null)
+  const lightboxTrackRef = useRef<HTMLDivElement | null>(null)
 
   const n = allImages.length
 
@@ -50,6 +54,36 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
   const onScroll = useCallback(() => {
     updateIndexFromScroll()
   }, [updateIndexFromScroll])
+
+  useEffect(() => {
+    if (!viewerOpen) return
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        setViewerOpen(false)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => {
+      document.body.style.overflow = prevOverflow
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [viewerOpen])
+
+  useEffect(() => {
+    if (!viewerOpen) return
+    const el = lightboxTrackRef.current
+    if (!el) return
+    const w = el.clientWidth
+    if (w <= 0) return
+    const scrollToEntry = () => {
+      el.scrollTo({ left: viewerEntryIndex * w, behavior: 'auto' })
+    }
+    scrollToEntry()
+    requestAnimationFrame(scrollToEntry)
+  }, [viewerOpen, viewerEntryIndex])
 
   if (n === 0) {
     return <p className="m-0 py-2 text-center text-sm text-gray-500">등록된 추가 이미지가 없습니다.</p>
@@ -80,6 +114,10 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
                   loading={i === 0 ? 'eager' : 'lazy'}
                   draggable={false}
                   onError={applyGalleryImageOnError}
+                  onClick={() => {
+                    setViewerEntryIndex(i)
+                    setViewerOpen(true)
+                  }}
                 />
               </div>
             )
@@ -95,6 +133,43 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
               className={`h-2 w-2 rounded-full ${i === currentIndex ? 'bg-black' : 'bg-gray-300'}`}
             />
           ))}
+        </div>
+      ) : null}
+
+      {viewerOpen ? (
+        <div className="fixed inset-0 z-50 bg-black">
+          <button
+            type="button"
+            className="absolute right-4 top-4 z-50 border-0 bg-transparent text-xl text-white"
+            onClick={() => setViewerOpen(false)}
+            aria-label="전체화면 닫기"
+          >
+            ✕
+          </button>
+
+          <div
+            ref={lightboxTrackRef}
+            className="scrollbar-hide flex h-full w-full snap-x snap-mandatory overflow-x-auto [-webkit-overflow-scrolling:touch]"
+          >
+            {allImages.map((src, index) => {
+              const u = stripImageUrlResizeParams(src)
+              return (
+                <div
+                  key={`lb-${index}-${u.slice(0, 32)}`}
+                  className="flex h-full w-full shrink-0 snap-center items-center justify-center"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={u}
+                    alt=""
+                    className="max-h-full max-w-full object-contain"
+                    draggable={false}
+                    onError={applyGalleryImageOnError}
+                  />
+                </div>
+              )
+            })}
+          </div>
         </div>
       ) : null}
     </div>
