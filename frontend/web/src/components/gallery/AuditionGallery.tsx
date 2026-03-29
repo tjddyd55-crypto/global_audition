@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState, type TouchEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { applyGalleryImageOnError } from '@/components/gallery/galleryFallback'
 import { stripImageUrlResizeParams } from '@/lib/utils/imageDisplayUrl'
 
@@ -20,190 +20,81 @@ function normalizeGalleryUrls(images: string[]): string[] {
   return out
 }
 
-const SWIPE_THRESHOLD_PX = 56
-
 /**
- * 인스타그램 스타일: 고정 높이 가로 썸네일 스트립 + 풀스크린 뷰어(스와이프·키보드·좌우 버튼).
- * 썸네일은 w-[28vw](≈ 뷰포트 28% 폭)로 퍼센트 순환 레이아웃 버그를 피함.
+ * 인스타 스토리/슬라이드: 한 장씩 풀폭(h 고정) · snap-x 스와이프 · 하단 dot만(네비 버튼 없음).
  */
 export default function AuditionGallery({ images }: AuditionGalleryProps) {
   const allImages = useMemo(() => normalizeGalleryUrls(images), [images])
-  const [viewerOpen, setViewerOpen] = useState(false)
-  const [viewerIndex, setViewerIndex] = useState(0)
-  const touchStartXRef = useRef<number | null>(null)
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const trackRef = useRef<HTMLDivElement | null>(null)
 
   const n = allImages.length
-  const safeIndex = n === 0 ? 0 : Math.min(Math.max(0, viewerIndex), n - 1)
-  const currentSrc = allImages[safeIndex] ?? ''
 
-  const openViewer = useCallback((i: number) => {
-    if (n === 0) return
-    setViewerIndex(Math.max(0, Math.min(i, n - 1)))
-    setViewerOpen(true)
-  }, [n])
-
-  const closeViewer = useCallback(() => setViewerOpen(false), [])
-
-  const goPrev = useCallback(() => {
-    if (n <= 1) return
-    setViewerIndex((i) => (i - 1 + n) % n)
-  }, [n])
-
-  const goNext = useCallback(() => {
-    if (n <= 1) return
-    setViewerIndex((i) => (i + 1) % n)
+  const updateIndexFromScroll = useCallback(() => {
+    const el = trackRef.current
+    if (!el || n === 0) return
+    const w = el.clientWidth
+    if (w <= 0) return
+    const idx = Math.round(el.scrollLeft / w)
+    setCurrentIndex(Math.min(Math.max(0, idx), n - 1))
   }, [n])
 
   useEffect(() => {
-    if (!viewerOpen) return
-    const prevOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = prevOverflow
-    }
-  }, [viewerOpen])
+    const el = trackRef.current
+    if (!el || typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(() => updateIndexFromScroll())
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [updateIndexFromScroll, n])
 
-  const closeRef = useRef(closeViewer)
-  closeRef.current = closeViewer
-  const goPrevRef = useRef(goPrev)
-  goPrevRef.current = goPrev
-  const goNextRef = useRef(goNext)
-  goNextRef.current = goNext
-
-  useEffect(() => {
-    if (!viewerOpen) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.preventDefault()
-        closeRef.current()
-        return
-      }
-      if (n <= 1) return
-      if (e.key === 'ArrowLeft') {
-        e.preventDefault()
-        goPrevRef.current()
-      } else if (e.key === 'ArrowRight') {
-        e.preventDefault()
-        goNextRef.current()
-      }
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [viewerOpen, n])
-
-  const onTouchStart = useCallback((e: TouchEvent) => {
-    const x = e.changedTouches[0]?.clientX
-    touchStartXRef.current = x ?? null
-  }, [])
-
-  const onTouchEnd = useCallback(
-    (e: TouchEvent) => {
-      const startX = touchStartXRef.current
-      touchStartXRef.current = null
-      if (startX == null || n <= 1) return
-      const endX = e.changedTouches[0]?.clientX
-      if (endX === undefined) return
-      const delta = endX - startX
-      if (delta > SWIPE_THRESHOLD_PX) goPrev()
-      else if (delta < -SWIPE_THRESHOLD_PX) goNext()
-    },
-    [goNext, goPrev, n],
-  )
+  const onScroll = useCallback(() => {
+    updateIndexFromScroll()
+  }, [updateIndexFromScroll])
 
   if (n === 0) {
     return <p className="m-0 py-2 text-center text-sm text-gray-500">등록된 추가 이미지가 없습니다.</p>
   }
 
-  const displaySrc = stripImageUrlResizeParams(currentSrc)
-
   return (
     <div className="w-full">
-      <div className="scrollbar-hide w-full overflow-x-auto [-webkit-overflow-scrolling:touch]">
-        <div className="flex w-max gap-2 px-0">
+      <div className="w-full overflow-hidden">
+        <div
+          ref={trackRef}
+          role="region"
+          aria-label="이미지 슬라이드"
+          onScroll={onScroll}
+          className="scrollbar-hide flex snap-x snap-mandatory overflow-x-auto scroll-smooth [-webkit-overflow-scrolling:touch]"
+        >
           {allImages.map((src, i) => {
             const url = stripImageUrlResizeParams(src)
             return (
-              <button
+              <div
                 key={`${i}-${url.slice(0, 32)}`}
-                type="button"
-                className="h-[90px] w-[28vw] shrink-0 cursor-pointer overflow-hidden rounded-md border-0 bg-neutral-200 p-0 text-left"
-                onClick={() => openViewer(i)}
-                aria-label={`이미지 ${i + 1} 크게 보기`}
+                className="min-w-full shrink-0 snap-center"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={url}
                   alt=""
-                  className="h-full w-full object-cover"
-                  loading={i < 4 ? 'eager' : 'lazy'}
+                  className="h-[260px] w-full object-cover"
+                  loading={i === 0 ? 'eager' : 'lazy'}
                   draggable={false}
                   onError={applyGalleryImageOnError}
                 />
-              </button>
+              </div>
             )
           })}
         </div>
       </div>
 
-      {viewerOpen ? (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black"
-          role="dialog"
-          aria-modal
-          aria-label="갤러리 이미지 보기"
-          onTouchStart={onTouchStart}
-          onTouchEnd={onTouchEnd}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={displaySrc}
-            alt=""
-            className="max-h-full max-w-full object-contain"
-            draggable={false}
-            onError={applyGalleryImageOnError}
-          />
-
-          <button
-            type="button"
-            className="absolute right-4 top-4 z-[60] border-0 bg-transparent text-2xl leading-none text-white"
-            onClick={closeViewer}
-            aria-label="닫기"
-          >
-            ✕
-          </button>
-
-          {n > 1 ? (
-            <>
-              <button
-                type="button"
-                className="absolute left-4 top-1/2 z-[60] -translate-y-1/2 border-0 bg-transparent text-2xl text-white"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  goPrev()
-                }}
-                aria-label="이전 이미지"
-              >
-                ←
-              </button>
-              <button
-                type="button"
-                className="absolute right-4 top-1/2 z-[60] -translate-y-1/2 border-0 bg-transparent text-2xl text-white"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  goNext()
-                }}
-                aria-label="다음 이미지"
-              >
-                →
-              </button>
-            </>
-          ) : null}
-
-          {n > 1 ? (
-            <div className="pointer-events-none absolute bottom-4 left-0 right-0 z-[60] text-center text-sm text-white">
-              {safeIndex + 1} / {n}
-            </div>
-          ) : null}
+      {n > 1 ? (
+        <div className="mt-2 flex justify-center gap-1" aria-hidden>
+          {allImages.map((_, i) => (
+            <div
+              key={i}
+              className={`h-2 w-2 rounded-full ${i === currentIndex ? 'bg-black' : 'bg-gray-300'}`}
+            />
+          ))}
         </div>
       ) : null}
     </div>
