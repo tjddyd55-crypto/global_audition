@@ -34,7 +34,7 @@ export function resolveFeaturedVideoIdForMePatch(raw: string, videos: VideoConte
 /** 채널 분야: 한글 라벨·일반 표기 → 저장용 코드 (확장 시 여기만 추가). */
 const CATEGORY_TO_API_CODE: Record<string, string> = {
   케이팝: 'KPOP',
-  케이 팝: 'KPOP',
+  '케이 팝': 'KPOP',
   kpop: 'KPOP',
   KPOP: 'KPOP',
   보컬: 'VOCAL',
