@@ -177,6 +177,7 @@ export default function AuditionDetailPage() {
   const auditionTags = safeArr(audition.tags)
   const seriesRound = audition.round ?? 1
   const headlineTitle = auditionHeadlineTitle(audition)
+  const descriptionText = safeStr(audition.description)
 
   const isOpen = audition.status === 'OPEN'
   const alreadyApplied = audition.hasApplied === true
@@ -317,6 +318,30 @@ export default function AuditionDetailPage() {
           }}
         >
           <div>
+            {descriptionText.length > 0 ? (
+              <section className="border-t border-neutral-200 py-6">
+                <h2
+                  style={{
+                    margin: '0 0 16px 0',
+                    fontSize: AUDITION_DETAIL.sectionTitlePx,
+                    fontWeight: AUDITION_DETAIL.sectionTitleWeight,
+                  }}
+                >
+                  상세 설명
+                </h2>
+                <p
+                  className="whitespace-pre-line"
+                  style={{
+                    margin: 0,
+                    color: AUDITION_DETAIL.bodyColor,
+                    fontSize: AUDITION_DETAIL.bodyFontPx,
+                    lineHeight: AUDITION_DETAIL.listItemLineHeight,
+                  }}
+                >
+                  {descriptionText}
+                </p>
+              </section>
+            ) : null}
             <section className="border-t border-neutral-200 py-6">
               <h2
                 style={{
