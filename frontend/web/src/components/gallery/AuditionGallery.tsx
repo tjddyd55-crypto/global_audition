@@ -21,7 +21,7 @@ function normalizeGalleryUrls(images: string[]): string[] {
 }
 
 /**
- * 인스타 스토리/슬라이드: 한 장씩 4:5 비율 · snap-x 스와이프 · PC에서 max-width 800px 중앙.
+ * 슬라이드: 모바일 4:5 · PC 16:9 + object-cover · snap-x · PC만 max-w 1280px 중앙.
  */
 export default function AuditionGallery({ images }: AuditionGalleryProps) {
   const allImages = useMemo(() => normalizeGalleryUrls(images), [images])
@@ -125,7 +125,7 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
   }
 
   return (
-    <div className="mx-auto w-full lg:max-w-[800px]">
+    <div className="mx-auto w-full lg:max-w-[1280px]">
       <div className="w-full overflow-hidden lg:rounded-lg">
         <div
           ref={trackRef}
@@ -141,7 +141,7 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
                 key={`${i}-${url.slice(0, 32)}`}
                 className="min-w-full shrink-0 snap-center"
               >
-                <div className="aspect-[4/5] w-full overflow-hidden">
+                <div className="aspect-[4/5] w-full overflow-hidden lg:aspect-[16/9]">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={url}
@@ -190,13 +190,13 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
               return (
                 <div
                   key={`lb-${index}-${u.slice(0, 32)}`}
-                  className="flex h-full w-full shrink-0 snap-center items-center justify-center"
+                  className="relative h-full w-full shrink-0 snap-center overflow-hidden"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={u}
                     alt=""
-                    className="max-h-full max-w-full object-contain"
+                    className="h-full w-full object-cover"
                     draggable={false}
                     onError={applyGalleryImageOnError}
                   />

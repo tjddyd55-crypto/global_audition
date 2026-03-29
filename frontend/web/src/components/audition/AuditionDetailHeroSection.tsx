@@ -39,7 +39,7 @@ function statusBadgeClass(status: string): string {
 }
 
 /**
- * 포스터 4:5 비율(aspect) + object-cover, PC에서만 max-width 800px 중앙.
+ * 모바일 4:5 · PC 16:9 aspect + object-cover(crop), PC만 max-w 1280px 중앙.
  * 좌상단 상태 뱃지 + 하단 그라데이션 오버레이(제목·메타·CTA).
  */
 export function AuditionDetailHeroSection({
@@ -101,7 +101,7 @@ export function AuditionDetailHeroSection({
 
   const safeTitle = safeStr(title)
   const bannerImage = (
-    <div className="aspect-[4/5] w-full overflow-hidden">
+    <div className="aspect-[4/5] w-full overflow-hidden lg:aspect-[16/9]">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={displaySrc || AUDITION_COVER_PLACEHOLDER_SRC}
@@ -116,7 +116,7 @@ export function AuditionDetailHeroSection({
 
   return (
     <section className="relative w-full overflow-hidden">
-      <div className="relative mx-auto w-full lg:max-w-[800px]">
+      <div className="relative mx-auto w-full lg:max-w-[1280px]">
         <div className="relative w-full overflow-hidden bg-neutral-200 lg:rounded-lg">
           {hasCover ? (
             openOriginalHref.length > 0 ? (

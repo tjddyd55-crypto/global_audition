@@ -5,7 +5,7 @@ import AuditionGallery from '@/components/gallery/AuditionGallery'
 import { AUDITION_COVER_PLACEHOLDER_SRC } from '@/components/audition/AuditionEditorPreview'
 
 /**
- * 상세 보조 이미지: 4:5 + object-cover, PC에서 max-width 800px. `fullSizeHref` 가 있으면 원본 열기.
+ * 상세 보조 이미지: 모바일 4:5 · PC 16:9 + object-cover, PC만 max-w 1280px. `fullSizeHref` 있으면 원본 열기.
  */
 export function AuditionDetailHeroImage({ src, fullSizeHref }: { src: string; fullSizeHref?: string }) {
   const [failed, setFailed] = useState(false)
@@ -14,7 +14,7 @@ export function AuditionDetailHeroImage({ src, fullSizeHref }: { src: string; fu
   const href = (fullSizeHref?.trim() || trimmed).trim()
 
   const inner = (
-    <div className="aspect-[4/5] w-full overflow-hidden">
+    <div className="aspect-[4/5] w-full overflow-hidden lg:aspect-[16/9]">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={url}
@@ -28,7 +28,7 @@ export function AuditionDetailHeroImage({ src, fullSizeHref }: { src: string; fu
   )
 
   return (
-    <div className="mx-auto w-full lg:max-w-[800px]">
+    <div className="mx-auto w-full lg:max-w-[1280px]">
       <div className="relative w-full overflow-hidden bg-neutral-200 lg:rounded-lg">
         {href && !failed && url !== AUDITION_COVER_PLACEHOLDER_SRC ? (
           <a href={href} target="_blank" rel="noopener noreferrer" className="block w-full">
