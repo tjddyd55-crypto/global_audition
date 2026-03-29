@@ -5,7 +5,7 @@ import AuditionGallery from '@/components/gallery/AuditionGallery'
 import { AUDITION_COVER_PLACEHOLDER_SRC } from '@/components/audition/AuditionEditorPreview'
 
 /**
- * 상세 보조 이미지: 메인과 동일하게 자연 비율(w-full h-auto), PC만 max-w 1280px. `fullSizeHref` 있으면 원본 열기.
+ * 상세 보조 이미지: 히어로와 동일 — 모바일 contain·자연 높이, md+ 400px cover. `fullSizeHref` 있으면 원본 열기.
  */
 export function AuditionDetailHeroImage({ src, fullSizeHref }: { src: string; fullSizeHref?: string }) {
   const [failed, setFailed] = useState(false)
@@ -14,12 +14,12 @@ export function AuditionDetailHeroImage({ src, fullSizeHref }: { src: string; fu
   const href = (fullSizeHref?.trim() || trimmed).trim()
 
   const inner = (
-    <div className="w-full">
+    <div className="w-full md:h-[400px] md:overflow-hidden">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={url}
         alt=""
-        className="block h-auto w-full max-w-full"
+        className="block h-auto w-full max-w-full object-contain md:h-full md:object-cover"
         loading="eager"
         decoding="async"
         onError={() => setFailed(true)}

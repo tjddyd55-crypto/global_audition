@@ -25,8 +25,8 @@ const DESKTOP_GALLERY_CARD_PX = 300
 const DESKTOP_GALLERY_GAP_PX = 16
 
 /**
- * 모바일: 기존 풀폭 4:5 스냅 슬라이드(변경 없음).
- * PC: max-w 1280px 안에서 300px 카드 가로 스크롤 + snap-start.
+ * 모바일: aspect 금지 · w-full h-auto object-contain 풀폭 스냅 슬라이드.
+ * lg+: 300×120 썸네일 카드 가로 스크롤 + snap-start, object-cover.
  */
 export default function AuditionGallery({ images }: AuditionGalleryProps) {
   const allImages = useMemo(() => normalizeGalleryUrls(images), [images])
@@ -160,12 +160,12 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
                   key={`m-${i}-${url.slice(0, 32)}`}
                   className="min-w-full shrink-0 snap-center"
                 >
-                  <div className="aspect-[4/5] w-full overflow-hidden">
+                  <div className="w-full overflow-hidden">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={url}
                       alt=""
-                      className="h-full w-full cursor-pointer object-cover"
+                      className="h-auto w-full max-w-full cursor-pointer object-contain"
                       loading={i === 0 ? 'eager' : 'lazy'}
                       draggable={false}
                       onError={applyGalleryImageOnError}
@@ -190,16 +190,16 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
           {allImages.map((src, i) => {
             const url = stripImageUrlResizeParams(src)
             return (
-              <div
-                key={`d-${i}-${url.slice(0, 32)}`}
-                className="w-[300px] shrink-0 snap-start"
-              >
-                <div className="aspect-[4/5] w-full overflow-hidden rounded-lg">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={url}
-                    alt=""
-                    className="h-full w-full cursor-pointer object-cover"
+                <div
+                  key={`d-${i}-${url.slice(0, 32)}`}
+                  className="w-[300px] shrink-0 snap-start"
+                >
+                  <div className="h-[120px] w-full overflow-hidden rounded-lg">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={url}
+                      alt=""
+                      className="h-full w-full cursor-pointer object-cover"
                     loading={i === 0 ? 'eager' : 'lazy'}
                     draggable={false}
                     onError={applyGalleryImageOnError}
