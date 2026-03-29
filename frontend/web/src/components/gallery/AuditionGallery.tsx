@@ -20,8 +20,13 @@ function normalizeGalleryUrls(images: string[]): string[] {
   return out
 }
 
+/** 데스크톱 카드 폭 + gap-4(1rem) — 스크롤 인덱스 계산용 */
+const DESKTOP_GALLERY_CARD_PX = 300
+const DESKTOP_GALLERY_GAP_PX = 16
+
 /**
- * 슬라이드: 모바일 4:5 · PC 16:9 + object-cover · snap-x · PC만 max-w 1280px 중앙.
+ * 모바일: 기존 풀폭 4:5 스냅 슬라이드(변경 없음).
+ * PC: max-w 1280px 안에서 300px 카드 가로 스크롤 + snap-start.
  */
 export default function AuditionGallery({ images }: AuditionGalleryProps) {
   const allImages = useMemo(() => normalizeGalleryUrls(images), [images])
@@ -29,7 +34,8 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
   const [viewerOpen, setViewerOpen] = useState(false)
   /** 라이트박스를 연 슬라이드 인덱스(메인 트랙 `currentIndex`와 별도) */
   const [viewerEntryIndex, setViewerEntryIndex] = useState(0)
-  const trackRef = useRef<HTMLDivElement | null>(null)
+  const mobileTrackRef = useRef<HTMLDivElement | null>(null)
+  const desktopTrackRef = useRef<HTMLDivElement | null>(null)
   const lightboxTrackRef = useRef<HTMLDivElement | null>(null)
   const viewerOpenRef = useRef(false)
 
@@ -69,8 +75,8 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
     return () => window.removeEventListener('popstate', handlePopState)
   }, [])
 
-  const updateIndexFromScroll = useCallback(() => {
-    const el = trackRef.current
+  const onMobileScroll = useCallback(() => {
+    const el = mobileTrackRef.current
     if (!el || n === 0) return
     const w = el.clientWidth
     if (w <= 0) return
@@ -78,17 +84,29 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
     setCurrentIndex(Math.min(Math.max(0, idx), n - 1))
   }, [n])
 
+  const onDesktopScroll = useCallback(() => {
+    const el = desktopTrackRef.current
+    if (!el || n === 0) return
+    const step = DESKTOP_GALLERY_CARD_PX + DESKTOP_GALLERY_GAP_PX
+    const idx = Math.round(el.scrollLeft / step)
+    setCurrentIndex(Math.min(Math.max(0, idx), n - 1))
+  }, [n])
+
   useEffect(() => {
-    const el = trackRef.current
+    const el = mobileTrackRef.current
     if (!el || typeof ResizeObserver === 'undefined') return
-    const ro = new ResizeObserver(() => updateIndexFromScroll())
+    const ro = new ResizeObserver(() => onMobileScroll())
     ro.observe(el)
     return () => ro.disconnect()
-  }, [updateIndexFromScroll, n])
+  }, [onMobileScroll, n])
 
-  const onScroll = useCallback(() => {
-    updateIndexFromScroll()
-  }, [updateIndexFromScroll])
+  useEffect(() => {
+    const el = desktopTrackRef.current
+    if (!el || typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(() => onDesktopScroll())
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [onDesktopScroll, n])
 
   useEffect(() => {
     if (!viewerOpen) return
@@ -126,22 +144,57 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
 
   return (
     <div className="mx-auto w-full lg:max-w-[1280px]">
-      <div className="w-full overflow-hidden lg:rounded-lg">
+      <div className="lg:hidden">
+        <div className="w-full overflow-hidden">
+          <div
+            ref={mobileTrackRef}
+            role="region"
+            aria-label="이미지 슬라이드"
+            onScroll={onMobileScroll}
+            className="scrollbar-hide flex snap-x snap-mandatory overflow-x-auto scroll-smooth [-webkit-overflow-scrolling:touch]"
+          >
+            {allImages.map((src, i) => {
+              const url = stripImageUrlResizeParams(src)
+              return (
+                <div
+                  key={`m-${i}-${url.slice(0, 32)}`}
+                  className="min-w-full shrink-0 snap-center"
+                >
+                  <div className="aspect-[4/5] w-full overflow-hidden">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={url}
+                      alt=""
+                      className="h-full w-full cursor-pointer object-cover"
+                      loading={i === 0 ? 'eager' : 'lazy'}
+                      draggable={false}
+                      onError={applyGalleryImageOnError}
+                      onClick={() => openLightbox(i)}
+                    />
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div className="hidden lg:block w-full">
         <div
-          ref={trackRef}
+          ref={desktopTrackRef}
           role="region"
           aria-label="이미지 슬라이드"
-          onScroll={onScroll}
-          className="scrollbar-hide flex snap-x snap-mandatory overflow-x-auto scroll-smooth [-webkit-overflow-scrolling:touch]"
+          onScroll={onDesktopScroll}
+          className="scrollbar-hide flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth [-webkit-overflow-scrolling:touch]"
         >
           {allImages.map((src, i) => {
             const url = stripImageUrlResizeParams(src)
             return (
               <div
-                key={`${i}-${url.slice(0, 32)}`}
-                className="min-w-full shrink-0 snap-center"
+                key={`d-${i}-${url.slice(0, 32)}`}
+                className="w-[300px] shrink-0 snap-start"
               >
-                <div className="aspect-[4/5] w-full overflow-hidden lg:aspect-[16/9]">
+                <div className="aspect-[4/5] w-full overflow-hidden rounded-lg">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={url}

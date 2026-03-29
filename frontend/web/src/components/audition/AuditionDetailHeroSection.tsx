@@ -39,7 +39,7 @@ function statusBadgeClass(status: string): string {
 }
 
 /**
- * 모바일 4:5 · PC 16:9 aspect + object-cover(crop), PC만 max-w 1280px 중앙.
+ * 메인 이미지: 자연 비율(w-full h-auto, crop 없음), PC만 max-w 1280px 중앙.
  * 좌상단 상태 뱃지 + 하단 그라데이션 오버레이(제목·메타·CTA).
  */
 export function AuditionDetailHeroSection({
@@ -101,12 +101,12 @@ export function AuditionDetailHeroSection({
 
   const safeTitle = safeStr(title)
   const bannerImage = (
-    <div className="aspect-[4/5] w-full overflow-hidden lg:aspect-[16/9]">
+    <div className="w-full">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={displaySrc || AUDITION_COVER_PLACEHOLDER_SRC}
         alt={safeTitle}
-        className="block h-full w-full object-cover"
+        className="block h-auto w-full max-w-full"
         loading="eager"
         decoding="async"
         onError={() => setImgFailed(true)}
