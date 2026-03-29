@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from '../../i18n.config'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
@@ -10,6 +10,7 @@ import {
   normalizeAuditionImages,
   type AuditionDto,
 } from '../../lib/types/audition'
+import { stripImageUrlResizeParams } from '../../lib/utils/imageDisplayUrl'
 import { safeNum } from '../../lib/utils/safe'
 import { FALLBACK_TEXT, DEFAULT_IMAGES } from '../../lib/constants/fallbacks'
 
@@ -45,20 +46,26 @@ export default function AuditionCard({ audition }: AuditionCardProps) {
   const original = (im.original ?? '').trim()
   const listPrimary = auditionListImageUrl(im)
   const fallbackImg = DEFAULT_IMAGES.videoThumbnail
+
+  /** 표시·폴백 순서: original → medium → thumb (URL 정규화 후 중복 제거) */
+  const coverFallbackChain = useMemo(() => {
+    const raw = [original, medium, thumb].map((s) => stripImageUrlResizeParams(s)).filter((s) => s.length > 0)
+    return [...new Set(raw)]
+  }, [original, medium, thumb])
+
   const [imgSrc, setImgSrc] = useState(() => listPrimary || fallbackImg)
 
   useEffect(() => {
-    const p = thumb || medium || original
-    setImgSrc(p || fallbackImg)
-  }, [thumb, medium, original, fallbackImg])
+    setImgSrc(listPrimary || fallbackImg)
+  }, [listPrimary, fallbackImg])
 
   const onCoverError = useCallback(() => {
     setImgSrc((cur) => {
-      if (cur === thumb && medium) return medium
-      if ((cur === thumb || cur === medium) && original) return original
-      return fallbackImg
+      const idx = coverFallbackChain.indexOf(cur)
+      const next = idx >= 0 ? coverFallbackChain[idx + 1] : null
+      return next ?? fallbackImg
     })
-  }, [thumb, medium, original, fallbackImg])
+  }, [coverFallbackChain, fallbackImg])
 
   const createdAt = audition?.createdAt
   const dateStr = createdAt

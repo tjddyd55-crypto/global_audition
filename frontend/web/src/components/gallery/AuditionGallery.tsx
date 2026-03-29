@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { GalleryModal } from '@/components/gallery/GalleryModal'
 import { applyGalleryImageOnError } from '@/components/gallery/galleryFallback'
+import { stripImageUrlResizeParams } from '@/lib/utils/imageDisplayUrl'
 
 /** `gap: 8px` (gap-2) — 스텝·스크롤 계산용 */
 const SLIDER_GAP_PX = 8
@@ -230,7 +231,7 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
               <div className="image-wrapper">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={src}
+                  src={stripImageUrlResizeParams(src)}
                   alt=""
                   loading={i < 2 ? 'eager' : 'lazy'}
                   draggable={false}

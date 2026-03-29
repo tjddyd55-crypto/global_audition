@@ -3,6 +3,8 @@
  * 배열 필드: recruitFields, qualifications, schedules, benefits, galleryImages — JSON/detail_content 없음.
  * 태그: 서버 `tags`(표시용 병합) + `tagRefs`(catalog id / 직입력 구분).
  */
+import { stripImageUrlResizeParams } from '@/lib/utils/imageDisplayUrl'
+
 export type AuditionStatus = 'DRAFT' | 'OPEN' | 'CLOSED'
 
 /** API·DB 대표 이미지 — R2 업로드 `urls` 키와 동일 */
@@ -19,22 +21,25 @@ export function normalizeAuditionImages(im?: AuditionImages | null): AuditionIma
   return im ?? EMPTY_API_IMAGES
 }
 
-/** 리스트: thumb → medium → original (원본 단독 사용 금지) */
+/** 리스트·풀폭 카드: original → medium → thumb (저해상도 thumb 확대 방지) */
 export function auditionListImageUrl(im?: AuditionImages | null): string {
   const i = normalizeAuditionImages(im)
-  return (i.thumb || i.medium || i.original || '').trim()
+  const raw = (i.original || i.medium || i.thumb || '').trim()
+  return stripImageUrlResizeParams(raw)
 }
 
-/** 상세 히어로: medium → original → thumb */
+/** 상세 히어로 표시: original → medium → thumb */
 export function auditionDetailMediumUrl(im?: AuditionImages | null): string {
   const i = normalizeAuditionImages(im)
-  return (i.medium || i.original || i.thumb || '').trim()
+  const raw = (i.original || i.medium || i.thumb || '').trim()
+  return stripImageUrlResizeParams(raw)
 }
 
 /** 확대·원본 링크: original → medium */
 export function auditionDetailOriginalUrl(im?: AuditionImages | null): string {
   const i = normalizeAuditionImages(im)
-  return (i.original || i.medium || '').trim()
+  const raw = (i.original || i.medium || '').trim()
+  return stripImageUrlResizeParams(raw)
 }
 
 /** 에디터 폼: 업로드 응답 `urls` 와 동일 키 — setImages({ ...res.urls }) 패턴 */

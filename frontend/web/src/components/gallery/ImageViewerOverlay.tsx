@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { applyGalleryImageOnError, GALLERY_IMAGE_FALLBACK_SRC } from '@/components/gallery/galleryFallback'
+import { stripImageUrlResizeParams } from '@/lib/utils/imageDisplayUrl'
 import { shouldTriggerSwipeNavigation } from '@/components/gallery/gallerySwipe'
 
 export type ImageViewerOverlayProps = {
@@ -36,7 +37,7 @@ function ViewerImage({ src, label }: { src: string; label: string }) {
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         key={src}
-        src={src}
+        src={stripImageUrlResizeParams(src)}
         alt={label}
         loading="eager"
         fetchPriority="high"

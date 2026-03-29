@@ -1,12 +1,13 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from '../../../../i18n.config'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { auditionApi, type AuditionResponse } from '../../../../lib/api/auditions'
 import { authApi } from '../../../../lib/api/auth'
 import { DEFAULT_IMAGES } from '../../../../lib/constants/fallbacks'
 import { auditionListImageUrl, normalizeAuditionImages } from '../../../../lib/types/audition'
+import { stripImageUrlResizeParams } from '../../../../lib/utils/imageDisplayUrl'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 
@@ -31,6 +32,10 @@ function MyAuditionManageCard({
   const medium = (im.medium ?? '').trim()
   const original = (im.original ?? '').trim()
   const listPrimary = auditionListImageUrl(im)
+  const coverFallbackChain = useMemo(() => {
+    const raw = [original, medium, thumb].map((s) => stripImageUrlResizeParams(s)).filter((s) => s.length > 0)
+    return [...new Set(raw)]
+  }, [original, medium, thumb])
   const initialSrc = listPrimary || DEFAULT_IMAGES.videoThumbnail
   const [imgSrc, setImgSrc] = useState(initialSrc)
 
@@ -40,11 +45,11 @@ function MyAuditionManageCard({
 
   const onCoverError = useCallback(() => {
     setImgSrc((cur) => {
-      if (cur === thumb && medium) return medium
-      if ((cur === thumb || cur === medium) && original) return original
-      return DEFAULT_IMAGES.videoThumbnail
+      const idx = coverFallbackChain.indexOf(cur)
+      const next = idx >= 0 ? coverFallbackChain[idx + 1] : null
+      return next ?? DEFAULT_IMAGES.videoThumbnail
     })
-  }, [thumb, medium, original])
+  }, [coverFallbackChain])
 
   return (
     <div className="flex flex-col gap-4 rounded-lg bg-white p-6 shadow-lg transition-shadow hover:shadow-xl md:flex-row md:items-start md:gap-6">
