@@ -123,7 +123,7 @@ export async function listPublicVideosForChannel(channelOwnerId: string): Promis
   return []
 }
 
-/** GET /videos/browse?category= — 공개 채널의 전체 공개 영상 목록(둘러보기 페이지용). */
+/** GET /videos/browse?category= — 공개 채널의 전체 공개 영상 목록(둘러보기 페이지용). 비로그인 허용. */
 export async function listBrowsePublicVideos(category?: string): Promise<ChannelVideoBrowseItem[]> {
   const { data } = await apiClient.get<unknown>('/videos/browse', {
     params: category && category !== '전체 카테고리' ? { category } : undefined,

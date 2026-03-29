@@ -89,7 +89,7 @@ export default function AuditionCard({ audition }: AuditionCardProps) {
         <img
           src={imgSrc}
           alt={title}
-          className="block w-full h-auto object-cover"
+          className="block h-auto w-full max-w-full object-cover"
           loading="lazy"
           decoding="async"
           onError={onCoverError}

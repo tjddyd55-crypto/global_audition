@@ -18,7 +18,7 @@ export function AuditionDetailHeroImage({ src, fullSizeHref }: { src: string; fu
     <img
       src={url}
       alt=""
-      className="block w-full h-auto object-cover"
+      className="block h-auto w-full max-w-full object-cover"
       loading="eager"
       decoding="async"
       onError={() => setFailed(true)}

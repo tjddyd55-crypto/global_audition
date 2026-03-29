@@ -57,6 +57,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/auditions/*/votes").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/channels", "/api/channels/*").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/videos").permitAll()
+                /** 둘러보기 목록 — 비로그인 허용(JwtAuthFilter 는 토큰 있으면 사용자만 설정). */
+                .requestMatchers(HttpMethod.GET, "/api/videos/browse").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/videos/public").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/videos/*/public").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/videos/*/comments").permitAll()

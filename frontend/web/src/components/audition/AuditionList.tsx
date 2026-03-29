@@ -16,7 +16,7 @@ export default function AuditionList() {
 
   if (isLoading) {
     return (
-      <div className="flex w-full flex-col">
+      <div className="flex w-full flex-col lg:gap-3">
         {[1, 2, 3, 4, 5, 6].map((i) => (
           <SkeletonAuditionCard key={i} />
         ))}
@@ -33,7 +33,7 @@ export default function AuditionList() {
   }
 
   return (
-    <div className="flex w-full flex-col">
+    <div className="flex w-full flex-col lg:gap-3">
       {data.map((audition: AuditionDto) => (
         <AuditionCard key={audition?.id ?? ''} audition={audition} />
       ))}

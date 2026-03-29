@@ -40,6 +40,7 @@ apiClient.interceptors.request.use(
 
     const token = getStoredAccessToken()
 
+    /** 토큰 있을 때만 Bearer 설정. 없으면 헤더 미설정 → 공개 GET(예: /videos/browse)도 401 없이 동작. */
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     } else if (

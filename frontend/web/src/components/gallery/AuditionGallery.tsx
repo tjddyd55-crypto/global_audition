@@ -145,7 +145,7 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
                 <img
                   src={url}
                   alt=""
-                  className="h-[260px] w-full object-cover"
+                  className="h-[260px] w-full max-w-full object-cover"
                   loading={i === 0 ? 'eager' : 'lazy'}
                   draggable={false}
                   onError={applyGalleryImageOnError}

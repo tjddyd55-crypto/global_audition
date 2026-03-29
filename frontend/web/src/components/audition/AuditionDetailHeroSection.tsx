@@ -104,7 +104,7 @@ export function AuditionDetailHeroSection({
     <img
       src={displaySrc || AUDITION_COVER_PLACEHOLDER_SRC}
       alt={safeTitle}
-      className="block w-full h-auto object-cover"
+      className="block h-auto w-full max-w-full object-cover"
       loading="eager"
       decoding="async"
       onError={() => setImgFailed(true)}
