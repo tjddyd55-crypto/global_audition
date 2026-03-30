@@ -1,5 +1,7 @@
 package com.audition.platform.api.dto;
 
+import java.math.BigDecimal;
+
 /**
  * PG 연동 전 단계: 주문 식별자와 결제 금액만 확정한다. 실제 결제는 수행하지 않는다.
  */
@@ -13,7 +15,13 @@ public class PreparePaymentResponse {
 
     private String packageId;
     private String packageName;
-    private long amount;
+
+    /** 청구 금액 (USD 달러). */
+    private BigDecimal amount;
+
+    /** Stripe PaymentIntent 등에 넣을 smallest unit (센트). */
+    private long stripeAmountCents;
+
     private long credits;
     private long bonusCredits;
     private String currency;
@@ -73,12 +81,20 @@ public class PreparePaymentResponse {
         this.packageName = packageName;
     }
 
-    public long getAmount() {
+    public BigDecimal getAmount() {
         return amount;
     }
 
-    public void setAmount(long amount) {
+    public void setAmount(BigDecimal amount) {
         this.amount = amount;
+    }
+
+    public long getStripeAmountCents() {
+        return stripeAmountCents;
+    }
+
+    public void setStripeAmountCents(long stripeAmountCents) {
+        this.stripeAmountCents = stripeAmountCents;
     }
 
     public long getCredits() {

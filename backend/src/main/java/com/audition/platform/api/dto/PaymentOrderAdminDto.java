@@ -1,5 +1,6 @@
 package com.audition.platform.api.dto;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -11,7 +12,7 @@ public class PaymentOrderAdminDto {
     private UUID userId;
     private UUID packageId;
     private String provider;
-    private long amount;
+    private BigDecimal amount;
     private String currency;
     private String status;
     private long credits;
@@ -62,11 +63,11 @@ public class PaymentOrderAdminDto {
         this.provider = provider;
     }
 
-    public long getAmount() {
+    public BigDecimal getAmount() {
         return amount;
     }
 
-    public void setAmount(long amount) {
+    public void setAmount(BigDecimal amount) {
         this.amount = amount;
     }
 

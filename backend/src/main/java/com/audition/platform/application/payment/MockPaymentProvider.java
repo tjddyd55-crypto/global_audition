@@ -9,6 +9,10 @@ import java.nio.charset.StandardCharsets;
 @Component
 public class MockPaymentProvider implements PaymentProvider {
 
+    /**
+     * 실제 Stripe 연동 시 {@link UsdMoney#toStripeCents(java.math.BigDecimal)} 로
+     * {@code PaymentIntent} 금액을 설정한다.
+     */
     public static final String CODE = "MOCK";
 
     @Override

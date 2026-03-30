@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { superAdminApi, type PaymentOrderAdminRow } from '@/lib/api/superAdmin'
+import { formatCurrency } from '@/lib/money/currency'
 
 const PAGE_SIZE = 50
 
@@ -105,7 +106,7 @@ export default function PaymentOrdersPage() {
                     <td className="py-2 pr-2 font-mono text-xs text-gray-700">{o.userId}</td>
                     <td className="py-2 pr-2">{o.status}</td>
                     <td className="py-2 pr-2 tabular-nums">
-                      {o.amount.toLocaleString('ko-KR')} {o.currency}
+                      {formatCurrency(Number(o.amount))} {o.currency}
                     </td>
                     <td className="py-2 pr-2 tabular-nums">{o.credits}</td>
                     <td className="py-2 pr-2 tabular-nums">{o.bonusCredits}</td>

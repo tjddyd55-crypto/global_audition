@@ -11,6 +11,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -35,11 +36,12 @@ public class PaymentOrder {
     @Column(nullable = false, length = 32)
     private String provider;
 
-    @Column(nullable = false)
-    private long amount;
+    /** 청구 금액 (USD, 달러 단위). Stripe 연동 시 {@link com.audition.platform.application.payment.UsdMoney#toStripeCents} 사용. */
+    @Column(nullable = false, precision = 14, scale = 2)
+    private BigDecimal amount;
 
     @Column(nullable = false, length = 8)
-    private String currency = "KRW";
+    private String currency = "USD";
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 24)
@@ -110,11 +112,11 @@ public class PaymentOrder {
         this.provider = provider;
     }
 
-    public long getAmount() {
+    public BigDecimal getAmount() {
         return amount;
     }
 
-    public void setAmount(long amount) {
+    public void setAmount(BigDecimal amount) {
         this.amount = amount;
     }
 

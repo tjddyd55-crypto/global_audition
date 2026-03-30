@@ -13,6 +13,8 @@ import {
   TEXT_SUB,
   TITLE_PAGE,
 } from '@/lib/ui/specClasses'
+import { formatCurrency } from '@/lib/money/currency'
+import { formatCreditsCount } from '@/lib/money/creditsDisplay'
 
 export default function CreditsChargePage() {
   const router = useRouter()
@@ -87,17 +89,17 @@ export default function CreditsChargePage() {
                   }`}
                 >
                   <p className="text-base font-semibold text-gray-900">{p.name}</p>
-                  <p className="mt-2 text-2xl font-bold text-[#3B82F6]">{p.price.toLocaleString('ko-KR')}원</p>
+                  <p className="mt-2 text-2xl font-bold text-[#3B82F6]">{formatCurrency(p.price)}</p>
                   <p className={`${TEXT_SUB} mt-2`}>
-                    기본 {p.credits.toLocaleString('ko-KR')} 크레딧
+                    기본 {formatCreditsCount(p.credits)} 크레딧
                     {p.bonusCredits > 0 && (
                       <span className="ml-1 font-medium text-green-600">
-                        + 보너스 {p.bonusCredits.toLocaleString('ko-KR')}
+                        + 보너스 {formatCreditsCount(p.bonusCredits)}
                       </span>
                     )}
                   </p>
                   <p className="mt-1 text-sm font-semibold text-gray-800">
-                    총 {(p.credits + p.bonusCredits).toLocaleString('ko-KR')} 크레딧 지급
+                    총 {formatCreditsCount(p.credits + p.bonusCredits)} 크레딧 지급
                   </p>
                 </button>
               )

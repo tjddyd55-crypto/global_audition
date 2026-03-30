@@ -12,6 +12,7 @@ import { meProfileApi } from '@/lib/api/meProfile'
 import { CREDIT_POLICY_AUDITION_APPLY, creditsApi } from '@/lib/api/credits'
 import { useAuthStore } from '@/lib/auth/authStore'
 import { auditionHeadlineTitle, PREV_ROUND_APPLY_BLOCKED_MSG } from '@/lib/types/audition'
+import { formatCreditsCount } from '@/lib/money/creditsDisplay'
 
 export default function ApplyPage() {
   const params = useParams()
@@ -138,7 +139,8 @@ export default function ApplyPage() {
 
         {applyPolicySnapshot && applyPolicySnapshot.active && applyPolicySnapshot.cost > 0 ? (
           <div className="mb-4 rounded-lg border border-violet-100 bg-violet-50 px-4 py-3 text-sm text-violet-900">
-            지원 시 크레딧 {applyPolicySnapshot.cost} 소모 · 현재 보유 {creditBalanceAmount}
+            지원 시 크레딧 {formatCreditsCount(applyPolicySnapshot.cost)} 소모 · 현재 보유{' '}
+            {formatCreditsCount(creditBalanceAmount)}
             {creditGateReady && !hasEnoughCredits ? (
               <div className="mt-2">
                 <Link

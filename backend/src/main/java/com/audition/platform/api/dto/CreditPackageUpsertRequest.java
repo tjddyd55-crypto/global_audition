@@ -1,17 +1,23 @@
 package com.audition.platform.api.dto;
 
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+
+import java.math.BigDecimal;
 
 public class CreditPackageUpsertRequest {
 
     @NotBlank
     private String name;
 
+    /** 패키지 판매가 (USD 달러, 소수 2자리까지). */
     @NotNull
-    @Min(0)
-    private Long price;
+    @DecimalMin(value = "0.01", inclusive = true)
+    @Digits(integer = 12, fraction = 2)
+    private BigDecimal price;
 
     @NotNull
     @Min(0)
@@ -36,11 +42,11 @@ public class CreditPackageUpsertRequest {
         this.name = name;
     }
 
-    public Long getPrice() {
+    public BigDecimal getPrice() {
         return price;
     }
 
-    public void setPrice(Long price) {
+    public void setPrice(BigDecimal price) {
         this.price = price;
     }
 

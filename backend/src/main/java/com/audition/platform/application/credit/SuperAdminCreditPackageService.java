@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -105,7 +106,7 @@ public class SuperAdminCreditPackageService {
 
     private static void applyBody(CreditPackage p, CreditPackageUpsertRequest body) {
         p.setName(body.getName().trim());
-        p.setPrice(body.getPrice());
+        p.setPrice(body.getPrice().setScale(2, RoundingMode.HALF_UP));
         p.setCredits(body.getCredits());
         p.setBonusCredits(body.getBonusCredits());
         p.setActive(Boolean.TRUE.equals(body.getActive()));

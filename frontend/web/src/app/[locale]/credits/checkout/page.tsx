@@ -21,6 +21,8 @@ import {
   TEXT_SUB,
   TITLE_PAGE,
 } from '@/lib/ui/specClasses'
+import { formatCurrency } from '@/lib/money/currency'
+import { formatCreditsCount } from '@/lib/money/creditsDisplay'
 
 function CheckoutContent() {
   const router = useRouter()
@@ -157,17 +159,13 @@ function CheckoutContent() {
                 <span className="font-medium text-gray-800">패키지</span> {displayName}
               </li>
               <li>
-                <span className="font-medium text-gray-800">결제 금액</span>{' '}
-                {(displayAmount ?? 0).toLocaleString('ko-KR')}원
+                <span className="font-medium text-gray-800">결제 금액</span> {formatCurrency(displayAmount ?? 0)}
               </li>
               <li>
-                <span className="font-medium text-gray-800">지급 크레딧</span>{' '}
-                {(displayCredits ?? 0).toLocaleString('ko-KR')}
+                <span className="font-medium text-gray-800">지급 크레딧</span> {formatCreditsCount(displayCredits ?? 0)}
               </li>
               {(displayBonus ?? 0) > 0 && (
-                <li className="font-medium text-green-600">
-                  보너스 +{(displayBonus ?? 0).toLocaleString('ko-KR')}
-                </li>
+                <li className="font-medium text-green-600">보너스 +{formatCreditsCount(displayBonus ?? 0)}</li>
               )}
               <li>
                 <span className="font-medium text-gray-800">총 지급 예정</span>{' '}

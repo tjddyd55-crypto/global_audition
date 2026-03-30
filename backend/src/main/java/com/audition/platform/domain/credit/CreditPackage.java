@@ -6,6 +6,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.UuidGenerator;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -21,8 +22,9 @@ public class CreditPackage {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String name;
 
-    @Column(nullable = false)
-    private long price;
+    /** 패키지 판매가 (USD, 달러 단위). */
+    @Column(nullable = false, precision = 14, scale = 2)
+    private BigDecimal price;
 
     @Column(nullable = false)
     private long credits;
@@ -58,11 +60,11 @@ public class CreditPackage {
         this.name = name;
     }
 
-    public long getPrice() {
+    public BigDecimal getPrice() {
         return price;
     }
 
-    public void setPrice(long price) {
+    public void setPrice(BigDecimal price) {
         this.price = price;
     }
 

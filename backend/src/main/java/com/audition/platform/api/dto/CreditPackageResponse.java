@@ -1,12 +1,13 @@
 package com.audition.platform.api.dto;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 
 public class CreditPackageResponse {
 
     private String id;
     private String name;
-    private long price;
+    private BigDecimal price;
     private long credits;
     private long bonusCredits;
     private boolean active;
@@ -30,11 +31,11 @@ public class CreditPackageResponse {
         this.name = name;
     }
 
-    public long getPrice() {
+    public BigDecimal getPrice() {
         return price;
     }
 
-    public void setPrice(long price) {
+    public void setPrice(BigDecimal price) {
         this.price = price;
     }
 

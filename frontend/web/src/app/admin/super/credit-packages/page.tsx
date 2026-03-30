@@ -6,7 +6,9 @@ import { AdminCard } from '@/components/admin/AdminCard'
 import { DataTable, type DataTableColumn } from '@/components/admin/DataTable'
 import { superAdminApi, type CreditPackageRow } from '@/lib/api/superAdmin'
 import { LAYOUT } from '@/lib/design-tokens'
-import { formatNumericInput, parseNonNegativeInt } from '@/lib/utils/numberFormat'
+import { formatNumericInput, formatUsdInput, parseNonNegativeInt, parseUsdDecimal } from '@/lib/utils/numberFormat'
+import { formatCurrency } from '@/lib/money/currency'
+import { formatCreditsCount } from '@/lib/money/creditsDisplay'
 
 type FormState = {
   name: string
@@ -19,7 +21,7 @@ type FormState = {
 
 const emptyForm: FormState = {
   name: '',
-  price: '0',
+  price: '',
   credits: '0',
   bonusCredits: '0',
   active: true,
@@ -29,7 +31,7 @@ const emptyForm: FormState = {
 function rowToForm(p: CreditPackageRow): FormState {
   return {
     name: p.name,
-    price: formatNumericInput(String(p.price)),
+    price: formatUsdInput(String(p.price)),
     credits: formatNumericInput(String(p.credits)),
     bonusCredits: formatNumericInput(String(p.bonusCredits)),
     active: p.active,
@@ -40,7 +42,7 @@ function rowToForm(p: CreditPackageRow): FormState {
 function formToPayload(f: FormState) {
   return {
     name: f.name,
-    price: parseNonNegativeInt(f.price, 0),
+    price: parseUsdDecimal(f.price, 0),
     credits: parseNonNegativeInt(f.credits, 0),
     bonusCredits: parseNonNegativeInt(f.bonusCredits, 0),
     active: f.active,
@@ -92,23 +94,23 @@ export default function SuperAdminCreditPackagesPage() {
     {
       id: 'sort',
       header: 'sort_order',
-      cell: (r) => (r.sortOrder ?? 0).toLocaleString('ko-KR'),
+      cell: (r) => formatCreditsCount(r.sortOrder ?? 0),
     },
     { id: 'name', header: 'name', cell: (r) => r.name },
     {
       id: 'price',
       header: 'price',
-      cell: (r) => `${Number(r.price).toLocaleString('ko-KR')} 원`,
+      cell: (r) => formatCurrency(Number(r.price)),
     },
     {
       id: 'credits',
       header: 'credits',
-      cell: (r) => `${Number(r.credits).toLocaleString('ko-KR')} 크레딧`,
+      cell: (r) => `${formatCreditsCount(Number(r.credits))} 크레딧`,
     },
     {
       id: 'bonus',
       header: 'bonus_credits',
-      cell: (r) => `${Number(r.bonusCredits).toLocaleString('ko-KR')} 크레딧`,
+      cell: (r) => `${formatCreditsCount(Number(r.bonusCredits))} 크레딧`,
     },
     {
       id: 'active',
@@ -160,17 +162,17 @@ export default function SuperAdminCreditPackagesPage() {
             />
           </label>
           <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 14 }}>
-            price (원)
+            price (USD)
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <input
                 type="text"
-                inputMode="numeric"
+                inputMode="decimal"
                 autoComplete="off"
                 style={{ ...fieldStyle, flex: 1 }}
                 value={createForm.price}
-                onChange={(e) => setCreateForm((f) => ({ ...f, price: formatNumericInput(e.target.value) }))}
+                onChange={(e) => setCreateForm((f) => ({ ...f, price: formatUsdInput(e.target.value) }))}
               />
-              <span style={{ fontSize: 14, color: '#555' }}>원</span>
+              <span style={{ fontSize: 14, color: '#555' }}>$</span>
             </div>
           </label>
           <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 14 }}>
@@ -222,7 +224,7 @@ export default function SuperAdminCreditPackagesPage() {
           </label>
           <button
             type="button"
-            disabled={!createForm.name.trim() || createMut.isPending}
+            disabled={!createForm.name.trim() || parseUsdDecimal(createForm.price, 0) < 0.01 || createMut.isPending}
             onClick={() => createMut.mutate()}
             style={{
               padding: '10px 18px',
@@ -253,17 +255,17 @@ export default function SuperAdminCreditPackagesPage() {
               />
             </label>
             <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 14 }}>
-              price (원)
+              price (USD)
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <input
                   type="text"
-                  inputMode="numeric"
+                  inputMode="decimal"
                   autoComplete="off"
                   style={{ ...fieldStyle, flex: 1 }}
                   value={editForm.price}
-                  onChange={(e) => setEditForm((f) => ({ ...f, price: formatNumericInput(e.target.value) }))}
+                  onChange={(e) => setEditForm((f) => ({ ...f, price: formatUsdInput(e.target.value) }))}
                 />
-                <span style={{ fontSize: 14, color: '#555' }}>원</span>
+                <span style={{ fontSize: 14, color: '#555' }}>$</span>
               </div>
             </label>
             <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 14 }}>

@@ -14,6 +14,7 @@ import {
   TEXT_SUB,
   TITLE_PAGE,
 } from '@/lib/ui/specClasses'
+import { formatCreditsCount } from '@/lib/money/creditsDisplay'
 
 function SuccessContent() {
   const searchParams = useSearchParams()
@@ -53,11 +54,11 @@ function SuccessContent() {
           {orderNo && <p className="font-mono text-sm text-gray-900">{orderNo}</p>}
           {granted != null && (
             <p className="mt-4 text-lg font-semibold text-green-700">
-              지급 크레딧 {granted.toLocaleString('ko-KR')} C
+              지급 크레딧 {formatCreditsCount(granted)} C
             </p>
           )}
           {balance != null && (
-            <p className={`${TEXT_SUB} mt-2`}>현재 잔액 {balance.toLocaleString('ko-KR')} C</p>
+            <p className={`${TEXT_SUB} mt-2`}>현재 잔액 {formatCreditsCount(balance)} C</p>
           )}
           {err && <p className="mt-2 text-sm text-red-600">{err}</p>}
           <div className="mt-6 flex flex-wrap gap-3">

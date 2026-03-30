@@ -1,5 +1,6 @@
 package com.audition.platform.api.dto;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 
 public class CreditOrderSummaryResponse {
@@ -7,7 +8,7 @@ public class CreditOrderSummaryResponse {
     private String orderNo;
     private String status;
     private String provider;
-    private long amount;
+    private BigDecimal amount;
     private String currency;
     private long credits;
     private long bonusCredits;
@@ -41,11 +42,11 @@ public class CreditOrderSummaryResponse {
         this.provider = provider;
     }
 
-    public long getAmount() {
+    public BigDecimal getAmount() {
         return amount;
     }
 
-    public void setAmount(long amount) {
+    public void setAmount(BigDecimal amount) {
         this.amount = amount;
     }
 

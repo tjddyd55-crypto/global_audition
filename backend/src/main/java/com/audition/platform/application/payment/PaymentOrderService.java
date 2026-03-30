@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
@@ -70,8 +71,8 @@ public class PaymentOrderService {
         order.setUserId(userId);
         order.setPackageId(packageId);
         order.setProvider(code);
-        order.setAmount(pkg.getPrice());
-        order.setCurrency("KRW");
+        order.setAmount(pkg.getPrice().setScale(2, RoundingMode.HALF_UP));
+        order.setCurrency("USD");
         order.setStatus(PaymentOrderStatus.CREATED);
         order.setCredits(pkg.getCredits());
         order.setBonusCredits(pkg.getBonusCredits());
@@ -90,6 +91,7 @@ public class PaymentOrderService {
         r.setPackageId(pkg.getId().toString());
         r.setPackageName(pkg.getName());
         r.setAmount(order.getAmount());
+        r.setStripeAmountCents(UsdMoney.toStripeCents(order.getAmount()));
         r.setCredits(order.getCredits());
         r.setBonusCredits(order.getBonusCredits());
         r.setCurrency(order.getCurrency());

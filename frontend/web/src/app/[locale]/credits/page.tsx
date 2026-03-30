@@ -14,8 +14,11 @@ import {
   TITLE_PAGE,
 } from '@/lib/ui/specClasses'
 
-function formatAmount(amount: number) {
-  return amount > 0 ? `+${amount.toLocaleString('ko-KR')}` : amount.toLocaleString('ko-KR')
+import { formatCreditsCount } from '@/lib/money/creditsDisplay'
+
+function formatSignedCredits(amount: number) {
+  const s = formatCreditsCount(amount)
+  return amount > 0 ? `+${s}` : s
 }
 
 function typeLabel(type: string) {
@@ -102,7 +105,7 @@ export default function CreditsDashboardPage() {
             <p className="text-sm text-red-600">{error}</p>
           ) : (
             <p className="text-4xl font-bold tracking-tight text-[#3B82F6]">
-              {(balance ?? 0).toLocaleString('ko-KR')}
+              {formatCreditsCount(balance ?? 0)}
               <span className="ml-2 text-lg font-semibold text-gray-600">C</span>
             </p>
           )}
@@ -155,10 +158,10 @@ export default function CreditsDashboardPage() {
                   </div>
                   <div className="text-right">
                     <p className={`text-sm font-semibold ${tx.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {formatAmount(tx.amount)}
+                      {formatSignedCredits(tx.amount)}
                     </p>
                     {tx.afterBalance != null && (
-                      <p className={TEXT_SUB}>잔액 {tx.afterBalance.toLocaleString('ko-KR')}</p>
+                      <p className={TEXT_SUB}>잔액 {formatCreditsCount(tx.afterBalance)}</p>
                     )}
                   </div>
                 </li>

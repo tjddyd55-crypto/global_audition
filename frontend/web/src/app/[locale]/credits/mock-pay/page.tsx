@@ -20,6 +20,7 @@ import {
   TEXT_SUB,
   TITLE_PAGE,
 } from '@/lib/ui/specClasses'
+import { formatCurrency } from '@/lib/money/currency'
 
 function MockPayContent() {
   const router = useRouter()
@@ -187,7 +188,9 @@ function MockPayContent() {
             <ul className={`space-y-1 ${TEXT_SUB}`}>
               <li>주문번호 {order.orderNo}</li>
               <li>상태 {order.status}</li>
-              <li>금액 {order.amount.toLocaleString('ko-KR')} {order.currency}</li>
+              <li>
+                금액 {formatCurrency(Number(order.amount))} {order.currency}
+              </li>
               <li>
                 크레딧 {order.credits} + 보너스 {order.bonusCredits}
               </li>

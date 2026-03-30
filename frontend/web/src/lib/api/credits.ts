@@ -63,7 +63,10 @@ export type PreparePaymentResult = {
   orderId: string
   packageId: string
   packageName: string
+  /** USD 달러 */
   amount: number
+  /** Stripe smallest unit ( cents ) */
+  stripeAmountCents?: number
   credits: number
   bonusCredits: number
   currency: string
@@ -77,6 +80,7 @@ export type CreditOrderSummary = {
   orderNo: string
   status: string
   provider: string
+  /** USD 달러 */
   amount: number
   currency: string
   credits: number
