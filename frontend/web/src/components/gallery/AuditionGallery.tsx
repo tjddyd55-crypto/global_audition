@@ -21,7 +21,8 @@ function normalizeGalleryUrls(images: string[]): string[] {
 }
 
 /**
- * 피드형 슬라이드(모바일·PC 동일): globals.css 고정 높이 + cover. 클릭 시 라이트박스 `.fullscreen-image` contain.
+ * 모바일: 피드형 슬라이드(globals `audition-detail-gallery-slide-wrap`만). PC: 동일 높이·cover + 중앙 max-width(별도 modifier).
+ * 클릭 시 라이트박스 `.fullscreen-image` contain.
  */
 export default function AuditionGallery({ images }: AuditionGalleryProps) {
   const allImages = useMemo(() => normalizeGalleryUrls(images), [images])
@@ -134,6 +135,34 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
     requestAnimationFrame(scrollToEntry)
   }, [viewerOpen, viewerEntryIndex])
 
+  /** PC 트랙: 세로 휠 → 가로 스크롤. 모바일 트랙에는 연결하지 않음. */
+  useEffect(() => {
+    const el = desktopTrackRef.current
+    if (!el || n <= 1) return
+    const onWheel = (e: WheelEvent) => {
+      if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return
+      e.preventDefault()
+      el.scrollLeft += e.deltaY
+    }
+    el.addEventListener('wheel', onWheel, { passive: false })
+    return () => el.removeEventListener('wheel', onWheel)
+  }, [n])
+
+  const scrollGalleryToIndex = useCallback(
+    (index: number) => {
+      const clamped = Math.min(Math.max(0, index), n - 1)
+      if (typeof window === 'undefined') return
+      const isMd = window.matchMedia('(min-width: 768px)').matches
+      const el = isMd ? desktopTrackRef.current : mobileTrackRef.current
+      if (!el) return
+      const w = el.clientWidth
+      if (w <= 0) return
+      el.scrollTo({ left: clamped * w, behavior: 'smooth' })
+      setCurrentIndex(clamped)
+    },
+    [n],
+  )
+
   if (n === 0) {
     return <p className="m-0 py-2 text-center text-sm text-gray-500">등록된 추가 이미지가 없습니다.</p>
   }
@@ -175,23 +204,43 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
         </div>
       </div>
 
-      <div className="hidden w-full md:block">
-        <div className="gallery-container w-full">
+      <div className="relative hidden w-full md:block">
+        {n > 1 ? (
+          <>
+            <button
+              type="button"
+              className="absolute left-1 top-1/2 z-10 -translate-y-1/2 rounded-full border-0 bg-black/50 px-2 py-3 text-2xl leading-none text-white hover:bg-black/70"
+              aria-label="이전 이미지"
+              onClick={() => scrollGalleryToIndex(currentIndex - 1)}
+            >
+              ‹
+            </button>
+            <button
+              type="button"
+              className="absolute right-1 top-1/2 z-10 -translate-y-1/2 rounded-full border-0 bg-black/50 px-2 py-3 text-2xl leading-none text-white hover:bg-black/70"
+              aria-label="다음 이미지"
+              onClick={() => scrollGalleryToIndex(currentIndex + 1)}
+            >
+              ›
+            </button>
+          </>
+        ) : null}
+        <div className="gallery-container gallery-container--desktop w-full min-w-0">
           <div
             ref={desktopTrackRef}
             role="region"
             aria-label="이미지 슬라이드"
             onScroll={onDesktopScroll}
-            className="scrollbar-hide flex snap-x snap-mandatory overflow-x-auto scroll-smooth [-webkit-overflow-scrolling:touch]"
+            className="scrollbar-hide flex min-h-0 min-w-0 w-full snap-x snap-mandatory overflow-x-auto scroll-smooth overscroll-x-contain [-webkit-overflow-scrolling:touch]"
           >
             {allImages.map((src, i) => {
               const url = stripImageUrlResizeParams(src)
               return (
                 <div
                   key={`d-${i}-${url.slice(0, 32)}`}
-                  className="min-w-full shrink-0 snap-center"
+                  className="flex min-h-0 min-w-full shrink-0 snap-center justify-center bg-black"
                 >
-                  <div className="audition-detail-gallery-slide-wrap">
+                  <div className="audition-detail-gallery-slide-wrap audition-detail-gallery-slide--pc">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={url}
@@ -211,11 +260,16 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
       </div>
 
       {n > 1 ? (
-        <div className="mt-2 flex justify-center gap-1" aria-hidden>
+        <div className="mt-2 flex justify-center gap-1" role="tablist" aria-label="이미지 위치">
           {allImages.map((_, i) => (
-            <div
+            <button
               key={i}
-              className={`h-2 w-2 rounded-full ${i === currentIndex ? 'bg-black' : 'bg-gray-300'}`}
+              type="button"
+              role="tab"
+              aria-selected={i === currentIndex}
+              aria-label={`이미지 ${i + 1}로 이동`}
+              className={`h-2 w-2 shrink-0 rounded-full border-0 p-0 ${i === currentIndex ? 'bg-black' : 'bg-gray-300'}`}
+              onClick={() => scrollGalleryToIndex(i)}
             />
           ))}
         </div>

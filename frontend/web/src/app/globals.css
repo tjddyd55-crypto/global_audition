@@ -66,9 +66,25 @@
 }
 
 @media (min-width: 768px) {
-  .audition-detail-hero-image-wrap,
-  .audition-detail-gallery-slide-wrap {
+  /* 히어만 데스크톱에서 조금 더 큼. 갤러리 높이는 모바일과 동일 320px 유지(비율 맞춤). */
+  .audition-detail-hero-image-wrap {
     height: 420px;
+  }
+
+  /**
+   * PC 갤러리만: 모바일 뷰포트에 가까운 폭으로 중앙 정렬(잘린 초광각 슬롯 방지).
+   * 모바일 슬라이드에는 이 modifier 클래스를 붙이지 않음.
+   */
+  .audition-detail-gallery-slide-wrap.audition-detail-gallery-slide--pc {
+    width: 100%;
+    max-width: 430px;
+    height: 320px;
+    margin-inline: auto;
+  }
+
+  /* 가로 스크롤 트랙이 부모 flex에서 깨지지 않도록 */
+  .gallery-container--desktop {
+    min-width: 0;
   }
 }
 
