@@ -154,6 +154,11 @@ export default function MainHeader() {
                   <Link href="/profile" className={DROPDOWN_ITEM} onClick={closeUserMenu}>
                     프로필
                   </Link>
+                  {userRole === 'SUPER_ADMIN' ? (
+                    <Link href="/admin/super" className={DROPDOWN_ITEM} onClick={closeUserMenu}>
+                      관리자 콘솔
+                    </Link>
+                  ) : null}
                   {userRole === 'AGENCY' || userRole === 'ADMIN' ? (
                     <Link href="/my/dashboard" className={DROPDOWN_ITEM} onClick={closeUserMenu}>
                       기획사 대시보드
@@ -233,6 +238,15 @@ export default function MainHeader() {
                 >
                   프로필
                 </Link>
+                {userRole === 'SUPER_ADMIN' ? (
+                  <Link
+                    href="/admin/super"
+                    onClick={() => setIsMobileOpen(false)}
+                    className="w-full rounded-lg border border-[#E5E7EB] py-3 text-center text-sm font-medium text-violet-700"
+                  >
+                    관리자 콘솔
+                  </Link>
+                ) : null}
                 {userRole === 'AGENCY' || userRole === 'ADMIN' ? (
                   <Link
                     href="/my/dashboard"
