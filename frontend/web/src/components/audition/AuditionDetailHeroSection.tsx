@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useState, type MouseEvent } from 'react'
+import { useCallback, useState } from 'react'
 import { Link } from '@/i18n.config'
 import { AUDITION_DETAIL, HERO } from '@/lib/design-tokens'
 import { safeStr } from '@/lib/utils/safe'
@@ -16,9 +16,6 @@ type AuditionDetailHeroSectionProps = {
   status: string
   /** 있으면 뱃지에 사용(예: "2차 모집 중") */
   statusPillText?: string | null
-  /** 시리즈 2차+ 지원 불가 시 히어로 CTA 비활성 */
-  disableHeroApply?: boolean
-  heroApplyDisabledReason?: string | null
   tags: string[]
   /** 이미 포맷된 마감일 문자열 */
   endDateFormatted: string
@@ -42,7 +39,7 @@ function statusBadgeClass(status: string): string {
 }
 
 /**
- * 메인 이미지: 피드형 `.audition-detail-hero-image-wrap` (고정 높이·object-fit cover). 좌상단 뱃지 + 하단 오버레이.
+ * 메인 이미지: `.audition-detail-hero-feed-cover` (비율 유지). 좌상단 뱃지 + 하단 오버레이.
  */
 export function AuditionDetailHeroSection({
   auditionId,
@@ -51,8 +48,6 @@ export function AuditionDetailHeroSection({
   title,
   status,
   statusPillText,
-  disableHeroApply = false,
-  heroApplyDisabledReason,
   tags,
   endDateFormatted,
   location,
@@ -76,25 +71,11 @@ export function AuditionDetailHeroSection({
     }
   }, [])
 
-  const scrollToApplyBar = useCallback((e: MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault()
-    if (typeof window === 'undefined') return
-    window.scrollTo({
-      top: document.documentElement.scrollHeight,
-      behavior: 'smooth',
-    })
-    window.setTimeout(() => {
-      document.getElementById('audition-detail-apply')?.focus?.()
-    }, 400)
-  }, [])
-
-  const isOpen = status === 'OPEN'
   const pillLabel = (
     statusPillText != null && String(statusPillText).trim().length > 0
       ? String(statusPillText).trim()
       : statusBadgeCopy(status)
   ).trim()
-  const heroApplyBlocked = Boolean(isOpen && disableHeroApply)
 
   const hasCover = cover.length > 0
   const displaySrc = hasCover && !imgFailed ? cover : hasCover ? AUDITION_COVER_PLACEHOLDER_SRC : ''
@@ -103,7 +84,7 @@ export function AuditionDetailHeroSection({
 
   const safeTitle = safeStr(title)
   const bannerImage = (
-    <div className="audition-detail-hero-image-wrap">
+    <div className="audition-detail-hero-feed-cover">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={displaySrc || AUDITION_COVER_PLACEHOLDER_SRC}
@@ -180,27 +161,6 @@ export function AuditionDetailHeroSection({
               마감 {endDateFormatted} · {safeStr(location)}
             </p>
           </div>
-          {isOpen && !heroApplyBlocked ? (
-            <a
-              href="#audition-detail-apply"
-              onClick={scrollToApplyBar}
-              className="mt-3 flex w-full items-center justify-center rounded-lg bg-black py-3 text-base font-semibold text-white no-underline"
-            >
-              지금 지원하기
-            </a>
-          ) : isOpen && heroApplyBlocked ? (
-            <span
-              className="mt-3 flex w-full cursor-not-allowed items-center justify-center rounded-lg bg-black/40 py-3 text-center text-base font-semibold text-white/70"
-              title={heroApplyDisabledReason ?? undefined}
-              aria-disabled="true"
-            >
-              지금 지원하기
-            </span>
-          ) : (
-            <span className="mt-3 flex w-full items-center justify-center rounded-lg bg-neutral-700 py-3 text-base font-semibold text-white/80">
-              {status === 'CLOSED' ? '마감됨' : '지원 불가'}
-            </span>
-          )}
           <div className="mt-3 flex flex-wrap gap-2">
             <button
               type="button"

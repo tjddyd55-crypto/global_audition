@@ -17,7 +17,6 @@ import { AuditionDetailMediaSection } from '@/components/audition/AuditionDetail
 import { CREDIT_POLICY_AUDITION_APPLY, creditsApi } from '@/lib/api/credits'
 import { MultiRoundSubmitCta } from '@/components/application/MultiRoundSubmitCta'
 import { roundIdForRoundNumber } from '@/lib/audition/roundNav'
-import { toast } from 'sonner'
 import {
   auditionDetailMediumUrl,
   auditionDetailOriginalUrl,
@@ -243,27 +242,6 @@ export default function AuditionDetailPage() {
   const subCtaClass =
     'inline-flex min-h-12 shrink-0 items-center justify-center rounded-lg border border-neutral-300 bg-white px-4 py-3 text-center text-sm font-semibold text-neutral-900 sm:text-base'
 
-  const shareAudition = async () => {
-    const url = typeof window !== 'undefined' ? window.location.href : ''
-    try {
-      if (typeof navigator !== 'undefined' && navigator.share) {
-        await navigator.share({ title: headlineTitle, url })
-        return
-      }
-      await navigator.clipboard.writeText(url)
-      toast.success('링크가 복사되었습니다.')
-    } catch (e) {
-      const err = e as { name?: string }
-      if (err?.name === 'AbortError') return
-      try {
-        await navigator.clipboard.writeText(url)
-        toast.success('링크가 복사되었습니다.')
-      } catch {
-        toast.error('공유에 실패했습니다.')
-      }
-    }
-  }
-
   return (
     <div style={{ minHeight: '100vh', background: AUDITION_DETAIL.pageBackgroundMuted }}>
       <AuditionDetailHeroSection
@@ -273,8 +251,6 @@ export default function AuditionDetailPage() {
         title={headlineTitle}
         status={String(audition.status)}
         statusPillText={audition.recruitmentRoundLabel}
-        disableHeroApply={applyNavBlockedBySeries}
-        heroApplyDisabledReason={audition.applyBlockedMessage ?? PREV_ROUND_APPLY_BLOCKED_MSG}
         tags={auditionTags}
         endDateFormatted={fmt(safeStr(audition.endDate))}
         location={safeStr(audition.location)}
@@ -486,61 +462,6 @@ export default function AuditionDetailPage() {
             </div>
           </section>
         )}
-
-        <div className="mt-10">
-          {showApplySubmitCta && alreadyApplied ? (
-            <button type="button" disabled className="w-full rounded-lg bg-black py-4 text-lg font-semibold text-white opacity-60">
-              지금 지원하기
-            </button>
-          ) : !isOpen ? (
-            <button type="button" disabled className="w-full rounded-lg bg-black py-4 text-lg font-semibold text-white opacity-60">
-              지금 지원하기
-            </button>
-          ) : showApplySubmitCta ? (
-            applyNavDisabledCombined ? (
-              <button
-                type="button"
-                disabled
-                title={
-                  applyNavBlockedBySeries
-                    ? (audition.applyBlockedMessage ?? PREV_ROUND_APPLY_BLOCKED_MSG)
-                    : undefined
-                }
-                className="w-full rounded-lg bg-black py-4 text-lg font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {applyPolicyLoading || balanceLoading ? '확인 중...' : '지금 지원하기'}
-              </button>
-            ) : (
-              <Link href={`/auditions/${id}/apply`} className="block w-full no-underline">
-                <span className="flex w-full items-center justify-center rounded-lg bg-black py-4 text-lg font-semibold text-white">
-                  지금 지원하기
-                </span>
-              </Link>
-            )
-          ) : showApplyLoginCta ? (
-            <Link
-              href={`/login?next=${encodeURIComponent(`/auditions/${id}`)}`}
-              className="block w-full no-underline"
-            >
-              <span className="flex w-full items-center justify-center rounded-lg bg-black py-4 text-lg font-semibold text-white">
-                지금 지원하기
-              </span>
-            </Link>
-          ) : showApplyDisabledCta ? (
-            <button
-              type="button"
-              disabled
-              title="지원자 계정으로 로그인 후 이용할 수 있습니다."
-              className="w-full rounded-lg bg-black py-4 text-lg font-semibold text-white opacity-60"
-            >
-              지금 지원하기
-            </button>
-          ) : (
-            <button type="button" disabled className="w-full rounded-lg bg-black py-4 text-lg font-semibold text-white opacity-60">
-              지금 지원하기
-            </button>
-          )}
-        </div>
       </div>
 
       <div
@@ -598,26 +519,20 @@ export default function AuditionDetailPage() {
             </button>
           )}
 
-          <div className="flex flex-wrap gap-2">
-            {showApplySubmitCta && alreadyApplied ? (
-              <Link href={`/auditions/${id}/vote`} className={`${subCtaClass} no-underline`}>
-                지원자 보기 &amp; 투표
-              </Link>
-            ) : null}
-            {!isOpen ? (
-              <Link href={`/auditions/${id}/ranking`} className={`${subCtaClass} no-underline`}>
-                랭킹 보기
-              </Link>
-            ) : null}
-            {isOpen &&
-            (showApplyLoginCta ||
-              (showApplySubmitCta && !alreadyApplied) ||
-              showApplyDisabledCta) ? (
-              <button type="button" className={subCtaClass} onClick={() => void shareAudition()}>
-                공유
-              </button>
-            ) : null}
-          </div>
+          {(showApplySubmitCta && alreadyApplied) || !isOpen ? (
+            <div className="flex flex-wrap gap-2">
+              {showApplySubmitCta && alreadyApplied ? (
+                <Link href={`/auditions/${id}/vote`} className={`${subCtaClass} no-underline`}>
+                  지원자 보기 &amp; 투표
+                </Link>
+              ) : null}
+              {!isOpen ? (
+                <Link href={`/auditions/${id}/ranking`} className={`${subCtaClass} no-underline`}>
+                  랭킹 보기
+                </Link>
+              ) : null}
+            </div>
+          ) : null}
 
         {showApplySubmitCta && alreadyApplied ? (
           <p className="mt-2 text-center text-xs text-neutral-500">이 오디션에 이미 지원하셨습니다.</p>

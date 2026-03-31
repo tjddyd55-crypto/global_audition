@@ -70,25 +70,6 @@ export default function AuditionDetailPage() {
         {heroSubtitle.length > 0 ? (
           <p className="mb-3 text-sm text-gray-500">{heroSubtitle}</p>
         ) : null}
-        <div className="mb-6">
-          {applyBlocked ? (
-            <button
-              type="button"
-              disabled
-              className="mt-3 w-full cursor-not-allowed rounded-lg bg-black py-3 font-semibold text-white opacity-60"
-              title={audition.applyBlockedMessage ?? PREV_ROUND_APPLY_BLOCKED_MSG}
-            >
-              지금 지원하기
-            </button>
-          ) : (
-            <Link
-              href={`/auditions/${id}/apply`}
-              className="mt-3 flex w-full items-center justify-center rounded-lg bg-black py-3 text-center font-semibold text-white no-underline"
-            >
-              지금 지원하기
-            </Link>
-          )}
-        </div>
         {audition.description ? (
           <div className="mb-6">
             <p className="whitespace-pre-line text-gray-700">{audition.description}</p>
@@ -109,25 +90,6 @@ export default function AuditionDetailPage() {
             {audition.applyBlockedMessage ?? PREV_ROUND_APPLY_BLOCKED_MSG}
           </p>
         ) : null}
-        <div className="mt-10">
-          {applyBlocked ? (
-            <button
-              type="button"
-              disabled
-              className="w-full rounded-lg bg-black py-4 text-lg font-semibold text-white opacity-60"
-              title={audition.applyBlockedMessage ?? PREV_ROUND_APPLY_BLOCKED_MSG}
-            >
-              지금 지원하기
-            </button>
-          ) : (
-            <Link
-              href={`/auditions/${id}/apply`}
-              className="flex w-full items-center justify-center rounded-lg bg-black py-4 text-lg font-semibold text-white no-underline"
-            >
-              지금 지원하기
-            </Link>
-          )}
-        </div>
       </div>
       <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-white p-3 pb-[max(12px,env(safe-area-inset-bottom))]">
         {applyBlocked ? (
