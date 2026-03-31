@@ -168,7 +168,6 @@ export default function AuditionDetailPage() {
     .map((src) => safeStr(src))
     .filter((s) => s.length > 0 && !coverDedupUrls.has(s))
     .slice(0, 24)
-  const applicants = safeNum(audition.applicantsCount)
   const recruitList = safeArr(audition.recruitFields)
   const qualifications = safeArr(audition.qualifications)
   const schedules = safeArr(audition.schedules)
@@ -177,6 +176,13 @@ export default function AuditionDetailPage() {
   const seriesRound = audition.round ?? 1
   const headlineTitle = auditionHeadlineTitle(audition)
   const descriptionText = safeStr(audition.description)
+  const heroSubtitle =
+    descriptionText
+      .split(/\n/)
+      .map((s) => s.trim())
+      .find((s) => s.length > 0) ?? ''
+  const remainingDaysVal = safeNum(audition.remainingDays)
+  const deadlineUrgent = isOpenAudition && remainingDaysVal <= 3 && remainingDaysVal >= 0
 
   const isOpen = audition.status === 'OPEN'
   const alreadyApplied = audition.hasApplied === true
@@ -231,9 +237,9 @@ export default function AuditionDetailPage() {
   }
 
   const mainCtaClass =
-    'flex min-h-12 flex-1 items-center justify-center rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 py-3 text-center text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60 sm:text-base'
+    'flex w-full min-h-12 items-center justify-center rounded-lg bg-black py-4 text-center text-lg font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60'
   const mainCtaFullWidthClass =
-    'flex min-h-12 w-full items-center justify-center rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 py-3 text-center text-sm font-semibold text-white sm:text-base'
+    'flex min-h-12 w-full items-center justify-center rounded-lg bg-black py-4 text-center text-lg font-semibold text-white'
   const subCtaClass =
     'inline-flex min-h-12 shrink-0 items-center justify-center rounded-lg border border-neutral-300 bg-white px-4 py-3 text-center text-sm font-semibold text-neutral-900 sm:text-base'
 
@@ -272,7 +278,8 @@ export default function AuditionDetailPage() {
         tags={auditionTags}
         endDateFormatted={fmt(safeStr(audition.endDate))}
         location={safeStr(audition.location)}
-        applicantsCount={applicants}
+        subtitle={heroSubtitle}
+        deadlineUrgent={deadlineUrgent}
       />
 
       {embed ? (
@@ -333,6 +340,9 @@ export default function AuditionDetailPage() {
                 >
                   {descriptionText}
                 </p>
+                <div className="mt-6 text-sm text-gray-600">
+                  지원 방법: 영상 업로드 후 간단 정보 입력
+                </div>
               </section>
             ) : null}
             <section className="border-t border-neutral-200 py-6">
@@ -345,6 +355,11 @@ export default function AuditionDetailPage() {
               >
                 상세 안내
               </h2>
+              {descriptionText.length === 0 ? (
+                <div className="mb-6 text-sm text-gray-600">
+                  지원 방법: 영상 업로드 후 간단 정보 입력
+                </div>
+              ) : null}
               <SectionBlock iconLabel="R" title="모집 분야" items={recruitList} />
               <SectionBlock iconLabel="Q" title="지원 자격" items={qualifications} />
               <SectionBlock iconLabel="S" title="일정" items={schedules} />
@@ -410,8 +425,7 @@ export default function AuditionDetailPage() {
                   gap: AUDITION_DETAIL.galleryGapPx,
                 }}
               >
-                <div>지원자 {applicants.toLocaleString()}명</div>
-                <div>남은 기간 D-{safeNum(audition.remainingDays)}</div>
+                <div>남은 기간 D-{remainingDaysVal}</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: AUDITION_DETAIL.galleryGapPx, marginTop: AUDITION_DETAIL.galleryGapPx }}>
                   {recruitList.map((tag, idx) => (
                     <span
@@ -473,93 +487,137 @@ export default function AuditionDetailPage() {
           </section>
         )}
 
+        <div className="mt-10">
+          {showApplySubmitCta && alreadyApplied ? (
+            <button type="button" disabled className="w-full rounded-lg bg-black py-4 text-lg font-semibold text-white opacity-60">
+              지금 지원하기
+            </button>
+          ) : !isOpen ? (
+            <button type="button" disabled className="w-full rounded-lg bg-black py-4 text-lg font-semibold text-white opacity-60">
+              지금 지원하기
+            </button>
+          ) : showApplySubmitCta ? (
+            applyNavDisabledCombined ? (
+              <button
+                type="button"
+                disabled
+                title={
+                  applyNavBlockedBySeries
+                    ? (audition.applyBlockedMessage ?? PREV_ROUND_APPLY_BLOCKED_MSG)
+                    : undefined
+                }
+                className="w-full rounded-lg bg-black py-4 text-lg font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {applyPolicyLoading || balanceLoading ? '확인 중...' : '지금 지원하기'}
+              </button>
+            ) : (
+              <Link href={`/auditions/${id}/apply`} className="block w-full no-underline">
+                <span className="flex w-full items-center justify-center rounded-lg bg-black py-4 text-lg font-semibold text-white">
+                  지금 지원하기
+                </span>
+              </Link>
+            )
+          ) : showApplyLoginCta ? (
+            <Link
+              href={`/login?next=${encodeURIComponent(`/auditions/${id}`)}`}
+              className="block w-full no-underline"
+            >
+              <span className="flex w-full items-center justify-center rounded-lg bg-black py-4 text-lg font-semibold text-white">
+                지금 지원하기
+              </span>
+            </Link>
+          ) : showApplyDisabledCta ? (
+            <button
+              type="button"
+              disabled
+              title="지원자 계정으로 로그인 후 이용할 수 있습니다."
+              className="w-full rounded-lg bg-black py-4 text-lg font-semibold text-white opacity-60"
+            >
+              지금 지원하기
+            </button>
+          ) : (
+            <button type="button" disabled className="w-full rounded-lg bg-black py-4 text-lg font-semibold text-white opacity-60">
+              지금 지원하기
+            </button>
+          )}
+        </div>
       </div>
 
       <div
         id="audition-detail-apply"
         tabIndex={-1}
-        className="fixed bottom-0 left-0 right-0 z-50 border-t border-neutral-200 bg-white px-3 pt-3 pb-[max(12px,env(safe-area-inset-bottom))] outline-none"
+        className="fixed bottom-0 left-0 right-0 z-50 border-t border-neutral-200 bg-white p-3 pb-[max(12px,env(safe-area-inset-bottom))] outline-none"
       >
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-2">
           {showApplySubmitCta && alreadyApplied ? (
-            <>
-              <button type="button" disabled className={mainCtaClass}>
-                지원 완료
-              </button>
-              <Link href={`/auditions/${id}/vote`} className={`${subCtaClass} no-underline`}>
-                지원자 보기 &amp; 투표
-              </Link>
-            </>
+            <button type="button" disabled className={mainCtaClass}>
+              지금 지원하기
+            </button>
           ) : !isOpen ? (
-            <>
-              <button type="button" disabled className={mainCtaClass}>
-                마감됨
-              </button>
-              <Link href={`/auditions/${id}/ranking`} className={`${subCtaClass} no-underline`}>
-                랭킹 보기
-              </Link>
-            </>
+            <button type="button" disabled className={mainCtaClass}>
+              지금 지원하기
+            </button>
           ) : showApplySubmitCta ? (
-            <>
-              {applyNavDisabledCombined ? (
-                <button
-                  type="button"
-                  disabled
-                  title={
-                    applyNavBlockedBySeries
-                      ? (audition.applyBlockedMessage ?? PREV_ROUND_APPLY_BLOCKED_MSG)
-                      : undefined
-                  }
-                  className={mainCtaClass}
-                >
-                  {applyPolicyLoading || balanceLoading ? '확인 중...' : '지원하기'}
-                </button>
-              ) : (
-                <Link href={`/auditions/${id}/apply`} className={`${mainCtaClass} no-underline`}>
-                  지원하기
-                </Link>
-              )}
-              <button type="button" className={subCtaClass} onClick={() => void shareAudition()}>
-                공유
-              </button>
-            </>
-          ) : showApplyLoginCta ? (
-            <>
-              <Link
-                href={`/login?next=${encodeURIComponent(`/auditions/${id}`)}`}
-                className={`${mainCtaClass} no-underline`}
-              >
-                지원하기
-              </Link>
-              <button type="button" className={subCtaClass} onClick={() => void shareAudition()}>
-                공유
-              </button>
-            </>
-          ) : showApplyDisabledCta ? (
-            <>
+            applyNavDisabledCombined ? (
               <button
                 type="button"
                 disabled
-                title="지원자 계정으로 로그인 후 이용할 수 있습니다."
+                title={
+                  applyNavBlockedBySeries
+                    ? (audition.applyBlockedMessage ?? PREV_ROUND_APPLY_BLOCKED_MSG)
+                    : undefined
+                }
                 className={mainCtaClass}
               >
-                지원하기
+                {applyPolicyLoading || balanceLoading ? '확인 중...' : '지금 지원하기'}
               </button>
-              <button type="button" className={subCtaClass} onClick={() => void shareAudition()}>
-                공유
-              </button>
-            </>
+            ) : (
+              <Link href={`/auditions/${id}/apply`} className={`${mainCtaClass} no-underline`}>
+                지금 지원하기
+              </Link>
+            )
+          ) : showApplyLoginCta ? (
+            <Link
+              href={`/login?next=${encodeURIComponent(`/auditions/${id}`)}`}
+              className={`${mainCtaClass} no-underline`}
+            >
+              지금 지원하기
+            </Link>
+          ) : showApplyDisabledCta ? (
+            <button
+              type="button"
+              disabled
+              title="지원자 계정으로 로그인 후 이용할 수 있습니다."
+              className={mainCtaClass}
+            >
+              지금 지원하기
+            </button>
           ) : (
-            <>
-              <button type="button" disabled className={mainCtaClass}>
-                마감됨
-              </button>
+            <button type="button" disabled className={mainCtaClass}>
+              지금 지원하기
+            </button>
+          )}
+
+          <div className="flex flex-wrap gap-2">
+            {showApplySubmitCta && alreadyApplied ? (
+              <Link href={`/auditions/${id}/vote`} className={`${subCtaClass} no-underline`}>
+                지원자 보기 &amp; 투표
+              </Link>
+            ) : null}
+            {!isOpen ? (
               <Link href={`/auditions/${id}/ranking`} className={`${subCtaClass} no-underline`}>
                 랭킹 보기
               </Link>
-            </>
-          )}
-        </div>
+            ) : null}
+            {isOpen &&
+            (showApplyLoginCta ||
+              (showApplySubmitCta && !alreadyApplied) ||
+              showApplyDisabledCta) ? (
+              <button type="button" className={subCtaClass} onClick={() => void shareAudition()}>
+                공유
+              </button>
+            ) : null}
+          </div>
 
         {showApplySubmitCta && alreadyApplied ? (
           <p className="mt-2 text-center text-xs text-neutral-500">이 오디션에 이미 지원하셨습니다.</p>
@@ -609,6 +667,7 @@ export default function AuditionDetailPage() {
             ) : null}
           </div>
         ) : null}
+        </div>
       </div>
     </div>
   )

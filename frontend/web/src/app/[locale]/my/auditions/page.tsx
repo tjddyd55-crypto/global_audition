@@ -120,25 +120,19 @@ export default function MyAuditionsPage() {
             <div className="mt-4 hidden border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-600 md:grid md:grid-cols-12 md:gap-2">
               <div className="col-span-4">제목</div>
               <div className="col-span-2">상태</div>
-              <div className="col-span-2 text-right">지원자</div>
-              <div className="col-span-4 text-right">관리</div>
+              <div className="col-span-6 text-right">관리</div>
             </div>
             <ul className="divide-y divide-gray-200 border border-t-0 border-gray-200 bg-white">
               {auditions.content.map((audition: AuditionResponse) => (
                 <li key={audition.id} className="px-3 py-4 md:grid md:grid-cols-12 md:items-center md:gap-2 md:py-3">
                   <div className="md:col-span-4">
                     <p className="font-medium text-gray-900">{audition.title}</p>
-                    <p className={`${TEXT_SUB} text-xs md:hidden`}>
-                      {getStatusText(audition.status)} · 지-{audition.applicantsCount ?? 0}명
-                    </p>
+                    <p className={`${TEXT_SUB} text-xs md:hidden`}>{getStatusText(audition.status)}</p>
                   </div>
                   <div className="mt-2 hidden text-sm text-gray-800 md:col-span-2 md:mt-0 md:block">
                     {getStatusText(audition.status)}
                   </div>
-                  <div className="hidden text-right text-sm tabular-nums text-gray-800 md:col-span-2 md:block">
-                    {(audition.applicantsCount ?? 0).toLocaleString('ko-KR')}명
-                  </div>
-                  <div className="mt-3 flex flex-wrap items-center justify-end gap-2 md:col-span-4 md:mt-0">
+                  <div className="mt-3 flex flex-wrap items-center justify-end gap-2 md:col-span-6 md:mt-0">
                     {audition.status === 'OPEN' || audition.status === 'CLOSED' ? (
                       <button
                         type="button"

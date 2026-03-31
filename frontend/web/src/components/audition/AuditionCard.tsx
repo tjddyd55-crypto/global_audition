@@ -11,7 +11,6 @@ import {
   type AuditionDto,
 } from '../../lib/types/audition'
 import { stripImageUrlResizeParams } from '../../lib/utils/imageDisplayUrl'
-import { safeNum } from '../../lib/utils/safe'
 import { FALLBACK_TEXT, DEFAULT_IMAGES } from '../../lib/constants/fallbacks'
 
 interface AuditionCardProps {
@@ -79,8 +78,7 @@ export default function AuditionCard({ audition }: AuditionCardProps) {
     : FALLBACK_TEXT.date
 
   const location = (audition?.location ?? '').trim() || '—'
-  const applicants = safeNum(audition?.applicantsCount).toLocaleString()
-  const metaLine = `${dateStr} · ${location} · 지원자 ${applicants}명`
+  const metaLine = `${dateStr} · ${location}`
 
   return (
     <Link href={`/auditions/${id}`} className="block w-full text-inherit no-underline">

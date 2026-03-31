@@ -47,45 +47,106 @@ export default function AuditionDetailPage() {
     )
   }
 
+  const heroSubtitle =
+    String(audition.description ?? '')
+      .split(/\n/)
+      .map((s) => s.trim())
+      .find((s) => s.length > 0) ?? ''
+  const rd = Number(audition.remainingDays ?? 0) || 0
+  const deadlineUrgent = audition.status === 'OPEN' && rd <= 3 && rd >= 0
+
   return (
-    <div className="min-h-screen">
-      <div className="max-w-4xl mx-auto p-4 md:p-8">
-        <h1 className="text-3xl md:text-4xl font-bold mb-4">{auditionHeadlineTitle(audition)}</h1>
-        <div className="mb-6">
-          <span className="inline-block px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
+    <div className="min-h-screen pb-24">
+      <div className="mx-auto max-w-4xl p-4 md:p-8">
+        <h1 className="mb-4 text-3xl font-bold md:text-4xl">{auditionHeadlineTitle(audition)}</h1>
+        <div className="mb-2 flex flex-wrap items-center gap-2">
+          <span className="inline-block rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-700">
             {audition.recruitmentRoundLabel ?? audition.status}
           </span>
+          {deadlineUrgent ? (
+            <span className="text-sm font-semibold text-red-500">🔥 마감 임박</span>
+          ) : null}
         </div>
-        {audition.description && (
-          <div className="mb-6">
-            <p className="text-gray-700 whitespace-pre-line">{audition.description}</p>
-          </div>
-        )}
-        <p className="text-sm text-gray-500 mb-6">
-          등록일: {format(new Date(audition.createdAt), 'yyyy.MM.dd', { locale: ko })}
-        </p>
-        <div className="mt-8 flex flex-col gap-2">
+        {heroSubtitle.length > 0 ? (
+          <p className="mb-3 text-sm text-gray-500">{heroSubtitle}</p>
+        ) : null}
+        <div className="mb-6">
           {applyBlocked ? (
-            <>
-              <span
-                className="inline-block cursor-not-allowed px-6 py-3 rounded-lg bg-gray-300 text-gray-600 text-center"
-                title={audition.applyBlockedMessage ?? PREV_ROUND_APPLY_BLOCKED_MSG}
-              >
-                지원하기
-              </span>
-              <p className="text-sm text-amber-800">
-                {audition.applyBlockedMessage ?? PREV_ROUND_APPLY_BLOCKED_MSG}
-              </p>
-            </>
+            <button
+              type="button"
+              disabled
+              className="mt-3 w-full cursor-not-allowed rounded-lg bg-black py-3 font-semibold text-white opacity-60"
+              title={audition.applyBlockedMessage ?? PREV_ROUND_APPLY_BLOCKED_MSG}
+            >
+              지금 지원하기
+            </button>
           ) : (
             <Link
               href={`/auditions/${id}/apply`}
-              className="inline-block px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-center"
+              className="mt-3 flex w-full items-center justify-center rounded-lg bg-black py-3 text-center font-semibold text-white no-underline"
             >
-              지원하기
+              지금 지원하기
             </Link>
           )}
         </div>
+        {audition.description ? (
+          <div className="mb-6">
+            <p className="whitespace-pre-line text-gray-700">{audition.description}</p>
+            <div className="mt-6 text-sm text-gray-600">
+              지원 방법: 영상 업로드 후 간단 정보 입력
+            </div>
+          </div>
+        ) : (
+          <div className="mb-6 text-sm text-gray-600">
+            지원 방법: 영상 업로드 후 간단 정보 입력
+          </div>
+        )}
+        <p className="mb-6 text-sm text-gray-500">
+          등록일: {format(new Date(audition.createdAt), 'yyyy.MM.dd', { locale: ko })}
+        </p>
+        {applyBlocked ? (
+          <p className="mb-6 text-sm text-amber-800">
+            {audition.applyBlockedMessage ?? PREV_ROUND_APPLY_BLOCKED_MSG}
+          </p>
+        ) : null}
+        <div className="mt-10">
+          {applyBlocked ? (
+            <button
+              type="button"
+              disabled
+              className="w-full rounded-lg bg-black py-4 text-lg font-semibold text-white opacity-60"
+              title={audition.applyBlockedMessage ?? PREV_ROUND_APPLY_BLOCKED_MSG}
+            >
+              지금 지원하기
+            </button>
+          ) : (
+            <Link
+              href={`/auditions/${id}/apply`}
+              className="flex w-full items-center justify-center rounded-lg bg-black py-4 text-lg font-semibold text-white no-underline"
+            >
+              지금 지원하기
+            </Link>
+          )}
+        </div>
+      </div>
+      <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-white p-3 pb-[max(12px,env(safe-area-inset-bottom))]">
+        {applyBlocked ? (
+          <button
+            type="button"
+            disabled
+            className="w-full rounded-lg bg-black py-4 text-lg font-semibold text-white opacity-60"
+            title={audition.applyBlockedMessage ?? PREV_ROUND_APPLY_BLOCKED_MSG}
+          >
+            지금 지원하기
+          </button>
+        ) : (
+          <Link
+            href={`/auditions/${id}/apply`}
+            className="flex w-full items-center justify-center rounded-lg bg-black py-4 text-lg font-semibold text-white no-underline"
+          >
+            지금 지원하기
+          </Link>
+        )}
       </div>
     </div>
   )

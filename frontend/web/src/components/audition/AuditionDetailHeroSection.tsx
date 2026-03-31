@@ -23,7 +23,10 @@ type AuditionDetailHeroSectionProps = {
   /** 이미 포맷된 마감일 문자열 */
   endDateFormatted: string
   location: string
-  applicantsCount: number
+  /** 상단 한 줄 설명(상세 본문 첫 줄 등) */
+  subtitle?: string | null
+  /** 모집 중이며 남은 일수가 3일 이하일 때 마감 임박 표시 */
+  deadlineUrgent?: boolean
 }
 
 function statusBadgeCopy(status: string): string {
@@ -53,7 +56,8 @@ export function AuditionDetailHeroSection({
   tags,
   endDateFormatted,
   location,
-  applicantsCount,
+  subtitle,
+  deadlineUrgent = false,
 }: AuditionDetailHeroSectionProps) {
   const cover = safeStr(heroImageMediumUrl)
   const fullSize = safeStr(heroImageOriginalUrl)
@@ -85,7 +89,6 @@ export function AuditionDetailHeroSection({
   }, [])
 
   const isOpen = status === 'OPEN'
-  const applicants = applicantsCount.toLocaleString()
   const pillLabel = (
     statusPillText != null && String(statusPillText).trim().length > 0
       ? String(statusPillText).trim()
@@ -154,6 +157,9 @@ export function AuditionDetailHeroSection({
           >
             {safeTitle}
           </h1>
+          {subtitle != null && String(subtitle).trim().length > 0 ? (
+            <p className="mt-1 text-sm text-white/70">{String(subtitle).trim()}</p>
+          ) : null}
           {tags.length > 0 ? (
             <div className="mb-2 flex flex-wrap gap-1.5" aria-label="오디션 태그">
               {tags.map((tag) => (
@@ -166,35 +172,36 @@ export function AuditionDetailHeroSection({
               ))}
             </div>
           ) : null}
-          <p className="m-0 text-sm text-white/80">
-            마감 {endDateFormatted} · {safeStr(location)} · 지원자 {applicants}명
-          </p>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            {deadlineUrgent ? (
+              <span className="text-sm font-semibold text-red-500">🔥 마감 임박</span>
+            ) : null}
+            <p className="m-0 text-sm text-white/80">
+              마감 {endDateFormatted} · {safeStr(location)}
+            </p>
+          </div>
+          {isOpen && !heroApplyBlocked ? (
+            <a
+              href="#audition-detail-apply"
+              onClick={scrollToApplyBar}
+              className="mt-3 flex w-full items-center justify-center rounded-lg bg-black py-3 text-base font-semibold text-white no-underline"
+            >
+              지금 지원하기
+            </a>
+          ) : isOpen && heroApplyBlocked ? (
+            <span
+              className="mt-3 flex w-full cursor-not-allowed items-center justify-center rounded-lg bg-black/40 py-3 text-center text-base font-semibold text-white/70"
+              title={heroApplyDisabledReason ?? undefined}
+              aria-disabled="true"
+            >
+              지금 지원하기
+            </span>
+          ) : (
+            <span className="mt-3 flex w-full items-center justify-center rounded-lg bg-neutral-700 py-3 text-base font-semibold text-white/80">
+              {status === 'CLOSED' ? '마감됨' : '지원 불가'}
+            </span>
+          )}
           <div className="mt-3 flex flex-wrap gap-2">
-            {isOpen && !heroApplyBlocked ? (
-              <a
-                href="#audition-detail-apply"
-                onClick={scrollToApplyBar}
-                className="inline-flex items-center justify-center px-4 py-2 text-xs font-semibold text-white no-underline md:text-sm"
-                style={{
-                  borderRadius: HERO.buttonRadiusPx,
-                  background: `linear-gradient(90deg, ${HERO.primaryGradientStart}, ${HERO.primaryGradientEnd})`,
-                }}
-              >
-                지원하기
-              </a>
-            ) : isOpen && heroApplyBlocked ? (
-              <span
-                className="inline-flex cursor-not-allowed items-center px-4 py-2 text-xs font-semibold text-white/60 md:text-sm"
-                title={heroApplyDisabledReason ?? undefined}
-                aria-disabled="true"
-              >
-                지원하기
-              </span>
-            ) : (
-              <span className="inline-flex items-center px-4 py-2 text-xs font-semibold text-white/50 md:text-sm">
-                {status === 'CLOSED' ? '마감됨' : '지원 불가'}
-              </span>
-            )}
             <button
               type="button"
               onClick={onShare}
