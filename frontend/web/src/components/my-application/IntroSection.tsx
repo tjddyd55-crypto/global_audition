@@ -1,4 +1,4 @@
-import { CARD_BASE, TEXT_SUB, TITLE_PAGE } from '@/lib/ui/specClasses'
+﻿import { CARD_BASE, TEXT_SUB, TITLE_PAGE } from '@/shared/ui/specClasses'
 
 export type IntroSectionProps = {
   introText: string | null | undefined

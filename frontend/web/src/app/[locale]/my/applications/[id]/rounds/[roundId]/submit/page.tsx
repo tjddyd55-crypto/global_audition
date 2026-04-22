@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { Suspense, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -13,9 +13,9 @@ import {
   SECTION_GAP,
   TEXT_SUB,
   TITLE_PAGE,
-} from '@/lib/ui/specClasses'
-import { meApplicationRoundsApi } from '@/lib/api/meApplicationRounds'
-import { extractMeApiErrorMessage, messageForReasonCode } from '@/lib/audition/reasonMessages'
+} from '@/shared/ui/specClasses'
+import { meApplicationRoundsApi } from '@/shared/api/meApplicationRounds'
+import { extractMeApiErrorMessage, messageForReasonCode } from '@/shared/audition/reasonMessages'
 
 function MyRoundSubmitContent() {
   const params = useParams()

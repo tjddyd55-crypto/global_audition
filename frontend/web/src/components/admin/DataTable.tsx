@@ -1,7 +1,7 @@
-'use client'
+﻿'use client'
 
 import type { ReactNode } from 'react'
-import { AUDITION_DETAIL } from '@/lib/design-tokens'
+import { AUDITION_DETAIL } from '@/shared/design-tokens'
 
 export type DataTableColumn<T> = {
   id: string

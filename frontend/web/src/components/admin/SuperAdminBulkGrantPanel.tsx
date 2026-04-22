@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
@@ -8,8 +8,8 @@ import {
   MAX_CREDIT_GRANT_AMOUNT,
   superAdminApi,
   type CreditGrantReason,
-} from '@/lib/api/superAdmin'
-import { LAYOUT } from '@/lib/design-tokens'
+} from '@/shared/api/superAdmin'
+import { LAYOUT } from '@/shared/design-tokens'
 
 export default function SuperAdminBulkGrantPanel() {
   const qc = useQueryClient()

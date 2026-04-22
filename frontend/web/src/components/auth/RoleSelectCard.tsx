@@ -1,6 +1,6 @@
-'use client'
+﻿'use client'
 
-import { SIGNUP } from '../../lib/design-tokens'
+import { SIGNUP } from '@/shared/design-tokens'
 
 type SignupRole = 'APPLICANT' | 'AGENCY'
 

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from '../../i18n.config'
@@ -9,9 +9,9 @@ import {
   auditionListImageUrl,
   normalizeAuditionImages,
   type AuditionDto,
-} from '../../lib/types/audition'
-import { stripImageUrlResizeParams } from '../../lib/utils/imageDisplayUrl'
-import { FALLBACK_TEXT, DEFAULT_IMAGES } from '../../lib/constants/fallbacks'
+} from '@/shared/types/audition'
+import { stripImageUrlResizeParams } from '@/shared/utils/imageDisplayUrl'
+import { FALLBACK_TEXT, DEFAULT_IMAGES } from '@/shared/constants/fallbacks'
 
 interface AuditionCardProps {
   audition: AuditionDto

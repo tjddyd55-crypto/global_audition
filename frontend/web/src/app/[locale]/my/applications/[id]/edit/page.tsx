@@ -1,12 +1,12 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Link } from '../../../../../../i18n.config'
-import { applicationApi } from '../../../../../../lib/api/applications'
-import { applicationVideoApi } from '../../../../../../lib/api/applicationVideos'
+import { applicationApi } from '@/shared/api/applications'
+import { applicationVideoApi } from '@/shared/api/applicationVideos'
 import {
   BTN_PRIMARY,
   CARD_BASE,
@@ -15,11 +15,11 @@ import {
   SECTION_GAP,
   TEXT_SUB,
   TITLE_PAGE,
-} from '@/lib/ui/specClasses'
+} from '@/shared/ui/specClasses'
 import { VideoEmbedOverlay } from '@/components/video/VideoEmbedOverlay'
 import Image from 'next/image'
-import { resolveVideoThumbnailUrl } from '@/lib/audition/videoThumbnail'
-import { isYoutubeShortsLikeUrl } from '@/lib/utils/videoEmbed'
+import { resolveVideoThumbnailUrl } from '@/shared/audition/videoThumbnail'
+import { isYoutubeShortsLikeUrl } from '@/shared/utils/videoEmbed'
 
 export default function MyApplicationEditPage() {
   const t = useTranslations('common')

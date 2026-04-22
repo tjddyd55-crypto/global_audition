@@ -1,12 +1,12 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter as useNextRouter } from 'next/navigation'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from '@/i18n.config'
-import { videoApi, VideoContent } from '@/lib/api/videos'
-import { userApi } from '@/lib/api/user'
-import { authApi } from '@/lib/api/auth'
+import { videoApi, VideoContent } from '@/shared/api/videos'
+import { userApi } from '@/shared/api/user'
+import { authApi } from '@/shared/api/auth'
 import { useTranslations } from 'next-intl'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
@@ -17,10 +17,10 @@ import {
   SECTION_GAP,
   TEXT_SUB,
   TITLE_PAGE,
-} from '@/lib/ui/specClasses'
+} from '@/shared/ui/specClasses'
 import { ChannelSettingsPanel } from '@/components/channel/ChannelSettingsPanel'
 import { ChannelMeStudioForm } from '@/components/channel/ChannelMeStudioForm'
-import { invalidateAfterChannelVideoMutation } from '@/lib/query/channelVideoQuery'
+import { invalidateAfterChannelVideoMutation } from '@/shared/query/channelVideoQuery'
 import { ChannelMyVideoList } from '@/components/channel/ChannelMyVideoList'
 
 const BTN_PRIMARY =

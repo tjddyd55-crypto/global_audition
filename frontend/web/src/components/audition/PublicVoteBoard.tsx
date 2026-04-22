@@ -1,16 +1,16 @@
-'use client'
+﻿'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useState } from 'react'
 import { toast } from 'sonner'
-import { auditionApi, type PublicVoteItem } from '@/lib/api/auditions'
+import { auditionApi, type PublicVoteItem } from '@/shared/api/auditions'
 import { VideoEmbedOverlay } from '@/components/video/VideoEmbedOverlay'
-import { resolveVideoThumbnailUrl } from '@/lib/audition/videoThumbnail'
-import { getVideoEmbedSrc } from '@/lib/utils/videoEmbed'
-import { useAuthStore } from '@/lib/auth/authStore'
+import { resolveVideoThumbnailUrl } from '@/shared/audition/videoThumbnail'
+import { getVideoEmbedSrc } from '@/shared/utils/videoEmbed'
+import { useAuthStore } from '@/shared/auth/authStore'
 import { Link, useRouter } from '@/i18n.config'
-import { HERO } from '@/lib/design-tokens'
-import { CARD_BASE, PAGE_CONTAINER, TEXT_SUB } from '@/lib/ui/specClasses'
+import { HERO } from '@/shared/design-tokens'
+import { CARD_BASE, PAGE_CONTAINER, TEXT_SUB } from '@/shared/ui/specClasses'
 
 function formatCount(n: number) {
   return new Intl.NumberFormat('ko-KR').format(n)

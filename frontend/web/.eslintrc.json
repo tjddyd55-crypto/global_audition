@@ -3,5 +3,59 @@
   "rules": {
     "react/no-unescaped-entities": "off",
     "@next/next/no-img-element": "warn"
-  }
+  },
+  "overrides": [
+    {
+      "files": ["src/pc/**/*.{ts,tsx}"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@/mobile/*", "src/mobile/*", "../**/mobile/*"],
+                "message": "PC 트리는 모바일 트리를 import할 수 없습니다. 공용은 @/shared/* 를 거쳐야 합니다."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/mobile/**/*.{ts,tsx}"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@/pc/*", "src/pc/*", "../**/pc/*"],
+                "message": "모바일 트리는 PC 트리를 import할 수 없습니다. 공용은 @/shared/* 를 거쳐야 합니다."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/shared/**/*.{ts,tsx}"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@/pc/*", "@/mobile/*", "src/pc/*", "src/mobile/*"],
+                "message": "shared 레이어는 pc/mobile UI를 의존할 수 없습니다(역방향 의존 금지)."
+              },
+              {
+                "group": ["@/components/*", "@/app/*"],
+                "message": "shared 레이어는 앱/컴포넌트 레이어를 의존할 수 없습니다. 의존 방향은 (app|pc|mobile|components) → shared 입니다."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
 }

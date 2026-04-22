@@ -20,10 +20,8 @@ export const metadata: Metadata = {
     statusBarStyle: 'black-translucent',
     title: 'Audition',
   },
-  icons: {
-    icon: [{ url: '/icons/icon.svg', type: 'image/svg+xml' }],
-    apple: [{ url: '/icons/icon.svg' }],
-  },
+  // 아이콘은 `src/app/icon.tsx`·`src/app/apple-icon.tsx`(Edge 런타임)에서 PNG로 생성된다.
+  // 별도 선언이 있으면 Next의 자동 주입과 이중으로 태그가 생기므로 여기선 명시하지 않는다.
 }
 
 export const viewport: Viewport = {

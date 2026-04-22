@@ -1,14 +1,14 @@
-'use client'
+﻿'use client'
 
 import Image from 'next/image'
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { useParams } from 'next/navigation'
 import { VideoListItem } from '@/components/video/VideoListItem'
-import { DEFAULT_IMAGES } from '@/lib/constants/fallbacks'
-import { getVideoEmbedSrc } from '@/lib/utils/videoEmbed'
-import { useAuthStore } from '@/lib/auth/authStore'
-import { auditionApi } from '@/lib/api/auditions'
-import { formatRelativeKo } from '@/lib/formatRelativeKo'
+import { DEFAULT_IMAGES } from '@/shared/constants/fallbacks'
+import { getVideoEmbedSrc } from '@/shared/utils/videoEmbed'
+import { useAuthStore } from '@/shared/auth/authStore'
+import { auditionApi } from '@/shared/api/auditions'
+import { formatRelativeKo } from '@/shared/formatRelativeKo'
 import {
   bumpApplicationViewPublic,
   deleteApplicationLike,
@@ -20,7 +20,7 @@ import {
   type ApplicationCommentRow,
   type ApplicationPublicDetail,
   type ApplicationRecommendItem,
-} from '@/lib/api/applicationPublicVideo'
+} from '@/shared/api/applicationPublicVideo'
 
 const ACCENT = '#7c3aed'
 const DESC_PREVIEW_CHARS = 140

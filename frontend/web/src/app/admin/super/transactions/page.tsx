@@ -1,8 +1,8 @@
-'use client'
+﻿'use client'
 
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
-import { superAdminApi, type CreditTransactionRow } from '@/lib/api/superAdmin'
+import { superAdminApi, type CreditTransactionRow } from '@/shared/api/superAdmin'
 
 const PAGE_SIZE = 50
 

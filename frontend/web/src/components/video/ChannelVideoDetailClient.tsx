@@ -1,14 +1,14 @@
-'use client'
+﻿'use client'
 
 import Image from 'next/image'
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { Link } from '@/i18n.config'
 import { VideoListItem } from '@/components/video/VideoListItem'
-import { DEFAULT_IMAGES } from '@/lib/constants/fallbacks'
-import { resolveThumbnailDisplayUrl } from '@/lib/audition/videoThumbnail'
-import { getVideoEmbedSrc } from '@/lib/utils/videoEmbed'
-import { useAuthStore } from '@/lib/auth/authStore'
-import { formatRelativeKo } from '@/lib/formatRelativeKo'
+import { DEFAULT_IMAGES } from '@/shared/constants/fallbacks'
+import { resolveThumbnailDisplayUrl } from '@/shared/audition/videoThumbnail'
+import { getVideoEmbedSrc } from '@/shared/utils/videoEmbed'
+import { useAuthStore } from '@/shared/auth/authStore'
+import { formatRelativeKo } from '@/shared/formatRelativeKo'
 import {
   bumpChannelVideoView,
   deleteChannelSubscribe,
@@ -21,7 +21,7 @@ import {
   type ChannelVideoCommentRow,
   type ChannelVideoPublicDetail,
   type ChannelVideoRecommendItem,
-} from '@/lib/api/channelVideoPublic'
+} from '@/shared/api/channelVideoPublic'
 
 const ACCENT = '#7c3aed'
 const DESC_PREVIEW_CHARS = 140

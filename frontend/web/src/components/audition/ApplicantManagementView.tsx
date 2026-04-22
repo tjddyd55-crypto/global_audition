@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import Image from 'next/image'
@@ -14,7 +14,7 @@ import {
   type ManageApplicationsPayload,
   type ManageListFilters,
   type ManageRoundCount,
-} from '@/lib/api/auditions'
+} from '@/shared/api/auditions'
 import {
   BTN_PRIMARY,
   BTN_SECONDARY,
@@ -23,10 +23,10 @@ import {
   SECTION_GAP,
   TEXT_SUB,
   TITLE_PAGE,
-} from '@/lib/ui/specClasses'
+} from '@/shared/ui/specClasses'
 import { Link } from '@/i18n.config'
-import { resolveVideoThumbnailUrl } from '@/lib/audition/videoThumbnail'
-import { getVideoEmbedSrc } from '@/lib/utils/videoEmbed'
+import { resolveVideoThumbnailUrl } from '@/shared/audition/videoThumbnail'
+import { getVideoEmbedSrc } from '@/shared/utils/videoEmbed'
 
 function formatCount(n: number) {
   return new Intl.NumberFormat('ko-KR').format(n)

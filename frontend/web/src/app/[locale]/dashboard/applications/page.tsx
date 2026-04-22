@@ -1,7 +1,7 @@
-'use client'
+﻿'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { applicationApi } from '../../../../lib/api/applications'
+import { applicationApi } from '@/shared/api/applications'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import { Link } from '../../../../i18n.config'

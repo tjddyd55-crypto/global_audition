@@ -1,8 +1,8 @@
-'use client'
+﻿'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { applyGalleryImageOnError } from '@/components/gallery/galleryFallback'
-import { stripImageUrlResizeParams } from '@/lib/utils/imageDisplayUrl'
+import { stripImageUrlResizeParams } from '@/shared/utils/imageDisplayUrl'
 
 export type AuditionGalleryProps = {
   images: string[]

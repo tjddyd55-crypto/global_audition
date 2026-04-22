@@ -1,8 +1,8 @@
-'use client'
+﻿'use client'
 
 import Image from 'next/image'
-import { DEFAULT_IMAGES, FALLBACK_TEXT } from '../../lib/constants/fallbacks'
-import { AUDITION_CARD, VIDEO_CARD } from '../../lib/design-tokens'
+import { DEFAULT_IMAGES, FALLBACK_TEXT } from '@/shared/constants/fallbacks'
+import { AUDITION_CARD, VIDEO_CARD } from '@/shared/design-tokens'
 
 /** 목업·API 공통 카드 입력 (메인·목록 등에서 재사용) */
 export type VideoCardModel = {

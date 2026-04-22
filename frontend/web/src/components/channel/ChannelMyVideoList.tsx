@@ -1,13 +1,13 @@
-'use client'
+﻿'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { videoApi, type VideoContent } from '@/lib/api/videos'
-import { resolveVideoThumbnailUrl } from '@/lib/audition/videoThumbnail'
+import { videoApi, type VideoContent } from '@/shared/api/videos'
+import { resolveVideoThumbnailUrl } from '@/shared/audition/videoThumbnail'
 import { VideoListItem } from '@/components/video/VideoListItem'
 import { VideoVisibilitySwitch } from '@/components/channel/VideoVisibilitySwitch'
-import { channelVideoKeys } from '@/lib/query/channelVideoQuery'
-import { TEXT_SUB } from '@/lib/ui/specClasses'
-import { formatRelativeKo } from '@/lib/formatRelativeKo'
+import { channelVideoKeys } from '@/shared/query/channelVideoQuery'
+import { TEXT_SUB } from '@/shared/ui/specClasses'
+import { formatRelativeKo } from '@/shared/formatRelativeKo'
 
 const BTN_UPLOAD =
   'w-full rounded-md bg-neutral-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-neutral-800'

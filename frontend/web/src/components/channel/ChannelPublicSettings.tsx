@@ -1,10 +1,10 @@
-'use client'
+﻿'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
-import { channelApi } from '@/lib/api/channel'
-import { invalidateAfterChannelVideoMutation } from '@/lib/query/channelVideoQuery'
-import { CARD_BASE, TEXT_SUB } from '@/lib/ui/specClasses'
+import { channelApi } from '@/shared/api/channel'
+import { invalidateAfterChannelVideoMutation } from '@/shared/query/channelVideoQuery'
+import { CARD_BASE, TEXT_SUB } from '@/shared/ui/specClasses'
 
 const SWITCH_TRACK = 'relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
 

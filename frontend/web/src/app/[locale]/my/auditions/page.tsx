@@ -1,16 +1,16 @@
-'use client'
+﻿'use client'
 
 import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from '../../../../i18n.config'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { auditionApi, type AuditionResponse } from '../../../../lib/api/auditions'
+import { auditionApi, type AuditionResponse } from '@/shared/api/auditions'
 import { useTranslations } from 'next-intl'
 import { Link } from '../../../../i18n.config'
 import { toast } from 'sonner'
 import { AgencyDashboardShell } from '@/components/agency/AgencyDashboardShell'
-import { useAuthStore } from '@/lib/auth/authStore'
-import type { AuditionStatus } from '@/lib/types/audition'
-import { PAGE_CONTAINER, TEXT_SUB } from '@/lib/ui/specClasses'
+import { useAuthStore } from '@/shared/auth/authStore'
+import type { AuditionStatus } from '@/shared/types/audition'
+import { PAGE_CONTAINER, TEXT_SUB } from '@/shared/ui/specClasses'
 
 export default function MyAuditionsPage() {
   const router = useRouter()

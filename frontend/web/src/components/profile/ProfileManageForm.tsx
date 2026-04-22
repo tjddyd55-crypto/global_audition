@@ -1,13 +1,13 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { meProfileApi, type MeProfileResponse } from '@/lib/api/meProfile'
-import { calculateAge } from '@/lib/audition/calculateAge'
-import { CARD_BASE, BTN_PRIMARY, TEXT_SUB } from '@/lib/ui/specClasses'
+import { meProfileApi, type MeProfileResponse } from '@/shared/api/meProfile'
+import { calculateAge } from '@/shared/audition/calculateAge'
+import { CARD_BASE, BTN_PRIMARY, TEXT_SUB } from '@/shared/ui/specClasses'
 
 /** 백엔드 NicknamePolicy.ALLOWED 과 동일 */
 const NICKNAME_ALLOWED = /^[a-zA-Z0-9가-힣._]+$/

@@ -1,3 +1,11 @@
-﻿// Re-export facade. Source of truth still lives at '@/lib/api/authToken'.
-// New PC/mobile UI code should import from '@/shared/*' to align with the layered architecture.
-export * from '@/lib/api/authToken'
+﻿/**
+ * Bearer 토큰 저장소 — apiClient 인터셉터와 apiFetch가 동일 키를 사용해야 403/401이 줄어든다.
+ */
+export function getStoredAccessToken(): string | null {
+  if (typeof window === 'undefined') return null
+  return (
+    localStorage.getItem('accessToken') ||
+    localStorage.getItem('auth_token') ||
+    localStorage.getItem('token')
+  )
+}

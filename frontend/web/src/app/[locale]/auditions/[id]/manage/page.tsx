@@ -1,9 +1,9 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { useRouter } from '@/i18n.config'
-import { useAuthStore } from '@/lib/auth/authStore'
+import { useAuthStore } from '@/shared/auth/authStore'
 
 /** 공개 URL — 기획사 허브의 상태·지원자 관리로 이동 */
 export default function AuditionManageRedirectPage() {

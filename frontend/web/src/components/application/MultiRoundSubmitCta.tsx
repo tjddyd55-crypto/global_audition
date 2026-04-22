@@ -1,10 +1,10 @@
-'use client'
+﻿'use client'
 
 import type { CSSProperties } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@/i18n.config'
-import { meApplicationRoundsApi } from '@/lib/api/meApplicationRounds'
-import { messageForReasonCode } from '@/lib/audition/reasonMessages'
+import { meApplicationRoundsApi } from '@/shared/api/meApplicationRounds'
+import { messageForReasonCode } from '@/shared/audition/reasonMessages'
 
 type Props = {
   applicationId: string

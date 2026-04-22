@@ -1,14 +1,14 @@
-'use client'
+﻿'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { AdminCard } from '@/components/admin/AdminCard'
 import { DataTable, type DataTableColumn } from '@/components/admin/DataTable'
-import { superAdminApi, type CreditPackageRow } from '@/lib/api/superAdmin'
-import { LAYOUT } from '@/lib/design-tokens'
-import { formatNumericInput, formatUsdInput, parseNonNegativeInt, parseUsdDecimal } from '@/lib/utils/numberFormat'
-import { formatCurrency } from '@/lib/money/currency'
-import { formatCreditsCount } from '@/lib/money/creditsDisplay'
+import { superAdminApi, type CreditPackageRow } from '@/shared/api/superAdmin'
+import { LAYOUT } from '@/shared/design-tokens'
+import { formatNumericInput, formatUsdInput, parseNonNegativeInt, parseUsdDecimal } from '@/shared/utils/numberFormat'
+import { formatCurrency } from '@/shared/money/currency'
+import { formatCreditsCount } from '@/shared/money/creditsDisplay'
 
 type FormState = {
   name: string

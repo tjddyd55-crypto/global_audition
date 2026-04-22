@@ -1,9 +1,9 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { useRouter } from '@/i18n.config'
-import { useAuthStore } from '@/lib/auth/authStore'
+import { useAuthStore } from '@/shared/auth/authStore'
 
 export default function AuditionRoundReviewRedirectPage() {
   const params = useParams()

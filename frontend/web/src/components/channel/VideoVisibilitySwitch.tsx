@@ -1,9 +1,9 @@
-'use client'
+﻿'use client'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
-import { videoApi, type VideoContent } from '@/lib/api/videos'
-import { invalidateAfterChannelVideoMutation } from '@/lib/query/channelVideoQuery'
+import { videoApi, type VideoContent } from '@/shared/api/videos'
+import { invalidateAfterChannelVideoMutation } from '@/shared/query/channelVideoQuery'
 
 const SWITCH_TRACK =
   'relative inline-flex h-6 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 disabled:cursor-not-allowed disabled:opacity-50'

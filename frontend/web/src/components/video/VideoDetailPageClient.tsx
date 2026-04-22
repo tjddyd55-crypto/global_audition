@@ -1,10 +1,10 @@
-'use client'
+﻿'use client'
 
 import axios from 'axios'
 import { useParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { fetchApplicationPublic } from '@/lib/api/applicationPublicVideo'
-import { fetchChannelVideoPublic, type ChannelVideoPublicDetail } from '@/lib/api/channelVideoPublic'
+import { fetchApplicationPublic } from '@/shared/api/applicationPublicVideo'
+import { fetchChannelVideoPublic, type ChannelVideoPublicDetail } from '@/shared/api/channelVideoPublic'
 import { ApplicationVideoDetailClient } from './ApplicationVideoDetailClient'
 import { ChannelVideoDetailClient } from './ChannelVideoDetailClient'
 

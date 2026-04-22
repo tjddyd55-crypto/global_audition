@@ -1,10 +1,10 @@
-'use client'
+﻿'use client'
 
 import { useQuery } from '@tanstack/react-query'
 import ChannelCard from '../../../components/cards/ChannelCard'
 import EmptyState from '../../../components/ui/EmptyState'
-import { LAYOUT, CHANNEL_CARD } from '../../../lib/design-tokens'
-import { channelApi } from '../../../lib/api/channel'
+import { LAYOUT, CHANNEL_CARD } from '@/shared/design-tokens'
+import { channelApi } from '@/shared/api/channel'
 
 const containerStyle: React.CSSProperties = {
   maxWidth: LAYOUT.containerMaxWidth,

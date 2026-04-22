@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useCallback, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import {
@@ -24,12 +24,12 @@ import {
   uploadAuditionImageWithVariants,
   apiUploadErrorMessage,
   type AuditionUploadDir,
-} from '@/lib/api/uploads'
+} from '@/shared/api/uploads'
 import {
   AUDITION_IMAGE_ACCEPT_ATTR,
   AUDITION_IMAGE_MAX_BYTES,
   assertAuditionImageFile,
-} from '@/lib/audition/auditionImageRules'
+} from '@/shared/audition/auditionImageRules'
 import { AUDITION_COVER_PLACEHOLDER_SRC } from '@/components/audition/AuditionEditorPreview'
 
 export type ImageUploaderAspect = 'portrait' | 'landscape'

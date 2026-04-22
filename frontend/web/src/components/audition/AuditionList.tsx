@@ -1,8 +1,8 @@
-'use client'
+﻿'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { auditionApi } from '../../lib/api/auditions'
-import type { AuditionDto } from '../../lib/types/audition'
+import { auditionApi } from '@/shared/api/auditions'
+import type { AuditionDto } from '@/shared/types/audition'
 import AuditionCard from './AuditionCard'
 import { SkeletonAuditionCard } from '../ui/SkeletonCard'
 import EmptyState from '../ui/EmptyState'

@@ -1,9 +1,9 @@
-'use client'
+﻿'use client'
 
 import { useQuery } from '@tanstack/react-query'
 import { useParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { auditionApi } from '../../../../../lib/api/auditions'
+import { auditionApi } from '@/shared/api/auditions'
 import { AuditionRankingBoard } from '@/components/audition/AuditionRankingBoard'
 
 export default function AuditionRankingPage() {

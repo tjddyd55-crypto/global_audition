@@ -1,10 +1,10 @@
-'use client'
+﻿'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import type { AuditionStatus } from '@/lib/types/audition'
-import { AUDITION_DETAIL, HERO } from '@/lib/design-tokens'
-import { EDITOR_LABELS, auditionStatusLabelKo } from '@/lib/audition/auditionEditorCopy'
-import { getVideoEmbedSrc } from '@/lib/utils/videoEmbed'
+import type { AuditionStatus } from '@/shared/types/audition'
+import { AUDITION_DETAIL, HERO } from '@/shared/design-tokens'
+import { EDITOR_LABELS, auditionStatusLabelKo } from '@/shared/audition/auditionEditorCopy'
+import { getVideoEmbedSrc } from '@/shared/utils/videoEmbed'
 
 /** public 정적 자산 — 깨진 URL 시 onError fallback (무한 루프 방지: 한 번만 교체) */
 export const AUDITION_COVER_PLACEHOLDER_SRC = '/audition-cover-placeholder.svg'

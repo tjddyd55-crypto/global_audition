@@ -1,9 +1,9 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import { useRouter, Link } from '../../../../i18n.config'
-import { authApi } from '@/lib/api/auth'
-import { creditsApi, type CreditPackageCatalogItem } from '@/lib/api/credits'
+import { authApi } from '@/shared/api/auth'
+import { creditsApi, type CreditPackageCatalogItem } from '@/shared/api/credits'
 import {
   BTN_PRIMARY,
   BTN_SECONDARY,
@@ -12,9 +12,9 @@ import {
   SECTION_GAP,
   TEXT_SUB,
   TITLE_PAGE,
-} from '@/lib/ui/specClasses'
-import { formatCurrency } from '@/lib/money/currency'
-import { formatCreditsCount } from '@/lib/money/creditsDisplay'
+} from '@/shared/ui/specClasses'
+import { formatCurrency } from '@/shared/money/currency'
+import { formatCreditsCount } from '@/shared/money/creditsDisplay'
 
 export default function CreditsChargePage() {
   const router = useRouter()

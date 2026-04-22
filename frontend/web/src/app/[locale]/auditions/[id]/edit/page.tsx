@@ -1,17 +1,17 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useMemo, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
-import { auditionApi } from '../../../../../lib/api/auditions'
-import { authApi } from '../../../../../lib/api/auth'
-import { useAuthStore } from '@/lib/auth/authStore'
+import { auditionApi } from '@/shared/api/auditions'
+import { authApi } from '@/shared/api/auth'
+import { useAuthStore } from '@/shared/auth/authStore'
 import { useTranslations } from 'next-intl'
 import { Link } from '../../../../../i18n.config'
-import { LAYOUT, HERO, AUDITION_DETAIL } from '../../../../../lib/design-tokens'
+import { LAYOUT, HERO, AUDITION_DETAIL } from '@/shared/design-tokens'
 import { toast } from 'sonner'
 import { AuditionEditorForm } from '@/components/audition/AuditionEditorForm'
-import { canManageAudition } from '@/lib/audition/auditionPermissions'
+import { canManageAudition } from '@/shared/audition/auditionPermissions'
 
 export default function AuditionEditPage() {
   const params = useParams()

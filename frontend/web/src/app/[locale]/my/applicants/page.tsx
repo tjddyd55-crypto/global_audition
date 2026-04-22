@@ -1,15 +1,15 @@
-'use client'
+﻿'use client'
 
 import { Suspense, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useRouter } from '@/i18n.config'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
-import { auditionApi } from '../../../../lib/api/auditions'
+import { auditionApi } from '@/shared/api/auditions'
 import { ApplicantManagementView } from '@/components/audition/ApplicantManagementView'
 import { AgencyDashboardShell } from '@/components/agency/AgencyDashboardShell'
-import { useAuthStore } from '@/lib/auth/authStore'
-import { PAGE_CONTAINER, TEXT_SUB } from '@/lib/ui/specClasses'
+import { useAuthStore } from '@/shared/auth/authStore'
+import { PAGE_CONTAINER, TEXT_SUB } from '@/shared/ui/specClasses'
 
 function MyApplicantsInner() {
   const t = useTranslations('common')

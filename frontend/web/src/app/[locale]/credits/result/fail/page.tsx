@@ -1,9 +1,9 @@
-'use client'
+﻿'use client'
 
 import { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Link } from '../../../../../i18n.config'
-import { BTN_PRIMARY, BTN_SECONDARY, CARD_BASE, PAGE_CONTAINER, TEXT_SUB, TITLE_PAGE } from '@/lib/ui/specClasses'
+import { BTN_PRIMARY, BTN_SECONDARY, CARD_BASE, PAGE_CONTAINER, TEXT_SUB, TITLE_PAGE } from '@/shared/ui/specClasses'
 
 function FailContent() {
   const searchParams = useSearchParams()

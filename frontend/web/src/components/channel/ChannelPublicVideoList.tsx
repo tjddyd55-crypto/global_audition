@@ -1,9 +1,9 @@
-'use client'
+﻿'use client'
 
 import { VideoListItem } from '@/components/video/VideoListItem'
-import type { MyChannelVideoRow } from '@/lib/api/videos'
-import { resolveVideoThumbnailUrl } from '@/lib/audition/videoThumbnail'
-import { formatRelativeKo } from '@/lib/formatRelativeKo'
+import type { MyChannelVideoRow } from '@/shared/api/videos'
+import { resolveVideoThumbnailUrl } from '@/shared/audition/videoThumbnail'
+import { formatRelativeKo } from '@/shared/formatRelativeKo'
 
 export type ChannelPublicVideoListProps = {
   videosLoading: boolean

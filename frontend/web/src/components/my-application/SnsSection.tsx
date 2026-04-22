@@ -1,4 +1,4 @@
-import { CARD_BASE, TEXT_SUB, TITLE_PAGE } from '@/lib/ui/specClasses'
+﻿import { CARD_BASE, TEXT_SUB, TITLE_PAGE } from '@/shared/ui/specClasses'
 
 const SNS_PLATFORM_LABEL: Record<string, string> = {
   instagram: 'Instagram',

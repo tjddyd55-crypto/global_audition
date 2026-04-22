@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import type { ReactNode } from 'react'
 import { useEffect, useMemo, useState } from 'react'
@@ -6,9 +6,9 @@ import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
 import { usePathname } from 'next/navigation'
 import { routing } from '@/i18n.config'
-import { authApi } from '@/lib/api/auth'
-import { userApi } from '@/lib/api/user'
-import { useAuthStore } from '@/lib/auth/authStore'
+import { authApi } from '@/shared/api/auth'
+import { userApi } from '@/shared/api/user'
+import { useAuthStore } from '@/shared/auth/authStore'
 
 const LOGIN_BASE = `/${routing.defaultLocale}/login`
 

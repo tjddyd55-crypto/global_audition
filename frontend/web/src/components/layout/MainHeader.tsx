@@ -1,14 +1,15 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useLocale, useTranslations } from 'next-intl'
 import { Link, usePathname, useRouter } from '../../i18n.config'
-import { authApi } from '../../lib/api/auth'
-import { userApi } from '../../lib/api/user'
-import { useAuthStore } from '@/lib/auth/authStore'
-import { getDisplayNickname } from '@/lib/user/getDisplayNickname'
-import { BTN_PRIMARY, DROPDOWN_ITEM } from '@/lib/ui/specClasses'
+import { authApi } from '@/shared/api/auth'
+import { userApi } from '@/shared/api/user'
+import { useAuthStore } from '@/shared/auth/authStore'
+import { getDisplayNickname } from '@/shared/user/getDisplayNickname'
+import { BTN_PRIMARY, DROPDOWN_ITEM } from '@/shared/ui/specClasses'
+import { DeviceToggle } from '@/shared/device/DeviceToggle'
 
 const locales = ['ko', 'en', 'ja', 'zh', 'es', 'fr', 'de'] as const
 
@@ -174,6 +175,8 @@ export default function MainHeader() {
                   <Link href="/vault" className={DROPDOWN_ITEM} onClick={closeUserMenu}>
                     창작물 보관소
                   </Link>
+                  <div className="my-1 border-t border-gray-100" />
+                  <DeviceToggle className={DROPDOWN_ITEM} onToggled={closeUserMenu} />
                   <button type="button" onClick={handleLogout} className={`${DROPDOWN_ITEM} text-red-600`}>
                     로그아웃
                   </button>
@@ -228,6 +231,10 @@ export default function MainHeader() {
             </div>
           </div>
           <div className="mt-4 flex flex-col gap-2 border-t border-gray-200 pt-4">
+            <DeviceToggle
+              className="w-full rounded-lg border border-[#E5E7EB] py-3 text-center text-sm text-gray-900"
+              onToggled={() => setIsMobileOpen(false)}
+            />
             {showUserChrome ? (
               <>
                 <div className="truncate py-1 text-sm font-medium text-gray-900">{displayName}</div>

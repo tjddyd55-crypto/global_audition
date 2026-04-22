@@ -1,11 +1,11 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { useRouter } from '../../../../i18n.config'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { auditionApi } from '../../../../lib/api/auditions'
+import { auditionApi } from '@/shared/api/auditions'
 import { Link } from '../../../../i18n.config'
 
 const createSchema = z.object({

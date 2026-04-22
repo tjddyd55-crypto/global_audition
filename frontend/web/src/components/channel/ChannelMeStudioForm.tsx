@@ -1,17 +1,17 @@
-'use client'
+﻿'use client'
 
 import Image from 'next/image'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { meProfileApi } from '@/lib/api/meProfile'
-import { videoApi, type VideoContent } from '@/lib/api/videos'
-import { INPUT_BASE } from '@/lib/ui/specClasses'
-import { uploadAuditionImage } from '@/lib/api/uploads'
-import { DEFAULT_IMAGES } from '@/lib/constants/fallbacks'
+import { meProfileApi } from '@/shared/api/meProfile'
+import { videoApi, type VideoContent } from '@/shared/api/videos'
+import { INPUT_BASE } from '@/shared/ui/specClasses'
+import { uploadAuditionImage } from '@/shared/api/uploads'
+import { DEFAULT_IMAGES } from '@/shared/constants/fallbacks'
 import {
   mapChannelCategoriesForApi,
   resolveFeaturedVideoIdForMePatch,
-} from '@/lib/channel/channelProfilePatch'
+} from '@/shared/channel/channelProfilePatch'
 
 const NATIONALITIES = [
   { value: '', label: '선택 안 함' },

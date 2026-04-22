@@ -1,7 +1,7 @@
-import { render, screen } from '@testing-library/react'
+﻿import { render, screen } from '@testing-library/react'
 import { NextIntlClientProvider } from 'next-intl'
 import AuditionCard from '../audition/AuditionCard'
-import type { AuditionDto } from '../../lib/types/audition'
+import type { AuditionDto } from '@/shared/types/audition'
 
 const mockAudition: AuditionDto = {
   id: '1',

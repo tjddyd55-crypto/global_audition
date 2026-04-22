@@ -1,12 +1,12 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState, type ReactNode } from 'react'
 import { useRouter, Link } from '../../../../i18n.config'
 import { useQuery } from '@tanstack/react-query'
-import { authApi } from '../../../../lib/api/auth'
-import { dashboardApi } from '../../../../lib/api/dashboard'
+import { authApi } from '@/shared/api/auth'
+import { dashboardApi } from '@/shared/api/dashboard'
 import { useTranslations } from 'next-intl'
-import { useAuthStore } from '@/lib/auth/authStore'
+import { useAuthStore } from '@/shared/auth/authStore'
 import {
   BTN_PRIMARY,
   BTN_SECONDARY,
@@ -15,7 +15,7 @@ import {
   SECTION_GAP,
   TEXT_SUB,
   TITLE_PAGE,
-} from '@/lib/ui/specClasses'
+} from '@/shared/ui/specClasses'
 import { AgencyDashboardShell } from '@/components/agency/AgencyDashboardShell'
 
 function statusLabel(status?: string) {

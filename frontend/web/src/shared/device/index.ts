@@ -8,3 +8,4 @@ export {
   setDevicePref,
   useDeviceMemo,
 } from './DeviceContext'
+export { DeviceToggle } from './DeviceToggle'

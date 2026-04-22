@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -8,9 +8,9 @@ import {
   type PatchMyChannelBody,
   type SnsLinkRow,
   type SnsPlatformCode,
-} from '@/lib/api/channel'
+} from '@/shared/api/channel'
 import { useRouter } from 'next/navigation'
-import { invalidateAfterChannelVideoMutation } from '@/lib/query/channelVideoQuery'
+import { invalidateAfterChannelVideoMutation } from '@/shared/query/channelVideoQuery'
 
 /** 풀 가로·유튜브형 채널 UI와 통일: 카드/그림자 없음 */
 const SECTION =

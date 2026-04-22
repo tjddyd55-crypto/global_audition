@@ -1,11 +1,11 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import { useRouter } from '../../../../../i18n.config'
-import { authApi } from '../../../../../lib/api/auth'
+import { authApi } from '@/shared/api/auth'
 import { useTranslations } from 'next-intl'
 import { Link } from '../../../../../i18n.config'
-import { LAYOUT, HERO, AUDITION_DETAIL } from '../../../../../lib/design-tokens'
+import { LAYOUT, HERO, AUDITION_DETAIL } from '@/shared/design-tokens'
 import { AuditionEditorForm } from '@/components/audition/AuditionEditorForm'
 
 export default function DashboardAuditionCreatePage() {

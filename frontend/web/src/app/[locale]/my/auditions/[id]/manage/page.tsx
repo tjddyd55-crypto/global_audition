@@ -1,16 +1,16 @@
-'use client'
+﻿'use client'
 
 import { useQuery } from '@tanstack/react-query'
 import { useParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useRouter } from '@/i18n.config'
 import { useEffect, useState } from 'react'
-import { auditionApi } from '../../../../../../lib/api/auditions'
+import { auditionApi } from '@/shared/api/auditions'
 import { AuditionManageList } from '@/components/audition/AuditionManageList'
 import { AgencyDashboardShell } from '@/components/agency/AgencyDashboardShell'
-import { useAuthStore } from '@/lib/auth/authStore'
-import { canManageAudition } from '@/lib/audition/auditionPermissions'
-import { auditionHeadlineTitle } from '@/lib/types/audition'
+import { useAuthStore } from '@/shared/auth/authStore'
+import { canManageAudition } from '@/shared/audition/auditionPermissions'
+import { auditionHeadlineTitle } from '@/shared/types/audition'
 
 export default function MyAuditionManagePage() {
   const params = useParams()

@@ -1,17 +1,17 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import axios from 'axios'
 import { useRouter, Link } from '../../../../i18n.config'
-import { authApi } from '@/lib/api/auth'
+import { authApi } from '@/shared/api/auth'
 import {
   creditsApi,
   type CreditOrderSummary,
   type CreditPackageCatalogItem,
   type PreparePaymentResult,
   isMockPaymentUiEnabled,
-} from '@/lib/api/credits'
+} from '@/shared/api/credits'
 import {
   BTN_PRIMARY,
   BTN_SECONDARY,
@@ -20,9 +20,9 @@ import {
   SECTION_GAP,
   TEXT_SUB,
   TITLE_PAGE,
-} from '@/lib/ui/specClasses'
-import { formatCurrency } from '@/lib/money/currency'
-import { formatCreditsCount } from '@/lib/money/creditsDisplay'
+} from '@/shared/ui/specClasses'
+import { formatCurrency } from '@/shared/money/currency'
+import { formatCreditsCount } from '@/shared/money/creditsDisplay'
 
 function CheckoutContent() {
   const router = useRouter()

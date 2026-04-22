@@ -1,7 +1,7 @@
-'use client'
+﻿'use client'
 
 import { useEffect } from 'react'
-import { useAuthStore } from '@/lib/auth/authStore'
+import { useAuthStore } from '@/shared/auth/authStore'
 
 /** localStorage 세션을 Zustand와 동기화 (로그인 직후·다른 탭·새로고침) */
 export function AuthSync() {
