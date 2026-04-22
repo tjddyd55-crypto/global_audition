@@ -30,10 +30,12 @@ function statusBadgeClass(status: string): string {
 }
 
 export default function AuditionCard({ audition }: AuditionCardProps) {
-  if (!audition) return null
+  // React Hooks 규칙 준수를 위해 early return 전에 모든 훅을 호출한다.
+  // `audition`이 null/undefined인 경우 하단에서 null을 반환하기 전까지 hook 순서가 고정되어야 한다.
   const id = audition?.id ?? ''
-  const title =
-    auditionHeadlineTitle(audition).trim() || audition.title.trim() || FALLBACK_TEXT.videoTitle
+  const title = audition
+    ? auditionHeadlineTitle(audition).trim() || audition.title.trim() || FALLBACK_TEXT.videoTitle
+    : FALLBACK_TEXT.videoTitle
   const status = audition?.status ?? 'DRAFT'
   const statusBadgeLabel =
     status === 'OPEN' && audition?.recruitmentRoundLabel?.trim()
@@ -65,6 +67,8 @@ export default function AuditionCard({ audition }: AuditionCardProps) {
       return next ?? fallbackImg
     })
   }, [coverFallbackChain, fallbackImg])
+
+  if (!audition) return null
 
   const createdAt = audition?.createdAt
   const dateStr = createdAt

@@ -1,38 +1,21 @@
-import { getTranslations, setRequestLocale } from 'next-intl/server'
-import AuditionList from '../../../components/audition/AuditionList'
+import { setRequestLocale } from 'next-intl/server'
+import { getDeviceFromHeaders } from '@/shared/device/resolveDevice'
+import PcAuditionsListPage from '@/pc/pages/auditions/ListPage'
+import MobileAuditionsListPage from '@/mobile/pages/auditions/ListPage'
 
+/**
+ * URL 진입점. 실제 UI는 device에 따라 `src/pc/pages` 또는 `src/mobile/pages`가 담당.
+ *
+ * - device는 미들웨어가 `x-device` 헤더에 세팅한다.
+ * - 모바일 UI가 없는 페이지는 PC 페이지로 폴백하도록 `DevicePicker` 또는 수동 분기 사용.
+ */
 export default async function AuditionsPage({
   params,
 }: {
   params: Promise<{ locale: string }>
 }) {
   const { locale } = await params
-  
-  // 정적 렌더링을 위해 setRequestLocale 호출 (필수)
   setRequestLocale(locale)
-  
-  const t = await getTranslations('common')
-
-  const pageStyle = {
-    width: '100%' as const,
-    paddingTop: 80,
-    paddingBottom: 80,
-  }
-
-  return (
-    <div style={pageStyle}>
-      <div
-        className="w-full"
-        style={{
-          marginBottom: 24,
-          paddingLeft: 'max(1rem, env(safe-area-inset-left))',
-          paddingRight: 'max(1rem, env(safe-area-inset-right))',
-        }}
-      >
-        <h1 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 8px 0' }}>{t('auditions')}</h1>
-        <p style={{ fontSize: 16, color: '#666', margin: 0 }}>전 세계 기획사의 오디션에 지원해보세요</p>
-      </div>
-      <AuditionList />
-    </div>
-  )
+  const device = getDeviceFromHeaders()
+  return device === 'mobile' ? <MobileAuditionsListPage /> : <PcAuditionsListPage locale={locale} />
 }
