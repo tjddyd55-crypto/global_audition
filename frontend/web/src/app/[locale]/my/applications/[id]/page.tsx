@@ -1,10 +1,10 @@
-'use client'
+﻿'use client'
 
 import { useQuery } from '@tanstack/react-query'
 import { useParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Link } from '../../../../../i18n.config'
-import { applicationApi } from '../../../../../lib/api/applications'
+import { applicationApi } from '@/shared/api/applications'
 import {
   BTN_PRIMARY,
   BTN_SECONDARY,
@@ -13,10 +13,10 @@ import {
   SECTION_GAP,
   TEXT_SUB,
   TITLE_PAGE,
-} from '@/lib/ui/specClasses'
+} from '@/shared/ui/specClasses'
 import { ApplicationRoundTimeline } from '@/components/application/ApplicationRoundTimeline'
 import { MultiRoundSubmitCta } from '@/components/application/MultiRoundSubmitCta'
-import { roundIdForRoundNumber } from '@/lib/audition/roundNav'
+import { roundIdForRoundNumber } from '@/shared/audition/roundNav'
 import { BasicInfoSection } from '@/components/my-application/BasicInfoSection'
 import { VideoSection } from '@/components/my-application/VideoSection'
 import { SnsSection } from '@/components/my-application/SnsSection'

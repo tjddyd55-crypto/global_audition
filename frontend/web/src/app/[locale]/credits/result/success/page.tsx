@@ -1,10 +1,10 @@
-'use client'
+﻿'use client'
 
 import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Link } from '../../../../../i18n.config'
-import { authApi } from '@/lib/api/auth'
-import { creditsApi, type CreditOrderSummary } from '@/lib/api/credits'
+import { authApi } from '@/shared/api/auth'
+import { creditsApi, type CreditOrderSummary } from '@/shared/api/credits'
 import {
   BTN_PRIMARY,
   BTN_SECONDARY,
@@ -13,8 +13,8 @@ import {
   SECTION_GAP,
   TEXT_SUB,
   TITLE_PAGE,
-} from '@/lib/ui/specClasses'
-import { formatCreditsCount } from '@/lib/money/creditsDisplay'
+} from '@/shared/ui/specClasses'
+import { formatCreditsCount } from '@/shared/money/creditsDisplay'
 
 function SuccessContent() {
   const searchParams = useSearchParams()

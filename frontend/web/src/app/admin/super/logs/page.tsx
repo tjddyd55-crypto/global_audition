@@ -1,8 +1,8 @@
-'use client'
+﻿'use client'
 
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
-import { superAdminApi, type AdminLogEntry } from '@/lib/api/superAdmin'
+import { superAdminApi, type AdminLogEntry } from '@/shared/api/superAdmin'
 
 const ACTIONS = [
   '',

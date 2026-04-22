@@ -1,7 +1,7 @@
-'use client'
+﻿'use client'
 
 import type { ReactNode } from 'react'
-import { AUDITION_DETAIL, LAYOUT } from '@/lib/design-tokens'
+import { AUDITION_DETAIL, LAYOUT } from '@/shared/design-tokens'
 
 type AdminCardProps = {
   title: string

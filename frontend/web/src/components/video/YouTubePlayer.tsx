@@ -1,6 +1,6 @@
-'use client'
+﻿'use client'
 
-import { getVideoEmbedSrc } from '@/lib/utils/videoEmbed'
+import { getVideoEmbedSrc } from '@/shared/utils/videoEmbed'
 
 interface YouTubePlayerProps {
   videoUrl: string

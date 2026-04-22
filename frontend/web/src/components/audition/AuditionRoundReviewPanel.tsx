@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
@@ -8,8 +8,8 @@ import {
   adminAuditionRoundsApi,
   type AdminAuditionRoundRow,
   type AdminRoundApplicantRow,
-} from '@/lib/api/adminAuditionRounds'
-import { BTN_PRIMARY, BTN_SECONDARY, CARD_BASE, PAGE_CONTAINER, TEXT_SUB } from '@/lib/ui/specClasses'
+} from '@/shared/api/adminAuditionRounds'
+import { BTN_PRIMARY, BTN_SECONDARY, CARD_BASE, PAGE_CONTAINER, TEXT_SUB } from '@/shared/ui/specClasses'
 
 type Props = {
   auditionId: string

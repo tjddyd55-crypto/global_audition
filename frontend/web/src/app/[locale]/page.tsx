@@ -1,20 +1,20 @@
-'use client'
+﻿'use client'
 
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '../../i18n.config'
 import { useTranslations } from 'next-intl'
-import { auditionApi } from '../../lib/api/auditions'
+import { auditionApi } from '@/shared/api/auditions'
 import AuditionCard from '../../components/cards/AuditionCard'
 import HeroSection from '../../components/home/HeroSection'
 import { VideoListItem } from '../../components/video/VideoListItem'
-import { listBrowsePublicVideos } from '../../lib/api/channelVideoPublic'
-import { resolveVideoThumbnailUrl } from '../../lib/audition/videoThumbnail'
-import { channelVideoKeys } from '../../lib/query/channelVideoQuery'
+import { listBrowsePublicVideos } from '@/shared/api/channelVideoPublic'
+import { resolveVideoThumbnailUrl } from '@/shared/audition/videoThumbnail'
+import { channelVideoKeys } from '@/shared/query/channelVideoQuery'
 import { SkeletonAuditionCard, SkeletonVideoCard } from '../../components/ui/SkeletonCard'
 import EmptyState from '../../components/ui/EmptyState'
-import { LAYOUT } from '../../lib/design-tokens'
-import { formatRelativeKo } from '../../lib/formatRelativeKo'
+import { LAYOUT } from '@/shared/design-tokens'
+import { formatRelativeKo } from '@/shared/formatRelativeKo'
 
 const containerStyle: React.CSSProperties = {
   maxWidth: LAYOUT.containerMaxWidth,

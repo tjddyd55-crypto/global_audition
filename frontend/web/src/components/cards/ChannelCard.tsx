@@ -1,10 +1,10 @@
-'use client'
+﻿'use client'
 
 import Image from 'next/image'
 import { Link } from '../../i18n.config'
-import type { PublicChannelListItem } from '../../lib/api/channel'
-import { DEFAULT_IMAGES, FALLBACK_TEXT } from '../../lib/constants/fallbacks'
-import { AUDITION_CARD, CHANNEL_CARD } from '../../lib/design-tokens'
+import type { PublicChannelListItem } from '@/shared/api/channel'
+import { DEFAULT_IMAGES, FALLBACK_TEXT } from '@/shared/constants/fallbacks'
+import { AUDITION_CARD, CHANNEL_CARD } from '@/shared/design-tokens'
 
 interface ChannelCardProps {
   channel: PublicChannelListItem

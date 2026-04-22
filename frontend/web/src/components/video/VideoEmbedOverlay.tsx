@@ -1,8 +1,8 @@
-'use client'
+﻿'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { resolveVideoThumbnailUrl } from '@/lib/audition/videoThumbnail'
-import { getVideoEmbedSrc, isYoutubeShortsLikeUrl } from '@/lib/utils/videoEmbed'
+import { resolveVideoThumbnailUrl } from '@/shared/audition/videoThumbnail'
+import { getVideoEmbedSrc, isYoutubeShortsLikeUrl } from '@/shared/utils/videoEmbed'
 
 /** 플레이리스트·추천 영상 등 확장용 — url 필수, 나머지 선택 */
 export type VideoEmbedPlayPayload = {

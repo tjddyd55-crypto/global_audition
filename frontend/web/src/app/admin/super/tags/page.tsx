@@ -1,9 +1,9 @@
-'use client'
+﻿'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { isAxiosError } from 'axios'
-import { superAdminTagApi, type TagRow } from '@/lib/api/tags'
+import { superAdminTagApi, type TagRow } from '@/shared/api/tags'
 
 function errMsg(err: unknown): string {
   if (isAxiosError(err)) {

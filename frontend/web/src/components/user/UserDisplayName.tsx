@@ -1,6 +1,6 @@
-'use client'
+﻿'use client'
 
-import { getDisplayNickname } from '@/lib/user/getDisplayNickname'
+import { getDisplayNickname } from '@/shared/user/getDisplayNickname'
 
 type UserLike = Parameters<typeof getDisplayNickname>[0]
 

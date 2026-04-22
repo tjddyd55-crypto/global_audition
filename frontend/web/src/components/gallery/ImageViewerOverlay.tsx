@@ -1,8 +1,8 @@
-'use client'
+﻿'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { applyGalleryImageOnError, GALLERY_IMAGE_FALLBACK_SRC } from '@/components/gallery/galleryFallback'
-import { stripImageUrlResizeParams } from '@/lib/utils/imageDisplayUrl'
+import { stripImageUrlResizeParams } from '@/shared/utils/imageDisplayUrl'
 import { shouldTriggerSwipeNavigation } from '@/components/gallery/gallerySwipe'
 
 export type ImageViewerOverlayProps = {

@@ -1,7 +1,7 @@
-'use client'
+﻿'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { TEXT_SUB } from '@/lib/ui/specClasses'
+import { TEXT_SUB } from '@/shared/ui/specClasses'
 import { AUDITION_COVER_PLACEHOLDER_SRC } from '@/components/audition/AuditionEditorPreview'
 import { ImageViewerOverlay } from '@/components/gallery/ImageViewerOverlay'
 

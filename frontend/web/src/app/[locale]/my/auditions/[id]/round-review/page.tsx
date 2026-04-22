@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useQuery } from '@tanstack/react-query'
 import { useParams } from 'next/navigation'
@@ -6,11 +6,11 @@ import { useTranslations } from 'next-intl'
 import { useRouter } from '@/i18n.config'
 import { Link } from '@/i18n.config'
 import { useEffect, useState } from 'react'
-import { auditionApi } from '../../../../../../lib/api/auditions'
+import { auditionApi } from '@/shared/api/auditions'
 import { AuditionRoundReviewPanel } from '@/components/audition/AuditionRoundReviewPanel'
 import { AgencyDashboardShell } from '@/components/agency/AgencyDashboardShell'
-import { PAGE_CONTAINER, TEXT_SUB } from '@/lib/ui/specClasses'
-import { useAuthStore } from '@/lib/auth/authStore'
+import { PAGE_CONTAINER, TEXT_SUB } from '@/shared/ui/specClasses'
+import { useAuthStore } from '@/shared/auth/authStore'
 
 export default function MyAuditionRoundReviewPage() {
   const params = useParams()

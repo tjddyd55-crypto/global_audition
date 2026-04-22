@@ -1,12 +1,12 @@
-'use client'
+﻿'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { isAxiosError } from 'axios'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { Link, useRouter } from '@/i18n.config'
-import { auditionApi, getManageList, type ManageApplicantItem } from '@/lib/api/auditions'
-import { BTN_SECONDARY, CARD_BASE, PAGE_CONTAINER, TEXT_SUB } from '@/lib/ui/specClasses'
+import { auditionApi, getManageList, type ManageApplicantItem } from '@/shared/api/auditions'
+import { BTN_SECONDARY, CARD_BASE, PAGE_CONTAINER, TEXT_SUB } from '@/shared/ui/specClasses'
 
 type StatusBtn = 'REVIEWING' | 'APPROVED' | 'REJECTED'
 

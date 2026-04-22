@@ -1,10 +1,10 @@
-'use client'
+﻿'use client'
 
 import { useQuery } from '@tanstack/react-query'
 import { isAxiosError } from 'axios'
 import { Link } from '@/i18n.config'
-import { auditionApi, type RankingItem } from '@/lib/api/auditions'
-import { PAGE_CONTAINER, TEXT_SUB } from '@/lib/ui/specClasses'
+import { auditionApi, type RankingItem } from '@/shared/api/auditions'
+import { PAGE_CONTAINER, TEXT_SUB } from '@/shared/ui/specClasses'
 
 type Props = {
   auditionId: string

@@ -1,10 +1,10 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { authApi } from '../../../lib/api/auth'
+import { authApi } from '@/shared/api/auth'
 import { useTranslations } from 'next-intl'
 import { Link } from '../../../i18n.config'
 

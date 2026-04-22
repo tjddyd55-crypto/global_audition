@@ -1,9 +1,9 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useMemo, useState, type FormEvent, type CSSProperties } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { SIGNUP, HERO, AUDITION_DETAIL } from '@/lib/design-tokens'
+import { SIGNUP, HERO, AUDITION_DETAIL } from '@/shared/design-tokens'
 import {
   buildAuditionImagesPayload,
   EMPTY_AUDITION_FORM_IMAGES,
@@ -11,17 +11,17 @@ import {
   type AuditionFormImages,
   type AuditionStatus,
   type CreateAuditionPayload,
-} from '@/lib/types/audition'
-import { auditionApi } from '@/lib/api/auditions'
-import { fetchTagCatalog } from '@/lib/api/tags'
-import { apiErrorMessage } from '@/lib/api/uploads'
-import { isoToDatetimeLocalValue } from '@/lib/audition/datetimeLocal'
-import { isBlankOrValidYoutubeUrl } from '@/lib/audition/youtubeEmbed'
+} from '@/shared/types/audition'
+import { auditionApi } from '@/shared/api/auditions'
+import { fetchTagCatalog } from '@/shared/api/tags'
+import { apiErrorMessage } from '@/shared/api/uploads'
+import { isoToDatetimeLocalValue } from '@/shared/audition/datetimeLocal'
+import { isBlankOrValidYoutubeUrl } from '@/shared/audition/youtubeEmbed'
 import { AuditionEditorPreview } from '@/components/audition/AuditionEditorPreview'
 import { SingleImageUploadField } from '@/components/audition/AuditionEditorImageUpload'
 import { ImageUploader } from '@/components/common/ImageUploader'
-import { EDITOR_LABELS, AUDITION_STATUS_LABEL_KO } from '@/lib/audition/auditionEditorCopy'
-import { normalizeCustomTagNamesForPayload } from '@/lib/audition/auditionTags'
+import { EDITOR_LABELS, AUDITION_STATUS_LABEL_KO } from '@/shared/audition/auditionEditorCopy'
+import { normalizeCustomTagNamesForPayload } from '@/shared/audition/auditionTags'
 
 function trimNonEmpty(lines: string[] | undefined): string[] {
   return (lines ?? []).map((s) => (s ?? '').trim()).filter((s) => s.length > 0)

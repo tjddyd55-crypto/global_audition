@@ -1,9 +1,9 @@
-'use client'
+﻿'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { isAxiosError } from 'axios'
-import { superAdminApi, type CreditPolicyRow } from '@/lib/api/superAdmin'
+import { superAdminApi, type CreditPolicyRow } from '@/shared/api/superAdmin'
 
 type Draft = { cost: number; active: boolean }
 

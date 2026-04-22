@@ -1,9 +1,9 @@
-'use client'
+﻿'use client'
 
 import { useQueries } from '@tanstack/react-query'
-import { meApplicationRoundsApi } from '@/lib/api/meApplicationRounds'
-import type { AuditionRoundSummary } from '@/lib/audition/roundNav'
-import { CARD_BASE, TEXT_SUB, TITLE_PAGE } from '@/lib/ui/specClasses'
+import { meApplicationRoundsApi } from '@/shared/api/meApplicationRounds'
+import type { AuditionRoundSummary } from '@/shared/audition/roundNav'
+import { CARD_BASE, TEXT_SUB, TITLE_PAGE } from '@/shared/ui/specClasses'
 
 type Props = {
   applicationId: string

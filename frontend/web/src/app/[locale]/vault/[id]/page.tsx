@@ -1,12 +1,12 @@
-'use client'
+﻿'use client'
 
 import { useParams as useNextParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
-import { vaultApi, type CreativeAsset } from '../../../../lib/api/vault'
-import { feedbackApi, type ExpertFeedback } from '../../../../lib/api/feedback'
+import { vaultApi, type CreativeAsset } from '@/shared/api/vault'
+import { feedbackApi, type ExpertFeedback } from '@/shared/api/feedback'
 import { useTranslations } from 'next-intl'
 import { Link } from '../../../../i18n.config'
-import { CARD_BASE, PAGE_CONTAINER, SECTION_GAP, TEXT_SUB, TITLE_PAGE } from '@/lib/ui/specClasses'
+import { CARD_BASE, PAGE_CONTAINER, SECTION_GAP, TEXT_SUB, TITLE_PAGE } from '@/shared/ui/specClasses'
 
 export default function AssetDetailPage() {
   const params = useNextParams()

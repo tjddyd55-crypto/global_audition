@@ -1,13 +1,13 @@
-'use client'
+﻿'use client'
 
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import EmptyState from '@/components/ui/EmptyState'
 import { VideoListItem } from '@/components/video/VideoListItem'
-import { listBrowsePublicVideos } from '@/lib/api/channelVideoPublic'
-import { resolveVideoThumbnailUrl } from '@/lib/audition/videoThumbnail'
-import { formatRelativeKo } from '@/lib/formatRelativeKo'
-import { channelVideoKeys } from '@/lib/query/channelVideoQuery'
+import { listBrowsePublicVideos } from '@/shared/api/channelVideoPublic'
+import { resolveVideoThumbnailUrl } from '@/shared/audition/videoThumbnail'
+import { formatRelativeKo } from '@/shared/formatRelativeKo'
+import { channelVideoKeys } from '@/shared/query/channelVideoQuery'
 
 const CATEGORIES = ['전체 카테고리', 'Vocal', 'Dance', 'Rap'] as const
 

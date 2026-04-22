@@ -1,10 +1,10 @@
-'use client'
+﻿'use client'
 
 import { useQuery } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import { Link } from '../../../../i18n.config'
-import { applicationApi } from '../../../../lib/api/applications'
-import { BTN_SECONDARY, CARD_BASE, PAGE_CONTAINER, SECTION_GAP, TEXT_SUB, TITLE_PAGE } from '@/lib/ui/specClasses'
+import { applicationApi } from '@/shared/api/applications'
+import { BTN_SECONDARY, CARD_BASE, PAGE_CONTAINER, SECTION_GAP, TEXT_SUB, TITLE_PAGE } from '@/shared/ui/specClasses'
 
 function statusBadgeClass(status: string) {
   if (status === 'REVIEWING' || status === 'REVIEWED') return 'rounded-full bg-blue-50 px-3 py-1 text-sm text-blue-700'

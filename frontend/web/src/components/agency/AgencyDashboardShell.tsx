@@ -1,8 +1,8 @@
-'use client'
+﻿'use client'
 
 import type { ReactNode } from 'react'
 import { Link, usePathname } from '@/i18n.config'
-import { useAuthStore } from '@/lib/auth/authStore'
+import { useAuthStore } from '@/shared/auth/authStore'
 
 const NAV_ITEMS = [
   { href: '/my/dashboard', label: '요약', match: (p: string) => p === '/my/dashboard' },

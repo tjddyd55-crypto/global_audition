@@ -1,9 +1,9 @@
-'use client'
+﻿'use client'
 
 import type { ReactNode } from 'react'
 import Image from 'next/image'
 import { Link } from '@/i18n.config'
-import { DEFAULT_IMAGES } from '@/lib/constants/fallbacks'
+import { DEFAULT_IMAGES } from '@/shared/constants/fallbacks'
 
 export type VideoListItemProps = {
   href: string

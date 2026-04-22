@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
@@ -9,7 +9,7 @@ import {
   superAdminApi,
   type CreditGrantReason,
   type UserCreditLookup,
-} from '@/lib/api/superAdmin'
+} from '@/shared/api/superAdmin'
 
 function grantErrorMessage(err: unknown): string {
   if (isAxiosError(err)) {

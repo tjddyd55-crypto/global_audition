@@ -1,9 +1,9 @@
-'use client'
+﻿'use client'
 
 import { useCallback, useState } from 'react'
 import { Link } from '@/i18n.config'
-import { AUDITION_DETAIL, HERO } from '@/lib/design-tokens'
-import { safeStr } from '@/lib/utils/safe'
+import { AUDITION_DETAIL, HERO } from '@/shared/design-tokens'
+import { safeStr } from '@/shared/utils/safe'
 import { AUDITION_COVER_PLACEHOLDER_SRC } from '@/components/audition/AuditionEditorPreview'
 
 type AuditionDetailHeroSectionProps = {

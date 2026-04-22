@@ -1,3 +1,8 @@
-﻿// Re-export facade. Source of truth still lives at '@/lib/audition/datetimeLocal'.
-// New PC/mobile UI code should import from '@/shared/*' to align with the layered architecture.
-export * from '@/lib/audition/datetimeLocal'
+﻿/** API ISO 문자열 → datetime-local input 값 */
+export function isoToDatetimeLocalValue(iso: string): string {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}

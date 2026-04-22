@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react'
-import { SIGNUP } from '../../lib/design-tokens'
+﻿import type { ReactNode } from 'react'
+import { SIGNUP } from '@/shared/design-tokens'
 
 interface AuthCardLayoutProps {
   title: string

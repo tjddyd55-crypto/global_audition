@@ -1,9 +1,9 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import { useRouter, Link } from '../../../i18n.config'
-import { authApi } from '@/lib/api/auth'
-import { creditsApi, type CreditTransactionItem } from '@/lib/api/credits'
+import { authApi } from '@/shared/api/auth'
+import { creditsApi, type CreditTransactionItem } from '@/shared/api/credits'
 import {
   BTN_PRIMARY,
   BTN_SECONDARY,
@@ -12,9 +12,9 @@ import {
   SECTION_GAP,
   TEXT_SUB,
   TITLE_PAGE,
-} from '@/lib/ui/specClasses'
+} from '@/shared/ui/specClasses'
 
-import { formatCreditsCount } from '@/lib/money/creditsDisplay'
+import { formatCreditsCount } from '@/shared/money/creditsDisplay'
 
 function formatSignedCredits(amount: number) {
   const s = formatCreditsCount(amount)

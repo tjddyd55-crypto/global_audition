@@ -1,6 +1,6 @@
-'use client'
+﻿'use client'
 
-import { AUDITION_CARD } from '../../lib/design-tokens'
+import { AUDITION_CARD } from '@/shared/design-tokens'
 
 /** 오디션 포스터 행 스켈레톤(풀폭, 하단 오버레이 영역만 시각 힌트) */
 export function SkeletonAuditionCard() {

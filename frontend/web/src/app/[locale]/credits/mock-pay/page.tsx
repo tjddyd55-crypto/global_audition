@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 /**
  * 목 결제 UI → 백엔드 `POST /api/payments/callback/success|fail` 만 호출.
@@ -8,9 +8,9 @@ import { useEffect, useState, Suspense, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useLocale } from 'next-intl'
 import { useRouter, Link } from '../../../../i18n.config'
-import { authApi } from '@/lib/api/auth'
-import { ApiFetchError } from '@/lib/api/apiFetch'
-import { creditsApi, type CreditOrderSummary, isMockPaymentUiEnabled } from '@/lib/api/credits'
+import { authApi } from '@/shared/api/auth'
+import { ApiFetchError } from '@/shared/api/apiFetch'
+import { creditsApi, type CreditOrderSummary, isMockPaymentUiEnabled } from '@/shared/api/credits'
 import {
   BTN_PRIMARY,
   BTN_SECONDARY,
@@ -19,8 +19,8 @@ import {
   SECTION_GAP,
   TEXT_SUB,
   TITLE_PAGE,
-} from '@/lib/ui/specClasses'
-import { formatCurrency } from '@/lib/money/currency'
+} from '@/shared/ui/specClasses'
+import { formatCurrency } from '@/shared/money/currency'
 
 function MockPayContent() {
   const router = useRouter()

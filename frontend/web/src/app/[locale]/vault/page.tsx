@@ -1,11 +1,11 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { vaultApi, type CreativeAsset } from '../../../lib/api/vault'
+import { vaultApi, type CreativeAsset } from '@/shared/api/vault'
 import { useTranslations } from 'next-intl'
 import { Link } from '../../../i18n.config'
-import { BTN_PRIMARY, BTN_SECONDARY, CARD_BASE, INPUT_BASE, PAGE_CONTAINER, SECTION_GAP, TEXT_SUB, TITLE_PAGE } from '@/lib/ui/specClasses'
+import { BTN_PRIMARY, BTN_SECONDARY, CARD_BASE, INPUT_BASE, PAGE_CONTAINER, SECTION_GAP, TEXT_SUB, TITLE_PAGE } from '@/shared/ui/specClasses'
 
 export default function VaultPage() {
   const t = useTranslations('common')

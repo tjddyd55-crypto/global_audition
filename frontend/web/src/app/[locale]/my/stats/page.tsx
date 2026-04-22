@@ -1,13 +1,13 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useRouter } from '@/i18n.config'
 import { useTranslations } from 'next-intl'
-import { dashboardApi } from '../../../../lib/api/dashboard'
+import { dashboardApi } from '@/shared/api/dashboard'
 import { AgencyDashboardShell } from '@/components/agency/AgencyDashboardShell'
-import { useAuthStore } from '@/lib/auth/authStore'
-import { PAGE_CONTAINER, TEXT_SUB } from '@/lib/ui/specClasses'
+import { useAuthStore } from '@/shared/auth/authStore'
+import { PAGE_CONTAINER, TEXT_SUB } from '@/shared/ui/specClasses'
 
 export default function MyAgencyStatsPage() {
   const t = useTranslations('common')

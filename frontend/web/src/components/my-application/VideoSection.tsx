@@ -1,10 +1,10 @@
-'use client'
+﻿'use client'
 
 import Image from 'next/image'
 import { useState } from 'react'
-import { resolveVideoThumbnailUrl } from '@/lib/audition/videoThumbnail'
-import { isYoutubeShortsLikeUrl } from '@/lib/utils/videoEmbed'
-import { CARD_BASE, TEXT_SUB, TITLE_PAGE } from '@/lib/ui/specClasses'
+import { resolveVideoThumbnailUrl } from '@/shared/audition/videoThumbnail'
+import { isYoutubeShortsLikeUrl } from '@/shared/utils/videoEmbed'
+import { CARD_BASE, TEXT_SUB, TITLE_PAGE } from '@/shared/ui/specClasses'
 import { VideoEmbedOverlay } from '@/components/video/VideoEmbedOverlay'
 
 export type VideoSectionItem = {

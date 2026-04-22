@@ -1,14 +1,14 @@
-'use client'
+﻿'use client'
 
 import { useId, type ChangeEvent, type ReactNode } from 'react'
 import { toast } from 'sonner'
-import { SIGNUP, AUDITION_DETAIL } from '@/lib/design-tokens'
+import { SIGNUP, AUDITION_DETAIL } from '@/shared/design-tokens'
 import {
   uploadAuditionImage,
   apiUploadErrorMessage,
   type AuditionUploadDir,
-} from '@/lib/api/uploads'
-import { AUDITION_IMAGE_ACCEPT_ATTR } from '@/lib/audition/auditionImageRules'
+} from '@/shared/api/uploads'
+import { AUDITION_IMAGE_ACCEPT_ATTR } from '@/shared/audition/auditionImageRules'
 import { AUDITION_COVER_PLACEHOLDER_SRC } from '@/components/audition/AuditionEditorPreview'
 
 const inputBaseStyle: React.CSSProperties = {

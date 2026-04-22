@@ -1,11 +1,11 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { calculateAge } from '@/lib/audition/calculateAge'
-import type { MeProfileForApply } from '@/lib/api/meProfile'
+import { calculateAge } from '@/shared/audition/calculateAge'
+import type { MeProfileForApply } from '@/shared/api/meProfile'
 
 const NATIONALITIES = [
   { value: '', label: '선택 안 함' },

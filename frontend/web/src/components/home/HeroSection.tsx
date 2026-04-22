@@ -1,7 +1,7 @@
-'use client'
+﻿'use client'
 
 import { Link } from '../../i18n.config'
-import { HERO } from '../../lib/design-tokens'
+import { HERO } from '@/shared/design-tokens'
 
 interface HeroSectionProps {
   title: string
