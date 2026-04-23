@@ -112,7 +112,7 @@ cd android
 | 프로필                 | 배포    | 타겟                 | 웹 URL                                                    |
 | ---------------------- | ------- | -------------------- | --------------------------------------------------------- |
 | `development`          | internal | APK + dev-client     | `http://10.0.2.2:3000` (에뮬레이터)                       |
-| `preview`              | internal | APK                  | `https://frontend-production-8613a.up.railway.app`        |
+| `preview`              | internal | APK                  | `https://frontend-develop-3d3e.up.railway.app` (develop 환경) |
 | `production-apk`       | store   | APK (내부 테스트용) | `https://frontend-production-8613a.up.railway.app`        |
 | `production`           | store   | AAB (Play Store)     | `https://frontend-production-8613a.up.railway.app`        |
 
