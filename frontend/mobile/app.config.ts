@@ -69,6 +69,17 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     web: {
       favicon: './assets/favicon.png',
     },
+    // EAS Update(OTA) 구성
+    // - url: EAS가 제공하는 이 프로젝트 전용 업데이트 엔드포인트.
+    // - runtimeVersion.policy='appVersion': 네이티브 버전(1.0.0)이 바뀌면
+    //   OTA 호환이 끊긴다. WebView 쉘 앱에서 가장 안전한 기본값이다.
+    //   (네이티브 모듈이 바뀌지 않는 한 쉘 JS는 OTA로 밀어넣을 수 있음)
+    updates: {
+      url: 'https://u.expo.dev/8cde4c16-2ac2-4014-990a-a59048d77496',
+    },
+    runtimeVersion: {
+      policy: 'appVersion',
+    },
     plugins: ['expo-secure-store'],
     extra: {
       webUrl,
