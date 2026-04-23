@@ -1,0 +1,34 @@
+{
+  "name": "global-audition-mobile",
+  "version": "1.0.0",
+  "description": "Global Audition - Expo WebView 래퍼 앱 (Android/iOS)",
+  "private": true,
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "typecheck": "tsc --noEmit",
+    "install:fix": "expo install --fix",
+    "build:apk:preview": "eas build --platform android --profile preview",
+    "build:apk:production": "eas build --platform android --profile production-apk",
+    "build:aab:production": "eas build --platform android --profile production",
+    "build:ios:preview": "eas build --platform ios --profile preview"
+  },
+  "dependencies": {
+    "expo": "~54.0.33",
+    "expo-constants": "~18.0.7",
+    "expo-linking": "~8.0.10",
+    "expo-secure-store": "~15.0.7",
+    "expo-status-bar": "~3.0.9",
+    "react": "19.1.0",
+    "react-native": "0.81.5",
+    "react-native-safe-area-context": "~5.6.0",
+    "react-native-webview": "13.15.0"
+  },
+  "devDependencies": {
+    "@types/react": "~19.1.0",
+    "typescript": "~5.9.2"
+  }
+}

@@ -2,6 +2,8 @@
 
 import { useEffect } from 'react'
 
+import { isInNativeAppShell } from '@/shared/device/appShell'
+
 /**
  * 서비스 워커 등록 훅 (모바일 전용).
  *
@@ -13,6 +15,8 @@ export function useServiceWorker() {
   useEffect(() => {
     if (typeof window === 'undefined') return
     if (process.env.NODE_ENV !== 'production') return
+    // 네이티브 셸 환경에서는 WebView 캐시 정책과 충돌을 피하기 위해 SW를 등록하지 않는다.
+    if (isInNativeAppShell()) return
     if (!('serviceWorker' in navigator)) return
 
     const controller = new AbortController()
