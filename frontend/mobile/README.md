@@ -109,14 +109,16 @@ cd android
 
 `eas.json` 참조.
 
-| 프로필                 | 배포    | 타겟                 | 웹 URL                                         |
-| ---------------------- | ------- | -------------------- | ---------------------------------------------- |
-| `development`          | internal | APK + dev-client     | `http://10.0.2.2:3000` (에뮬레이터)            |
-| `preview`              | internal | APK                  | `https://staging.global-audition.example.com`  |
-| `production-apk`       | store   | APK (내부 테스트용) | `https://global-audition.example.com`          |
-| `production`           | store   | AAB (Play Store)     | `https://global-audition.example.com`          |
+| 프로필                 | 배포    | 타겟                 | 웹 URL                                                    |
+| ---------------------- | ------- | -------------------- | --------------------------------------------------------- |
+| `development`          | internal | APK + dev-client     | `http://10.0.2.2:3000` (에뮬레이터)                       |
+| `preview`              | internal | APK                  | `https://frontend-production-8613a.up.railway.app`        |
+| `production-apk`       | store   | APK (내부 테스트용) | `https://frontend-production-8613a.up.railway.app`        |
+| `production`           | store   | AAB (Play Store)     | `https://frontend-production-8613a.up.railway.app`        |
 
-> 실제 서비스 URL이 정해지면 `eas.json`의 `env.EXPO_PUBLIC_WEB_URL`과 `EXPO_PUBLIC_ALLOWED_HOSTS`를 교체한다. 여기 한 곳만 바꾸면 앱 전역이 따라온다.
+> 현재는 Railway 프로덕션 서비스 하나를 세 프로필 모두 바라본다.
+> 추후 스테이징 환경을 분리하게 되면 `preview` 프로필의 URL만 별도 도메인으로 교체하면 된다.
+> 정식 도메인(예: `audition.mydomain.com`)을 붙이게 되면 이 표 세 줄의 URL만 바꿔주면 앱 전역이 따라온다.
 
 ---
 
