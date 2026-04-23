@@ -5,6 +5,7 @@ import {
   Linking,
   Platform,
   StyleSheet,
+  Text,
   View,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -17,6 +18,7 @@ import type {
 } from 'react-native-webview/lib/WebViewTypes'
 
 import { WEB_URL, isInternalUrl } from '../config/env'
+import { SHELL_BUILD_TAG } from '../config/shellBuild'
 import { OfflineScreen } from './OfflineScreen'
 
 /**
@@ -120,6 +122,7 @@ function renderLoader() {
   return (
     <View style={styles.loader}>
       <ActivityIndicator size="large" color="#0a0a0a" />
+      <Text style={styles.buildTag}>build {SHELL_BUILD_TAG}</Text>
     </View>
   )
 }
@@ -138,5 +141,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#ffffff',
+  },
+  buildTag: {
+    marginTop: 12,
+    fontSize: 11,
+    color: '#9ca3af',
+    letterSpacing: 0.5,
   },
 })
