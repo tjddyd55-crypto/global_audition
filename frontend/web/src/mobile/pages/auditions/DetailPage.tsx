@@ -25,9 +25,12 @@ export default function MobileAuditionDetailPage() {
   })
 
   const seriesRound = audition?.round ?? 1
+  const isApplicantRole = role === 'APPLICANT' || role === 'ADMIN'
+  const alreadyApplied =
+    audition?.status === 'OPEN' && isApplicantRole && audition?.hasApplied === true
   const applyBlocked =
     audition?.status === 'OPEN' &&
-    (role === 'APPLICANT' || role === 'ADMIN') &&
+    isApplicantRole &&
     seriesRound >= 2 &&
     audition?.canApply === false
 
@@ -85,14 +88,27 @@ export default function MobileAuditionDetailPage() {
         <p className="mb-6 text-sm text-gray-500">
           등록일: {format(new Date(audition.createdAt), 'yyyy.MM.dd', { locale: ko })}
         </p>
-        {applyBlocked ? (
+        {alreadyApplied ? (
+          <p className="mb-6 text-sm text-neutral-500">
+            이 오디션에 이미 지원하셨습니다. 결과는 마이페이지에서 확인할 수 있어요.
+          </p>
+        ) : applyBlocked ? (
           <p className="mb-6 text-sm text-amber-800">
             {audition.applyBlockedMessage ?? PREV_ROUND_APPLY_BLOCKED_MSG}
           </p>
         ) : null}
       </div>
       <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-white p-3 pb-[max(12px,env(safe-area-inset-bottom))]">
-        {applyBlocked ? (
+        {alreadyApplied ? (
+          <button
+            type="button"
+            disabled
+            className="w-full rounded-lg bg-black py-4 text-lg font-semibold text-white opacity-60"
+            title="이 오디션에 이미 지원하셨습니다."
+          >
+            이미 지원함
+          </button>
+        ) : applyBlocked ? (
           <button
             type="button"
             disabled

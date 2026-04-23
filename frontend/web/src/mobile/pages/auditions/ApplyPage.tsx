@@ -92,6 +92,17 @@ export default function MobileAuditionApplyPage() {
     )
   }
 
+  if (audition.hasApplied === true) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center p-4 text-center">
+        <p className="mb-4 text-neutral-800">이 오디션에 이미 지원하셨습니다.</p>
+        <Link href={`/auditions/${auditionId}`} className="text-violet-600 hover:underline">
+          오디션 상세로 돌아가기
+        </Link>
+      </div>
+    )
+  }
+
   const seriesRound = audition.round ?? 1
   if (seriesRound >= 2 && audition.canApply === false) {
     const msg = audition.applyBlockedMessage ?? PREV_ROUND_APPLY_BLOCKED_MSG
