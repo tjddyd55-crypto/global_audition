@@ -127,11 +127,22 @@ cd android
 스토어 재심사 없이 **JS 쉘 번들**을 원격 배포하는 경로다. 네이티브 코드/권한/SDK 변경은 불가능하므로 남용하지 말 것.
 
 ### 동작 원리
-- 네이티브 단이 앱 부팅 시 자동 체크(app.config.ts `updates.checkAutomatically: 'ON_LOAD'`).
-- 새 번들이 있으면 백그라운드에서 다운로드.
-- **다음 앱 부팅에 자동 적용**(부드러운 OTA). 사용자는 업데이트를 인지하지 않는다.
-- 체크/다운로드 실패는 앱 사용을 막지 않고 `console.warn`으로만 남긴다.
-- 관측 포인트는 `src/services/updates.ts`의 `useOtaWatcher()` 한 곳이다. 정책(즉시 reload로 전환, 사용자에게 프롬프트 띄우기 등)을 바꾸려면 여기만 수정한다.
+1. 앱 부팅 시 네이티브가 자동으로 EAS Update 서버에 체크(`app.config.ts`의 `updates.checkAutomatically: 'ON_LOAD'`).
+2. 새 번들이 있으면 **백그라운드에서 다운로드**(사용자 인지 없음).
+3. 다운로드 완료 순간 앱 내에서 **"새 버전이 준비되었어요"** 모달이 뜬다.
+   - **"지금 업데이트"** → `Updates.reloadAsync()`로 즉시 재시작 → 새 번들로 부팅.
+   - **"나중에"** → 이번 세션엔 모달을 다시 띄우지 않지만, **다음 앱 부팅 시 네이티브가 자동 적용**한다(안전장치). 업데이트가 영원히 미뤄지지 않는다.
+4. 체크/다운로드 실패는 앱 사용을 막지 않고 `console.warn`으로만 남긴다.
+
+### 관련 소스(정책을 바꿀 때 여기만 고치면 됨)
+- `src/services/updates.ts`
+  - `useOtaWatcher()` — 상태 관측 및 디버그 로그
+  - `useOtaPromptState()` — 모달 표시 조건과 액션 결정
+  - `applyPendingUpdateNow()` — 즉시 적용(재시작)
+- `src/components/OtaUpdatePrompt.tsx` — 모달 UI만 담당. 정책을 알지 않는다.
+- 정책 전환 예시
+  - **강제 업데이트**로 바꾸고 싶다: `OtaUpdatePrompt`에서 "나중에" 버튼을 숨기고 `onRequestClose`로 닫지 못하게 한다.
+  - **모달 없이 조용히**로 되돌리고 싶다: `App.tsx`에서 `<OtaUpdatePrompt />`를 제거하면 된다. 네이티브가 다음 부팅에 자동 적용하는 폴백만 남아 예전의 '부드러운 OTA'가 된다.
 
 ### 무엇을 OTA로 배포할 수 있는가
 - ✅ `App.tsx`, `WebViewApp.tsx`, `OfflineScreen.tsx` 등 **JS 쉘 코드**
