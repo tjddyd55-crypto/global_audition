@@ -19,8 +19,8 @@
       "distribution": "internal",
       "channel": "preview",
       "env": {
-        "EXPO_PUBLIC_WEB_URL": "https://frontend-production-8613a.up.railway.app",
-        "EXPO_PUBLIC_ALLOWED_HOSTS": "frontend-production-8613a.up.railway.app"
+        "EXPO_PUBLIC_WEB_URL": "https://frontend-develop-3d3e.up.railway.app",
+        "EXPO_PUBLIC_ALLOWED_HOSTS": "frontend-develop-3d3e.up.railway.app"
       },
       "android": {
         "buildType": "apk"
