@@ -88,6 +88,7 @@ export default function MobileLoginPage() {
             <label className="block text-sm font-medium mb-2">이메일</label>
             <input
               type="email"
+              autoComplete="email"
               {...register('email')}
               className="w-full px-4 py-2 border rounded-lg"
               placeholder="email@example.com"
@@ -101,6 +102,7 @@ export default function MobileLoginPage() {
             <label className="block text-sm font-medium mb-2">비밀번호</label>
             <input
               type="password"
+              autoComplete="current-password"
               {...register('password')}
               className="w-full px-4 py-2 border rounded-lg"
               placeholder="비밀번호"

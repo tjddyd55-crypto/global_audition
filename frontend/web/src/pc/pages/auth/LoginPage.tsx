@@ -128,6 +128,7 @@ export default function PcLoginPage() {
           <input
             id="email"
             type="email"
+            autoComplete="email"
             {...register('email')}
             placeholder="your@email.com"
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
@@ -142,6 +143,7 @@ export default function PcLoginPage() {
           <input
             id="password"
             type="password"
+            autoComplete="current-password"
             {...register('password')}
             placeholder="••••••••"
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"

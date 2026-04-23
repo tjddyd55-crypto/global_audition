@@ -20,6 +20,11 @@ export const metadata: Metadata = {
     statusBarStyle: 'black-translucent',
     title: 'Audition',
   },
+  // Chrome/Android 권장: apple-mobile-web-app-capable(Next.js가 자동 주입)과 함께
+  // 표준화된 mobile-web-app-capable도 선언해 DevTools의 deprecation 경고를 없앤다.
+  other: {
+    'mobile-web-app-capable': 'yes',
+  },
   // 아이콘은 `src/app/icon.tsx`·`src/app/apple-icon.tsx`(Edge 런타임)에서 PNG로 생성된다.
   // 별도 선언이 있으면 Next의 자동 주입과 이중으로 태그가 생기므로 여기선 명시하지 않는다.
 }

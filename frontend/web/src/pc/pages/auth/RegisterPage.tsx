@@ -93,7 +93,7 @@ export default function PcRegisterPage() {
           <label htmlFor="email" style={{ display: 'block', fontSize: 14, fontWeight: 500, marginBottom: 4 }}>
             이메일
           </label>
-          <input id="email" type="email" {...register('email')} placeholder="your@email.com" style={inputStyle} />
+          <input id="email" type="email" autoComplete="email" {...register('email')} placeholder="your@email.com" style={inputStyle} />
           {errors.email && <p style={{ marginTop: 4, fontSize: 12, color: '#b91c1c' }}>{errors.email.message}</p>}
         </div>
 
@@ -117,7 +117,7 @@ export default function PcRegisterPage() {
           <label htmlFor="password" style={{ display: 'block', fontSize: 14, fontWeight: 500, marginBottom: 4 }}>
             비밀번호
           </label>
-          <input id="password" type="password" {...register('password')} placeholder="6자 이상" style={inputStyle} />
+          <input id="password" type="password" autoComplete="new-password" {...register('password')} placeholder="6자 이상" style={inputStyle} />
           {errors.password && <p style={{ marginTop: 4, fontSize: 12, color: '#b91c1c' }}>{errors.password.message}</p>}
         </div>
 
@@ -125,7 +125,7 @@ export default function PcRegisterPage() {
           <label htmlFor="confirmPassword" style={{ display: 'block', fontSize: 14, fontWeight: 500, marginBottom: 4 }}>
             비밀번호 확인
           </label>
-          <input id="confirmPassword" type="password" {...register('confirmPassword')} placeholder="비밀번호 확인" style={inputStyle} />
+          <input id="confirmPassword" type="password" autoComplete="new-password" {...register('confirmPassword')} placeholder="비밀번호 확인" style={inputStyle} />
           {errors.confirmPassword && <p style={{ marginTop: 4, fontSize: 12, color: '#b91c1c' }}>{errors.confirmPassword.message}</p>}
         </div>
 
