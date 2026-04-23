@@ -14,7 +14,7 @@ import type { ExpoConfig, ConfigContext } from 'expo/config'
  * 이 파일을 TypeScript로 둔 이유는 빌드 시점에 환경변수를 읽어
  * runtime(extra)으로 주입하기 위함이다. 값 자체는 app 코드에서 Constants.expoConfig?.extra를 통해 읽는다.
  */
-const DEFAULT_WEB_URL = 'https://global-audition.example.com'
+const DEFAULT_WEB_URL = 'https://frontend-production-8613a.up.railway.app'
 
 export default ({ config }: ConfigContext): ExpoConfig => {
   const webUrl = process.env.EXPO_PUBLIC_WEB_URL?.trim() || DEFAULT_WEB_URL

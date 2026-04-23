@@ -19,8 +19,8 @@
       "distribution": "internal",
       "channel": "preview",
       "env": {
-        "EXPO_PUBLIC_WEB_URL": "https://staging.global-audition.example.com",
-        "EXPO_PUBLIC_ALLOWED_HOSTS": "staging.global-audition.example.com"
+        "EXPO_PUBLIC_WEB_URL": "https://frontend-production-8613a.up.railway.app",
+        "EXPO_PUBLIC_ALLOWED_HOSTS": "frontend-production-8613a.up.railway.app"
       },
       "android": {
         "buildType": "apk"
@@ -32,8 +32,8 @@
     "production-apk": {
       "channel": "production",
       "env": {
-        "EXPO_PUBLIC_WEB_URL": "https://global-audition.example.com",
-        "EXPO_PUBLIC_ALLOWED_HOSTS": "global-audition.example.com"
+        "EXPO_PUBLIC_WEB_URL": "https://frontend-production-8613a.up.railway.app",
+        "EXPO_PUBLIC_ALLOWED_HOSTS": "frontend-production-8613a.up.railway.app"
       },
       "android": {
         "buildType": "apk"
@@ -43,8 +43,8 @@
       "channel": "production",
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_WEB_URL": "https://global-audition.example.com",
-        "EXPO_PUBLIC_ALLOWED_HOSTS": "global-audition.example.com"
+        "EXPO_PUBLIC_WEB_URL": "https://frontend-production-8613a.up.railway.app",
+        "EXPO_PUBLIC_ALLOWED_HOSTS": "frontend-production-8613a.up.railway.app"
       },
       "android": {
         "buildType": "app-bundle"
