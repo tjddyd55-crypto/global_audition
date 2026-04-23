@@ -20,4 +20,4 @@
  * - 네이티브 바이너리가 바뀌는(Expo SDK·네이티브 의존성 추가 등) 커밋에서는
  *   app.config.ts의 version을 올리되, 이 태그도 초기화(예: '2026-05-01.1')한다.
  */
-export const SHELL_BUILD_TAG = '2026-04-23.1'
+export const SHELL_BUILD_TAG = '2026-04-23.2'
