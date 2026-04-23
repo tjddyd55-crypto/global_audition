@@ -11,6 +11,18 @@ Global Audition 네이티브 앱. 기존 Next.js PWA(`frontend/web`)를 **Expo +
 - **심사 통과용 최소 네이티브**: 순수 WebView 래퍼는 Apple에서 거절될 수 있어, Back 핸들링 / 외부 링크 분리 / 오프라인 화면 / Pull-to-Refresh 정도의 네이티브성을 얹었다.
 - **웹과의 연동**: WebView UA에 `GlobalAuditionApp/1.0` 마커를 삽입하고 `frontend/web/src/shared/device/appShell.ts`의 `isInNativeAppShell()`로 감지한다. 앱 안에서는 PWA 설치 프롬프트와 Service Worker 등록이 자동으로 생략된다.
 
+### 현재 운영 정책 (2026-04-23 ~)
+
+아직 실사용자가 없는 초기 단계이므로, 개발·테스트·앱 배포 모두 **main 단일 환경**으로 운영한다.
+
+- **앱이 바라보는 웹 URL**: `frontend-production-…` (Railway production)
+- **기본 APK 빌드 프로필**: `production-apk` (`npm run build:apk:production`)
+- **develop 환경**: Railway에 서비스/DB 모두 구성은 유지되지만 **콜드 스탠바이 상태**. 실유저가 생기는 시점에 개발용 워크로드를 이쪽으로 이관한다.
+- **OTA 채널**: `production` 채널만 사용 (`npm run ota:production`). `preview` 채널은 develop 환경이 깨어난 뒤부터 쓴다.
+- **브랜치**: `develop`과 `main`은 ff로 동일 커밋을 가리키며, 개발 커밋은 `develop` 위에서 쌓고 검증이 끝나면 `main`으로 머지한다.
+
+> **왜 이 단계에서 두 환경을 분리해 두나**: 나중에 실유저가 생긴 뒤 환경 분리 작업을 하려면 데이터·계정·트래픽이 섞여 있어 난이도가 급등한다. 지금은 비용 없이 분리 골격만 만들어 두고 "스위치만 올리면 되는 상태"로 유지한다.
+
 ```
 frontend/mobile
 ├─ App.tsx                     # 루트 Provider
@@ -70,16 +82,20 @@ eas login                  # Expo 계정 로그인
 eas init                   # projectId 생성 및 app.config.ts에 주입
 ```
 
-### preview(스테이징) APK 빌드
+### production APK 빌드 (현 단계 기본 경로)
 ```powershell
-# eas.json의 preview 프로필이 EXPO_PUBLIC_WEB_URL=https://staging.global-audition.example.com 을 주입한다.
-npm run build:apk:preview
-# 빌드가 끝나면 EAS 대시보드에 APK 다운로드 링크가 생성된다.
+# eas.json의 production-apk 프로필이 main(production) Railway 웹 URL을 주입한다.
+# 지금은 이 명령이 "앱을 테스트/운영용으로 빌드하는" 기본 경로다.
+npm run build:apk:production
 ```
 
-### production APK 빌드 (스토어 업로드 전 내부 배포용)
+빌드가 끝나면 EAS 대시보드에 APK 다운로드 링크가 생성된다. 그 링크를 단말로 열어 설치하면 된다(기존 앱 위에 덮어 설치 가능).
+
+### preview APK 빌드 (develop 환경이 활성화된 뒤부터 사용)
 ```powershell
-npm run build:apk:production
+# eas.json의 preview 프로필은 develop Railway(frontend-develop-*.up.railway.app)를 바라본다.
+# 현재는 develop 환경이 콜드 스탠바이라 이 빌드는 사용하지 않는다.
+npm run build:apk:preview
 ```
 
 > **주의**: Google Play 스토어에 공식 업로드할 때는 APK가 아니라 **AAB**가 필요하다. `npm run build:aab:production` 참고.
@@ -111,14 +127,15 @@ cd android
 
 | 프로필                 | 배포    | 타겟                 | 웹 URL                                                    |
 | ---------------------- | ------- | -------------------- | --------------------------------------------------------- |
-| `development`          | internal | APK + dev-client     | `http://10.0.2.2:3000` (에뮬레이터)                       |
-| `preview`              | internal | APK                  | `https://frontend-develop-3d3e.up.railway.app` (develop 환경) |
-| `production-apk`       | store   | APK (내부 테스트용) | `https://frontend-production-8613a.up.railway.app`        |
-| `production`           | store   | AAB (Play Store)     | `https://frontend-production-8613a.up.railway.app`        |
+| 프로필             | 배포     | 타겟                 | 웹 URL                                                        | 현재 사용 여부               |
+| ------------------ | -------- | -------------------- | ------------------------------------------------------------- | ---------------------------- |
+| `development`      | internal | APK + dev-client     | `http://10.0.2.2:3000` (에뮬레이터)                           | 로컬 개발 시                 |
+| `preview`          | internal | APK                  | `https://frontend-develop-3d3e.up.railway.app` (develop 환경) | **대기** (develop 활성화 후) |
+| `production-apk`   | store    | APK (내부 테스트용)  | `https://frontend-production-8613a.up.railway.app`            | **현 단계 기본 경로**        |
+| `production`       | store    | AAB (Play Store)     | `https://frontend-production-8613a.up.railway.app`            | 스토어 제출 시               |
 
-> 현재는 Railway 프로덕션 서비스 하나를 세 프로필 모두 바라본다.
-> 추후 스테이징 환경을 분리하게 되면 `preview` 프로필의 URL만 별도 도메인으로 교체하면 된다.
-> 정식 도메인(예: `audition.mydomain.com`)을 붙이게 되면 이 표 세 줄의 URL만 바꿔주면 앱 전역이 따라온다.
+> **프로필의 의미를 지켜야 한다**: `preview`는 "develop 환경 검증용"이라는 의미로 설정돼 있다. 지금 develop이 잠들어 있다고 해서 `preview`를 production URL로 바꾸지 말 것. 그러면 develop을 깨울 때 또 원복해야 하고, 그 사이 의미가 일관되지 않는 히스토리가 쌓인다.
+> 정식 도메인(예: `audition.mydomain.com`)을 붙이게 되면 이 표의 URL만 바꿔주면 앱 전역이 따라온다.
 
 ---
 
@@ -156,20 +173,21 @@ cd android
 
 ### OTA 발행 흐름
 
+현 단계(main 단일 환경)에서는 **production 채널만 쓴다**. 설치된 APK는 `build:apk:production`으로 만들어졌고 `production` 채널을 구독한다.
+
 ```powershell
 # 1) 쉘 JS 수정 후 로컬에서 검증
 cd frontend/mobile
 npm run typecheck
 
-# 2) develop 환경(preview 채널)에 OTA 발행
-#    설치된 preview 빌드 APK가 다음 부팅에 자동 업데이트된다.
-npm run ota:preview -- --message "fix: 외부 링크 매칭 로직 수정"
-
-# 3) 충분한 검증 후 production 채널에 발행
+# 2) production 채널에 OTA 발행 (현 단계 기본 경로)
+#    설치된 production-apk 빌드가 다음 부팅 시 자동 업데이트된다.
 npm run ota:production -- --message "fix: 외부 링크 매칭 로직 수정"
 ```
 
 `-- --message` 의 `--`는 PowerShell/npm이 메시지를 자기 인자로 가로채지 않게 막는 구분자다. 메시지는 EAS 대시보드·롤백 판단의 유일한 단서이므로 **변경 이유를 한 줄로 명확히** 적을 것.
+
+> **develop 환경이 활성화되면**: 쉘 JS 변경은 먼저 `npm run ota:preview`로 develop 환경에 발행해 검증한 뒤, 동일 번들을 `ota:production`으로 프로덕션에 올리는 2단계 흐름을 복원한다.
 
 ### 런타임 버전과 호환성
 
@@ -183,7 +201,7 @@ npm run ota:production -- --message "fix: 외부 링크 매칭 로직 수정"
 
 ### 개발 시 주의
 - `npm run start`(Expo dev)에서는 OTA가 **동작하지 않는다**(로컬 Metro 번들 사용). `useOtaWatcher()`도 `__DEV__`에서 no-op.
-- OTA 동작 확인은 반드시 **`build:apk:preview`로 만든 실제 APK**에서만 가능하다.
+- OTA 동작 확인은 반드시 **EAS에서 빌드한 실제 APK**에서만 가능하다. 현 단계에서는 `build:apk:production`으로 만든 APK에 `ota:production`으로 발행해 검증한다.
 
 ---
 
