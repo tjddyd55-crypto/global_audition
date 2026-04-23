@@ -5,12 +5,22 @@ const withNextIntl = createNextIntlPlugin('./src/i18n.ts')
 /**
  * `/api/*` rewrite 대상 백엔드 Origin (트레일링 슬래시 없음).
  * 서버 전용(BACKEND_PROXY_ORIGIN) — 브라우저 번들에 노출되지 않음.
+ *
+ * 안전 규칙
+ * - 환경변수 없이 동작하지 않는다. 과거에는 production URL로 fallback했으나,
+ *   develop/staging 환경에서 변수가 누락되면 조용히 프로덕션을 오염시키는 사고가
+ *   나기 쉬워 제거한다. 각 Railway 환경은 자신의 BACKEND_PROXY_ORIGIN을 가진다.
+ * - 로컬 개발(NODE_ENV=development)에서는 로컬 백엔드를 기본값으로 허용한다.
  */
 function backendProxyOrigin() {
   const fromEnv = (process.env.BACKEND_PROXY_ORIGIN || '').trim().replace(/\/+$/, '')
   if (fromEnv) return fromEnv
   if (process.env.NODE_ENV === 'development') return 'http://127.0.0.1:8081'
-  return 'https://backend-production-b968.up.railway.app'
+  throw new Error(
+    '[next.config.js] BACKEND_PROXY_ORIGIN is not set. ' +
+      '각 배포 환경의 Railway Variables에 자신의 백엔드 URL을 등록해야 한다. ' +
+      '자동 fallback은 환경 간 데이터 오염을 막기 위해 제거되었다.',
+  )
 }
 
 /** @type {import('next').NextConfig} */
