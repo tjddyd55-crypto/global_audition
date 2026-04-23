@@ -14,7 +14,9 @@
     "build:apk:preview": "eas build --platform android --profile preview",
     "build:apk:production": "eas build --platform android --profile production-apk",
     "build:aab:production": "eas build --platform android --profile production",
-    "build:ios:preview": "eas build --platform ios --profile preview"
+    "build:ios:preview": "eas build --platform ios --profile preview",
+    "ota:preview": "eas update --branch preview",
+    "ota:production": "eas update --branch production"
   },
   "dependencies": {
     "expo": "~54.0.33",

@@ -122,7 +122,61 @@ cd android
 
 ---
 
-## 5. 스토어 배포 체크리스트 (추후)
+## 5. OTA 자동 업데이트 (EAS Update)
+
+스토어 재심사 없이 **JS 쉘 번들**을 원격 배포하는 경로다. 네이티브 코드/권한/SDK 변경은 불가능하므로 남용하지 말 것.
+
+### 동작 원리
+- 네이티브 단이 앱 부팅 시 자동 체크(app.config.ts `updates.checkAutomatically: 'ON_LOAD'`).
+- 새 번들이 있으면 백그라운드에서 다운로드.
+- **다음 앱 부팅에 자동 적용**(부드러운 OTA). 사용자는 업데이트를 인지하지 않는다.
+- 체크/다운로드 실패는 앱 사용을 막지 않고 `console.warn`으로만 남긴다.
+- 관측 포인트는 `src/services/updates.ts`의 `useOtaWatcher()` 한 곳이다. 정책(즉시 reload로 전환, 사용자에게 프롬프트 띄우기 등)을 바꾸려면 여기만 수정한다.
+
+### 무엇을 OTA로 배포할 수 있는가
+- ✅ `App.tsx`, `WebViewApp.tsx`, `OfflineScreen.tsx` 등 **JS 쉘 코드**
+- ✅ `src/config/env.ts` 같은 상수 분기 로직
+- ✅ `EXPO_PUBLIC_WEB_URL`, `EXPO_PUBLIC_ALLOWED_HOSTS` (빌드 시 번들에 인라인되므로 OTA 번들도 같이 교체됨)
+- ❌ `package.json`의 네이티브 의존성 변경 (새 네이티브 모듈 추가/제거)
+- ❌ `app.config.ts`의 `version`, `android.permissions`, `ios.infoPlist` 등 네이티브 메타
+- ❌ 네이티브 아이콘/스플래시 에셋
+
+위 ❌에 해당되면 OTA가 아니라 **스토어 재빌드**(`build:aab:production`)가 필요하다.
+
+### OTA 발행 흐름
+
+```powershell
+# 1) 쉘 JS 수정 후 로컬에서 검증
+cd frontend/mobile
+npm run typecheck
+
+# 2) develop 환경(preview 채널)에 OTA 발행
+#    설치된 preview 빌드 APK가 다음 부팅에 자동 업데이트된다.
+npm run ota:preview -- --message "fix: 외부 링크 매칭 로직 수정"
+
+# 3) 충분한 검증 후 production 채널에 발행
+npm run ota:production -- --message "fix: 외부 링크 매칭 로직 수정"
+```
+
+`-- --message` 의 `--`는 PowerShell/npm이 메시지를 자기 인자로 가로채지 않게 막는 구분자다. 메시지는 EAS 대시보드·롤백 판단의 유일한 단서이므로 **변경 이유를 한 줄로 명확히** 적을 것.
+
+### 런타임 버전과 호환성
+
+- `app.config.ts`의 `version`(예: `1.0.0`)이 OTA 호환성의 기준이다 (`runtimeVersion.policy: 'appVersion'`).
+- `version`을 `1.1.0`으로 올리는 순간 기존에 `1.0.0`으로 설치된 사용자들은 **더 이상 OTA를 받지 못하고**, 스토어에서 새 APK/AAB를 받아야 한다.
+- 즉 version bump와 OTA는 서로 배타적이다: 같은 version 안에서만 OTA가 흐르고, version이 바뀌면 스토어 재배포 경로를 탄다.
+
+### 긴급 롤백
+
+잘못된 OTA를 배포했다면 EAS 대시보드에서 해당 채널의 이전 업데이트를 다시 "publish"하면 같은 번들이 최신으로 재지정되어 다음 부팅에 되돌아간다. 사용자 입장에서는 한 번 더 부팅하면 정상화된다.
+
+### 개발 시 주의
+- `npm run start`(Expo dev)에서는 OTA가 **동작하지 않는다**(로컬 Metro 번들 사용). `useOtaWatcher()`도 `__DEV__`에서 no-op.
+- OTA 동작 확인은 반드시 **`build:apk:preview`로 만든 실제 APK**에서만 가능하다.
+
+---
+
+## 6. 스토어 배포 체크리스트 (추후)
 
 - [ ] `app.config.ts`의 `version`과 각 스토어 빌드 번호를 bump
 - [ ] 아이콘/스플래시 교체 (`assets/icon.png`, `assets/adaptive-icon.png`, `assets/splash-icon.png`)
@@ -132,7 +186,7 @@ cd android
 
 ---
 
-## 6. 트러블슈팅
+## 7. 트러블슈팅
 
 - **"의존성 버전이 Expo SDK와 안 맞습니다" 경고**: `npx expo install --fix`로 자동 정합.
 - **안드로이드 에뮬레이터에서 localhost가 비어 보임**: `localhost` 대신 `10.0.2.2`를 사용. (실단말은 PC LAN IP + 같은 Wi-Fi.)

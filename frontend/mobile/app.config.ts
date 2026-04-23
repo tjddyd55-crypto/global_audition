@@ -71,11 +71,18 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     },
     // EAS Update(OTA) 구성
     // - url: EAS가 제공하는 이 프로젝트 전용 업데이트 엔드포인트.
+    // - checkAutomatically='ON_LOAD': 앱이 켜질 때마다 네이티브 단에서 자동 체크한다.
+    //   발견된 업데이트는 백그라운드에서 다운로드되고, '다음 부팅'에 자동 적용된다.
+    //   사용자가 업데이트를 느끼지 않게 하려는 의도적 설계이다.
+    // - fallbackToCacheTimeout=0: 시작 시 원격 체크로 앱 기동을 지연시키지 않는다.
+    //   느린 네트워크/오프라인에서도 즉시 기존 번들로 시작한다.
     // - runtimeVersion.policy='appVersion': 네이티브 버전(1.0.0)이 바뀌면
     //   OTA 호환이 끊긴다. WebView 쉘 앱에서 가장 안전한 기본값이다.
     //   (네이티브 모듈이 바뀌지 않는 한 쉘 JS는 OTA로 밀어넣을 수 있음)
     updates: {
       url: 'https://u.expo.dev/8cde4c16-2ac2-4014-990a-a59048d77496',
+      checkAutomatically: 'ON_LOAD',
+      fallbackToCacheTimeout: 0,
     },
     runtimeVersion: {
       policy: 'appVersion',
