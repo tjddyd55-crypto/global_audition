@@ -74,6 +74,12 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       webUrl,
       allowedHosts,
       buildProfile: process.env.EAS_BUILD_PROFILE ?? 'local',
+      // EAS 프로젝트 연결 식별자. `eas init` 결과를 동적 config(app.config.ts)에
+      // 자동 주입할 수 없어 수동으로 박아둔다. 프로젝트를 다시 생성하거나
+      // 전환할 때만 교체하면 된다(그 외 상황에서는 건드리지 말 것).
+      eas: {
+        projectId: '8cde4c16-2ac2-4014-990a-a59048d77496',
+      },
     },
   }
 }
