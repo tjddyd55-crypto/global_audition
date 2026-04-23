@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react'
 
+import { isInNativeAppShell } from '@/shared/device/appShell'
+
 type BeforeInstallPromptEvent = Event & {
   readonly platforms: string[]
   prompt: () => Promise<void>
@@ -26,6 +28,9 @@ export function InstallPrompt() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return
+
+    // 네이티브 셸(앱) 안에서는 설치 개념이 없으므로 프롬프트를 노출하지 않는다.
+    if (isInNativeAppShell()) return
 
     const isStandalone =
       window.matchMedia?.('(display-mode: standalone)').matches ||
