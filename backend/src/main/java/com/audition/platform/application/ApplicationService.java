@@ -468,50 +468,11 @@ public class ApplicationService {
         );
     }
 
+    @Deprecated
     public ApplicationAgencyDetailDto getApplicationAgencyDetail(UUID applicationId) {
-        UUID currentUserId = SecurityUtils.getCurrentUserId();
-        if (currentUserId == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
-        }
-        Application app = applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "지원서를 찾을 수 없습니다."));
-        Audition audition = auditionRepository.findById(app.getAuditionId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "오디션을 찾을 수 없습니다."));
-        assertAgencyOrAdminCanManageAudition(audition);
-
-        User applicant = userRepository.findById(app.getApplicantId()).orElse(null);
-        var m = metricsLoader.resolve(app);
-        String displayName = applicant != null ? applicant.getPublicDisplayLabel() : "";
-        if (StringUtils.hasText(app.getApplicantName())) {
-            displayName = app.getApplicantName();
-        }
-
-        ApplicationAgencyDetailDto dto = new ApplicationAgencyDetailDto();
-        dto.setId(app.getId().toString());
-        dto.setAuditionId(app.getAuditionId().toString());
-        dto.setName(displayName);
-        if (app.getBirthDate() != null) {
-            dto.setBirthDate(app.getBirthDate().toString());
-        }
-        dto.setAge(app.getAge());
-        dto.setNationality(app.getNationality());
-        dto.setVideoUrl(m.videoUrl());
-        dto.setThumbnailUrl(m.thumbnailUrl());
-        dto.setIntroText(app.getIntroText());
-        dto.setStatus(MeApiMapping.agencyBoardStatusToApi(app.getStatus()));
-        dto.setRound(app.getCurrentRoundNumber());
-        dto.setCreatedAt(app.getCreatedAt() != null ? app.getCreatedAt().toString() : null);
-
-        List<ApplicationSnsLink> links = applicationSnsLinkRepository.findByApplicationIdOrderByCreatedAtAsc(applicationId);
-        List<ApplicationAgencyDetailDto.SnsLinkRow> rows = new ArrayList<>();
-        for (ApplicationSnsLink link : links) {
-            ApplicationAgencyDetailDto.SnsLinkRow row = new ApplicationAgencyDetailDto.SnsLinkRow();
-            row.setPlatform(link.getPlatform());
-            row.setUrl(link.getUrl());
-            rows.add(row);
-        }
-        dto.setSnsLinks(rows);
-        return dto;
+        throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "기획사 지원자 상세 조회는 AgencyApplicationManageService를 사용하세요.");
     }
 
     /**
