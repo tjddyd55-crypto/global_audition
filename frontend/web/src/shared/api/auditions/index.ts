@@ -9,3 +9,13 @@ export {
 } from './votes'
 export { getAuditionRanking } from './ranking'
 export { createNextSeriesRoundAudition } from './series'
+export {
+  createAudition,
+  updateAudition,
+  deleteAudition,
+  getMyAuditions,
+  listManageApplications,
+  getApplicationAgencyDetail,
+  updateApplicationStatus,
+  manageAuditionApi,
+} from './manage'
