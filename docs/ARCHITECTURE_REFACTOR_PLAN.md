@@ -14,7 +14,8 @@
 
 - `ApplicationSubmitService`
   - 지원자 지원서 제출/조회 경계
-  - 향후 `submitApplication` 저장 흐름 이동 대상
+  - 지원서 제출 저장 흐름을 담당한다.
+  - 기존 조회/레거시 경로는 아직 `ApplicationService`에 위임한다.
 - `ApplicationValidationService`
   - 지원서 입력값 검증/정규화 경계
   - 생년월일/나이, 국적, 영상 URL, SNS 링크 검증 담당
@@ -33,7 +34,8 @@
 - 1차 PR에서 컨트롤러가 기능별 서비스 경계를 바라보도록 변경했다.
 - 2차 PR에서 `ApplicationStatusService`, `ApplicationVideoViewService`는 실제 로직을 보유하도록 이동했다.
 - 3차 PR에서 `ApplicationValidationService`를 추가해 submit 검증 분리 준비를 완료했다.
-- `ApplicationSubmitService`, `AgencyApplicationManageService`는 아직 기존 `ApplicationService`에 위임한다.
+- 4차 PR에서 `ApplicationSubmitService`가 `ApplicationValidationService`를 사용하고, 지원서 제출 흐름을 직접 담당하도록 이동했다.
+- `AgencyApplicationManageService`는 아직 기존 `ApplicationService`에 위임한다.
 
 ## 프론트 API 경계
 
@@ -79,8 +81,7 @@
 
 ## 다음 단계
 
-1. `ApplicationSubmitService`가 `ApplicationValidationService`를 사용하도록 submit 흐름을 이동
-2. `ApplicationService.submitApplication`은 호환 위임 또는 제거 가능한 상태로 축소
-3. 기획사 관리 목록/필터링을 `AgencyApplicationManageService`로 이동
-4. 기존 `auditions.ts` 내부 구현을 기능별 파일로 실제 이동하고, `auditions.ts`는 호환 export만 유지
-5. 홈/오디션 상세 UI를 컴포넌트 단위로 분리
+1. `ApplicationService.submitApplication` 중복 메서드를 호환 위임 또는 제거 가능한 상태로 축소
+2. 기획사 관리 목록/필터링을 `AgencyApplicationManageService`로 이동
+3. 기존 `auditions.ts` 내부 구현을 기능별 파일로 실제 이동하고, `auditions.ts`는 호환 export만 유지
+4. 홈/오디션 상세 UI를 컴포넌트 단위로 분리
