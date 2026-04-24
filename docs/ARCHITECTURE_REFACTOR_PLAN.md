@@ -20,12 +20,16 @@
   - 향후 목록 필터링/카테고리/차수 로직 이동 대상
 - `ApplicationStatusService`
   - 지원 상태 변경 경계
-  - 향후 상태값 매핑, 히스토리 기록, 랭킹 재계산 로직 이동 대상
+  - 상태값 매핑, 히스토리 기록, 랭킹 재계산을 담당한다.
 - `ApplicationVideoViewService`
   - 지원 영상 조회수 경계
-  - 향후 대표 영상 조회, 조회수 증가, 랭킹 재계산 로직 이동 대상
+  - 대표 영상 조회, 조회수 증가, 랭킹 재계산을 담당한다.
 
-현재 1차 단계에서는 기존 동작 보존을 위해 위 서비스들이 `ApplicationService`에 위임한다. 이후 PR에서 메서드 단위로 내부 로직을 이동한다.
+현재 상태:
+
+- 1차 PR에서 컨트롤러가 기능별 서비스 경계를 바라보도록 변경했다.
+- 2차 PR에서 `ApplicationStatusService`, `ApplicationVideoViewService`는 실제 로직을 보유하도록 이동했다.
+- `ApplicationSubmitService`, `AgencyApplicationManageService`는 아직 기존 `ApplicationService`에 위임한다.
 
 ## 프론트 API 경계
 
@@ -74,7 +78,5 @@
 1. `ApplicationService.submitApplication` 내부를 `ApplicationSubmitService`로 이동
 2. 지원서 입력 검증을 `ApplicationValidationService`로 분리
 3. 기획사 관리 목록/필터링을 `AgencyApplicationManageService`로 이동
-4. 상태 변경 히스토리/랭킹 재계산을 `ApplicationStatusService`로 이동
-5. 조회수 증가 로직을 `ApplicationVideoViewService`로 이동
-6. 기존 `auditions.ts` 내부 구현을 기능별 파일로 실제 이동하고, `auditions.ts`는 호환 export만 유지
-7. 홈/오디션 상세 UI를 컴포넌트 단위로 분리
+4. 기존 `auditions.ts` 내부 구현을 기능별 파일로 실제 이동하고, `auditions.ts`는 호환 export만 유지
+5. 홈/오디션 상세 UI를 컴포넌트 단위로 분리
