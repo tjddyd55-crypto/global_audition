@@ -13,13 +13,7 @@ import com.audition.platform.api.dto.ManageApplicationStatsDto;
 import com.audition.platform.api.dto.ManageApplicationsPageDataDto;
 import com.audition.platform.api.dto.ManageAuditionHeaderDto;
 import com.audition.platform.api.dto.ManageRoundCountDto;
-import com.audition.platform.application.audition.AuditionSeriesEligibilityService;
-import com.audition.platform.application.audition.AuditionSeriesPresentation;
-import com.audition.platform.application.round.AuditionProcessModes;
-import com.audition.platform.application.round.ApplicationRoundSubmissionService;
 import com.audition.platform.application.audition.ApplicantCardMetricsLoader;
-import com.audition.platform.application.credit.CreditPolicyKey;
-import com.audition.platform.application.credit.CreditService;
 import com.audition.platform.application.me.MeApiMapping;
 import com.audition.platform.application.ranking.ApplicationRankingService;
 import com.audition.platform.domain.audition.Application;
@@ -38,10 +32,7 @@ import com.audition.platform.domain.score.ApplicationScore;
 import com.audition.platform.domain.score.ApplicationScoreRepository;
 import com.audition.platform.domain.user.User;
 import com.audition.platform.domain.user.UserRepository;
-import com.audition.platform.domain.util.ApplicationBirthdates;
-import com.audition.platform.domain.util.SocialVideoUrls;
 import com.audition.platform.infra.SecurityUtils;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,17 +40,13 @@ import org.springframework.web.server.ResponseStatusException;
 
 import org.springframework.util.StringUtils;
 
-import java.net.URI;
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -68,11 +55,6 @@ import java.util.stream.Collectors;
 public class ApplicationService {
 
     private static final List<String> STANDARD_MANAGE_CATEGORIES = List.of("보컬", "댄스", "랩", "프로듀싱");
-
-    private static final Set<String> ALLOWED_NATIONALITIES = Set.of("KR", "MN", "JP", "OTHER");
-
-    private static final Set<String> ALLOWED_SNS_PLATFORMS = Set.of(
-            "instagram", "tiktok", "youtube", "twitter", "facebook", "other");
 
     private final ApplicationRepository applicationRepository;
     private final AuditionRepository auditionRepository;
@@ -84,9 +66,6 @@ public class ApplicationService {
     private final ApplicationSnsLinkRepository applicationSnsLinkRepository;
     private final ApplicationStatusHistoryRepository applicationStatusHistoryRepository;
     private final AuditionRoundRepository auditionRoundRepository;
-    private final CreditService creditService;
-    private final ApplicationRoundSubmissionService applicationRoundSubmissionService;
-    private final AuditionSeriesEligibilityService auditionSeriesEligibilityService;
 
     public ApplicationService(
             ApplicationRepository applicationRepository,
@@ -98,10 +77,7 @@ public class ApplicationService {
             ApplicationVideoRepository applicationVideoRepository,
             ApplicationSnsLinkRepository applicationSnsLinkRepository,
             ApplicationStatusHistoryRepository applicationStatusHistoryRepository,
-            AuditionRoundRepository auditionRoundRepository,
-            CreditService creditService,
-            ApplicationRoundSubmissionService applicationRoundSubmissionService,
-            AuditionSeriesEligibilityService auditionSeriesEligibilityService) {
+            AuditionRoundRepository auditionRoundRepository) {
         this.applicationRepository = applicationRepository;
         this.auditionRepository = auditionRepository;
         this.userRepository = userRepository;
@@ -112,9 +88,6 @@ public class ApplicationService {
         this.applicationSnsLinkRepository = applicationSnsLinkRepository;
         this.applicationStatusHistoryRepository = applicationStatusHistoryRepository;
         this.auditionRoundRepository = auditionRoundRepository;
-        this.creditService = creditService;
-        this.applicationRoundSubmissionService = applicationRoundSubmissionService;
-        this.auditionSeriesEligibilityService = auditionSeriesEligibilityService;
     }
 
     private void recordApplicationStatusChange(
@@ -550,182 +523,11 @@ public class ApplicationService {
                 "지원서 작성 후 제출해 주세요. 「지원하기」 화면에서 정보를 입력할 수 있습니다.");
     }
 
-    @Transactional
+    @Deprecated
     public ApplicationResponse submitApplication(CreateApplicationRequest req) {
-        UUID applicantId = SecurityUtils.getCurrentUserId();
-        if (applicantId == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
-        }
-        if (!SecurityUtils.hasRole("APPLICANT") && !SecurityUtils.hasRole("ADMIN")) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "지원자만 지원할 수 있습니다.");
-        }
-        UUID auditionId = req.getAuditionId();
-        Audition audition = auditionRepository.findById(auditionId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "오디션을 찾을 수 없습니다."));
-        if (!"OPEN".equals(audition.getStatus())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "모집 중인 오디션이 아닙니다.");
-        }
-        if (!auditionSeriesEligibilityService.canApply(applicantId, audition)) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN, AuditionSeriesPresentation.APPLY_BLOCKED_PREV_ROUND_NOT_ACCEPTED);
-        }
-        if (applicationRepository.existsByAuditionIdAndApplicantId(auditionId, applicantId)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 지원 완료입니다.");
-        }
-
-        String applicantName = req.getName() != null ? req.getName().trim() : "";
-        if (applicantName.isEmpty()) {
-            applicantName = null;
-        }
-
-        LocalDate birthDate = null;
-        Integer computedAge = null;
-        String birthRaw = req.getBirthDate() != null ? req.getBirthDate().trim() : "";
-        LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
-        if (!birthRaw.isEmpty()) {
-            try {
-                birthDate = LocalDate.parse(birthRaw);
-            } catch (Exception e) {
-                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "생년월일 형식이 올바르지 않습니다.");
-            }
-            try {
-                computedAge = ApplicationBirthdates.ageOnDate(birthDate, today);
-            } catch (IllegalArgumentException ex) {
-                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "생년월일이 올바르지 않습니다.");
-            }
-            if (req.getAge() != null && !req.getAge().equals(computedAge)) {
-                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "생년월일과 나이가 일치하지 않습니다.");
-            }
-        } else if (req.getAge() != null) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "생년월일이 없으면 나이를 보낼 수 없습니다.");
-        }
-
-        String nationality = null;
-        if (req.getNationality() != null && !req.getNationality().isBlank()) {
-            nationality = req.getNationality().trim().toUpperCase(Locale.ROOT);
-            if (!ALLOWED_NATIONALITIES.contains(nationality)) {
-                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "국적 값이 올바르지 않습니다.");
-            }
-        }
-
-        String videoUrl = req.getVideoUrl().trim();
-        if (!SocialVideoUrls.isValidAuditionVideoUrl(videoUrl)) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
-                    "영상 링크는 YouTube, TikTok, Instagram 영상 주소만 입력할 수 있습니다.");
-        }
-        String introText = req.getIntroText() != null ? req.getIntroText().trim() : "";
-        if (introText.isEmpty()) {
-            introText = null;
-        }
-
-        List<NormalizedSnsLink> snsToSave = normalizeSnsPayload(req.snsLinksOrEmpty());
-
-        creditService.useCredits(applicantId, CreditPolicyKey.AUDITION_APPLY, auditionId.toString());
-        User applicant = userRepository.findById(applicantId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "사용자를 찾을 수 없습니다."));
-
-        Application app = new Application();
-        app.setAuditionId(auditionId);
-        app.setApplicantId(applicantId);
-        app.setStatus("SUBMITTED");
-        if (!AuditionProcessModes.isMultiRound(audition.getProcessMode())) {
-            int initialRound = 1;
-            if (audition.getCurrentRoundNumber() != null && audition.getCurrentRoundNumber() > 0) {
-                initialRound = audition.getCurrentRoundNumber();
-            }
-            app.setCurrentRoundNumber(initialRound);
-        }
-        app.setApplicantName(applicantName);
-        app.setBirthDate(birthDate);
-        app.setAge(computedAge);
-        app.setNationality(nationality);
-        app.setVideoUrl(videoUrl);
-        app.setIntroText(introText);
-        app.setUpdatedAt(Instant.now());
-
-        try {
-            app = applicationRepository.save(app);
-        } catch (DataIntegrityViolationException e) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 지원 완료입니다.");
-        }
-
-        ApplicationVideo video = new ApplicationVideo();
-        video.setApplicationId(app.getId());
-        video.setVideoUrl(videoUrl);
-        video.setUpdatedAt(Instant.now());
-        applicationVideoRepository.save(video);
-
-        for (NormalizedSnsLink row : snsToSave) {
-            ApplicationSnsLink link = new ApplicationSnsLink();
-            link.setApplicationId(app.getId());
-            link.setPlatform(row.platform());
-            link.setUrl(row.url());
-            applicationSnsLinkRepository.save(link);
-        }
-
-        applicationRoundSubmissionService.onApplicationCreated(app, audition);
-        long cnt = applicationRepository.countByAuditionId(auditionId);
-        audition.setApplicantsCount((int) cnt);
-        auditionRepository.save(audition);
-        return toResponse(app, applicant);
-    }
-
-    private List<NormalizedSnsLink> normalizeSnsPayload(List<CreateApplicationRequest.SnsLinkItem> raw) {
-        List<NormalizedSnsLink> out = new ArrayList<>();
-        for (CreateApplicationRequest.SnsLinkItem item : raw) {
-            if (item == null) {
-                continue;
-            }
-            String platform = item.getPlatform() != null ? item.getPlatform().trim().toLowerCase(Locale.ROOT) : "";
-            String url = item.getUrl() != null ? item.getUrl().trim() : "";
-            if (platform.isEmpty() && url.isEmpty()) {
-                continue;
-            }
-            if (platform.isEmpty() || url.isEmpty()) {
-                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "SNS는 플랫폼과 URL을 함께 입력해 주세요.");
-            }
-            if (!ALLOWED_SNS_PLATFORMS.contains(platform)) {
-                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "지원하지 않는 SNS 플랫폼입니다.");
-            }
-            assertHttpUrl(url);
-            out.add(new NormalizedSnsLink(platform, url));
-        }
-        return out;
-    }
-
-    private static void assertHttpUrl(String url) {
-        try {
-            URI u = URI.create(url);
-            String scheme = u.getScheme();
-            if (scheme == null || !(scheme.equalsIgnoreCase("http") || scheme.equalsIgnoreCase("https"))) {
-                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "SNS URL은 http(s) 주소여야 합니다.");
-            }
-            if (u.getHost() == null || u.getHost().isBlank()) {
-                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "SNS URL이 올바르지 않습니다.");
-            }
-        } catch (ResponseStatusException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "SNS URL이 올바르지 않습니다.");
-        }
-    }
-
-    private static final class NormalizedSnsLink {
-        private final String platform;
-        private final String url;
-
-        private NormalizedSnsLink(String platform, String url) {
-            this.platform = platform;
-            this.url = url;
-        }
-
-        private String platform() {
-            return platform;
-        }
-
-        private String url() {
-            return url;
-        }
+        throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "submitApplication은 ApplicationSubmitService 경유만 허용됩니다.");
     }
 
     public List<ApplicationResponse> listMyApplications() {
