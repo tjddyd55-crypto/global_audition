@@ -105,14 +105,16 @@ public class ApplicationValidationService {
         try {
             URI uri = URI.create(url);
             String scheme = uri.getScheme();
-            if (!("http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme))) {
-                throw new IllegalArgumentException("invalid scheme");
+            if (scheme == null || !(scheme.equalsIgnoreCase("http") || scheme.equalsIgnoreCase("https"))) {
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "SNS URL은 http(s) 주소여야 합니다.");
             }
             if (uri.getHost() == null || uri.getHost().isBlank()) {
-                throw new IllegalArgumentException("missing host");
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "SNS URL이 올바르지 않습니다.");
             }
+        } catch (ResponseStatusException e) {
+            throw e;
         } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "SNS URL 형식이 올바르지 않습니다.");
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "SNS URL이 올바르지 않습니다.");
         }
     }
 
