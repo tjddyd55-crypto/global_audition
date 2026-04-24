@@ -21,7 +21,8 @@
   - 생년월일/나이, 국적, 영상 URL, SNS 링크 검증 담당
 - `AgencyApplicationManageService`
   - 기획사/관리자 지원자 목록, 상세, 심사 보드 경계
-  - 향후 목록 필터링/카테고리/차수 로직 이동 대상
+  - 지원자 상세 조회를 담당한다.
+  - 목록/필터링/레거시 상태 변경 경로는 아직 `ApplicationService`에 위임한다.
 - `ApplicationStatusService`
   - 지원 상태 변경 경계
   - 상태값 매핑, 히스토리 기록, 랭킹 재계산을 담당한다.
@@ -35,7 +36,8 @@
 - 2차 PR에서 `ApplicationStatusService`, `ApplicationVideoViewService`는 실제 로직을 보유하도록 이동했다.
 - 3차 PR에서 `ApplicationValidationService`를 추가해 submit 검증 분리 준비를 완료했다.
 - 4차 PR에서 `ApplicationSubmitService`가 `ApplicationValidationService`를 사용하고, 지원서 제출 흐름을 직접 담당하도록 이동했다.
-- `AgencyApplicationManageService`는 아직 기존 `ApplicationService`에 위임한다.
+- 5차 PR에서 `ApplicationService.submitApplication` 중복 구현을 축소했다.
+- 6차 PR에서 `AgencyApplicationManageService`가 지원자 상세 조회를 직접 담당하도록 이동했다.
 
 ## 프론트 API 경계
 
@@ -81,7 +83,7 @@
 
 ## 다음 단계
 
-1. `ApplicationService.submitApplication` 중복 메서드를 호환 위임 또는 제거 가능한 상태로 축소
-2. 기획사 관리 목록/필터링을 `AgencyApplicationManageService`로 이동
+1. 기획사 관리 목록/필터링을 `AgencyApplicationManageService`로 이동
+2. `ApplicationService.getApplicationAgencyDetail` 중복 구현 축소
 3. 기존 `auditions.ts` 내부 구현을 기능별 파일로 실제 이동하고, `auditions.ts`는 호환 export만 유지
 4. 홈/오디션 상세 UI를 컴포넌트 단위로 분리
