@@ -1,10 +1,13 @@
-import { auditionApi } from '../auditions'
+import { apiClient } from '../client'
+import type { AuditionDto } from '@/shared/types/audition'
+import { parseAuditionDto } from './parsers'
 
-/** 공개 오디션 조회 API 경계. */
-export const publicAuditionApi = {
-  listOpen: auditionApi.listOpen,
-  getById: auditionApi.getById,
+export const listOpenAuditions = async (): Promise<AuditionDto[]> => {
+  const { data } = await apiClient.get<Record<string, unknown>[]>('/auditions', { params: { status: 'OPEN' } })
+  return (data ?? []).map((row) => parseAuditionDto(row))
 }
 
-export const listOpenAuditions = auditionApi.listOpen
-export const getAuditionById = auditionApi.getById
+export const getAuditionById = async (id: string): Promise<AuditionDto> => {
+  const { data } = await apiClient.get<Record<string, unknown>>(`/auditions/${id}`)
+  return parseAuditionDto(data ?? {})
+}

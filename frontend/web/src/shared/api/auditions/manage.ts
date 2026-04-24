@@ -1,12 +1,5 @@
-import { auditionApi } from '../auditions'
-
-/** 기획사/관리자 오디션 관리 API 경계. */
-export const manageAuditionApi = {
-  create: auditionApi.create,
-  update: auditionApi.update,
-  deleteAudition: auditionApi.deleteAudition,
-  getMyAuditions: auditionApi.getMyAuditions,
-  listManageApplications: auditionApi.listManageApplications,
-  getApplicationAgencyDetail: auditionApi.getApplicationAgencyDetail,
-  updateApplicationStatus: auditionApi.updateApplicationStatus,
-}
+/**
+ * manage API 분리는 후속 PR에서 진행한다.
+ * 현재 PR(#13)에서는 기존 `auditions.ts` 구현을 그대로 사용한다.
+ */
+export {}
