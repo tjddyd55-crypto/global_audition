@@ -28,13 +28,14 @@ import java.util.UUID;
 /**
  * 기획사/관리자 관점의 지원자 관리 유스케이스 경계.
  *
- * <p>지원자 상세 조회는 이 서비스가 담당한다. 목록, 심사 보드 필터링,
+ * <p>지원자 단순 목록과 상세 조회는 이 서비스 경계가 담당한다. 심사 보드 필터링,
  * 레거시 상태 변경 경로는 아직 기존 {@link ApplicationService} 에 위임한다.</p>
  */
 @Service
 public class AgencyApplicationManageService {
 
     private final ApplicationService applicationService;
+    private final AgencyApplicantsListQueryService agencyApplicantsListQueryService;
     private final ApplicationRepository applicationRepository;
     private final AuditionRepository auditionRepository;
     private final UserRepository userRepository;
@@ -43,12 +44,14 @@ public class AgencyApplicationManageService {
 
     public AgencyApplicationManageService(
             ApplicationService applicationService,
+            AgencyApplicantsListQueryService agencyApplicantsListQueryService,
             ApplicationRepository applicationRepository,
             AuditionRepository auditionRepository,
             UserRepository userRepository,
             ApplicantCardMetricsLoader metricsLoader,
             ApplicationSnsLinkRepository applicationSnsLinkRepository) {
         this.applicationService = applicationService;
+        this.agencyApplicantsListQueryService = agencyApplicantsListQueryService;
         this.applicationRepository = applicationRepository;
         this.auditionRepository = auditionRepository;
         this.userRepository = userRepository;
@@ -57,7 +60,7 @@ public class AgencyApplicationManageService {
     }
 
     public AgencyApplicantsListDto listAgencyApplicants(UUID auditionId) {
-        return applicationService.listAgencyApplicants(auditionId);
+        return agencyApplicantsListQueryService.listAgencyApplicants(auditionId);
     }
 
     public ManageApplicationsPageDataDto listManageApplications(
