@@ -28,7 +28,7 @@ import java.util.UUID;
 /**
  * 기획사/관리자 관점의 지원자 관리 유스케이스 경계.
  *
- * <p>지원자 단순 목록과 상세 조회는 이 서비스 경계가 담당한다. 심사 보드 필터링,
+ * <p>지원자 단순 목록, 상세 조회, 관리 보드 조회는 이 서비스 경계가 담당한다.
  * 레거시 상태 변경 경로는 아직 기존 {@link ApplicationService} 에 위임한다.</p>
  */
 @Service
@@ -36,6 +36,7 @@ public class AgencyApplicationManageService {
 
     private final ApplicationService applicationService;
     private final AgencyApplicantsListQueryService agencyApplicantsListQueryService;
+    private final ManageApplicationsQueryService manageApplicationsQueryService;
     private final ApplicationRepository applicationRepository;
     private final AuditionRepository auditionRepository;
     private final UserRepository userRepository;
@@ -45,6 +46,7 @@ public class AgencyApplicationManageService {
     public AgencyApplicationManageService(
             ApplicationService applicationService,
             AgencyApplicantsListQueryService agencyApplicantsListQueryService,
+            ManageApplicationsQueryService manageApplicationsQueryService,
             ApplicationRepository applicationRepository,
             AuditionRepository auditionRepository,
             UserRepository userRepository,
@@ -52,6 +54,7 @@ public class AgencyApplicationManageService {
             ApplicationSnsLinkRepository applicationSnsLinkRepository) {
         this.applicationService = applicationService;
         this.agencyApplicantsListQueryService = agencyApplicantsListQueryService;
+        this.manageApplicationsQueryService = manageApplicationsQueryService;
         this.applicationRepository = applicationRepository;
         this.auditionRepository = auditionRepository;
         this.userRepository = userRepository;
@@ -72,7 +75,7 @@ public class AgencyApplicationManageService {
             Boolean hasSns,
             String boardStatus,
             Integer round) {
-        return applicationService.listManageApplications(
+        return manageApplicationsQueryService.listManageApplications(
                 auditionId, category, minAge, maxAge, nationality, hasSns, boardStatus, round);
     }
 

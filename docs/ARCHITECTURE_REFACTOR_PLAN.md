@@ -21,11 +21,15 @@
   - 생년월일/나이, 국적, 영상 URL, SNS 링크 검증 담당
 - `AgencyApplicationManageService`
   - 기획사/관리자 지원자 목록, 상세, 심사 보드 경계
-  - 지원자 단순 목록과 상세 조회를 담당한다.
-  - 심사 보드 필터링/레거시 상태 변경 경로는 아직 `ApplicationService`에 위임한다.
+  - 지원자 단순 목록, 상세 조회, 관리 보드 조회 경로를 담당한다.
+  - 레거시 상태 변경 경로는 아직 `ApplicationService`에 위임한다.
 - `AgencyApplicantsListQueryService`
   - 기획사/관리자 지원자 단순 목록 조회 전용 경계
   - 목록 카드 DTO, 점수, SNS count, 카드 메트릭 조립을 담당한다.
+- `ManageApplicationsQueryService`
+  - 기획사/관리자 지원자 관리 보드 조회 전용 경계
+  - 현재는 기존 `ApplicationService.listManageApplications`에 위임한다.
+  - 다음 단계에서 통계, 차수, 필터링, 카드 DTO 조립 로직을 이동한다.
 - `ApplicationStatusService`
   - 지원 상태 변경 경계
   - 상태값 매핑, 히스토리 기록, 랭킹 재계산을 담당한다.
@@ -42,6 +46,7 @@
 - 5차 PR에서 `ApplicationService.submitApplication` 중복 구현을 축소했다.
 - 6차 PR에서 `AgencyApplicationManageService`가 지원자 상세 조회를 직접 담당하도록 이동했다.
 - 8차 PR에서 `AgencyApplicantsListQueryService`를 추가하고, `AgencyApplicationManageService.listAgencyApplicants`가 이를 사용하도록 이동했다.
+- 10차 PR에서 `ManageApplicationsQueryService` 경계를 추가하고, `AgencyApplicationManageService.listManageApplications`가 이를 사용하도록 이동했다.
 
 ## 프론트 API 경계
 
@@ -87,7 +92,7 @@
 
 ## 다음 단계
 
-1. `ApplicationService.listAgencyApplicants` 중복 구현 축소
-2. 기획사 관리 보드 목록/필터링을 `AgencyApplicationManageService`로 이동
+1. `ManageApplicationsQueryService`로 관리 보드 목록/필터링 실제 로직 이동
+2. `ApplicationService.listManageApplications` 중복 구현 축소
 3. 기존 `auditions.ts` 내부 구현을 기능별 파일로 실제 이동하고, `auditions.ts`는 호환 export만 유지
 4. 홈/오디션 상세 UI를 컴포넌트 단위로 분리
