@@ -2,14 +2,17 @@ package com.audition.platform.api;
 
 import com.audition.platform.api.dto.ApiEnvelope;
 import com.audition.platform.api.dto.AgencyApplicantsListDto;
-import com.audition.platform.api.dto.ApplicationDecisionRequest;
-import com.audition.platform.api.dto.CreateApplicationRequest;
-import com.audition.platform.api.dto.ApplicationResponse;
 import com.audition.platform.api.dto.ApplicationAgencyDetailDto;
+import com.audition.platform.api.dto.ApplicationDecisionRequest;
+import com.audition.platform.api.dto.ApplicationResponse;
 import com.audition.platform.api.dto.ApplicationStatusPatchDataDto;
+import com.audition.platform.api.dto.CreateApplicationRequest;
 import com.audition.platform.api.dto.ManageApplicationsPageDataDto;
 import com.audition.platform.api.dto.PatchApplicationStatusRequest;
-import com.audition.platform.application.ApplicationService;
+import com.audition.platform.application.applications.AgencyApplicationManageService;
+import com.audition.platform.application.applications.ApplicationStatusService;
+import com.audition.platform.application.applications.ApplicationSubmitService;
+import com.audition.platform.application.applications.ApplicationVideoViewService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -27,35 +30,45 @@ import java.util.UUID;
 @RequestMapping("/api")
 public class ApplicationController {
 
-    private final ApplicationService applicationService;
+    private final ApplicationSubmitService applicationSubmitService;
+    private final AgencyApplicationManageService agencyApplicationManageService;
+    private final ApplicationStatusService applicationStatusService;
+    private final ApplicationVideoViewService applicationVideoViewService;
 
-    public ApplicationController(ApplicationService applicationService) {
-        this.applicationService = applicationService;
+    public ApplicationController(
+            ApplicationSubmitService applicationSubmitService,
+            AgencyApplicationManageService agencyApplicationManageService,
+            ApplicationStatusService applicationStatusService,
+            ApplicationVideoViewService applicationVideoViewService) {
+        this.applicationSubmitService = applicationSubmitService;
+        this.agencyApplicationManageService = agencyApplicationManageService;
+        this.applicationStatusService = applicationStatusService;
+        this.applicationVideoViewService = applicationVideoViewService;
     }
 
     @PostMapping("/auditions/{auditionId}/apply")
     public ApplicationResponse apply(@PathVariable UUID auditionId) {
-        return applicationService.apply(auditionId);
+        return applicationSubmitService.apply(auditionId);
     }
 
     @PostMapping("/applications")
     public ApplicationResponse submitApplication(@Valid @RequestBody CreateApplicationRequest body) {
-        return applicationService.submitApplication(body);
+        return applicationSubmitService.submitApplication(body);
     }
 
     @GetMapping("/applications/my")
     public List<ApplicationResponse> listMyApplications() {
-        return applicationService.listMyApplications();
+        return applicationSubmitService.listMyApplications();
     }
 
     @GetMapping("/applications/me")
     public List<ApplicationResponse> listMyApplicationsLegacy() {
-        return applicationService.listMyApplications();
+        return applicationSubmitService.listMyApplications();
     }
 
     @GetMapping("/auditions/{auditionId}/applications")
     public ApiEnvelope<AgencyApplicantsListDto> listApplications(@PathVariable UUID auditionId) {
-        return ApiEnvelope.ok(applicationService.listAgencyApplicants(auditionId));
+        return ApiEnvelope.ok(agencyApplicationManageService.listAgencyApplicants(auditionId));
     }
 
     @GetMapping("/auditions/{auditionId}/applications/manage")
@@ -68,51 +81,51 @@ public class ApplicationController {
             @RequestParam(name = "hasSns", required = false) Boolean hasSns,
             @RequestParam(name = "status", required = false) String boardStatus,
             @RequestParam(name = "round", required = false) Integer round) {
-        return ApiEnvelope.ok(applicationService.listManageApplications(
+        return ApiEnvelope.ok(agencyApplicationManageService.listManageApplications(
                 auditionId, category, minAge, maxAge, nationality, hasSns, boardStatus, round));
     }
 
     @PostMapping("/applications/{id}/decision")
     public ApplicationResponse decide(@PathVariable UUID id, @Valid @RequestBody ApplicationDecisionRequest request) {
-        return applicationService.decide(id, request.getStatus());
+        return agencyApplicationManageService.decide(id, request.getStatus());
     }
 
     @PostMapping("/applications/{id}/mark-reviewed")
     public ApplicationResponse markReviewed(@PathVariable UUID id) {
-        return applicationService.markReviewed(id);
+        return agencyApplicationManageService.markReviewed(id);
     }
 
     @PatchMapping("/applications/{id}/status")
     public ApiEnvelope<ApplicationStatusPatchDataDto> patchApplicationStatus(
             @PathVariable UUID id,
             @Valid @RequestBody PatchApplicationStatusRequest request) {
-        return ApiEnvelope.ok(applicationService.patchApplicationStatus(id, request.getStatus()));
+        return ApiEnvelope.ok(applicationStatusService.patchApplicationStatus(id, request.getStatus()));
     }
 
     /** 공개 투표 등에서 대표 영상 조회수 +1 (인증 불필요, MVP) */
     @PostMapping("/applications/{id}/view")
     public ApiEnvelope<Boolean> incrementApplicationView(@PathVariable UUID id) {
-        applicationService.incrementRepresentativeVideoView(id);
+        applicationVideoViewService.incrementRepresentativeVideoView(id);
         return ApiEnvelope.ok(Boolean.TRUE);
     }
 
     @PostMapping("/applications/{id}/accept")
     public ApplicationResponse acceptLegacy(@PathVariable UUID id) {
-        return applicationService.decide(id, "ACCEPTED");
+        return agencyApplicationManageService.decide(id, "ACCEPTED");
     }
 
     @PostMapping("/applications/{id}/reject")
     public ApplicationResponse rejectLegacy(@PathVariable UUID id) {
-        return applicationService.decide(id, "REJECTED");
+        return agencyApplicationManageService.decide(id, "REJECTED");
     }
 
     @GetMapping("/applications/{id}/agency-detail")
     public ApiEnvelope<ApplicationAgencyDetailDto> getAgencyApplicationDetail(@PathVariable UUID id) {
-        return ApiEnvelope.ok(applicationService.getApplicationAgencyDetail(id));
+        return ApiEnvelope.ok(agencyApplicationManageService.getApplicationAgencyDetail(id));
     }
 
     @GetMapping("/applications/{id}")
     public ApplicationResponse getById(@PathVariable UUID id) {
-        return applicationService.getApplicationForApplicantOrOwner(id);
+        return applicationSubmitService.getApplicationForApplicantOrOwner(id);
     }
 }
