@@ -1,0 +1,1 @@
+export { parseAuditionDto } from '../auditions'
