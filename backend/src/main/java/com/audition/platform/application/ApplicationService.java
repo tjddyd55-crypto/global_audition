@@ -170,24 +170,11 @@ public class ApplicationService {
     /**
      * 기획사/관리자용 지원자 카드 목록 (화면 DTO)
      */
+    @Deprecated
     public AgencyApplicantsListDto listAgencyApplicants(UUID auditionId) {
-        UUID currentUserId = SecurityUtils.getCurrentUserId();
-        if (currentUserId == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
-        }
-        Audition audition = auditionRepository.findById(auditionId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "오디션을 찾을 수 없습니다."));
-        assertAgencyOrAdminCanManageAudition(audition);
-
-        List<Application> list = applicationRepository.findByAuditionIdOrderByCreatedAtDesc(auditionId);
-        Map<UUID, ApplicationScore> scoreByApp = applicationScoreRepository.findByAuditionId(auditionId).stream()
-                .collect(Collectors.toMap(ApplicationScore::getApplicationId, Function.identity(), (a, b) -> a));
-        Map<UUID, Long> snsMap = snsCountsByApplicationIds(list);
-        AgencyApplicantsListDto out = new AgencyApplicantsListDto();
-        out.setItems(list.stream()
-                .map(app -> toAgencyItem(app, scoreByApp.get(app.getId()), snsMap.getOrDefault(app.getId(), 0L)))
-                .collect(Collectors.toList()));
-        return out;
+        throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "기획사 지원자 단순 목록 조회는 AgencyApplicantsListQueryService를 사용하세요.");
     }
 
     /**
