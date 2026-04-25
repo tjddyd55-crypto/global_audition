@@ -1,7 +1,6 @@
 ﻿'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { auditionApi } from '@/shared/api/auditions'
 import { useParams } from 'next/navigation'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
@@ -9,11 +8,11 @@ import { useTranslations } from 'next-intl'
 import { AUDITION_DETAIL } from '@/shared/design-tokens'
 import { getVideoEmbedSrc } from '@/shared/utils/videoEmbed'
 import { safeArr, safeNum, safeStr } from '@/shared/utils/safe'
-import { useAuthStore } from '@/shared/auth/authStore'
 import { AuditionDetailHeroSection } from '@/components/audition/AuditionDetailHeroSection'
 import { AuditionDetailMediaSection } from '@/components/audition/AuditionDetailMedia'
 import { CREDIT_POLICY_AUDITION_APPLY, creditsApi } from '@/shared/api/credits'
 import { roundIdForRoundNumber } from '@/shared/audition/roundNav'
+import { useAuditionDetailState } from '@/shared/audition/useAuditionDetailState'
 import PcAuditionDetailInfo from './components/PcAuditionDetailInfo'
 import PcAuditionBenefitsSection from './components/PcAuditionBenefitsSection'
 import PcAuditionDetailSidebar from './components/PcAuditionDetailSidebar'
@@ -29,33 +28,31 @@ export default function PcAuditionDetailPage() {
   const params = useParams()
   const t = useTranslations('common')
   const id = params.id as string
-  const accessToken = useAuthStore((s) => s.accessToken)
-  const myUserId = useAuthStore((s) => s.userId)
-  const role = useAuthStore((s) => s.role)
 
-  const { data: audition, isLoading, error } = useQuery({
-    /** 로그인 전후 hasApplied 등 뷰어 전용 필드 반영 */
-    queryKey: ['audition', id, myUserId ?? 'anon'],
-    queryFn: () => auditionApi.getById(id),
-    enabled: !!id,
-  })
-
-  const isOpenAudition = audition?.status === 'OPEN'
+  const {
+    audition,
+    isLoading,
+    error,
+    isOpen,
+    alreadyApplied,
+    isMultiRoundAudition,
+    seriesRound,
+    showApplyLoginCta,
+    showApplySubmitCta,
+    showApplyDisabledCta,
+  } = useAuditionDetailState(id)
 
   const { data: applyPolicy, isLoading: applyPolicyLoading, isError: applyPolicyError } = useQuery({
     queryKey: ['credit-policy-public', CREDIT_POLICY_AUDITION_APPLY],
     queryFn: () => creditsApi.getPublicPolicy(CREDIT_POLICY_AUDITION_APPLY),
-    enabled: !!id && isOpenAudition,
+    enabled: !!id && isOpen,
     staleTime: 60_000,
   })
-
-  const showApplySubmitCtaEarly =
-    isOpenAudition && !!accessToken && (role === 'APPLICANT' || role === 'ADMIN')
 
   const { data: creditBalance, isLoading: balanceLoading } = useQuery({
     queryKey: ['credits', 'balance'],
     queryFn: () => creditsApi.getBalance(),
-    enabled: !!id && showApplySubmitCtaEarly,
+    enabled: !!id && showApplySubmitCta,
     staleTime: 30_000,
   })
 
@@ -93,7 +90,6 @@ export default function PcAuditionDetailPage() {
   const schedules = safeArr(audition.schedules)
   const benefits = safeArr(audition.benefits)
   const auditionTags = safeArr(audition.tags)
-  const seriesRound = audition.round ?? 1
   const headlineTitle = auditionHeadlineTitle(audition)
   const descriptionText = safeStr(audition.description)
   const heroSubtitle =
@@ -102,11 +98,8 @@ export default function PcAuditionDetailPage() {
       .map((s) => s.trim())
       .find((s) => s.length > 0) ?? ''
   const remainingDaysVal = safeNum(audition.remainingDays)
-  const deadlineUrgent = isOpenAudition && remainingDaysVal <= 3 && remainingDaysVal >= 0
+  const deadlineUrgent = isOpen && remainingDaysVal <= 3 && remainingDaysVal >= 0
 
-  const isOpen = audition.status === 'OPEN'
-  const alreadyApplied = audition.hasApplied === true
-  const isMultiRoundAudition = safeStr(audition.processMode) === 'MULTI_ROUND'
   const auditionRoundSummaries = audition.roundSummaries ?? []
   const myApplicationIdForRound = audition.myApplicationId
   const myApplicantRoundNumber = audition.myCurrentRoundNumber ?? 1
@@ -114,11 +107,6 @@ export default function PcAuditionDetailPage() {
     myApplicationIdForRound != null && myApplicationIdForRound.length > 0
       ? roundIdForRoundNumber(auditionRoundSummaries, myApplicantRoundNumber)
       : null
-  /** 하단 CTA: 오픈 시 비로그인은 로그인 유도, 지원자/관리자만 실제 지원 버튼 */
-  const isAuthenticated = !!accessToken
-  const showApplyLoginCta = isOpen && !isAuthenticated
-  const showApplySubmitCta = isOpen && isAuthenticated && (role === 'APPLICANT' || role === 'ADMIN')
-  const showApplyDisabledCta = isOpen && isAuthenticated && !showApplySubmitCta
 
   const applyPolicySnapshot = applyPolicy
   const creditBalanceAmount = creditBalance?.balance ?? 0

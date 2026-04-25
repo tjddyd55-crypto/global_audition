@@ -1,33 +1,14 @@
 'use client'
 
-import { useQuery } from '@tanstack/react-query'
-import { auditionApi } from '@/shared/api/auditions'
 import { useParams } from 'next/navigation'
-import { useAuthStore } from '@/shared/auth/authStore'
+import { useAuditionDetailState } from '@/shared/audition/useAuditionDetailState'
 import MobileAuditionDetailSummary from './components/MobileAuditionDetailSummary'
 import MobileAuditionApplyBar from './components/MobileAuditionApplyBar'
 
 export default function MobileAuditionDetailPage() {
   const params = useParams()
   const id = params.id as string
-  const myUserId = useAuthStore((s) => s.userId)
-  const role = useAuthStore((s) => s.role)
-
-  const { data: audition, isLoading, error } = useQuery({
-    queryKey: ['audition', id, myUserId ?? 'anon'],
-    queryFn: () => auditionApi.getById(id),
-    enabled: !!id,
-  })
-
-  const seriesRound = audition?.round ?? 1
-  const isApplicantRole = role === 'APPLICANT' || role === 'ADMIN'
-  const alreadyApplied =
-    audition?.status === 'OPEN' && isApplicantRole && audition?.hasApplied === true
-  const applyBlocked =
-    audition?.status === 'OPEN' &&
-    isApplicantRole &&
-    seriesRound >= 2 &&
-    audition?.canApply === false
+  const { audition, isLoading, error, alreadyApplied, applyBlocked } = useAuditionDetailState(id)
 
   if (isLoading) {
     return (
