@@ -115,9 +115,10 @@ export default function PcAuditionDetailPage() {
       ? roundIdForRoundNumber(auditionRoundSummaries, myApplicantRoundNumber)
       : null
   /** 하단 CTA: 오픈 시 비로그인은 로그인 유도, 지원자/관리자만 실제 지원 버튼 */
-  const showApplyLoginCta = isOpen && !accessToken
-  const showApplySubmitCta = isOpen && accessToken && (role === 'APPLICANT' || role === 'ADMIN')
-  const showApplyDisabledCta = isOpen && accessToken && !showApplySubmitCta
+  const isAuthenticated = !!accessToken
+  const showApplyLoginCta = isOpen && !isAuthenticated
+  const showApplySubmitCta = isOpen && isAuthenticated && (role === 'APPLICANT' || role === 'ADMIN')
+  const showApplyDisabledCta = isOpen && isAuthenticated && !showApplySubmitCta
 
   const applyPolicySnapshot = applyPolicy
   const creditBalanceAmount = creditBalance?.balance ?? 0
