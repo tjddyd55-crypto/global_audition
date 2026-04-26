@@ -9,6 +9,9 @@ import { getVideoEmbedSrc } from '@/shared/utils/videoEmbed'
 import { safeArr, safeNum, safeStr } from '@/shared/utils/safe'
 import { AuditionDetailHeroSection } from '@/components/audition/AuditionDetailHeroSection'
 import { AuditionDetailMediaSection } from '@/components/audition/AuditionDetailMedia'
+import PageSurface from '@/components/layout/PageSurface'
+import DetailContentShell from '@/components/layout/DetailContentShell'
+import DetailTwoColumnGrid from '@/components/layout/DetailTwoColumnGrid'
 import { roundIdForRoundNumber } from '@/shared/audition/roundNav'
 import { useAuditionDetailState } from '@/shared/audition/useAuditionDetailState'
 import { useAuditionApplyCreditGate } from '@/shared/audition/useAuditionApplyCreditGate'
@@ -128,7 +131,7 @@ export default function PcAuditionDetailPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: AUDITION_DETAIL.pageBackgroundMuted }}>
+    <PageSurface background={AUDITION_DETAIL.pageBackgroundMuted}>
       <AuditionDetailHeroSection
         auditionId={id}
         heroImageMediumUrl={heroMedium}
@@ -168,16 +171,8 @@ export default function PcAuditionDetailPage() {
 
       {galleryExtra.length > 0 ? <AuditionDetailMediaSection galleryUrls={galleryExtra} /> : null}
 
-      <div
-        className="w-full px-4 pb-[calc(120px+env(safe-area-inset-bottom))]"
-        style={{ paddingTop: AUDITION_DETAIL.sectionGapPx }}
-      >
-        <div
-          className="grid grid-cols-1 lg:grid-cols-[1fr_320px]"
-          style={{
-            gap: AUDITION_DETAIL.mainGridGapPx,
-          }}
-        >
+      <DetailContentShell style={{ paddingTop: AUDITION_DETAIL.sectionGapPx }}>
+        <DetailTwoColumnGrid gap={AUDITION_DETAIL.mainGridGapPx}>
           <PcAuditionDetailInfo
             descriptionText={descriptionText}
             recruitList={recruitList}
@@ -194,10 +189,10 @@ export default function PcAuditionDetailPage() {
             endDateFormatted={fmt(safeStr(audition.endDate))}
             location={safeStr(audition.location)}
           />
-        </div>
+        </DetailTwoColumnGrid>
 
         <PcAuditionBenefitsSection benefits={benefits} />
-      </div>
+      </DetailContentShell>
 
       <PcAuditionDetailApplyBar
         auditionId={id}
@@ -222,6 +217,6 @@ export default function PcAuditionDetailPage() {
         hasEnoughCredits={hasEnoughCredits}
         applyPolicyError={applyPolicyError}
       />
-    </div>
+    </PageSurface>
   )
 }
