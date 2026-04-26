@@ -1,6 +1,5 @@
 ﻿'use client'
 
-import { useQuery } from '@tanstack/react-query'
 import { useParams } from 'next/navigation'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
@@ -10,9 +9,9 @@ import { getVideoEmbedSrc } from '@/shared/utils/videoEmbed'
 import { safeArr, safeNum, safeStr } from '@/shared/utils/safe'
 import { AuditionDetailHeroSection } from '@/components/audition/AuditionDetailHeroSection'
 import { AuditionDetailMediaSection } from '@/components/audition/AuditionDetailMedia'
-import { CREDIT_POLICY_AUDITION_APPLY, creditsApi } from '@/shared/api/credits'
 import { roundIdForRoundNumber } from '@/shared/audition/roundNav'
 import { useAuditionDetailState } from '@/shared/audition/useAuditionDetailState'
+import { useAuditionApplyCreditGate } from '@/shared/audition/useAuditionApplyCreditGate'
 import PcAuditionDetailInfo from './components/PcAuditionDetailInfo'
 import PcAuditionBenefitsSection from './components/PcAuditionBenefitsSection'
 import PcAuditionDetailSidebar from './components/PcAuditionDetailSidebar'
@@ -42,18 +41,21 @@ export default function PcAuditionDetailPage() {
     showApplyDisabledCta,
   } = useAuditionDetailState(id)
 
-  const { data: applyPolicy, isLoading: applyPolicyLoading, isError: applyPolicyError } = useQuery({
-    queryKey: ['credit-policy-public', CREDIT_POLICY_AUDITION_APPLY],
-    queryFn: () => creditsApi.getPublicPolicy(CREDIT_POLICY_AUDITION_APPLY),
-    enabled: !!id && isOpen,
-    staleTime: 60_000,
-  })
-
-  const { data: creditBalance, isLoading: balanceLoading } = useQuery({
-    queryKey: ['credits', 'balance'],
-    queryFn: () => creditsApi.getBalance(),
-    enabled: !!id && showApplySubmitCta,
-    staleTime: 30_000,
+  const {
+    applyPolicySnapshot,
+    applyPolicyLoading,
+    applyPolicyError,
+    balanceLoading,
+    creditBalanceAmount,
+    needCreditsForApply,
+    creditGateReady,
+    hasEnoughCredits,
+    applyNavDisabledForCredits,
+  } = useAuditionApplyCreditGate({
+    auditionId: id,
+    isOpen,
+    showApplySubmitCta,
+    alreadyApplied,
   })
 
   if (isLoading) {
@@ -107,26 +109,6 @@ export default function PcAuditionDetailPage() {
     myApplicationIdForRound != null && myApplicationIdForRound.length > 0
       ? roundIdForRoundNumber(auditionRoundSummaries, myApplicantRoundNumber)
       : null
-
-  const applyPolicySnapshot = applyPolicy
-  const creditBalanceAmount = creditBalance?.balance ?? 0
-  const needCreditsForApply =
-    !!applyPolicySnapshot && applyPolicySnapshot.active && applyPolicySnapshot.cost > 0
-  const creditGateReady = !needCreditsForApply || !balanceLoading
-  const hasEnoughCredits =
-    !applyPolicySnapshot || !applyPolicySnapshot.active || applyPolicySnapshot.cost <= 0
-      ? true
-      : creditBalanceAmount >= applyPolicySnapshot.cost
-  const applyNavDisabledForCredits = Boolean(
-    showApplySubmitCta &&
-      !alreadyApplied &&
-      (applyPolicyLoading ||
-        applyPolicyError ||
-        !applyPolicySnapshot ||
-        !applyPolicySnapshot.active ||
-        !creditGateReady ||
-        !hasEnoughCredits)
-  )
 
   const applyNavBlockedBySeries = Boolean(
     showApplySubmitCta &&
