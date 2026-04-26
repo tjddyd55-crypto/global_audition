@@ -1,5 +1,6 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import AuditionList from '@/components/audition/AuditionList'
+import AuditionsPageHeader from '@/components/audition/AuditionsPageHeader'
 
 /**
  * PC 오디션 목록 페이지.
@@ -17,17 +18,14 @@ export default async function PcAuditionsListPage({ locale }: { locale: string }
 
   return (
     <div style={pageStyle}>
-      <div
+      <AuditionsPageHeader
+        title={t('auditions')}
+        description="전 세계 기획사의 오디션에 지원해보세요"
         className="w-full"
-        style={{
-          marginBottom: 24,
-          paddingLeft: 'max(1rem, env(safe-area-inset-left))',
-          paddingRight: 'max(1rem, env(safe-area-inset-right))',
-        }}
-      >
-        <h1 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 8px 0' }}>{t('auditions')}</h1>
-        <p style={{ fontSize: 16, color: '#666', margin: 0 }}>전 세계 기획사의 오디션에 지원해보세요</p>
-      </div>
+        style={{ marginBottom: 24 }}
+        titleStyle={{ fontSize: 28, fontWeight: 700, margin: '0 0 8px 0' }}
+        descriptionStyle={{ fontSize: 16, color: '#666', margin: 0 }}
+      />
       <AuditionList />
     </div>
   )
