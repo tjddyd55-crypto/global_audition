@@ -2,16 +2,13 @@
 
 import { useParams } from 'next/navigation'
 import { useRouter } from '@/i18n.config'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { auditionApi } from '@/shared/api/auditions'
+import { useQueryClient } from '@tanstack/react-query'
 import { applicationApi } from '@/shared/api/applications'
-import { authApi } from '@/shared/api/auth'
 import { useTranslations } from 'next-intl'
 import { AuditionApplyForm } from '@/components/application/AuditionApplyForm'
-import { meProfileApi } from '@/shared/api/meProfile'
-import { CREDIT_POLICY_AUDITION_APPLY, creditsApi } from '@/shared/api/credits'
-import { useAuthStore } from '@/shared/auth/authStore'
 import { auditionHeadlineTitle, PREV_ROUND_APPLY_BLOCKED_MSG } from '@/shared/types/audition'
+import { useAuditionApplyPageState } from '@/shared/audition/useAuditionApplyPageState'
+import { useAuditionApplySubmitGate } from '@/shared/audition/useAuditionApplySubmitGate'
 import ApplyPageShell from '@/components/application/ApplyPageShell'
 import ApplyPageGuardState from '@/components/application/ApplyPageGuardState'
 import ApplyPageHeader from '@/components/application/ApplyPageHeader'
@@ -23,38 +20,25 @@ export default function PcAuditionApplyPage() {
   const queryClient = useQueryClient()
   const t = useTranslations('common')
   const auditionId = params.id as string
-  const role = useAuthStore((s) => s.role)
 
-  const { data: audition, isLoading } = useQuery({
-    queryKey: ['audition', auditionId],
-    queryFn: () => auditionApi.getById(auditionId),
-    enabled: !!auditionId,
-  })
+  const {
+    audition,
+    isLoading,
+    role,
+    token,
+    showCreditQueries,
+    meProfile,
+    meProfileFetched,
+  } = useAuditionApplyPageState(auditionId)
 
-  const isOpenAudition = audition?.status === 'OPEN'
-  const showCreditQueries =
-    !!auditionId && isOpenAudition && !!authApi.getToken() && (role === 'APPLICANT' || role === 'ADMIN')
-
-  const { data: meProfile, isFetched: meProfileFetched } = useQuery({
-    queryKey: ['me-profile', 'apply-prefill'],
-    queryFn: () => meProfileApi.get(),
-    enabled: showCreditQueries,
-    staleTime: 60_000,
-  })
-
-  const { data: applyPolicy, isLoading: applyPolicyLoading, isError: applyPolicyError } = useQuery({
-    queryKey: ['credit-policy-public', CREDIT_POLICY_AUDITION_APPLY],
-    queryFn: () => creditsApi.getPublicPolicy(CREDIT_POLICY_AUDITION_APPLY),
-    enabled: showCreditQueries,
-    staleTime: 60_000,
-  })
-
-  const { data: creditBalance, isLoading: balanceLoading } = useQuery({
-    queryKey: ['credits', 'balance'],
-    queryFn: () => creditsApi.getBalance(),
-    enabled: showCreditQueries,
-    staleTime: 30_000,
-  })
+  const {
+    applyPolicySnapshot,
+    applyPolicyError,
+    creditBalanceAmount,
+    creditGateReady,
+    hasEnoughCredits,
+    submitDisabled,
+  } = useAuditionApplySubmitGate({ enabled: showCreditQueries })
 
   if (isLoading || !audition) {
     return (
@@ -75,7 +59,7 @@ export default function PcAuditionApplyPage() {
     )
   }
 
-  if (!authApi.getToken()) {
+  if (!token) {
     return (
       <ApplyPageGuardState
         message="지원하려면 로그인해 주세요."
@@ -123,23 +107,6 @@ export default function PcAuditionApplyPage() {
       />
     )
   }
-
-  const applyPolicySnapshot = applyPolicy
-  const creditBalanceAmount = creditBalance?.balance ?? 0
-  const needCreditsForApply =
-    !!applyPolicySnapshot && applyPolicySnapshot.active && applyPolicySnapshot.cost > 0
-  const creditGateReady = !needCreditsForApply || !balanceLoading
-  const hasEnoughCredits =
-    !applyPolicySnapshot || !applyPolicySnapshot.active || applyPolicySnapshot.cost <= 0
-      ? true
-      : creditBalanceAmount >= applyPolicySnapshot.cost
-  const submitDisabled =
-    applyPolicyLoading ||
-    applyPolicyError ||
-    !applyPolicySnapshot ||
-    !applyPolicySnapshot.active ||
-    !creditGateReady ||
-    !hasEnoughCredits
 
   return (
     <ApplyPageShell>
