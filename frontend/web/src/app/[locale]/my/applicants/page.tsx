@@ -8,8 +8,9 @@ import { useTranslations } from 'next-intl'
 import { auditionApi } from '@/shared/api/auditions'
 import { ApplicantManagementView } from '@/components/audition/ApplicantManagementView'
 import { AgencyDashboardShell } from '@/components/agency/AgencyDashboardShell'
+import MyApplicantsAuditionSelector from '@/components/agency/applicants/MyApplicantsAuditionSelector'
+import MyApplicantsEmptyState from '@/components/agency/applicants/MyApplicantsEmptyState'
 import { useAuthStore } from '@/shared/auth/authStore'
-import { PAGE_CONTAINER, TEXT_SUB } from '@/shared/ui/specClasses'
 
 function MyApplicantsInner() {
   const t = useTranslations('common')
@@ -80,40 +81,20 @@ function MyApplicantsInner() {
   if (!effectiveAuditionId || !selectedAudition) {
     return (
       <AgencyDashboardShell>
-        <div className={`${PAGE_CONTAINER} py-10`}>
-          <h1 className="text-xl font-semibold text-gray-900">지원자 관리</h1>
-          <p className={`${TEXT_SUB} mt-2`}>
-            {list.length === 0
-              ? '등록된 오디션이 없습니다. 오디션 관리에서 공고를 만든 뒤 이용해 주세요.'
-              : '오디션을 선택해 주세요.'}
-          </p>
-        </div>
+        <MyApplicantsEmptyState hasAuditions={list.length > 0} />
       </AgencyDashboardShell>
     )
   }
 
   return (
     <AgencyDashboardShell>
-      <div className={`${PAGE_CONTAINER} border-b border-gray-200 bg-white py-4`}>
-        <label className="block text-xs font-semibold text-gray-500" htmlFor="agency-audition-filter">
-          오디션
-        </label>
-        <select
-          id="agency-audition-filter"
-          className="mt-1 w-full max-w-md rounded-md border border-gray-300 bg-white px-3 py-2 text-sm md:w-auto"
-          value={effectiveAuditionId}
-          onChange={(e) => {
-            const next = e.target.value
-            router.replace(`/my/applicants?auditionId=${encodeURIComponent(next)}`)
-          }}
-        >
-          {list.map((a) => (
-            <option key={a.id} value={a.id}>
-              {a.title} ({a.status})
-            </option>
-          ))}
-        </select>
-      </div>
+      <MyApplicantsAuditionSelector
+        auditions={list}
+        value={effectiveAuditionId}
+        onChange={(next) => {
+          router.replace(`/my/applicants?auditionId=${encodeURIComponent(next)}`)
+        }}
+      />
       <ApplicantManagementView
         auditionId={effectiveAuditionId}
         auditionTitle={selectedAudition.title}
