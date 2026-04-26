@@ -1,5 +1,7 @@
-﻿export { default as ApplicantEmptyListState } from './ApplicantEmptyListState'
+﻿export { default as ApplicantCategoryFilterChips } from './ApplicantCategoryFilterChips'
+export { default as ApplicantEmptyListState } from './ApplicantEmptyListState'
 export { default as ApplicantManagementContentShell } from './ApplicantManagementContentShell'
+export { default as ApplicantManagementFilterPanel } from './ApplicantManagementFilterPanel'
 export { default as ApplicantManagementHeader } from './ApplicantManagementHeader'
 export { default as ApplicantManagementPageState } from './ApplicantManagementPageState'
 export { default as ApplicantRoundTabs } from './ApplicantRoundTabs'
