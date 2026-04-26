@@ -2,6 +2,7 @@
 
 import { useParams } from 'next/navigation'
 import { useAuditionDetailState } from '@/shared/audition/useAuditionDetailState'
+import PageSurface from '@/components/layout/PageSurface'
 import MobileAuditionDetailSummary from './components/MobileAuditionDetailSummary'
 import MobileAuditionApplyBar from './components/MobileAuditionApplyBar'
 
@@ -27,7 +28,7 @@ export default function MobileAuditionDetailPage() {
   }
 
   return (
-    <div className="min-h-screen pb-24">
+    <PageSurface className="pb-24">
       <MobileAuditionDetailSummary
         audition={audition}
         alreadyApplied={alreadyApplied}
@@ -39,6 +40,6 @@ export default function MobileAuditionDetailPage() {
         alreadyApplied={alreadyApplied}
         applyBlocked={applyBlocked}
       />
-    </div>
+    </PageSurface>
   )
 }
