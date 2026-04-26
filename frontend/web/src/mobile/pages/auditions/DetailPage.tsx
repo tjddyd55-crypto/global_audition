@@ -3,6 +3,7 @@
 import { useParams } from 'next/navigation'
 import { useAuditionDetailState } from '@/shared/audition/useAuditionDetailState'
 import PageSurface from '@/components/layout/PageSurface'
+import CenteredPageState from '@/components/layout/CenteredPageState'
 import MobileAuditionDetailSummary from './components/MobileAuditionDetailSummary'
 import MobileAuditionApplyBar from './components/MobileAuditionApplyBar'
 
@@ -13,17 +14,17 @@ export default function MobileAuditionDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <CenteredPageState className="min-h-screen">
         <div className="text-xl">로딩 중...</div>
-      </div>
+      </CenteredPageState>
     )
   }
 
   if (error || !audition) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <CenteredPageState className="min-h-screen">
         <div className="text-xl text-red-600">오디션을 찾을 수 없습니다</div>
-      </div>
+      </CenteredPageState>
     )
   }
 

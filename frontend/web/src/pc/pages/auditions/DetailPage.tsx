@@ -12,6 +12,7 @@ import { AuditionDetailMediaSection } from '@/components/audition/AuditionDetail
 import PageSurface from '@/components/layout/PageSurface'
 import DetailContentShell from '@/components/layout/DetailContentShell'
 import DetailTwoColumnGrid from '@/components/layout/DetailTwoColumnGrid'
+import CenteredPageState from '@/components/layout/CenteredPageState'
 import { roundIdForRoundNumber } from '@/shared/audition/roundNav'
 import { useAuditionDetailState } from '@/shared/audition/useAuditionDetailState'
 import { useAuditionApplyCreditGate } from '@/shared/audition/useAuditionApplyCreditGate'
@@ -63,17 +64,17 @@ export default function PcAuditionDetailPage() {
 
   if (isLoading) {
     return (
-      <div style={{ minHeight: '50vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <CenteredPageState>
         <div style={{ fontSize: AUDITION_DETAIL.bodyFontPx }}>{t('loading')}</div>
-      </div>
+      </CenteredPageState>
     )
   }
 
   if (error || !audition) {
     return (
-      <div style={{ minHeight: '50vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <CenteredPageState>
         <div style={{ fontSize: AUDITION_DETAIL.bodyFontPx, color: '#b91c1c' }}>{t('error')}</div>
-      </div>
+      </CenteredPageState>
     )
   }
 
