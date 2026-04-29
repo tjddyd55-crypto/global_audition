@@ -1,3 +1,4 @@
 ﻿export { default as ApplicantDetailActionBar } from './ApplicantDetailActionBar'
 export { default as ApplicantDetailBasicInfo } from './ApplicantDetailBasicInfo'
+export { default as ApplicantStatusConfirmDialog } from './ApplicantStatusConfirmDialog'
 export * from './applicantDetailLabels'
