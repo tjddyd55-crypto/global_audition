@@ -1,5 +1,6 @@
 ﻿export { default as ApplicantDetailActionBar } from './ApplicantDetailActionBar'
 export { default as ApplicantDetailBasicInfo } from './ApplicantDetailBasicInfo'
+export { default as ApplicantDetailPanelHeader } from './ApplicantDetailPanelHeader'
 export { default as ApplicantDetailPanelState } from './ApplicantDetailPanelState'
 export { default as ApplicantDetailVideoSection } from './ApplicantDetailVideoSection'
 export { default as ApplicantStatusConfirmDialog } from './ApplicantStatusConfirmDialog'
