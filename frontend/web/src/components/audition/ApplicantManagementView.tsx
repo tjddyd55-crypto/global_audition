@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
-import Image from 'next/image'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
@@ -29,22 +28,14 @@ import {
   type RoundTabValue,
 } from '@/components/audition/manage'
 import { ApplicantListRow } from '@/components/audition/manage/list'
-
-const NATIONALITY_LABEL: Record<string, string> = {
-  KR: '대한민국',
-  MN: '몽골',
-  JP: '일본',
-  OTHER: '기타',
-}
-
-const SNS_PLATFORM_LABEL: Record<string, string> = {
-  instagram: 'Instagram',
-  tiktok: 'TikTok',
-  youtube: 'YouTube',
-  twitter: 'X',
-  facebook: 'Facebook',
-  other: '기타',
-}
+import {
+  ApplicantDetailBasicInfo,
+  ApplicantDetailIntroSection,
+  ApplicantDetailPanelHeader,
+  ApplicantDetailPanelState,
+  ApplicantDetailSnsSection,
+  ApplicantDetailVideoSection,
+} from '@/components/audition/manage/detail'
 
 function statusLabel(status: AgencyBoardStatus) {
   if (status === 'REVIEWING') return '검토중'
@@ -333,10 +324,6 @@ function AgencyDetailPanel({
       })()
     : '—'
 
-  const nat = detail?.nationality
-    ? NATIONALITY_LABEL[detail.nationality] ?? detail.nationality
-    : '—'
-
   const statusActionButtons: { target: AgencyBoardStatus; label: string; primaryClass: string }[] = [
     {
       target: 'REVIEWING',
@@ -408,114 +395,21 @@ function AgencyDetailPanel({
         role="dialog"
         aria-modal="true"
       >
-        <div className="flex shrink-0 items-center justify-between border-b border-gray-100 px-4 py-3">
-          <h2 className="text-lg font-bold text-gray-900">지원자 상세</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg p-2 text-sm font-medium text-gray-600 hover:bg-gray-100"
-          >
-            닫기
-          </button>
-        </div>
+        <ApplicantDetailPanelHeader onClose={onClose} />
 
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
-          {isLoading && <p className="text-sm text-gray-500">불러오는 중…</p>}
-          {isError && <p className="text-sm text-red-600">상세를 불러오지 못했습니다.</p>}
+          {isLoading ? <ApplicantDetailPanelState message="불러오는 중…" /> : null}
+          {isError ? <ApplicantDetailPanelState message="상세를 불러오지 못했습니다." tone="danger" /> : null}
           {detail && (
             <div className="flex flex-col gap-6">
-              <section>
-                <h3 className="mb-2 text-sm font-semibold text-gray-900">지원 영상</h3>
-                <div className="overflow-hidden rounded-xl bg-black">
-                  {embed ? (
-                    <div className="relative aspect-video w-full">
-                      <iframe
-                        title="application-video"
-                        src={embed}
-                        className="absolute inset-0 h-full w-full border-0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                      />
-                    </div>
-                  ) : detailThumb ? (
-                    <a
-                      href={detail.videoUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="relative block aspect-video w-full"
-                    >
-                      <Image src={detailThumb} alt="" fill className="object-cover" unoptimized />
-                      <span className="absolute inset-0 flex items-center justify-center bg-black/35 text-4xl text-white">
-                        ▶
-                      </span>
-                    </a>
-                  ) : (
-                    <div className="py-12 text-center">
-                      <a
-                        href={detail.videoUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-sm font-medium text-violet-200 underline"
-                      >
-                        새 창에서 영상 열기
-                      </a>
-                    </div>
-                  )}
-                </div>
-              </section>
-
-              <section className="space-y-2 text-sm">
-                <h3 className="text-sm font-semibold text-gray-900">기본 정보</h3>
-                <p>
-                  <span className="text-gray-500">이름 </span>
-                  <span className="font-medium text-gray-900">{detail.name}</span>
-                </p>
-                <p>
-                  <span className="text-gray-500">나이 </span>
-                  <span className="font-medium text-gray-900">{detail.age != null ? `${detail.age}세` : '—'}</span>
-                </p>
-                <p>
-                  <span className="text-gray-500">생년월일 </span>
-                  <span className="font-medium text-gray-900">{birth}</span>
-                </p>
-                <p>
-                  <span className="text-gray-500">국적 </span>
-                  <span className="font-medium text-gray-900">{nat}</span>
-                </p>
-                <p>
-                  <span className="text-gray-500">지원 차수 </span>
-                  <span className="font-semibold text-violet-800">{detail.round}차</span>
-                </p>
-              </section>
-
-              <section>
-                <h3 className="mb-2 text-sm font-semibold text-gray-900">SNS</h3>
-                {detail.snsLinks.length === 0 ? (
-                  <p className="text-sm text-gray-500">등록된 SNS가 없습니다.</p>
-                ) : (
-                  <ul className="space-y-2">
-                    {detail.snsLinks.map((l, i) => (
-                      <li key={`${l.platform}-${i}`}>
-                        <a
-                          href={l.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-sm font-medium text-violet-700 underline hover:text-violet-900"
-                        >
-                          {SNS_PLATFORM_LABEL[l.platform] ?? l.platform}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </section>
-
-              <section>
-                <h3 className="mb-2 text-sm font-semibold text-gray-900">지원 동기 · 자기소개</h3>
-                <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-800">
-                  {detail.introText?.trim() ? detail.introText : '작성 내용이 없습니다.'}
-                </p>
-              </section>
+              <ApplicantDetailVideoSection
+                videoUrl={detail.videoUrl}
+                embedUrl={embed}
+                thumbnailUrl={detailThumb}
+              />
+              <ApplicantDetailBasicInfo detail={detail} birthLabel={birth} />
+              <ApplicantDetailSnsSection snsLinks={detail.snsLinks} />
+              <ApplicantDetailIntroSection introText={detail.introText} />
             </div>
           )}
         </div>

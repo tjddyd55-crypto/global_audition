@@ -4,7 +4,7 @@ import Image from 'next/image'
 
 type ApplicantDetailVideoSectionProps = {
   videoUrl?: string | null
-  embedUrl: string
+  embedUrl?: string | null
   thumbnailUrl?: string | null
 }
 
