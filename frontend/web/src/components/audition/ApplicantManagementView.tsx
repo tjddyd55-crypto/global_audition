@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import Image from 'next/image'
@@ -10,27 +10,25 @@ import {
   auditionApi,
   type AgencyBoardStatus,
   type ApplicationAgencyDetail,
-  type ManageApplicantItem,
   type ManageApplicationsPayload,
   type ManageListFilters,
   type ManageRoundCount,
 } from '@/shared/api/auditions'
-import {
-  BTN_PRIMARY,
-  BTN_SECONDARY,
-  CARD_BASE,
-  PAGE_CONTAINER,
-  SECTION_GAP,
-  TEXT_SUB,
-  TITLE_PAGE,
-} from '@/shared/ui/specClasses'
-import { Link } from '@/i18n.config'
+import { BTN_PRIMARY, BTN_SECONDARY } from '@/shared/ui/specClasses'
 import { resolveVideoThumbnailUrl } from '@/shared/audition/videoThumbnail'
 import { getVideoEmbedSrc } from '@/shared/utils/videoEmbed'
-
-function formatCount(n: number) {
-  return new Intl.NumberFormat('ko-KR').format(n)
-}
+import {
+  ApplicantCategoryFilterChips,
+  ApplicantEmptyListState,
+  ApplicantManagementContentShell,
+  ApplicantManagementFilterPanel,
+  ApplicantManagementHeader,
+  ApplicantManagementPageState,
+  ApplicantRoundTabs,
+  ApplicantStatsGrid,
+  type RoundTabValue,
+} from '@/components/audition/manage'
+import { ApplicantListRow } from '@/components/audition/manage/list'
 
 const NATIONALITY_LABEL: Record<string, string> = {
   KR: '대한민국',
@@ -46,13 +44,6 @@ const SNS_PLATFORM_LABEL: Record<string, string> = {
   twitter: 'X',
   facebook: 'Facebook',
   other: '기타',
-}
-
-function statusBadgeClass(status: AgencyBoardStatus) {
-  if (status === 'REVIEWING') return 'bg-blue-50 text-blue-700'
-  if (status === 'APPROVED') return 'bg-green-50 text-green-700'
-  if (status === 'REJECTED') return 'bg-red-50 text-red-700'
-  return 'bg-amber-50 text-amber-800'
 }
 
 function statusLabel(status: AgencyBoardStatus) {
@@ -95,8 +86,6 @@ function subtitleFromDescription(description: string) {
 function countForRound(roundCounts: ManageRoundCount[], n: number): number {
   return roundCounts.find((x) => x.round === n)?.count ?? 0
 }
-
-type RoundTabValue = 'all' | number
 
 type Props = {
   auditionId: string
@@ -233,181 +222,56 @@ export function ApplicantManagementView({
   }, [panelAppId])
 
   if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <p className="text-lg font-medium text-gray-900">로딩 중…</p>
-      </div>
-    )
+    return <ApplicantManagementPageState message="로딩 중…" />
   }
 
   if (error) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <p className="text-lg text-red-600">데이터를 불러오지 못했습니다.</p>
-      </div>
-    )
+    return <ApplicantManagementPageState message="데이터를 불러오지 못했습니다." tone="danger" />
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="sticky top-0 z-30 border-b border-violet-200/80 bg-gradient-to-b from-violet-100/95 to-white/98 shadow-sm backdrop-blur-md">
-        <div className={`${PAGE_CONTAINER}`} style={{ paddingTop: 24, paddingBottom: 20 }}>
-          <Link href={backHref} className="text-sm font-medium text-violet-700 no-underline hover:underline">
-            {backLabel}
-          </Link>
-          <p className="mt-4 text-xs font-semibold uppercase tracking-[0.12em] text-violet-600">지원자 관리</p>
-          <h1 className="mt-1 text-3xl font-bold leading-tight tracking-tight text-gray-900 md:text-4xl">
-            {displayTitle}
-          </h1>
-          {displaySubtitle ? (
-            <p className="mt-3 w-full text-base leading-relaxed text-gray-600 md:text-lg">{displaySubtitle}</p>
-          ) : null}
-          <p className={`${TEXT_SUB} mt-3 text-sm font-medium text-gray-700`}>
-            총 지원자 {applicantTotalCount}명
-            {auditionHeader?.maxRoundNumber != null ? (
-              <span className="text-gray-500"> · 최대 {auditionHeader.maxRoundNumber}차</span>
-            ) : null}
-          </p>
-        </div>
-      </div>
+      <ApplicantManagementHeader
+        backHref={backHref}
+        backLabel={backLabel}
+        title={displayTitle}
+        subtitle={displaySubtitle}
+        applicantTotalCount={applicantTotalCount}
+        maxRoundNumber={auditionHeader?.maxRoundNumber ?? null}
+      />
 
-      <div className={`${PAGE_CONTAINER} py-6 ${SECTION_GAP}`}>
-        <div className="flex flex-col gap-3">
-          <div className="-mx-1 flex gap-2 overflow-x-auto pb-1">
-            <button
-              type="button"
-              onClick={() => setRoundTab('all')}
-              className={
-                roundTab === 'all'
-                  ? 'shrink-0 rounded-full bg-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-sm'
-                  : 'shrink-0 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50'
-              }
-            >
-              전체({applicantTotalCount})
-            </button>
-            {Array.from({ length: maxRound }, (_, i) => i + 1).map((n) => {
-              const c = countForRound(roundCounts, n)
-              const active = roundTab === n
-              return (
-                <button
-                  key={n}
-                  type="button"
-                  onClick={() => setRoundTab(n)}
-                  className={
-                    active
-                      ? 'shrink-0 rounded-full bg-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-sm'
-                      : 'shrink-0 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50'
-                  }
-                >
-                  {n}차({c})
-                </button>
-              )
-            })}
-          </div>
-          <p className="text-sm font-medium text-gray-800">
-            {roundTab === 'all' ? '현재: 전체 지원자' : `현재: ${roundTab}차 지원자`}
-          </p>
-        </div>
+      <ApplicantManagementContentShell>
+        <ApplicantRoundTabs
+          value={roundTab}
+          maxRound={maxRound}
+          applicantTotalCount={applicantTotalCount}
+          getRoundCount={(round) => countForRound(roundCounts, round)}
+          onChange={setRoundTab}
+        />
 
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-          <StatCard label="전체" value={stats.total} tone="violet" />
-          <StatCard label="대기(미심사)" value={stats.submitted} tone="neutral" />
-          <StatCard label="검토중" value={stats.reviewing} tone="blue" />
-          <StatCard label="합격" value={stats.accepted} tone="green" />
-          <StatCard label="불합격" value={stats.rejected} tone="red" />
-        </div>
+        <ApplicantStatsGrid stats={stats} />
 
-        <div className={`${CARD_BASE} flex flex-col gap-4`}>
-          <p className={`${TEXT_SUB} font-semibold text-gray-900`}>필터</p>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-gray-600">나이 최소</span>
-              <input
-                type="number"
-                min={0}
-                value={minAge}
-                onChange={(e) => setMinAge(e.target.value)}
-                className="rounded-lg border border-gray-200 px-2 py-2"
-                placeholder="예: 18"
-              />
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-gray-600">나이 최대</span>
-              <input
-                type="number"
-                min={0}
-                value={maxAge}
-                onChange={(e) => setMaxAge(e.target.value)}
-                className="rounded-lg border border-gray-200 px-2 py-2"
-                placeholder="예: 35"
-              />
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-gray-600">국적</span>
-              <select
-                value={nationalityFilter}
-                onChange={(e) => setNationalityFilter(e.target.value)}
-                className="rounded-lg border border-gray-200 bg-white px-2 py-2"
-              >
-                <option value="">전체</option>
-                <option value="KR">대한민국</option>
-                <option value="MN">몽골</option>
-                <option value="JP">일본</option>
-                <option value="OTHER">기타</option>
-              </select>
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-gray-600">심사 상태</span>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="rounded-lg border border-gray-200 bg-white px-2 py-2"
-              >
-                <option value="">전체</option>
-                <option value="PENDING">대기</option>
-                <option value="REVIEWING">검토중</option>
-                <option value="APPROVED">합격</option>
-                <option value="REJECTED">탈락</option>
-              </select>
-            </label>
-            <label className="flex flex-col gap-1 text-sm sm:col-span-2 lg:col-span-1">
-              <span className="text-gray-600">SNS</span>
-              <select
-                value={hasSnsFilter}
-                onChange={(e) => setHasSnsFilter(e.target.value as 'all' | 'yes' | 'no')}
-                className="rounded-lg border border-gray-200 bg-white px-2 py-2"
-              >
-                <option value="all">전체</option>
-                <option value="yes">있음</option>
-                <option value="no">없음</option>
-              </select>
-            </label>
-          </div>
-        </div>
+        <ApplicantManagementFilterPanel
+          minAge={minAge}
+          maxAge={maxAge}
+          nationality={nationalityFilter}
+          status={statusFilter}
+          hasSns={hasSnsFilter}
+          onMinAgeChange={setMinAge}
+          onMaxAgeChange={setMaxAge}
+          onNationalityChange={setNationalityFilter}
+          onStatusChange={(next) => setStatusFilter(next)}
+          onHasSnsChange={setHasSnsFilter}
+        />
 
-        {categories.length > 0 && (
-          <div>
-            <p className={`${TEXT_SUB} mb-2 flex items-center gap-2 font-medium text-gray-900`}>분야(영상 카테고리)</p>
-            <div className="flex flex-wrap gap-2">
-              {categories.map((c) => (
-                <FilterChip
-                  key={c.name}
-                  active={
-                    (c.name === '전체' && categoryFilter === null) ||
-                    (c.name !== '전체' && categoryFilter === c.name)
-                  }
-                  onClick={() => setCategoryFilter(c.name === '전체' ? null : c.name)}
-                  label={`${c.name}${c.name === '전체' ? '' : ` (${c.count})`}`}
-                />
-              ))}
-            </div>
-          </div>
-        )}
+        <ApplicantCategoryFilterChips
+          categories={categories}
+          selectedCategory={categoryFilter}
+          onChange={setCategoryFilter}
+        />
 
         {items.length === 0 ? (
-          <div className={CARD_BASE}>
-            <p className={`${TEXT_SUB} text-center`}>표시할 지원자가 없습니다.</p>
-          </div>
+          <ApplicantEmptyListState />
         ) : (
           <div className="flex flex-col gap-2">
             {items.map((app) => (
@@ -419,7 +283,7 @@ export function ApplicantManagementView({
             ))}
           </div>
         )}
-      </div>
+      </ApplicantManagementContentShell>
 
       {panelAppId ? (
         <AgencyDetailPanel
@@ -433,58 +297,6 @@ export function ApplicantManagementView({
         />
       ) : null}
     </div>
-  )
-}
-
-function ApplicantListRow({ app, onOpen }: { app: ManageApplicantItem; onOpen: () => void }) {
-  const listThumb = resolveVideoThumbnailUrl(app.videoUrl, app.thumbnailUrl)
-  const applied = app.createdAt
-    ? (() => {
-        try {
-          return format(new Date(app.createdAt), 'yyyy.MM.dd', { locale: ko })
-        } catch {
-          return '—'
-        }
-      })()
-    : '—'
-
-  return (
-    <button
-      type="button"
-      onClick={onOpen}
-      className="flex w-full cursor-pointer gap-3 rounded-xl border border-gray-200 bg-white p-3 text-left shadow-sm transition hover:border-violet-200 hover:bg-violet-50/40 md:items-center md:gap-4 md:p-4"
-    >
-      <div className="relative h-16 w-14 shrink-0 overflow-hidden rounded-lg bg-gray-200 md:h-20 md:w-[4.5rem]">
-        {listThumb ? (
-          <Image src={listThumb} alt="" fill className="object-cover" sizes="72px" unoptimized />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-violet-700/80 to-fuchsia-700/80 text-lg text-white">
-            ▶
-          </div>
-        )}
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <span className="font-semibold text-gray-900">{app.name || app.userName || '지원자'}</span>
-          <span className="text-sm text-gray-500">{app.age != null ? `${app.age}세` : '나이 —'}</span>
-          <span className="text-sm text-gray-500">
-            {app.nationality ? NATIONALITY_LABEL[app.nationality] ?? app.nationality : '국적 —'}
-          </span>
-        </div>
-        <p className="mt-0.5 text-xs font-semibold text-violet-700">{app.round}차 지원</p>
-        <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-gray-500">
-          <span>SNS {formatCount(app.snsCount)}</span>
-          <span>·</span>
-          <span>지원 {applied}</span>
-        </div>
-      </div>
-      <div className="flex shrink-0 flex-col items-end gap-2">
-        <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusBadgeClass(app.status)}`}>
-          {statusLabel(app.status)}
-        </span>
-        <span className={`${BTN_SECONDARY} !w-auto !py-1.5 !text-xs`}>보기</span>
-      </div>
-    </button>
   )
 }
 
@@ -741,48 +553,5 @@ function AgencyDetailPanel({
       </aside>
       {confirmOverlay}
     </>
-  )
-}
-
-function StatCard({
-  label,
-  value,
-  tone,
-}: {
-  label: string
-  value: number
-  tone: 'violet' | 'neutral' | 'blue' | 'green' | 'red'
-}) {
-  const color =
-    tone === 'violet'
-      ? 'text-violet-600'
-      : tone === 'blue'
-        ? 'text-blue-600'
-        : tone === 'green'
-          ? 'text-green-600'
-          : tone === 'red'
-            ? 'text-red-600'
-            : 'text-gray-900'
-  return (
-    <div className={`${CARD_BASE} text-center`}>
-      <div className={`text-2xl font-bold ${color}`}>{value}</div>
-      <div className={TEXT_SUB}>{label}</div>
-    </div>
-  )
-}
-
-function FilterChip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={
-        active
-          ? 'rounded-full bg-violet-600 px-3 py-1.5 text-sm font-medium text-white'
-          : 'rounded-full border border-[#E5E7EB] bg-white px-3 py-1.5 text-sm font-medium text-gray-800 hover:bg-gray-50'
-      }
-    >
-      {label}
-    </button>
   )
 }
