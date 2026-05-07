@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import {
@@ -8,7 +8,6 @@ import {
   type AgencyBoardStatus,
   type ApplicationAgencyDetail,
   type ManageApplicationsPayload,
-  type ManageListFilters,
   type ManageRoundCount,
 } from '@/shared/api/auditions'
 import {
@@ -20,9 +19,9 @@ import {
   ApplicantManagementPageState,
   ApplicantRoundTabs,
   ApplicantStatsGrid,
-  type RoundTabValue,
 } from '@/components/audition/manage'
 import AgencyDetailPanel from '@/components/audition/manage/detail/AgencyDetailPanel'
+import { useApplicantManageFilters } from '@/components/audition/manage/hooks/useApplicantManageFilters'
 import { ApplicantListRow } from '@/components/audition/manage/list'
 
 function toastMessageForPatchSuccess(status: AgencyBoardStatus) {
@@ -61,33 +60,25 @@ export function ApplicantManagementView({
   queryKeyPrefix = 'audition-manage',
 }: Props) {
   const queryClient = useQueryClient()
-  const [categoryFilter, setCategoryFilter] = useState<string | null>(null)
-  const [minAge, setMinAge] = useState<string>('')
-  const [maxAge, setMaxAge] = useState<string>('')
-  const [nationalityFilter, setNationalityFilter] = useState<string>('')
-  const [hasSnsFilter, setHasSnsFilter] = useState<'all' | 'yes' | 'no'>('all')
-  const [statusFilter, setStatusFilter] = useState<string>('')
-  const [roundTab, setRoundTab] = useState<RoundTabValue>('all')
+  const {
+    categoryFilter,
+    setCategoryFilter,
+    minAge,
+    setMinAge,
+    maxAge,
+    setMaxAge,
+    nationalityFilter,
+    setNationalityFilter,
+    hasSnsFilter,
+    setHasSnsFilter,
+    statusFilter,
+    setStatusFilter,
+    roundTab,
+    setRoundTab,
+    listFilters,
+  } = useApplicantManageFilters()
   const [patchingId, setPatchingId] = useState<string | null>(null)
   const [panelAppId, setPanelAppId] = useState<string | null>(null)
-
-  const listFilters: ManageListFilters = useMemo(() => {
-    const f: ManageListFilters = { category: categoryFilter }
-    if (minAge.trim() !== '') {
-      const n = Number(minAge)
-      if (!Number.isNaN(n)) f.minAge = n
-    }
-    if (maxAge.trim() !== '') {
-      const n = Number(maxAge)
-      if (!Number.isNaN(n)) f.maxAge = n
-    }
-    if (nationalityFilter) f.nationality = nationalityFilter
-    if (hasSnsFilter === 'yes') f.hasSns = true
-    if (hasSnsFilter === 'no') f.hasSns = false
-    if (statusFilter) f.status = statusFilter as AgencyBoardStatus
-    if (roundTab !== 'all') f.round = roundTab
-    return f
-  }, [categoryFilter, minAge, maxAge, nationalityFilter, hasSnsFilter, statusFilter, roundTab])
 
   const qk = [queryKeyPrefix, auditionId, listFilters] as const
 
