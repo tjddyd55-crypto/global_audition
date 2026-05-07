@@ -10,7 +10,7 @@ import MobileAuditionApplyBar from './components/MobileAuditionApplyBar'
 export default function MobileAuditionDetailPage() {
   const params = useParams()
   const id = params.id as string
-  const { audition, isLoading, error, alreadyApplied, applyBlocked } = useAuditionDetailState(id)
+  const { audition, isLoading, error, alreadyApplied, applyBlocked, isOpen } = useAuditionDetailState(id)
 
   if (isLoading) {
     return (
@@ -32,6 +32,7 @@ export default function MobileAuditionDetailPage() {
     <PageSurface className="pb-24">
       <MobileAuditionDetailSummary
         audition={audition}
+        isOpen={isOpen}
         alreadyApplied={alreadyApplied}
         applyBlocked={applyBlocked}
       />
