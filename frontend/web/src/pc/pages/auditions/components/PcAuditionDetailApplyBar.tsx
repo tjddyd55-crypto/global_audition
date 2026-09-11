@@ -23,6 +23,8 @@ type PcAuditionDetailApplyBarProps = {
   applyPolicySnapshot?: {
     active: boolean
     cost: number
+    applicationPaymentMode?: string
+    applicationFeeCredits?: number
   } | null
   creditBalanceAmount: number
   needCreditsForApply: boolean
