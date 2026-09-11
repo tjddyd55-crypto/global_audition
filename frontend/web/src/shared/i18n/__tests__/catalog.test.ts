@@ -38,6 +38,16 @@ describe('i18n catalogs', () => {
     expect(missingInMn).toEqual([])
   })
 
+  it('maps payment and credit error codes in all primary catalogs', () => {
+    for (const tree of [ko, en, mn] as const) {
+      const errors = (tree as { errors: Record<string, string> }).errors
+      expect(errors.INSUFFICIENT_CREDITS.trim().length).toBeGreaterThan(0)
+      expect(errors.CONFIG_INCOMPLETE.trim().length).toBeGreaterThan(0)
+      expect(errors.TOSS_INACTIVE.trim().length).toBeGreaterThan(0)
+      expect(errors.AMOUNT_MISMATCH.trim().length).toBeGreaterThan(0)
+    }
+  })
+
   it('lists mn as a first-class locale', () => {
     expect(locales.primary).toEqual(['ko', 'en', 'mn'])
     expect(locales.supported).toContain('mn')

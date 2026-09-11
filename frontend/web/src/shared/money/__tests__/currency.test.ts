@@ -1,4 +1,4 @@
-import { formatCurrency, isWholeUsdDollars, parseWholeUsdDollars, SETTLEMENT_CURRENCY } from '../currency'
+import { formatCurrency, formatWholeUsd, isWholeUsdDollars, parseWholeUsdDollars, SETTLEMENT_CURRENCY } from '../currency'
 
 describe('USD settlement display', () => {
   it('formats as USD not KRW', () => {
@@ -20,5 +20,13 @@ describe('USD settlement display', () => {
   it('does not invent cents for Toss display', () => {
     expect(formatCurrency(10, 'en')).not.toMatch(/4\.99/)
     expect(formatCurrency(10, 'mn')).toMatch(/10/)
+  })
+
+  it('prints integer dollars only', () => {
+    expect(formatWholeUsd(10)).toBe('$10')
+    expect(formatWholeUsd(1)).toBe('$1')
+    expect(formatWholeUsd(5)).toBe('$5')
+    expect(formatWholeUsd(10)).not.toContain('.00')
+    expect(formatCurrency(10, 'en')).toBe('$10')
   })
 })

@@ -7,5 +7,7 @@ describe('native USD formatter', () => {
     expect(formatUsd(10, 'en')).not.toContain('₩')
     expect(formatUsd(10, 'ko')).not.toContain('₩')
     expect(formatUsd(10, 'mn')).toMatch(/10/)
+    expect(formatUsd(10, 'en')).toBe('$10')
+    expect(formatUsd(10, 'en')).not.toContain('.00')
   })
 })
