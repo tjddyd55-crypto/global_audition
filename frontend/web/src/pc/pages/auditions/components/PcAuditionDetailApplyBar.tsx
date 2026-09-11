@@ -159,21 +159,24 @@ export default function PcAuditionDetailApplyBar({
             {applyNavBlockedBySeries ? (
               <p className="text-center text-amber-800">{applyBlockedMessage ?? PREV_ROUND_APPLY_BLOCKED_MSG}</p>
             ) : null}
-            {applyPolicySnapshot && applyPolicySnapshot.active && applyPolicySnapshot.cost > 0 ? (
+            {applyPolicySnapshot &&
+            (applyPolicySnapshot.applicationPaymentMode ??
+              (applyPolicySnapshot.active && applyPolicySnapshot.cost > 0 ? 'CREDIT' : 'FREE')) === 'FREE' ? (
+              <p className="text-center text-neutral-500">이번 지원은 무료입니다.</p>
+            ) : null}
+            {needCreditsForApply && hasEnoughCredits ? (
               <p className="text-center text-neutral-500">
-                지원 시 크레딧 {applyPolicySnapshot.cost} 소모 · 보유 {creditBalanceAmount}
+                지원 시 크레딧 {applyPolicySnapshot?.applicationFeeCredits ?? applyPolicySnapshot?.cost} 소모 · 보유{' '}
+                {creditBalanceAmount}
               </p>
             ) : null}
-            {needCreditsForApply && creditGateReady && !hasEnoughCredits && applyPolicySnapshot?.active ? (
+            {needCreditsForApply && creditGateReady && !hasEnoughCredits ? (
               <Link
                 href="/credits/charge"
                 className="flex min-h-10 items-center justify-center rounded-lg border-2 border-violet-600 bg-white text-sm font-semibold text-violet-700 no-underline hover:bg-violet-50"
               >
-                크레딧 충전하기
+                충전하기
               </Link>
-            ) : null}
-            {applyPolicySnapshot && !applyPolicySnapshot.active ? (
-              <p className="text-center text-amber-700">지원 비용 정책이 비활성화되어 지원할 수 없습니다.</p>
             ) : null}
             {applyPolicyError ? (
               <p className="text-center text-red-600">지원 비용 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</p>

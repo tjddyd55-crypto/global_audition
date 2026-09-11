@@ -38,6 +38,8 @@ export default function UsersPage() {
   const [selectedEmail, setSelectedEmail] = useState<string | null>(null)
   const [grantReason, setGrantReason] = useState<CreditGrantReason>('ADMIN_GRANT')
   const [grantError, setGrantError] = useState<string | null>(null)
+  const [deductAmount, setDeductAmount] = useState(1)
+  const [deductReason, setDeductReason] = useState('')
 
   const { data, isLoading, error, isFetching } = useQuery({
     queryKey: ['superAdmin', 'admin-users', q, page, pageSize],
@@ -67,6 +69,24 @@ export default function UsersPage() {
     onError: (err) => {
       setGrantError(grantErrorMessage(err))
     },
+  })
+
+  const deductMut = useMutation({
+    mutationFn: () =>
+      superAdminApi.adjustCredits({
+        userId: selectedUserId!,
+        amount: -Math.max(1, Math.floor(deductAmount)),
+        note: deductReason.trim(),
+      }),
+    onSuccess: () => {
+      setGrantError(null)
+      void qc.invalidateQueries({ queryKey: ['superAdmin', 'admin-users'] })
+      void qc.invalidateQueries({ queryKey: ['superAdmin', 'credit-transactions'] })
+      void qc.invalidateQueries({ queryKey: ['superAdmin', 'admin-logs'] })
+      setDeductReason('')
+      alert('차감이 반영되었습니다.')
+    },
+    onError: (err) => setGrantError(grantErrorMessage(err)),
   })
 
   const onGrant = () => {
@@ -160,6 +180,38 @@ export default function UsersPage() {
           )}
         </div>
         {grantError && <p className="mt-2 text-sm text-red-700">{grantError}</p>}
+
+        <p className="mb-2 mt-6 text-sm font-medium text-gray-800">크레딧 차감 (사유 필수)</p>
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            className="w-64 rounded border border-gray-300 px-2 py-1.5 text-sm"
+            value={deductReason}
+            onChange={(e) => setDeductReason(e.target.value)}
+            placeholder="차감 사유"
+          />
+          <input
+            type="number"
+            min={1}
+            className="w-28 rounded border border-gray-300 px-2 py-1.5"
+            value={deductAmount}
+            onChange={(e) => setDeductAmount(Number(e.target.value))}
+          />
+          <button
+            type="button"
+            disabled={deductMut.isPending || !selectedUserId || !deductReason.trim()}
+            onClick={() => {
+              if (!selectedUserId || !deductReason.trim()) {
+                setGrantError('유저와 차감 사유가 필요합니다.')
+                return
+              }
+              if (!confirm(`선택한 유저에서 ${Math.max(1, Math.floor(deductAmount))} 크레딧을 차감할까요?`)) return
+              deductMut.mutate()
+            }}
+            className="rounded bg-red-600 px-3 py-1.5 text-sm text-white disabled:bg-gray-300"
+          >
+            차감
+          </button>
+        </div>
       </div>
 
       <div className="overflow-x-auto rounded-lg border bg-white">

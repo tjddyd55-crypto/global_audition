@@ -69,7 +69,7 @@ export default function CreditsChargePage() {
           </div>
         </div>
 
-        <p className={TEXT_SUB}>충전할 상품을 선택한 뒤 결제 단계로 이동합니다. (PG 연동 전까지 실제 결제는 진행되지 않습니다.)</p>
+        <p className={TEXT_SUB}>충전할 상품을 선택한 뒤 결제 단계로 이동합니다. 토스가 켜져 있으면 토스 결제창으로 이동합니다.</p>
 
         {error && <p className="text-sm text-red-600">{error}</p>}
 

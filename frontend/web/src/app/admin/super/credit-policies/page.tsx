@@ -72,6 +72,15 @@ export default function CreditPoliciesPage() {
           API: GET/PATCH <code className="rounded bg-gray-100 px-1">/api/admin/credit-policies</code> · Bearer +{' '}
           <code className="rounded bg-gray-100 px-1">withCredentials</code> (axios 클라이언트 사용)
         </p>
+        <ul className="mb-3 list-disc space-y-1 pl-5 text-xs text-gray-600">
+          <li>
+            <code>AUDITION_APPLY</code>: 비활성이거나 cost=0 이면 <strong>FREE</strong>, 활성+cost&gt;0 이면 <strong>CREDIT</strong>{' '}
+            차감.
+          </li>
+          <li>
+            <code>SIGNUP_CREDIT</code>: 활성+cost&gt;0 이면 가입 1회 지급. 원장 reason은 <code>SIGNUP_REWARD</code>.
+          </li>
+        </ul>
 
         {isLoading && <p className="text-sm text-gray-600">불러오는 중…</p>}
         {error && (

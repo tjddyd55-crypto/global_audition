@@ -88,8 +88,19 @@ function CheckoutContent() {
     setIsPreparing(true)
     setActionError(null)
     try {
-      const res = await creditsApi.preparePayment(packageId, 'MOCK')
+      let provider = 'MOCK'
+      try {
+        const hints = await creditsApi.getCheckoutHints()
+        if (hints.enabled) provider = 'TOSS_PAYMENTS'
+      } catch {
+        provider = 'MOCK'
+      }
+      const res = await creditsApi.preparePayment(packageId, provider)
       setPrepareResult(res)
+      if (res.provider === 'TOSS_PAYMENTS') {
+        router.replace(`/credits/toss-checkout?packageId=${encodeURIComponent(packageId)}&orderNo=${encodeURIComponent(res.orderNo)}`)
+        return
+      }
       router.replace(`/credits/checkout?packageId=${encodeURIComponent(packageId)}&orderNo=${encodeURIComponent(res.orderNo)}`)
     } catch (e: unknown) {
       let msg = '주문 생성에 실패했습니다.'

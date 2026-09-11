@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { superAdminApi, type PaymentOrderAdminRow } from '@/shared/api/superAdmin'
 import { formatCurrency } from '@/shared/money/currency'
@@ -10,9 +10,11 @@ const PAGE_SIZE = 50
 const STATUS_OPTIONS = ['', 'CREATED', 'READY', 'PAID', 'FAILED', 'CANCELLED'] as const
 
 export default function PaymentOrdersPage() {
+  const qc = useQueryClient()
   const [userId, setUserId] = useState('')
   const [status, setStatus] = useState<string>('')
   const [page, setPage] = useState(0)
+  const [cancelReason, setCancelReason] = useState('관리자 취소')
 
   const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ['superAdmin', 'payment-orders', userId, status, page],
@@ -26,6 +28,12 @@ export default function PaymentOrdersPage() {
   })
 
   const rows: PaymentOrderAdminRow[] = data?.content ?? []
+  const cancelMut = useMutation({
+    mutationFn: (orderNo: string) => superAdminApi.cancelPaymentOrder(orderNo, cancelReason.trim() || '관리자 취소'),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['superAdmin', 'payment-orders'] })
+    },
+  })
 
   return (
     <div>
@@ -38,6 +46,14 @@ export default function PaymentOrdersPage() {
       </p>
 
       <div className="mb-4 rounded-lg border bg-white p-4">
+        <label className="mb-3 flex max-w-md flex-col gap-1 text-xs text-gray-600">
+          취소 사유 (필수)
+          <input
+            className="rounded border border-gray-300 px-2 py-1.5 text-sm"
+            value={cancelReason}
+            onChange={(e) => setCancelReason(e.target.value)}
+          />
+        </label>
         <p className="mb-3 text-sm font-medium text-gray-800">필터</p>
         <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <label className="flex flex-col gap-1 text-xs text-gray-600">
@@ -97,6 +113,7 @@ export default function PaymentOrdersPage() {
                   <th className="py-2 pr-2 font-medium">PG</th>
                   <th className="py-2 pr-2 font-medium">paidAt</th>
                   <th className="py-2 font-medium">생성</th>
+                  <th className="py-2 font-medium">취소</th>
                 </tr>
               </thead>
               <tbody>
@@ -116,6 +133,22 @@ export default function PaymentOrdersPage() {
                     </td>
                     <td className="py-2 whitespace-nowrap text-xs text-gray-600">
                       {new Date(o.createdAt).toLocaleString('ko-KR')}
+                    </td>
+                    <td className="py-2">
+                      {o.status === 'PAID' ? (
+                        <button
+                          type="button"
+                          disabled={cancelMut.isPending || !cancelReason.trim()}
+                          onClick={() => {
+                            if (!cancelReason.trim()) return
+                            if (!confirm(`${o.orderNo} 를 취소할까요? 이미 사용한 크레딧이 있으면 거부됩니다.`)) return
+                            cancelMut.mutate(o.orderNo)
+                          }}
+                          className="rounded border border-red-200 px-2 py-1 text-xs text-red-700"
+                        >
+                          취소
+                        </button>
+                      ) : null}
                     </td>
                   </tr>
                 ))}
