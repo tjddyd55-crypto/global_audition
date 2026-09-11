@@ -66,6 +66,10 @@ public class PaymentOrder {
     @Column(name = "raw_payload", columnDefinition = "jsonb")
     private JsonNode rawPayload;
 
+    /** 토스 paymentKey. 승인 이후 저장. 유니크(부분 인덱스). */
+    @Column(name = "payment_key", length = 200)
+    private String paymentKey;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
@@ -182,6 +186,14 @@ public class PaymentOrder {
 
     public void setRawPayload(JsonNode rawPayload) {
         this.rawPayload = rawPayload;
+    }
+
+    public String getPaymentKey() {
+        return paymentKey;
+    }
+
+    public void setPaymentKey(String paymentKey) {
+        this.paymentKey = paymentKey;
     }
 
     public Instant getCreatedAt() {

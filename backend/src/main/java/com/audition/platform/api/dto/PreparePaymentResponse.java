@@ -33,6 +33,15 @@ public class PreparePaymentResponse {
 
     private String provider;
 
+    /** 토스 위젯용 클라이언트 키. 시크릿은 절대 내려주지 않는다. */
+    private String clientKey;
+    /** 토스 confirm 에 쓰는 정수 금액(서버 확정). */
+    private Long tossAmount;
+    private String orderName;
+    private String successUrl;
+    private String failUrl;
+    private String variantKey;
+
     public String getOrderNo() {
         return orderNo;
     }
@@ -135,5 +144,53 @@ public class PreparePaymentResponse {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public String getClientKey() {
+        return clientKey;
+    }
+
+    public void setClientKey(String clientKey) {
+        this.clientKey = clientKey;
+    }
+
+    public Long getTossAmount() {
+        return tossAmount;
+    }
+
+    public void setTossAmount(Long tossAmount) {
+        this.tossAmount = tossAmount;
+    }
+
+    public String getOrderName() {
+        return orderName;
+    }
+
+    public void setOrderName(String orderName) {
+        this.orderName = orderName;
+    }
+
+    public String getSuccessUrl() {
+        return successUrl;
+    }
+
+    public void setSuccessUrl(String successUrl) {
+        this.successUrl = successUrl;
+    }
+
+    public String getFailUrl() {
+        return failUrl;
+    }
+
+    public void setFailUrl(String failUrl) {
+        this.failUrl = failUrl;
+    }
+
+    public String getVariantKey() {
+        return variantKey;
+    }
+
+    public void setVariantKey(String variantKey) {
+        this.variantKey = variantKey;
     }
 }

@@ -117,7 +117,6 @@ public class ApplicationSubmitService {
         }
         List<NormalizedSnsLink> snsToSave = applicationValidationService.normalizeSnsPayload(body.snsLinksOrEmpty());
 
-        creditService.useCredits(applicantId, CreditPolicyKey.AUDITION_APPLY, auditionId.toString());
         User applicant = userRepository.findById(applicantId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "사용자를 찾을 수 없습니다."));
 
@@ -145,6 +144,8 @@ public class ApplicationSubmitService {
         } catch (DataIntegrityViolationException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 지원 완료입니다.");
         }
+
+        creditService.useCredits(applicantId, CreditPolicyKey.AUDITION_APPLY, auditionId.toString());
 
         ApplicationVideo video = new ApplicationVideo();
         video.setApplicationId(app.getId());

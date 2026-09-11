@@ -4,6 +4,7 @@ import com.audition.platform.api.dto.CreditBalanceResponse;
 import com.audition.platform.api.dto.CreditChargeRequest;
 import com.audition.platform.api.dto.CreditOrderSummaryResponse;
 import com.audition.platform.api.dto.CreditPolicyPublicDto;
+import com.audition.platform.api.dto.CreditRuntimePublicDto;
 import com.audition.platform.api.dto.CreditTransactionDto;
 import com.audition.platform.api.dto.PreparePaymentRequest;
 import com.audition.platform.api.dto.PreparePaymentResponse;
@@ -57,6 +58,11 @@ public class CreditController {
         return creditService.getPolicyPublicSnapshot(key);
     }
 
+    @GetMapping("/public/runtime")
+    public CreditRuntimePublicDto getPublicRuntime() {
+        return creditService.getRuntimePublic();
+    }
+
     @GetMapping("/balance")
     public CreditBalanceResponse getBalance() {
         UUID userId = requireUserId();
@@ -97,6 +103,12 @@ public class CreditController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "유효하지 않은 packageId입니다.");
         }
         return paymentOrderService.preparePayment(userId, packageId, request.getProvider());
+    }
+
+    @GetMapping("/orders/{orderNo}/checkout")
+    public PreparePaymentResponse checkoutSession(@PathVariable String orderNo) {
+        UUID userId = requireUserId();
+        return paymentOrderService.checkoutSessionForUser(orderNo.trim(), userId);
     }
 
     @GetMapping("/orders/{orderNo}")

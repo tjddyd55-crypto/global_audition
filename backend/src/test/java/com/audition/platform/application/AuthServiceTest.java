@@ -3,6 +3,7 @@ package com.audition.platform.application;
 import com.audition.platform.api.dto.AuthResponse;
 import com.audition.platform.api.dto.LoginRequest;
 import com.audition.platform.api.dto.SignupRequest;
+import com.audition.platform.application.credit.CreditService;
 import com.audition.platform.application.recovery.AuthRecoveryService;
 import com.audition.platform.application.user.UserNicknameService;
 import com.audition.platform.domain.user.User;
@@ -39,9 +40,10 @@ class AuthServiceTest {
         userRepository = mock(UserRepository.class);
         userNicknameService = mock(UserNicknameService.class);
         authRecoveryService = mock(AuthRecoveryService.class);
+        CreditService creditService = mock(CreditService.class);
         encoder = new BCryptPasswordEncoder();
         JwtService jwtService = new JwtService("change-me-in-production-min-32-chars!!", 86_400_000L);
-        authService = new AuthService(userRepository, encoder, jwtService, userNicknameService, authRecoveryService);
+        authService = new AuthService(userRepository, encoder, jwtService, userNicknameService, authRecoveryService, creditService);
         when(userRepository.existsByUsername(any())).thenReturn(false);
         when(userRepository.save(any(User.class))).thenAnswer(inv -> {
             User user = inv.getArgument(0);

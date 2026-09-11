@@ -8,6 +8,9 @@ public class CreditPolicyPublicDto {
     private String policyKey;
     private long cost;
     private boolean active;
+    /** FREE | CREDIT. active=false 또는 cost=0 이면 FREE. */
+    private String applicationPaymentMode;
+    private long applicationFeeCredits;
 
     public CreditPolicyPublicDto() {
     }
@@ -16,6 +19,8 @@ public class CreditPolicyPublicDto {
         this.policyKey = policyKey;
         this.cost = cost;
         this.active = active;
+        this.applicationPaymentMode = (!active || cost <= 0) ? "FREE" : "CREDIT";
+        this.applicationFeeCredits = Math.max(0, cost);
     }
 
     public String getPolicyKey() {
@@ -40,5 +45,21 @@ public class CreditPolicyPublicDto {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public String getApplicationPaymentMode() {
+        return applicationPaymentMode;
+    }
+
+    public void setApplicationPaymentMode(String applicationPaymentMode) {
+        this.applicationPaymentMode = applicationPaymentMode;
+    }
+
+    public long getApplicationFeeCredits() {
+        return applicationFeeCredits;
+    }
+
+    public void setApplicationFeeCredits(long applicationFeeCredits) {
+        this.applicationFeeCredits = applicationFeeCredits;
     }
 }
