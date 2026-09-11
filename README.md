@@ -8,7 +8,8 @@
 audition-platform/
 ├── backend/              # 단일 Spring Boot 백엔드 (모놀리스)
 ├── frontend/
-│   └── web/              # Next.js 웹 애플리케이션
+│   ├── web/              # Next.js 웹 (기획사 관리 + 폴백)
+│   └── mobile/           # Expo 네이티브 (applicant-first)
 └── docs/                 # 문서 (참고/아카이브 포함)
 ```
 

@@ -1,16 +1,15 @@
 import Constants from 'expo-constants'
+import { isLoopbackApiUrl } from './envUrl'
 
 /**
- * 앱 전역에서 참조하는 환경 값.
+ * 앱 전역 환경 값.
  *
- * 결정
- * - 값의 출처를 app.config.ts의 extra로 단일화한다. WebView URL은 런타임에 바꿀 일이 없으므로
- *   빌드 타임 주입(EXPO_PUBLIC_WEB_URL)으로 충분하다.
- * - 호스트 허용 목록(allowedHosts)은 "내부 탐색"과 "외부 브라우저 오픈"을 가르는 기준이 된다.
- * - allowedHosts가 비어 있으면 안전하게 "아무 것도 외부로 열지 않는다"로 본다(앱 안에서만 이동).
+ * API Origin은 웹과 같은 Railway 프론트 프록시(`/api`)를 기본으로 쓴다.
+ * 백엔드 도메인을 새로 만들지 않고, 기존 rewrite SSOT를 재사용한다.
  */
 type Extra = {
   webUrl?: string
+  apiUrl?: string
   allowedHosts?: string[]
   buildProfile?: string
 }
@@ -18,7 +17,21 @@ type Extra = {
 const extra = (Constants.expoConfig?.extra ?? {}) as Extra
 
 export const WEB_URL: string =
-  extra.webUrl?.trim() || 'https://global-audition.example.com'
+  process.env.EXPO_PUBLIC_WEB_URL?.trim() || extra.webUrl?.trim() || 'https://frontend-production-8613a.up.railway.app'
+
+/**
+ * 실기기 Android는 localhost/127.0.0.1 이 폰 자신을 가리킨다.
+ * 우선순위: EXPO_PUBLIC_API_URL → extra.apiUrl → `${WEB_URL}/api` (웹 프록시 SSOT).
+ */
+export const API_BASE_URL: string = normalizeApiBase(
+  process.env.EXPO_PUBLIC_API_URL?.trim() || extra.apiUrl?.trim() || `${WEB_URL.replace(/\/+$/, '')}/api`,
+)
+
+export { isLoopbackApiUrl }
+
+export function isCurrentApiLoopback(): boolean {
+  return isLoopbackApiUrl(API_BASE_URL)
+}
 
 export const ALLOWED_HOSTS: string[] = Array.isArray(extra.allowedHosts)
   ? extra.allowedHosts.map((s) => s.toLowerCase())
@@ -26,11 +39,6 @@ export const ALLOWED_HOSTS: string[] = Array.isArray(extra.allowedHosts)
 
 export const BUILD_PROFILE: string = extra.buildProfile ?? 'local'
 
-/**
- * 주어진 URL이 앱 내부에서 계속 탐색할 대상인지 판별.
- * - 내부 이동(true): WebView 내에서 로드
- * - 외부 이동(false): 시스템 브라우저/메일앱/전화앱 등으로 넘긴다.
- */
 export function isInternalUrl(url: string): boolean {
   try {
     const parsed = new URL(url)
@@ -42,4 +50,8 @@ export function isInternalUrl(url: string): boolean {
   } catch {
     return false
   }
+}
+
+function normalizeApiBase(raw: string): string {
+  return raw.replace(/\/+$/, '')
 }

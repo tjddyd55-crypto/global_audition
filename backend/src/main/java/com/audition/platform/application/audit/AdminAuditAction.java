@@ -13,6 +13,8 @@ public final class AdminAuditAction {
     public static final String CREDIT_PACKAGE_CREATE = "CREDIT_PACKAGE_CREATE";
     public static final String CREDIT_PACKAGE_UPDATE = "CREDIT_PACKAGE_UPDATE";
     public static final String CREDIT_PACKAGE_DELETE = "CREDIT_PACKAGE_DELETE";
+    public static final String RECOVERY_REISSUE = "RECOVERY_REISSUE";
+    public static final String RECOVERY_REJECT = "RECOVERY_REJECT";
 
     private AdminAuditAction() {
     }

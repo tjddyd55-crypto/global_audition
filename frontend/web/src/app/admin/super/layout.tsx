@@ -12,6 +12,7 @@ const MENU = [
   { name: '거래 내역', path: '/admin/super/transactions' },
   { name: '결제 주문', path: '/admin/super/payment-orders' },
   { name: '로그', path: '/admin/super/logs' },
+  { name: '복구 요청', path: '/admin/super/recovery' },
   { name: '대량 지급', path: '/admin/super/bulk-grant' },
 ] as const
 
