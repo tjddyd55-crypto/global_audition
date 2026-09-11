@@ -10,7 +10,7 @@ import { ApiError } from '../../../src/api/http'
 import { parseInsufficientCredits } from '../../../src/api/parsers'
 import { calculateAge } from '../../../src/domain/age'
 import { ALLOWED_NATIONALITIES, ALLOWED_SNS_PLATFORMS, nationalityLabel, snsPlatformLabel } from '../../../src/domain/statusLabels'
-import { VIDEO_URL_HINT, isValidAuditionVideoUrl } from '../../../src/domain/videoUrl'
+import { videoUrlHint, isValidAuditionVideoUrl } from '../../../src/domain/videoUrl'
 import { pickLibraryVideo } from '../../../src/features/media/pickMedia'
 import { Button } from '../../../src/ui/Button'
 import { ConfirmDialog } from '../../../src/ui/ConfirmDialog'
@@ -70,7 +70,7 @@ export default function ApplyScreen() {
   const submit = async () => {
     setError(null)
     if (!isValidAuditionVideoUrl(videoUrl)) {
-      setError(VIDEO_URL_HINT)
+      setError(videoUrlHint())
       return
     }
     setLoading(true)
@@ -120,7 +120,7 @@ export default function ApplyScreen() {
             onPress={() => {
               setError(null)
               if (!isValidAuditionVideoUrl(videoUrl)) {
-                setError(VIDEO_URL_HINT)
+                setError(videoUrlHint())
                 return
               }
               if (insufficient) {

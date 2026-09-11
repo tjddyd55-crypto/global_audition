@@ -1,17 +1,20 @@
 import { StyleSheet, Text, View } from 'react-native'
-import { NOTIFICATION_API_MISSING, NOTIFICATION_TYPE_COPY } from '../src/features/notifications/notificationContract'
+import { useTranslation } from 'react-i18next'
 import { Screen } from '../src/ui/Screen'
 import { colors, radius } from '../src/theme/tokens'
 
+const NOTICE_TYPES = ['ROUND_OPEN', 'PASS_NOTICE', 'FAIL_NOTICE', 'FINAL_NOTICE'] as const
+
 export default function NotificationsScreen() {
+  const { t } = useTranslation()
   return (
     <Screen>
-      <Text style={styles.title}>알림</Text>
-      <Text style={styles.body}>{NOTIFICATION_API_MISSING}</Text>
-      {Object.entries(NOTIFICATION_TYPE_COPY).map(([type, copy]) => (
+      <Text style={styles.title}>{t('notifications.title')}</Text>
+      <Text style={styles.body}>{t('notifications.apiMissing')}</Text>
+      {NOTICE_TYPES.map((type) => (
         <View key={type} style={styles.card}>
           <Text style={styles.type}>{type}</Text>
-          <Text style={styles.body}>{copy}</Text>
+          <Text style={styles.body}>{t(`notifications.${type}`)}</Text>
         </View>
       ))}
     </Screen>

@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native'
+import { useTranslation } from 'react-i18next'
 import type { AuditionDto } from '../api/types'
 import { auditionHeadlineTitle, auditionListImageUrl } from '../domain/auditionImages'
 import { auditionStatusLabel } from '../domain/statusLabels'
@@ -7,6 +8,7 @@ import { PosterImage } from './PosterImage'
 import { StatusPill, toneForApplicationStatus } from './StatusPill'
 
 export function AuditionCard({ audition, onPress }: { audition: AuditionDto; onPress: () => void }) {
+  const { t } = useTranslation()
   const title = auditionHeadlineTitle(audition)
   const label = auditionStatusLabel(audition.status, audition.recruitmentRoundLabel)
   return (
@@ -20,7 +22,7 @@ export function AuditionCard({ audition, onPress }: { audition: AuditionDto; onP
           {audition.description}
         </Text>
         <Text style={styles.faint}>
-          지원 {audition.applicantsCount} · 남은 일 {audition.remainingDays}
+          {t('common.applicantsCount', { n: audition.applicantsCount })} · {t('common.daysLeftCount', { n: audition.remainingDays })}
         </Text>
       </View>
     </Pressable>

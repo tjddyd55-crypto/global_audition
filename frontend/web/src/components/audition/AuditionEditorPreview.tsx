@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { AuditionStatus } from '@/shared/types/audition'
 import { AUDITION_DETAIL, HERO } from '@/shared/design-tokens'
-import { EDITOR_LABELS, auditionStatusLabelKo } from '@/shared/audition/auditionEditorCopy'
+import { auditionStatusLabelKo } from '@/shared/audition/auditionEditorCopy'
+import { useTranslations } from 'next-intl'
 import { getVideoEmbedSrc } from '@/shared/utils/videoEmbed'
 
 /** public 정적 자산 — 깨진 URL 시 onError fallback (무한 루프 방지: 한 번만 교체) */
@@ -27,6 +28,7 @@ export function AuditionEditorPreview({
   videoUrl,
   status,
 }: AuditionEditorPreviewProps) {
+  const tEditor = useTranslations('editor')
   const embedSrc = useMemo(() => getVideoEmbedSrc(videoUrl) ?? '', [videoUrl])
 
   const displayTitle = useMemo(() => title.trim() || '제목을 입력하세요', [title])
@@ -58,9 +60,9 @@ export function AuditionEditorPreview({
         className="border-b border-gray-100 px-4 py-3 text-sm font-semibold text-gray-800"
         style={{ borderColor: AUDITION_DETAIL.cardBorderColor }}
       >
-        {EDITOR_LABELS.previewTitle}
+        {tEditor('previewTitle')}
       </div>
-      <p className="px-4 pt-2 text-xs text-gray-500 leading-snug">{EDITOR_LABELS.previewHint}</p>
+      <p className="px-4 pt-2 text-xs text-gray-500 leading-snug">{tEditor('previewHint')}</p>
 
       <div className="p-4">
         <div

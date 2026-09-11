@@ -70,10 +70,15 @@ export default function AuditionDetailScreen() {
             <Info label={t('auditionDetail.qualifications')} items={audition.qualifications} />
             <Info label={t('auditionDetail.schedules')} items={audition.schedules} />
             <Info label={t('auditionDetail.benefits')} items={audition.benefits} />
-            {audition.location ? <Text style={styles.meta}>장소 {audition.location}</Text> : null}
+            {audition.location ? (
+              <Text style={styles.meta}>{t('auditionDetail.locationLabel', { location: audition.location })}</Text>
+            ) : null}
             {audition.processMode === 'MULTI_ROUND' ? (
               <Text style={styles.meta}>
-                진행 {audition.currentRoundNumber ?? '-'} / {audition.maxRoundNumber ?? audition.roundSummaries?.length ?? '-'} 라운드
+                {t('auditionDetail.roundProgress', {
+                  current: audition.currentRoundNumber ?? '-',
+                  max: audition.maxRoundNumber ?? audition.roundSummaries?.length ?? '-',
+                })}
               </Text>
             ) : null}
             <View style={styles.row}>
@@ -81,7 +86,7 @@ export default function AuditionDetailScreen() {
               <Button label={t('common.ranking')} variant="secondary" onPress={() => router.push(`/auditions/${id}/ranking`)} />
             </View>
             {audition.videoUrl ? (
-              <Button label="소개 영상 열기" variant="secondary" onPress={() => void Linking.openURL(audition.videoUrl ?? '')} />
+              <Button label={t('auditionDetail.introVideo')} variant="secondary" onPress={() => void Linking.openURL(audition.videoUrl ?? '')} />
             ) : null}
           </View>
         </View>

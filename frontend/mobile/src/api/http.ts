@@ -1,6 +1,7 @@
 import { API_BASE_URL } from '../config/env'
 import { clearSession, getAccessToken } from '../auth/secureSession'
 import { getRuntimeLocale } from '../i18n/runtime'
+import { mapApiError } from './errorMessage'
 import { readApiErrorMessage } from './unwrap'
 
 export class ApiError extends Error {
@@ -78,7 +79,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   }
 
   if (!response.ok) {
-    throw new ApiError(response.status, readApiErrorMessage(parsed, `요청에 실패했습니다 (${response.status})`), parsed)
+    throw new ApiError(response.status, mapApiError(parsed, readApiErrorMessage(parsed, `요청에 실패했습니다 (${response.status})`)), parsed)
   }
 
   return parsed as T

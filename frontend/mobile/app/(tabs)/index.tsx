@@ -11,12 +11,18 @@ import { EmptyState, ErrorState } from '../../src/ui/EmptyState'
 import { Screen } from '../../src/ui/Screen'
 import { colors, radius } from '../../src/theme/tokens'
 import { useTranslation } from 'react-i18next'
+import { audienceCountryFromLocale } from '../../src/domain/audience'
+import { getRuntimeLocale } from '../../src/i18n/runtime'
 
 export default function HomeScreen() {
   const { t } = useTranslation()
   const router = useRouter()
   const { isAuthenticated, session } = useAuth()
-  const auditionsQuery = useQuery({ queryKey: queryKeys.auditionsOpen, queryFn: auditionApi.listOpen })
+  const country = audienceCountryFromLocale(getRuntimeLocale())
+  const auditionsQuery = useQuery({
+    queryKey: queryKeys.auditionsOpen(country),
+    queryFn: () => auditionApi.listOpen(country),
+  })
   const dashQuery = useQuery({
     queryKey: queryKeys.dashboard,
     queryFn: dashboardApi.applicant,

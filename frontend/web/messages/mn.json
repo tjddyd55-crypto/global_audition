@@ -37,7 +37,10 @@
     "required": "Заавал",
     "optional": "Сонголт",
     "done": "Дууссан",
-    "copy": "Хуулах"
+    "copy": "Хуулах",
+    "loadFailedTitle": "Ачаалж чадсангүй",
+    "applicantsCount": "{n} өргөдөл",
+    "daysLeftCount": "{n} хоног үлдсэн"
   },
   "nav": {
     "home": "Нүүр",
@@ -110,7 +113,27 @@
     "recoveryFieldsRequired": "Бүртгэл, нэр, холбоо барихыг оруулна уу.",
     "recoveryRequested": "Сэргээх хүсэлт илгээгдлээ. Админ код дахин олгож мэдэгдэнэ.",
     "requestFailed": "Хүсэлт амжилтгүй.",
-    "backToLogin": "Нэвтрэх рүү"
+    "backToLogin": "Нэвтрэх рүү",
+    "hasRecoveryCode": "Сэргээх кодтой",
+    "lostRecoveryCode": "Кодоо алдсан",
+    "recoveryCodePlaceholder": "Сэргээх хамгаалалтын код",
+    "accountEmailOrId": "Бүртгэлийн имэйл эсвэл таних тэмдэг",
+    "nameRequired": "Нэрээ оруулна уу",
+    "contactRequired": "Холбоо барих мэдээлэл оруулна уу",
+    "recoveryRequestedAdmin": "Сэргээх хүсэлтийг админд илгээлээ. Шинэ кодыг шалгасны дараа олгоно.",
+    "loginAfterReset": "Нууц үг шинэчлэгдлээ. Шинэ нууц үгээр нэвтэрнэ үү.",
+    "loginRequiredBody": "Энэ дэлгэцийг ашиглахын тулд нэвтэрнэ үү.",
+    "recoverySaveTitle": "Сэргээх кодоо хадгална уу",
+    "recoverySaveBody": "Энэ кодыг одоо л нэг удаа харуулна. Нууц үгээ мартсан үед бүртгэлээ баталгаажуулж шинэчлэхэд ашиглана. Сервер зөвхөн хэш хадгална.",
+    "saveOnDevice": "Энэ төхөөрөмжид хадгалах",
+    "savedOnDevice": "Төхөөрөмжид хадгаллаа",
+    "recoveryAck": "Кодыг аюулгүй газар хадгалсан бөгөөд дахин харахгүйг ойлголоо.",
+    "continueAfterSave": "Үргэлжлүүлэх",
+    "nicknameCharset": "Хоч нэрэнд үсэг, тоо, солонгос үсэг, доогуур зураас, цэг л ашиглана.",
+    "nicknameReserved": "Энэ хоч нэрийг ашиглах боломжгүй.",
+    "roleApplicantOrAgency": "Үүрэг нь өргөдөл гаргагч эсвэл агентлаг байх ёстой.",
+    "legalNameMax": "Жинхэнэ нэр 120 тэмдэгтээс хэтрэхгүй.",
+    "nicknameLen": "Хоч нэр 2–20 тэмдэгт байх ёстой."
   },
   "register": {
     "title": "Бүртгүүлэх",
@@ -139,7 +162,9 @@
     "enterCity": "Хотын нэр",
     "selectTimezone": "Цагийн бүс сонгоно уу (заавал биш)",
     "uploadLicense": "Бизнесийн лиценз (зураг эсвэл PDF) оруулна уу",
-    "registrationFormat": "Өөрийн улсын форматаар оруулна уу"
+    "registrationFormat": "Өөрийн улсын форматаар оруулна уу",
+    "emailInvalid": "Зөв имэйл оруулна уу",
+    "passwordMin6": "Нууц үг хамгийн багадаа 6 тэмдэгт"
   },
   "home": {
     "title": "Аудишн платформ",
@@ -198,7 +223,9 @@
     "cannotApply": "Бүртгүүлэх боломжгүй",
     "viewVote": "Санал үзэх",
     "loadFailed": "Аудишн ачаалж чадсангүй.",
-    "roundProgress": "Шат {current} / {max}"
+    "roundProgress": "Шат {current} / {max}",
+    "locationLabel": "Байршил {location}",
+    "introVideo": "Танилцуулга видео нээх"
   },
   "apply": {
     "title": "Бүртгүүлэх",
@@ -232,7 +259,8 @@
     "birthDateHint": "Төрсөн өдөр (YYYY-MM-DD)",
     "ageYears": "Нас {age} (сервер эцсийн баталгаажуулна)",
     "snsOptional": "Сошиал (заавал биш)",
-    "snsUrl": "Сошиал холбоос"
+    "snsUrl": "Сошиал холбоос",
+    "videoUrlRule": "Видео холбоос нь YouTube, TikTok, Instagram байх ёстой."
   },
   "myApplications": {
     "title": "Миний өргөдөл",
@@ -255,14 +283,24 @@
     "hubTitle": "Нээлттэй санал",
     "hubHint": "Аудишн сонговол нээлттэй саналын самбар нээгдэнэ.",
     "loadFailed": "Санал өгөх аудишн ачаалж чадсангүй.",
-    "emptyHub": "Санал авч буй аудишн алга"
+    "emptyHub": "Санал авч буй аудишн алга",
+    "summary": "Өргөдөл {applicants} · Санал {votes} · Миний {mine}",
+    "applicantFallback": "Өргөдөл гаргагч",
+    "watchVideo": "Видео үзэх",
+    "myVote": "Миний санал",
+    "castFor": "Энэ өргөдөлд санал өгөх",
+    "failed": "Санал өгч чадсангүй.",
+    "emptyBoard": "Санал өгөх өргөдөл хараахан алга",
+    "voteCount": "{n} санал"
   },
   "ranking": {
     "title": "Чансаа",
     "empty": "Чансааны мэдээлэл алга",
     "restricted": "Чансааг агентлаг, админ үзнэ",
     "rank": "Байр",
-    "score": "Оноо"
+    "score": "Оноо",
+    "loadFailed": "Чансааг ачаалж чадсангүй.",
+    "votesMeta": "{n} санал"
   },
   "profile": {
     "title": "Профайл",
@@ -275,7 +313,12 @@
     "intro": "Танилцуулга",
     "issueRecovery": "Сэргээх код байхгүй бол авах",
     "recoveryOnce": "Сэргээх код (нэг л удаа): {code}",
-    "recoveryKeep": "Кодыг аюулгүй хадгална уу. Дахин харах боломжгүй."
+    "recoveryKeep": "Кодыг аюулгүй хадгална уу. Дахин харах боломжгүй.",
+    "issueFailed": "Код олгож чадсангүй.",
+    "findAccount": "Бүртгэл олох / нууц үг шинэчлэх",
+    "notifications": "Мэдэгдэл",
+    "manageApplicants": "Миний аудишний өргөдлийг удирдах",
+    "createAuditionWeb": "Аудишн үүсгэх (веб)"
   },
   "credits": {
     "title": "Кредит",
@@ -299,7 +342,21 @@
     "loadFailed": "Кредитын багц ачаалж чадсангүй.",
     "selectPackage": "Багц сонгоно уу",
     "payWithToss": "Toss-оор төлөх",
-    "wholeUsd": "Үнэ нь бүхэл ам.доллар."
+    "wholeUsd": "Үнэ нь бүхэл ам.доллар.",
+    "currentBalance": "Одоогийн кредит",
+    "dashboard": "Хянах самбар руу",
+    "ledgerTitle": "Кредитийн түүх",
+    "ledgerHint": "Цэнэглэлт, зарцуулалт, олголтыг шүүнэ. (сүүлийн 50)",
+    "all": "Бүгд",
+    "typeCharge": "Цэнэглэлт",
+    "typeUse": "Зарцуулалт",
+    "typeGrant": "Олголт",
+    "applyRef": "Аудишнд өргөдөл (ref: {id}…)",
+    "packageCharge": "Багц худалдан авалт",
+    "afterBalance": "Үлдэгдэл {n}",
+    "emptyTx": "Гүйлгээ алга.",
+    "loadHomeFailed": "Кредитийг ачаалж чадсангүй. Дахин оролдоно уу.",
+    "policyLoadFailed": "Өргөдлийн төлбөрийг ачаалж чадсангүй."
   },
   "payments": {
     "title": "Төлбөр",
@@ -329,7 +386,25 @@
     "chargeComplete": "Кредит нэмэгдлээ.",
     "confirming": "Сервер төлбөрийг баталгаажуулж байна…",
     "store": "Кредитын дэлгүүр",
-    "cancelled": "Төлбөр цуцлагдсан эсвэл амжилтгүй. Кредит олгоогүй."
+    "cancelled": "Төлбөр цуцлагдсан эсвэл амжилтгүй. Кредит олгоогүй.",
+    "confirmTitle": "Төлбөр баталгаажуулах",
+    "reselectPackage": "Өөр багц сонгох",
+    "selectPackageCta": "Багц сонгох",
+    "orderSummary": "Захиалгын хураангуй",
+    "orderNo": "Захиалгын дугаар",
+    "packageName": "Багц",
+    "payAmount": "Дүн",
+    "grantCredits": "Кредит",
+    "bonus": "Урамшуулал +{n}",
+    "totalGrant": "Нийт олгох {n} кредит",
+    "provider": "Provider",
+    "status": "Төлөв",
+    "creatingOrder": "Захиалга үүсгэж байна…",
+    "createOrder": "Захиалга үүсгэх",
+    "mockPay": "Төлбөр үргэлжлүүлэх (mock)",
+    "pgHint": "Бодит PG энд нээгдэнэ.",
+    "orderCreated": "Захиалга үүслээ.",
+    "packageNotFound": "Багц олдсонгүй эсвэл борлуулагдахгүй байна."
   },
   "status": {
     "submitted": "Илгээсэн",
@@ -404,7 +479,23 @@
     "translationAfterSave": "Эх хувилбарыг эхлээд хадгалбал орчуулгын таб нээгдэнэ.",
     "saveTranslation": "Энэ хэлийг хадгалах",
     "saving": "Хадгалж байна…",
-    "onePerLine": "мөр бүрт нэг зүйл"
+    "onePerLine": "мөр бүрт нэг зүйл",
+    "tags": "Шошго",
+    "tagsHint": "Каталогийн шошго сонгох эсвэл өөрөө нэмнэ. Хайлт, шүүлтэнд ашиглана.",
+    "coverImage": "Нүүр зураг",
+    "galleryImages": "Галерейн зураг",
+    "agencyLogo": "Агентлагийн лого",
+    "startDate": "Эхлэх огноо",
+    "endDate": "Дуусах огноо",
+    "previewTitle": "Урьдчилан харах",
+    "previewHint": "Хадгалахаас өмнө энд харагдана.",
+    "sectionBasic": "Үндсэн мэдээлэл",
+    "sectionMedia": "Медиа",
+    "sectionAgency": "Агентлаг",
+    "sectionSchedule": "Байршил · хуваарь",
+    "sectionLists": "Үүрэг · шаардлага · хуваарь",
+    "sectionBenefits": "Давуу тал",
+    "videoUrl": "YouTube видео холбоос"
   },
   "country": {
     "KR": "Солонгос",
@@ -432,6 +523,64 @@
     "resultAccepted": "Та энэ аудишнд тэнцлээ. Дараагийн зааврыг агентлагаас шалгана уу.",
     "resultRejected": "Энэ удаа тэнцсэнгүй. Дараагийн боломжид дахин уулзая.",
     "resultReviewing": "Агентлаг өргөдлийг шалгаж байна.",
-    "resultSubmitted": "Өргөдөл хүлээн авлаа. Үр дүн энд харагдана."
+    "resultSubmitted": "Өргөдөл хүлээн авлаа. Үр дүн энд харагдана.",
+    "agencyOnly": "Зөвхөн агентлагийн бүртгэл",
+    "stats": "Бүгд {total} · Хүлээж буй {submitted} · Шалгаж буй {reviewing} · Тэнцсэн {accepted} · Тэнцээгүй {rejected}",
+    "loadFailed": "Өргөдөл гаргагчдыг ачаалж чадсангүй.",
+    "empty": "Өргөдөл гаргагч алга",
+    "ageRoundVotes": "{age} нас · Шат {round} · {votes} санал",
+    "markReviewing": "Шалгаж буй гэж тэмдэглэх",
+    "markPass": "Тэнцүүлэх",
+    "markReject": "Тэнцүүлэхгүй",
+    "openVideo": "Өргөдлийн видео нээх",
+    "nameUnset": "Нэр оруулаагүй",
+    "detailLoadFailed": "Дэлгэрэнгүйг ачаалж чадсангүй."
+  },
+  "errors": {
+    "INSUFFICIENT_CREDITS": "Кредит хүрэлцэхгүй байна",
+    "GENERIC": "Хүсэлтийг гүйцэтгэж чадсангүй",
+    "NETWORK": "Сүлжээний алдаа гарлаа",
+    "UNAUTHORIZED": "Нэвтэрнэ үү",
+    "FORBIDDEN": "Эрх хүрэхгүй байна",
+    "NOT_FOUND": "Олсонгүй",
+    "PAYMENT_NOT_READY": "Төлбөр хараахан бэлэн биш",
+    "TOSS_INACTIVE": "Toss төлбөр идэвхгүй байна",
+    "AMOUNT_MISMATCH": "Төлбөрийн дүн таарахгүй байна",
+    "DUPLICATE_CONFIRM": "Энэ төлбөрийг аль хэдийн баталгаажуулсан",
+    "CONFIG_INCOMPLETE": "Төлбөрийн тохиргоо дутуу байна",
+    "REQUEST_FAILED": "Хүсэлт амжилтгүй боллоо",
+    "UNDER_REVIEW_LOCKED": "Шалгаж байна",
+    "ROUND_NOT_ACTIVE": "Хүлээн авах хугацаа биш",
+    "NOT_ELIGIBLE_ROUND": "Энэ шатанд хамрагдахгүй",
+    "APPLICATION_NOT_FOUND": "Өргөдөл олдсонгүй",
+    "AUDITION_NOT_FOUND": "Аудишн олдсонгүй",
+    "AUDITION_NOT_OPEN": "Энэ аудишн нээлттэй биш"
+  },
+  "application": {
+    "detailLoadFailed": "Өргөдлийг ачаалж чадсангүй.",
+    "nameUnset": "Нэр оруулаагүй",
+    "ageYears": "{age} нас",
+    "openSubmittedVideo": "Илгээсэн видео нээх",
+    "processMode": "Явц {mode}",
+    "currentRoundOf": "Одоо {current} / {max} шат",
+    "roundN": "Шат {n}",
+    "currentMark": "(одоо)",
+    "nextRound": "Дараагийн шат",
+    "submissionStatus": "Илгээлт {status}",
+    "nextRoundOpen": "Дараагийн шат нээлттэй. Серверээс шаардсан хэлбэрээр илгээнэ үү.",
+    "fileUrl": "Файлын URL",
+    "textAnswer": "Бичгэн хариулт",
+    "submitRound": "Шатыг илгээх",
+    "cannotSubmitNow": "Одоо энэ шатад илгээх боломжгүй.",
+    "roundSubmitted": "Шатын материалыг илгээлээ.",
+    "roundSubmitFailed": "Шатыг илгээж чадсангүй."
+  },
+  "notifications": {
+    "title": "Мэдэгдэл",
+    "apiMissing": "Мэдэгдлийн API хараахан нээлттэй биш. Үр дүнг Өргөдлөөсөө шалгана уу.",
+    "ROUND_OPEN": "Шат нээгдэхэд мэдэгдэнэ.",
+    "PASS_NOTICE": "Шатыг тэнцсэн мэдэгдэл",
+    "FAIL_NOTICE": "Шатын үр дүнгийн мэдэгдэл",
+    "FINAL_NOTICE": "Эцсийн үр дүнгийн мэдэгдэл"
   }
 }

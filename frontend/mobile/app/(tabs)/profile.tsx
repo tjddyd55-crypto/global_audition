@@ -99,18 +99,18 @@ export default function ProfileScreen() {
               setIssuedCode(res.recoveryCode)
               setRecoveryNote(t('profile.recoveryKeep'))
             } catch (err) {
-              setRecoveryNote(err instanceof ApiError ? err.message : '발급에 실패했습니다.')
+              setRecoveryNote(err instanceof ApiError ? err.message : t('profile.issueFailed'))
             }
           }}
         />
-        <Button label="계정 찾기 / 비밀번호 재설정" variant="secondary" onPress={() => router.push('/(auth)/recover')} />
+        <Button label={t('profile.findAccount')} variant="secondary" onPress={() => router.push('/(auth)/recover')} />
         <Button label={t('nav.credits')} variant="secondary" onPress={() => router.push('/credits')} />
-        <Button label="알림" variant="secondary" onPress={() => router.push('/notifications')} />
+        <Button label={t('profile.notifications')} variant="secondary" onPress={() => router.push('/notifications')} />
         {isAgencyRole(session?.role) ? (
-          <Button label="내 오디션 지원자 관리" variant="secondary" onPress={() => router.push('/agency/applicants')} />
+          <Button label={t('profile.manageApplicants')} variant="secondary" onPress={() => router.push('/agency/applicants')} />
         ) : null}
         <Button
-          label="오디션 생성 (웹)"
+          label={t('profile.createAuditionWeb')}
           variant="secondary"
           onPress={() => router.push({ pathname: '/web', params: { path: '/ko/my/auditions' } })}
         />

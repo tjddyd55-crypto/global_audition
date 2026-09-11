@@ -7,11 +7,17 @@ import { AuditionCard } from '../../src/ui/AuditionCard'
 import { EmptyState, ErrorState } from '../../src/ui/EmptyState'
 import { Screen } from '../../src/ui/Screen'
 import { useTranslation } from 'react-i18next'
+import { audienceCountryFromLocale } from '../../src/domain/audience'
+import { getRuntimeLocale } from '../../src/i18n/runtime'
 
 export default function AuditionsScreen() {
   const { t } = useTranslation()
   const router = useRouter()
-  const query = useQuery({ queryKey: queryKeys.auditionsOpen, queryFn: auditionApi.listOpen })
+  const country = audienceCountryFromLocale(getRuntimeLocale())
+  const query = useQuery({
+    queryKey: queryKeys.auditionsOpen(country),
+    queryFn: () => auditionApi.listOpen(country),
+  })
 
   return (
     <Screen loading={query.isLoading} refreshing={query.isFetching} onRefresh={() => void query.refetch()}>

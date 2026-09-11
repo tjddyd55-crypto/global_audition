@@ -78,7 +78,7 @@ export default function RegisterScreen() {
             }
           }}
         />
-        <Button label="로그인" variant="secondary" onPress={() => router.push('/(auth)/login')} />
+        <Button label={t('common.login')} variant="secondary" onPress={() => router.push('/(auth)/login')} />
       </KeyboardAvoidingView>
     </Screen>
   )

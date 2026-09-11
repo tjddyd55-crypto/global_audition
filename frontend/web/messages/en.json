@@ -37,7 +37,10 @@
     "required": "Required",
     "optional": "Optional",
     "done": "Done",
-    "copy": "Copy"
+    "copy": "Copy",
+    "loadFailedTitle": "Could not load",
+    "applicantsCount": "{n} applied",
+    "daysLeftCount": "{n} days left"
   },
   "nav": {
     "home": "Home",
@@ -110,7 +113,27 @@
     "recoveryFieldsRequired": "Enter account, name, and contact.",
     "recoveryRequested": "Recovery request sent. An admin will reissue a code and contact you.",
     "requestFailed": "The request failed.",
-    "backToLogin": "Back to login"
+    "backToLogin": "Back to login",
+    "hasRecoveryCode": "I have a recovery code",
+    "lostRecoveryCode": "I lost the code",
+    "recoveryCodePlaceholder": "Recovery security code",
+    "accountEmailOrId": "Account email or identifier",
+    "nameRequired": "Please enter your name",
+    "contactRequired": "Please enter a contact",
+    "recoveryRequestedAdmin": "The recovery request was sent to an admin. A new code will be issued after review.",
+    "loginAfterReset": "Password updated. Sign in with the new password.",
+    "loginRequiredBody": "Sign in to use this screen.",
+    "recoverySaveTitle": "Save your recovery code",
+    "recoverySaveBody": "This code is shown once. Use it to identify the account and reset the password. The server stores only a hash and never returns the old password.",
+    "saveOnDevice": "Save on this device",
+    "savedOnDevice": "Saved on this device",
+    "recoveryAck": "I saved the code in a safe place and understand I cannot see it again.",
+    "continueAfterSave": "Continue",
+    "nicknameCharset": "Nickname may use letters, numbers, hangul, underscore, and dot only.",
+    "nicknameReserved": "That nickname is not allowed.",
+    "roleApplicantOrAgency": "Role must be applicant or agency.",
+    "legalNameMax": "Legal name must be 120 characters or fewer.",
+    "nicknameLen": "Nickname must be 2–20 characters."
   },
   "register": {
     "title": "Register",
@@ -139,7 +162,9 @@
     "enterCity": "City name",
     "selectTimezone": "Select timezone (optional)",
     "uploadLicense": "Upload a business license (image or PDF)",
-    "registrationFormat": "Use your country's format (e.g. Korea 123-45-67890, US EIN)"
+    "registrationFormat": "Use your country's format (e.g. Korea 123-45-67890, US EIN)",
+    "emailInvalid": "Enter a valid email",
+    "passwordMin6": "Password must be at least 6 characters"
   },
   "home": {
     "title": "Audition platform",
@@ -198,7 +223,9 @@
     "cannotApply": "Cannot apply",
     "viewVote": "View votes",
     "loadFailed": "Could not load this audition.",
-    "roundProgress": "Round {current} / {max}"
+    "roundProgress": "Round {current} / {max}",
+    "locationLabel": "Location {location}",
+    "introVideo": "Open intro video"
   },
   "apply": {
     "title": "Apply",
@@ -232,7 +259,8 @@
     "birthDateHint": "Date of birth (YYYY-MM-DD)",
     "ageYears": "Age {age} (server confirms)",
     "snsOptional": "Social (optional)",
-    "snsUrl": "Social URL"
+    "snsUrl": "Social URL",
+    "videoUrlRule": "Video links must be YouTube, TikTok, or Instagram URLs."
   },
   "myApplications": {
     "title": "My applications",
@@ -255,14 +283,24 @@
     "hubTitle": "Public vote",
     "hubHint": "Choose an audition to open its public vote board.",
     "loadFailed": "Could not load auditions to vote on.",
-    "emptyHub": "No auditions are open for voting"
+    "emptyHub": "No auditions are open for voting",
+    "summary": "Apps {applicants} · Votes {votes} · Mine {mine}",
+    "applicantFallback": "Applicant",
+    "watchVideo": "Watch video",
+    "myVote": "My vote",
+    "castFor": "Vote for this applicant",
+    "failed": "Voting failed.",
+    "emptyBoard": "No applicants to vote for yet",
+    "voteCount": "{n} votes"
   },
   "ranking": {
     "title": "Ranking",
     "empty": "No ranking data yet",
     "restricted": "Ranking is available to agencies and admins",
     "rank": "Rank",
-    "score": "Score"
+    "score": "Score",
+    "loadFailed": "Could not load the ranking.",
+    "votesMeta": "{n} votes"
   },
   "profile": {
     "title": "Profile",
@@ -275,7 +313,12 @@
     "intro": "Introduction",
     "issueRecovery": "Issue a recovery code if missing",
     "recoveryOnce": "Recovery code (shown once): {code}",
-    "recoveryKeep": "Store this code safely. You will not see it again."
+    "recoveryKeep": "Store this code safely. You will not see it again.",
+    "issueFailed": "Could not issue the code.",
+    "findAccount": "Find account / reset password",
+    "notifications": "Notifications",
+    "manageApplicants": "Manage my audition applicants",
+    "createAuditionWeb": "Create audition (web)"
   },
   "credits": {
     "title": "Credits",
@@ -299,7 +342,21 @@
     "loadFailed": "Could not load credit packs.",
     "selectPackage": "Select a pack",
     "payWithToss": "Pay with Toss",
-    "wholeUsd": "Prices are whole US dollars."
+    "wholeUsd": "Prices are whole US dollars.",
+    "currentBalance": "Current credits",
+    "dashboard": "Back to dashboard",
+    "ledgerTitle": "Credit history",
+    "ledgerHint": "Filter charges, uses, and grants. (last 50)",
+    "all": "All",
+    "typeCharge": "Charge",
+    "typeUse": "Use",
+    "typeGrant": "Grant",
+    "applyRef": "Audition apply (ref: {id}…)",
+    "packageCharge": "Package purchase",
+    "afterBalance": "Balance {n}",
+    "emptyTx": "No transactions.",
+    "loadHomeFailed": "Could not load credits. Please try again.",
+    "policyLoadFailed": "Could not load the apply fee. Try again shortly."
   },
   "payments": {
     "title": "Payment",
@@ -329,7 +386,25 @@
     "chargeComplete": "Credits were added.",
     "confirming": "Confirming payment on the server…",
     "store": "Credit store",
-    "cancelled": "Payment was cancelled or failed. Credits were not granted."
+    "cancelled": "Payment was cancelled or failed. Credits were not granted.",
+    "confirmTitle": "Confirm payment",
+    "reselectPackage": "Choose another package",
+    "selectPackageCta": "Choose a package",
+    "orderSummary": "Order summary",
+    "orderNo": "Order no.",
+    "packageName": "Package",
+    "payAmount": "Amount",
+    "grantCredits": "Credits",
+    "bonus": "Bonus +{n}",
+    "totalGrant": "Total grant {n} credits",
+    "provider": "Provider",
+    "status": "Status",
+    "creatingOrder": "Creating order…",
+    "createOrder": "Create order",
+    "mockPay": "Continue (mock pay)",
+    "pgHint": "A live PG would open the provider screen here.",
+    "orderCreated": "Order created.",
+    "packageNotFound": "Package not found or not for sale."
   },
   "status": {
     "submitted": "Submitted",
@@ -404,7 +479,23 @@
     "translationAfterSave": "Save the original first to open translation tabs.",
     "saveTranslation": "Save this locale",
     "saving": "Saving…",
-    "onePerLine": "one item per line"
+    "onePerLine": "one item per line",
+    "tags": "Tags",
+    "tagsHint": "Pick catalog tags or add your own. Used for search and filters.",
+    "coverImage": "Cover image",
+    "galleryImages": "Gallery images",
+    "agencyLogo": "Agency logo",
+    "startDate": "Start datetime",
+    "endDate": "End datetime",
+    "previewTitle": "Preview",
+    "previewHint": "Your edits appear here before you save.",
+    "sectionBasic": "Basics",
+    "sectionMedia": "Media",
+    "sectionAgency": "Agency",
+    "sectionSchedule": "Location · schedule",
+    "sectionLists": "Roles · requirements · schedule",
+    "sectionBenefits": "Benefits",
+    "videoUrl": "YouTube video link"
   },
   "country": {
     "KR": "Korea",
@@ -432,6 +523,64 @@
     "resultAccepted": "You passed this audition. Check the agency notice for next steps.",
     "resultRejected": "Not this time. We hope to see you at the next audition.",
     "resultReviewing": "The agency is reviewing the application.",
-    "resultSubmitted": "Application received. Results will appear here."
+    "resultSubmitted": "Application received. Results will appear here.",
+    "agencyOnly": "Agency accounts only",
+    "stats": "All {total} · Pending {submitted} · Review {reviewing} · Pass {accepted} · Reject {rejected}",
+    "loadFailed": "Could not load applicants.",
+    "empty": "No applicants",
+    "ageRoundVotes": "{age} yrs · Round {round} · {votes} votes",
+    "markReviewing": "Mark in review",
+    "markPass": "Pass",
+    "markReject": "Reject",
+    "openVideo": "Open application video",
+    "nameUnset": "Name not set",
+    "detailLoadFailed": "Could not load applicant detail."
+  },
+  "errors": {
+    "INSUFFICIENT_CREDITS": "Not enough credits",
+    "GENERIC": "The request could not be completed",
+    "NETWORK": "A network error occurred",
+    "UNAUTHORIZED": "Please sign in",
+    "FORBIDDEN": "You do not have permission",
+    "NOT_FOUND": "Item not found",
+    "PAYMENT_NOT_READY": "Payments are not ready yet",
+    "TOSS_INACTIVE": "Toss payments are disabled",
+    "AMOUNT_MISMATCH": "Payment amount does not match",
+    "DUPLICATE_CONFIRM": "This payment was already confirmed",
+    "CONFIG_INCOMPLETE": "Payment configuration is incomplete",
+    "REQUEST_FAILED": "The request failed",
+    "UNDER_REVIEW_LOCKED": "Under review",
+    "ROUND_NOT_ACTIVE": "Submissions are not open",
+    "NOT_ELIGIBLE_ROUND": "Not eligible for this round",
+    "APPLICATION_NOT_FOUND": "Application not found",
+    "AUDITION_NOT_FOUND": "Audition not found",
+    "AUDITION_NOT_OPEN": "This audition is not open"
+  },
+  "application": {
+    "detailLoadFailed": "Could not load the application.",
+    "nameUnset": "Name not set",
+    "ageYears": "{age} yrs",
+    "openSubmittedVideo": "Open submitted video",
+    "processMode": "Process {mode}",
+    "currentRoundOf": "Current {current} / {max} rounds",
+    "roundN": "Round {n}",
+    "currentMark": "(current)",
+    "nextRound": "Next round",
+    "submissionStatus": "Submission {status}",
+    "nextRoundOpen": "The next round is open. Send only the format the server requires.",
+    "fileUrl": "File URL",
+    "textAnswer": "Text answer",
+    "submitRound": "Submit round",
+    "cannotSubmitNow": "You cannot submit this round now.",
+    "roundSubmitted": "Round materials submitted.",
+    "roundSubmitFailed": "Round submission failed."
+  },
+  "notifications": {
+    "title": "Notifications",
+    "apiMissing": "The notification inbox API is not public yet. Check results in My applications.",
+    "ROUND_OPEN": "We notify you when a round opens.",
+    "PASS_NOTICE": "Round pass notice",
+    "FAIL_NOTICE": "Round result notice",
+    "FINAL_NOTICE": "Final result notice"
   }
 }

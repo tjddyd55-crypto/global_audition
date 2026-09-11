@@ -20,7 +20,7 @@ import { isBlankOrValidYoutubeUrl } from '@/shared/audition/youtubeEmbed'
 import { AuditionEditorPreview } from '@/components/audition/AuditionEditorPreview'
 import { SingleImageUploadField } from '@/components/audition/AuditionEditorImageUpload'
 import { ImageUploader } from '@/components/common/ImageUploader'
-import { EDITOR_LABELS, AUDITION_STATUS_LABEL_KO } from '@/shared/audition/auditionEditorCopy'
+import { AUDITION_STATUS_LABEL_KO } from '@/shared/audition/auditionEditorCopy'
 import { normalizeCustomTagNamesForPayload } from '@/shared/audition/auditionTags'
 import { AuditionTranslationPanel } from '@/components/audition/AuditionTranslationPanel'
 import {
@@ -483,7 +483,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
         onSubmit={(e: FormEvent) => e.preventDefault()}
         className="w-full max-w-none"
       >
-        <h2 style={sectionTitle}>{EDITOR_LABELS.sectionBasic}</h2>
+        <h2 style={sectionTitle}>{tEditor('sectionBasic')}</h2>
         {draftSavedBanner && (
           <div
             role="status"
@@ -505,7 +505,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
           <label
             style={{ display: 'block', marginBottom: AUDITION_DETAIL.galleryGapPx, fontSize: AUDITION_DETAIL.bodyFontPx, fontWeight: 600 }}
           >
-            {EDITOR_LABELS.title}{' '}
+            {tEditor('title')}{' '}
             <span className="text-red-600" aria-hidden>
               *
             </span>
@@ -526,7 +526,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
           <label
             style={{ display: 'block', marginBottom: AUDITION_DETAIL.galleryGapPx, fontSize: AUDITION_DETAIL.bodyFontPx, fontWeight: 600 }}
           >
-            {EDITOR_LABELS.description}{' '}
+            {tEditor('description')}{' '}
             <span className="text-red-600" aria-hidden>
               *
             </span>
@@ -583,7 +583,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
             <label
               style={{ display: 'block', marginBottom: AUDITION_DETAIL.galleryGapPx, fontSize: AUDITION_DETAIL.bodyFontPx, fontWeight: 600 }}
             >
-              {EDITOR_LABELS.status}
+              {tEditor('status')}
             </label>
             <select value={status} onChange={(e) => setStatus(e.target.value as AuditionStatus)} style={inputStyle}>
               {(Object.keys(AUDITION_STATUS_LABEL_KO) as AuditionStatus[]).map((s) => (
@@ -602,9 +602,9 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
           <label
             style={{ display: 'block', marginBottom: AUDITION_DETAIL.galleryGapPx, fontSize: AUDITION_DETAIL.bodyFontPx, fontWeight: 600 }}
           >
-            {EDITOR_LABELS.tags}
+            {tEditor('tags')}
           </label>
-          <p style={{ margin: '0 0 10px 0', fontSize: 12, color: '#6b7280' }}>{EDITOR_LABELS.tagsHint}</p>
+          <p style={{ margin: '0 0 10px 0', fontSize: 12, color: '#6b7280' }}>{tEditor('tagsHint')}</p>
           {tagCatalogLoading ? (
             <p className="text-sm text-gray-500">태그 목록 불러오는 중…</p>
           ) : (
@@ -696,12 +696,12 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
           </div>
         </div>
 
-        <h2 style={sectionTitle}>{EDITOR_LABELS.sectionMedia}</h2>
+        <h2 style={sectionTitle}>{tEditor('sectionMedia')}</h2>
         <ImageUploader
           className="mb-8"
           label={
             <>
-              {EDITOR_LABELS.coverImage}{' '}
+              {tEditor('coverImage')}{' '}
               <span className="text-red-600" aria-hidden>
                 *
               </span>
@@ -738,7 +738,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
           <label
             style={{ display: 'block', marginBottom: AUDITION_DETAIL.galleryGapPx, fontSize: AUDITION_DETAIL.bodyFontPx, fontWeight: 600 }}
           >
-            {EDITOR_LABELS.videoUrl}
+            {tEditor('videoUrl')}
             <span className="ml-1 text-xs font-normal text-gray-500">(YouTube만, 등록·마감 시 형식 검사)</span>
           </label>
           <input
@@ -754,7 +754,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
         </div>
         <ImageUploader
           className="mb-8"
-          label={EDITOR_LABELS.galleryImages}
+          label={tEditor('galleryImages')}
           guide="가로형 (16:9) 권장. 상세 페이지 갤러리 영역은 16:9 · contain으로 표시됩니다. 드래그로 순서를 바꿀 수 있습니다."
           multiple
           aspect="landscape"
@@ -765,12 +765,12 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
           disabled={isLoading}
         />
 
-        <h2 style={sectionTitle}>{EDITOR_LABELS.sectionAgency}</h2>
+        <h2 style={sectionTitle}>{tEditor('sectionAgency')}</h2>
         <div style={{ marginBottom: AUDITION_DETAIL.benefitGridGapPx }}>
           <label
             style={{ display: 'block', marginBottom: AUDITION_DETAIL.galleryGapPx, fontSize: AUDITION_DETAIL.bodyFontPx, fontWeight: 600 }}
           >
-            {EDITOR_LABELS.agencyName}
+            {tEditor('agencyName')}
           </label>
           <input
             value={agencyName}
@@ -780,7 +780,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
           />
         </div>
         <SingleImageUploadField
-          label={EDITOR_LABELS.agencyLogo}
+          label={tEditor('agencyLogo')}
           uploadDir="profile"
           imageUrl={agencyLogo}
           onImageUrlChange={setAgencyLogo}
@@ -789,12 +789,12 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
           disabled={isLoading}
         />
 
-        <h2 style={sectionTitle}>{EDITOR_LABELS.sectionSchedule}</h2>
+        <h2 style={sectionTitle}>{tEditor('sectionSchedule')}</h2>
         <div style={{ marginBottom: AUDITION_DETAIL.benefitGridGapPx }}>
           <label
             style={{ display: 'block', marginBottom: AUDITION_DETAIL.galleryGapPx, fontSize: AUDITION_DETAIL.bodyFontPx, fontWeight: 600 }}
           >
-            {EDITOR_LABELS.location}
+            {tEditor('location')}
           </label>
           <input
             value={location}
@@ -807,7 +807,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
           <label
             style={{ display: 'block', marginBottom: AUDITION_DETAIL.galleryGapPx, fontSize: AUDITION_DETAIL.bodyFontPx, fontWeight: 600 }}
           >
-            {EDITOR_LABELS.startDate}
+            {tEditor('startDate')}
           </label>
           <input type="datetime-local" value={startDate} onChange={(e) => setStartDate(e.target.value)} style={inputStyle} />
         </div>
@@ -815,18 +815,18 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
           <label
             style={{ display: 'block', marginBottom: AUDITION_DETAIL.galleryGapPx, fontSize: AUDITION_DETAIL.bodyFontPx, fontWeight: 600 }}
           >
-            {EDITOR_LABELS.endDate}
+            {tEditor('endDate')}
           </label>
           <input type="datetime-local" value={endDate} onChange={(e) => setEndDate(e.target.value)} style={inputStyle} />
         </div>
 
-        <h2 style={sectionTitle}>{EDITOR_LABELS.sectionLists}</h2>
-        <StringListEditor label={EDITOR_LABELS.recruitFields} values={recruitFields} onChange={setRecruitFields} />
-        <StringListEditor label={EDITOR_LABELS.qualifications} values={qualifications} onChange={setQualifications} />
-        <StringListEditor label={EDITOR_LABELS.schedules} values={schedules} onChange={setSchedules} />
+        <h2 style={sectionTitle}>{tEditor('sectionLists')}</h2>
+        <StringListEditor label={tEditor('recruitFields')} values={recruitFields} onChange={setRecruitFields} />
+        <StringListEditor label={tEditor('qualifications')} values={qualifications} onChange={setQualifications} />
+        <StringListEditor label={tEditor('schedules')} values={schedules} onChange={setSchedules} />
 
-        <h2 style={sectionTitle}>{EDITOR_LABELS.sectionBenefits}</h2>
-        <StringListEditor label={EDITOR_LABELS.benefits} values={benefits} onChange={setBenefits} />
+        <h2 style={sectionTitle}>{tEditor('sectionBenefits')}</h2>
+        <StringListEditor label={tEditor('benefits')} values={benefits} onChange={setBenefits} />
 
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap" style={{ marginTop: AUDITION_DETAIL.mainGridGapPx }}>
           <button
