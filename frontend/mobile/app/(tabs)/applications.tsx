@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useRouter } from 'expo-router'
-import { Pressable, StyleSheet, Text, View } from 'react-native'
+import { Pressable, StyleSheet, Text } from 'react-native'
 import { applicationApi } from '../../src/api/endpoints'
 import { queryKeys } from '../../src/api/queryKeys'
 import { useAuth } from '../../src/auth/AuthProvider'

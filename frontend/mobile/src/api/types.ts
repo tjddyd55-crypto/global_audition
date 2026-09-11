@@ -102,11 +102,11 @@ export type ApplicationDetail = {
   nationality?: string | null
   introText?: string | null
   videoUrl?: string | null
-  snsLinks: Array<{ platform: string; url: string }>
+  snsLinks: { platform: string; url: string }[]
   processMode: string
   currentRoundNumber: number
   roundSummaries: RoundSummary[]
-  videos: Array<{ id: string; title: string; videoUrl: string; thumbnailUrl?: string | null }>
+  videos: { id: string; title: string; videoUrl: string; thumbnailUrl?: string | null }[]
 }
 
 export type CreateApplicationPayload = {
@@ -117,7 +117,7 @@ export type CreateApplicationPayload = {
   nationality?: string | null
   videoUrl: string
   introText?: string | null
-  snsLinks?: Array<{ platform: string; url: string }>
+  snsLinks?: { platform: string; url: string }[]
 }
 
 export type PublicVoteItem = {
@@ -142,7 +142,7 @@ export type PublicVotesPage = {
     description: string
     applicantCount: number
     totalVotes: number
-    categories: Array<{ name: string; count: number }>
+    categories: { name: string; count: number }[]
   }
   summary: {
     applicantCount: number
@@ -205,7 +205,7 @@ export type ApplicationAgencyDetail = {
   status: AgencyBoardStatus
   round: number
   createdAt: string | null
-  snsLinks: Array<{ platform: string; url: string }>
+  snsLinks: { platform: string; url: string }[]
 }
 
 export type MeProfile = {
@@ -217,7 +217,7 @@ export type MeProfile = {
   birthDate?: string | null
   nationality?: string | null
   introText?: string | null
-  snsLinks?: Array<{ platform: string; url: string }>
+  snsLinks?: { platform: string; url: string }[]
 }
 
 export type ApplicantDashboard = {
