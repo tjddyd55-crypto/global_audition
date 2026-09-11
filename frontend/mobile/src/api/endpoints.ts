@@ -65,8 +65,8 @@ export const authApi = {
 }
 
 export const auditionApi = {
-  listOpen: async (): Promise<AuditionDto[]> => {
-    const data = await apiRequest<unknown>('/auditions', { query: { status: 'OPEN' } })
+  listOpen: async (country?: string): Promise<AuditionDto[]> => {
+    const data = await apiRequest<unknown>('/auditions', { query: { status: 'OPEN', country } })
     const rows = Array.isArray(data) ? data : []
     return rows.map((row) => parseAuditionDto(row))
   },

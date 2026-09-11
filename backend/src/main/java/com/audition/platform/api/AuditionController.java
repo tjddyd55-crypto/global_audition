@@ -42,9 +42,11 @@ public class AuditionController {
     }
 
     @GetMapping
-    public List<AuditionResponse> list(@RequestParam(value = "status", required = false) String status) {
+    public List<AuditionResponse> list(
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "country", required = false) String country) {
         if (status == null || status.isBlank() || "OPEN".equals(status)) {
-            return auditionService.listOpen();
+            return auditionService.listOpen(country);
         }
         if (!SecurityUtils.hasRole("AGENCY") && !SecurityUtils.hasRole("ADMIN") && !SecurityUtils.hasRole("SUPER_ADMIN")) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only AGENCY or ADMIN can query non-open auditions");

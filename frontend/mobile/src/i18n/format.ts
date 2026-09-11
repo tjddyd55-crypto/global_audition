@@ -2,24 +2,13 @@ import { getRuntimeLocale } from './runtime'
 
 export const SETTLEMENT_CURRENCY = 'USD'
 
-const INTL_BY_APP_LOCALE: Record<string, string> = {
-  ko: 'ko-KR',
-  en: 'en-US',
-  mn: 'mn-MN',
-  ja: 'ja-JP',
-  zh: 'zh-CN',
-  es: 'es-ES',
-  fr: 'fr-FR',
-  de: 'de-DE',
+/** 사용자 표시: `$10` 정수 달러만. `$10.00` / 센트 / float 금지. */
+export function formatWholeUsd(amount: number): string {
+  const n = Number.isFinite(amount) ? Math.round(amount) : 0
+  return `$${n}`
 }
 
-/** Web `formatCurrency` 와 동일 계약: 정산 통화 USD, 로케일별 Intl. */
-export function formatUsd(amount: number, locale = getRuntimeLocale()): string {
-  const n = Number.isFinite(amount) ? amount : 0
-  return new Intl.NumberFormat(INTL_BY_APP_LOCALE[locale] ?? 'en-US', {
-    style: 'currency',
-    currency: SETTLEMENT_CURRENCY,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(n)
+/** Web `formatCurrency` 와 동일 계약: 정수 USD major unit. */
+export function formatUsd(amount: number, _locale = getRuntimeLocale()): string {
+  return formatWholeUsd(amount)
 }

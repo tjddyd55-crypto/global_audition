@@ -20,14 +20,14 @@ export function intlLocaleFor(appLocale?: string): string {
   return INTL_BY_APP_LOCALE[appLocale] ?? 'en-US'
 }
 
-export function formatCurrency(amount: number, locale = 'en'): string {
-  const n = Number.isFinite(amount) ? amount : 0
-  return new Intl.NumberFormat(intlLocaleFor(locale), {
-    style: 'currency',
-    currency: SETTLEMENT_CURRENCY,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(n)
+/** 사용자 표시: `$10` 정수 달러만. `$10.00` / 센트 / float 금지. */
+export function formatWholeUsd(amount: number): string {
+  const n = Number.isFinite(amount) ? Math.round(amount) : 0
+  return `$${n}`
+}
+
+export function formatCurrency(amount: number, _locale = 'en'): string {
+  return formatWholeUsd(amount)
 }
 
 /** Stripe PaymentIntent 등: USD 달러 → 센트 정수. Toss 경로에서는 사용하지 않는다. */

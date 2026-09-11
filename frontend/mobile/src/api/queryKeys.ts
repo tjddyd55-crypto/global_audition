@@ -2,7 +2,7 @@ export const queryKeys = {
   me: ['auth', 'me'] as const,
   profile: ['me', 'profile'] as const,
   dashboard: ['me', 'dashboard'] as const,
-  auditionsOpen: ['auditions', 'open'] as const,
+  auditionsOpen: (country?: string) => ['auditions', 'open', country ?? 'GLOBAL'] as const,
   audition: (id: string) => ['auditions', id] as const,
   myAuditions: ['auditions', 'mine'] as const,
   myApplications: ['me', 'applications'] as const,

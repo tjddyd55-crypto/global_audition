@@ -6,8 +6,8 @@ import { AdminCard } from '@/components/admin/AdminCard'
 import { DataTable, type DataTableColumn } from '@/components/admin/DataTable'
 import { superAdminApi, type CreditPackageRow } from '@/shared/api/superAdmin'
 import { LAYOUT } from '@/shared/design-tokens'
-import { formatNumericInput, formatUsdInput, parseNonNegativeInt } from '@/shared/utils/numberFormat'
-import { formatCurrency, isWholeUsdDollars, parseWholeUsdDollars } from '@/shared/money/currency'
+import { formatNumericInput, parseNonNegativeInt } from '@/shared/utils/numberFormat'
+import { formatWholeUsd, isWholeUsdDollars, parseWholeUsdDollars } from '@/shared/money/currency'
 import { formatCreditsCount } from '@/shared/money/creditsDisplay'
 
 type FormState = {
@@ -31,7 +31,7 @@ const emptyForm: FormState = {
 function rowToForm(p: CreditPackageRow): FormState {
   return {
     name: p.name,
-    price: formatUsdInput(String(p.price)),
+    price: formatNumericInput(String(p.price)),
     credits: formatNumericInput(String(p.credits)),
     bonusCredits: formatNumericInput(String(p.bonusCredits)),
     active: p.active,
@@ -100,7 +100,7 @@ export default function SuperAdminCreditPackagesPage() {
     {
       id: 'price',
       header: 'price',
-      cell: (r) => formatCurrency(Number(r.price)),
+      cell: (r) => formatWholeUsd(Number(r.price)),
     },
     {
       id: 'credits',
@@ -166,11 +166,11 @@ export default function SuperAdminCreditPackagesPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <input
                 type="text"
-                inputMode="decimal"
+                inputMode="numeric"
                 autoComplete="off"
                 style={{ ...fieldStyle, flex: 1 }}
                 value={createForm.price}
-                onChange={(e) => setCreateForm((f) => ({ ...f, price: formatUsdInput(e.target.value) }))}
+                onChange={(e) => setCreateForm((f) => ({ ...f, price: formatNumericInput(e.target.value) }))}
               />
               <span style={{ fontSize: 14, color: '#555' }}>$</span>
             </div>
@@ -259,11 +259,11 @@ export default function SuperAdminCreditPackagesPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <input
                   type="text"
-                  inputMode="decimal"
+                  inputMode="numeric"
                   autoComplete="off"
                   style={{ ...fieldStyle, flex: 1 }}
                   value={editForm.price}
-                  onChange={(e) => setEditForm((f) => ({ ...f, price: formatUsdInput(e.target.value) }))}
+                  onChange={(e) => setEditForm((f) => ({ ...f, price: formatNumericInput(e.target.value) }))}
                 />
                 <span style={{ fontSize: 14, color: '#555' }}>$</span>
               </div>

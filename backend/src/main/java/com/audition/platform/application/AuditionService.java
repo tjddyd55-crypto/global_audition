@@ -344,9 +344,30 @@ public class AuditionService {
     }
 
     public List<AuditionResponse> listOpen() {
+        return listOpen(null);
+    }
+
+    public List<AuditionResponse> listOpen(String country) {
         return auditionRepository.findByStatusOrderByCreatedAtDesc("OPEN").stream()
+                .filter(a -> matchesAudience(a.getCountryCode(), country))
                 .map(this::toResponse)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 기존 country_code 재사용. MN 요청은 MN+GLOBAL(+미지정), KR은 KR+GLOBAL.
+     * GLOBAL/빈 값은 전체 OPEN.
+     */
+    static boolean matchesAudience(String stored, String requestedRaw) {
+        if (requestedRaw == null || requestedRaw.isBlank()) {
+            return true;
+        }
+        String requested = requestedRaw.trim().toUpperCase();
+        if ("GLOBAL".equals(requested) || "ALL".equals(requested)) {
+            return true;
+        }
+        String code = stored == null || stored.isBlank() ? "GLOBAL" : stored.trim().toUpperCase();
+        return requested.equals(code) || "GLOBAL".equals(code);
     }
 
     public List<AuditionResponse> listByStatus(String status) {
