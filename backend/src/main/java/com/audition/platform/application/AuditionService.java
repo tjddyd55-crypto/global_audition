@@ -8,6 +8,7 @@ import com.audition.platform.api.dto.UpdateAuditionRequest;
 import com.audition.platform.application.audition.AuditionSeriesEligibilityService;
 import com.audition.platform.application.audition.AuditionSeriesPresentation;
 import com.audition.platform.application.i18n.AuditionLocalizationService;
+import com.audition.platform.application.i18n.ContentLocales;
 import com.audition.platform.api.dto.AuditionTagRefDto;
 import com.audition.platform.application.round.AuditionProcessModes;
 import com.audition.platform.application.round.AuditionRoundService;
@@ -115,6 +116,24 @@ public class AuditionService {
         a.setQualifications(a.getQualifications());
         a.setSchedules(a.getSchedules());
         a.setBenefits(a.getBenefits());
+    }
+
+    /**
+     * 기존 {@code auditions.country_code} 재사용. 대상 국가/권역: KR, MN, GLOBAL, JP, OTHER.
+     * 새 컬럼을 만들지 않는다.
+     */
+    private static String normalizeCountryCode(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        String code = raw.trim().toUpperCase();
+        return switch (code) {
+            case "KR", "MN", "GLOBAL", "JP", "OTHER" -> code;
+            case "KOREA", "KOR" -> "KR";
+            case "MONGOLIA", "MNG" -> "MN";
+            case "WORLD", "ALL", "WW" -> "GLOBAL";
+            default -> code.length() <= 16 ? code : code.substring(0, 16);
+        };
     }
 
     private static String trimOrNull(String s) {
@@ -256,7 +275,10 @@ public class AuditionService {
         a.setEndDate(end);
         Instant deadlineParsed = parseInstantOrNull(req.getDeadlineAt());
         a.setDeadlineAt(deadlineParsed != null ? deadlineParsed : end);
-        a.setCountryCode(req.getCountryCode());
+        a.setCountryCode(normalizeCountryCode(req.getCountryCode()));
+        if (req.getDefaultLocale() != null && !req.getDefaultLocale().isBlank()) {
+            a.setDefaultLocale(ContentLocales.normalize(req.getDefaultLocale()));
+        }
         a.setRemainingDays(computeRemainingDays(end));
         a.setApplicantsCount(0);
         if (req.getProcessMode() != null && AuditionProcessModes.isMultiRound(req.getProcessMode())) {
@@ -411,7 +433,10 @@ public class AuditionService {
             audition.setStatus(request.getStatus());
         }
         if (request.getCountryCode() != null) {
-            audition.setCountryCode(request.getCountryCode());
+            audition.setCountryCode(normalizeCountryCode(request.getCountryCode()));
+        }
+        if (request.getDefaultLocale() != null && !request.getDefaultLocale().isBlank()) {
+            audition.setDefaultLocale(ContentLocales.normalize(request.getDefaultLocale()));
         }
         boolean patchNewTags = request.getTagIds() != null || request.getCustomTagNames() != null;
         if (patchNewTags) {
@@ -532,6 +557,7 @@ public class AuditionService {
         n.setDescription(source.getDescription());
         n.setStatus("DRAFT");
         n.setCountryCode(source.getCountryCode());
+        n.setDefaultLocale(source.getDefaultLocale());
         n.setDeadlineAt(source.getDeadlineAt());
         n.setCoverImage(source.getCoverImage());
         n.setImageOriginalUrl(source.getImageOriginalUrl());

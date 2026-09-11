@@ -17,6 +17,7 @@ import {
   getApplicationAgencyDetail,
   updateApplicationStatus,
 } from './auditions/manage'
+import { listAuditionTranslations, upsertAuditionTranslation } from './auditions/translations'
 import type { ManageListFilters } from './auditions/types'
 
 /** @deprecated 레거시 import 호환 — AuditionDto와 동일 */
@@ -57,6 +58,8 @@ export const auditionApi = {
   listManageApplications,
   getApplicationAgencyDetail,
   updateApplicationStatus,
+  listTranslations: listAuditionTranslations,
+  upsertTranslation: upsertAuditionTranslation,
 }
 
 /** 스펙 문서용 별칭 — {@link auditionApi.listManageApplications} 와 동일 */

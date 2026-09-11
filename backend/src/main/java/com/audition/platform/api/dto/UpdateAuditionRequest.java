@@ -54,6 +54,8 @@ public class UpdateAuditionRequest {
 
     private String countryCode;
 
+    private String defaultLocale;
+
     private String deadlineAt;
 
     @Pattern(regexp = "SINGLE|MULTI_ROUND")
@@ -97,6 +99,8 @@ public class UpdateAuditionRequest {
     public void setBenefits(List<String> benefits) { this.benefits = benefits; }
     public String getCountryCode() { return countryCode; }
     public void setCountryCode(String countryCode) { this.countryCode = countryCode; }
+    public String getDefaultLocale() { return defaultLocale; }
+    public void setDefaultLocale(String defaultLocale) { this.defaultLocale = defaultLocale; }
     public String getDeadlineAt() { return deadlineAt; }
     public void setDeadlineAt(String deadlineAt) { this.deadlineAt = deadlineAt; }
     public String getProcessMode() { return processMode; }

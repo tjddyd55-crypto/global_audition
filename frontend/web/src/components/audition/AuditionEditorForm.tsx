@@ -22,6 +22,14 @@ import { SingleImageUploadField } from '@/components/audition/AuditionEditorImag
 import { ImageUploader } from '@/components/common/ImageUploader'
 import { EDITOR_LABELS, AUDITION_STATUS_LABEL_KO } from '@/shared/audition/auditionEditorCopy'
 import { normalizeCustomTagNamesForPayload } from '@/shared/audition/auditionTags'
+import { AuditionTranslationPanel } from '@/components/audition/AuditionTranslationPanel'
+import {
+  AUDITION_TARGET_COUNTRIES,
+  CONTENT_LOCALES,
+  normalizeTargetCountry,
+  type ContentLocale,
+} from '@/shared/audition/audience'
+import { useTranslations } from 'next-intl'
 
 function trimNonEmpty(lines: string[] | undefined): string[] {
   return (lines ?? []).map((s) => (s ?? '').trim()).filter((s) => s.length > 0)
@@ -150,6 +158,10 @@ function applyInitial(a: AuditionDto) {
     location: a.location ?? '',
     startDate: isoToDatetimeLocalValue(a.startDate ?? ''),
     endDate: isoToDatetimeLocalValue(a.endDate ?? ''),
+    countryCode: normalizeTargetCountry(a.countryCode),
+    defaultLocale: (CONTENT_LOCALES.includes((a.defaultLocale ?? 'ko') as ContentLocale)
+      ? a.defaultLocale
+      : 'ko') as ContentLocale,
   }
 }
 
@@ -163,6 +175,9 @@ export type AuditionEditorFormProps = {
 }
 
 export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot, onSuccess }: AuditionEditorFormProps) {
+  const tEditor = useTranslations('editor')
+  const tCountry = useTranslations('country')
+  const tLocale = useTranslations('locale')
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   /** 필수·검증 실패 시 빨간 테두리 */
@@ -200,6 +215,8 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
   const [location, setLocation] = useState('')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
+  const [countryCode, setCountryCode] = useState('')
+  const [defaultLocale, setDefaultLocale] = useState<ContentLocale>('ko')
 
   const effectiveId = mode === 'edit' ? auditionId : draftId
 
@@ -228,6 +245,8 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
     setLocation(v.location)
     setStartDate(v.startDate || defaultDatetimeLocalStart())
     setEndDate(v.endDate || defaultDatetimeLocalEnd())
+    setCountryCode(v.countryCode)
+    setDefaultLocale(v.defaultLocale)
   }, [mode, initialAudition])
 
   useEffect(() => {
@@ -306,6 +325,8 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
       location: (location ?? '').trim() || '미지정',
       startDate: new Date(sd).toISOString(),
       endDate: new Date(ed).toISOString(),
+      countryCode: countryCode || undefined,
+      defaultLocale,
     }
   }
 
@@ -521,6 +542,40 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
             placeholder="모집 내용, 자격 요건, 진행 방식 등을 적어 주세요."
             aria-invalid={showDescriptionError}
           />
+        </div>
+
+        <div className="mb-4 grid gap-3 sm:grid-cols-2">
+          <label className="block">
+            <span className="mb-1 block text-sm font-semibold">{tEditor('contentLanguage')}</span>
+            <select
+              value={defaultLocale}
+              onChange={(e) => setDefaultLocale(e.target.value as ContentLocale)}
+              style={inputStyle}
+            >
+              {CONTENT_LOCALES.map((code) => (
+                <option key={code} value={code}>
+                  {tLocale(code)}
+                </option>
+              ))}
+            </select>
+            <span className="mt-1 block text-xs text-gray-500">{tEditor('contentLanguageHint')}</span>
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-sm font-semibold">{tEditor('targetCountry')}</span>
+            <select
+              value={countryCode}
+              onChange={(e) => setCountryCode(e.target.value)}
+              style={inputStyle}
+            >
+              <option value="">{tCountry('unspecified')}</option>
+              {AUDITION_TARGET_COUNTRIES.map((code) => (
+                <option key={code} value={code}>
+                  {tCountry(code)}
+                </option>
+              ))}
+            </select>
+            <span className="mt-1 block text-xs text-gray-500">{tEditor('targetCountryHint')}</span>
+          </label>
         </div>
 
         {mode === 'edit' && (
@@ -877,6 +932,11 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
         {formCol}
         {previewCol}
       </div>
+      {effectiveId ? (
+        <AuditionTranslationPanel auditionId={effectiveId} defaultLocale={defaultLocale} />
+      ) : (
+        <p className="mt-6 text-sm text-gray-500">{tEditor('translationAfterSave')}</p>
+      )}
     </>
   )
 }

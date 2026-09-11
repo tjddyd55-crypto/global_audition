@@ -145,6 +145,7 @@ export type CreateAuditionPayload = {
   endDate: string
   benefits: string[]
   countryCode?: string
+  defaultLocale?: string
   deadlineAt?: string
 }
 

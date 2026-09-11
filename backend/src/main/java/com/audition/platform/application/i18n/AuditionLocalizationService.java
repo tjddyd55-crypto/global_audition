@@ -132,13 +132,17 @@ public class AuditionLocalizationService {
 
     private static void overlay(AuditionResponse response, AuditionTranslation row) {
         response.setTitle(row.getTitle());
-        response.setDescription(row.getDescription() != null ? row.getDescription() : "");
-        response.setLocation(row.getLocation() != null ? row.getLocation() : "");
-        response.setAgencyName(row.getAgencyName() != null ? row.getAgencyName() : "");
-        response.setRecruitFields(row.getRecruitFields());
-        response.setQualifications(row.getQualifications());
-        response.setSchedules(row.getSchedules());
-        response.setBenefits(row.getBenefits());
+        response.setDescription(safeText(row.getDescription()));
+        response.setLocation(safeText(row.getLocation()));
+        response.setAgencyName(safeText(row.getAgencyName()));
+        response.setRecruitFields(row.getRecruitFields() != null ? row.getRecruitFields() : new String[0]);
+        response.setQualifications(row.getQualifications() != null ? row.getQualifications() : new String[0]);
+        response.setSchedules(row.getSchedules() != null ? row.getSchedules() : new String[0]);
+        response.setBenefits(row.getBenefits() != null ? row.getBenefits() : new String[0]);
+    }
+
+    private static String safeText(String raw) {
+        return raw == null ? "" : raw;
     }
 
     private static AuditionTranslationView toView(AuditionTranslation row) {
