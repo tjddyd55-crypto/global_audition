@@ -22,6 +22,8 @@ export interface AuthResponse {
   email?: string
   nickname?: string
   profileImageUrl?: string | null
+  /** 회원가입 응답에만 한 번 포함. 이후 API는 평문을 돌려주지 않는다. */
+  recoveryCode?: string | null
 }
 
 export interface AuthMeResponse {
@@ -104,22 +106,32 @@ export const authApi = {
     return null
   },
 
-  /** MVP: no backend; shows a message only */
-  forgotPassword: async (_data: { email: string }): Promise<{ message: string; resetToken?: string }> => {
-    return { message: '비밀번호 재설정 기능은 현재 준비 중입니다. 문의해 주세요.' }
+  identifyByRecoveryCode: async (recoveryCode: string): Promise<{ accountIdentifier: string }> => {
+    const { data } = await apiClient.post<unknown>('/auth/recover/identify', { recoveryCode })
+    return unwrapData<{ accountIdentifier: string }>(data)
   },
 
-  /** MVP: no backend; rejects so UI shows error */
-  findUserId: async (_data: unknown): Promise<{ maskedEmail: string }> => {
-    const err = new Error('아이디 찾기 기능은 현재 준비 중입니다.') as Error & { response?: { data?: { message?: string } } }
-    err.response = { data: { message: '아이디 찾기 기능은 현재 준비 중입니다.' } }
-    throw err
+  resetPasswordWithRecoveryCode: async (recoveryCode: string, newPassword: string): Promise<void> => {
+    const { data } = await apiClient.post<unknown>('/auth/recover/reset', { recoveryCode, newPassword })
+    unwrapData<boolean>(data)
   },
 
-  /** MVP: no backend; stub throws */
-  resetPassword: async (_data: { resetToken?: string; token?: string; newPassword: string; confirmPassword?: string }): Promise<void> => {
-    const err = new Error('비밀번호 재설정 기능은 현재 준비 중입니다.') as Error & { response?: { data?: { message?: string } } }
-    err.response = { data: { message: '비밀번호 재설정 기능은 현재 준비 중입니다.' } }
-    throw err
+  createRecoveryHelpRequest: async (body: {
+    accountIdentifier: string
+    requesterName: string
+    contact: string
+    message?: string
+  }) => {
+    const { data } = await apiClient.post<unknown>('/auth/recovery-requests', body)
+    return unwrapData<{ id: string; status: string }>(data)
+  },
+
+  findUserId: async (data: { recoveryCode: string }): Promise<{ maskedEmail: string; accountIdentifier: string }> => {
+    const identified = await authApi.identifyByRecoveryCode(data.recoveryCode)
+    return { accountIdentifier: identified.accountIdentifier, maskedEmail: identified.accountIdentifier }
+  },
+
+  resetPassword: async (data: { recoveryCode: string; newPassword: string }): Promise<void> => {
+    await authApi.resetPasswordWithRecoveryCode(data.recoveryCode, data.newPassword)
   },
 }

@@ -7,12 +7,13 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useQueryClient } from '@tanstack/react-query'
 import { z } from 'zod'
 import { authApi } from '@/shared/api/auth'
+import { RecoveryCodeNotice } from '@/components/auth/RecoveryCodeNotice'
 import { countries, languages, timezones } from '@/shared/utils/countries'
 import { nicknameZodField } from '@/shared/user/nicknameZod'
 
 const applicantSchema = z.object({
   email: z.string().email('유효한 이메일을 입력해주세요'),
-  password: z.string().min(8, '비밀번호는 최소 8자 이상이어야 합니다'),
+  password: z.string().min(6, '비밀번호는 최소 6자 이상이어야 합니다'),
   nickname: nicknameZodField,
   name: z.string().max(120).optional().or(z.literal('')),
   userType: z.literal('APPLICANT'),
@@ -28,7 +29,7 @@ const applicantSchema = z.object({
 
 const businessSchema = z.object({
   email: z.string().email('유효한 이메일을 입력해주세요'),
-  password: z.string().min(8, '비밀번호는 최소 8자 이상이어야 합니다'),
+  password: z.string().min(6, '비밀번호는 최소 6자 이상이어야 합니다'),
   nickname: nicknameZodField,
   name: z.string().max(120).optional().or(z.literal('')),
   userType: z.literal('BUSINESS'),
@@ -57,6 +58,8 @@ export default function MobileRegisterPage() {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([])
+  const [issuedCode, setIssuedCode] = useState<string | null>(null)
+  const [issuedRole, setIssuedRole] = useState<string>('APPLICANT')
 
   const {
     register,
@@ -172,15 +175,16 @@ export default function MobileRegisterPage() {
         nickname: submitData.nickname.trim(),
         name: submitData.name?.trim() ? submitData.name.trim() : undefined,
       })
-      if (response.token && response.role) {
-        queryClient.invalidateQueries({ queryKey: ['currentUser'] })
-        if (response.role === 'AGENCY') {
-          window.location.href = '/my/dashboard'
-        } else {
-          window.location.href = '/'
-        }
+      queryClient.invalidateQueries({ queryKey: ['currentUser'] })
+      if (response.recoveryCode) {
+        setIssuedRole(response.role)
+        setIssuedCode(response.recoveryCode)
+        return
+      }
+      if (response.role === 'AGENCY') {
+        window.location.href = '/my/dashboard'
       } else {
-        router.push('/login')
+        window.location.href = '/'
       }
     } catch (err: any) {
       console.error('회원가입 오류:', err)
@@ -218,6 +222,22 @@ export default function MobileRegisterPage() {
     )
   }
 
+  if (issuedCode) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
+        <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-lg">
+          <RecoveryCodeNotice
+            recoveryCode={issuedCode}
+            onAcknowledged={() => {
+              if (issuedRole === 'AGENCY') window.location.href = '/my/dashboard'
+              else window.location.href = '/'
+            }}
+          />
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
       <div className="w-full max-w-2xl bg-white rounded-lg shadow-lg p-8">
@@ -251,7 +271,7 @@ export default function MobileRegisterPage() {
               autoComplete="new-password"
               {...register('password')}
               className="w-full px-4 py-2 border rounded-lg"
-              placeholder="비밀번호 (최소 8자)"
+              placeholder="비밀번호 (최소 6자)"
             />
             {errors.password && (
               <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>
