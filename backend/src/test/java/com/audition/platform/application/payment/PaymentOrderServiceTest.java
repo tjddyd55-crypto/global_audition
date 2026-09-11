@@ -50,7 +50,6 @@ class PaymentOrderServiceTest {
                 creditService,
                 settingsService,
                 tossClient,
-                mock(PaymentOrderFailureRecorder.class),
                 List.of(new MockPaymentProvider(), new TossPaymentProvider()));
     }
 

@@ -40,7 +40,6 @@ public class PaymentOrderService {
     private final CreditService creditService;
     private final PaymentSettingsService paymentSettingsService;
     private final TossPaymentsClient tossPaymentsClient;
-    private final PaymentOrderFailureRecorder failureRecorder;
     private final Map<String, PaymentProvider> providersByCode;
 
     public PaymentOrderService(
@@ -49,14 +48,12 @@ public class PaymentOrderService {
             CreditService creditService,
             PaymentSettingsService paymentSettingsService,
             TossPaymentsClient tossPaymentsClient,
-            PaymentOrderFailureRecorder failureRecorder,
             List<PaymentProvider> providers) {
         this.paymentOrderRepository = paymentOrderRepository;
         this.creditPackageRepository = creditPackageRepository;
         this.creditService = creditService;
         this.paymentSettingsService = paymentSettingsService;
         this.tossPaymentsClient = tossPaymentsClient;
-        this.failureRecorder = failureRecorder;
         Map<String, PaymentProvider> map = providers.stream()
                 .collect(Collectors.toMap(p -> p.getCode().toUpperCase(Locale.ROOT), Function.identity(), (a, b) -> a));
         PaymentProvider toss = map.get(TossPaymentProvider.CODE);
@@ -203,7 +200,7 @@ public class PaymentOrderService {
     /**
      * 토스 승인. 클라이언트 amount 는 조회만 하고, 실제 confirm 금액은 서버 주문 금액을 쓴다.
      */
-    @Transactional
+    @Transactional(noRollbackFor = org.springframework.web.server.ResponseStatusException.class)
     public CreditOrderSummaryResponse confirmToss(UUID userId, String paymentKey, String orderId, long clientAmount) {
         String key = paymentKey.trim();
         String orderNo = orderId.trim();
@@ -255,12 +252,10 @@ public class PaymentOrderService {
                     order.getOrderNo(),
                     serverAmount);
         } catch (TossPaymentsException e) {
-            String reason = safeFailReason(e.getMessage());
             order.setStatus(PaymentOrderStatus.FAILED);
-            order.setFailReason(reason);
+            order.setFailReason(safeFailReason(e.getMessage()));
             order.setUpdatedAt(Instant.now());
             paymentOrderRepository.save(order);
-            failureRecorder.recordFailed(order.getOrderNo(), reason);
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
 
