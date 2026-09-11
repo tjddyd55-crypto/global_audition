@@ -64,6 +64,20 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         'android.permission.READ_MEDIA_IMAGES',
         'android.permission.READ_MEDIA_VIDEO',
       ],
+      intentFilters: [
+        {
+          action: 'VIEW',
+          autoVerify: false,
+          data: [{ scheme: 'globalaudition', host: 'payments', pathPrefix: '/success' }],
+          category: ['BROWSABLE', 'DEFAULT'],
+        },
+        {
+          action: 'VIEW',
+          autoVerify: false,
+          data: [{ scheme: 'globalaudition', host: 'payments', pathPrefix: '/fail' }],
+          category: ['BROWSABLE', 'DEFAULT'],
+        },
+      ],
     },
     web: {
       favicon: './assets/favicon.png',

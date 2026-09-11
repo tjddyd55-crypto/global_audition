@@ -2,16 +2,18 @@ import { useQuery } from '@tanstack/react-query'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useEffect, useMemo, useState } from 'react'
 import { KeyboardAvoidingView, StyleSheet, Text, View } from 'react-native'
-import { applicationApi, profileApi } from '../../../src/api/endpoints'
+import { applicationApi, creditApi, profileApi } from '../../../src/api/endpoints'
 import { queryKeys } from '../../../src/api/queryKeys'
 import { RequireAuth } from '../../../src/auth/RequireAuth'
 import { useAuth } from '../../../src/auth/AuthProvider'
 import { ApiError } from '../../../src/api/http'
+import { parseInsufficientCredits } from '../../../src/api/parsers'
 import { calculateAge } from '../../../src/domain/age'
 import { ALLOWED_NATIONALITIES, ALLOWED_SNS_PLATFORMS, nationalityLabel, snsPlatformLabel } from '../../../src/domain/statusLabels'
 import { VIDEO_URL_HINT, isValidAuditionVideoUrl } from '../../../src/domain/videoUrl'
 import { pickLibraryVideo } from '../../../src/features/media/pickMedia'
 import { Button } from '../../../src/ui/Button'
+import { ConfirmDialog } from '../../../src/ui/ConfirmDialog'
 import { Screen } from '../../../src/ui/Screen'
 import { StickyCta } from '../../../src/ui/StickyCta'
 import { TextField } from '../../../src/ui/TextField'
@@ -22,6 +24,12 @@ export default function ApplyScreen() {
   const router = useRouter()
   const { isAuthenticated } = useAuth()
   const profileQuery = useQuery({ queryKey: queryKeys.profile, queryFn: profileApi.get, enabled: isAuthenticated })
+  const runtimeQuery = useQuery({ queryKey: queryKeys.creditRuntime, queryFn: creditApi.runtime })
+  const balanceQuery = useQuery({
+    queryKey: queryKeys.creditBalance,
+    queryFn: creditApi.balance,
+    enabled: isAuthenticated,
+  })
 
   const [name, setName] = useState('')
   const [birthDate, setBirthDate] = useState('')
@@ -34,6 +42,7 @@ export default function ApplyScreen() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [filled, setFilled] = useState(false)
+  const [confirmOpen, setConfirmOpen] = useState(false)
 
   useEffect(() => {
     if (!profileQuery.data || filled) return
@@ -50,6 +59,49 @@ export default function ApplyScreen() {
   }, [profileQuery.data, filled])
 
   const age = useMemo(() => (birthDate ? calculateAge(birthDate) : null), [birthDate])
+  const runtime = runtimeQuery.data
+  const fee = runtime?.applicationFeeCredits ?? 0
+  const creditMode = runtime?.applicationPaymentMode === 'CREDIT' && fee > 0
+  const balance = balanceQuery.data?.balance ?? 0
+  const insufficient = creditMode && balance < fee
+
+  const submit = async () => {
+    setError(null)
+    if (!isValidAuditionVideoUrl(videoUrl)) {
+      setError(VIDEO_URL_HINT)
+      return
+    }
+    setLoading(true)
+    try {
+      await applicationApi.submit({
+        auditionId: id,
+        name: name.trim() || null,
+        birthDate: birthDate.trim() || null,
+        age: birthDate.trim() ? age : null,
+        nationality: nationality || null,
+        videoUrl: videoUrl.trim(),
+        introText: introText.trim() || null,
+        snsLinks: snsUrl.trim() ? [{ platform: snsPlatform, url: snsUrl.trim() }] : [],
+      })
+      router.replace('/(tabs)/applications')
+    } catch (err) {
+      if (err instanceof ApiError) {
+        const short = parseInsufficientCredits(err.body)
+        if (short) {
+          setError(
+            `크레딧이 부족합니다. 필요 ${short.requiredCredits} · 보유 ${short.currentCredits} · 부족 ${short.shortfallCredits}`,
+          )
+        } else {
+          setError(err.message)
+        }
+      } else {
+        setError('지원에 실패했습니다.')
+      }
+    } finally {
+      setLoading(false)
+      setConfirmOpen(false)
+    }
+  }
 
   return (
     <RequireAuth message="지원하려면 로그인이 필요합니다.">
@@ -59,37 +111,48 @@ export default function ApplyScreen() {
           <Button
             label="지원서 제출"
             loading={loading}
-            onPress={async () => {
+            onPress={() => {
               setError(null)
               if (!isValidAuditionVideoUrl(videoUrl)) {
                 setError(VIDEO_URL_HINT)
                 return
               }
-              setLoading(true)
-              try {
-                await applicationApi.submit({
-                  auditionId: id,
-                  name: name.trim() || null,
-                  birthDate: birthDate.trim() || null,
-                  age: birthDate.trim() ? age : null,
-                  nationality: nationality || null,
-                  videoUrl: videoUrl.trim(),
-                  introText: introText.trim() || null,
-                  snsLinks: snsUrl.trim() ? [{ platform: snsPlatform, url: snsUrl.trim() }] : [],
-                })
-                router.replace('/(tabs)/applications')
-              } catch (err) {
-                setError(err instanceof ApiError ? err.message : '지원에 실패했습니다.')
-              } finally {
-                setLoading(false)
+              if (insufficient) {
+                setError(`크레딧이 부족합니다. 필요 ${fee} · 보유 ${balance} · 부족 ${fee - balance}`)
+                return
               }
+              if (creditMode) {
+                setConfirmOpen(true)
+                return
+              }
+              void submit()
             }}
           />
         </StickyCta>
       }
     >
+      <ConfirmDialog
+        visible={confirmOpen}
+        message={`지원 시 크레딧 ${fee} 이 차감됩니다. 현재 보유 ${balance}. 계속할까요?`}
+        confirmLabel="지원하기"
+        loading={loading}
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={() => void submit()}
+      />
       <KeyboardAvoidingView behavior="padding" style={styles.form}>
         <Text style={styles.lead}>백엔드는 영상 파일 업로드가 아니라 YouTube/TikTok/Instagram URL을 받습니다.</Text>
+        {runtime && !creditMode ? <Text style={styles.meta}>이번 지원은 무료입니다.</Text> : null}
+        {creditMode && !insufficient ? (
+          <Text style={styles.meta}>지원 시 크레딧 {fee} 차감 · 보유 {balance}</Text>
+        ) : null}
+        {insufficient ? (
+          <View style={styles.warn}>
+            <Text style={styles.warnText}>
+              크레딧이 부족합니다. 필요 {fee} · 보유 {balance} · 부족 {fee - balance}
+            </Text>
+            <Button label="충전하기" onPress={() => router.push('/credits')} />
+          </View>
+        ) : null}
         <TextField label="이름" value={name} onChangeText={setName} autoCapitalize="words" />
         <TextField label="생년월일 (YYYY-MM-DD)" value={birthDate} onChangeText={setBirthDate} placeholder="1999-01-31" />
         {age != null ? <Text style={styles.meta}>만 나이 {age}세 (서버가 최종 확인)</Text> : null}
@@ -152,4 +215,6 @@ const styles = StyleSheet.create({
   },
   chipOn: { borderColor: colors.purple, backgroundColor: colors.heroStart, color: colors.purple, fontWeight: '700' },
   error: { color: colors.dangerText, lineHeight: 20 },
+  warn: { gap: 8, padding: 12, borderRadius: radius.card, backgroundColor: colors.warnBg },
+  warnText: { color: colors.warnText, lineHeight: 20 },
 })

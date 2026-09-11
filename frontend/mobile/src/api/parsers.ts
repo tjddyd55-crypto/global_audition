@@ -1,5 +1,11 @@
 import type {
   ApplicantDashboard,
+  CreditLedgerItem,
+  CreditLedgerPage,
+  CreditPackageItem,
+  CreditRuntimePublic,
+  InsufficientCredits,
+  PreparePaymentResult,
   ApplicationAgencyDetail,
   ApplicationDetail,
   ApplicationStatus,
@@ -289,6 +295,82 @@ export function parseApplicantDashboard(raw: unknown): ApplicantDashboard {
     accepted: asNumber(stats.acceptedCount),
     rejected: asNumber(stats.rejectedCount),
     videosCount: asNumber(stats.videoCount),
+  }
+}
+
+export function parseCreditRuntime(raw: unknown): CreditRuntimePublic {
+  const row = asRecord(raw)
+  const mode = asString(row.applicationPaymentMode, 'FREE')
+  return {
+    applicationPaymentMode: mode === 'CREDIT' ? 'CREDIT' : 'FREE',
+    applicationFeeCredits: Math.max(0, asNumber(row.applicationFeeCredits)),
+    signupCreditEnabled: Boolean(row.signupCreditEnabled),
+    signupCreditAmount: Math.max(0, asNumber(row.signupCreditAmount)),
+  }
+}
+
+export function parseCreditPackages(raw: unknown): CreditPackageItem[] {
+  const rows = Array.isArray(raw) ? raw : []
+  return rows.map((item) => {
+    const row = asRecord(item)
+    return {
+      id: asString(row.id),
+      name: asString(row.name),
+      price: asNumber(row.price),
+      credits: asNumber(row.credits),
+      bonusCredits: asNumber(row.bonusCredits),
+    }
+  })
+}
+
+export function parseCreditLedger(raw: unknown): CreditLedgerPage {
+  const page = asRecord(raw)
+  const items = Array.isArray(page.content) ? page.content : []
+  return {
+    content: items.map((item) => {
+      const row = asRecord(item)
+      return {
+        id: asString(row.id),
+        amount: asNumber(row.amount),
+        type: asString(row.type),
+        reason: asString(row.reason),
+        createdAt: asString(row.createdAt),
+        note: row.note != null ? asString(row.note) : null,
+      } satisfies CreditLedgerItem
+    }),
+  }
+}
+
+export function parsePreparePayment(raw: unknown): PreparePaymentResult {
+  const row = asRecord(raw)
+  return {
+    orderNo: asString(row.orderNo || row.orderId),
+    orderId: asString(row.orderId || row.orderNo),
+    packageId: asString(row.packageId),
+    packageName: asString(row.packageName),
+    amount: asNumber(row.amount),
+    credits: asNumber(row.credits),
+    bonusCredits: asNumber(row.bonusCredits),
+    currency: asString(row.currency, 'KRW'),
+    status: asString(row.status),
+    provider: row.provider != null ? asString(row.provider) : undefined,
+    clientKey: row.clientKey != null ? asString(row.clientKey) : undefined,
+    tossAmount: row.tossAmount != null ? asNumber(row.tossAmount) : undefined,
+    orderName: row.orderName != null ? asString(row.orderName) : undefined,
+    successUrl: row.successUrl != null ? asString(row.successUrl) : undefined,
+    failUrl: row.failUrl != null ? asString(row.failUrl) : undefined,
+  }
+}
+
+export function parseInsufficientCredits(raw: unknown): InsufficientCredits | null {
+  const row = asRecord(raw)
+  if (asString(row.code) !== 'INSUFFICIENT_CREDITS') return null
+  return {
+    code: 'INSUFFICIENT_CREDITS',
+    requiredCredits: asNumber(row.requiredCredits),
+    currentCredits: asNumber(row.currentCredits),
+    shortfallCredits: asNumber(row.shortfallCredits),
+    message: asString(row.message, '크레딧이 부족합니다.'),
   }
 }
 

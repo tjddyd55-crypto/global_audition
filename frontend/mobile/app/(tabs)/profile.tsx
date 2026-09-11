@@ -87,6 +87,7 @@ export default function ProfileScreen() {
           }}
         />
         <Button label="계정 찾기 / 비밀번호 재설정" variant="secondary" onPress={() => router.push('/(auth)/recover')} />
+        <Button label="크레딧 / 충전" variant="secondary" onPress={() => router.push('/credits')} />
         <Button label="알림" variant="secondary" onPress={() => router.push('/notifications')} />
         {isAgencyRole(session?.role) ? (
           <Button label="내 오디션 지원자 관리" variant="secondary" onPress={() => router.push('/agency/applicants')} />

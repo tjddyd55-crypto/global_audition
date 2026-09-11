@@ -46,6 +46,10 @@ export default function RootLayout() {
             <Stack.Screen name="applications/[id]" options={{ title: '지원서' }} />
             <Stack.Screen name="agency/applicants" options={{ title: '지원자 관리' }} />
             <Stack.Screen name="agency/[applicationId]" options={{ title: '지원자 상세' }} />
+            <Stack.Screen name="credits/index" options={{ title: '크레딧' }} />
+            <Stack.Screen name="credits/checkout" options={{ title: '크레딧 결제' }} />
+            <Stack.Screen name="payments/success" options={{ title: '결제 완료' }} />
+            <Stack.Screen name="payments/fail" options={{ title: '결제 실패' }} />
             <Stack.Screen name="notifications" options={{ title: '알림' }} />
             <Stack.Screen name="web" options={{ title: '웹으로 열기' }} />
           </Stack>

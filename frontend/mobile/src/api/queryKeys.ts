@@ -13,4 +13,8 @@ export const queryKeys = {
   agencyDetail: (id: string) => ['agency', 'application', id] as const,
   roundEligibility: (applicationId: string, roundId: string) =>
     ['me', 'applications', applicationId, 'rounds', roundId, 'eligibility'] as const,
+  creditRuntime: ['credits', 'runtime'] as const,
+  creditBalance: ['credits', 'balance'] as const,
+  creditPackages: ['credits', 'packages'] as const,
+  creditLedger: ['credits', 'ledger'] as const,
 }

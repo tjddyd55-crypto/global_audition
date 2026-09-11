@@ -2,6 +2,10 @@ import { unwrapData } from './unwrap'
 import { apiRequest } from './http'
 import {
   parseAgencyDetail,
+  parseCreditLedger,
+  parseCreditPackages,
+  parseCreditRuntime,
+  parsePreparePayment,
   parseApplicantDashboard,
   parseApplicationDetail,
   parseAuditionDto,
@@ -20,7 +24,12 @@ import type {
   AuditionDto,
   AuthMe,
   AuthResponse,
+  CreditBalance,
+  CreditLedgerPage,
+  CreditPackageItem,
+  CreditRuntimePublic,
   CreateApplicationPayload,
+  PreparePaymentResult,
   ManageApplicationsPayload,
   MeProfile,
   MeRoundEligibility,
@@ -128,6 +137,25 @@ export const roundApi = {
     unwrapData(await apiRequest<unknown>(`/me/applications/${applicationId}/rounds/${roundId}/eligibility`)) as MeRoundEligibility,
   submit: (applicationId: string, roundId: string, body: { videoUrl?: string; fileUrl?: string; textAnswer?: string }) =>
     apiRequest<unknown>(`/me/applications/${applicationId}/rounds/${roundId}/submit`, { method: 'POST', body }),
+}
+
+export const creditApi = {
+  runtime: async (): Promise<CreditRuntimePublic> =>
+    parseCreditRuntime(await apiRequest<unknown>('/credits/public/runtime', { auth: false })),
+  balance: async (): Promise<CreditBalance> => {
+    const data = await apiRequest<{ balance?: number }>('/credits/balance')
+    return { balance: Number(data.balance ?? 0) }
+  },
+  packages: async (): Promise<CreditPackageItem[]> =>
+    parseCreditPackages(await apiRequest<unknown>('/credit-packages')),
+  ledger: async (): Promise<CreditLedgerPage> =>
+    parseCreditLedger(await apiRequest<unknown>('/credits/transactions', { query: { size: 50 } })),
+  prepare: async (packageId: string, provider = 'TOSS_PAYMENTS'): Promise<PreparePaymentResult> =>
+    parsePreparePayment(await apiRequest<unknown>('/credits/prepare-payment', { method: 'POST', body: { packageId, provider } })),
+  checkoutSession: async (orderNo: string): Promise<PreparePaymentResult> =>
+    parsePreparePayment(await apiRequest<unknown>(`/credits/orders/${orderNo}/checkout`)),
+  confirmToss: async (body: { paymentKey: string; orderId: string; amount: number }) =>
+    apiRequest<unknown>('/payments/toss/confirm', { method: 'POST', body }),
 }
 
 export function isAgencyRole(role: UserRole | string | null | undefined): boolean {
