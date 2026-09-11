@@ -99,7 +99,18 @@
     "findPassword": "Find password",
     "socialSoon": "Social login is coming soon",
     "serverUnreachable": "Could not reach the server",
-    "requiredValues": "Please fill in the required fields"
+    "requiredValues": "Please fill in the required fields",
+    "passwordResetDone": "The new password is set. Sign in with it.",
+    "resetFailed": "Reset failed.",
+    "lostCodeHint": "This sends a recovery request to an admin. They will not invent a password; after identity check they reissue a recovery code.",
+    "accountEmail": "Account email",
+    "contact": "Contact",
+    "situationOptional": "What happened (optional)",
+    "requestAdminRecovery": "Request admin recovery",
+    "recoveryFieldsRequired": "Enter account, name, and contact.",
+    "recoveryRequested": "Recovery request sent. An admin will reissue a code and contact you.",
+    "requestFailed": "The request failed.",
+    "backToLogin": "Back to login"
   },
   "register": {
     "title": "Register",
@@ -207,14 +218,32 @@
     "intro": "Introduction",
     "birthDate": "Date of birth",
     "category": "Category",
-    "videoHint": "YouTube or a public video URL"
+    "videoHint": "YouTube or a public video URL",
+    "loginRequired": "Sign in to apply.",
+    "failed": "Application failed.",
+    "urlOnlyHint": "The server accepts a YouTube, TikTok, or Instagram URL — not a local file upload.",
+    "creditConfirm": "Applying will use {fee} credits. You have {balance}. Continue?",
+    "creditMeta": "Uses {fee} credits · you have {balance}",
+    "insufficientDetail": "Not enough credits. Need {required} · have {current} · short {shortfall}",
+    "pickLocal": "Pick a gallery video (reference only)",
+    "localUnsupported": "Local files are not accepted yet. Upload to YouTube/TikTok/Instagram and paste the URL.",
+    "localPicked": "Selected: {name}",
+    "localDefaultName": "Selected local video",
+    "birthDateHint": "Date of birth (YYYY-MM-DD)",
+    "ageYears": "Age {age} (server confirms)",
+    "snsOptional": "Social (optional)",
+    "snsUrl": "Social URL"
   },
   "myApplications": {
     "title": "My applications",
     "empty": "You have not applied yet",
     "status": "Status",
     "appliedAt": "Applied",
-    "viewDetail": "View details"
+    "viewDetail": "View details",
+    "loginTitle": "Sign in required",
+    "loginBody": "Sign in to see your applications.",
+    "loadFailed": "Could not load applications.",
+    "browse": "Browse auditions"
   },
   "vote": {
     "title": "Vote",
@@ -222,7 +251,11 @@
     "voted": "Voted",
     "voteAction": "Vote",
     "cancelVote": "Remove vote",
-    "votes": "votes"
+    "votes": "votes",
+    "hubTitle": "Public vote",
+    "hubHint": "Choose an audition to open its public vote board.",
+    "loadFailed": "Could not load auditions to vote on.",
+    "emptyHub": "No auditions are open for voting"
   },
   "ranking": {
     "title": "Ranking",

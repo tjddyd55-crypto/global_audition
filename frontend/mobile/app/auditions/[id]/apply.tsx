@@ -18,8 +18,10 @@ import { Screen } from '../../../src/ui/Screen'
 import { StickyCta } from '../../../src/ui/StickyCta'
 import { TextField } from '../../../src/ui/TextField'
 import { colors, radius } from '../../../src/theme/tokens'
+import { useTranslation } from 'react-i18next'
 
 export default function ApplyScreen() {
+  const { t } = useTranslation()
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()
   const { isAuthenticated } = useAuth()
@@ -89,13 +91,17 @@ export default function ApplyScreen() {
         const short = parseInsufficientCredits(err.body)
         if (short) {
           setError(
-            `크레딧이 부족합니다. 필요 ${short.requiredCredits} · 보유 ${short.currentCredits} · 부족 ${short.shortfallCredits}`,
+            t('apply.insufficientDetail', {
+              required: short.requiredCredits,
+              current: short.currentCredits,
+              shortfall: short.shortfallCredits,
+            }),
           )
         } else {
           setError(err.message)
         }
       } else {
-        setError('지원에 실패했습니다.')
+        setError(t('apply.failed'))
       }
     } finally {
       setLoading(false)
@@ -104,12 +110,12 @@ export default function ApplyScreen() {
   }
 
   return (
-    <RequireAuth message="지원하려면 로그인이 필요합니다.">
+    <RequireAuth message={t('apply.loginRequired')}>
     <Screen
       footer={
         <StickyCta>
           <Button
-            label="지원서 제출"
+            label={t('apply.submit')}
             loading={loading}
             onPress={() => {
               setError(null)
@@ -118,7 +124,7 @@ export default function ApplyScreen() {
                 return
               }
               if (insufficient) {
-                setError(`크레딧이 부족합니다. 필요 ${fee} · 보유 ${balance} · 부족 ${fee - balance}`)
+                setError(t('apply.insufficientDetail', { required: fee, current: balance, shortfall: fee - balance }))
                 return
               }
               if (creditMode) {
@@ -133,55 +139,55 @@ export default function ApplyScreen() {
     >
       <ConfirmDialog
         visible={confirmOpen}
-        message={`지원 시 크레딧 ${fee} 이 차감됩니다. 현재 보유 ${balance}. 계속할까요?`}
-        confirmLabel="지원하기"
+        message={t('apply.creditConfirm', { fee, balance })}
+        confirmLabel={t('apply.title')}
         loading={loading}
         onCancel={() => setConfirmOpen(false)}
         onConfirm={() => void submit()}
       />
       <KeyboardAvoidingView behavior="padding" style={styles.form}>
-        <Text style={styles.lead}>백엔드는 영상 파일 업로드가 아니라 YouTube/TikTok/Instagram URL을 받습니다.</Text>
-        {runtime && !creditMode ? <Text style={styles.meta}>이번 지원은 무료입니다.</Text> : null}
+        <Text style={styles.lead}>{t('apply.urlOnlyHint')}</Text>
+        {runtime && !creditMode ? <Text style={styles.meta}>{t('apply.freeApply')}</Text> : null}
         {creditMode && !insufficient ? (
-          <Text style={styles.meta}>지원 시 크레딧 {fee} 차감 · 보유 {balance}</Text>
+          <Text style={styles.meta}>{t('apply.creditMeta', { fee, balance })}</Text>
         ) : null}
         {insufficient ? (
           <View style={styles.warn}>
             <Text style={styles.warnText}>
-              크레딧이 부족합니다. 필요 {fee} · 보유 {balance} · 부족 {fee - balance}
+              {t('apply.insufficientDetail', { required: fee, current: balance, shortfall: fee - balance })}
             </Text>
-            <Button label="충전하기" onPress={() => router.push('/credits')} />
+            <Button label={t('apply.charge')} onPress={() => router.push('/credits')} />
           </View>
         ) : null}
-        <TextField label="이름" value={name} onChangeText={setName} autoCapitalize="words" />
-        <TextField label="생년월일 (YYYY-MM-DD)" value={birthDate} onChangeText={setBirthDate} placeholder="1999-01-31" />
-        {age != null ? <Text style={styles.meta}>만 나이 {age}세 (서버가 최종 확인)</Text> : null}
-        <Text style={styles.label}>국적</Text>
+        <TextField label={t('apply.name')} value={name} onChangeText={setName} autoCapitalize="words" />
+        <TextField label={t('apply.birthDateHint')} value={birthDate} onChangeText={setBirthDate} placeholder="1999-01-31" />
+        {age != null ? <Text style={styles.meta}>{t('apply.ageYears', { age })}</Text> : null}
+        <Text style={styles.label}>{t('apply.nationality')}</Text>
         <View style={styles.chips}>
           {ALLOWED_NATIONALITIES.map((code) => (
             <Chip key={code} label={nationalityLabel(code)} selected={nationality === code} onPress={() => setNationality(code)} />
           ))}
         </View>
-        <TextField label="영상 URL" value={videoUrl} onChangeText={setVideoUrl} keyboardType="url" placeholder="https://youtu.be/..." />
+        <TextField label={t('apply.videoUrl')} value={videoUrl} onChangeText={setVideoUrl} keyboardType="url" placeholder="https://youtu.be/..." />
         <Button
-          label="갤러리에서 영상 선택 (참고)"
+          label={t('apply.pickLocal')}
           variant="secondary"
           onPress={async () => {
             const picked = await pickLibraryVideo()
             if (!picked) return
-            setLocalVideoName(picked.fileName ?? '선택한 로컬 영상')
-            setError('로컬 파일은 아직 지원 API가 없습니다. YouTube/TikTok/Instagram에 올린 뒤 URL을 입력해 주세요.')
+            setLocalVideoName(picked.fileName ?? t('apply.localDefaultName'))
+            setError(t('apply.localUnsupported'))
           }}
         />
-        {localVideoName ? <Text style={styles.meta}>선택됨: {localVideoName}</Text> : null}
-        <TextField label="자기소개" value={introText} onChangeText={setIntroText} multiline />
-        <Text style={styles.label}>SNS (선택)</Text>
+        {localVideoName ? <Text style={styles.meta}>{t('apply.localPicked', { name: localVideoName })}</Text> : null}
+        <TextField label={t('apply.intro')} value={introText} onChangeText={setIntroText} multiline />
+        <Text style={styles.label}>{t('apply.snsOptional')}</Text>
         <View style={styles.chips}>
           {ALLOWED_SNS_PLATFORMS.map((platform) => (
             <Chip key={platform} label={snsPlatformLabel(platform)} selected={snsPlatform === platform} onPress={() => setSnsPlatform(platform)} />
           ))}
         </View>
-        <TextField label="SNS URL" value={snsUrl} onChangeText={setSnsUrl} keyboardType="url" />
+        <TextField label={t('apply.snsUrl')} value={snsUrl} onChangeText={setSnsUrl} keyboardType="url" />
         {error ? <Text style={styles.error}>{error}</Text> : null}
       </KeyboardAvoidingView>
     </Screen>

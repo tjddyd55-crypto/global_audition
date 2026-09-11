@@ -36,15 +36,15 @@ export default function RecoverScreen() {
           <ModeChip label={t('auth.resetPassword')} selected={mode === 'reset'} onPress={() => setMode('reset')} />
           <ModeChip label={t('auth.lostCode')} selected={mode === 'lost'} onPress={() => setMode('lost')} />
         </View>
-        {hint ? <Text style={styles.hint}>확인된 계정: {hint}</Text> : null}
+        {hint ? <Text style={styles.hint}>{t('auth.confirmedAccount', { id: hint })}</Text> : null}
         {success ? <Text style={styles.ok}>{success}</Text> : null}
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
         {mode === 'identify' ? (
           <>
-            <TextField label="복구 보안 코드" value={recoveryCode} onChangeText={setRecoveryCode} />
+            <TextField label={t('auth.recoveryCode')} value={recoveryCode} onChangeText={setRecoveryCode} />
             <Button
-              label="계정 확인"
+              label={t('auth.confirmAccount')}
               loading={loading}
               onPress={async () => {
                 setError(null)
@@ -54,10 +54,10 @@ export default function RecoverScreen() {
                   const res = await authApi.identifyByRecoveryCode(recoveryCode)
                   setHint(res.accountIdentifier)
                   setAccountIdentifier(res.accountIdentifier)
-                  setSuccess('계정 식별자를 확인했습니다. 비밀번호를 재설정할 수 있습니다.')
+                  setSuccess(t('auth.identified'))
                   setMode('reset')
                 } catch (err) {
-                  setError(err instanceof ApiError ? err.message : '복구 코드를 확인할 수 없습니다.')
+                  setError(err instanceof ApiError ? err.message : t('auth.identifyFailed'))
                 } finally {
                   setLoading(false)
                 }
@@ -68,21 +68,21 @@ export default function RecoverScreen() {
 
         {mode === 'reset' ? (
           <>
-            <TextField label="복구 보안 코드" value={recoveryCode} onChangeText={setRecoveryCode} />
-            <TextField label="새 비밀번호 (6자 이상)" value={newPassword} onChangeText={setNewPassword} secureTextEntry />
-            <TextField label="새 비밀번호 확인" value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry />
+            <TextField label={t('auth.recoveryCode')} value={recoveryCode} onChangeText={setRecoveryCode} />
+            <TextField label={t('auth.newPasswordMin6')} value={newPassword} onChangeText={setNewPassword} secureTextEntry />
+            <TextField label={t('auth.confirmNewPassword')} value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry />
             <Button
-              label="새 비밀번호 설정"
+              label={t('auth.setNewPassword')}
               loading={loading}
               onPress={async () => {
                 setError(null)
                 setSuccess(null)
                 if (newPassword.length < 6) {
-                  setError('비밀번호는 최소 6자입니다.')
+                  setError(t('auth.passwordTooShort'))
                   return
                 }
                 if (newPassword !== confirmPassword) {
-                  setError('비밀번호가 일치하지 않습니다.')
+                  setError(t('auth.passwordMismatch'))
                   return
                 }
                 setLoading(true)
@@ -92,9 +92,9 @@ export default function RecoverScreen() {
                     setHint(id.accountIdentifier)
                   }
                   await authApi.resetPasswordWithRecoveryCode(recoveryCode, newPassword)
-                  setSuccess('새 비밀번호가 설정되었습니다. 이전 비밀번호는 알 수 없습니다. 새 비밀번호로 로그인하세요.')
+                  setSuccess(t('auth.passwordResetDone'))
                 } catch (err) {
-                  setError(err instanceof ApiError ? err.message : '재설정에 실패했습니다.')
+                  setError(err instanceof ApiError ? err.message : t('auth.resetFailed'))
                 } finally {
                   setLoading(false)
                 }
@@ -106,21 +106,20 @@ export default function RecoverScreen() {
         {mode === 'lost' ? (
           <>
             <Text style={styles.body}>
-              관리자에게 복구 요청을 보냅니다. 관리자는 비밀번호를 임의로 지정하지 않고, 본인 확인 후 새 복구 코드를
-              재발급합니다.
+              {t('auth.lostCodeHint')}
             </Text>
-            <TextField label="계정 이메일" value={accountIdentifier} onChangeText={setAccountIdentifier} keyboardType="email-address" />
-            <TextField label="이름" value={requesterName} onChangeText={setRequesterName} autoCapitalize="words" />
-            <TextField label="연락처" value={contact} onChangeText={setContact} />
-            <TextField label="상황 설명 (선택)" value={message} onChangeText={setMessage} multiline />
+            <TextField label={t('auth.accountEmail')} value={accountIdentifier} onChangeText={setAccountIdentifier} keyboardType="email-address" />
+            <TextField label={t('auth.name')} value={requesterName} onChangeText={setRequesterName} autoCapitalize="words" />
+            <TextField label={t('auth.contact')} value={contact} onChangeText={setContact} />
+            <TextField label={t('auth.situationOptional')} value={message} onChangeText={setMessage} multiline />
             <Button
-              label="관리자 복구 요청"
+              label={t('auth.requestAdminRecovery')}
               loading={loading}
               onPress={async () => {
                 setError(null)
                 setSuccess(null)
                 if (accountIdentifier.trim().length < 3 || !requesterName.trim() || contact.trim().length < 3) {
-                  setError('계정·이름·연락처를 입력해 주세요.')
+                  setError(t('auth.recoveryFieldsRequired'))
                   return
                 }
                 setLoading(true)
@@ -131,9 +130,9 @@ export default function RecoverScreen() {
                     contact: contact.trim(),
                     message: message.trim() || undefined,
                   })
-                  setSuccess('복구 요청이 전달되었습니다. 관리자가 코드를 재발급한 뒤 안내합니다.')
+                  setSuccess(t('auth.recoveryRequested'))
                 } catch (err) {
-                  setError(err instanceof ApiError ? err.message : '요청에 실패했습니다.')
+                  setError(err instanceof ApiError ? err.message : t('auth.requestFailed'))
                 } finally {
                   setLoading(false)
                 }
@@ -142,7 +141,7 @@ export default function RecoverScreen() {
           </>
         ) : null}
 
-        <Button label="로그인으로" variant="secondary" onPress={() => router.replace('/(auth)/login')} />
+        <Button label={t('auth.backToLogin')} variant="secondary" onPress={() => router.replace('/(auth)/login')} />
       </KeyboardAvoidingView>
     </Screen>
   )
