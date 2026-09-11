@@ -20,6 +20,8 @@ applicant-first 네이티브 앱은 `frontend/mobile`에 둔다. 기존 Expo 프
 - Base URL: `EXPO_PUBLIC_API_URL` 또는 `${EXPO_PUBLIC_WEB_URL}/api`
 - 프로덕션 기본은 기존 Railway 프론트 프록시. 백엔드 도메인을 새로 발명하지 않는다.
 - Auth: `Authorization: Bearer` + SecureStore. 웹 localStorage 키와 개념만 같고 저장소만 네이티브다.
+- 로그아웃은 SecureStore + React Query 캐시 + 세션 state를 함께 지운다.
+- 복구: `POST /auth/recover/identify|reset`, `POST /auth/recovery-requests`. 평문 코드는 발급 응답에만.
 - 상태 문자열: `DRAFT|OPEN|CLOSED`, `SUBMITTED|REVIEWING|ACCEPTED|REJECTED`, 보드 `PENDING|REVIEWING|APPROVED|REJECTED` 를 그대로 표시한다.
 
 ## 미디어

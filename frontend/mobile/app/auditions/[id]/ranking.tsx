@@ -13,7 +13,7 @@ export default function RankingScreen() {
   const query = useQuery({ queryKey: queryKeys.ranking(id), queryFn: () => rankingApi.list(id), enabled: Boolean(id) })
 
   return (
-    <Screen loading={query.isLoading}>
+    <Screen loading={query.isLoading} refreshing={query.isFetching} onRefresh={() => void query.refetch()}>
       <Text style={styles.title}>랭킹</Text>
       {query.isError ? <ErrorState message="랭킹을 불러오지 못했습니다." onRetry={() => void query.refetch()} /> : null}
       {(query.data ?? []).map((item) => (

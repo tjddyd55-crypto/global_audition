@@ -34,7 +34,12 @@ function buildUrl(path: string, query?: RequestOptions['query']): string {
 }
 
 function isPublicAuthPath(path: string): boolean {
-  return path.includes('/auth/login') || path.includes('/auth/signup')
+  return (
+    path.includes('/auth/login') ||
+    path.includes('/auth/signup') ||
+    path.includes('/auth/recover/') ||
+    path.includes('/auth/recovery-requests')
+  )
 }
 
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {

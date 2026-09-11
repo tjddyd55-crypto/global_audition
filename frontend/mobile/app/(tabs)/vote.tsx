@@ -13,7 +13,7 @@ export default function VoteHubScreen() {
   const query = useQuery({ queryKey: queryKeys.auditionsOpen, queryFn: auditionApi.listOpen })
 
   return (
-    <Screen loading={query.isLoading}>
+    <Screen loading={query.isLoading} refreshing={query.isFetching} onRefresh={() => void query.refetch()}>
       <Text style={{ fontSize: 22, fontWeight: '800', color: colors.text, marginBottom: 8 }}>공개 투표</Text>
       <Text style={{ fontSize: 14, color: colors.muted, lineHeight: 22, marginBottom: 16 }}>
         오디션을 선택하면 해당 공고의 공개 투표 보드로 이동합니다. 투표 규칙은 서버가 결정합니다.

@@ -2,7 +2,8 @@ import { useQuery } from '@tanstack/react-query'
 import { useRouter } from 'expo-router'
 import { useEffect, useState } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
-import { isAgencyRole, profileApi } from '../../src/api/endpoints'
+import { authApi, isAgencyRole, profileApi } from '../../src/api/endpoints'
+import { ApiError } from '../../src/api/http'
 import { queryKeys } from '../../src/api/queryKeys'
 import { useAuth } from '../../src/auth/AuthProvider'
 import { Button } from '../../src/ui/Button'
@@ -19,6 +20,8 @@ export default function ProfileScreen() {
   const [nickname, setNickname] = useState('')
   const [intro, setIntro] = useState('')
   const [saving, setSaving] = useState(false)
+  const [recoveryNote, setRecoveryNote] = useState<string | null>(null)
+  const [issuedCode, setIssuedCode] = useState<string | null>(null)
 
   useEffect(() => {
     if (!query.data) return
@@ -62,7 +65,28 @@ export default function ProfileScreen() {
         />
       </View>
 
+      {issuedCode ? (
+        <Text selectable style={styles.meta}>
+          기존 계정 복구 코드(한 번만): {issuedCode}
+        </Text>
+      ) : null}
+      {recoveryNote ? <Text style={styles.meta}>{recoveryNote}</Text> : null}
+
       <View style={styles.links}>
+        <Button
+          label="복구 코드가 없으면 발급"
+          variant="secondary"
+          onPress={async () => {
+            try {
+              const res = await authApi.issueRecoveryCodeIfMissing()
+              setIssuedCode(res.recoveryCode)
+              setRecoveryNote('코드를 안전한 곳에 저장하세요. 다시 볼 수 없습니다.')
+            } catch (err) {
+              setRecoveryNote(err instanceof ApiError ? err.message : '발급에 실패했습니다.')
+            }
+          }}
+        />
+        <Button label="계정 찾기 / 비밀번호 재설정" variant="secondary" onPress={() => router.push('/(auth)/recover')} />
         <Button label="알림" variant="secondary" onPress={() => router.push('/notifications')} />
         {isAgencyRole(session?.role) ? (
           <Button label="내 오디션 지원자 관리" variant="secondary" onPress={() => router.push('/agency/applicants')} />

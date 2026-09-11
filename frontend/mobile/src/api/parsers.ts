@@ -146,6 +146,7 @@ export function parseApplicationDetail(raw: unknown): ApplicationDetail {
     }),
     processMode: asString(row.processMode, 'SINGLE'),
     currentRoundNumber: asNumber(row.currentRoundNumber, 1),
+    maxRoundNumber: row.maxRoundNumber != null ? asNumber(row.maxRoundNumber) : null,
     roundSummaries: Array.isArray(row.roundSummaries)
       ? row.roundSummaries.map((item) => {
           const r = asRecord(item)

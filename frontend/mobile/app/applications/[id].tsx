@@ -67,7 +67,9 @@ export default function ApplicationDetailScreen() {
           ))}
           <Text style={styles.section}>
             진행 방식 {app.processMode}
-            {app.processMode === 'MULTI_ROUND' ? ` · 현재 라운드 ${app.currentRoundNumber}` : ''}
+            {app.processMode === 'MULTI_ROUND'
+              ? ` · 현재 ${app.currentRoundNumber ?? '-'} / ${app.maxRoundNumber ?? app.roundSummaries.length} 라운드`
+              : ''}
           </Text>
           {app.roundSummaries.map((round) => (
             <Text key={round.roundId} style={styles.meta}>

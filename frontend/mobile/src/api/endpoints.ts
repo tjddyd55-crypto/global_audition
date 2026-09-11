@@ -37,6 +37,22 @@ export const authApi = {
     apiRequest<AuthResponse>('/auth/signup', { method: 'POST', body, auth: false }),
   me: async (): Promise<AuthMe> => parseAuthMe(unwrapData(await apiRequest<unknown>('/auth/me'))),
   logout: () => apiRequest<unknown>('/auth/logout', { method: 'POST' }),
+  identifyByRecoveryCode: async (recoveryCode: string): Promise<{ accountIdentifier: string }> =>
+    unwrapData(await apiRequest<unknown>('/auth/recover/identify', { method: 'POST', body: { recoveryCode }, auth: false })),
+  resetPasswordWithRecoveryCode: async (recoveryCode: string, newPassword: string): Promise<void> => {
+    unwrapData(await apiRequest<unknown>('/auth/recover/reset', { method: 'POST', body: { recoveryCode, newPassword }, auth: false }))
+  },
+  createRecoveryHelpRequest: async (body: {
+    accountIdentifier: string
+    requesterName: string
+    contact: string
+    message?: string
+  }): Promise<{ id: string; status: string }> =>
+    unwrapData(
+      await apiRequest<unknown>('/auth/recovery-requests', { method: 'POST', body, auth: false }),
+    ),
+  issueRecoveryCodeIfMissing: async (): Promise<{ recoveryCode: string; accountIdentifier: string }> =>
+    unwrapData(await apiRequest<unknown>('/me/recovery-code', { method: 'POST' })),
 }
 
 export const auditionApi = {

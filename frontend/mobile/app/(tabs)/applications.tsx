@@ -28,7 +28,7 @@ export default function MyApplicationsScreen() {
   }
 
   return (
-    <Screen loading={query.isLoading}>
+    <Screen loading={query.isLoading} refreshing={query.isFetching} onRefresh={() => void query.refetch()}>
       <Text style={styles.heading}>내 지원</Text>
       {query.isError ? <ErrorState message="지원 목록을 불러오지 못했습니다." onRetry={() => void query.refetch()} /> : null}
       {(query.data ?? []).map((item) => (

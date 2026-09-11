@@ -16,11 +16,24 @@ type Extra = {
 const extra = (Constants.expoConfig?.extra ?? {}) as Extra
 
 export const WEB_URL: string =
-  extra.webUrl?.trim() || 'https://frontend-production-8613a.up.railway.app'
+  process.env.EXPO_PUBLIC_WEB_URL?.trim() || extra.webUrl?.trim() || 'https://frontend-production-8613a.up.railway.app'
 
+/**
+ * 실기기 Android는 localhost/127.0.0.1 이 폰 자신을 가리킨다.
+ * 우선순위: EXPO_PUBLIC_API_URL → extra.apiUrl → `${WEB_URL}/api` (웹 프록시 SSOT).
+ */
 export const API_BASE_URL: string = normalizeApiBase(
-  extra.apiUrl?.trim() || `${WEB_URL.replace(/\/+$/, '')}/api`,
+  process.env.EXPO_PUBLIC_API_URL?.trim() || extra.apiUrl?.trim() || `${WEB_URL.replace(/\/+$/, '')}/api`,
 )
+
+export function isLoopbackApiUrl(url: string = API_BASE_URL): boolean {
+  try {
+    const host = new URL(url).hostname
+    return host === 'localhost' || host === '127.0.0.1'
+  } catch {
+    return false
+  }
+}
 
 export const ALLOWED_HOSTS: string[] = Array.isArray(extra.allowedHosts)
   ? extra.allowedHosts.map((s) => s.toLowerCase())

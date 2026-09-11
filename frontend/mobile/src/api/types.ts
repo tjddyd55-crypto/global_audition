@@ -18,6 +18,8 @@ export type AuthResponse = {
   email?: string
   nickname?: string
   profileImageUrl?: string | null
+  /** 회원가입·재발급 응답에만 한 번. 로그인은 포함하지 않는다. */
+  recoveryCode?: string | null
 }
 
 export type AuthMe = {
@@ -105,6 +107,7 @@ export type ApplicationDetail = {
   snsLinks: { platform: string; url: string }[]
   processMode: string
   currentRoundNumber: number
+  maxRoundNumber?: number | null
   roundSummaries: RoundSummary[]
   videos: { id: string; title: string; videoUrl: string; thumbnailUrl?: string | null }[]
 }

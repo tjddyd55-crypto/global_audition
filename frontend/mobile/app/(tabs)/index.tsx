@@ -22,7 +22,7 @@ export default function HomeScreen() {
   })
 
   return (
-    <Screen>
+    <Screen refreshing={auditionsQuery.isFetching} onRefresh={() => void auditionsQuery.refetch()}>
       <LinearGradient colors={[colors.heroStart, colors.surface]} style={styles.hero}>
         <Text style={styles.kicker}>GLOBAL AUDITION</Text>
         <Text style={styles.heroTitle}>기획사와 지망생을 잇는{'\n'}글로벌 오디션</Text>

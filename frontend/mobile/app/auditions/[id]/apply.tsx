@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useEffect, useMemo, useState } from 'react'
-import { KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native'
+import { KeyboardAvoidingView, StyleSheet, Text, View } from 'react-native'
 import { applicationApi, profileApi } from '../../../src/api/endpoints'
 import { queryKeys } from '../../../src/api/queryKeys'
+import { RequireAuth } from '../../../src/auth/RequireAuth'
 import { useAuth } from '../../../src/auth/AuthProvider'
 import { ApiError } from '../../../src/api/http'
 import { calculateAge } from '../../../src/domain/age'
@@ -19,7 +20,7 @@ import { colors, radius } from '../../../src/theme/tokens'
 export default function ApplyScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()
-  const { isAuthenticated, ready } = useAuth()
+  const { isAuthenticated } = useAuth()
   const profileQuery = useQuery({ queryKey: queryKeys.profile, queryFn: profileApi.get, enabled: isAuthenticated })
 
   const [name, setName] = useState('')
@@ -50,12 +51,8 @@ export default function ApplyScreen() {
 
   const age = useMemo(() => (birthDate ? calculateAge(birthDate) : null), [birthDate])
 
-  if (ready && !isAuthenticated) {
-    router.replace('/(auth)/login')
-    return null
-  }
-
   return (
+    <RequireAuth message="지원하려면 로그인이 필요합니다.">
     <Screen
       footer={
         <StickyCta>
@@ -91,7 +88,7 @@ export default function ApplyScreen() {
         </StickyCta>
       }
     >
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.form}>
+      <KeyboardAvoidingView behavior="padding" style={styles.form}>
         <Text style={styles.lead}>백엔드는 영상 파일 업로드가 아니라 YouTube/TikTok/Instagram URL을 받습니다.</Text>
         <TextField label="이름" value={name} onChangeText={setName} autoCapitalize="words" />
         <TextField label="생년월일 (YYYY-MM-DD)" value={birthDate} onChangeText={setBirthDate} placeholder="1999-01-31" />
@@ -125,6 +122,7 @@ export default function ApplyScreen() {
         {error ? <Text style={styles.error}>{error}</Text> : null}
       </KeyboardAvoidingView>
     </Screen>
+    </RequireAuth>
   )
 }
 

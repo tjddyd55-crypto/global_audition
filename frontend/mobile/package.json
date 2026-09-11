@@ -12,7 +12,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --ext .ts,.tsx",
     "test": "jest",
-    "export:check": "expo export --platform web --output-dir dist-export",
+    "export:check": "expo export --platform android --output-dir dist-export",
     "doctor": "npx expo-doctor",
     "install:fix": "expo install --fix",
     "build:apk:preview": "eas build --platform android --profile preview",

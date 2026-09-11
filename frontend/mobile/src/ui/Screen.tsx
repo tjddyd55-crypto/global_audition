@@ -1,4 +1,4 @@
-import { ActivityIndicator, ScrollView, StyleSheet, View, type RefreshControlProps } from 'react-native'
+import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, View, type RefreshControlProps } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { colors, space } from '../theme/tokens'
 
@@ -12,7 +12,15 @@ type Props = {
   footer?: React.ReactNode
 }
 
-export function Screen({ children, padded = true, scroll = true, loading, footer }: Props) {
+export function Screen({
+  children,
+  padded = true,
+  scroll = true,
+  loading,
+  footer,
+  refreshing,
+  onRefresh,
+}: Props) {
   if (loading) {
     return (
       <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
@@ -26,7 +34,14 @@ export function Screen({ children, padded = true, scroll = true, loading, footer
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       {scroll ? (
-        <ScrollView contentContainerStyle={[styles.content, padded && styles.padded]} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          contentContainerStyle={[styles.content, padded && styles.padded]}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          refreshControl={
+            onRefresh ? <RefreshControl refreshing={Boolean(refreshing)} onRefresh={onRefresh} /> : undefined
+          }
+        >
           {children}
         </ScrollView>
       ) : (

@@ -12,7 +12,7 @@ export default function AuditionsScreen() {
   const query = useQuery({ queryKey: queryKeys.auditionsOpen, queryFn: auditionApi.listOpen })
 
   return (
-    <Screen loading={query.isLoading}>
+    <Screen loading={query.isLoading} refreshing={query.isFetching} onRefresh={() => void query.refetch()}>
       {query.isError ? <ErrorState message="오디션 목록을 불러오지 못했습니다." onRetry={() => void query.refetch()} /> : null}
       {(query.data ?? []).map((audition) => (
         <View key={audition.id} style={{ marginBottom: 12 }}>
