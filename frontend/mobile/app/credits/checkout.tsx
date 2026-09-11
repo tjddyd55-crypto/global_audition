@@ -8,11 +8,13 @@ import { RequireAuth } from '../../src/auth/RequireAuth'
 import { buildTossCheckoutHtml } from '../../src/features/payments/tossCheckoutHtml'
 import { Screen } from '../../src/ui/Screen'
 import { colors } from '../../src/theme/tokens'
+import { useTranslation } from 'react-i18next'
 
 const SUCCESS_SCHEME = 'globalaudition://payments/success'
 const FAIL_SCHEME = 'globalaudition://payments/fail'
 
 export default function CreditCheckoutScreen() {
+  const { t } = useTranslation()
   const { packageId } = useLocalSearchParams<{ packageId: string }>()
   const router = useRouter()
   const [html, setHtml] = useState<string | null>(null)
@@ -20,7 +22,7 @@ export default function CreditCheckoutScreen() {
 
   useEffect(() => {
     if (!packageId) {
-      setError('packageId가 없습니다.')
+      setError(t('payments.missingPackage'))
       return
     }
     let cancelled = false
@@ -28,7 +30,7 @@ export default function CreditCheckoutScreen() {
       try {
         const prep = await creditApi.prepare(packageId, 'TOSS_PAYMENTS')
         if (!prep.clientKey || prep.tossAmount == null) {
-          throw new Error('토스 결제 설정이 없거나 비활성입니다. 관리자에게 문의하세요.')
+          throw new Error(t('payments.tossInactive'))
         }
         if (cancelled) return
         setHtml(
@@ -38,21 +40,24 @@ export default function CreditCheckoutScreen() {
             orderName: prep.orderName || prep.packageName,
             amount: prep.tossAmount,
             currency: prep.currency,
+            method: prep.tossMethod,
+            foreignEasyPayProvider: prep.foreignEasyPayProvider,
+            variantKey: prep.variantKey,
             successUrl: SUCCESS_SCHEME,
             failUrl: FAIL_SCHEME,
           }),
         )
       } catch (err) {
-        if (!cancelled) setError(err instanceof ApiError ? err.message : err instanceof Error ? err.message : '주문 생성 실패')
+        if (!cancelled) setError(err instanceof ApiError ? err.message : err instanceof Error ? err.message : t('payments.createOrderFailed'))
       }
     })()
     return () => {
       cancelled = true
     }
-  }, [packageId])
+  }, [packageId, t])
 
   return (
-    <RequireAuth message="결제하려면 로그인이 필요합니다.">
+    <RequireAuth message={t('payments.loginToPay')}>
       {error ? (
         <Screen>
           <Text style={styles.error}>{error}</Text>

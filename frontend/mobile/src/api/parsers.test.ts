@@ -99,10 +99,14 @@ describe('parsers', () => {
       bonusCredits: 1,
       clientKey: 'test_ck_x',
       status: 'READY',
+      tossMethod: 'FOREIGN_EASY_PAY',
+      foreignEasyPayProvider: 'PAYPAL',
     })
     expect(prep.orderId).toBe('ORD-1')
     expect(prep.tossAmount).toBe(10)
     expect(prep.currency).toBe('USD')
     expect(prep.clientKey).toBe('test_ck_x')
+    expect(prep.tossMethod).toBe('FOREIGN_EASY_PAY')
+    expect(prep.foreignEasyPayProvider).toBe('PAYPAL')
   })
 })

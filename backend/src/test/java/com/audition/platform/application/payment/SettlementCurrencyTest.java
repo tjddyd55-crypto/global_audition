@@ -37,4 +37,10 @@ class SettlementCurrencyTest {
         assertEquals(SettlementCurrency.CODE, SettlementCurrency.requireUsd(null));
         assertEquals(SettlementCurrency.CODE, SettlementCurrency.requireUsd(""));
     }
+
+    @Test
+    void tossUsdUsesForeignEasyPayNotCard() {
+        assertEquals("FOREIGN_EASY_PAY", SettlementCurrency.TOSS_METHOD);
+        assertEquals("PAYPAL", SettlementCurrency.TOSS_EASY_PAY_PROVIDER);
+    }
 }

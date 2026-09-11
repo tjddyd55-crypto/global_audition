@@ -98,9 +98,9 @@ export default function PaymentSettingsPage() {
 
       <div className="rounded-lg border bg-white p-4">
         <p className="mb-3 text-xs text-gray-500">
-          정산 통화는 USD입니다. Toss checkout/confirm 금액은 공식 문서상 정수 달러(major unit)이며 센트/환율 변환을 하지
-          않습니다. 시크릿은 GET에서 마스킹됩니다. LIVE 과금은 이 화면에서 켜기 전에 반드시 리뷰하세요. 외화 결제는 저장해도
-          활성화되지 않습니다.
+          정산 통화는 USD입니다. 공식 USD 경로는 FOREIGN_EASY_PAY(PayPal 등)이며 CARD+USD 는 쓰지 않습니다.
+          checkout/confirm 금액은 정수 달러(major unit)이고 센트/환율 변환을 하지 않습니다. variantKey/MID 가 없으면
+          구조만 준비되고 활성화는 OFF 로 둡니다. LIVE 과금은 이 화면에서 켜기 전에 반드시 리뷰하세요.
         </p>
         {isLoading && <p className="text-sm text-gray-600">불러오는 중…</p>}
         {error && <p className="text-sm text-red-700">설정을 불러오지 못했습니다.</p>}

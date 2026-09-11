@@ -37,7 +37,7 @@ public class PaymentOrder {
     private String provider;
 
     /** 청구 금액 (USD, 달러 단위). Stripe 연동 시 {@link com.audition.platform.application.payment.UsdMoney#toStripeCents} 사용. */
-    @Column(nullable = false, precision = 14, scale = 2)
+    @Column(nullable = false)
     private BigDecimal amount;
 
     @Column(nullable = false, length = 8)

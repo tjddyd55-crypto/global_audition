@@ -7,6 +7,7 @@ import { useRouter, Link } from '../../../../i18n.config'
 import { authApi } from '@/shared/api/auth'
 import { creditsApi, type PreparePaymentResult } from '@/shared/api/credits'
 import { BTN_PRIMARY, BTN_SECONDARY, CARD_BASE, PAGE_CONTAINER, TEXT_SUB, TITLE_PAGE } from '@/shared/ui/specClasses'
+import { useTranslations } from 'next-intl'
 
 declare global {
   interface Window {
@@ -19,6 +20,7 @@ declare global {
 }
 
 function TossCheckoutContent() {
+  const t = useTranslations('payments')
   const router = useRouter()
   const searchParams = useSearchParams()
   const packageId = searchParams.get('packageId')?.trim() ?? ''
@@ -33,7 +35,7 @@ function TossCheckoutContent() {
       return
     }
     if (!packageId && !orderNoParam) {
-      setError('packageId 또는 orderNo가 필요합니다.')
+      setError(t('needOrder'))
       return
     }
     let cancelled = false
@@ -45,14 +47,14 @@ function TossCheckoutContent() {
           return
         }
         if (!packageId) {
-          setError('packageId 또는 orderNo가 필요합니다.')
+          setError(t('needOrder'))
           return
         }
         const created = await creditsApi.preparePayment(packageId, 'TOSS_PAYMENTS')
         if (!cancelled) setPrep(created)
       } catch (e: unknown) {
         const ax = e as { response?: { data?: { message?: string } } }
-        if (!cancelled) setError(ax.response?.data?.message ?? '토스 주문을 만들 수 없습니다.')
+        if (!cancelled) setError(ax.response?.data?.message ?? t('createFailed'))
       }
     })()
     return () => {
@@ -62,11 +64,11 @@ function TossCheckoutContent() {
 
   const startPay = async () => {
     if (!prep?.clientKey || !prep.tossAmount || !prep.orderNo) {
-      setError('결제 준비 정보가 없습니다.')
+      setError(t('missingPrep'))
       return
     }
     if (!window.TossPayments) {
-      setError('토스 결제 스크립트를 불러오지 못했습니다.')
+      setError(t('scriptFailed'))
       return
     }
     const origin = window.location.origin
@@ -76,15 +78,17 @@ function TossCheckoutContent() {
       const toss = window.TossPayments(prep.clientKey)
       const payment = toss.payment({ customerKey: prep.orderNo })
       await payment.requestPayment({
-        method: 'CARD',
+        method: prep.tossMethod || 'FOREIGN_EASY_PAY',
         amount: { currency: prep.currency || 'USD', value: prep.tossAmount },
         orderId: prep.orderNo,
         orderName: prep.orderName || prep.packageName,
         successUrl,
         failUrl,
+        foreignEasyPay: { provider: prep.foreignEasyPayProvider || 'PAYPAL' },
+        ...(prep.variantKey ? { variantKey: prep.variantKey } : {}),
       })
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : '결제창을 열 수 없습니다.')
+      setError(e instanceof Error ? e.message : t('createFailed'))
     }
   }
 
@@ -96,33 +100,40 @@ function TossCheckoutContent() {
         strategy="afterInteractive"
       />
       <div className={`${PAGE_CONTAINER} py-6`}>
-        <h1 className={TITLE_PAGE}>토스 결제</h1>
-        <p className={`${TEXT_SUB} mt-2`}>금액은 서버가 패키지에서 확정합니다. 클라이언트 금액을 신뢰하지 않습니다.</p>
+        <h1 className={TITLE_PAGE}>{t('title')}</h1>
+        <p className={`${TEXT_SUB} mt-2`}>{t('amountServerSettled')}</p>
         {error ? <p className="mt-3 text-sm text-red-600">{error}</p> : null}
         {prep ? (
           <div className={`${CARD_BASE} mt-4`}>
-            <p>주문 {prep.orderNo}</p>
             <p>
-              {prep.tossAmount} {prep.currency} · {prep.credits + prep.bonusCredits} 크레딧
+              {t('order')} {prep.orderNo}
+            </p>
+            <p>
+              {prep.tossAmount} {prep.currency} · {prep.credits + prep.bonusCredits} {t('creditsUnit')}
             </p>
             <button type="button" disabled={!ready} onClick={() => void startPay()} className={`${BTN_PRIMARY} mt-4`}>
-              토스 결제창 열기
+              {t('openCheckout')}
             </button>
           </div>
         ) : (
-          <p className={`${TEXT_SUB} mt-4`}>주문을 준비하는 중…</p>
+          <p className={`${TEXT_SUB} mt-4`}>{t('preparing')}</p>
         )}
         <Link href="/credits/charge" className={`${BTN_SECONDARY} mt-4 inline-block`}>
-          상품으로
+          {t('backToPackages')}
         </Link>
       </div>
     </div>
   )
 }
 
+function CheckoutLoading() {
+  const t = useTranslations('common')
+  return <div className="flex min-h-screen items-center justify-center">{t('loading')}</div>
+}
+
 export default function TossCheckoutPage() {
   return (
-    <Suspense fallback={<div className="flex min-h-screen items-center justify-center">불러오는 중…</div>}>
+    <Suspense fallback={<CheckoutLoading />}>
       <TossCheckoutContent />
     </Suspense>
   )

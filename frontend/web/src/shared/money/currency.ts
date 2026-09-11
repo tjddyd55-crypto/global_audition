@@ -25,8 +25,8 @@ export function formatCurrency(amount: number, locale = 'en'): string {
   return new Intl.NumberFormat(intlLocaleFor(locale), {
     style: 'currency',
     currency: SETTLEMENT_CURRENCY,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
   }).format(n)
 }
 

@@ -139,6 +139,8 @@ public class PaymentOrderService {
             r.setSuccessUrl(NATIVE_SUCCESS_URL);
             r.setFailUrl(NATIVE_FAIL_URL);
             r.setVariantKey(paymentSettingsService.current().getVariantKey());
+            r.setTossMethod(SettlementCurrency.TOSS_METHOD);
+            r.setForeignEasyPayProvider(SettlementCurrency.TOSS_EASY_PAY_PROVIDER);
             r.setMessage("토스 결제창으로 이동합니다. 승인 금액은 서버가 패키지에서 확정합니다.");
         } else {
             r.setMessage("결제 단계로 이동합니다. (PG 연동 전에는 목 결제 페이지를 사용합니다.)");
@@ -178,6 +180,8 @@ public class PaymentOrderService {
             r.setFailUrl(NATIVE_FAIL_URL);
             r.setRedirectUrl("/credits/toss-checkout?orderNo=" + order.getOrderNo());
             r.setVariantKey(paymentSettingsService.current().getVariantKey());
+            r.setTossMethod(SettlementCurrency.TOSS_METHOD);
+            r.setForeignEasyPayProvider(SettlementCurrency.TOSS_EASY_PAY_PROVIDER);
         }
         return r;
     }
@@ -411,6 +415,10 @@ public class PaymentOrderService {
         out.put("environment", settings.getEnvironment());
         out.put("currency", SettlementCurrency.requireUsd(settings.getCurrency()));
         out.put("foreignCurrencyEnabled", false);
+        out.put("tossMethod", SettlementCurrency.TOSS_METHOD);
+        out.put("foreignEasyPayProvider", SettlementCurrency.TOSS_EASY_PAY_PROVIDER);
+        out.put("variantKey", settings.getVariantKey());
+        out.put("midConfigured", settings.getMid() != null && !settings.getMid().isBlank());
         out.put("successScheme", NATIVE_SUCCESS_URL);
         out.put("failScheme", NATIVE_FAIL_URL);
         return out;

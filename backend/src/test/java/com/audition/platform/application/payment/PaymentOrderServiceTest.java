@@ -54,6 +54,19 @@ class PaymentOrderServiceTest {
     }
 
     @Test
+    void confirmRejectsCurrencyMismatchWithoutCallingToss() {
+        UUID userId = UUID.randomUUID();
+        PaymentOrder order = readyTossOrder(userId, "ORD-KRW", new BigDecimal("10"));
+        order.setCurrency("KRW");
+        when(orderRepository.findByPaymentKey("pk-fx")).thenReturn(Optional.empty());
+        when(orderRepository.findByOrderNoForUpdate("ORD-KRW")).thenReturn(Optional.of(order));
+
+        assertThrows(ResponseStatusException.class,
+                () -> service.confirmToss(userId, "pk-fx", "ORD-KRW", 10));
+        verify(tossClient, never()).confirm(any(), any(), any(), anyLong());
+    }
+
+    @Test
     void confirmRejectsAmountMismatchWithoutCallingToss() {
         UUID userId = UUID.randomUUID();
         PaymentOrder order = readyTossOrder(userId, "ORD-1", new BigDecimal("10"));

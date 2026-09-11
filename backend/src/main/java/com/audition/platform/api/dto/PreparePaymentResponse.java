@@ -41,6 +41,9 @@ public class PreparePaymentResponse {
     private String successUrl;
     private String failUrl;
     private String variantKey;
+    /** Toss v2 method. USD 는 FOREIGN_EASY_PAY. */
+    private String tossMethod;
+    private String foreignEasyPayProvider;
 
     public String getOrderNo() {
         return orderNo;
@@ -192,5 +195,11 @@ public class PreparePaymentResponse {
 
     public void setVariantKey(String variantKey) {
         this.variantKey = variantKey;
+    }
+    public String getTossMethod() { return tossMethod; }
+    public void setTossMethod(String tossMethod) { this.tossMethod = tossMethod; }
+    public String getForeignEasyPayProvider() { return foreignEasyPayProvider; }
+    public void setForeignEasyPayProvider(String foreignEasyPayProvider) {
+        this.foreignEasyPayProvider = foreignEasyPayProvider;
     }
 }

@@ -19,7 +19,7 @@ export function formatUsd(amount: number, locale = getRuntimeLocale()): string {
   return new Intl.NumberFormat(INTL_BY_APP_LOCALE[locale] ?? 'en-US', {
     style: 'currency',
     currency: SETTLEMENT_CURRENCY,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
   }).format(n)
 }

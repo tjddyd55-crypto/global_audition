@@ -359,6 +359,10 @@ export function parsePreparePayment(raw: unknown): PreparePaymentResult {
     orderName: row.orderName != null ? asString(row.orderName) : undefined,
     successUrl: row.successUrl != null ? asString(row.successUrl) : undefined,
     failUrl: row.failUrl != null ? asString(row.failUrl) : undefined,
+    variantKey: row.variantKey != null ? asString(row.variantKey) : undefined,
+    tossMethod: row.tossMethod != null ? asString(row.tossMethod) : undefined,
+    foreignEasyPayProvider:
+      row.foreignEasyPayProvider != null ? asString(row.foreignEasyPayProvider) : undefined,
   }
 }
 

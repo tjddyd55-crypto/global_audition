@@ -298,6 +298,9 @@ export type PreparePaymentResult = {
   orderName?: string
   successUrl?: string
   failUrl?: string
+  variantKey?: string
+  tossMethod?: string
+  foreignEasyPayProvider?: string
 }
 
 export type InsufficientCredits = {

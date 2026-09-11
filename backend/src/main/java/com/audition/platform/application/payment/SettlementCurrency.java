@@ -21,6 +21,9 @@ import java.util.Locale;
 public final class SettlementCurrency {
 
     public static final String CODE = "USD";
+    /** Toss 공식 USD 경로. CARD+USD 는 쓰지 않는다. */
+    public static final String TOSS_METHOD = "FOREIGN_EASY_PAY";
+    public static final String TOSS_EASY_PAY_PROVIDER = "PAYPAL";
 
     private SettlementCurrency() {
     }
@@ -58,7 +61,7 @@ public final class SettlementCurrency {
                     HttpStatus.BAD_REQUEST,
                     "Toss USD amount.value 는 정수 달러입니다. $1 / $5 / $10 처럼 소수점 없이 입력하세요.");
         }
-        return scaled;
+        return scaled.setScale(0, RoundingMode.UNNECESSARY);
     }
 
     /**
