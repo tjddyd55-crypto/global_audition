@@ -22,6 +22,10 @@ export function normalizeLocale(raw?: string | null): string {
   return DEVICE_FALLBACK
 }
 
+/** 기기 언어는 1급 로케일(ko/en/mn)만 채택. 그 외는 en. */
 export function detectDeviceLocale(tag?: string | null): string {
-  return normalizeLocale(tag)
+  if (!tag) return DEVICE_FALLBACK
+  const language = tag.trim().toLowerCase().replace('_', '-').split('-')[0]
+  if (PRIMARY_LOCALES.includes(language)) return language
+  return DEVICE_FALLBACK
 }

@@ -9,8 +9,10 @@ import { RecoveryCodeNotice } from '../../src/ui/RecoveryCodeNotice'
 import { Screen } from '../../src/ui/Screen'
 import { TextField } from '../../src/ui/TextField'
 import { colors, radius } from '../../src/theme/tokens'
+import { useTranslation } from 'react-i18next'
 
 export default function RegisterScreen() {
+  const { t } = useTranslation()
   const router = useRouter()
   const { signup } = useAuth()
   const [email, setEmail] = useState('')
@@ -33,19 +35,19 @@ export default function RegisterScreen() {
   return (
     <Screen>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'padding'} style={styles.box}>
-        <Text style={styles.title}>회원가입</Text>
-        <Text style={styles.hint}>서버가 받는 항목만 입력합니다. 이메일·비밀번호·닉네임·역할(선택 실명).</Text>
+        <Text style={styles.title}>{t('auth.registerTitle')}</Text>
+        <Text style={styles.hint}>{t('auth.signupHint')}</Text>
         <View style={styles.roles}>
-          <RoleChip label="지원자" selected={role === 'APPLICANT'} onPress={() => setRole('APPLICANT')} />
-          <RoleChip label="기획사" selected={role === 'AGENCY'} onPress={() => setRole('AGENCY')} />
+          <RoleChip label={t('auth.applicant')} selected={role === 'APPLICANT'} onPress={() => setRole('APPLICANT')} />
+          <RoleChip label={t('auth.business')} selected={role === 'AGENCY'} onPress={() => setRole('AGENCY')} />
         </View>
-        <TextField label="닉네임" value={nickname} onChangeText={setNickname} />
-        <TextField label="이메일" value={email} onChangeText={setEmail} keyboardType="email-address" />
-        <TextField label="비밀번호 (6자 이상)" value={password} onChangeText={setPassword} secureTextEntry />
-        <TextField label="실명 (선택)" value={name} onChangeText={setName} autoCapitalize="words" />
+        <TextField label={t('auth.nickname')} value={nickname} onChangeText={setNickname} />
+        <TextField label={t('auth.email')} value={email} onChangeText={setEmail} keyboardType="email-address" />
+        <TextField label={t('auth.passwordMin6')} value={password} onChangeText={setPassword} secureTextEntry />
+        <TextField label={t('auth.legalNameOptional')} value={name} onChangeText={setName} autoCapitalize="words" />
         {error ? <Text style={styles.error}>{error}</Text> : null}
         <Button
-          label="가입하기"
+          label={t('auth.registerButton')}
           loading={loading}
           onPress={async () => {
             const draft = {
@@ -70,7 +72,7 @@ export default function RegisterScreen() {
               }
               router.replace('/(tabs)')
             } catch (err) {
-              setError(err instanceof ApiError ? err.message : '가입에 실패했습니다.')
+              setError(err instanceof ApiError ? err.message : t('auth.registerError'))
             } finally {
               setLoading(false)
             }

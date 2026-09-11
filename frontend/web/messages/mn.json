@@ -30,7 +30,14 @@
     "language": "Хэл",
     "retry": "Дахин оролдох",
     "empty": "Харуулах зүйл алга",
-    "myAccount": "Миний бүртгэл"
+    "myAccount": "Миний бүртгэл",
+    "close": "Хаах",
+    "add": "Нэмэх",
+    "remove": "Хасах",
+    "required": "Заавал",
+    "optional": "Сонголт",
+    "done": "Дууссан",
+    "copy": "Хуулах"
   },
   "nav": {
     "home": "Нүүр",
@@ -66,7 +73,33 @@
     "securityCode": "Нууц код",
     "newPassword": "Шинэ нууц үг",
     "recoverSubmit": "Нууц үг шинэчлэх",
-    "recoverLoginRequired": "Энэ функцийг ашиглахын тулд нэвтэрнэ үү"
+    "recoverLoginRequired": "Энэ функцийг ашиглахын тулд нэвтэрнэ үү",
+    "nickname": "Хоч нэр",
+    "passwordMin6": "Нууц үг (6-аас дээш)",
+    "legalNameOptional": "Албан ёсны нэр (заавал биш)",
+    "findAccount": "Бүртгэл олох / нууц үг шинэчлэх",
+    "loginInvalidResponse": "Нэвтрэх хариу буруу байна. Дахин оролдоно уу.",
+    "tokenSaveFailed": "Сесс хадгалж чадсангүй. Дахин оролдоно уу.",
+    "apiLoopbackWarn": "API localhost руу зааж байна. Бодит төхөөрөмжид EXPO_PUBLIC_API_URL-ийг LAN хаяг болгоно уу.",
+    "signupHint": "Сервер хүлээн авдаг талбаруудыг л бөглөнө үү.",
+    "identify": "Бүртгэл олох",
+    "resetPassword": "Нууц үг шинэчлэх",
+    "lostCode": "Код алдсан",
+    "recoveryCode": "Сэргээх нууц код",
+    "confirmAccount": "Бүртгэл баталгаажуулах",
+    "identified": "Бүртгэл олдлоо. Нууц үгээ шинэчилнэ үү.",
+    "identifyFailed": "Сэргээх кодыг баталгаажуулж чадсангүй.",
+    "confirmedAccount": "Баталгаажсан бүртгэл: {id}",
+    "newPasswordMin6": "Шинэ нууц үг (6-аас дээш)",
+    "confirmNewPassword": "Шинэ нууц үг баталгаажуулах",
+    "setNewPassword": "Шинэ нууц үг тохируулах",
+    "passwordTooShort": "Нууц үг хамгийн багадаа 6 тэмдэгт.",
+    "passwordMismatch": "Нууц үг таарахгүй байна.",
+    "findId": "ID олох",
+    "findPassword": "Нууц үг олох",
+    "socialSoon": "Сошиал нэвтрэлт удахгүй",
+    "serverUnreachable": "Серверт холбогдож чадсангүй",
+    "requiredValues": "Заавал бөглөх талбарыг оруулна уу"
   },
   "register": {
     "title": "Бүртгүүлэх",
@@ -111,7 +144,17 @@
     "feature3Title": "Агентлагийн санал",
     "feature3Desc": "Агентлагаас шууд аудишны санал аваарай",
     "openAuditions": "Нээлттэй аудишн",
-    "latestVideos": "Шинэ видео"
+    "latestVideos": "Шинэ видео",
+    "kicker": "Глобал аудишн",
+    "heroBody": "Нээлттэй аудишныг үзэж, видео холбоосоор бүртгүүлж, шатны үр дүнг шалгаарай.",
+    "browse": "Аудишн үзэх",
+    "applied": "Өргөдөл",
+    "reviewing": "Шалгаж байна",
+    "accepted": "Тэнцсэн",
+    "rejected": "Тэнцээгүй",
+    "loadFailed": "Аудишн ачаалж чадсангүй.",
+    "emptyBody": "Шинэ зар энд харагдана.",
+    "loginCue": "Бүртгүүлж, санал өгөхийн тулд нэвтэрнэ үү."
   },
   "auditions": {
     "title": "Аудишн",
@@ -122,7 +165,10 @@
     "statusDraft": "Ноорог",
     "deadline": "Дуусах",
     "location": "Байршил",
-    "agency": "Агентлаг"
+    "agency": "Агентлаг",
+    "loadFailed": "Жагсаалт ачаалж чадсангүй",
+    "daysLeft": "D-{n}",
+    "target": "Хүлээн авагч"
   },
   "auditionDetail": {
     "applyNow": "Одоо бүртгүүлэх",
@@ -136,7 +182,12 @@
     "applicants": "Өргөдөл гаргагч",
     "remainingDays": "Үлдсэн хоног",
     "loginToApply": "Бүртгүүлэхийн тулд нэвтэрнэ үү",
-    "contentFallback": "Энэ хэлний орчуулга байхгүй тул эх хувилбарыг харуулж байна"
+    "contentFallback": "Энэ хэлний орчуулга байхгүй тул эх хувилбарыг харуулж байна",
+    "viewApplication": "Миний өргөдөл үзэх",
+    "cannotApply": "Бүртгүүлэх боломжгүй",
+    "viewVote": "Санал үзэх",
+    "loadFailed": "Аудишн ачаалж чадсангүй.",
+    "roundProgress": "Шат {current} / {max}"
   },
   "apply": {
     "title": "Бүртгүүлэх",
@@ -152,7 +203,11 @@
     "insufficient": "Кредит хүрэлцэхгүй байна",
     "charge": "Кредит авах",
     "success": "Өргөдөл илгээгдлээ",
-    "blocked": "Одоо бүртгүүлэх боломжгүй"
+    "blocked": "Одоо бүртгүүлэх боломжгүй",
+    "intro": "Танилцуулга",
+    "birthDate": "Төрсөн өдөр",
+    "category": "Ангилал",
+    "videoHint": "YouTube эсвэл нээлттэй видео холбоос"
   },
   "myApplications": {
     "title": "Миний өргөдөл",
@@ -180,7 +235,14 @@
     "title": "Профайл",
     "videos": "Миний видео",
     "language": "Хэл",
-    "deviceLanguage": "Төхөөрөмжийн хэл"
+    "deviceLanguage": "Төхөөрөмжийн хэл",
+    "save": "Профайл хадгалах",
+    "name": "Нэр",
+    "nickname": "Хоч нэр",
+    "intro": "Танилцуулга",
+    "issueRecovery": "Сэргээх код байхгүй бол авах",
+    "recoveryOnce": "Сэргээх код (нэг л удаа): {code}",
+    "recoveryKeep": "Кодыг аюулгүй хадгална уу. Дахин харах боломжгүй."
   },
   "credits": {
     "title": "Кредит",
@@ -197,7 +259,14 @@
     "reasonDeduct": "Админы хасалт",
     "reasonSignup": "Бүртгэлийн урамшуулал",
     "reasonRefund": "Буцаалт",
-    "loginRequired": "Кредит үзэхийн тулд нэвтэрнэ үү"
+    "loginRequired": "Кредит үзэхийн тулд нэвтэрнэ үү",
+    "chargeTitle": "Кредит авах",
+    "chargeHint": "Багц сонгоод төлбөр рүү орно. Дүнг сервер багцаас тогтооно.",
+    "home": "Кредитын нүүр",
+    "loadFailed": "Кредитын багц ачаалж чадсангүй.",
+    "selectPackage": "Багц сонгоно уу",
+    "payWithToss": "Toss-оор төлөх",
+    "wholeUsd": "Үнэ нь бүхэл ам.доллар."
   },
   "payments": {
     "title": "Төлбөр",
@@ -209,14 +278,42 @@
     "missingPrep": "Төлбөрийн мэдээлэл алга",
     "needOrder": "packageId эсвэл orderNo шаардлагатай.",
     "createFailed": "Toss захиалга үүсгэж чадсангүй.",
-    "scriptFailed": "Toss скрипт ачаалж чадсангүй."
+    "scriptFailed": "Toss скрипт ачаалж чадсангүй.",
+    "openCheckout": "Toss цонх нээх",
+    "order": "Захиалга",
+    "creditsUnit": "кредит",
+    "backToPackages": "Багц руу",
+    "missingPackage": "packageId алга.",
+    "tossInactive": "Toss төлбөр тохируулаагүй эсвэл идэвхгүй. Админд хандана уу.",
+    "createOrderFailed": "Захиалга үүсгэж чадсангүй",
+    "loginToPay": "Төлөхийн тулд нэвтэрнэ үү.",
+    "preparing": "Захиалга бэлдэж байна…",
+    "amountServerSettled": "Дүнг сервер багцаас тогтооно. Клиентийн дүнд итгэхгүй.",
+    "paid": "Төлбөр амжилттай.",
+    "failed": "Төлбөр амжилтгүй.",
+    "successParamsInvalid": "Төлбөрийн амжилтын параметр буруу.",
+    "confirmFailed": "Баталгаажуулалт амжилтгүй. Кредит олгоогүй.",
+    "chargeComplete": "Кредит нэмэгдлээ.",
+    "confirming": "Сервер төлбөрийг баталгаажуулж байна…",
+    "store": "Кредитын дэлгүүр",
+    "cancelled": "Төлбөр цуцлагдсан эсвэл амжилтгүй. Кредит олгоогүй."
   },
   "status": {
     "submitted": "Илгээсэн",
     "reviewing": "Шалгаж байна",
     "accepted": "Тэнцсэн",
     "rejected": "Тэнцээгүй",
-    "withdrawn": "Татгалзсан"
+    "withdrawn": "Татгалзсан",
+    "open": "Нээлттэй",
+    "closed": "Хаагдсан",
+    "draft": "Ноорог",
+    "pending": "Хүлээгдэж байна",
+    "approved": "Тэнцсэн",
+    "notSubmitted": "Илгээгээгүй",
+    "underReview": "Шалгаж байна",
+    "roundPass": "Шат тэнцсэн",
+    "roundFail": "Шат тэнцээгүй",
+    "skipped": "Алгассан"
   },
   "validation": {
     "required": "Заавал бөглөнө",
@@ -249,5 +346,59 @@
     "es": "Español",
     "fr": "Français",
     "de": "Deutsch"
+  },
+  "editor": {
+    "title": "Гарчиг",
+    "description": "Дэлгэрэнгүй",
+    "status": "Төлөв",
+    "location": "Байршил",
+    "agencyName": "Агентлагийн нэр",
+    "recruitFields": "Чиглэл",
+    "qualifications": "Шаардлага",
+    "schedules": "Хуваарь",
+    "benefits": "Давуу тал",
+    "contentLanguage": "Эх хэл",
+    "contentLanguageHint": "Энэ аудишны эх хэл. Орчуулга байхгүй бол эх хувилбар харагдана.",
+    "targetCountry": "Зорилтот улс / бүс",
+    "targetCountryHint": "Одоогийн countryCode талбарыг ашиглана. KR / MN / GLOBAL.",
+    "translationTitle": "Аудишны орчуулга",
+    "translationHint": "Эх хэл: {locale}. Таб тус бүрт гарчиг, танилцуулга, шаардлага, хуваарь, давуу талыг хадгална.",
+    "translationComplete": "Бүрэн",
+    "translationMissing": "Дутуу",
+    "translationSaved": "Орчуулга хадгаллаа",
+    "translationSaveFailed": "Орчуулга хадгалж чадсангүй",
+    "translationLoadFailed": "Орчуулга ачаалж чадсангүй",
+    "translationAfterSave": "Эх хувилбарыг эхлээд хадгалбал орчуулгын таб нээгдэнэ.",
+    "saveTranslation": "Энэ хэлийг хадгалах",
+    "saving": "Хадгалж байна…",
+    "onePerLine": "мөр бүрт нэг зүйл"
+  },
+  "country": {
+    "KR": "Солонгос",
+    "MN": "Монгол",
+    "GLOBAL": "Глобал",
+    "JP": "Япон",
+    "OTHER": "Бусад",
+    "unspecified": "Тодорхойгүй"
+  },
+  "nationality": {
+    "KR": "Солонгос",
+    "MN": "Монгол",
+    "JP": "Япон",
+    "OTHER": "Бусад"
+  },
+  "agency": {
+    "applicants": "Өргөдөл удирдлага",
+    "pass": "Тэнцсэн",
+    "reject": "Тэнцээгүй",
+    "detail": "Өргөдлийн дэлгэрэнгүй",
+    "confirmPass": "Энэ өргөдөл гаргагчийг тэнцүүлэх үү?",
+    "confirmReject": "Энэ өргөдөл гаргагчийг тэнцүүлэхгүй юу?",
+    "confirmReview": "Энэ өргөдлийг шалгаж буй төлөвт шилжүүлэх үү?",
+    "confirmChange": "Төлөвийг өөрчлөх үү?",
+    "resultAccepted": "Та энэ аудишнд тэнцлээ. Дараагийн зааврыг агентлагаас шалгана уу.",
+    "resultRejected": "Энэ удаа тэнцсэнгүй. Дараагийн боломжид дахин уулзая.",
+    "resultReviewing": "Агентлаг өргөдлийг шалгаж байна.",
+    "resultSubmitted": "Өргөдөл хүлээн авлаа. Үр дүн энд харагдана."
   }
 }

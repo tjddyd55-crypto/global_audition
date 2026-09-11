@@ -63,7 +63,8 @@ const styles = StyleSheet.create({
     minHeight: touch.min,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
   outline: {
     borderWidth: 1,
@@ -79,12 +80,16 @@ const styles = StyleSheet.create({
   primaryText: {
     color: '#ffffff',
     fontWeight: '700',
-    fontSize: 16,
+    fontSize: 15,
+    textAlign: 'center',
+    flexShrink: 1,
   },
   outlineText: {
     color: colors.text,
     fontWeight: '600',
-    fontSize: 15,
+    fontSize: 14,
+    textAlign: 'center',
+    flexShrink: 1,
   },
   disabled: { opacity: 0.55 },
   pressed: { opacity: 0.85 },

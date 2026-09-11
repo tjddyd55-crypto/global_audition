@@ -3,14 +3,16 @@ import { StyleSheet, Text } from 'react-native'
 import { Button } from '../../src/ui/Button'
 import { Screen } from '../../src/ui/Screen'
 import { colors } from '../../src/theme/tokens'
+import { useTranslation } from 'react-i18next'
 
 export default function PaymentFailScreen() {
+  const { t } = useTranslation()
   const router = useRouter()
   const { message } = useLocalSearchParams<{ message?: string }>()
   return (
     <Screen>
-      <Text style={styles.error}>{message || '결제가 취소되었거나 실패했습니다. 크레딧은 지급되지 않았습니다.'}</Text>
-      <Button label="크레딧 스토어" onPress={() => router.replace('/credits')} />
+      <Text style={styles.error}>{message || t('payments.cancelled')}</Text>
+      <Button label={t('payments.store')} onPress={() => router.replace('/credits')} />
     </Screen>
   )
 }

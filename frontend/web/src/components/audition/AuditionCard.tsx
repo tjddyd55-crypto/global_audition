@@ -12,15 +12,10 @@ import {
 } from '@/shared/types/audition'
 import { stripImageUrlResizeParams } from '@/shared/utils/imageDisplayUrl'
 import { FALLBACK_TEXT, DEFAULT_IMAGES } from '@/shared/constants/fallbacks'
+import { useTranslations } from 'next-intl'
 
 interface AuditionCardProps {
   audition: AuditionDto
-}
-
-const statusLabels: Record<string, string> = {
-  DRAFT: '초안',
-  OPEN: '모집중',
-  CLOSED: '마감',
 }
 
 function statusBadgeClass(status: string): string {
@@ -30,6 +25,12 @@ function statusBadgeClass(status: string): string {
 }
 
 export default function AuditionCard({ audition }: AuditionCardProps) {
+  const tStatus = useTranslations('status')
+  const statusLabels: Record<string, string> = {
+    DRAFT: tStatus('draft'),
+    OPEN: tStatus('open'),
+    CLOSED: tStatus('closed'),
+  }
   // React Hooks 규칙 준수를 위해 early return 전에 모든 훅을 호출한다.
   // `audition`이 null/undefined인 경우 하단에서 null을 반환하기 전까지 hook 순서가 고정되어야 한다.
   const id = audition?.id ?? ''

@@ -8,8 +8,10 @@ import { queryKeys } from '../../src/api/queryKeys'
 import { Button } from '../../src/ui/Button'
 import { Screen } from '../../src/ui/Screen'
 import { colors } from '../../src/theme/tokens'
+import { useTranslation } from 'react-i18next'
 
 export default function PaymentSuccessScreen() {
+  const { t } = useTranslation()
   const router = useRouter()
   const queryClient = useQueryClient()
   const { paymentKey, orderId, amount } = useLocalSearchParams<{
@@ -25,7 +27,7 @@ export default function PaymentSuccessScreen() {
     const order = orderId?.trim() ?? ''
     const amt = Number(amount)
     if (!key || !order || !Number.isFinite(amt)) {
-      setError('결제 성공 파라미터가 올바르지 않습니다.')
+      setError(t('payments.successParamsInvalid'))
       return
     }
     let cancelled = false
@@ -36,7 +38,7 @@ export default function PaymentSuccessScreen() {
         await queryClient.invalidateQueries({ queryKey: queryKeys.creditLedger })
         if (!cancelled) setDone(true)
       } catch (err) {
-        if (!cancelled) setError(err instanceof ApiError ? err.message : '승인에 실패했습니다. 크레딧은 지급되지 않았습니다.')
+        if (!cancelled) setError(err instanceof ApiError ? err.message : t('payments.confirmFailed'))
       }
     })()
     return () => {
@@ -46,10 +48,10 @@ export default function PaymentSuccessScreen() {
 
   return (
     <Screen>
-      {done ? <Text style={styles.ok}>충전이 완료되었습니다.</Text> : null}
+      {done ? <Text style={styles.ok}>{t('payments.chargeComplete')}</Text> : null}
       {error ? <Text style={styles.error}>{error}</Text> : null}
-      {!done && !error ? <Text style={styles.meta}>서버에서 결제를 승인하는 중…</Text> : null}
-      <Button label="크레딧 스토어" onPress={() => router.replace('/credits')} />
+      {!done && !error ? <Text style={styles.meta}>{t('payments.confirming')}</Text> : null}
+      <Button label={t('payments.store')} onPress={() => router.replace('/credits')} />
     </Screen>
   )
 }

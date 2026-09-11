@@ -64,11 +64,11 @@ export default function ProfileScreen() {
       <Text style={styles.role}>{session?.role}</Text>
 
       <View style={styles.card}>
-        <TextField label="이름" value={name} onChangeText={setName} autoCapitalize="words" />
-        <TextField label="닉네임" value={nickname} onChangeText={setNickname} />
-        <TextField label="소개" value={intro} onChangeText={setIntro} multiline />
+        <TextField label={t('profile.name')} value={name} onChangeText={setName} autoCapitalize="words" />
+        <TextField label={t('profile.nickname')} value={nickname} onChangeText={setNickname} />
+        <TextField label={t('profile.intro')} value={intro} onChangeText={setIntro} multiline />
         <Button
-          label="프로필 저장"
+          label={t('profile.save')}
           loading={saving}
           onPress={async () => {
             setSaving(true)
@@ -84,20 +84,20 @@ export default function ProfileScreen() {
 
       {issuedCode ? (
         <Text selectable style={styles.meta}>
-          기존 계정 복구 코드(한 번만): {issuedCode}
+          {t('profile.recoveryOnce', { code: issuedCode })}
         </Text>
       ) : null}
       {recoveryNote ? <Text style={styles.meta}>{recoveryNote}</Text> : null}
 
       <View style={styles.links}>
         <Button
-          label="복구 코드가 없으면 발급"
+          label={t('profile.issueRecovery')}
           variant="secondary"
           onPress={async () => {
             try {
               const res = await authApi.issueRecoveryCodeIfMissing()
               setIssuedCode(res.recoveryCode)
-              setRecoveryNote('코드를 안전한 곳에 저장하세요. 다시 볼 수 없습니다.')
+              setRecoveryNote(t('profile.recoveryKeep'))
             } catch (err) {
               setRecoveryNote(err instanceof ApiError ? err.message : '발급에 실패했습니다.')
             }

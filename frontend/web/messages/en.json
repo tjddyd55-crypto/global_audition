@@ -30,7 +30,14 @@
     "language": "Language",
     "retry": "Try again",
     "empty": "Nothing to show",
-    "myAccount": "My account"
+    "myAccount": "My account",
+    "close": "Close",
+    "add": "Add",
+    "remove": "Remove",
+    "required": "Required",
+    "optional": "Optional",
+    "done": "Done",
+    "copy": "Copy"
   },
   "nav": {
     "home": "Home",
@@ -66,7 +73,33 @@
     "securityCode": "Security code",
     "newPassword": "New password",
     "recoverSubmit": "Reset password",
-    "recoverLoginRequired": "Please sign in to use this feature"
+    "recoverLoginRequired": "Please sign in to use this feature",
+    "nickname": "Nickname",
+    "passwordMin6": "Password (6+ characters)",
+    "legalNameOptional": "Legal name (optional)",
+    "findAccount": "Find account / reset password",
+    "loginInvalidResponse": "The login response was invalid. Please try again.",
+    "tokenSaveFailed": "Could not save the session. Please try again.",
+    "apiLoopbackWarn": "API points at localhost. On a physical device set EXPO_PUBLIC_API_URL to a LAN address.",
+    "signupHint": "Enter only the fields the server accepts.",
+    "identify": "Find account",
+    "resetPassword": "Reset password",
+    "lostCode": "Lost code",
+    "recoveryCode": "Recovery security code",
+    "confirmAccount": "Confirm account",
+    "identified": "Account found. You can reset the password.",
+    "identifyFailed": "Could not verify the recovery code.",
+    "confirmedAccount": "Confirmed account: {id}",
+    "newPasswordMin6": "New password (6+ characters)",
+    "confirmNewPassword": "Confirm new password",
+    "setNewPassword": "Set new password",
+    "passwordTooShort": "Password must be at least 6 characters.",
+    "passwordMismatch": "Passwords do not match.",
+    "findId": "Find ID",
+    "findPassword": "Find password",
+    "socialSoon": "Social login is coming soon",
+    "serverUnreachable": "Could not reach the server",
+    "requiredValues": "Please fill in the required fields"
   },
   "register": {
     "title": "Register",
@@ -111,7 +144,17 @@
     "feature3Title": "Agency offers",
     "feature3Desc": "Receive audition offers directly from agencies",
     "openAuditions": "Open auditions",
-    "latestVideos": "Latest videos"
+    "latestVideos": "Latest videos",
+    "kicker": "Global Audition",
+    "heroBody": "Browse open auditions, apply with a video link, and check round results.",
+    "browse": "Browse auditions",
+    "applied": "Applied",
+    "reviewing": "In review",
+    "accepted": "Passed",
+    "rejected": "Rejected",
+    "loadFailed": "Could not load auditions.",
+    "emptyBody": "New listings will appear here.",
+    "loginCue": "Sign in to apply and vote."
   },
   "auditions": {
     "title": "Auditions",
@@ -122,7 +165,10 @@
     "statusDraft": "Draft",
     "deadline": "Deadline",
     "location": "Location",
-    "agency": "Agency"
+    "agency": "Agency",
+    "loadFailed": "Could not load the list",
+    "daysLeft": "D-{n}",
+    "target": "Audience"
   },
   "auditionDetail": {
     "applyNow": "Apply now",
@@ -136,7 +182,12 @@
     "applicants": "Applicants",
     "remainingDays": "Days left",
     "loginToApply": "Sign in to apply",
-    "contentFallback": "Showing the original language. A translation is not available yet."
+    "contentFallback": "Showing the original language. A translation is not available yet.",
+    "viewApplication": "View my application",
+    "cannotApply": "Cannot apply",
+    "viewVote": "View votes",
+    "loadFailed": "Could not load this audition.",
+    "roundProgress": "Round {current} / {max}"
   },
   "apply": {
     "title": "Apply",
@@ -152,7 +203,11 @@
     "insufficient": "Not enough credits",
     "charge": "Add credits",
     "success": "Application submitted",
-    "blocked": "You cannot apply right now"
+    "blocked": "You cannot apply right now",
+    "intro": "Introduction",
+    "birthDate": "Date of birth",
+    "category": "Category",
+    "videoHint": "YouTube or a public video URL"
   },
   "myApplications": {
     "title": "My applications",
@@ -180,7 +235,14 @@
     "title": "Profile",
     "videos": "My videos",
     "language": "Language",
-    "deviceLanguage": "Device language"
+    "deviceLanguage": "Device language",
+    "save": "Save profile",
+    "name": "Name",
+    "nickname": "Nickname",
+    "intro": "Introduction",
+    "issueRecovery": "Issue a recovery code if missing",
+    "recoveryOnce": "Recovery code (shown once): {code}",
+    "recoveryKeep": "Store this code safely. You will not see it again."
   },
   "credits": {
     "title": "Credits",
@@ -197,7 +259,14 @@
     "reasonDeduct": "Admin deduct",
     "reasonSignup": "Signup bonus",
     "reasonRefund": "Refund",
-    "loginRequired": "Sign in to view credits"
+    "loginRequired": "Sign in to view credits",
+    "chargeTitle": "Buy credits",
+    "chargeHint": "Choose a pack, then continue to checkout. The server settles the amount from the package.",
+    "home": "Credits home",
+    "loadFailed": "Could not load credit packs.",
+    "selectPackage": "Select a pack",
+    "payWithToss": "Pay with Toss",
+    "wholeUsd": "Prices are whole US dollars."
   },
   "payments": {
     "title": "Payment",
@@ -209,14 +278,42 @@
     "missingPrep": "Checkout is not ready",
     "needOrder": "packageId or orderNo is required.",
     "createFailed": "Could not create a Toss order.",
-    "scriptFailed": "Could not load the Toss checkout script."
+    "scriptFailed": "Could not load the Toss checkout script.",
+    "openCheckout": "Open Toss checkout",
+    "order": "Order",
+    "creditsUnit": "credits",
+    "backToPackages": "Back to packs",
+    "missingPackage": "packageId is missing.",
+    "tossInactive": "Toss checkout is missing or inactive. Ask an administrator.",
+    "createOrderFailed": "Could not create the order",
+    "loginToPay": "Sign in to pay.",
+    "preparing": "Preparing the order…",
+    "amountServerSettled": "The server settles the amount from the package. The client amount is not trusted.",
+    "paid": "Payment completed.",
+    "failed": "Payment did not complete.",
+    "successParamsInvalid": "Payment success parameters are invalid.",
+    "confirmFailed": "Confirmation failed. Credits were not granted.",
+    "chargeComplete": "Credits were added.",
+    "confirming": "Confirming payment on the server…",
+    "store": "Credit store",
+    "cancelled": "Payment was cancelled or failed. Credits were not granted."
   },
   "status": {
     "submitted": "Submitted",
     "reviewing": "In review",
     "accepted": "Accepted",
     "rejected": "Rejected",
-    "withdrawn": "Withdrawn"
+    "withdrawn": "Withdrawn",
+    "open": "Open",
+    "closed": "Closed",
+    "draft": "Draft",
+    "pending": "Pending",
+    "approved": "Passed",
+    "notSubmitted": "Not submitted",
+    "underReview": "Under review",
+    "roundPass": "Round passed",
+    "roundFail": "Round failed",
+    "skipped": "Skipped"
   },
   "validation": {
     "required": "This field is required",
@@ -249,5 +346,59 @@
     "es": "Español",
     "fr": "Français",
     "de": "Deutsch"
+  },
+  "editor": {
+    "title": "Title",
+    "description": "Details",
+    "status": "Status",
+    "location": "Location",
+    "agencyName": "Agency name",
+    "recruitFields": "Roles",
+    "qualifications": "Requirements",
+    "schedules": "Schedule",
+    "benefits": "Benefits",
+    "contentLanguage": "Content language",
+    "contentLanguageHint": "Original language of this audition. The original is shown when a translation is missing.",
+    "targetCountry": "Target country / region",
+    "targetCountryHint": "Reuses the existing countryCode field. KR / MN / GLOBAL.",
+    "translationTitle": "Audition translations",
+    "translationHint": "Original language: {locale}. Save title, intro, requirements, schedule, and benefits per tab.",
+    "translationComplete": "Complete",
+    "translationMissing": "Missing",
+    "translationSaved": "Translation saved",
+    "translationSaveFailed": "Could not save the translation",
+    "translationLoadFailed": "Could not load translations",
+    "translationAfterSave": "Save the original first to open translation tabs.",
+    "saveTranslation": "Save this locale",
+    "saving": "Saving…",
+    "onePerLine": "one item per line"
+  },
+  "country": {
+    "KR": "Korea",
+    "MN": "Mongolia",
+    "GLOBAL": "Global",
+    "JP": "Japan",
+    "OTHER": "Other",
+    "unspecified": "Not specified"
+  },
+  "nationality": {
+    "KR": "Korea",
+    "MN": "Mongolia",
+    "JP": "Japan",
+    "OTHER": "Other"
+  },
+  "agency": {
+    "applicants": "Applicant management",
+    "pass": "Pass",
+    "reject": "Rejected",
+    "detail": "Applicant detail",
+    "confirmPass": "Pass this applicant?",
+    "confirmReject": "Reject this applicant?",
+    "confirmReview": "Move this applicant to in review?",
+    "confirmChange": "Change the status?",
+    "resultAccepted": "You passed this audition. Check the agency notice for next steps.",
+    "resultRejected": "Not this time. We hope to see you at the next audition.",
+    "resultReviewing": "The agency is reviewing the application.",
+    "resultSubmitted": "Application received. Results will appear here."
   }
 }

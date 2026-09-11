@@ -7,10 +7,12 @@ import { Button } from '../../src/ui/Button'
 import { Screen } from '../../src/ui/Screen'
 import { TextField } from '../../src/ui/TextField'
 import { colors, radius } from '../../src/theme/tokens'
+import { useTranslation } from 'react-i18next'
 
 type Mode = 'identify' | 'reset' | 'lost'
 
 export default function RecoverScreen() {
+  const { t } = useTranslation()
   const router = useRouter()
   const [mode, setMode] = useState<Mode>('identify')
   const [recoveryCode, setRecoveryCode] = useState('')
@@ -28,11 +30,11 @@ export default function RecoverScreen() {
   return (
     <Screen>
       <KeyboardAvoidingView behavior="padding" style={styles.box}>
-        <Text style={styles.title}>계정 찾기 / 비밀번호 재설정</Text>
+        <Text style={styles.title}>{t('auth.findAccount')}</Text>
         <View style={styles.modes}>
-          <ModeChip label="아이디 찾기" selected={mode === 'identify'} onPress={() => setMode('identify')} />
-          <ModeChip label="비밀번호 재설정" selected={mode === 'reset'} onPress={() => setMode('reset')} />
-          <ModeChip label="코드 분실" selected={mode === 'lost'} onPress={() => setMode('lost')} />
+          <ModeChip label={t('auth.identify')} selected={mode === 'identify'} onPress={() => setMode('identify')} />
+          <ModeChip label={t('auth.resetPassword')} selected={mode === 'reset'} onPress={() => setMode('reset')} />
+          <ModeChip label={t('auth.lostCode')} selected={mode === 'lost'} onPress={() => setMode('lost')} />
         </View>
         {hint ? <Text style={styles.hint}>확인된 계정: {hint}</Text> : null}
         {success ? <Text style={styles.ok}>{success}</Text> : null}
