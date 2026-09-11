@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router'
 import { useState } from 'react'
-import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, View } from 'react-native'
+import { KeyboardAvoidingView, Pressable, StyleSheet, Text, View } from 'react-native'
 import { authApi } from '../../src/api/endpoints'
 import { ApiError } from '../../src/api/http'
 import { Button } from '../../src/ui/Button'
@@ -40,7 +40,7 @@ export default function RecoverScreen() {
 
         {mode === 'identify' ? (
           <>
-            <TextField label="복구 보안 코드" value={recoveryCode} onChangeText={setRecoveryCode} autoCapitalize="characters" />
+            <TextField label="복구 보안 코드" value={recoveryCode} onChangeText={setRecoveryCode} />
             <Button
               label="계정 확인"
               loading={loading}
@@ -66,7 +66,7 @@ export default function RecoverScreen() {
 
         {mode === 'reset' ? (
           <>
-            <TextField label="복구 보안 코드" value={recoveryCode} onChangeText={setRecoveryCode} autoCapitalize="characters" />
+            <TextField label="복구 보안 코드" value={recoveryCode} onChangeText={setRecoveryCode} />
             <TextField label="새 비밀번호 (6자 이상)" value={newPassword} onChangeText={setNewPassword} secureTextEntry />
             <TextField label="새 비밀번호 확인" value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry />
             <Button

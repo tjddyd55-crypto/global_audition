@@ -3,7 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { colors, space } from '../theme/tokens'
 
 type Props = {
-  children: React.ReactNode
+  children?: React.ReactNode
   padded?: boolean
   scroll?: boolean
   refreshing?: boolean

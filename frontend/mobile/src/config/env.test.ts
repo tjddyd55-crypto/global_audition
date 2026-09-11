@@ -1,4 +1,4 @@
-import { isLoopbackApiUrl } from './env'
+import { isLoopbackApiUrl } from './envUrl'
 
 describe('API URL', () => {
   it('flags localhost trap for real Android', () => {

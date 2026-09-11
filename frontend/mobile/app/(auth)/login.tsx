@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { KeyboardAvoidingView, StyleSheet, Text } from 'react-native'
 import { useAuth } from '../../src/auth/AuthProvider'
 import { ApiError } from '../../src/api/http'
-import { isLoopbackApiUrl, API_BASE_URL } from '../../src/config/env'
+import { API_BASE_URL, isCurrentApiLoopback } from '../../src/config/env'
 import { Button } from '../../src/ui/Button'
 import { Screen } from '../../src/ui/Screen'
 import { TextField } from '../../src/ui/TextField'
@@ -21,7 +21,7 @@ export default function LoginScreen() {
     <Screen>
       <KeyboardAvoidingView behavior="padding" style={styles.box}>
         <Text style={styles.title}>로그인</Text>
-        {isLoopbackApiUrl() ? (
+        {isCurrentApiLoopback() ? (
           <Text style={styles.warn}>
             API가 localhost를 가리킵니다. 실기기 Android는 폰 자신을 호출하므로 EXPO_PUBLIC_API_URL 을 웹 프록시 또는 LAN
             주소로 바꿔 주세요. 현재: {API_BASE_URL}

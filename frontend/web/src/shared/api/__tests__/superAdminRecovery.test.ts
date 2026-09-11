@@ -1,4 +1,4 @@
-import { unwrapData } from '../../unwrap'
+import { unwrapData } from '../unwrap'
 
 describe('admin recovery payload unwrap', () => {
   it('reads envelope data once for reissue', () => {

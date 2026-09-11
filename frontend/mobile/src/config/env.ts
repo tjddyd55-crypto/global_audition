@@ -1,4 +1,5 @@
 import Constants from 'expo-constants'
+import { isLoopbackApiUrl } from './envUrl'
 
 /**
  * 앱 전역 환경 값.
@@ -26,13 +27,10 @@ export const API_BASE_URL: string = normalizeApiBase(
   process.env.EXPO_PUBLIC_API_URL?.trim() || extra.apiUrl?.trim() || `${WEB_URL.replace(/\/+$/, '')}/api`,
 )
 
-export function isLoopbackApiUrl(url: string = API_BASE_URL): boolean {
-  try {
-    const host = new URL(url).hostname
-    return host === 'localhost' || host === '127.0.0.1'
-  } catch {
-    return false
-  }
+export { isLoopbackApiUrl }
+
+export function isCurrentApiLoopback(): boolean {
+  return isLoopbackApiUrl(API_BASE_URL)
 }
 
 export const ALLOWED_HOSTS: string[] = Array.isArray(extra.allowedHosts)
