@@ -28,6 +28,16 @@ describe('i18n catalogs', () => {
     }
   })
 
+  it('fails when any primary locale is missing a key', () => {
+    const koKeys = new Set(collectMessageKeys(ko))
+    const enKeys = new Set(collectMessageKeys(en))
+    const mnKeys = new Set(collectMessageKeys(mn))
+    const missingInEn = [...koKeys].filter((key) => !enKeys.has(key))
+    const missingInMn = [...koKeys].filter((key) => !mnKeys.has(key))
+    expect(missingInEn).toEqual([])
+    expect(missingInMn).toEqual([])
+  })
+
   it('lists mn as a first-class locale', () => {
     expect(locales.primary).toEqual(['ko', 'en', 'mn'])
     expect(locales.supported).toContain('mn')

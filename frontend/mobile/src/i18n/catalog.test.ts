@@ -21,8 +21,10 @@ describe('native i18n catalogs', () => {
     expect(keys(mn as Tree)).toEqual(keys(ko as Tree))
   })
 
-  it('falls back to en for unknown device locales', () => {
-    expect(detectDeviceLocale('fr-FR')).toBe('fr')
+  it('falls back to en for unknown or non-primary device locales', () => {
+    expect(detectDeviceLocale('mn-MN')).toBe('mn')
+    expect(detectDeviceLocale('ko-KR')).toBe('ko')
+    expect(detectDeviceLocale('fr-FR')).toBe('en')
     expect(normalizeLocale('xx-YY')).toBe('en')
     expect(DEFAULT_LOCALE).toBe('ko')
   })

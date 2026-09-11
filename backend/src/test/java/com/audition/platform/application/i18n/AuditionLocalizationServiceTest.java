@@ -69,6 +69,25 @@ class AuditionLocalizationServiceTest {
         assertEquals("Монгол гарчиг (2-р шат)", response.getDisplayTitle());
     }
 
+    @Test
+    void incompleteTranslationFallsBackToOriginal() {
+        Audition audition = baseAudition("ko");
+        AuditionResponse response = baseResponse(audition);
+        AuditionTranslation row = new AuditionTranslation();
+        row.setAuditionId(audition.getId());
+        row.setLocale("en");
+        row.setTitle("   ");
+        row.setStatus(AuditionTranslation.STATUS_COMPLETED);
+        when(translationRepository.findByAuditionIdAndLocale(audition.getId(), "en"))
+                .thenReturn(Optional.of(row));
+
+        service.apply(audition, response, "en");
+
+        assertEquals("원문 제목", response.getTitle());
+        assertTrue(response.isContentLocaleFallback());
+        assertEquals("ko", response.getContentLocale());
+    }
+
     private static Audition baseAudition(String locale) {
         Audition audition = new Audition();
         audition.setId(UUID.randomUUID());
