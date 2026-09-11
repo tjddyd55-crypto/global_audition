@@ -19,4 +19,6 @@ public interface UserRepository extends JpaRepository<User, UUID>, JpaSpecificat
     boolean existsByNicknameIgnoreCase(String nickname);
 
     boolean existsByNicknameIgnoreCaseAndIdNot(String nickname, UUID id);
+
+    java.util.Optional<User> findByRecoveryCodeLookup(String recoveryCodeLookup);
 }

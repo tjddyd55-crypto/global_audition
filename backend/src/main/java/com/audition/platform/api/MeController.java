@@ -7,7 +7,14 @@ import com.audition.platform.application.me.MeApplicationService;
 import com.audition.platform.application.me.MeDashboardService;
 import com.audition.platform.application.me.MeProfileService;
 import com.audition.platform.application.me.MeVaultService;
+import com.audition.platform.api.dto.recovery.RecoveryCodeIssueResponse;
 import com.audition.platform.application.me.MyChannelService;
+import com.audition.platform.application.recovery.AuthRecoveryService;
+import com.audition.platform.domain.user.User;
+import com.audition.platform.domain.user.UserRepository;
+import com.audition.platform.infra.SecurityUtils;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -25,19 +32,25 @@ public class MeController {
     private final MyChannelService myChannelService;
     private final MeVaultService meVaultService;
     private final MeApplicationRoundService meApplicationRoundService;
+    private final AuthRecoveryService authRecoveryService;
+    private final UserRepository userRepository;
 
     public MeController(MeProfileService meProfileService,
                         MeDashboardService meDashboardService,
                         MeApplicationService meApplicationService,
                         MyChannelService myChannelService,
                         MeVaultService meVaultService,
-                        MeApplicationRoundService meApplicationRoundService) {
+                        MeApplicationRoundService meApplicationRoundService,
+                        AuthRecoveryService authRecoveryService,
+                        UserRepository userRepository) {
         this.meProfileService = meProfileService;
         this.meDashboardService = meDashboardService;
         this.meApplicationService = meApplicationService;
         this.myChannelService = myChannelService;
         this.meVaultService = meVaultService;
         this.meApplicationRoundService = meApplicationRoundService;
+        this.authRecoveryService = authRecoveryService;
+        this.userRepository = userRepository;
     }
 
     /** 내 정보 관리 SSOT (프로필 + SNS 등) */
@@ -55,6 +68,22 @@ public class MeController {
     public ApiEnvelope<Boolean> patchPassword(@Valid @RequestBody com.audition.platform.api.dto.me.PatchMePasswordRequest req) {
         meProfileService.changePassword(req);
         return ApiEnvelope.ok(true);
+    }
+
+    /** 복구 코드가 없는 기존 계정만 1회 발급. 이미 있으면 재발급하지 않는다. */
+    @PostMapping("/recovery-code")
+    public ApiEnvelope<RecoveryCodeIssueResponse> issueRecoveryCodeIfMissing() {
+        UUID userId = SecurityUtils.getCurrentUserId();
+        if (userId == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
+        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "사용자를 찾을 수 없습니다."));
+        if (user.getRecoveryCodeHash() != null && !user.getRecoveryCodeHash().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 복구 코드가 발급되어 있습니다. 분실 시 관리자에게 요청하세요.");
+        }
+        String code = authRecoveryService.issueNewCode(user);
+        return ApiEnvelope.ok(new RecoveryCodeIssueResponse(code, user.getEmail()));
     }
 
     @GetMapping("/profile")

@@ -8,6 +8,8 @@ public class AuthResponse {
     private String email;
     private String nickname;
     private String profileImageUrl;
+    /** 회원가입·재발급 응답에만 한 번 포함. 로그인에는 넣지 않는다. */
+    private String recoveryCode;
 
     public AuthResponse() {}
 
@@ -46,5 +48,13 @@ public class AuthResponse {
 
     public void setProfileImageUrl(String profileImageUrl) {
         this.profileImageUrl = profileImageUrl;
+    }
+
+    public String getRecoveryCode() {
+        return recoveryCode;
+    }
+
+    public void setRecoveryCode(String recoveryCode) {
+        this.recoveryCode = recoveryCode;
     }
 }
