@@ -32,6 +32,9 @@ public class PaymentSettingsService {
     private final TossPaymentsClient tossPaymentsClient;
     private final String envTestSecret;
     private final String envLiveSecret;
+    private final String envTestClient;
+    private final String envVariantKey;
+    private final String envMid;
 
     public PaymentSettingsService(
             PlatformPaymentSettingsRepository repository,
@@ -39,13 +42,19 @@ public class PaymentSettingsService {
             AdminAuditLogService adminAuditLogService,
             TossPaymentsClient tossPaymentsClient,
             @Value("${TOSS_TEST_SECRET_KEY:}") String envTestSecret,
-            @Value("${TOSS_LIVE_SECRET_KEY:}") String envLiveSecret) {
+            @Value("${TOSS_LIVE_SECRET_KEY:}") String envLiveSecret,
+            @Value("${TOSS_TEST_CLIENT_KEY:}") String envTestClient,
+            @Value("${TOSS_VARIANT_KEY:}") String envVariantKey,
+            @Value("${TOSS_MID:}") String envMid) {
         this.repository = repository;
         this.crypto = crypto;
         this.adminAuditLogService = adminAuditLogService;
         this.tossPaymentsClient = tossPaymentsClient;
         this.envTestSecret = envTestSecret;
         this.envLiveSecret = envLiveSecret;
+        this.envTestClient = envTestClient;
+        this.envVariantKey = envVariantKey;
+        this.envMid = envMid;
     }
 
     @Transactional
@@ -117,7 +126,7 @@ public class PaymentSettingsService {
             if (Boolean.TRUE.equals(req.getEnabled())) {
                 throw new ResponseStatusException(
                         HttpStatus.BAD_REQUEST,
-                        "활성화하려면 해당 환경의 client/secret과 variantKey, MID가 필요합니다.");
+                        "활성화하려면 해당 환경의 client/secret이 필요합니다. LIVE는 variantKey와 MID도 필요합니다.");
             }
             row.setEnabled(false);
         }
@@ -145,7 +154,7 @@ public class PaymentSettingsService {
         if (!isActivationComplete(row)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "variantKey/MID 또는 키가 없어 결제를 활성화할 수 없습니다.");
         }
-        String key = ENV_LIVE.equals(row.getEnvironment()) ? row.getLiveClientKey() : row.getTestClientKey();
+        String key = resolveClient(row);
         if (key == null || key.isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "활성화된 환경의 클라이언트 키가 없습니다.");
         }
@@ -173,6 +182,15 @@ public class PaymentSettingsService {
 
     public PlatformPaymentSettings current() {
         return requireRow();
+    }
+
+    /** 관리자 권한 없이 prepare 응답에 넣을 variantKey. 없으면 null. */
+    public String resolvedVariantKey() {
+        return resolveVariant(requireRow());
+    }
+
+    public String resolvedMid() {
+        return resolveMid(requireRow());
     }
 
     @Transactional
@@ -223,7 +241,7 @@ public class PaymentSettingsService {
     }
 
     private void assertNoMixedKeys(PlatformPaymentSettings row) {
-        String testClient = row.getTestClientKey();
+        String testClient = firstNonBlank(envTestClient, row.getTestClientKey());
         String liveClient = row.getLiveClientKey();
         String testSecret = firstNonBlank(envTestSecret, decryptQuiet(row.getTestSecretCipher()));
         String liveSecret = firstNonBlank(envLiveSecret, decryptQuiet(row.getLiveSecretCipher()));
@@ -243,7 +261,7 @@ public class PaymentSettingsService {
     }
 
     private void assertClientSecretPair(PlatformPaymentSettings row, String secret) {
-        String client = ENV_LIVE.equals(row.getEnvironment()) ? row.getLiveClientKey() : row.getTestClientKey();
+        String client = resolveClient(row);
         if (client == null || secret == null) {
             return;
         }
@@ -259,7 +277,7 @@ public class PaymentSettingsService {
         view.setEnabled(row.isEnabled());
         view.setEnvironment(row.getEnvironment());
         view.setCurrency(row.getCurrency());
-        view.setTestClientKey(row.getTestClientKey());
+        view.setTestClientKey(firstNonBlank(envTestClient, row.getTestClientKey()));
         view.setLiveClientKey(row.getLiveClientKey());
         String testSecret = firstNonBlank(envTestSecret, decryptQuiet(row.getTestSecretCipher()));
         String liveSecret = firstNonBlank(envLiveSecret, decryptQuiet(row.getLiveSecretCipher()));
@@ -269,8 +287,8 @@ public class PaymentSettingsService {
         view.setLiveSecretMasked(SettingsSecretCrypto.maskSecret(liveSecret));
         view.setForeignCardKrw(row.isForeignCardKrw());
         view.setForeignCurrencyEnabled(row.isForeignCurrencyEnabled());
-        view.setVariantKey(row.getVariantKey());
-        view.setMid(row.getMid());
+        view.setVariantKey(resolveVariant(row));
+        view.setMid(resolveMid(row));
         view.setUpdatedAt(row.getUpdatedAt());
         view.setTossMethod(SettlementCurrency.TOSS_METHOD);
         view.setForeignEasyPayProvider(SettlementCurrency.TOSS_EASY_PAY_PROVIDER);
@@ -279,20 +297,39 @@ public class PaymentSettingsService {
     }
 
     boolean isActivationComplete(PlatformPaymentSettings row) {
-        if (row.getVariantKey() == null || row.getVariantKey().isBlank()) {
-            return false;
-        }
-        if (row.getMid() == null || row.getMid().isBlank()) {
-            return false;
-        }
         boolean live = ENV_LIVE.equals(row.getEnvironment());
-        String client = live ? row.getLiveClientKey() : row.getTestClientKey();
+        String client = resolveClient(row);
         if (client == null || client.isBlank()) {
             return false;
         }
         String secret = firstNonBlank(live ? envLiveSecret : envTestSecret,
                 decryptQuiet(live ? row.getLiveSecretCipher() : row.getTestSecretCipher()));
-        return secret != null && !secret.isBlank();
+        if (secret == null || secret.isBlank()) {
+            return false;
+        }
+        // LIVE 는 상점 식별(variantKey/MID)이 없으면 켜지 않는다. TEST 결제창은 키가 있으면 진행한다.
+        return !live || hasWidgetIdentity(row);
+    }
+
+    boolean hasWidgetIdentity(PlatformPaymentSettings row) {
+        String variant = resolveVariant(row);
+        String mid = resolveMid(row);
+        return variant != null && !variant.isBlank() && mid != null && !mid.isBlank();
+    }
+
+    private String resolveClient(PlatformPaymentSettings row) {
+        if (ENV_LIVE.equals(row.getEnvironment())) {
+            return blankToNull(row.getLiveClientKey());
+        }
+        return firstNonBlank(envTestClient, row.getTestClientKey());
+    }
+
+    private String resolveVariant(PlatformPaymentSettings row) {
+        return firstNonBlank(envVariantKey, row.getVariantKey());
+    }
+
+    private String resolveMid(PlatformPaymentSettings row) {
+        return firstNonBlank(envMid, row.getMid());
     }
 
     private String decryptQuiet(String cipher) {

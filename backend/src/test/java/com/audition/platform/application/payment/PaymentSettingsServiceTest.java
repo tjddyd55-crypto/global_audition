@@ -43,6 +43,9 @@ class PaymentSettingsServiceTest {
                 mock(AdminAuditLogService.class),
                 tossClient,
                 "",
+                "",
+                "",
+                "",
                 "");
         UUID adminId = UUID.randomUUID();
         SecurityContextHolder.getContext().setAuthentication(
@@ -58,13 +61,26 @@ class PaymentSettingsServiceTest {
     }
 
     @Test
-    void activationIsOffWithoutVariantKeyAndMid() {
+    void liveActivationIsOffWithoutVariantKeyAndMid() {
+        PlatformPaymentSettings row = baseRow();
+        row.setEnvironment(PaymentSettingsService.ENV_LIVE);
+        row.setLiveClientKey("live_ck_demo");
+        row.setLiveSecretCipher(crypto.encrypt("live_sk_demoABCD"));
+        when(repository.findById((short) 1)).thenReturn(Optional.of(row));
+
+        assertFalse(service.isActivationComplete(row));
+        assertFalse(service.hasWidgetIdentity(row));
+    }
+
+    @Test
+    void testActivationCompletesWithKeysEvenWithoutWidgetIdentity() {
         PlatformPaymentSettings row = baseRow();
         row.setTestClientKey("test_ck_demo");
         row.setTestSecretCipher(crypto.encrypt("test_sk_demoABCD"));
         when(repository.findById((short) 1)).thenReturn(Optional.of(row));
 
-        assertFalse(service.isActivationComplete(row));
+        assertTrue(service.isActivationComplete(row));
+        assertFalse(service.hasWidgetIdentity(row));
     }
 
     @Test
@@ -89,8 +105,7 @@ class PaymentSettingsServiceTest {
 
         PaymentSettingsPatchRequest req = new PaymentSettingsPatchRequest();
         req.setEnabled(true);
-        req.setTestClientKey("test_ck_demo");
-        req.setTestSecretKey("test_sk_demoABCD");
+        req.setEnvironment(PaymentSettingsService.ENV_LIVE);
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service.update(req));
         assertEquals(400, ex.getStatusCode().value());

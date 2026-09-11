@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { Link } from '../../../../../i18n.config'
 import { authApi } from '@/shared/api/auth'
 import { creditsApi, type CreditOrderSummary } from '@/shared/api/credits'
@@ -17,6 +18,8 @@ import {
 import { formatCreditsCount } from '@/shared/money/creditsDisplay'
 
 function SuccessContent() {
+  const t = useTranslations('payments')
+  const tCredits = useTranslations('credits')
   const searchParams = useSearchParams()
   const orderNo = searchParams.get('orderNo')?.trim() ?? ''
 
@@ -35,38 +38,38 @@ function SuccessContent() {
           setBalance(b.balance)
         }
       } catch {
-        if (!c) setErr('정보를 불러오지 못했습니다.')
+        if (!c) setErr(t('loadInfoFailed'))
       }
     })()
     return () => {
       c = true
     }
-  }, [orderNo])
+  }, [orderNo, t])
 
   const granted = order ? order.credits + order.bonusCredits : null
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className={`${PAGE_CONTAINER} py-6 ${SECTION_GAP}`}>
-        <h1 className={TITLE_PAGE}>충전 완료</h1>
+        <h1 className={TITLE_PAGE}>{t('chargeComplete')}</h1>
         <div className={CARD_BASE}>
-          {orderNo && <p className={`${TEXT_SUB} mb-2`}>주문번호</p>}
+          {orderNo && <p className={`${TEXT_SUB} mb-2`}>{t('orderNo')}</p>}
           {orderNo && <p className="font-mono text-sm text-gray-900">{orderNo}</p>}
           {granted != null && (
             <p className="mt-4 text-lg font-semibold text-green-700">
-              지급 크레딧 {formatCreditsCount(granted)} C
+              {t('grantedCreditsLabel', { n: formatCreditsCount(granted) })}
             </p>
           )}
           {balance != null && (
-            <p className={`${TEXT_SUB} mt-2`}>현재 잔액 {formatCreditsCount(balance)} C</p>
+            <p className={`${TEXT_SUB} mt-2`}>{t('currentBalanceLabel', { n: formatCreditsCount(balance) })}</p>
           )}
           {err && <p className="mt-2 text-sm text-red-600">{err}</p>}
           <div className="mt-6 flex flex-wrap gap-3">
             <Link href="/credits" className={BTN_PRIMARY}>
-              크레딧 홈
+              {tCredits('home')}
             </Link>
             <Link href="/credits" className={BTN_SECONDARY}>
-              잔액·내역 보기
+              {t('viewBalance')}
             </Link>
           </div>
         </div>
@@ -76,8 +79,9 @@ function SuccessContent() {
 }
 
 export default function CreditSuccessPage() {
+  const tCommon = useTranslations('common')
   return (
-    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-gray-50">…</div>}>
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-gray-50">{tCommon('loading')}</div>}>
       <SuccessContent />
     </Suspense>
   )

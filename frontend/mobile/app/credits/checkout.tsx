@@ -5,6 +5,7 @@ import { WebView } from 'react-native-webview'
 import { creditApi } from '../../src/api/endpoints'
 import { ApiError } from '../../src/api/http'
 import { RequireAuth } from '../../src/auth/RequireAuth'
+import { isTossCancelCode } from '../../src/features/payments/tossCancel'
 import { buildTossCheckoutHtml } from '../../src/features/payments/tossCheckoutHtml'
 import { Screen } from '../../src/ui/Screen'
 import { colors } from '../../src/theme/tokens'
@@ -69,7 +70,12 @@ export default function CreditCheckoutScreen() {
           onShouldStartLoadWithRequest={(req) => {
             if (req.url.startsWith(SUCCESS_SCHEME) || req.url.startsWith(FAIL_SCHEME)) {
               const parsed = new URL(req.url)
-              const path = req.url.startsWith(SUCCESS_SCHEME) ? '/payments/success' : '/payments/fail'
+              const code = parsed.searchParams.get('code') ?? ''
+              const path = req.url.startsWith(SUCCESS_SCHEME)
+                ? '/payments/success'
+                : isTossCancelCode(code)
+                  ? '/payments/cancel'
+                  : '/payments/fail'
               router.replace({
                 pathname: path,
                 params: {
@@ -77,6 +83,7 @@ export default function CreditCheckoutScreen() {
                   orderId: parsed.searchParams.get('orderId') ?? '',
                   amount: parsed.searchParams.get('amount') ?? '',
                   message: parsed.searchParams.get('message') ?? '',
+                  code,
                 },
               })
               return false

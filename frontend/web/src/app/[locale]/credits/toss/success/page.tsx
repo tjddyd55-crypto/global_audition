@@ -2,13 +2,18 @@
 
 import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { useRouter, Link } from '../../../../../i18n.config'
 import { authApi } from '@/shared/api/auth'
 import { creditsApi } from '@/shared/api/credits'
+import { mapApiErrorCode } from '@/shared/i18n/mapApiError'
 import { BTN_PRIMARY, BTN_SECONDARY, CARD_BASE, PAGE_CONTAINER } from '@/shared/ui/specClasses'
 
 function TossSuccessContent() {
   const router = useRouter()
+  const t = useTranslations('payments')
+  const tCredits = useTranslations('credits')
+  const tErr = useTranslations()
   const searchParams = useSearchParams()
   const paymentKey = searchParams.get('paymentKey')?.trim() ?? ''
   const orderId = searchParams.get('orderId')?.trim() ?? ''
@@ -22,7 +27,7 @@ function TossSuccessContent() {
     }
     const amount = Number(amountRaw)
     if (!paymentKey || !orderId || !Number.isFinite(amount)) {
-      setError('결제 성공 파라미터가 올바르지 않습니다.')
+      setError(t('successParamsInvalid'))
       return
     }
     let cancelled = false
@@ -33,14 +38,16 @@ function TossSuccessContent() {
           router.replace(`/credits/result/success?orderNo=${encodeURIComponent(orderId)}`)
         }
       } catch (e: unknown) {
-        const ax = e as { response?: { data?: { message?: string } } }
-        if (!cancelled) setError(ax.response?.data?.message ?? '결제 승인에 실패했습니다. 크레딧은 지급되지 않았습니다.')
+        const ax = e as { response?: { data?: unknown } }
+        if (!cancelled) {
+          setError(mapApiErrorCode(ax.response?.data, (key) => tErr(key), t('confirmFailed')))
+        }
       }
     })()
     return () => {
       cancelled = true
     }
-  }, [amountRaw, orderId, paymentKey, router])
+  }, [amountRaw, orderId, paymentKey, router, t, tErr])
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -50,14 +57,14 @@ function TossSuccessContent() {
             <>
               <p className="text-sm text-red-600">{error}</p>
               <Link href="/credits/charge" className={`${BTN_PRIMARY} mt-4 inline-block`}>
-                다시 충전
+                {t('retryCharge')}
               </Link>
             </>
           ) : (
-            <p>결제를 승인하는 중…</p>
+            <p>{t('confirming')}</p>
           )}
           <Link href="/credits" className={`${BTN_SECONDARY} mt-4 inline-block`}>
-            크레딧 홈
+            {tCredits('home')}
           </Link>
         </div>
       </div>
@@ -66,8 +73,9 @@ function TossSuccessContent() {
 }
 
 export default function TossSuccessPage() {
+  const tCommon = useTranslations('common')
   return (
-    <Suspense fallback={<div className="flex min-h-screen items-center justify-center">불러오는 중…</div>}>
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center">{tCommon('loading')}</div>}>
       <TossSuccessContent />
     </Suspense>
   )

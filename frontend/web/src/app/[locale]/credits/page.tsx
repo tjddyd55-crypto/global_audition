@@ -43,7 +43,7 @@ export default function CreditsDashboardPage() {
     if (type === 'USE' && reason === 'AUDITION_APPLY' && referenceId) {
       return t('applyRef', { id: referenceId.slice(0, 8) })
     }
-    if (type === 'CHARGE' && reason === 'PACKAGE_PURCHASE') {
+    if (type === 'CHARGE' && (reason === 'PACKAGE_PURCHASE' || reason === 'CREDIT_PURCHASE')) {
       return t('packageCharge')
     }
     return reason

@@ -7,7 +7,7 @@ import { useRouter, Link } from '../../../../i18n.config'
 import { authApi } from '@/shared/api/auth'
 import { creditsApi, type PreparePaymentResult } from '@/shared/api/credits'
 import { BTN_PRIMARY, BTN_SECONDARY, CARD_BASE, PAGE_CONTAINER, TEXT_SUB, TITLE_PAGE } from '@/shared/ui/specClasses'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 
 declare global {
   interface Window {
@@ -21,6 +21,7 @@ declare global {
 
 function TossCheckoutContent() {
   const t = useTranslations('payments')
+  const locale = useLocale()
   const router = useRouter()
   const searchParams = useSearchParams()
   const packageId = searchParams.get('packageId')?.trim() ?? ''
@@ -72,8 +73,8 @@ function TossCheckoutContent() {
       return
     }
     const origin = window.location.origin
-    const successUrl = `${origin}/credits/toss/success`
-    const failUrl = `${origin}/credits/result/fail`
+    const successUrl = `${origin}/${locale}/credits/toss/success`
+    const failUrl = `${origin}/${locale}/credits/result/fail`
     try {
       const toss = window.TossPayments(prep.clientKey)
       const payment = toss.payment({ customerKey: prep.orderNo })

@@ -66,6 +66,7 @@ function LocalizedStack() {
         <Stack.Screen name="credits/checkout" options={{ title: t('payments.checkout') }} />
         <Stack.Screen name="payments/success" options={{ title: t('payments.success') }} />
         <Stack.Screen name="payments/fail" options={{ title: t('payments.fail') }} />
+        <Stack.Screen name="payments/cancel" options={{ title: t('payments.cancel') }} />
         <Stack.Screen name="notifications" options={{ title: t('common.appName') }} />
         <Stack.Screen name="web" options={{ title: t('common.appName') }} />
       </Stack>
