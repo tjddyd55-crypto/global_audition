@@ -40,6 +40,7 @@ public class PaymentOrderService {
     private final CreditService creditService;
     private final PaymentSettingsService paymentSettingsService;
     private final TossPaymentsClient tossPaymentsClient;
+    private final PaymentOrderFailureRecorder failureRecorder;
     private final Map<String, PaymentProvider> providersByCode;
 
     public PaymentOrderService(
@@ -48,12 +49,14 @@ public class PaymentOrderService {
             CreditService creditService,
             PaymentSettingsService paymentSettingsService,
             TossPaymentsClient tossPaymentsClient,
+            PaymentOrderFailureRecorder failureRecorder,
             List<PaymentProvider> providers) {
         this.paymentOrderRepository = paymentOrderRepository;
         this.creditPackageRepository = creditPackageRepository;
         this.creditService = creditService;
         this.paymentSettingsService = paymentSettingsService;
         this.tossPaymentsClient = tossPaymentsClient;
+        this.failureRecorder = failureRecorder;
         Map<String, PaymentProvider> map = providers.stream()
                 .collect(Collectors.toMap(p -> p.getCode().toUpperCase(Locale.ROOT), Function.identity(), (a, b) -> a));
         PaymentProvider toss = map.get(TossPaymentProvider.CODE);
@@ -252,10 +255,12 @@ public class PaymentOrderService {
                     order.getOrderNo(),
                     serverAmount);
         } catch (TossPaymentsException e) {
+            String reason = safeFailReason(e.getMessage());
             order.setStatus(PaymentOrderStatus.FAILED);
-            order.setFailReason(safeFailReason(e.getMessage()));
+            order.setFailReason(reason);
             order.setUpdatedAt(Instant.now());
             paymentOrderRepository.save(order);
+            failureRecorder.recordFailed(order.getOrderNo(), reason);
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
 
