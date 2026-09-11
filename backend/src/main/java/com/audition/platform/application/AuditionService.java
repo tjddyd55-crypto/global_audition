@@ -7,6 +7,7 @@ import com.audition.platform.api.dto.CreateAuditionRequest;
 import com.audition.platform.api.dto.UpdateAuditionRequest;
 import com.audition.platform.application.audition.AuditionSeriesEligibilityService;
 import com.audition.platform.application.audition.AuditionSeriesPresentation;
+import com.audition.platform.application.i18n.AuditionLocalizationService;
 import com.audition.platform.api.dto.AuditionTagRefDto;
 import com.audition.platform.application.round.AuditionProcessModes;
 import com.audition.platform.application.round.AuditionRoundService;
@@ -48,19 +49,22 @@ public class AuditionService {
     private final AuditionRoundService auditionRoundService;
     private final AuditionTagService auditionTagService;
     private final AuditionSeriesEligibilityService auditionSeriesEligibilityService;
+    private final AuditionLocalizationService auditionLocalizationService;
 
     public AuditionService(AuditionRepository auditionRepository,
                            UserRepository userRepository,
                            ApplicationRepository applicationRepository,
                            AuditionRoundService auditionRoundService,
                            AuditionTagService auditionTagService,
-                           AuditionSeriesEligibilityService auditionSeriesEligibilityService) {
+                           AuditionSeriesEligibilityService auditionSeriesEligibilityService,
+                           AuditionLocalizationService auditionLocalizationService) {
         this.auditionRepository = auditionRepository;
         this.userRepository = userRepository;
         this.applicationRepository = applicationRepository;
         this.auditionRoundService = auditionRoundService;
         this.auditionTagService = auditionTagService;
         this.auditionSeriesEligibilityService = auditionSeriesEligibilityService;
+        this.auditionLocalizationService = auditionLocalizationService;
     }
 
     private static Instant parseInstantRequired(String value, String field) {
@@ -217,6 +221,7 @@ public class AuditionService {
         r.setDisplayTitle(AuditionSeriesPresentation.displayTitle(a.getTitle(), a.getSeriesRound()));
         r.setRecruitmentRoundLabel(
                 AuditionSeriesPresentation.recruitmentRoundLabel(statusForLabel, a.getSeriesRound()));
+        auditionLocalizationService.apply(a, r);
         return r;
     }
 
@@ -380,6 +385,7 @@ public class AuditionService {
                 r.setRoundSummaries(new ArrayList<>());
             }
         }
+        auditionLocalizationService.apply(a, r);
         return r;
     }
 

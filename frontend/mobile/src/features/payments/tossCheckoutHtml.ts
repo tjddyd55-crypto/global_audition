@@ -12,7 +12,7 @@ export function buildTossCheckoutHtml(input: {
     orderId: input.orderId,
     orderName: input.orderName,
     amount: input.amount,
-    currency: input.currency || 'KRW',
+    currency: input.currency || 'USD',
     successUrl: input.successUrl,
     failUrl: input.failUrl,
   })

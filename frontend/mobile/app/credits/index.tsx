@@ -7,6 +7,8 @@ import { RequireAuth } from '../../src/auth/RequireAuth'
 import { Button } from '../../src/ui/Button'
 import { EmptyState } from '../../src/ui/EmptyState'
 import { Screen } from '../../src/ui/Screen'
+import { useTranslation } from 'react-i18next'
+import { formatUsd } from '../../src/i18n/format'
 import { colors, radius } from '../../src/theme/tokens'
 
 function ledgerSign(amount: number, type: string, reason: string): string {
@@ -14,62 +16,63 @@ function ledgerSign(amount: number, type: string, reason: string): string {
   return `+${Math.abs(amount)}`
 }
 
-function ledgerLabel(type: string, reason: string): string {
-  if (reason === 'PACKAGE_PURCHASE') return '충전'
-  if (reason === 'AUDITION_APPLY') return '지원 차감'
-  if (reason === 'ADMIN_GRANT' || type === 'GRANT') return '관리자 지급'
-  if (reason === 'ADMIN_DEDUCT') return '관리자 차감'
-  if (reason === 'SIGNUP_REWARD') return '가입 보상'
-  if (type === 'REFUND') return '환불'
+function ledgerLabel(t: (key: string) => string, type: string, reason: string): string {
+  if (reason === 'PACKAGE_PURCHASE') return t('credits.reasonPurchase')
+  if (reason === 'AUDITION_APPLY') return t('credits.reasonApply')
+  if (reason === 'ADMIN_GRANT' || type === 'GRANT') return t('credits.reasonGrant')
+  if (reason === 'ADMIN_DEDUCT') return t('credits.reasonDeduct')
+  if (reason === 'SIGNUP_REWARD') return t('credits.reasonSignup')
+  if (type === 'REFUND') return t('credits.reasonRefund')
   return reason || type
 }
 
 export default function CreditStoreScreen() {
+  const { t } = useTranslation()
   const router = useRouter()
   const balance = useQuery({ queryKey: queryKeys.creditBalance, queryFn: creditApi.balance })
   const packages = useQuery({ queryKey: queryKeys.creditPackages, queryFn: creditApi.packages })
   const ledger = useQuery({ queryKey: queryKeys.creditLedger, queryFn: creditApi.ledger })
 
   return (
-    <RequireAuth message="크레딧을 보려면 로그인이 필요합니다.">
+    <RequireAuth message={t('credits.loginRequired')}>
       <Screen
         loading={balance.isLoading}
         onRefresh={async () => {
           await Promise.all([balance.refetch(), packages.refetch(), ledger.refetch()])
         }}
       >
-        <Text style={styles.heading}>크레딧</Text>
+        <Text style={styles.heading}>{t('credits.title')}</Text>
         <View style={styles.balanceCard}>
-          <Text style={styles.muted}>보유 잔액</Text>
+          <Text style={styles.muted}>{t('credits.balance')}</Text>
           <Text style={styles.balance}>{balance.data?.balance ?? 0}</Text>
         </View>
 
-        <Text style={styles.section}>충전 패키지</Text>
+        <Text style={styles.section}>{t('credits.packages')}</Text>
         {packages.isError ? (
-          <EmptyState title="패키지를 불러오지 못했습니다" actionLabel="다시 시도" onAction={() => void packages.refetch()} />
+          <EmptyState title={t('common.error')} actionLabel={t('common.retry')} onAction={() => void packages.refetch()} />
         ) : null}
         {(packages.data ?? []).map((item) => (
           <View key={item.id} style={styles.card}>
             <Text style={styles.pkgName}>{item.name}</Text>
             <Text style={styles.meta}>
-              {item.price} · {item.credits}
-              {item.bonusCredits > 0 ? ` +${item.bonusCredits}` : ''} 크레딧
+              {formatUsd(item.price)} · {item.credits}
+              {item.bonusCredits > 0 ? ` +${item.bonusCredits}` : ''} {t('credits.creditUnit')}
             </Text>
-            <Button label="충전하기" onPress={() => router.push({ pathname: '/credits/checkout', params: { packageId: item.id } })} />
+            <Button label={t('credits.charge')} onPress={() => router.push({ pathname: '/credits/checkout', params: { packageId: item.id } })} />
           </View>
         ))}
-        {packages.data && packages.data.length === 0 ? <Text style={styles.muted}>판매 중인 패키지가 없습니다.</Text> : null}
+        {packages.data && packages.data.length === 0 ? <Text style={styles.muted}>{t('credits.emptyPackages')}</Text> : null}
 
-        <Text style={styles.section}>원장</Text>
+        <Text style={styles.section}>{t('credits.ledger')}</Text>
         {(ledger.data?.content ?? []).map((row) => (
           <View key={row.id} style={styles.ledgerRow}>
-            <Text style={styles.ledgerLabel}>{ledgerLabel(row.type, row.reason)}</Text>
+            <Text style={styles.ledgerLabel}>{ledgerLabel(t, row.type, row.reason)}</Text>
             <Text style={row.amount < 0 || row.type === 'USE' ? styles.minus : styles.plus}>
               {ledgerSign(row.amount, row.type, row.reason)}
             </Text>
           </View>
         ))}
-        {ledger.data?.content.length === 0 ? <Text style={styles.muted}>내역이 없습니다.</Text> : null}
+        {ledger.data?.content.length === 0 ? <Text style={styles.muted}>{t('credits.emptyLedger')}</Text> : null}
       </Screen>
     </RequireAuth>
   )

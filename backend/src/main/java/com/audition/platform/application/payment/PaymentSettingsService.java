@@ -55,7 +55,7 @@ public class PaymentSettingsService {
             row.setId((short) 1);
             row.setEnabled(false);
             row.setEnvironment(ENV_TEST);
-            row.setCurrency("KRW");
+            row.setCurrency(SettlementCurrency.CODE);
             row.setForeignCurrencyEnabled(false);
             row.setUpdatedAt(Instant.now());
             return repository.save(row);
@@ -83,7 +83,9 @@ public class PaymentSettingsService {
             row.setEnvironment(env);
         }
         if (req.getCurrency() != null && !req.getCurrency().isBlank()) {
-            row.setCurrency(req.getCurrency().trim().toUpperCase(Locale.ROOT));
+            row.setCurrency(SettlementCurrency.requireUsd(req.getCurrency()));
+        } else {
+            row.setCurrency(SettlementCurrency.CODE);
         }
         if (req.getTestClientKey() != null) {
             row.setTestClientKey(blankToNull(req.getTestClientKey()));

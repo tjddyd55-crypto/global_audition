@@ -1,4 +1,5 @@
 import { Tabs } from 'expo-router'
+import { useTranslation } from 'react-i18next'
 import { Text } from 'react-native'
 import { colors } from '../../src/theme/tokens'
 
@@ -7,6 +8,7 @@ function TabIcon({ label, focused }: { label: string; focused: boolean }) {
 }
 
 export default function TabsLayout() {
+  const { t } = useTranslation()
   return (
     <Tabs
       screenOptions={{
@@ -17,11 +19,11 @@ export default function TabsLayout() {
         tabBarLabelStyle: { fontSize: 11, fontWeight: '700' },
       }}
     >
-      <Tabs.Screen name="index" options={{ title: '홈', tabBarIcon: ({ focused }) => <TabIcon label="홈" focused={focused} /> }} />
-      <Tabs.Screen name="auditions" options={{ title: '오디션', tabBarIcon: ({ focused }) => <TabIcon label="오디션" focused={focused} /> }} />
-      <Tabs.Screen name="vote" options={{ title: '투표', tabBarIcon: ({ focused }) => <TabIcon label="투표" focused={focused} /> }} />
-      <Tabs.Screen name="applications" options={{ title: '내 지원', tabBarIcon: ({ focused }) => <TabIcon label="지원" focused={focused} /> }} />
-      <Tabs.Screen name="profile" options={{ title: '프로필', tabBarIcon: ({ focused }) => <TabIcon label="나" focused={focused} /> }} />
+      <Tabs.Screen name="index" options={{ title: t('nav.home'), tabBarIcon: ({ focused }) => <TabIcon label={t('nav.home')} focused={focused} /> }} />
+      <Tabs.Screen name="auditions" options={{ title: t('nav.auditions'), tabBarIcon: ({ focused }) => <TabIcon label={t('nav.auditions')} focused={focused} /> }} />
+      <Tabs.Screen name="vote" options={{ title: t('nav.vote'), tabBarIcon: ({ focused }) => <TabIcon label={t('nav.vote')} focused={focused} /> }} />
+      <Tabs.Screen name="applications" options={{ title: t('nav.applications'), tabBarIcon: ({ focused }) => <TabIcon label={t('nav.applications')} focused={focused} /> }} />
+      <Tabs.Screen name="profile" options={{ title: t('nav.profile'), tabBarIcon: ({ focused }) => <TabIcon label={t('nav.profile')} focused={focused} /> }} />
     </Tabs>
   )
 }

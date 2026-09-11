@@ -11,10 +11,11 @@ import { getDisplayNickname } from '@/shared/user/getDisplayNickname'
 import { BTN_PRIMARY, DROPDOWN_ITEM } from '@/shared/ui/specClasses'
 import { DeviceToggle } from '@/shared/device/DeviceToggle'
 
-const locales = ['ko', 'en', 'ja', 'zh', 'es', 'fr', 'de'] as const
+const locales = ['ko', 'en', 'mn', 'ja', 'zh', 'es', 'fr', 'de'] as const
 
 export default function MainHeader() {
   const t = useTranslations('common')
+  const tNav = useTranslations('nav')
   const locale = useLocale()
   const router = useRouter()
   const pathname = usePathname()
@@ -87,18 +88,18 @@ export default function MainHeader() {
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-[#7c3aed] to-[#ec4899] text-base font-bold text-white">
             G
           </div>
-          <span className="truncate text-base font-semibold text-black max-md:max-w-[140px]">글로벌 오디션</span>
+          <span className="truncate text-base font-semibold text-black max-md:max-w-[140px]">{t('appName')}</span>
         </Link>
 
         <nav className="hidden gap-8 lg:flex">
           <Link href="/auditions" className={navLinkClass}>
-            오디션
+            {t('auditions')}
           </Link>
           <Link href="/channels" className={navLinkClass}>
-            채널
+            {t('channels')}
           </Link>
           <Link href="/videos" className={navLinkClass}>
-            영상
+            {t('videos')}
           </Link>
         </nav>
 
@@ -153,7 +154,7 @@ export default function MainHeader() {
               {isUserMenuOpen && (
                 <div className="absolute right-0 top-full z-50 mt-1 min-w-[200px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
                   <Link href="/profile" className={DROPDOWN_ITEM} onClick={closeUserMenu}>
-                    프로필
+                    {t('profile')}
                   </Link>
                   {userRole === 'SUPER_ADMIN' ? (
                     <Link href="/admin/super" className={DROPDOWN_ITEM} onClick={closeUserMenu}>
@@ -166,7 +167,7 @@ export default function MainHeader() {
                     </Link>
                   ) : userRole === 'APPLICANT' ? (
                     <Link href="/my/applications" className={DROPDOWN_ITEM} onClick={closeUserMenu}>
-                      내 지원
+                      {tNav('applications')}
                     </Link>
                   ) : null}
                   <Link href="/channel" className={DROPDOWN_ITEM} onClick={closeUserMenu}>
@@ -178,7 +179,7 @@ export default function MainHeader() {
                   <div className="my-1 border-t border-gray-100" />
                   <DeviceToggle className={DROPDOWN_ITEM} onToggled={closeUserMenu} />
                   <button type="button" onClick={handleLogout} className={`${DROPDOWN_ITEM} text-red-600`}>
-                    로그아웃
+                    {t('logout')}
                   </button>
                 </div>
               )}
@@ -206,17 +207,17 @@ export default function MainHeader() {
         <div className="border-t border-gray-200 bg-white px-4 py-4 shadow-md lg:hidden">
           <div className="flex flex-col gap-1">
             <Link href="/auditions" onClick={() => setIsMobileOpen(false)} className="py-2 text-sm text-gray-900">
-              오디션
+              {t('auditions')}
             </Link>
             <Link href="/channels" onClick={() => setIsMobileOpen(false)} className="py-2 text-sm text-gray-900">
-              채널
+              {t('channels')}
             </Link>
             <Link href="/videos" onClick={() => setIsMobileOpen(false)} className="py-2 text-sm text-gray-900">
-              영상
+              {t('videos')}
             </Link>
           </div>
           <div className="mt-3 border-t border-gray-200 pt-3">
-            <div className="mb-2 text-sm text-gray-600">언어</div>
+            <div className="mb-2 text-sm text-gray-600">{t('language')}</div>
             <div className="flex flex-wrap gap-2">
               {locales.map((item) => (
                 <button

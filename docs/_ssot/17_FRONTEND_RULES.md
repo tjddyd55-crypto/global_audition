@@ -37,9 +37,11 @@
 - 반응형 디자인: 모바일 우선
 
 ## 다국어 지원
-- `next-intl` 사용
-- 번역 파일: `messages/{locale}.json`
+- Web: `next-intl` + `[locale]` 라우트. 카탈로그 SSOT: `frontend/web/messages/{locale}.json`
+- Native: `i18next` + `react-i18next` + `expo-localization`. **같은 JSON 카탈로그**를 로드한다. 별도 카탈로그를 만들지 않는다.
+- 1급 로케일: ko / en / mn. 언어 전환 UI는 두 클라이언트 모두 제공.
 - 서버 컴포넌트에서 `getTranslations` 사용
+- 정산 표시 통화는 로케일과 무관하게 **USD** (`formatCurrency` / Native `formatUsd`)
 
 ## API 클라이언트
 - `lib/api/` 디렉토리에 서비스별 클라이언트

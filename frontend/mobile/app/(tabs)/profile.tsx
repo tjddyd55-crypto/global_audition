@@ -10,9 +10,13 @@ import { Button } from '../../src/ui/Button'
 import { EmptyState } from '../../src/ui/EmptyState'
 import { Screen } from '../../src/ui/Screen'
 import { TextField } from '../../src/ui/TextField'
+import { persistLocale } from '../../src/i18n/LocaleProvider'
+import { PRIMARY_LOCALES } from '../../src/i18n/runtime'
 import { colors, radius } from '../../src/theme/tokens'
+import { useTranslation } from 'react-i18next'
 
 export default function ProfileScreen() {
+  const { t, i18n } = useTranslation()
   const router = useRouter()
   const { isAuthenticated, ready, session, logout } = useAuth()
   const query = useQuery({ queryKey: queryKeys.profile, queryFn: profileApi.get, enabled: isAuthenticated })
@@ -33,16 +37,29 @@ export default function ProfileScreen() {
   if (ready && !isAuthenticated) {
     return (
       <Screen>
-        <EmptyState title="프로필을 보려면 로그인하세요" actionLabel="로그인" onAction={() => router.push('/(auth)/login')} />
+        <EmptyState title={t('auth.recoverLoginRequired')} actionLabel={t('common.login')} onAction={() => router.push('/(auth)/login')} />
         <View style={{ height: 12 }} />
-        <Button label="회원가입" variant="secondary" onPress={() => router.push('/(auth)/register')} />
+        <Button label={t('common.register')} variant="secondary" onPress={() => router.push('/(auth)/register')} />
       </Screen>
     )
   }
 
   return (
     <Screen loading={query.isLoading}>
-      <Text style={styles.heading}>프로필</Text>
+      <Text style={styles.heading}>{t('profile.title')}</Text>
+      <View style={styles.langRow}>
+        <Text style={styles.meta}>{t('profile.language')}</Text>
+        <View style={styles.langBtns}>
+          {PRIMARY_LOCALES.map((code) => (
+            <Button
+              key={code}
+              label={t(`locale.${code}`)}
+              variant={i18n.language === code ? 'primary' : 'secondary'}
+              onPress={() => void persistLocale(code)}
+            />
+          ))}
+        </View>
+      </View>
       <Text style={styles.meta}>{session?.email}</Text>
       <Text style={styles.role}>{session?.role}</Text>
 
@@ -87,7 +104,7 @@ export default function ProfileScreen() {
           }}
         />
         <Button label="계정 찾기 / 비밀번호 재설정" variant="secondary" onPress={() => router.push('/(auth)/recover')} />
-        <Button label="크레딧 / 충전" variant="secondary" onPress={() => router.push('/credits')} />
+        <Button label={t('nav.credits')} variant="secondary" onPress={() => router.push('/credits')} />
         <Button label="알림" variant="secondary" onPress={() => router.push('/notifications')} />
         {isAgencyRole(session?.role) ? (
           <Button label="내 오디션 지원자 관리" variant="secondary" onPress={() => router.push('/agency/applicants')} />
@@ -97,7 +114,7 @@ export default function ProfileScreen() {
           variant="secondary"
           onPress={() => router.push({ pathname: '/web', params: { path: '/ko/my/auditions' } })}
         />
-        <Button label="로그아웃" variant="danger" onPress={() => void logout()} />
+        <Button label={t('common.logout')} variant="danger" onPress={() => void logout()} />
       </View>
     </Screen>
   )
@@ -116,4 +133,6 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   links: { marginTop: 20, gap: 10 },
+  langRow: { marginBottom: 16, gap: 8 },
+  langBtns: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
 })

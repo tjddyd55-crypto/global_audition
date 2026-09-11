@@ -23,7 +23,7 @@ public class PlatformPaymentSettings {
     private String environment = "TEST";
 
     @Column(nullable = false, length = 8)
-    private String currency = "KRW";
+    private String currency = "USD";
 
     @Column(name = "test_client_key")
     private String testClientKey;

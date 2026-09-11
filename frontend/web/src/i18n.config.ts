@@ -3,7 +3,7 @@ import { createNavigation } from 'next-intl/navigation'
 
 export const routing = defineRouting({
   // 지원하는 모든 언어
-  locales: ['ko', 'en', 'ja', 'zh', 'es', 'fr', 'de'],
+  locales: ['ko', 'en', 'mn', 'ja', 'zh', 'es', 'fr', 'de'],
 
   // 기본 언어
   defaultLocale: 'ko',

@@ -7,6 +7,7 @@ import EmptyState from '../ui/EmptyState'
 import { LAYOUT } from '@/shared/design-tokens'
 import { formatRelativeKo } from '@/shared/formatRelativeKo'
 import { resolveVideoThumbnailUrl } from '@/shared/audition/videoThumbnail'
+import { useTranslations } from 'next-intl'
 import type { ChannelVideoBrowseItem } from '@/shared/api/channelVideoPublic'
 
 const sectionStyle: React.CSSProperties = {
@@ -21,13 +22,14 @@ type HomeVideoSectionProps = {
 }
 
 export default function HomeVideoSection({ videos, isLoading, isError }: HomeVideoSectionProps) {
+  const t = useTranslations('home')
   const isEmpty = !isLoading && !isError && videos.length === 0
 
   return (
     <section style={sectionStyle}>
       <div className="w-full">
         <div style={{ marginBottom: 24, textAlign: 'center' }}>
-          <h2 style={{ fontSize: 24, fontWeight: 700, margin: '0 0 8px 0' }}>최신 영상</h2>
+          <h2 style={{ fontSize: 24, fontWeight: 700, margin: '0 0 8px 0' }}>{t('latestVideos')}</h2>
           <p style={{ fontSize: 14, color: '#666', margin: 0 }}>최근 업로드된 영상을 확인하세요</p>
         </div>
 

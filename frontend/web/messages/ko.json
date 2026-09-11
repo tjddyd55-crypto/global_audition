@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "오디션 플랫폼",
+    "appName": "글로벌 오디션",
     "welcome": "환영합니다",
     "login": "로그인",
     "register": "회원가입",
@@ -10,6 +10,10 @@
     "auditions": "오디션",
     "applications": "지원서",
     "videos": "비디오",
+    "vote": "투표",
+    "ranking": "랭킹",
+    "credits": "크레딧",
+    "channels": "채널",
     "save": "저장",
     "cancel": "취소",
     "submit": "제출",
@@ -23,7 +27,18 @@
     "back": "뒤로",
     "next": "다음",
     "previous": "이전",
-    "language": "언어"
+    "language": "언어",
+    "retry": "다시 시도",
+    "empty": "표시할 항목이 없습니다",
+    "myAccount": "내 계정"
+  },
+  "nav": {
+    "home": "홈",
+    "auditions": "오디션",
+    "vote": "투표",
+    "applications": "내 지원",
+    "profile": "프로필",
+    "credits": "크레딧"
   },
   "auth": {
     "email": "이메일",
@@ -43,7 +58,15 @@
     "registerSuccess": "회원가입 성공",
     "loginError": "이메일 또는 비밀번호가 올바르지 않습니다",
     "registerError": "회원가입에 실패했습니다",
-    "or": "또는"
+    "or": "또는",
+    "processing": "처리 중...",
+    "recoverTitle": "계정 복구",
+    "recoverHint": "가입한 이메일로 복구 코드를 요청하세요",
+    "requestCode": "복구 코드 요청",
+    "securityCode": "보안 코드",
+    "newPassword": "새 비밀번호",
+    "recoverSubmit": "비밀번호 재설정",
+    "recoverLoginRequired": "이 기능을 사용하려면 로그인이 필요합니다"
   },
   "register": {
     "title": "회원가입",
@@ -86,7 +109,114 @@
     "feature2Title": "프로필 관리",
     "feature2Desc": "나만의 프로필과 영상을 관리하고 공유하세요",
     "feature3Title": "기획사 제안",
-    "feature3Desc": "기획사로부터 직접 오디션 제안을 받아보세요"
+    "feature3Desc": "기획사로부터 직접 오디션 제안을 받아보세요",
+    "openAuditions": "진행 중인 오디션",
+    "latestVideos": "최신 영상"
+  },
+  "auditions": {
+    "title": "오디션",
+    "description": "전 세계 기획사의 오디션에 지원하세요",
+    "empty": "진행 중인 오디션이 없습니다",
+    "statusOpen": "모집중",
+    "statusClosed": "마감",
+    "statusDraft": "초안",
+    "deadline": "마감",
+    "location": "장소",
+    "agency": "기획사"
+  },
+  "auditionDetail": {
+    "applyNow": "지금 지원하기",
+    "alreadyApplied": "이미 지원했습니다",
+    "description": "상세 설명",
+    "recruitFields": "모집 분야",
+    "qualifications": "자격 요건",
+    "schedules": "일정",
+    "benefits": "혜택",
+    "stats": "통계",
+    "applicants": "지원자",
+    "remainingDays": "남은 일수",
+    "loginToApply": "지원하려면 로그인하세요",
+    "contentFallback": "이 언어 번역이 없어 원문으로 표시합니다"
+  },
+  "apply": {
+    "title": "지원하기",
+    "submit": "지원서 제출",
+    "name": "이름",
+    "nationality": "국적",
+    "videoUrl": "영상 URL",
+    "sns": "SNS",
+    "freeApply": "이 오디션은 무료로 지원할 수 있습니다",
+    "creditApply": "지원에 크레딧이 사용됩니다",
+    "requiredCredits": "필요 크레딧",
+    "currentCredits": "보유 크레딧",
+    "insufficient": "크레딧이 부족합니다",
+    "charge": "충전하기",
+    "success": "지원이 완료되었습니다",
+    "blocked": "지금은 지원할 수 없습니다"
+  },
+  "myApplications": {
+    "title": "내 지원",
+    "empty": "지원 내역이 없습니다",
+    "status": "상태",
+    "appliedAt": "지원일",
+    "viewDetail": "상세 보기"
+  },
+  "vote": {
+    "title": "투표",
+    "empty": "투표할 지원자가 없습니다",
+    "voted": "투표 완료",
+    "voteAction": "투표하기",
+    "cancelVote": "투표 취소",
+    "votes": "표"
+  },
+  "ranking": {
+    "title": "랭킹",
+    "empty": "랭킹 데이터가 없습니다",
+    "restricted": "랭킹은 기획사·관리자만 볼 수 있습니다",
+    "rank": "순위",
+    "score": "점수"
+  },
+  "profile": {
+    "title": "프로필",
+    "videos": "내 영상",
+    "language": "언어",
+    "deviceLanguage": "기기 언어"
+  },
+  "credits": {
+    "title": "크레딧",
+    "balance": "보유 잔액",
+    "packages": "충전 패키지",
+    "emptyPackages": "판매 중인 패키지가 없습니다",
+    "charge": "충전하기",
+    "ledger": "원장",
+    "emptyLedger": "내역이 없습니다",
+    "creditUnit": "크레딧",
+    "reasonPurchase": "충전",
+    "reasonApply": "지원 차감",
+    "reasonGrant": "관리자 지급",
+    "reasonDeduct": "관리자 차감",
+    "reasonSignup": "가입 보상",
+    "reasonRefund": "환불",
+    "loginRequired": "크레딧을 보려면 로그인이 필요합니다"
+  },
+  "payments": {
+    "title": "결제",
+    "checkout": "크레딧 결제",
+    "success": "결제 완료",
+    "fail": "결제 실패",
+    "opening": "결제창을 여는 중…",
+    "currencyHint": "결제 통화는 USD입니다. 금액은 정수 달러입니다.",
+    "missingPrep": "결제 준비 정보가 없습니다",
+    "needOrder": "packageId 또는 orderNo가 필요합니다.",
+    "createFailed": "토스 주문을 만들 수 없습니다.",
+    "scriptFailed": "토스 결제 스크립트를 불러오지 못했습니다."
+  },
+  "status": {
+    "submitted": "제출됨",
+    "reviewing": "심사중",
+    "accepted": "합격",
+    "rejected": "불합격",
+    "withdrawn": "철회"
   },
   "validation": {
     "required": "필수 항목입니다",
@@ -102,5 +232,22 @@
     "legalNameRequired": "법인명을 입력해주세요",
     "representativeNameRequired": "대표자명을 입력해주세요",
     "businessRegistrationNumberRequired": "사업자 등록번호를 입력해주세요"
+  },
+  "format": {
+    "justNow": "방금 전",
+    "minutesAgo": "{n}분 전",
+    "hoursAgo": "{n}시간 전",
+    "daysAgo": "{n}일 전",
+    "monthsAgo": "{n}개월 전"
+  },
+  "locale": {
+    "ko": "한국어",
+    "en": "English",
+    "mn": "Монгол",
+    "ja": "日本語",
+    "zh": "中文",
+    "es": "Español",
+    "fr": "Français",
+    "de": "Deutsch"
   }
 }

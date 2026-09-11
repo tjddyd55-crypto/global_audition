@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { auditionApi } from '@/shared/api/auditions'
 import HeroSection from '../../components/home/HeroSection'
 import HomeAuditionSection from '../../components/home/HomeAuditionSection'
@@ -12,10 +12,11 @@ import { channelVideoKeys } from '@/shared/query/channelVideoQuery'
 
 export default function HomePage() {
   const t = useTranslations('home')
+  const locale = useLocale()
 
   const { data: auditions = [], isLoading: auditionsLoading } = useQuery({
-    queryKey: ['auditions'],
-    queryFn: () => auditionApi.listOpen(),
+    queryKey: ['auditions', locale],
+    queryFn: () => auditionApi.listOpen(locale),
     retry: 1,
   })
   const { data: browseVideosList = [], isLoading: videosLoading, isError: videosError } = useQuery({

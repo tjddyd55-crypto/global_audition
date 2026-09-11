@@ -16,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
@@ -90,14 +89,15 @@ public class PaymentOrderService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "판매 중이 아닌 패키지입니다.");
         }
 
-        String currency = "USD";
+        String currency = SettlementCurrency.CODE;
         if (isToss(code)) {
             PlatformPaymentSettings settings = paymentSettingsService.current();
             if (!settings.isEnabled()) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "토스 결제가 비활성화되어 있습니다.");
             }
-            currency = settings.getCurrency() != null ? settings.getCurrency() : "KRW";
+            currency = SettlementCurrency.requireUsd(settings.getCurrency());
         }
+        BigDecimal amount = SettlementCurrency.requireWholeUsd(pkg.getPrice());
 
         Instant now = Instant.now();
         PaymentOrder order = new PaymentOrder();
@@ -105,7 +105,7 @@ public class PaymentOrderService {
         order.setUserId(userId);
         order.setPackageId(packageId);
         order.setProvider(code);
-        order.setAmount(pkg.getPrice().setScale(2, RoundingMode.HALF_UP));
+        order.setAmount(amount);
         order.setCurrency(currency);
         order.setStatus(PaymentOrderStatus.CREATED);
         order.setCredits(pkg.getCredits());
@@ -135,7 +135,7 @@ public class PaymentOrderService {
         r.setOrderName(pkg.getName());
         if (isToss(code)) {
             r.setClientKey(paymentSettingsService.requireActiveClientKey());
-            r.setTossAmount(toTossAmount(order.getAmount(), order.getCurrency()));
+            r.setTossAmount(SettlementCurrency.toTossAmount(order.getAmount(), order.getCurrency()));
             r.setSuccessUrl(NATIVE_SUCCESS_URL);
             r.setFailUrl(NATIVE_FAIL_URL);
             r.setVariantKey(paymentSettingsService.current().getVariantKey());
@@ -173,7 +173,7 @@ public class PaymentOrderService {
         r.setOrderName(pkg.getName());
         if (isToss(order.getProvider())) {
             r.setClientKey(paymentSettingsService.requireActiveClientKey());
-            r.setTossAmount(toTossAmount(order.getAmount(), order.getCurrency()));
+            r.setTossAmount(SettlementCurrency.toTossAmount(order.getAmount(), order.getCurrency()));
             r.setSuccessUrl(NATIVE_SUCCESS_URL);
             r.setFailUrl(NATIVE_FAIL_URL);
             r.setRedirectUrl("/credits/toss-checkout?orderNo=" + order.getOrderNo());
@@ -215,7 +215,7 @@ public class PaymentOrderService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "토스 주문이 아닙니다.");
         }
 
-        long serverAmount = toTossAmount(order.getAmount(), order.getCurrency());
+        long serverAmount = SettlementCurrency.toTossAmount(order.getAmount(), order.getCurrency());
         if (clientAmount != serverAmount) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "결제 금액이 주문과 일치하지 않습니다.");
         }
@@ -374,14 +374,9 @@ public class PaymentOrderService {
         paymentOrderRepository.save(order);
     }
 
+    /** @deprecated 사용처는 {@link SettlementCurrency#toTossAmount} */
     public static long toTossAmount(BigDecimal amount, String currency) {
-        if (amount == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "주문 금액이 없습니다.");
-        }
-        if (currency != null && "KRW".equalsIgnoreCase(currency.trim())) {
-            return amount.setScale(0, RoundingMode.HALF_UP).longValueExact();
-        }
-        return amount.setScale(0, RoundingMode.HALF_UP).longValueExact();
+        return SettlementCurrency.toTossAmount(amount, currency);
     }
 
     private static String safeFailReason(String raw) {
@@ -414,7 +409,7 @@ public class PaymentOrderService {
         Map<String, Object> out = new HashMap<>();
         out.put("enabled", settings.isEnabled());
         out.put("environment", settings.getEnvironment());
-        out.put("currency", settings.getCurrency());
+        out.put("currency", SettlementCurrency.requireUsd(settings.getCurrency()));
         out.put("foreignCurrencyEnabled", false);
         out.put("successScheme", NATIVE_SUCCESS_URL);
         out.put("failScheme", NATIVE_FAIL_URL);

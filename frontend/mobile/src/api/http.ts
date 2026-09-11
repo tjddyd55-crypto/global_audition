@@ -1,5 +1,6 @@
 import { API_BASE_URL } from '../config/env'
 import { clearSession, getAccessToken } from '../auth/secureSession'
+import { getRuntimeLocale } from '../i18n/runtime'
 import { readApiErrorMessage } from './unwrap'
 
 export class ApiError extends Error {
@@ -30,6 +31,9 @@ function buildUrl(path: string, query?: RequestOptions['query']): string {
     if (value == null || value === '') continue
     url.searchParams.set(key, String(value))
   }
+  if (!url.searchParams.has('locale')) {
+    url.searchParams.set('locale', getRuntimeLocale())
+  }
   return url.toString()
 }
 
@@ -45,6 +49,7 @@ function isPublicAuthPath(path: string): boolean {
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const headers: Record<string, string> = {
     Accept: 'application/json',
+    'X-Content-Locale': getRuntimeLocale(),
   }
   const token = options.auth === false ? null : await getAccessToken()
   if (token) {

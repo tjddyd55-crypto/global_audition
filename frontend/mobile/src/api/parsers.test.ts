@@ -92,16 +92,17 @@ describe('parsers', () => {
       orderNo: 'ORD-1',
       packageId: 'p1',
       packageName: 'Starter',
-      amount: 1000,
-      tossAmount: 1000,
-      currency: 'KRW',
+      amount: 10,
+      tossAmount: 10,
+      currency: 'USD',
       credits: 10,
       bonusCredits: 1,
       clientKey: 'test_ck_x',
       status: 'READY',
     })
     expect(prep.orderId).toBe('ORD-1')
-    expect(prep.tossAmount).toBe(1000)
+    expect(prep.tossAmount).toBe(10)
+    expect(prep.currency).toBe('USD')
     expect(prep.clientKey).toBe('test_ck_x')
   })
 })

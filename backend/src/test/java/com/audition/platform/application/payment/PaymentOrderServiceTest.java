@@ -56,7 +56,7 @@ class PaymentOrderServiceTest {
     @Test
     void confirmRejectsAmountMismatchWithoutCallingToss() {
         UUID userId = UUID.randomUUID();
-        PaymentOrder order = readyTossOrder(userId, "ORD-1", new BigDecimal("1000"));
+        PaymentOrder order = readyTossOrder(userId, "ORD-1", new BigDecimal("10"));
         when(orderRepository.findByPaymentKey("pk-1")).thenReturn(Optional.empty());
         when(orderRepository.findByOrderNoForUpdate("ORD-1")).thenReturn(Optional.of(order));
 
@@ -71,14 +71,14 @@ class PaymentOrderServiceTest {
     @Test
     void confirmIsIdempotentOnSamePaymentKey() {
         UUID userId = UUID.randomUUID();
-        PaymentOrder order = readyTossOrder(userId, "ORD-1", new BigDecimal("1000"));
+        PaymentOrder order = readyTossOrder(userId, "ORD-1", new BigDecimal("10"));
         order.setStatus(PaymentOrderStatus.PAID);
         order.setPaymentKey("pk-1");
         when(orderRepository.findByPaymentKey("pk-1")).thenReturn(Optional.of(order));
         when(orderRepository.findByOrderNoForUpdate("ORD-1")).thenReturn(Optional.of(order));
         when(packageRepository.findById(order.getPackageId())).thenReturn(Optional.of(activePackage(order.getPackageId())));
 
-        CreditOrderSummaryResponse res = service.confirmToss(userId, "pk-1", "ORD-1", 1000);
+        CreditOrderSummaryResponse res = service.confirmToss(userId, "pk-1", "ORD-1", 10);
         assertEquals("PAID", res.getStatus());
         verify(tossClient, never()).confirm(any(), any(), any(), anyLong());
         verify(creditService, never()).applyChargeFromPaymentOrder(any());
@@ -87,16 +87,16 @@ class PaymentOrderServiceTest {
     @Test
     void confirmPaysAndGrantsCredits() {
         UUID userId = UUID.randomUUID();
-        PaymentOrder order = readyTossOrder(userId, "ORD-1", new BigDecimal("5000"));
+        PaymentOrder order = readyTossOrder(userId, "ORD-1", new BigDecimal("5"));
         CreditPackage pkg = activePackage(order.getPackageId());
         when(orderRepository.findByPaymentKey("pk-ok")).thenReturn(Optional.empty());
         when(orderRepository.findByOrderNoForUpdate("ORD-1")).thenReturn(Optional.of(order));
         when(packageRepository.findById(order.getPackageId())).thenReturn(Optional.of(pkg));
         when(settingsService.requireActiveSecret()).thenReturn("test_sk_dummy");
-        when(tossClient.confirm(eq("test_sk_dummy"), eq("pk-ok"), eq("ORD-1"), eq(5000L)))
+        when(tossClient.confirm(eq("test_sk_dummy"), eq("pk-ok"), eq("ORD-1"), eq(5L)))
                 .thenReturn(new ObjectMapper().createObjectNode());
 
-        CreditOrderSummaryResponse res = service.confirmToss(userId, "pk-ok", "ORD-1", 5000);
+        CreditOrderSummaryResponse res = service.confirmToss(userId, "pk-ok", "ORD-1", 5);
         assertEquals(PaymentOrderStatus.PAID, order.getStatus());
         assertEquals("pk-ok", order.getPaymentKey());
         assertEquals("PAID", res.getStatus());
@@ -106,7 +106,7 @@ class PaymentOrderServiceTest {
     @Test
     void confirmFailureMarksFailedAndDoesNotGrant() {
         UUID userId = UUID.randomUUID();
-        PaymentOrder order = readyTossOrder(userId, "ORD-1", new BigDecimal("5000"));
+        PaymentOrder order = readyTossOrder(userId, "ORD-1", new BigDecimal("5"));
         when(orderRepository.findByPaymentKey("pk-bad")).thenReturn(Optional.empty());
         when(orderRepository.findByOrderNoForUpdate("ORD-1")).thenReturn(Optional.of(order));
         when(packageRepository.findById(order.getPackageId())).thenReturn(Optional.of(activePackage(order.getPackageId())));
@@ -114,7 +114,7 @@ class PaymentOrderServiceTest {
         when(tossClient.confirm(any(), any(), any(), anyLong()))
                 .thenThrow(new TossPaymentsException(400, "REJECTED", "승인 실패"));
 
-        assertThrows(ResponseStatusException.class, () -> service.confirmToss(userId, "pk-bad", "ORD-1", 5000));
+        assertThrows(ResponseStatusException.class, () -> service.confirmToss(userId, "pk-bad", "ORD-1", 5));
         assertEquals(PaymentOrderStatus.FAILED, order.getStatus());
         verify(creditService, never()).applyChargeFromPaymentOrder(any());
     }
@@ -122,7 +122,7 @@ class PaymentOrderServiceTest {
     @Test
     void cancelBlocksWhenCreditsAlreadySpent() {
         UUID userId = UUID.randomUUID();
-        PaymentOrder order = readyTossOrder(userId, "ORD-1", new BigDecimal("1000"));
+        PaymentOrder order = readyTossOrder(userId, "ORD-1", new BigDecimal("10"));
         order.setStatus(PaymentOrderStatus.PAID);
         order.setPaidAt(Instant.now());
         order.setPaymentKey("pk-1");
@@ -144,7 +144,7 @@ class PaymentOrderServiceTest {
         order.setPackageId(UUID.randomUUID());
         order.setProvider(TossPaymentProvider.CODE);
         order.setAmount(amount);
-        order.setCurrency("KRW");
+        order.setCurrency("USD");
         order.setStatus(PaymentOrderStatus.READY);
         order.setCredits(10);
         order.setBonusCredits(0);
@@ -157,7 +157,7 @@ class PaymentOrderServiceTest {
         CreditPackage pkg = new CreditPackage();
         pkg.setId(id);
         pkg.setName("Starter");
-        pkg.setPrice(new BigDecimal("1000"));
+        pkg.setPrice(new BigDecimal("10"));
         pkg.setCredits(10);
         pkg.setBonusCredits(0);
         pkg.setActive(true);

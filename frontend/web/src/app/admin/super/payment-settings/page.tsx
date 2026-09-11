@@ -22,7 +22,7 @@ export default function PaymentSettingsPage() {
 
   const [enabled, setEnabled] = useState(false)
   const [environment, setEnvironment] = useState<'TEST' | 'LIVE'>('TEST')
-  const [currency, setCurrency] = useState('KRW')
+  const [currency, setCurrency] = useState('USD')
   const [testClientKey, setTestClientKey] = useState('')
   const [liveClientKey, setLiveClientKey] = useState('')
   const [testSecretKey, setTestSecretKey] = useState('')
@@ -73,7 +73,7 @@ export default function PaymentSettingsPage() {
   function applyView(view: PaymentSettingsAdmin) {
     setEnabled(view.enabled)
     setEnvironment(view.environment === 'LIVE' ? 'LIVE' : 'TEST')
-    setCurrency(view.currency || 'KRW')
+    setCurrency(view.currency || 'USD')
     setTestClientKey(view.testClientKey ?? '')
     setLiveClientKey(view.liveClientKey ?? '')
     setForeignCardKrw(view.foreignCardKrw)
@@ -98,8 +98,9 @@ export default function PaymentSettingsPage() {
 
       <div className="rounded-lg border bg-white p-4">
         <p className="mb-3 text-xs text-gray-500">
-          시크릿은 GET에서 마스킹됩니다. LIVE 과금은 이 화면에서 켜기 전에 반드시 리뷰하세요. 외화 결제는 저장해도 활성화되지
-          않습니다.
+          정산 통화는 USD입니다. Toss checkout/confirm 금액은 공식 문서상 정수 달러(major unit)이며 센트/환율 변환을 하지
+          않습니다. 시크릿은 GET에서 마스킹됩니다. LIVE 과금은 이 화면에서 켜기 전에 반드시 리뷰하세요. 외화 결제는 저장해도
+          활성화되지 않습니다.
         </p>
         {isLoading && <p className="text-sm text-gray-600">불러오는 중…</p>}
         {error && <p className="text-sm text-red-700">설정을 불러오지 못했습니다.</p>}
@@ -123,8 +124,9 @@ export default function PaymentSettingsPage() {
               </select>
             </label>
             <label className="flex flex-col gap-1">
-              통화
-              <input className="rounded border px-2 py-1.5" value={currency} onChange={(e) => setCurrency(e.target.value)} />
+              정산 통화
+              <input className="rounded border bg-gray-50 px-2 py-1.5" value={currency} readOnly />
+              <span className="text-xs text-gray-500">USD 고정. KRW/FX 변환은 없습니다.</span>
             </label>
             <label className="flex flex-col gap-1">
               TEST client key

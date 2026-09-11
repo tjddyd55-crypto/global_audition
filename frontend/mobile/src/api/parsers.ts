@@ -351,7 +351,7 @@ export function parsePreparePayment(raw: unknown): PreparePaymentResult {
     amount: asNumber(row.amount),
     credits: asNumber(row.credits),
     bonusCredits: asNumber(row.bonusCredits),
-    currency: asString(row.currency, 'KRW'),
+    currency: asString(row.currency, 'USD'),
     status: asString(row.status),
     provider: row.provider != null ? asString(row.provider) : undefined,
     clientKey: row.clientKey != null ? asString(row.clientKey) : undefined,

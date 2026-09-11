@@ -77,7 +77,7 @@ function TossCheckoutContent() {
       const payment = toss.payment({ customerKey: prep.orderNo })
       await payment.requestPayment({
         method: 'CARD',
-        amount: { currency: prep.currency || 'KRW', value: prep.tossAmount },
+        amount: { currency: prep.currency || 'USD', value: prep.tossAmount },
         orderId: prep.orderNo,
         orderName: prep.orderName || prep.packageName,
         successUrl,

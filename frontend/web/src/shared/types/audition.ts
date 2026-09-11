@@ -106,6 +106,10 @@ export type AuditionDto = {
   canApply?: boolean
   /** canApply=false 인데 2차 이상일 때 */
   applyBlockedMessage?: string
+  applyBlockedCode?: string
+  defaultLocale?: string
+  contentLocale?: string
+  contentLocaleFallback?: boolean
 }
 
 /** 시리즈(1·2차 공고) 지원 제한 안내 — API·기획과 동일 문구 */

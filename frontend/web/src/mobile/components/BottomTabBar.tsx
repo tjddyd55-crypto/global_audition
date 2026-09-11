@@ -1,6 +1,7 @@
 'use client'
 
 import { Link, usePathname } from '@/i18n.config'
+import { useTranslations } from 'next-intl'
 import { useMemo } from 'react'
 
 type TabItem = {
@@ -20,12 +21,13 @@ type TabItem = {
  */
 export function BottomTabBar() {
   const pathname = usePathname() || '/'
+  const t = useTranslations('nav')
 
   const tabs: TabItem[] = useMemo(
     () => [
       {
         key: 'home',
-        label: '홈',
+        label: t('home'),
         href: '/',
         matchPrefix: '/',
         icon: (
@@ -37,7 +39,7 @@ export function BottomTabBar() {
       },
       {
         key: 'auditions',
-        label: '오디션',
+        label: t('auditions'),
         href: '/auditions',
         matchPrefix: '/auditions',
         icon: (
@@ -49,7 +51,7 @@ export function BottomTabBar() {
       },
       {
         key: 'my',
-        label: '마이',
+        label: t('applications'),
         href: '/my/applications',
         matchPrefix: '/my',
         icon: (
@@ -60,7 +62,7 @@ export function BottomTabBar() {
       },
       {
         key: 'profile',
-        label: '프로필',
+        label: t('profile'),
         href: '/profile',
         matchPrefix: '/profile',
         icon: (
@@ -71,7 +73,7 @@ export function BottomTabBar() {
         ),
       },
     ],
-    [],
+    [t],
   )
 
   return (

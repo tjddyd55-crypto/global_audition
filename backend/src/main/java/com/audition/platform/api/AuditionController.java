@@ -2,9 +2,12 @@ package com.audition.platform.api;
 
 import com.audition.platform.api.dto.ApiFailResponse;
 import com.audition.platform.api.dto.AuditionResponse;
+import com.audition.platform.api.dto.AuditionTranslationUpsertRequest;
+import com.audition.platform.api.dto.AuditionTranslationView;
 import com.audition.platform.api.dto.CreateAuditionRequest;
 import com.audition.platform.api.dto.UpdateAuditionRequest;
 import com.audition.platform.application.AuditionService;
+import com.audition.platform.application.i18n.AuditionLocalizationService;
 import com.audition.platform.infra.SecurityUtils;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -24,9 +27,13 @@ public class AuditionController {
     private static final Logger log = LoggerFactory.getLogger(AuditionController.class);
 
     private final AuditionService auditionService;
+    private final AuditionLocalizationService auditionLocalizationService;
 
-    public AuditionController(AuditionService auditionService) {
+    public AuditionController(
+            AuditionService auditionService,
+            AuditionLocalizationService auditionLocalizationService) {
         this.auditionService = auditionService;
+        this.auditionLocalizationService = auditionLocalizationService;
     }
 
     @PostMapping
@@ -82,5 +89,18 @@ public class AuditionController {
     @PostMapping("/{id}/series/next-round")
     public AuditionResponse createNextSeriesRound(@PathVariable UUID id) {
         return auditionService.createNextSeriesRound(id);
+    }
+
+    @GetMapping("/{id}/translations")
+    public List<AuditionTranslationView> listTranslations(@PathVariable UUID id) {
+        return auditionLocalizationService.list(id);
+    }
+
+    @PutMapping("/{id}/translations/{locale}")
+    public AuditionTranslationView upsertTranslation(
+            @PathVariable UUID id,
+            @PathVariable String locale,
+            @Valid @RequestBody AuditionTranslationUpsertRequest request) {
+        return auditionLocalizationService.upsert(id, locale, request);
     }
 }

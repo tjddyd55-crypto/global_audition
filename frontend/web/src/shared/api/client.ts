@@ -50,6 +50,12 @@ apiClient.interceptors.request.use(
     ) {
       console.warn('[API Client] /auth/me 요청인데 localStorage에 토큰 없음 → Authorization 미설정')
     }
+    if (typeof window !== 'undefined') {
+      const seg = window.location.pathname.split('/')[1]
+      if (seg && ['ko', 'en', 'mn', 'ja', 'zh', 'es', 'fr', 'de'].includes(seg)) {
+        config.headers['X-Content-Locale'] = seg
+      }
+    }
 
     if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
       const h = config.headers
