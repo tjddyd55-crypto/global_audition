@@ -113,6 +113,14 @@ public class PaymentSettingsService {
             row.setMid(blankToNull(req.getMid()));
         }
         assertNoMixedKeys(row);
+        if (row.isEnabled() && !isActivationComplete(row)) {
+            if (Boolean.TRUE.equals(req.getEnabled())) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "활성화하려면 해당 환경의 client/secret과 variantKey, MID가 필요합니다.");
+            }
+            row.setEnabled(false);
+        }
         row.setUpdatedAt(Instant.now());
         row.setUpdatedBy(SecurityUtils.getCurrentUserId());
         repository.save(row);
@@ -133,6 +141,9 @@ public class PaymentSettingsService {
         PlatformPaymentSettings row = requireRow();
         if (!row.isEnabled()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "토스 결제가 비활성화되어 있습니다.");
+        }
+        if (!isActivationComplete(row)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "variantKey/MID 또는 키가 없어 결제를 활성화할 수 없습니다.");
         }
         String key = ENV_LIVE.equals(row.getEnvironment()) ? row.getLiveClientKey() : row.getTestClientKey();
         if (key == null || key.isBlank()) {
@@ -168,12 +179,16 @@ public class PaymentSettingsService {
     public PaymentConnectionTestResult testConnection() {
         SuperAdminAuthHelper.requireSuperAdmin();
         PlatformPaymentSettings row = requireRow();
+        if (!isActivationComplete(row)) {
+            return new PaymentConnectionTestResult(
+                    PaymentConnectionTestResult.CONFIG_INCOMPLETE, row.getEnvironment(), false);
+        }
         String secret;
         try {
             secret = resolveSecretForProbe(row);
         } catch (ResponseStatusException e) {
             return new PaymentConnectionTestResult(
-                    PaymentConnectionTestResult.INVALID_KEY, row.getEnvironment(), false);
+                    PaymentConnectionTestResult.CONFIG_INCOMPLETE, row.getEnvironment(), false);
         }
         TossPaymentsClient.ConnectionProbe probe = tossPaymentsClient.probeSecret(secret);
         boolean live = ENV_LIVE.equals(row.getEnvironment());
@@ -257,7 +272,27 @@ public class PaymentSettingsService {
         view.setVariantKey(row.getVariantKey());
         view.setMid(row.getMid());
         view.setUpdatedAt(row.getUpdatedAt());
+        view.setTossMethod(SettlementCurrency.TOSS_METHOD);
+        view.setForeignEasyPayProvider(SettlementCurrency.TOSS_EASY_PAY_PROVIDER);
+        view.setActivationReady(isActivationComplete(row));
         return view;
+    }
+
+    boolean isActivationComplete(PlatformPaymentSettings row) {
+        if (row.getVariantKey() == null || row.getVariantKey().isBlank()) {
+            return false;
+        }
+        if (row.getMid() == null || row.getMid().isBlank()) {
+            return false;
+        }
+        boolean live = ENV_LIVE.equals(row.getEnvironment());
+        String client = live ? row.getLiveClientKey() : row.getTestClientKey();
+        if (client == null || client.isBlank()) {
+            return false;
+        }
+        String secret = firstNonBlank(live ? envLiveSecret : envTestSecret,
+                decryptQuiet(live ? row.getLiveSecretCipher() : row.getTestSecretCipher()));
+        return secret != null && !secret.isBlank();
     }
 
     private String decryptQuiet(String cipher) {

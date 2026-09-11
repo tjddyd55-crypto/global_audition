@@ -331,6 +331,9 @@ export type PaymentSettingsAdmin = {
   variantKey?: string | null
   mid?: string | null
   updatedAt?: string
+  tossMethod?: string | null
+  foreignEasyPayProvider?: string | null
+  activationReady?: boolean
 }
 
 export type PaymentSettingsPatch = {

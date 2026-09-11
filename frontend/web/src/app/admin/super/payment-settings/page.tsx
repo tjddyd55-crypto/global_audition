@@ -7,10 +7,18 @@ import { superAdminApi, type PaymentSettingsAdmin } from '@/shared/api/superAdmi
 
 function errMsg(err: unknown): string {
   if (isAxiosError(err)) {
-    const d = err.response?.data as { message?: string } | undefined
+    const d = err.response?.data as { message?: string; code?: string } | undefined
+    if (d?.code === 'INSUFFICIENT_CREDITS') return 'INSUFFICIENT_CREDITS'
     return d?.message ?? err.message ?? '요청 실패'
   }
   return '요청 실패'
+}
+
+function resultTone(result: string | null): string {
+  if (!result) return 'text-gray-700'
+  if (result.includes('CONNECTED')) return 'text-emerald-700'
+  if (result === 'CONFIG INCOMPLETE') return 'text-amber-700'
+  return 'text-red-700'
 }
 
 export default function PaymentSettingsPage() {
@@ -22,13 +30,10 @@ export default function PaymentSettingsPage() {
 
   const [enabled, setEnabled] = useState(false)
   const [environment, setEnvironment] = useState<'TEST' | 'LIVE'>('TEST')
-  const [currency, setCurrency] = useState('USD')
   const [testClientKey, setTestClientKey] = useState('')
   const [liveClientKey, setLiveClientKey] = useState('')
   const [testSecretKey, setTestSecretKey] = useState('')
   const [liveSecretKey, setLiveSecretKey] = useState('')
-  const [foreignCardKrw, setForeignCardKrw] = useState(false)
-  const [foreignCurrencyEnabled, setForeignCurrencyEnabled] = useState(false)
   const [variantKey, setVariantKey] = useState('')
   const [mid, setMid] = useState('')
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -44,13 +49,13 @@ export default function PaymentSettingsPage() {
       superAdminApi.patchPaymentSettings({
         enabled,
         environment,
-        currency,
+        currency: 'USD',
         testClientKey,
         liveClientKey,
         testSecretKey: testSecretKey.trim() || undefined,
         liveSecretKey: liveSecretKey.trim() || undefined,
-        foreignCardKrw,
-        foreignCurrencyEnabled,
+        foreignCardKrw: false,
+        foreignCurrencyEnabled: true,
         variantKey,
         mid,
       }),
@@ -73,14 +78,15 @@ export default function PaymentSettingsPage() {
   function applyView(view: PaymentSettingsAdmin) {
     setEnabled(view.enabled)
     setEnvironment(view.environment === 'LIVE' ? 'LIVE' : 'TEST')
-    setCurrency(view.currency || 'USD')
     setTestClientKey(view.testClientKey ?? '')
     setLiveClientKey(view.liveClientKey ?? '')
-    setForeignCardKrw(view.foreignCardKrw)
-    setForeignCurrencyEnabled(false)
     setVariantKey(view.variantKey ?? '')
     setMid(view.mid ?? '')
   }
+
+  const activationReady = Boolean(data?.activationReady)
+  const method = data?.tossMethod ?? 'FOREIGN_EASY_PAY'
+  const providerEasyPay = data?.foreignEasyPayProvider ?? 'PAYPAL'
 
   return (
     <div>
@@ -98,9 +104,8 @@ export default function PaymentSettingsPage() {
 
       <div className="rounded-lg border bg-white p-4">
         <p className="mb-3 text-xs text-gray-500">
-          정산 통화는 USD입니다. 공식 USD 경로는 FOREIGN_EASY_PAY(PayPal 등)이며 CARD+USD 는 쓰지 않습니다.
-          checkout/confirm 금액은 정수 달러(major unit)이고 센트/환율 변환을 하지 않습니다. variantKey/MID 가 없으면
-          구조만 준비되고 활성화는 OFF 로 둡니다. LIVE 과금은 이 화면에서 켜기 전에 반드시 리뷰하세요.
+          TEST 키를 붙여 넣고 저장한 뒤 연결 테스트를 실행하세요. 시크릿은 GET 시 마스킹됩니다. LIVE 과금은 리뷰 전까지
+          켜지 마세요. CARD+USD 는 사용하지 않습니다.
         </p>
         {isLoading && <p className="text-sm text-gray-600">불러오는 중…</p>}
         {error && <p className="text-sm text-red-700">설정을 불러오지 못했습니다.</p>}
@@ -108,9 +113,28 @@ export default function PaymentSettingsPage() {
 
         {data && (
           <div className="grid max-w-2xl gap-3 text-sm">
+            <div className="grid gap-1 rounded border border-gray-100 bg-gray-50 p-3 text-xs text-gray-700">
+              <p>
+                <span className="font-semibold">Provider</span> Toss
+              </p>
+              <p>
+                <span className="font-semibold">Method</span> {method}
+              </p>
+              <p>
+                <span className="font-semibold">Easy pay</span> {providerEasyPay}
+              </p>
+              <p>
+                <span className="font-semibold">Currency</span> USD (integer major unit only)
+              </p>
+              <p>
+                <span className="font-semibold">Activation</span>{' '}
+                {activationReady ? 'READY (variantKey + MID + env keys)' : 'OFF — variantKey/MID/keys incomplete'}
+              </p>
+            </div>
+
             <label className="flex items-center gap-2">
               <input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />
-              토스 결제 사용
+              토스 결제 사용 (활성화는 variantKey + MID + 해당 환경 client/secret 이 있을 때만)
             </label>
             <label className="flex flex-col gap-1">
               환경
@@ -124,49 +148,58 @@ export default function PaymentSettingsPage() {
               </select>
             </label>
             <label className="flex flex-col gap-1">
-              정산 통화
-              <input className="rounded border bg-gray-50 px-2 py-1.5" value={currency} readOnly />
-              <span className="text-xs text-gray-500">USD 고정. KRW/FX 변환은 없습니다.</span>
-            </label>
-            <label className="flex flex-col gap-1">
               TEST client key
-              <input className="rounded border px-2 py-1.5" value={testClientKey} onChange={(e) => setTestClientKey(e.target.value)} />
+              <input
+                className="rounded border px-2 py-1.5 font-mono"
+                value={testClientKey}
+                onChange={(e) => setTestClientKey(e.target.value)}
+                placeholder="test_ck_…"
+                autoComplete="off"
+              />
             </label>
             <label className="flex flex-col gap-1">
               LIVE client key
-              <input className="rounded border px-2 py-1.5" value={liveClientKey} onChange={(e) => setLiveClientKey(e.target.value)} />
+              <input
+                className="rounded border px-2 py-1.5 font-mono"
+                value={liveClientKey}
+                onChange={(e) => setLiveClientKey(e.target.value)}
+                placeholder="live_ck_…"
+                autoComplete="off"
+              />
             </label>
             <label className="flex flex-col gap-1">
               TEST secret (저장된 값: {data.testSecretMasked ?? '없음'})
               <input
                 type="password"
-                className="rounded border px-2 py-1.5"
+                className="rounded border px-2 py-1.5 font-mono"
                 value={testSecretKey}
                 onChange={(e) => setTestSecretKey(e.target.value)}
-                placeholder="변경할 때만 입력"
+                placeholder="변경할 때만 붙여넣기"
+                autoComplete="new-password"
               />
             </label>
             <label className="flex flex-col gap-1">
               LIVE secret (저장된 값: {data.liveSecretMasked ?? '없음'})
               <input
                 type="password"
-                className="rounded border px-2 py-1.5"
+                className="rounded border px-2 py-1.5 font-mono"
                 value={liveSecretKey}
                 onChange={(e) => setLiveSecretKey(e.target.value)}
-                placeholder="변경할 때만 입력"
+                placeholder="변경할 때만 붙여넣기"
+                autoComplete="new-password"
               />
             </label>
-            <label className="flex items-center gap-2">
-              <input type="checkbox" checked={foreignCardKrw} onChange={(e) => setForeignCardKrw(e.target.checked)} />
-              해외카드 KRW
-            </label>
-            <label className="flex items-center gap-2 text-gray-500">
-              <input type="checkbox" checked={foreignCurrencyEnabled} disabled onChange={() => undefined} />
-              외화 결제 (리뷰 전까지 강제 OFF)
+            <label className="flex flex-col gap-1">
+              variantKey (활성화 필수)
+              <input
+                className="rounded border px-2 py-1.5"
+                value={variantKey}
+                onChange={(e) => setVariantKey(e.target.value)}
+                placeholder="variantKey"
+              />
             </label>
             <label className="flex flex-col gap-1">
-              variantKey / MID
-              <input className="rounded border px-2 py-1.5" value={variantKey} onChange={(e) => setVariantKey(e.target.value)} placeholder="variantKey" />
+              MID (활성화 필수)
               <input className="rounded border px-2 py-1.5" value={mid} onChange={(e) => setMid(e.target.value)} placeholder="MID" />
             </label>
             <div className="flex flex-wrap gap-2 pt-2">
@@ -187,7 +220,9 @@ export default function PaymentSettingsPage() {
                 연결 테스트 (실과금 없음)
               </button>
             </div>
-            {testResult ? <p className="font-mono text-sm">{testResult}</p> : null}
+            {testResult ? (
+              <p className={`font-mono text-sm font-semibold ${resultTone(testResult)}`}>{testResult}</p>
+            ) : null}
           </div>
         )}
       </div>

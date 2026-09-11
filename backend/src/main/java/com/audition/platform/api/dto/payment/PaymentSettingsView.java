@@ -18,6 +18,9 @@ public class PaymentSettingsView {
     private String variantKey;
     private String mid;
     private Instant updatedAt;
+    private String tossMethod;
+    private String foreignEasyPayProvider;
+    private boolean activationReady;
 
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
@@ -47,4 +50,12 @@ public class PaymentSettingsView {
     public void setMid(String mid) { this.mid = mid; }
     public Instant getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
+    public String getTossMethod() { return tossMethod; }
+    public void setTossMethod(String tossMethod) { this.tossMethod = tossMethod; }
+    public String getForeignEasyPayProvider() { return foreignEasyPayProvider; }
+    public void setForeignEasyPayProvider(String foreignEasyPayProvider) {
+        this.foreignEasyPayProvider = foreignEasyPayProvider;
+    }
+    public boolean isActivationReady() { return activationReady; }
+    public void setActivationReady(boolean activationReady) { this.activationReady = activationReady; }
 }

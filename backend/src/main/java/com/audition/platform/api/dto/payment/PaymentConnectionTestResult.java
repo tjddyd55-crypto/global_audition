@@ -5,6 +5,7 @@ public class PaymentConnectionTestResult {
     public static final String TEST_CONNECTED = "TEST CONNECTED";
     public static final String LIVE_CONNECTED = "LIVE CONNECTED";
     public static final String INVALID_KEY = "INVALID KEY";
+    public static final String CONFIG_INCOMPLETE = "CONFIG INCOMPLETE";
 
     private String result;
     private String environment;
