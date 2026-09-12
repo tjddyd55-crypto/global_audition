@@ -62,7 +62,11 @@ function LocalizedStack() {
         <Stack.Screen name="applications/[id]" options={{ title: t('common.applications') }} />
         <Stack.Screen name="agency/applicants" options={{ title: t('myApplications.title') }} />
         <Stack.Screen name="agency/[applicationId]" options={{ title: t('myApplications.viewDetail') }} />
-        <Stack.Screen name="notifications" options={{ title: t('common.appName') }} />
+        <Stack.Screen name="videos/index" options={{ title: t('video.browseTitle') }} />
+        <Stack.Screen name="videos/[id]" options={{ title: t('video.titleFallback') }} />
+        <Stack.Screen name="channels/index" options={{ title: t('channel.listTitle') }} />
+        <Stack.Screen name="channel/[userId]" options={{ title: t('channel.title') }} />
+        <Stack.Screen name="notifications" options={{ title: t('notifications.title') }} />
         <Stack.Screen name="web" options={{ title: t('common.appName') }} />
       </Stack>
     </>

@@ -1,15 +1,18 @@
 import { useRouter } from 'expo-router'
 import { useState } from 'react'
-import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, Text, View } from 'react-native'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../src/auth/AuthProvider'
 import { ApiError } from '../../src/api/http'
 import { validateSignupDraft } from '../../src/domain/signupRules'
+import { AuthScreenShell } from '../../src/ui/AuthScreenShell'
 import { Button } from '../../src/ui/Button'
+import { Chip } from '../../src/ui/Chip'
 import { RecoveryCodeNotice } from '../../src/ui/RecoveryCodeNotice'
 import { Screen } from '../../src/ui/Screen'
 import { TextField } from '../../src/ui/TextField'
-import { colors, radius } from '../../src/theme/tokens'
-import { useTranslation } from 'react-i18next'
+import { narrow } from '../../src/theme/narrow'
+import { colors } from '../../src/theme/tokens'
 
 export default function RegisterScreen() {
   const { t } = useTranslation()
@@ -34,12 +37,10 @@ export default function RegisterScreen() {
 
   return (
     <Screen>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'padding'} style={styles.box}>
-        <Text style={styles.title}>{t('auth.registerTitle')}</Text>
-        <Text style={styles.hint}>{t('auth.signupHint')}</Text>
+      <AuthScreenShell title={t('auth.registerTitle')} subtitle={t('auth.signupHint')}>
         <View style={styles.roles}>
-          <RoleChip label={t('auth.applicant')} selected={role === 'APPLICANT'} onPress={() => setRole('APPLICANT')} />
-          <RoleChip label={t('auth.business')} selected={role === 'AGENCY'} onPress={() => setRole('AGENCY')} />
+          <Chip label={t('auth.applicant')} selected={role === 'APPLICANT'} onPress={() => setRole('APPLICANT')} />
+          <Chip label={t('auth.business')} selected={role === 'AGENCY'} onPress={() => setRole('AGENCY')} />
         </View>
         <TextField label={t('auth.nickname')} value={nickname} onChangeText={setNickname} />
         <TextField label={t('auth.email')} value={email} onChangeText={setEmail} keyboardType="email-address" />
@@ -79,35 +80,12 @@ export default function RegisterScreen() {
           }}
         />
         <Button label={t('common.login')} variant="secondary" onPress={() => router.push('/(auth)/login')} />
-      </KeyboardAvoidingView>
+      </AuthScreenShell>
     </Screen>
   )
 }
 
-function RoleChip({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) {
-  return (
-    <Pressable onPress={onPress} style={[styles.chip, selected && styles.chipOn]} accessibilityRole="button">
-      <Text style={[styles.chipText, selected && styles.chipTextOn]}>{label}</Text>
-    </Pressable>
-  )
-}
-
 const styles = StyleSheet.create({
-  box: { gap: 12 },
-  title: { fontSize: 24, fontWeight: '800', marginBottom: 4, color: colors.text },
-  hint: { color: colors.muted, fontSize: 13, lineHeight: 20, marginBottom: 8 },
-  roles: { flexDirection: 'row', gap: 8, marginBottom: 4 },
-  chip: {
-    flex: 1,
-    minHeight: 44,
-    borderRadius: radius.button,
-    borderWidth: 1,
-    borderColor: colors.inputBorder,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  chipOn: { borderColor: colors.purple, backgroundColor: colors.heroStart },
-  chipText: { fontWeight: '600', color: colors.muted },
-  chipTextOn: { color: colors.purple },
+  roles: { ...narrow.wrap, marginBottom: 4 },
   error: { color: colors.dangerText, marginVertical: 4 },
 })

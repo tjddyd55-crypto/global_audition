@@ -16,4 +16,9 @@ export const queryKeys = {
   creditBalance: ['credits', 'balance'] as const,
   votes: (auditionId: string, category?: string) =>
     ['auditions', auditionId, 'votes', category ?? 'all'] as const,
+  videoBrowse: (category?: string) => ['videos', 'browse', category ?? 'all'] as const,
+  videoPublic: (videoId: string) => ['videos', videoId, 'public'] as const,
+  videoComments: (videoId: string) => ['videos', videoId, 'comments'] as const,
+  channelsPublic: ['channels', 'public'] as const,
+  channelPublic: (userId: string) => ['channels', userId, 'public'] as const,
 }

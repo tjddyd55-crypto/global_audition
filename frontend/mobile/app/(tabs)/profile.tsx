@@ -19,6 +19,7 @@ import { ProfileCompletionBar } from '../../src/ui/ProfileCompletionBar'
 import { Screen } from '../../src/ui/Screen'
 import { TextField } from '../../src/ui/TextField'
 import { persistLocale } from '../../src/i18n/LocaleProvider'
+import { localeWebPath } from '../../src/i18n/webPath'
 import { PRIMARY_LOCALES } from '../../src/i18n/runtime'
 import { colors, radius, space } from '../../src/theme/tokens'
 
@@ -249,9 +250,14 @@ export default function ProfileScreen() {
           <Button label={t('profile.manageApplicants')} variant="secondary" onPress={() => router.push('/agency/applicants')} />
         ) : null}
         <Button
+          label={t('channel.studioTitle')}
+          variant="secondary"
+          onPress={() => router.push({ pathname: '/web', params: { path: localeWebPath('/my/channel') } })}
+        />
+        <Button
           label={t('profile.createAuditionWeb')}
           variant="secondary"
-          onPress={() => router.push({ pathname: '/web', params: { path: '/ko/my/auditions' } })}
+          onPress={() => router.push({ pathname: '/web', params: { path: localeWebPath('/my/auditions') } })}
         />
         <Button label={t('common.logout')} variant="danger" onPress={() => void logout()} />
       </View>
