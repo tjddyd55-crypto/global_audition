@@ -534,7 +534,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
             </span>
             <span className="ml-1 text-xs font-normal text-gray-500">{tEditor('requiredOnPublish')}</span>
           </label>
-          <textarea>
+          <textarea
             value={description}
             onChange={(e) => {
               setDescription(e.target.value)
