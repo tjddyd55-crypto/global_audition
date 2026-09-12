@@ -48,7 +48,9 @@
     "vote": "Vote",
     "applications": "My applications",
     "profile": "Profile",
-    "credits": "Credits"
+    "credits": "Credits",
+    "adminConsole": "Admin console",
+    "menu": "Menu"
   },
   "auth": {
     "email": "Email",
@@ -220,7 +222,8 @@
     "loginCue": "Sign in to apply and vote.",
     "latestVideosHint": "See the latest uploaded videos",
     "videosLoadFailed": "Could not load videos. Try again shortly.",
-    "seeAllVideos": "See all videos"
+    "seeAllVideos": "See all videos",
+    "seeAllAuditions": "See all auditions"
   },
   "auditions": {
     "title": "Auditions",
@@ -502,7 +505,17 @@
     "agencyChannelHint": "This channel is for applicants. Agency accounts should use audition management.",
     "noThumbnail": "No thumbnail",
     "viewsCount": "Views: {n}",
-    "likesCount": "Likes: {n}"
+    "likesCount": "Likes: {n}",
+    "manageTitle": "Manage my info",
+    "nicknameMin": "Nickname must be at least 2 characters.",
+    "nicknamePlaceholder": "2–20 characters",
+    "birthFormat": "Birth date format is invalid.",
+    "snsPairRequired": "Enter both platform and URL, or remove the row.",
+    "loadFailed": "Could not load the profile.",
+    "ageAuto": "{age} years old (calculated from birth date)",
+    "snsHint": "Enter platform and URL together. Saving replaces the full list.",
+    "snsEmpty": "No SNS links yet.",
+    "introPlaceholder": "Write a short introduction."
   },
   "credits": {
     "title": "Credits",
@@ -1054,7 +1067,16 @@
     "videoPublicAria": "Video public",
     "videoPrivateAria": "Video private",
     "videoPublicState": "Video public",
-    "videoPrivateState": "Video private"
+    "videoPrivateState": "Video private",
+    "listTitle": "Channel list",
+    "listHint": "Explore artist channels and watch their videos",
+    "listLoading": "Loading channels…",
+    "listLoadFailed": "Could not load the channel list.",
+    "listEmpty": "No channels yet",
+    "viewCta": "View channel →",
+    "manageMine": "Manage my channel",
+    "nameFallback": "Untitled channel",
+    "descFallback": "No description"
   },
   "native": {
     "otaTitle": "A new version is ready",
@@ -1225,6 +1247,41 @@
     "sortLatest": "Latest",
     "sortPopular": "Popular",
     "browseLoading": "Loading videos…",
-    "browseEmpty": "No public videos uploaded yet"
+    "browseEmpty": "No public videos uploaded yet",
+    "invalidYoutubeUrl": "This is not a valid YouTube URL"
+  },
+  "gallery": {
+    "empty": "No additional images yet.",
+    "slideAria": "Image slideshow",
+    "previousAria": "Previous image",
+    "nextAria": "Next image",
+    "dotsAria": "Image position",
+    "goTo": "Go to image {n}",
+    "closeFullscreen": "Close fullscreen",
+    "zoomAria": "Zoomed image view",
+    "selectAria": "Select image",
+    "imageN": "Image {n}"
+  },
+  "uploader": {
+    "reorderAria": "Reorder (drag)",
+    "invalidType": "This image format is not supported.",
+    "fileTooLarge": "File size must be 10MB or less.",
+    "maxCount": "You can add up to {n} images.",
+    "maxAdded": "Only {n} images will be added.",
+    "omitted": "{n} image(s) were skipped.",
+    "uploadFailed": "Image upload failed",
+    "pickFileAria": "Choose image file",
+    "dropAria": "Upload image: drop or click to choose a file",
+    "galleryDropAria": "Upload gallery images: drop or click to choose files",
+    "dragOr": "Drag an image or",
+    "clickToSelect": "click to choose",
+    "galleryDragOr": "Drag gallery images or",
+    "clickMultiple": "click to choose (multiple)",
+    "formatsMax": "JPG · PNG · WebP, max {n}MB",
+    "formatsMaxEach": "JPG · PNG · WebP, {n}MB each · up to {max}",
+    "registeredMax": "Up to {n} images added",
+    "addMore": "Add more images (click or drag)",
+    "reorderHint": "Order: drag the ⋮⋮ handle · tap × to remove",
+    "changeImage": "Change image"
   }
 }

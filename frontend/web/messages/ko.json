@@ -48,7 +48,9 @@
     "vote": "투표",
     "applications": "내 지원",
     "profile": "프로필",
-    "credits": "크레딧"
+    "credits": "크레딧",
+    "adminConsole": "관리자 콘솔",
+    "menu": "메뉴"
   },
   "auth": {
     "email": "이메일",
@@ -220,7 +222,8 @@
     "loginCue": "로그인하면 지원과 투표를 이어갈 수 있습니다.",
     "latestVideosHint": "최근 업로드된 영상을 확인하세요",
     "videosLoadFailed": "영상 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
-    "seeAllVideos": "모든 영상 보기"
+    "seeAllVideos": "모든 영상 보기",
+    "seeAllAuditions": "모든 오디션 보기"
   },
   "auditions": {
     "title": "오디션",
@@ -502,7 +505,17 @@
     "agencyChannelHint": "지원자 전용 채널입니다. 기획사 계정은 오디션 관리 메뉴를 이용해 주세요.",
     "noThumbnail": "썸네일 없음",
     "viewsCount": "조회수: {n}",
-    "likesCount": "좋아요: {n}"
+    "likesCount": "좋아요: {n}",
+    "manageTitle": "내 정보 관리",
+    "nicknameMin": "닉네임은 2자 이상 입력해 주세요.",
+    "nicknamePlaceholder": "2~20자",
+    "birthFormat": "생년월일 형식이 올바르지 않습니다.",
+    "snsPairRequired": "SNS는 플랫폼과 URL을 함께 입력하거나, 해당 행을 삭제해 주세요.",
+    "loadFailed": "프로필을 불러오지 못했습니다.",
+    "ageAuto": "{age}세 (생년월일 기준 자동 계산)",
+    "snsHint": "플랫폼과 URL을 함께 입력해 주세요. 저장 시 목록 전체가 교체됩니다.",
+    "snsEmpty": "등록된 SNS가 없습니다.",
+    "introPlaceholder": "자기소개를 입력해 주세요."
   },
   "credits": {
     "title": "크레딧",
@@ -1054,7 +1067,16 @@
     "videoPublicAria": "영상 공개",
     "videoPrivateAria": "영상 비공개",
     "videoPublicState": "영상 공개",
-    "videoPrivateState": "영상 비공개"
+    "videoPrivateState": "영상 비공개",
+    "listTitle": "채널 리스트",
+    "listHint": "다양한 아티스트들의 채널을 탐색하고 영상을 감상하세요",
+    "listLoading": "채널을 불러오는 중…",
+    "listLoadFailed": "채널 목록을 불러오지 못했습니다.",
+    "listEmpty": "등록된 채널이 없습니다",
+    "viewCta": "채널 보기 →",
+    "manageMine": "내 채널 관리",
+    "nameFallback": "채널 없음",
+    "descFallback": "설명 없음"
   },
   "native": {
     "otaTitle": "새 버전이 준비되었어요",
@@ -1225,6 +1247,41 @@
     "sortLatest": "최신순",
     "sortPopular": "인기순",
     "browseLoading": "영상을 불러오는 중…",
-    "browseEmpty": "아직 업로드된 공개 영상이 없습니다"
+    "browseEmpty": "아직 업로드된 공개 영상이 없습니다",
+    "invalidYoutubeUrl": "유효한 YouTube URL이 아닙니다"
+  },
+  "gallery": {
+    "empty": "등록된 추가 이미지가 없습니다.",
+    "slideAria": "이미지 슬라이드",
+    "previousAria": "이전 이미지",
+    "nextAria": "다음 이미지",
+    "dotsAria": "이미지 위치",
+    "goTo": "이미지 {n}로 이동",
+    "closeFullscreen": "전체화면 닫기",
+    "zoomAria": "이미지 확대 보기",
+    "selectAria": "이미지 선택",
+    "imageN": "{n}번 이미지"
+  },
+  "uploader": {
+    "reorderAria": "순서 변경(드래그)",
+    "invalidType": "이미지 형식이 올바르지 않습니다.",
+    "fileTooLarge": "파일 크기는 10MB 이하여야 합니다.",
+    "maxCount": "이미지는 최대 {n}장까지 등록할 수 있습니다.",
+    "maxAdded": "최대 {n}장까지만 추가됩니다.",
+    "omitted": "{n}장은 생략되었습니다.",
+    "uploadFailed": "이미지 업로드 실패",
+    "pickFileAria": "이미지 파일 선택",
+    "dropAria": "이미지 업로드: 드래그하여 놓거나 클릭하여 파일 선택",
+    "galleryDropAria": "갤러리 이미지 업로드: 드래그하여 놓거나 클릭하여 파일 선택",
+    "dragOr": "이미지를 드래그하거나",
+    "clickToSelect": "클릭하여 선택",
+    "galleryDragOr": "갤러리 이미지를 드래그하거나",
+    "clickMultiple": "클릭하여 선택 (여러 장)",
+    "formatsMax": "JPG · PNG · WebP, 최대 {n}MB",
+    "formatsMaxEach": "JPG · PNG · WebP, 각 최대 {n}MB · 최대 {max}장",
+    "registeredMax": "최대 {n}장까지 등록됨",
+    "addMore": "이미지 더 추가 (클릭 또는 드래그)",
+    "reorderHint": "순서: 좌하단 ⋮⋮ 핸들을 드래그 · 우상단 × 삭제",
+    "changeImage": "이미지 변경"
   }
 }

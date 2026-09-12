@@ -98,6 +98,15 @@ const CATALOGUED_FILES = [
   'src/components/video/VideoEmbedOverlay.tsx',
   'src/components/videos/VideosBrowsePageClient.tsx',
   'src/components/video/VideoDetailPageClient.tsx',
+  'src/components/video/YouTubePlayer.tsx',
+  'src/components/home/HomeAuditionSection.tsx',
+  'src/app/[locale]/channels/page.tsx',
+  'src/components/cards/ChannelCard.tsx',
+  'src/components/layout/MainHeader.tsx',
+  'src/components/gallery/AuditionGallery.tsx',
+  'src/components/gallery/ImageViewerOverlay.tsx',
+  'src/components/profile/ProfileManageForm.tsx',
+  'src/components/common/ImageUploader.tsx',
 ]
 
 describe('catalogued user-facing files', () => {

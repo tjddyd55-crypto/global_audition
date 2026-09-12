@@ -16,6 +16,9 @@ const locales = ['ko', 'en', 'mn', 'ja', 'zh', 'es', 'fr', 'de'] as const
 export default function MainHeader() {
   const t = useTranslations('common')
   const tNav = useTranslations('nav')
+  const tAgency = useTranslations('agency')
+  const tChannel = useTranslations('channel')
+  const tVault = useTranslations('vault')
   const locale = useLocale()
   const router = useRouter()
   const pathname = usePathname()
@@ -74,7 +77,7 @@ export default function MainHeader() {
         email: user.email,
         displayName: user.displayName,
       })
-    : '내 계정'
+    : t('myAccount')
   const loggedIn = Boolean(accessToken)
   const showUserChrome = loggedIn && (!meLoading || !!user)
 
@@ -158,12 +161,12 @@ export default function MainHeader() {
                   </Link>
                   {userRole === 'SUPER_ADMIN' ? (
                     <Link href="/admin/super" className={DROPDOWN_ITEM} onClick={closeUserMenu}>
-                      관리자 콘솔
+                      {tNav('adminConsole')}
                     </Link>
                   ) : null}
                   {userRole === 'AGENCY' || userRole === 'ADMIN' ? (
                     <Link href="/my/dashboard" className={DROPDOWN_ITEM} onClick={closeUserMenu}>
-                      기획사 대시보드
+                      {tAgency('dashboard')}
                     </Link>
                   ) : userRole === 'APPLICANT' ? (
                     <Link href="/my/applications" className={DROPDOWN_ITEM} onClick={closeUserMenu}>
@@ -171,10 +174,10 @@ export default function MainHeader() {
                     </Link>
                   ) : null}
                   <Link href="/channel" className={DROPDOWN_ITEM} onClick={closeUserMenu}>
-                    내 채널 관리
+                    {tChannel('manageMine')}
                   </Link>
                   <Link href="/vault" className={DROPDOWN_ITEM} onClick={closeUserMenu}>
-                    창작물 보관소
+                    {tVault('title')}
                   </Link>
                   <div className="my-1 border-t border-gray-100" />
                   <DeviceToggle className={DROPDOWN_ITEM} onToggled={closeUserMenu} />
@@ -191,7 +194,7 @@ export default function MainHeader() {
           type="button"
           onClick={() => setIsMobileOpen((p) => !p)}
           className="flex h-9 w-9 items-center justify-center rounded border border-gray-200 lg:hidden"
-          aria-label="메뉴"
+          aria-label={tNav('menu')}
         >
           <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             {isMobileOpen ? (
@@ -244,7 +247,7 @@ export default function MainHeader() {
                   onClick={() => setIsMobileOpen(false)}
                   className="w-full rounded-lg border border-[#E5E7EB] py-3 text-center text-sm text-gray-900"
                 >
-                  프로필
+                  {t('profile')}
                 </Link>
                 {userRole === 'SUPER_ADMIN' ? (
                   <Link
@@ -252,7 +255,7 @@ export default function MainHeader() {
                     onClick={() => setIsMobileOpen(false)}
                     className="w-full rounded-lg border border-[#E5E7EB] py-3 text-center text-sm font-medium text-violet-700"
                   >
-                    관리자 콘솔
+                    {tNav('adminConsole')}
                   </Link>
                 ) : null}
                 {userRole === 'AGENCY' || userRole === 'ADMIN' ? (
@@ -261,7 +264,7 @@ export default function MainHeader() {
                     onClick={() => setIsMobileOpen(false)}
                     className="w-full rounded-lg border border-[#E5E7EB] py-3 text-center text-sm text-gray-900"
                   >
-                    기획사 대시보드
+                    {tAgency('dashboard')}
                   </Link>
                 ) : userRole === 'APPLICANT' ? (
                   <Link
@@ -269,7 +272,7 @@ export default function MainHeader() {
                     onClick={() => setIsMobileOpen(false)}
                     className="w-full rounded-lg border border-[#E5E7EB] py-3 text-center text-sm text-gray-900"
                   >
-                    내 지원
+                    {tNav('applications')}
                   </Link>
                 ) : null}
                 <Link
@@ -277,21 +280,21 @@ export default function MainHeader() {
                   onClick={() => setIsMobileOpen(false)}
                   className="w-full rounded-lg border border-[#E5E7EB] py-3 text-center text-sm text-gray-900"
                 >
-                  내 채널 관리
+                  {tChannel('manageMine')}
                 </Link>
                 <Link
                   href="/vault"
                   onClick={() => setIsMobileOpen(false)}
                   className="w-full rounded-lg border border-[#E5E7EB] py-3 text-center text-sm text-gray-900"
                 >
-                  창작물 보관소
+                  {tVault('title')}
                 </Link>
                 <button
                   type="button"
                   onClick={() => handleLogout()}
                   className="w-full rounded-lg border border-red-100 py-3 text-center text-sm text-red-600"
                 >
-                  로그아웃
+                  {t('logout')}
                 </button>
               </>
             ) : (

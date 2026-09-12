@@ -1,6 +1,7 @@
 ﻿'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { applyGalleryImageOnError, GALLERY_IMAGE_FALLBACK_SRC } from '@/components/gallery/galleryFallback'
 import { stripImageUrlResizeParams } from '@/shared/utils/imageDisplayUrl'
 import { shouldTriggerSwipeNavigation } from '@/components/gallery/gallerySwipe'
@@ -27,8 +28,11 @@ export function ImageViewerOverlay({
   currentIndex,
   onIndexChange,
   onClose,
-  ariaLabel = '이미지 확대 보기',
+  ariaLabel,
 }: ImageViewerOverlayProps) {
+  const tGallery = useTranslations('gallery')
+  const tCommon = useTranslations('common')
+  const dialogLabel = ariaLabel?.trim() || tGallery('zoomAria')
   const touchStartX = useRef<number | null>(null)
   const touchStartTime = useRef<number | null>(null)
   const onCloseRef = useRef(onClose)
@@ -113,7 +117,7 @@ export function ImageViewerOverlay({
       className="fixed inset-0 z-50 flex cursor-default flex-col bg-black"
       role="dialog"
       aria-modal
-      aria-label={ariaLabel}
+      aria-label={dialogLabel}
       onClick={onClose}
     >
       <button
@@ -123,7 +127,7 @@ export function ImageViewerOverlay({
           onClose()
         }}
         className="absolute right-4 top-4 z-[2] text-3xl leading-none text-white hover:opacity-90"
-        aria-label="닫기"
+        aria-label={tCommon('close')}
       >
         ×
       </button>
@@ -137,7 +141,7 @@ export function ImageViewerOverlay({
               goPrev()
             }}
             className="absolute left-4 top-1/2 z-[2] hidden -translate-y-1/2 text-3xl text-white hover:opacity-90 md:block"
-            aria-label="이전 이미지"
+            aria-label={tGallery('previousAria')}
           >
             ←
           </button>
@@ -148,7 +152,7 @@ export function ImageViewerOverlay({
               goNext()
             }}
             className="absolute right-4 top-1/2 z-[2] hidden -translate-y-1/2 text-3xl text-white hover:opacity-90 md:block"
-            aria-label="다음 이미지"
+            aria-label={tGallery('nextAria')}
           >
             →
           </button>
@@ -193,14 +197,14 @@ export function ImageViewerOverlay({
             className="flex shrink-0 flex-col items-center gap-2 py-3"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex flex-wrap justify-center gap-1.5" role="tablist" aria-label="이미지 선택">
+            <div className="flex flex-wrap justify-center gap-1.5" role="tablist" aria-label={tGallery('selectAria')}>
               {images.map((_, i) => (
                 <button
                   key={`viewer-dot-${i}`}
                   type="button"
                   role="tab"
                   aria-selected={i === safeIndex}
-                  aria-label={`${i + 1}번 이미지`}
+                  aria-label={tGallery('imageN', { n: i + 1 })}
                   className={`h-2 w-2 shrink-0 rounded-full transition-colors ${
                     i === safeIndex ? 'bg-white' : 'bg-white/40 hover:bg-white/60'
                   }`}

@@ -25,8 +25,10 @@ import {
   apiUploadErrorMessage,
   type AuditionUploadDir,
 } from '@/shared/api/uploads'
+import { useTranslations } from 'next-intl'
 import {
   AUDITION_IMAGE_ACCEPT_ATTR,
+  AUDITION_IMAGE_ERROR,
   AUDITION_IMAGE_MAX_BYTES,
   assertAuditionImageFile,
 } from '@/shared/audition/auditionImageRules'
@@ -96,6 +98,8 @@ function SortableImageCard({
     zIndex: isDragging ? 10 : undefined,
   }
   const frame = aspectFrameClass(aspect, true)
+  const tUploader = useTranslations('uploader')
+  const tCommon = useTranslations('common')
 
   return (
     <div ref={setNodeRef} style={style} className="relative w-[min(100%,280px)] shrink-0">
@@ -117,7 +121,7 @@ function SortableImageCard({
           <button
             type="button"
             className="absolute bottom-2 left-2 flex h-8 w-8 cursor-grab touch-none items-center justify-center rounded-md bg-black/50 text-xs text-white active:cursor-grabbing"
-            aria-label="순서 변경(드래그)"
+            aria-label={tUploader('reorderAria')}
             {...attributes}
             {...listeners}
           >
@@ -129,7 +133,7 @@ function SortableImageCard({
           disabled={disabled}
           onClick={onRemove}
           className="absolute right-1 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-black/65 text-sm font-bold text-white shadow disabled:opacity-40"
-          aria-label="삭제"
+          aria-label={tCommon('delete')}
         >
           ×
         </button>
@@ -152,6 +156,9 @@ export function ImageUploader({
   showFieldError,
   onAuditionCoverUrls,
 }: ImageUploaderProps) {
+  const tUploader = useTranslations('uploader')
+  const tChannel = useTranslations('channel')
+  const tCommon = useTranslations('common')
   const fileInputId = useId()
   const dndId = useId()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -201,7 +208,12 @@ export function ImageUploader({
           assertAuditionImageFile(f)
           valid.push(f)
         } catch (e) {
-          toast.error(e instanceof Error ? e.message : '이미지 형식이 올바르지 않습니다.')
+          const code = e instanceof Error ? e.message : ''
+          toast.error(
+            code === AUDITION_IMAGE_ERROR.TOO_LARGE
+              ? tUploader('fileTooLarge')
+              : tUploader('invalidType'),
+          )
         }
       }
       if (valid.length === 0) return
@@ -221,12 +233,14 @@ export function ImageUploader({
         }
         let room = resolvedMax - value.length
         if (room <= 0) {
-          toast.error(`이미지는 최대 ${resolvedMax}장까지 등록할 수 있습니다.`)
+          toast.error(tUploader('maxCount', { n: resolvedMax }))
           return
         }
         const slice = valid.slice(0, room)
         if (valid.length > room) {
-          toast.message(`최대 ${resolvedMax}장까지만 추가됩니다.`, { description: `${valid.length - room}장은 생략되었습니다.` })
+          toast.message(tUploader('maxAdded', { n: resolvedMax }), {
+            description: tUploader('omitted', { n: valid.length - room }),
+          })
         }
         const next = [...value]
         for (const file of slice) {
@@ -235,12 +249,19 @@ export function ImageUploader({
         }
         onChange(next)
       } catch (err) {
-        toast.error(apiUploadErrorMessage(err) || '이미지 업로드 실패')
+        const raw = err instanceof Error ? err.message : ''
+        const mapped =
+          raw === AUDITION_IMAGE_ERROR.TOO_LARGE
+            ? tUploader('fileTooLarge')
+            : raw === AUDITION_IMAGE_ERROR.INVALID_TYPE
+              ? tUploader('invalidType')
+              : apiUploadErrorMessage(err) || tUploader('uploadFailed')
+        toast.error(mapped)
       } finally {
         setUploadBusy(false)
       }
     },
-    [multiple, onAuditionCoverUrls, onChange, resolvedMax, resolvedUploadDir, value]
+    [multiple, onAuditionCoverUrls, onChange, resolvedMax, resolvedUploadDir, tUploader, value]
   )
 
   const onInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -313,7 +334,7 @@ export function ImageUploader({
         className="sr-only"
         onChange={onInputChange}
         disabled={inputDisabled}
-        aria-label="이미지 파일 선택"
+        aria-label={tUploader('pickFileAria')}
       />
 
       {!multiple && (
@@ -321,7 +342,7 @@ export function ImageUploader({
           role="button"
           tabIndex={inputDisabled ? -1 : 0}
           aria-disabled={inputDisabled}
-          aria-label="이미지 업로드: 드래그하여 놓거나 클릭하여 파일 선택"
+          aria-label={tUploader('dropAria')}
           className={`${dropZoneClass} ${dropActive} mb-4 w-full max-w-md ${dropZoneDisabledClass}`}
           onClick={openFilePicker}
           onKeyDown={onDropZoneKeyDown}
@@ -338,7 +359,7 @@ export function ImageUploader({
         >
           <div className={`relative mx-auto mb-3 w-full max-w-[220px] overflow-hidden bg-gray-100 ${framePreview}`}>
             {uploadBusy ? (
-              <div className="flex h-full w-full items-center justify-center text-sm text-gray-500">업로드 중…</div>
+              <div className="flex h-full w-full items-center justify-center text-sm text-gray-500">{tChannel('uploading')}</div>
             ) : value[0] ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -355,20 +376,20 @@ export function ImageUploader({
               />
             ) : (
               <div className="flex h-full w-full flex-col items-center justify-center gap-1 px-2 text-center text-xs text-gray-400">
-                <span>이미지를 드래그하거나</span>
-                <span className="font-medium text-violet-600">클릭하여 선택</span>
+                <span>{tUploader('dragOr')}</span>
+                <span className="font-medium text-violet-600">{tUploader('clickToSelect')}</span>
               </div>
             )}
           </div>
           <p className="text-sm text-gray-600">
-            JPG · PNG · WebP, 최대 {Math.round(AUDITION_IMAGE_MAX_BYTES / (1024 * 1024))}MB
+            {tUploader('formatsMax', { n: Math.round(AUDITION_IMAGE_MAX_BYTES / (1024 * 1024)) })}
           </p>
         </div>
       )}
 
       {uploadBusy ? (
         <p className="mt-2 text-sm text-gray-500" aria-live="polite">
-          업로드 중…
+          {tChannel('uploading')}
         </p>
       ) : null}
 
@@ -377,7 +398,7 @@ export function ImageUploader({
           role="button"
           tabIndex={inputDisabled ? -1 : 0}
           aria-disabled={inputDisabled}
-          aria-label="갤러리 이미지 업로드: 드래그하여 놓거나 클릭하여 파일 선택"
+          aria-label={tUploader('galleryDropAria')}
           className={`${dropZoneClass} ${dropActive} mb-4 w-full ${dropZoneDisabledClass}`}
           onClick={openFilePicker}
           onKeyDown={onDropZoneKeyDown}
@@ -394,17 +415,19 @@ export function ImageUploader({
         >
           <div className={`relative mx-auto mb-3 w-full max-w-[320px] overflow-hidden bg-gray-100 ${framePreview}`}>
             {uploadBusy ? (
-              <div className="flex h-full w-full items-center justify-center text-sm text-gray-500">업로드 중…</div>
+              <div className="flex h-full w-full items-center justify-center text-sm text-gray-500">{tChannel('uploading')}</div>
             ) : (
               <div className="flex h-full w-full flex-col items-center justify-center gap-1 px-2 text-center text-xs text-gray-400">
-                <span>갤러리 이미지를 드래그하거나</span>
-                <span className="font-medium text-violet-600">클릭하여 선택 (여러 장)</span>
+                <span>{tUploader('galleryDragOr')}</span>
+                <span className="font-medium text-violet-600">{tUploader('clickMultiple')}</span>
               </div>
             )}
           </div>
           <p className="text-sm text-gray-600">
-            JPG · PNG · WebP, 각 최대 {Math.round(AUDITION_IMAGE_MAX_BYTES / (1024 * 1024))}MB · 최대{' '}
-            {resolvedMax}장
+            {tUploader('formatsMaxEach', {
+              n: Math.round(AUDITION_IMAGE_MAX_BYTES / (1024 * 1024)),
+              max: resolvedMax,
+            })}
           </p>
         </div>
       )}
@@ -425,7 +448,7 @@ export function ImageUploader({
         >
           {galleryFull || inputDisabled ? (
             <span className="text-sm font-medium text-gray-400">
-              {uploadBusy ? '업로드 중…' : `최대 ${resolvedMax}장까지 등록됨`}
+              {uploadBusy ? tChannel('uploading') : tUploader('registeredMax', { n: resolvedMax })}
             </span>
           ) : (
             <button
@@ -433,10 +456,10 @@ export function ImageUploader({
               className="cursor-pointer border-0 bg-transparent p-0 text-sm font-medium text-violet-700 underline"
               onClick={openFilePicker}
             >
-              {uploadBusy ? '업로드 중…' : '이미지 더 추가 (클릭 또는 드래그)'}
+              {uploadBusy ? tChannel('uploading') : tUploader('addMore')}
             </button>
           )}
-          <p className="mt-2 text-xs text-gray-500">순서: 좌하단 ⋮⋮ 핸들을 드래그 · 우상단 × 삭제</p>
+          <p className="mt-2 text-xs text-gray-500">{tUploader('reorderHint')}</p>
         </div>
       ) : null}
 
@@ -464,14 +487,14 @@ export function ImageUploader({
       {!multiple && value[0] ? (
         <div className="mt-2 flex flex-wrap items-center gap-2">
           {inputDisabled ? (
-            <span className="text-sm font-medium text-gray-400">이미지 변경</span>
+            <span className="text-sm font-medium text-gray-400">{tUploader('changeImage')}</span>
           ) : (
             <button
               type="button"
               className="cursor-pointer border-0 bg-transparent p-0 text-sm font-medium text-violet-700 underline"
               onClick={openFilePicker}
             >
-              이미지 변경
+              {tUploader('changeImage')}
             </button>
           )}
           <button
@@ -480,7 +503,7 @@ export function ImageUploader({
             onClick={() => onChange([])}
             className="text-sm font-medium text-red-600 underline disabled:opacity-50"
           >
-            제거
+            {tCommon('remove')}
           </button>
         </div>
       ) : null}

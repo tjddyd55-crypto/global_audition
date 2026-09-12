@@ -47,7 +47,7 @@ export default function HomeAuditionSection({ auditions, isLoading }: HomeAuditi
         </div>
       ) : isEmpty ? (
         <div style={containerStyle}>
-          <EmptyState message="등록된 오디션이 없습니다" />
+          <EmptyState message={tAud('emptyList')} />
         </div>
       ) : (
         <div className="flex w-full flex-col">
@@ -76,7 +76,7 @@ export default function HomeAuditionSection({ auditions, isLoading }: HomeAuditi
               textDecoration: 'none',
             }}
           >
-            모든 오디션 보기
+            {t('seeAllAuditions')}
           </Link>
         </div>
       </div>
