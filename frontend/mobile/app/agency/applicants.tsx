@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
+import { useTranslation } from 'react-i18next'
 import { agencyApi, auditionApi, isAgencyRole } from '../../src/api/endpoints'
 import { queryKeys } from '../../src/api/queryKeys'
 import { useAuth } from '../../src/auth/AuthProvider'
@@ -12,6 +13,7 @@ import { colors, radius } from '../../src/theme/tokens'
 import type { AgencyBoardStatus } from '../../src/api/types'
 
 export default function AgencyApplicantsScreen() {
+  const { t } = useTranslation()
   const router = useRouter()
   const { session } = useAuth()
   const params = useLocalSearchParams<{ auditionId?: string; status?: AgencyBoardStatus }>()
@@ -26,14 +28,14 @@ export default function AgencyApplicantsScreen() {
   if (!isAgencyRole(session?.role)) {
     return (
       <Screen>
-        <EmptyState title="기획사 계정만 사용할 수 있습니다" />
+        <EmptyState title={t('agency.agencyOnly')} />
       </Screen>
     )
   }
 
   return (
     <Screen loading={mineQuery.isLoading || manageQuery.isLoading}>
-      <Text style={styles.title}>지원자 관리</Text>
+      <Text style={styles.title}>{t('agency.applicants')}</Text>
       <View style={styles.chips}>
         {(mineQuery.data ?? []).map((audition) => (
           <Pressable
@@ -47,12 +49,17 @@ export default function AgencyApplicantsScreen() {
       </View>
       {manageQuery.data ? (
         <Text style={styles.meta}>
-          전체 {manageQuery.data.stats.total} · 대기 {manageQuery.data.stats.submitted} · 검토 {manageQuery.data.stats.reviewing} · 합격{' '}
-          {manageQuery.data.stats.accepted} · 불합격 {manageQuery.data.stats.rejected}
+          {t('agency.stats', {
+            total: manageQuery.data.stats.total,
+            submitted: manageQuery.data.stats.submitted,
+            reviewing: manageQuery.data.stats.reviewing,
+            accepted: manageQuery.data.stats.accepted,
+            rejected: manageQuery.data.stats.rejected,
+          })}
           {manageQuery.data.audition.processMode === 'MULTI_ROUND' ? ` · maxRound ${manageQuery.data.maxRound}` : ''}
         </Text>
       ) : null}
-      {manageQuery.isError ? <ErrorState message="지원자 목록을 불러오지 못했습니다." onRetry={() => void manageQuery.refetch()} /> : null}
+      {manageQuery.isError ? <ErrorState message={t('agency.loadFailed')} onRetry={() => void manageQuery.refetch()} /> : null}
       {(manageQuery.data?.items ?? []).map((item) => (
         <Pressable
           key={item.applicationId}
@@ -63,11 +70,11 @@ export default function AgencyApplicantsScreen() {
           <StatusPill label={agencyBoardStatusLabel(item.status)} tone={toneForApplicationStatus(item.status)} />
           <Text style={styles.name}>{item.name || item.userName}</Text>
           <Text style={styles.meta}>
-            {item.category} · {item.age ?? '-'}세 · 라운드 {item.round} · 표 {item.voteCount}
+            {item.category} · {t('agency.ageRoundVotes', { age: item.age ?? '-', round: item.round, votes: item.voteCount })}
           </Text>
         </Pressable>
       ))}
-      {!manageQuery.isLoading && (manageQuery.data?.items.length ?? 0) === 0 ? <EmptyState title="지원자가 없습니다" /> : null}
+      {!manageQuery.isLoading && (manageQuery.data?.items.length ?? 0) === 0 ? <EmptyState title={t('agency.empty')} /> : null}
     </Screen>
   )
 }

@@ -1,20 +1,24 @@
 import { useQuery } from '@tanstack/react-query'
 import { useLocalSearchParams, useRouter } from 'expo-router'
-import { Linking, StyleSheet, Text, View } from 'react-native'
+import { Linking, ScrollView, Share, StyleSheet, Text, View } from 'react-native'
 import { auditionApi } from '../../../src/api/endpoints'
 import { queryKeys } from '../../../src/api/queryKeys'
 import { useAuth } from '../../../src/auth/AuthProvider'
+import { WEB_URL } from '../../../src/config/env'
+import { auditionBadgeMeta } from '../../../src/domain/auditionBadges'
 import { auditionDetailImageUrl, auditionHeadlineTitle } from '../../../src/domain/auditionImages'
-import { auditionStatusLabel } from '../../../src/domain/statusLabels'
 import { Button } from '../../../src/ui/Button'
+import { AuditionBadgeRow } from '../../../src/ui/Badges'
+import { DetailBulletList, DetailSection } from '../../../src/ui/DetailSection'
 import { ErrorState } from '../../../src/ui/EmptyState'
 import { PosterImage } from '../../../src/ui/PosterImage'
 import { Screen } from '../../../src/ui/Screen'
-import { StatusPill, toneForApplicationStatus } from '../../../src/ui/StatusPill'
 import { StickyCta } from '../../../src/ui/StickyCta'
-import { colors } from '../../../src/theme/tokens'
+import { colors, space } from '../../../src/theme/tokens'
+import { useTranslation } from 'react-i18next'
 
 export default function AuditionDetailScreen() {
+  const { t } = useTranslation()
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()
   const { isAuthenticated } = useAuth()
@@ -23,7 +27,23 @@ export default function AuditionDetailScreen() {
 
   const applyBlocked = audition?.canApply === false
   const alreadyApplied = audition?.hasApplied === true
-  const ctaLabel = alreadyApplied ? '내 지원서 보기' : applyBlocked ? '지원 불가' : '지원하기'
+  const ctaLabel = alreadyApplied ? t('auditionDetail.viewApplication') : applyBlocked ? t('auditionDetail.cannotApply') : t('apply.title')
+
+  const galleryExtra = (audition?.galleryImages ?? []).filter((url) => url && url.trim().length > 0)
+  const badges = audition ? auditionBadgeMeta(audition) : null
+
+  const shareAudition = async () => {
+    if (!audition) return
+    const url = `${WEB_URL.replace(/\/+$/, '')}/auditions/${audition.id}`
+    try {
+      await Share.share({
+        message: `${auditionHeadlineTitle(audition)}\n${url}`,
+        url,
+      })
+    } catch {
+      // 사용자 취소 등은 무시
+    }
+  }
 
   return (
     <Screen
@@ -51,35 +71,90 @@ export default function AuditionDetailScreen() {
         ) : null
       }
     >
-      {query.isError ? <ErrorState message="오디션을 불러오지 못했습니다." onRetry={() => void query.refetch()} /> : null}
+      {query.isError ? <ErrorState message={t('auditionDetail.loadFailed')} onRetry={() => void query.refetch()} /> : null}
       {audition ? (
         <View>
           <PosterImage uri={auditionDetailImageUrl(audition.images)} />
           <View style={styles.body}>
-            <StatusPill
-              label={auditionStatusLabel(audition.status, audition.recruitmentRoundLabel)}
-              tone={toneForApplicationStatus(audition.status)}
-            />
             <Text style={styles.title}>{auditionHeadlineTitle(audition)}</Text>
-            <Text style={styles.meta}>{audition.agencyName}</Text>
-            {audition.applyBlockedMessage ? <Text style={styles.warn}>{audition.applyBlockedMessage}</Text> : null}
-            <Text style={styles.desc}>{audition.description}</Text>
-            <Info label="모집 분야" items={audition.recruitFields} />
-            <Info label="자격" items={audition.qualifications} />
-            <Info label="일정" items={audition.schedules} />
-            <Info label="혜택" items={audition.benefits} />
-            {audition.location ? <Text style={styles.meta}>장소 {audition.location}</Text> : null}
-            {audition.processMode === 'MULTI_ROUND' ? (
+            {badges ? <AuditionBadgeRow {...badges} /> : null}
+            {audition.agencyName ? <Text style={styles.agency}>{audition.agencyName}</Text> : null}
+
+            <View style={styles.metaBlock}>
+              {audition.location ? (
+                <Text style={styles.meta}>{t('auditionDetail.locationLabel', { location: audition.location })}</Text>
+              ) : null}
+              {audition.endDate ? (
+                <Text style={styles.meta}>{t('auditionDetail.endDate')}: {audition.endDate}</Text>
+              ) : null}
+              {audition.createdAt ? (
+                <Text style={styles.meta}>{t('auditionDetail.registeredAt')}: {audition.createdAt}</Text>
+              ) : null}
               <Text style={styles.meta}>
-                진행 {audition.currentRoundNumber ?? '-'} / {audition.maxRoundNumber ?? audition.roundSummaries?.length ?? '-'} 라운드
+                {t('common.applicantsCount', { n: audition.applicantsCount })} · {t('common.daysLeftCount', { n: audition.remainingDays })}
               </Text>
-            ) : null}
-            <View style={styles.row}>
-              <Button label="투표 보기" variant="secondary" onPress={() => router.push(`/auditions/${id}/vote`)} />
-              <Button label="랭킹" variant="secondary" onPress={() => router.push(`/auditions/${id}/ranking`)} />
+              {audition.processMode === 'MULTI_ROUND' ? (
+                <Text style={styles.meta}>
+                  {t('auditionDetail.roundProgress', {
+                    current: audition.currentRoundNumber ?? '-',
+                    max: audition.maxRoundNumber ?? audition.roundSummaries?.length ?? '-',
+                  })}
+                </Text>
+              ) : null}
             </View>
+
+            {audition.applyBlockedMessage ? <Text style={styles.warn}>{audition.applyBlockedMessage}</Text> : null}
+
+            {audition.description ? (
+              <DetailSection title={t('auditionDetail.introTitle')}>
+                <Text style={styles.desc}>{audition.description}</Text>
+              </DetailSection>
+            ) : null}
+
+            {audition.qualifications.length > 0 ? (
+              <DetailSection title={t('auditionDetail.qualificationsTitle')}>
+                <DetailBulletList items={audition.qualifications} />
+              </DetailSection>
+            ) : null}
+
+            {audition.recruitFields.length > 0 ? (
+              <DetailSection title={t('auditionDetail.recruitFields')}>
+                <DetailBulletList items={audition.recruitFields} />
+              </DetailSection>
+            ) : null}
+
+            {audition.schedules.length > 0 ? (
+              <DetailSection title={t('auditionDetail.schedules')}>
+                <DetailBulletList items={audition.schedules} />
+              </DetailSection>
+            ) : null}
+
+            {audition.benefits.length > 0 ? (
+              <DetailSection title={t('auditionDetail.benefits')}>
+                <DetailBulletList items={audition.benefits} />
+              </DetailSection>
+            ) : null}
+
+            {galleryExtra.length > 0 ? (
+              <DetailSection title={t('auditionDetail.galleryAria')}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.galleryRow}>
+                  {galleryExtra.map((url) => (
+                    <View key={url} style={styles.galleryItem}>
+                      <PosterImage uri={url} compact />
+                    </View>
+                  ))}
+                </ScrollView>
+              </DetailSection>
+            ) : null}
+
+            <View style={styles.actions}>
+              <Button label={t('auditionDetail.viewVote')} variant="secondary" onPress={() => router.push(`/auditions/${id}/vote`)} />
+              <Button label={t('common.ranking')} variant="secondary" onPress={() => router.push(`/auditions/${id}/ranking`)} />
+              <Button label={t('auditionDetail.share')} variant="secondary" onPress={() => void shareAudition()} />
+            </View>
+
             {audition.videoUrl ? (
-              <Button label="소개 영상 열기" variant="secondary" onPress={() => void Linking.openURL(audition.videoUrl ?? '')} />
+              <Button label={t('auditionDetail.introVideo')} variant="secondary" onPress={() => void Linking.openURL(audition.videoUrl ?? '')} />
             ) : null}
           </View>
         </View>
@@ -88,26 +163,15 @@ export default function AuditionDetailScreen() {
   )
 }
 
-function Info({ label, items }: { label: string; items: string[] }) {
-  if (!items.length) return null
-  return (
-    <View style={{ gap: 4 }}>
-      <Text style={styles.section}>{label}</Text>
-      {items.map((item) => (
-        <Text key={item} style={styles.desc}>
-          · {item}
-        </Text>
-      ))}
-    </View>
-  )
-}
-
 const styles = StyleSheet.create({
-  body: { padding: 16, gap: 10, paddingBottom: 24 },
-  title: { fontSize: 24, fontWeight: '800', color: colors.text },
-  meta: { color: colors.muted, fontSize: 14 },
-  desc: { color: colors.muted, fontSize: 14, lineHeight: 22 },
-  warn: { color: colors.warnText, backgroundColor: colors.warnBg, padding: 10, borderRadius: 8 },
-  section: { fontWeight: '700', color: colors.text, marginTop: 8 },
-  row: { flexDirection: 'row', gap: 8 },
+  body: { padding: space.md, gap: space.sm, paddingBottom: space.xl },
+  title: { fontSize: 24, fontWeight: '800', color: colors.text, lineHeight: 32 },
+  agency: { fontSize: 15, fontWeight: '600', color: colors.textSecondary },
+  metaBlock: { gap: 4 },
+  meta: { color: colors.textSecondary, fontSize: 14, lineHeight: 20 },
+  desc: { color: colors.textSecondary, fontSize: 14, lineHeight: 22 },
+  warn: { color: colors.warnText, backgroundColor: colors.warnBg, padding: space.sm, borderRadius: 8 },
+  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: space.xs, marginTop: space.xs },
+  galleryRow: { gap: space.xs },
+  galleryItem: { width: 200 },
 })

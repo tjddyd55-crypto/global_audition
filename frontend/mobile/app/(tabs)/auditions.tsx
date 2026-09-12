@@ -1,27 +1,68 @@
 import { useQuery } from '@tanstack/react-query'
 import { useRouter } from 'expo-router'
-import { View } from 'react-native'
+import { useMemo } from 'react'
+import { StyleSheet, Text, View } from 'react-native'
 import { auditionApi } from '../../src/api/endpoints'
 import { queryKeys } from '../../src/api/queryKeys'
-import { AuditionCard } from '../../src/ui/AuditionCard'
+import { sortAuditionsByRecent } from '../../src/domain/auditionLists'
+import { AuditionListRow } from '../../src/ui/AuditionListRow'
 import { EmptyState, ErrorState } from '../../src/ui/EmptyState'
+import { AuditionListSkeleton } from '../../src/ui/ListSkeleton'
 import { Screen } from '../../src/ui/Screen'
+import { colors, space } from '../../src/theme/tokens'
+import { useTranslation } from 'react-i18next'
+import { audienceCountryFromLocale } from '../../src/domain/audience'
+import { getRuntimeLocale } from '../../src/i18n/runtime'
 
 export default function AuditionsScreen() {
+  const { t } = useTranslation()
   const router = useRouter()
-  const query = useQuery({ queryKey: queryKeys.auditionsOpen, queryFn: auditionApi.listOpen })
+  const country = audienceCountryFromLocale(getRuntimeLocale())
+  const query = useQuery({
+    queryKey: queryKeys.auditionsOpen(country),
+    queryFn: () => auditionApi.listOpen(country),
+  })
+
+  const items = useMemo(() => sortAuditionsByRecent(query.data ?? []), [query.data])
 
   return (
-    <Screen loading={query.isLoading} refreshing={query.isFetching} onRefresh={() => void query.refetch()}>
-      {query.isError ? <ErrorState message="오디션 목록을 불러오지 못했습니다." onRetry={() => void query.refetch()} /> : null}
-      {(query.data ?? []).map((audition) => (
-        <View key={audition.id} style={{ marginBottom: 12 }}>
-          <AuditionCard audition={audition} onPress={() => router.push(`/auditions/${audition.id}`)} />
+    <Screen
+      loading={false}
+      refreshing={query.isFetching}
+      onRefresh={() => void query.refetch()}
+    >
+      <Text style={styles.title}>{t('auditions.listTitle')}</Text>
+      <Text style={styles.meta}>
+        {t('auditions.resultCount', { count: items.length })} · {t('auditions.sortRecent')}
+      </Text>
+
+      {query.isLoading ? <AuditionListSkeleton /> : null}
+      {query.isError ? <ErrorState message={t('auditions.loadFailed')} onRetry={() => void query.refetch()} /> : null}
+
+      {items.map((audition) => (
+        <View key={audition.id} style={styles.rowGap}>
+          <AuditionListRow audition={audition} onPress={() => router.push(`/auditions/${audition.id}`)} />
         </View>
       ))}
-      {!query.isLoading && (query.data?.length ?? 0) === 0 ? (
-        <EmptyState title="모집중인 오디션이 없습니다" body="공고가 열리면 바로 확인할 수 있습니다." />
+
+      {!query.isLoading && items.length === 0 ? (
+        <EmptyState title={t('auditions.empty')} body={t('home.emptyBody')} />
       ) : null}
     </Screen>
   )
 }
+
+const styles = StyleSheet.create({
+  title: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: colors.text,
+    marginBottom: space.xxs,
+  },
+  meta: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginBottom: space.md,
+  },
+  rowGap: { marginBottom: space.sm },
+})

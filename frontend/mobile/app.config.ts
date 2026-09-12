@@ -1,5 +1,7 @@
 import type { ExpoConfig, ConfigContext } from 'expo/config'
 
+const RAILWAY_DEVELOP_WEB_URL = 'https://frontend-develop-3d3e.up.railway.app'
+
 /**
  * 이 앱의 역할
  * - applicant-first 네이티브 클라이언트 (Expo Router).
@@ -12,7 +14,8 @@ import type { ExpoConfig, ConfigContext } from 'expo/config'
  * - EXPO_PUBLIC_ALLOWED_HOSTS: WebView 내부 호스트 목록.
  * - EAS_BUILD_PROFILE: EAS 빌드 프로필 이름.
  */
-const DEFAULT_WEB_URL = 'https://frontend-production-8613a.up.railway.app'
+/** 로컬 Metro 기본값. production은 eas.json production* 프로필에서만 주입한다. */
+const DEFAULT_WEB_URL = RAILWAY_DEVELOP_WEB_URL
 
 export default ({ config }: ConfigContext): ExpoConfig => {
   const webUrl = process.env.EXPO_PUBLIC_WEB_URL?.trim() || DEFAULT_WEB_URL

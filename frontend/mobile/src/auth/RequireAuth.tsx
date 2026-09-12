@@ -1,10 +1,12 @@
 import { useRouter } from 'expo-router'
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Screen } from '../ui/Screen'
 import { EmptyState } from '../ui/EmptyState'
 import { useAuth } from './AuthProvider'
 
 export function RequireAuth({ children, message }: { children: ReactNode; message?: string }) {
+  const { t } = useTranslation()
   const router = useRouter()
   const { ready, isAuthenticated } = useAuth()
 
@@ -15,9 +17,9 @@ export function RequireAuth({ children, message }: { children: ReactNode; messag
     return (
       <Screen>
         <EmptyState
-          title="로그인이 필요합니다"
-          body={message ?? '이 화면은 로그인한 뒤 이용할 수 있습니다.'}
-          actionLabel="로그인"
+          title={t('myApplications.loginTitle')}
+          body={message ?? t('auth.loginRequiredBody')}
+          actionLabel={t('common.login')}
           onAction={() => router.push('/(auth)/login')}
         />
       </Screen>

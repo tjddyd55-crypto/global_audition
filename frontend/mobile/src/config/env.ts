@@ -1,4 +1,5 @@
 import Constants from 'expo-constants'
+import { apiUrlForWebOrigin, RAILWAY_DEVELOP_WEB_URL } from './railwayUrls'
 import { isLoopbackApiUrl } from './envUrl'
 
 /**
@@ -17,14 +18,14 @@ type Extra = {
 const extra = (Constants.expoConfig?.extra ?? {}) as Extra
 
 export const WEB_URL: string =
-  process.env.EXPO_PUBLIC_WEB_URL?.trim() || extra.webUrl?.trim() || 'https://frontend-production-8613a.up.railway.app'
+  process.env.EXPO_PUBLIC_WEB_URL?.trim() || extra.webUrl?.trim() || RAILWAY_DEVELOP_WEB_URL
 
 /**
  * 실기기 Android는 localhost/127.0.0.1 이 폰 자신을 가리킨다.
  * 우선순위: EXPO_PUBLIC_API_URL → extra.apiUrl → `${WEB_URL}/api` (웹 프록시 SSOT).
  */
 export const API_BASE_URL: string = normalizeApiBase(
-  process.env.EXPO_PUBLIC_API_URL?.trim() || extra.apiUrl?.trim() || `${WEB_URL.replace(/\/+$/, '')}/api`,
+  process.env.EXPO_PUBLIC_API_URL?.trim() || extra.apiUrl?.trim() || apiUrlForWebOrigin(WEB_URL),
 )
 
 export { isLoopbackApiUrl }

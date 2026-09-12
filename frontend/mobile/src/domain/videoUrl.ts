@@ -2,6 +2,7 @@
  * 백엔드 SocialVideoUrls + YoutubeUrls 허용 규칙을 클라이언트 UX용으로 미러링한다.
  * 최종 검증은 ApplicationValidationService가 SSOT다.
  */
+import i18n from '../i18n'
 
 function hostOf(raw: string): { host: string; path: string; query: string } | null {
   const trimmed = raw.trim()
@@ -71,4 +72,6 @@ export function youtubeThumbnailUrl(raw: string): string | null {
   return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : null
 }
 
-export const VIDEO_URL_HINT = '영상 링크는 YouTube, TikTok, Instagram 영상 주소만 입력할 수 있습니다.'
+export function videoUrlHint(): string {
+  return i18n.t('apply.videoUrlRule')
+}
