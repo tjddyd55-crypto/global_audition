@@ -121,6 +121,8 @@ const CATALOGUED_FILES = [
   'src/components/admin/DataTable.tsx',
   'src/shared/utils/countries.ts',
   'src/app/[locale]/layout.tsx',
+  'src/shared/user/getDisplayNickname.ts',
+  'src/components/user/UserDisplayName.tsx',
 ]
 
 describe('catalogued user-facing files', () => {

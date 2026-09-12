@@ -15,6 +15,7 @@ const locales = ['ko', 'en', 'mn', 'ja', 'zh', 'es', 'fr', 'de'] as const
 
 export default function MainHeader() {
   const t = useTranslations('common')
+  const tFallback = useTranslations('fallback')
   const tNav = useTranslations('nav')
   const tAgency = useTranslations('agency')
   const tChannel = useTranslations('channel')
@@ -71,12 +72,15 @@ export default function MainHeader() {
   const closeUserMenu = () => setIsUserMenuOpen(false)
 
   const displayName = user
-    ? getDisplayNickname({
-        nickname: user.nickname,
-        legalName: user.legalName,
-        email: user.email,
-        displayName: user.displayName,
-      })
+    ? getDisplayNickname(
+        {
+          nickname: user.nickname,
+          legalName: user.legalName,
+          email: user.email,
+          displayName: user.displayName,
+        },
+        tFallback('userName'),
+      )
     : t('myAccount')
   const loggedIn = Boolean(accessToken)
   const showUserChrome = loggedIn && (!meLoading || !!user)
