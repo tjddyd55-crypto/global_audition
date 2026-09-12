@@ -14,7 +14,7 @@ import {
 } from '@/shared/types/audition'
 import { auditionApi } from '@/shared/api/auditions'
 import { fetchTagCatalog } from '@/shared/api/tags'
-import { apiErrorMessage } from '@/shared/api/uploads'
+import { bindCatalogTranslator, mapDisplayError } from '@/shared/i18n/mapDisplayError'
 import { isoToDatetimeLocalValue } from '@/shared/audition/datetimeLocal'
 import { isBlankOrValidYoutubeUrl } from '@/shared/audition/youtubeEmbed'
 import { AuditionEditorPreview } from '@/components/audition/AuditionEditorPreview'
@@ -180,6 +180,9 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
   const tCountry = useTranslations('country')
   const tLocale = useTranslations('locale')
   const tCommon = useTranslations('common')
+  const tUploader = useTranslations('uploader')
+  const tErrors = useTranslations('errors')
+  const translateError = bindCatalogTranslator({ uploader: tUploader, errors: tErrors })
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   /** 필수·검증 실패 시 빨간 테두리 */
@@ -391,8 +394,8 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
         }
         if (intent === 'publish') onSuccess?.(created)
       } catch (e: unknown) {
-        const msg = apiErrorMessage(e)
-        setError(msg || tEditor('saveFailed'))
+        const msg = mapDisplayError(e, translateError, tEditor('saveFailed'))
+        setError(msg)
       } finally {
         setIsLoading(false)
       }
@@ -413,8 +416,8 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
       }
       if (intent === 'publish') onSuccess?.(updated)
     } catch (e: unknown) {
-      const msg = apiErrorMessage(e)
-      setError(msg || tEditor('saveFailed'))
+      const msg = mapDisplayError(e, translateError, tEditor('saveFailed'))
+      setError(msg)
       if (mode === 'edit') toast.error(msg || tEditor('saveFailedShort'))
     } finally {
       setIsLoading(false)
@@ -440,8 +443,8 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
       setStatus('CLOSED')
       toast.success(tEditor('closedSaved'))
     } catch (e: unknown) {
-      const msg = apiErrorMessage(e)
-      setError(msg || tEditor('saveFailed'))
+      const msg = mapDisplayError(e, translateError, tEditor('saveFailed'))
+      setError(msg)
     } finally {
       setIsLoading(false)
     }

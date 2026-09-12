@@ -40,7 +40,14 @@
     "copy": "복사",
     "loadFailedTitle": "불러오지 못했습니다",
     "applicantsCount": "지원 {n}",
-    "daysLeftCount": "남은 일 {n}"
+    "daysLeftCount": "남은 일 {n}",
+    "errorTemp": "일시적인 오류가 발생했습니다",
+    "errorRetryHint": "페이지를 새로고침하거나 잠시 후 다시 시도해 주세요.",
+    "goHome": "홈으로",
+    "notDevelopedTitle": "개발되지 않은 페이지 또는 기능입니다",
+    "notDevelopedNamed": "「{name}」 개발되지 않은 페이지 또는 기능입니다",
+    "notDevelopedBody": "이 페이지 또는 기능은 아직 개발 또는 페이지 생성이 되지 않았습니다.",
+    "notDevelopedSoon": "차후 구현 예정입니다."
   },
   "nav": {
     "home": "홈",
@@ -153,7 +160,11 @@
     "loginFailed": "로그인에 실패했습니다",
     "kakao": "카카오",
     "naver": "네이버",
-    "copyCode": "코드 복사"
+    "copyCode": "코드 복사",
+    "identifyHint": "가입 때 받은 복구 보안 코드로 계정 식별자(이메일)를 확인합니다. 이름만으로는 찾지 않습니다.",
+    "accountIdentifierLine": "계정 식별자: {id}",
+    "recoveryCodeRequired": "복구 보안 코드를 입력해 주세요",
+    "checking": "확인 중..."
   },
   "register": {
     "title": "회원가입",
@@ -1248,7 +1259,8 @@
     "sortPopular": "인기순",
     "browseLoading": "영상을 불러오는 중…",
     "browseEmpty": "아직 업로드된 공개 영상이 없습니다",
-    "invalidYoutubeUrl": "유효한 YouTube URL이 아닙니다"
+    "invalidYoutubeUrl": "유효한 YouTube URL이 아닙니다",
+    "statsLine": "조회 {views} · 좋아요 {likes}"
   },
   "gallery": {
     "empty": "등록된 추가 이미지가 없습니다.",
@@ -1282,6 +1294,36 @@
     "registeredMax": "최대 {n}장까지 등록됨",
     "addMore": "이미지 더 추가 (클릭 또는 드래그)",
     "reorderHint": "순서: 좌하단 ⋮⋮ 핸들을 드래그 · 우상단 × 삭제",
-    "changeImage": "이미지 변경"
+    "changeImage": "이미지 변경",
+    "noUrl": "업로드 응답에 URL이 없습니다.",
+    "timeout": "이미지 업로드 시간이 초과되었습니다.",
+    "loginRequired": "업로드 실패: 로그인이 필요합니다.",
+    "forbidden": "업로드 실패: 권한이 없습니다.",
+    "rateLimited": "업로드 요청이 너무 많습니다. 잠시 후 다시 시도해 주세요."
+  },
+  "languages": {
+    "ko": "한국어",
+    "en": "English",
+    "mn": "Монгол",
+    "ja": "日本語",
+    "zh": "中文",
+    "es": "Español",
+    "fr": "Français",
+    "de": "Deutsch"
+  },
+  "device": {
+    "viewPc": "PC 버전으로 보기",
+    "viewMobile": "모바일 버전으로 보기",
+    "requireTitle": "PC에서 이용해주세요",
+    "requireBody": "이 화면은 관리·운영용 인터페이스로, 모바일에서는 모든 기능을 원활하게 사용하기 어렵습니다. 데스크톱 브라우저에서 다시 접속해 주세요.",
+    "backHome": "홈으로 돌아가기",
+    "forcePcHint": "그래도 PC 레이아웃으로 보려면 헤더의 뷰 전환을 사용하세요"
+  },
+  "fallback": {
+    "userName": "이름 없음",
+    "videoTitle": "제목 없음",
+    "channelName": "채널 없음",
+    "description": "설명 없음",
+    "date": "날짜 없음"
   }
 }

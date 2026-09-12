@@ -89,6 +89,11 @@ describe('i18n catalogs', () => {
       'profile.manageTitle',
       'uploader.invalidType',
       'gallery.empty',
+      'auth.identifyHint',
+      'device.viewPc',
+      'common.errorTemp',
+      'fallback.videoTitle',
+      'uploader.loginRequired',
     ]
     for (const tree of [ko, en, mn] as const) {
       const keys = new Set(collectMessageKeys(tree))
@@ -147,6 +152,11 @@ describe('i18n catalogs', () => {
       expect(root.profile.manageTitle).toBeTruthy()
       expect(root.uploader.invalidType).toBeTruthy()
       expect(root.gallery.empty).toBeTruthy()
+      expect(root.auth.identifyHint).toBeTruthy()
+      expect(root.device.viewPc).toBeTruthy()
+      expect(root.common.errorTemp).toBeTruthy()
+      expect(root.fallback.videoTitle).toBeTruthy()
+      expect(root.uploader.loginRequired).toBeTruthy()
     }
   })
 

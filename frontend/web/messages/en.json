@@ -40,7 +40,14 @@
     "copy": "Copy",
     "loadFailedTitle": "Could not load",
     "applicantsCount": "{n} applied",
-    "daysLeftCount": "{n} days left"
+    "daysLeftCount": "{n} days left",
+    "errorTemp": "A temporary error occurred",
+    "errorRetryHint": "Refresh the page or try again in a moment.",
+    "goHome": "Go home",
+    "notDevelopedTitle": "This page or feature is not available yet",
+    "notDevelopedNamed": "“{name}” is not available yet",
+    "notDevelopedBody": "This page or feature has not been built yet.",
+    "notDevelopedSoon": "It is planned for a later release."
   },
   "nav": {
     "home": "Home",
@@ -153,7 +160,11 @@
     "loginFailed": "Sign-in failed",
     "kakao": "Kakao",
     "naver": "Naver",
-    "copyCode": "Copy code"
+    "copyCode": "Copy code",
+    "identifyHint": "Use the recovery code from signup to see your account identifier (email). A name alone is not enough.",
+    "accountIdentifierLine": "Account identifier: {id}",
+    "recoveryCodeRequired": "Enter your recovery code",
+    "checking": "Checking..."
   },
   "register": {
     "title": "Register",
@@ -1248,7 +1259,8 @@
     "sortPopular": "Popular",
     "browseLoading": "Loading videos…",
     "browseEmpty": "No public videos uploaded yet",
-    "invalidYoutubeUrl": "This is not a valid YouTube URL"
+    "invalidYoutubeUrl": "This is not a valid YouTube URL",
+    "statsLine": "{views} views · {likes} likes"
   },
   "gallery": {
     "empty": "No additional images yet.",
@@ -1282,6 +1294,36 @@
     "registeredMax": "Up to {n} images added",
     "addMore": "Add more images (click or drag)",
     "reorderHint": "Order: drag the ⋮⋮ handle · tap × to remove",
-    "changeImage": "Change image"
+    "changeImage": "Change image",
+    "noUrl": "The upload response did not include a URL.",
+    "timeout": "The image upload timed out.",
+    "loginRequired": "Upload failed: please sign in.",
+    "forbidden": "Upload failed: you do not have permission.",
+    "rateLimited": "Too many upload requests. Please try again shortly."
+  },
+  "languages": {
+    "ko": "한국어",
+    "en": "English",
+    "mn": "Монгол",
+    "ja": "日本語",
+    "zh": "中文",
+    "es": "Español",
+    "fr": "Français",
+    "de": "Deutsch"
+  },
+  "device": {
+    "viewPc": "View desktop version",
+    "viewMobile": "View mobile version",
+    "requireTitle": "Please use a desktop",
+    "requireBody": "This screen is for management and operations. Mobile cannot use every control smoothly. Open it again in a desktop browser.",
+    "backHome": "Back to home",
+    "forcePcHint": "To force the desktop layout, use the view switch in the header"
+  },
+  "fallback": {
+    "userName": "No name",
+    "videoTitle": "Untitled",
+    "channelName": "Untitled channel",
+    "description": "No description",
+    "date": "No date"
   }
 }

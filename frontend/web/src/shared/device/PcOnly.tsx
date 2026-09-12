@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import Link from 'next/link'
+import { getTranslations } from 'next-intl/server'
 import { getDeviceFromHeaders } from './resolveDevice'
 
 /**
@@ -28,23 +29,21 @@ export function PcOnly({
  * 모바일에서 PC 전용 기능에 진입한 경우의 공통 안내.
  * 쿠키 토글로 강제 PC 뷰 전환을 유도하는 링크도 함께 제공한다.
  */
-export function RequiresDesktopNotice() {
+export async function RequiresDesktopNotice() {
+  const tDevice = await getTranslations('device')
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-6 py-16 text-center">
-      <h1 className="text-2xl font-bold text-neutral-900">PC에서 이용해주세요</h1>
-      <p className="max-w-md text-sm text-neutral-600">
-        이 화면은 관리·운영용 인터페이스로, 모바일에서는 모든 기능을 원활하게 사용하기 어렵습니다.
-        데스크톱 브라우저에서 다시 접속해 주세요.
-      </p>
+      <h1 className="text-2xl font-bold text-neutral-900">{tDevice('requireTitle')}</h1>
+      <p className="max-w-md text-sm text-neutral-600">{tDevice('requireBody')}</p>
       <div className="flex flex-col gap-2 text-sm">
         <Link
           href="/"
           prefetch={false}
           className="rounded-md bg-neutral-900 px-4 py-2 font-medium text-white no-underline"
         >
-          홈으로 돌아가기
+          {tDevice('backHome')}
         </Link>
-        <ForcePcViewLink />
+        <ForcePcViewLink label={tDevice('forcePcHint')} />
       </div>
     </div>
   )
@@ -55,7 +54,7 @@ export function RequiresDesktopNotice() {
  * 서버 컴포넌트에서도 직접 렌더할 수 있도록 링크 형태를 유지하되,
  * 별도 클라이언트 버튼이 필요하면 호출처에서 `setDevicePref('pc')`를 사용한다.
  */
-function ForcePcViewLink() {
+function ForcePcViewLink({ label }: { label: string }) {
   return (
     <a
       href="#"
@@ -63,7 +62,7 @@ function ForcePcViewLink() {
       data-testid="force-pc-view-hint"
       // data-* 훅만 제공. 실제 토글 로직은 app-level 토글 컴포넌트에서 setDevicePref 호출.
     >
-      그래도 PC 레이아웃으로 보려면 헤더의 뷰 전환을 사용하세요
+      {label}
     </a>
   )
 }

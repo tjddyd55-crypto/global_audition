@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { useDevice, setDevicePref } from './DeviceContext'
 import type { Device } from './constants'
 
@@ -21,9 +22,10 @@ type DeviceToggleProps = {
  * - 헤더의 유저 드롭다운 맨 하단. 운영 초반에 UA 오감지가 발생해도 사용자가 직접 보정 가능.
  */
 export function DeviceToggle({ className, onToggled }: DeviceToggleProps) {
+  const tDevice = useTranslations('device')
   const current = useDevice()
   const next: Device = current === 'mobile' ? 'pc' : 'mobile'
-  const label = current === 'mobile' ? 'PC 버전으로 보기' : '모바일 버전으로 보기'
+  const label = current === 'mobile' ? tDevice('viewPc') : tDevice('viewMobile')
 
   return (
     <button

@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 import { auditionApi } from '@/shared/api/auditions'
-import { apiErrorMessage } from '@/shared/api/uploads'
+import { bindCatalogTranslator, mapDisplayError } from '@/shared/i18n/mapDisplayError'
 import type { AuditionTranslationView } from '@/shared/api/auditions/translations'
 import { CONTENT_LOCALES, type ContentLocale } from '@/shared/audition/audience'
 import { AUDITION_DETAIL, HERO, SIGNUP } from '@/shared/design-tokens'
@@ -69,6 +69,9 @@ type Props = {
 export function AuditionTranslationPanel({ auditionId, defaultLocale }: Props) {
   const t = useTranslations('editor')
   const tLocale = useTranslations('locale')
+  const tUploader = useTranslations('uploader')
+  const tErrors = useTranslations('errors')
+  const translateError = bindCatalogTranslator({ uploader: tUploader, errors: tErrors })
   const queryClient = useQueryClient()
   const [active, setActive] = useState<ContentLocale>(() =>
     CONTENT_LOCALES.includes(defaultLocale as ContentLocale) ? (defaultLocale as ContentLocale) : 'en',
@@ -110,7 +113,7 @@ export function AuditionTranslationPanel({ auditionId, defaultLocale }: Props) {
       await queryClient.invalidateQueries({ queryKey: ['audition-translations', auditionId] })
     },
     onError: (err) => {
-      toast.error(apiErrorMessage(err) || t('translationSaveFailed'))
+      toast.error(mapDisplayError(err, translateError, t('translationSaveFailed')))
     },
   })
 

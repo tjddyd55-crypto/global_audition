@@ -22,17 +22,16 @@ import { toast } from 'sonner'
 import {
   uploadAuditionImage,
   uploadAuditionImageWithVariants,
-  apiUploadErrorMessage,
   type AuditionUploadDir,
 } from '@/shared/api/uploads'
 import { useTranslations } from 'next-intl'
 import {
   AUDITION_IMAGE_ACCEPT_ATTR,
-  AUDITION_IMAGE_ERROR,
   AUDITION_IMAGE_MAX_BYTES,
   assertAuditionImageFile,
 } from '@/shared/audition/auditionImageRules'
 import { AUDITION_COVER_PLACEHOLDER_SRC } from '@/components/audition/AuditionEditorPreview'
+import { bindCatalogTranslator, mapDisplayError } from '@/shared/i18n/mapDisplayError'
 
 export type ImageUploaderAspect = 'portrait' | 'landscape'
 
@@ -159,6 +158,8 @@ export function ImageUploader({
   const tUploader = useTranslations('uploader')
   const tChannel = useTranslations('channel')
   const tCommon = useTranslations('common')
+  const tErrors = useTranslations('errors')
+  const translateError = bindCatalogTranslator({ uploader: tUploader, errors: tErrors })
   const fileInputId = useId()
   const dndId = useId()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -208,12 +209,7 @@ export function ImageUploader({
           assertAuditionImageFile(f)
           valid.push(f)
         } catch (e) {
-          const code = e instanceof Error ? e.message : ''
-          toast.error(
-            code === AUDITION_IMAGE_ERROR.TOO_LARGE
-              ? tUploader('fileTooLarge')
-              : tUploader('invalidType'),
-          )
+          toast.error(mapDisplayError(e, translateError, tUploader('invalidType')))
         }
       }
       if (valid.length === 0) return
@@ -249,19 +245,12 @@ export function ImageUploader({
         }
         onChange(next)
       } catch (err) {
-        const raw = err instanceof Error ? err.message : ''
-        const mapped =
-          raw === AUDITION_IMAGE_ERROR.TOO_LARGE
-            ? tUploader('fileTooLarge')
-            : raw === AUDITION_IMAGE_ERROR.INVALID_TYPE
-              ? tUploader('invalidType')
-              : apiUploadErrorMessage(err) || tUploader('uploadFailed')
-        toast.error(mapped)
+        toast.error(mapDisplayError(err, translateError, tUploader('uploadFailed')))
       } finally {
         setUploadBusy(false)
       }
     },
-    [multiple, onAuditionCoverUrls, onChange, resolvedMax, resolvedUploadDir, tUploader, value]
+    [multiple, onAuditionCoverUrls, onChange, resolvedMax, resolvedUploadDir, tUploader, translateError, value]
   )
 
   const onInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {

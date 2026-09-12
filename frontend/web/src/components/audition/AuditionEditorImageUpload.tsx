@@ -5,9 +5,9 @@ import { toast } from 'sonner'
 import { SIGNUP, AUDITION_DETAIL } from '@/shared/design-tokens'
 import {
   uploadAuditionImage,
-  apiUploadErrorMessage,
   type AuditionUploadDir,
 } from '@/shared/api/uploads'
+import { bindCatalogTranslator, mapDisplayError } from '@/shared/i18n/mapDisplayError'
 import { AUDITION_IMAGE_ACCEPT_ATTR } from '@/shared/audition/auditionImageRules'
 import { AUDITION_COVER_PLACEHOLDER_SRC } from '@/components/audition/AuditionEditorPreview'
 import { useTranslations } from 'next-intl'
@@ -46,6 +46,9 @@ export function SingleImageUploadField({
   const fileInputId = useId()
   const tEditor = useTranslations('editor')
   const t = useTranslations('common')
+  const tUploader = useTranslations('uploader')
+  const tErrors = useTranslations('errors')
+  const translateError = bindCatalogTranslator({ uploader: tUploader, errors: tErrors })
 
   const onPick = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -56,7 +59,7 @@ export function SingleImageUploadField({
         const url = await uploadAuditionImage(file, uploadDir)
         onImageUrlChange(url)
       } catch (err: unknown) {
-        toast.error(apiUploadErrorMessage(err) || tEditor('uploadFailed'))
+        toast.error(mapDisplayError(err, translateError, tEditor('uploadFailed')))
       } finally {
         onUploadingChange(false)
       }

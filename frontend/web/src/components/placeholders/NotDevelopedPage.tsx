@@ -35,19 +35,19 @@ export default function NotDevelopedPage({ featureName }: NotDevelopedPageProps)
           </svg>
         </div>
         <h1 className="text-xl font-semibold text-gray-900">
-          {featureName ? `「${featureName}」` : ''} 개발되지 않은 페이지 또는 기능입니다
+          {featureName ? t('notDevelopedNamed', { name: featureName }) : t('notDevelopedTitle')}
         </h1>
         <p className="text-gray-600 text-sm leading-relaxed">
-          이 페이지 또는 기능은 아직 개발 또는 페이지 생성이 되지 않았습니다.
+          {t('notDevelopedBody')}
           <br />
-          차후 구현 예정입니다.
+          {t('notDevelopedSoon')}
         </p>
         <div className="pt-4">
           <Link
             href="/"
             className="inline-block px-5 py-2.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm font-medium"
           >
-            {t('home') ?? '홈으로'}
+            {t('goHome')}
           </Link>
         </div>
       </div>

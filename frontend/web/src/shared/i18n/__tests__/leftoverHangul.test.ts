@@ -107,6 +107,15 @@ const CATALOGUED_FILES = [
   'src/components/gallery/ImageViewerOverlay.tsx',
   'src/components/profile/ProfileManageForm.tsx',
   'src/components/common/ImageUploader.tsx',
+  'src/app/[locale]/find-user-id/page.tsx',
+  'src/components/common/LanguageSwitcher.tsx',
+  'src/shared/device/DeviceToggle.tsx',
+  'src/shared/device/PcOnly.tsx',
+  'src/components/ErrorBoundary.tsx',
+  'src/components/placeholders/NotDevelopedPage.tsx',
+  'src/components/cards/VideoCard.tsx',
+  'src/shared/api/uploads.ts',
+  'src/shared/i18n/mapDisplayError.ts',
 ]
 
 describe('catalogued user-facing files', () => {
