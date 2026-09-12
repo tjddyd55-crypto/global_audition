@@ -1,27 +1,88 @@
+import { Ionicons } from '@expo/vector-icons'
 import { Tabs } from 'expo-router'
-import { Text } from 'react-native'
-import { colors } from '../../src/theme/tokens'
+import { useTranslation } from 'react-i18next'
+import { colors, tabBar, touch } from '../../src/theme/tokens'
 
-function TabIcon({ label, focused }: { label: string; focused: boolean }) {
-  return <Text style={{ fontSize: 11, fontWeight: focused ? '800' : '600', color: focused ? colors.purple : colors.faint }}>{label}</Text>
+type TabIconName = keyof typeof Ionicons.glyphMap
+
+function TabIcon({ name, focused }: { name: TabIconName; focused: boolean }) {
+  const color = focused ? colors.purple : colors.tabInactive
+  return (
+    <Ionicons
+      name={name}
+      size={tabBar.iconSize}
+      color={color}
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+    />
+  )
 }
 
 export default function TabsLayout() {
+  const { t } = useTranslation()
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: colors.purple,
-        tabBarInactiveTintColor: colors.faint,
-        tabBarStyle: { minHeight: 56 },
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '700' },
+        tabBarInactiveTintColor: colors.tabInactive,
+        tabBarStyle: {
+          minHeight: tabBar.height,
+          paddingTop: 6,
+          paddingBottom: 8,
+          backgroundColor: colors.surface,
+          borderTopColor: colors.border,
+        },
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '700', lineHeight: 14 },
+        tabBarAllowFontScaling: false,
+        tabBarLabelPosition: 'below-icon',
+        tabBarItemStyle: { minHeight: touch.min },
       }}
     >
-      <Tabs.Screen name="index" options={{ title: '홈', tabBarIcon: ({ focused }) => <TabIcon label="홈" focused={focused} /> }} />
-      <Tabs.Screen name="auditions" options={{ title: '오디션', tabBarIcon: ({ focused }) => <TabIcon label="오디션" focused={focused} /> }} />
-      <Tabs.Screen name="vote" options={{ title: '투표', tabBarIcon: ({ focused }) => <TabIcon label="투표" focused={focused} /> }} />
-      <Tabs.Screen name="applications" options={{ title: '내 지원', tabBarIcon: ({ focused }) => <TabIcon label="지원" focused={focused} /> }} />
-      <Tabs.Screen name="profile" options={{ title: '프로필', tabBarIcon: ({ focused }) => <TabIcon label="나" focused={focused} /> }} />
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: t('nav.home'),
+          tabBarAccessibilityLabel: t('nav.home'),
+          tabBarIcon: ({ focused }) => <TabIcon name={focused ? 'home' : 'home-outline'} focused={focused} />,
+        }}
+      />
+      <Tabs.Screen
+        name="auditions"
+        options={{
+          title: t('nav.auditions'),
+          tabBarAccessibilityLabel: t('nav.auditions'),
+          tabBarIcon: ({ focused }) => (
+            <TabIcon name={focused ? 'musical-notes' : 'musical-notes-outline'} focused={focused} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="vote"
+        options={{
+          title: t('nav.vote'),
+          tabBarAccessibilityLabel: t('nav.vote'),
+          tabBarIcon: ({ focused }) => <TabIcon name={focused ? 'heart' : 'heart-outline'} focused={focused} />,
+        }}
+      />
+      <Tabs.Screen
+        name="applications"
+        options={{
+          title: t('nav.applications'),
+          tabBarAccessibilityLabel: t('nav.applications'),
+          tabBarIcon: ({ focused }) => (
+            <TabIcon name={focused ? 'document-text' : 'document-text-outline'} focused={focused} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: t('nav.profile'),
+          tabBarAccessibilityLabel: t('nav.profile'),
+          tabBarIcon: ({ focused }) => <TabIcon name={focused ? 'person' : 'person-outline'} focused={focused} />,
+        }}
+      />
     </Tabs>
   )
 }

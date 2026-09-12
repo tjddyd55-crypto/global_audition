@@ -8,8 +8,10 @@ import { Button } from '../../src/ui/Button'
 import { Screen } from '../../src/ui/Screen'
 import { TextField } from '../../src/ui/TextField'
 import { colors } from '../../src/theme/tokens'
+import { useTranslation } from 'react-i18next'
 
 export default function LoginScreen() {
+  const { t } = useTranslation()
   const router = useRouter()
   const { login } = useAuth()
   const [email, setEmail] = useState('')
@@ -20,18 +22,17 @@ export default function LoginScreen() {
   return (
     <Screen>
       <KeyboardAvoidingView behavior="padding" style={styles.box}>
-        <Text style={styles.title}>로그인</Text>
+        <Text style={styles.title}>{t('auth.loginTitle')}</Text>
         {isCurrentApiLoopback() ? (
           <Text style={styles.warn}>
-            API가 localhost를 가리킵니다. 실기기 Android는 폰 자신을 호출하므로 EXPO_PUBLIC_API_URL 을 웹 프록시 또는 LAN
-            주소로 바꿔 주세요. 현재: {API_BASE_URL}
+            {t('auth.apiLoopbackWarn')} {API_BASE_URL}
           </Text>
         ) : null}
-        <TextField label="이메일" value={email} onChangeText={setEmail} keyboardType="email-address" />
-        <TextField label="비밀번호" value={password} onChangeText={setPassword} secureTextEntry />
+        <TextField label={t('auth.email')} value={email} onChangeText={setEmail} keyboardType="email-address" />
+        <TextField label={t('auth.password')} value={password} onChangeText={setPassword} secureTextEntry />
         {error ? <Text style={styles.error}>{error}</Text> : null}
         <Button
-          label="로그인"
+          label={t('auth.loginButton')}
           loading={loading}
           onPress={async () => {
             setError(null)
@@ -40,14 +41,14 @@ export default function LoginScreen() {
               await login(email.trim(), password)
               router.replace('/(tabs)')
             } catch (err) {
-              setError(err instanceof ApiError ? err.message : '로그인에 실패했습니다.')
+              setError(err instanceof ApiError ? err.message : t('auth.loginError'))
             } finally {
               setLoading(false)
             }
           }}
         />
-        <Button label="회원가입" variant="secondary" onPress={() => router.push('/(auth)/register')} />
-        <Button label="계정 찾기 / 비밀번호 재설정" variant="secondary" onPress={() => router.push('/(auth)/recover')} />
+        <Button label={t('auth.registerButton')} variant="secondary" onPress={() => router.push('/(auth)/register')} />
+        <Button label={t('auth.findAccount')} variant="secondary" onPress={() => router.push('/(auth)/recover')} />
       </KeyboardAvoidingView>
     </Screen>
   )

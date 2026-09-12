@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native'
 
+import { useTranslation } from 'react-i18next'
 import { useOtaPromptState } from '../services/updates'
 
 /**
@@ -25,6 +26,7 @@ import { useOtaPromptState } from '../services/updates'
  *   이중 탭이나 "왜 반응이 없지?" 오해를 막는다.
  */
 export function OtaUpdatePrompt() {
+  const { t } = useTranslation()
   const { shouldShow, applyNow, dismiss } = useOtaPromptState()
   const [isApplying, setIsApplying] = useState(false)
 
@@ -51,11 +53,8 @@ export function OtaUpdatePrompt() {
     >
       <View style={styles.backdrop}>
         <View style={styles.card}>
-          <Text style={styles.title}>새 버전이 준비되었어요</Text>
-          <Text style={styles.body}>
-            최신 업데이트가 다운로드 완료되었습니다.{'\n'}
-            지금 적용하려면 앱이 잠시 재시작됩니다.
-          </Text>
+          <Text style={styles.title}>{t('native.otaTitle')}</Text>
+          <Text style={styles.body}>{t('native.otaBody')}</Text>
 
           <View style={styles.actions}>
             <Pressable
@@ -68,7 +67,7 @@ export function OtaUpdatePrompt() {
                 isApplying && styles.disabled,
               ]}
             >
-              <Text style={styles.secondaryText}>나중에</Text>
+              <Text style={styles.secondaryText}>{t('native.otaLater')}</Text>
             </Pressable>
 
             <Pressable
@@ -84,7 +83,7 @@ export function OtaUpdatePrompt() {
               {isApplying ? (
                 <ActivityIndicator color="#ffffff" />
               ) : (
-                <Text style={styles.primaryText}>지금 업데이트</Text>
+                <Text style={styles.primaryText}>{t('native.otaNow')}</Text>
               )}
             </Pressable>
           </View>

@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native'
+import { useTranslation } from 'react-i18next'
 import { colors } from '../theme/tokens'
 import { Button } from './Button'
 
@@ -13,11 +14,12 @@ export function EmptyState({ title, body, actionLabel, onAction }: { title: stri
 }
 
 export function ErrorState({ message, onRetry }: { message: string; onRetry?: () => void }) {
+  const { t } = useTranslation()
   return (
     <View style={styles.box}>
-      <Text style={styles.title}>불러오지 못했습니다</Text>
+      <Text style={styles.title}>{t('common.loadFailedTitle')}</Text>
       <Text style={styles.body}>{message}</Text>
-      {onRetry ? <Button label="다시 시도" onPress={onRetry} variant="secondary" /> : null}
+      {onRetry ? <Button label={t('common.retry')} onPress={onRetry} variant="secondary" /> : null}
     </View>
   )
 }

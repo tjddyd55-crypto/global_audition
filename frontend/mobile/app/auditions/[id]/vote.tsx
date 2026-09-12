@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { Linking, StyleSheet, Text, View } from 'react-native'
+import { useTranslation } from 'react-i18next'
 import { voteApi } from '../../../src/api/endpoints'
 import { queryKeys } from '../../../src/api/queryKeys'
 import { useAuth } from '../../../src/auth/AuthProvider'
@@ -11,6 +12,7 @@ import { Screen } from '../../../src/ui/Screen'
 import { colors, radius } from '../../../src/theme/tokens'
 
 export default function VoteScreen() {
+  const { t } = useTranslation()
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()
   const queryClient = useQueryClient()
@@ -25,24 +27,30 @@ export default function VoteScreen() {
 
   return (
     <Screen loading={query.isLoading}>
-      {query.isError ? <ErrorState message="투표 보드를 불러오지 못했습니다." onRetry={() => void query.refetch()} /> : null}
+      {query.isError ? <ErrorState message={t('vote.loadFailed')} onRetry={() => void query.refetch()} /> : null}
       {page ? (
         <View style={styles.head}>
           <Text style={styles.title}>{page.audition.title}</Text>
           <Text style={styles.meta}>
-            지원 {page.summary.applicantCount} · 표 {page.summary.totalVotes} · 내 표 {page.summary.myVoteCount}
+            {t('vote.summary', {
+              applicants: page.summary.applicantCount,
+              votes: page.summary.totalVotes,
+              mine: page.summary.myVoteCount,
+            })}
           </Text>
         </View>
       ) : null}
       {(page?.items ?? []).map((item) => (
         <View key={item.applicationId} style={styles.card}>
           <Text style={styles.rank}>#{item.rank || '-'}</Text>
-          <Text style={styles.name}>{item.userName || '지원자'}</Text>
+          <Text style={styles.name}>{item.userName || t('vote.applicantFallback')}</Text>
           <Text style={styles.meta}>{item.description}</Text>
-          <Text style={styles.meta}>표 {item.voteCount}</Text>
-          {item.videoUrl ? <Button label="영상 보기" variant="secondary" onPress={() => void Linking.openURL(item.videoUrl)} /> : null}
+          <Text style={styles.meta}>{t('vote.voteCount', { n: item.voteCount })}</Text>
+          {item.videoUrl ? (
+            <Button label={t('vote.watchVideo')} variant="secondary" onPress={() => void Linking.openURL(item.videoUrl)} />
+          ) : null}
           <Button
-            label={item.isVoted ? '내 표' : '이 지원자에게 투표'}
+            label={item.isVoted ? t('vote.myVote') : t('vote.castFor')}
             disabled={item.isVoted || voteMutation.isPending}
             onPress={() => {
               if (!isAuthenticated) {
@@ -55,9 +63,9 @@ export default function VoteScreen() {
         </View>
       ))}
       {voteMutation.isError ? (
-        <Text style={styles.error}>{voteMutation.error instanceof ApiError ? voteMutation.error.message : '투표에 실패했습니다.'}</Text>
+        <Text style={styles.error}>{voteMutation.error instanceof ApiError ? voteMutation.error.message : t('vote.failed')}</Text>
       ) : null}
-      {!query.isLoading && (page?.items.length ?? 0) === 0 ? <EmptyState title="아직 투표할 지원자가 없습니다" /> : null}
+      {!query.isLoading && (page?.items.length ?? 0) === 0 ? <EmptyState title={t('vote.emptyBoard')} /> : null}
     </Screen>
   )
 }

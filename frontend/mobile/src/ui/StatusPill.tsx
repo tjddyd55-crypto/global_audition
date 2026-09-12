@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native'
-import { colors, radius } from '../theme/tokens'
+import { badge, colors, radius } from '../theme/tokens'
 
 type Tone = 'success' | 'danger' | 'info' | 'warn' | 'neutral'
 
@@ -34,10 +34,11 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     borderRadius: radius.pill,
     paddingHorizontal: 10,
-    paddingVertical: 4,
+    minHeight: badge.height,
+    justifyContent: 'center',
   },
   text: {
-    fontSize: 12,
+    fontSize: badge.fontSize,
     fontWeight: '700',
   },
 })

@@ -3,8 +3,10 @@ import { Stack } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { AuthProvider } from '../src/auth/AuthProvider'
+import { LocaleProvider } from '../src/i18n/LocaleProvider'
 import { OtaUpdatePrompt } from '../src/components/OtaUpdatePrompt'
 import { useOtaWatcher } from '../src/services/updates'
 import { colors } from '../src/theme/tokens'
@@ -27,31 +29,42 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <StatusBar style="dark" />
-          <Stack
-            initialRouteName="(tabs)"
-            screenOptions={{
-              headerTintColor: colors.purple,
-              headerTitleStyle: { fontWeight: '700' },
-              headerShadowVisible: false,
-              contentStyle: { backgroundColor: colors.bg },
-            }}
-          >
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-            <Stack.Screen name="auditions/[id]/index" options={{ title: '오디션' }} />
-            <Stack.Screen name="auditions/[id]/apply" options={{ title: '지원하기' }} />
-            <Stack.Screen name="auditions/[id]/vote" options={{ title: '투표' }} />
-            <Stack.Screen name="auditions/[id]/ranking" options={{ title: '랭킹' }} />
-            <Stack.Screen name="applications/[id]" options={{ title: '지원서' }} />
-            <Stack.Screen name="agency/applicants" options={{ title: '지원자 관리' }} />
-            <Stack.Screen name="agency/[applicationId]" options={{ title: '지원자 상세' }} />
-            <Stack.Screen name="notifications" options={{ title: '알림' }} />
-            <Stack.Screen name="web" options={{ title: '웹으로 열기' }} />
-          </Stack>
-          <OtaUpdatePrompt />
+          <LocaleProvider>
+            <LocalizedStack />
+            <OtaUpdatePrompt />
+          </LocaleProvider>
         </AuthProvider>
       </QueryClientProvider>
     </SafeAreaProvider>
+  )
+}
+
+function LocalizedStack() {
+  const { t } = useTranslation()
+  return (
+    <>
+      <StatusBar style="dark" />
+      <Stack
+        initialRouteName="(tabs)"
+        screenOptions={{
+          headerTintColor: colors.purple,
+          headerTitleStyle: { fontWeight: '700' },
+          headerShadowVisible: false,
+          contentStyle: { backgroundColor: colors.bg },
+        }}
+      >
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen name="auditions/[id]/index" options={{ title: t('common.auditions') }} />
+        <Stack.Screen name="auditions/[id]/apply" options={{ title: t('apply.title') }} />
+        <Stack.Screen name="auditions/[id]/vote" options={{ title: t('vote.title') }} />
+        <Stack.Screen name="auditions/[id]/ranking" options={{ title: t('ranking.title') }} />
+        <Stack.Screen name="applications/[id]" options={{ title: t('common.applications') }} />
+        <Stack.Screen name="agency/applicants" options={{ title: t('myApplications.title') }} />
+        <Stack.Screen name="agency/[applicationId]" options={{ title: t('myApplications.viewDetail') }} />
+        <Stack.Screen name="notifications" options={{ title: t('common.appName') }} />
+        <Stack.Screen name="web" options={{ title: t('common.appName') }} />
+      </Stack>
+    </>
   )
 }

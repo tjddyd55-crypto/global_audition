@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useLocalSearchParams } from 'expo-router'
 import { useState } from 'react'
 import { Linking, StyleSheet, Text, View } from 'react-native'
+import { useTranslation } from 'react-i18next'
 import { agencyApi } from '../../src/api/endpoints'
 import { queryKeys } from '../../src/api/queryKeys'
 import type { AgencyBoardStatus } from '../../src/api/types'
@@ -14,6 +15,7 @@ import { StatusPill, toneForApplicationStatus } from '../../src/ui/StatusPill'
 import { colors } from '../../src/theme/tokens'
 
 export default function AgencyApplicantDetailScreen() {
+  const { t } = useTranslation()
   const { applicationId } = useLocalSearchParams<{ applicationId: string }>()
   const queryClient = useQueryClient()
   const query = useQuery({
@@ -34,24 +36,27 @@ export default function AgencyApplicantDetailScreen() {
 
   return (
     <Screen loading={query.isLoading}>
-      {query.isError ? <ErrorState message="지원자 상세를 불러오지 못했습니다." onRetry={() => void query.refetch()} /> : null}
+      {query.isError ? <ErrorState message={t('agency.detailLoadFailed')} onRetry={() => void query.refetch()} /> : null}
       {detail ? (
         <View style={styles.stack}>
           <StatusPill label={agencyBoardStatusLabel(detail.status)} tone={toneForApplicationStatus(detail.status)} />
-          <Text style={styles.title}>{detail.name || '이름 미입력'}</Text>
+          <Text style={styles.title}>{detail.name || t('agency.nameUnset')}</Text>
           <Text style={styles.meta}>
-            {nationalityLabel(detail.nationality)} {detail.age != null ? `· ${detail.age}세` : ''} · 라운드 {detail.round}
+            {nationalityLabel(detail.nationality)}{' '}
+            {detail.age != null ? `· ${t('application.ageYears', { age: detail.age })}` : ''} · {t('application.roundN', { n: detail.round })}
           </Text>
           {detail.introText ? <Text style={styles.body}>{detail.introText}</Text> : null}
-          {detail.videoUrl ? <Button label="지원 영상 열기" variant="secondary" onPress={() => void Linking.openURL(detail.videoUrl)} /> : null}
+          {detail.videoUrl ? (
+            <Button label={t('agency.openVideo')} variant="secondary" onPress={() => void Linking.openURL(detail.videoUrl)} />
+          ) : null}
           {detail.snsLinks.map((link) => (
             <Text key={`${link.platform}-${link.url}`} style={styles.meta}>
               {snsPlatformLabel(link.platform)} · {link.url}
             </Text>
           ))}
-          <Button label="검토중으로 표시" variant="secondary" onPress={() => setPending('REVIEWING')} />
-          <Button label="합격 처리" onPress={() => setPending('APPROVED')} />
-          <Button label="불합격 처리" variant="danger" onPress={() => setPending('REJECTED')} />
+          <Button label={t('agency.markReviewing')} variant="secondary" onPress={() => setPending('REVIEWING')} />
+          <Button label={t('agency.markPass')} onPress={() => setPending('APPROVED')} />
+          <Button label={t('agency.markReject')} variant="danger" onPress={() => setPending('REJECTED')} />
         </View>
       ) : null}
       <ConfirmDialog

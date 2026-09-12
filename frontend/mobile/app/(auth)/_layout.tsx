@@ -1,7 +1,9 @@
 import { Stack } from 'expo-router'
+import { useTranslation } from 'react-i18next'
 import { colors } from '../../src/theme/tokens'
 
 export default function AuthLayout() {
+  const { t } = useTranslation()
   return (
     <Stack
       screenOptions={{
@@ -10,9 +12,9 @@ export default function AuthLayout() {
         headerShadowVisible: false,
       }}
     >
-      <Stack.Screen name="login" options={{ title: '로그인' }} />
-      <Stack.Screen name="register" options={{ title: '회원가입' }} />
-      <Stack.Screen name="recover" options={{ title: '계정 찾기' }} />
+      <Stack.Screen name="login" options={{ title: t('auth.loginTitle') }} />
+      <Stack.Screen name="register" options={{ title: t('auth.registerTitle') }} />
+      <Stack.Screen name="recover" options={{ title: t('auth.findAccount') }} />
     </Stack>
   )
 }
