@@ -3,7 +3,7 @@
 import { VideoListItem } from '@/components/video/VideoListItem'
 import type { MyChannelVideoRow } from '@/shared/api/videos'
 import { resolveVideoThumbnailUrl } from '@/shared/audition/videoThumbnail'
-import { formatRelativeKo } from '@/shared/formatRelativeKo'
+import { formatRelative } from '@/shared/i18n/formatRelative'
 import { useTranslations } from 'next-intl'
 
 export type ChannelPublicVideoListProps = {
@@ -25,6 +25,7 @@ export function ChannelPublicVideoList({
   channelProfileImageUrl,
 }: ChannelPublicVideoListProps) {
   const t = useTranslations('channel')
+  const tRelative = useTranslations('relative')
   if (videosLoading && displayVideos.length === 0) {
     return <p className="px-3 py-10 text-sm text-neutral-600">{t('loadingVideos')}</p>
   }
@@ -63,7 +64,7 @@ export function ChannelPublicVideoList({
               channelName={chName}
               channelImageSrc={channelProfileImageUrl}
               viewCount={Number(v.viewCount ?? 0)}
-              dateLabel={formatRelativeKo(v.createdAt ?? '')}
+              dateLabel={formatRelative(v.createdAt ?? '', tRelative)}
               categoryBadge={cat || null}
             />
           </div>

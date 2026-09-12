@@ -1,5 +1,6 @@
 ﻿'use client'
 
+import { useTranslations } from 'next-intl'
 import { AUDITION_DETAIL } from '@/shared/design-tokens'
 
 type PcAuditionBenefitsSectionProps = {
@@ -7,13 +8,14 @@ type PcAuditionBenefitsSectionProps = {
 }
 
 export default function PcAuditionBenefitsSection({ benefits }: PcAuditionBenefitsSectionProps) {
+  const t = useTranslations('auditionDetail')
   if (benefits.length === 0) {
     return null
   }
 
   return (
     <section className="border-t border-neutral-200 py-6" style={{ marginTop: AUDITION_DETAIL.sectionGapPx }}>
-      <h2 style={{ margin: '0 0 16px 0', fontSize: 20, fontWeight: 700 }}>혜택</h2>
+      <h2 style={{ margin: '0 0 16px 0', fontSize: 20, fontWeight: 700 }}>{t('benefits')}</h2>
       <div className="flex flex-col divide-y divide-neutral-200">
         {benefits.map((b, i) => (
           <div

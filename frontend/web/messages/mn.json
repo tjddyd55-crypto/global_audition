@@ -217,7 +217,10 @@
     "rejected": "Тэнцээгүй",
     "loadFailed": "Аудишн ачаалж чадсангүй.",
     "emptyBody": "Шинэ зар энд харагдана.",
-    "loginCue": "Бүртгүүлж, санал өгөхийн тулд нэвтэрнэ үү."
+    "loginCue": "Бүртгүүлж, санал өгөхийн тулд нэвтэрнэ үү.",
+    "latestVideosHint": "Саяхан байршуулсан видеог үзээрэй",
+    "videosLoadFailed": "Видео ачаалж чадсангүй. Түр хүлээгээд дахин оролдоно уу.",
+    "seeAllVideos": "Бүх видео үзэх"
   },
   "auditions": {
     "title": "Аудишн",
@@ -293,7 +296,8 @@
     "tags": "Шошго",
     "agencyFallback": "Агентлаг",
     "daysLeftPeriod": "Үлдсэн хугацаа D-{n}",
-    "quickInfo": "Товч мэдээлэл"
+    "quickInfo": "Товч мэдээлэл",
+    "galleryAria": "Галерей"
   },
   "apply": {
     "title": "Бүртгүүлэх",
@@ -740,7 +744,10 @@
     "imageRules": "JPG, PNG, WebP, хамгийн ихдээ 10MB. Нүүр зураг солих: шинэ файл сонгох эсвэл устгаад дахин сонгоно. Зөвхөн нийтийн хадгалалтын URL хадгалагдана.",
     "coverEmptyPreview": "Нүүр зураг байршуулбал энд харагдана",
     "videoPreview": "Видео урьдчилан харах",
-    "youtubePreviewTitle": "YouTube урьдчилан харах"
+    "youtubePreviewTitle": "YouTube урьдчилан харах",
+    "editPosting": "Зар засах",
+    "backToPublicDetail": "Дэлгэрэнгүй рүү",
+    "savedRedirect": "Зарыг хадгаллаа. Нээлттэй дэлгэрэнгүй рүү шилжинэ."
   },
   "country": {
     "KR": "Солонгос",
@@ -837,7 +844,14 @@
     "navApplicants": "Өргөдөл",
     "navStats": "Статистик",
     "navSettings": "Тохиргоо",
-    "navAria": "Агентлагийн цэс"
+    "navAria": "Агентлагийн цэс",
+    "closePanelAria": "Самбар хаах",
+    "noIntro": "Бичсэн танилцуулга алга.",
+    "introTitle": "Хүсэл · танилцуулга",
+    "applyVideo": "Өргөдлийн видео",
+    "noVideoLink": "Видео холбоос алга.",
+    "noAuditionsHint": "Аудишн алга. Эхлээд аудишн удирдлагаас зар үүсгэнэ үү.",
+    "pickAudition": "Аудишн сонгоно уу."
   },
   "errors": {
     "INSUFFICIENT_CREDITS": "Кредит хүрэлцэхгүй байна",
@@ -1179,5 +1193,8 @@
     "hoursAgo": "{n} цагийн өмнө",
     "daysAgo": "{n} өдрийн өмнө",
     "monthsAgo": "{n} сарын өмнө"
+  },
+  "video": {
+    "viewsCount": "{n} үзэлт"
   }
 }

@@ -1,6 +1,7 @@
 ﻿'use client'
 
 import Image from 'next/image'
+import { useTranslations } from 'next-intl'
 
 type ApplicantDetailVideoSectionProps = {
   videoUrl?: string | null
@@ -13,9 +14,12 @@ export default function ApplicantDetailVideoSection({
   embedUrl,
   thumbnailUrl,
 }: ApplicantDetailVideoSectionProps) {
+  const tAgency = useTranslations('agency')
+  const tDetail = useTranslations('auditionDetail')
+
   return (
     <section>
-      <h3 className="mb-2 text-sm font-semibold text-gray-900">지원 영상</h3>
+      <h3 className="mb-2 text-sm font-semibold text-gray-900">{tAgency('applyVideo')}</h3>
       <div className="overflow-hidden rounded-xl bg-black">
         {embedUrl ? (
           <div className="relative aspect-video w-full">
@@ -48,10 +52,10 @@ export default function ApplicantDetailVideoSection({
                 rel="noreferrer"
                 className="text-sm font-medium text-violet-200 underline"
               >
-                새 창에서 영상 열기
+                {tDetail('openVideoNew')}
               </a>
             ) : (
-              <span className="text-sm font-medium text-violet-200">영상 링크가 없습니다.</span>
+              <span className="text-sm font-medium text-violet-200">{tAgency('noVideoLink')}</span>
             )}
           </div>
         )}

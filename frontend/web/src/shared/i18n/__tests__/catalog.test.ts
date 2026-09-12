@@ -78,6 +78,10 @@ describe('i18n catalogs', () => {
       'channel.firstVideo',
       'relative.justNow',
       'errors.PREVIOUS_ROUND_NOT_PASSED',
+      'agency.detailLoadFailed',
+      'editor.editPosting',
+      'home.latestVideosHint',
+      'video.viewsCount',
     ]
     for (const tree of [ko, en, mn] as const) {
       const keys = new Set(collectMessageKeys(tree))
@@ -125,6 +129,10 @@ describe('i18n catalogs', () => {
       expect(root.channel.firstVideo).toBeTruthy()
       expect(root.relative.justNow).toBeTruthy()
       expect(root.errors.PREVIOUS_ROUND_NOT_PASSED).toBeTruthy()
+      expect(root.agency.detailLoadFailed).toBeTruthy()
+      expect(root.editor.editPosting).toBeTruthy()
+      expect(root.home.latestVideosHint).toBeTruthy()
+      expect(root.video.viewsCount).toBeTruthy()
     }
   })
 

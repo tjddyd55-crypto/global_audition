@@ -6,12 +6,15 @@ import EmptyState from '@/components/ui/EmptyState'
 import { VideoListItem } from '@/components/video/VideoListItem'
 import { listBrowsePublicVideos } from '@/shared/api/channelVideoPublic'
 import { resolveVideoThumbnailUrl } from '@/shared/audition/videoThumbnail'
-import { formatRelativeKo } from '@/shared/formatRelativeKo'
+import { formatRelative } from '@/shared/i18n/formatRelative'
+import { useTranslations } from 'next-intl'
 import { channelVideoKeys } from '@/shared/query/channelVideoQuery'
 
 const CATEGORIES = ['전체 카테고리', 'Vocal', 'Dance', 'Rap'] as const
 
 export function VideosBrowsePageClient() {
+  const tRelative = useTranslations('relative')
+  const tChannel = useTranslations('channel')
   const [sortBy, setSortBy] = useState<'latest' | 'popular'>('latest')
   const [filterCategory, setFilterCategory] = useState<(typeof CATEGORIES)[number]>('전체 카테고리')
 
@@ -76,10 +79,10 @@ export function VideosBrowsePageClient() {
                 href={`/videos/${video.videoId}`}
                 title={video.title}
                 thumbnailSrc={resolveVideoThumbnailUrl(video.videoUrl, video.thumbnailUrl)}
-                channelName={video.channelDisplayName || '채널'}
+                channelName={video.channelDisplayName || tChannel('title')}
                 channelImageSrc={video.channelProfileImageUrl}
                 viewCount={Number(video.viewCount ?? 0)}
-                dateLabel={formatRelativeKo(video.publishedAt ?? '')}
+                dateLabel={formatRelative(video.publishedAt ?? '', tRelative)}
                 categoryBadge={video.category?.trim() || null}
               />
             </div>

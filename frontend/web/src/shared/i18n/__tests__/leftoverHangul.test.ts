@@ -77,6 +77,21 @@ const CATALOGUED_FILES = [
   'src/shared/audition/reasonMessages.ts',
   'src/app/[locale]/dashboard/applications/page.tsx',
   'src/app/[locale]/dashboard/auditions/create/page.tsx',
+  'src/components/audition/manage/detail/AgencyDetailPanel.tsx',
+  'src/components/audition/manage/detail/ApplicantDetailPanelHeader.tsx',
+  'src/components/audition/manage/detail/ApplicantDetailIntroSection.tsx',
+  'src/components/audition/manage/detail/ApplicantDetailVideoSection.tsx',
+  'src/components/agency/applicants/MyApplicantsEmptyState.tsx',
+  'src/components/agency/applicants/MyApplicantsAuditionSelector.tsx',
+  'src/app/[locale]/my/applicants/page.tsx',
+  'src/app/[locale]/auditions/[id]/edit/page.tsx',
+  'src/pc/pages/auditions/DetailPage.tsx',
+  'src/mobile/pages/auditions/DetailPage.tsx',
+  'src/pc/pages/auditions/components/PcAuditionBenefitsSection.tsx',
+  'src/components/audition/AuditionGalleryViewer.tsx',
+  'src/components/auth/RoleSelector.tsx',
+  'src/components/channel/ChannelPublicVideoList.tsx',
+  'src/components/home/HomeVideoSection.tsx',
 ]
 
 describe('catalogued user-facing files', () => {

@@ -217,7 +217,10 @@
     "rejected": "불합격",
     "loadFailed": "오디션 목록을 불러오지 못했습니다.",
     "emptyBody": "새로운 공고가 열리면 여기에 표시됩니다.",
-    "loginCue": "로그인하면 지원과 투표를 이어갈 수 있습니다."
+    "loginCue": "로그인하면 지원과 투표를 이어갈 수 있습니다.",
+    "latestVideosHint": "최근 업로드된 영상을 확인하세요",
+    "videosLoadFailed": "영상 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
+    "seeAllVideos": "모든 영상 보기"
   },
   "auditions": {
     "title": "오디션",
@@ -293,7 +296,8 @@
     "tags": "태그",
     "agencyFallback": "기획사",
     "daysLeftPeriod": "남은 기간 D-{n}",
-    "quickInfo": "빠른 정보"
+    "quickInfo": "빠른 정보",
+    "galleryAria": "갤러리"
   },
   "apply": {
     "title": "지원하기",
@@ -740,7 +744,10 @@
     "imageRules": "JPG·PNG·WebP, 최대 10MB. 대표 이미지 변경: 「이미지 변경」 또는 「제거」 후 다시 선택. 스토리지 공개 URL만 DB에 저장됩니다.",
     "coverEmptyPreview": "대표 이미지를 업로드하면 여기에 표시됩니다",
     "videoPreview": "영상 미리보기",
-    "youtubePreviewTitle": "YouTube 미리보기"
+    "youtubePreviewTitle": "YouTube 미리보기",
+    "editPosting": "공고 수정",
+    "backToPublicDetail": "상세로 돌아가기",
+    "savedRedirect": "공고가 반영되었습니다. 상세 화면으로 이동합니다."
   },
   "country": {
     "KR": "한국",
@@ -780,7 +787,7 @@
     "markReject": "불합격 처리",
     "openVideo": "지원 영상 열기",
     "nameUnset": "이름 미입력",
-    "detailLoadFailed": "지원자 상세를 불러오지 못했습니다.",
+    "detailLoadFailed": "상세를 불러오지 못했습니다.",
     "agencyAdminOnly": "이 페이지는 기획사·관리자만 이용할 수 있습니다.",
     "statusChanged": "상태가 변경되었습니다.",
     "roundCreated": "다음 차수 공고가 초안으로 생성되었습니다.",
@@ -837,7 +844,14 @@
     "navApplicants": "지원자 관리",
     "navStats": "통계",
     "navSettings": "설정",
-    "navAria": "기획사 메뉴"
+    "navAria": "기획사 메뉴",
+    "closePanelAria": "패널 닫기",
+    "noIntro": "작성 내용이 없습니다.",
+    "introTitle": "지원 동기 · 자기소개",
+    "applyVideo": "지원 영상",
+    "noVideoLink": "영상 링크가 없습니다.",
+    "noAuditionsHint": "등록된 오디션이 없습니다. 오디션 관리에서 공고를 만든 뒤 이용해 주세요.",
+    "pickAudition": "오디션을 선택해 주세요."
   },
   "errors": {
     "INSUFFICIENT_CREDITS": "크레딧이 부족합니다",
@@ -1179,5 +1193,8 @@
     "hoursAgo": "{n}시간 전",
     "daysAgo": "{n}일 전",
     "monthsAgo": "{n}개월 전"
+  },
+  "video": {
+    "viewsCount": "조회 {n}회"
   }
 }

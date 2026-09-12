@@ -8,7 +8,8 @@ import { DEFAULT_IMAGES } from '@/shared/constants/fallbacks'
 import { getVideoEmbedSrc } from '@/shared/utils/videoEmbed'
 import { useAuthStore } from '@/shared/auth/authStore'
 import { auditionApi } from '@/shared/api/auditions'
-import { formatRelativeKo } from '@/shared/formatRelativeKo'
+import { formatRelative } from '@/shared/i18n/formatRelative'
+import { useLocale, useTranslations } from 'next-intl'
 import {
   bumpApplicationViewPublic,
   deleteApplicationLike,
@@ -70,6 +71,10 @@ export function ApplicationVideoDetailClient() {
   const params = useParams()
   const applicationId = typeof params?.applicationId === 'string' ? params.applicationId : ''
   const accessToken = useAuthStore((s) => s.accessToken)
+  const locale = useLocale()
+  const tVideo = useTranslations('video')
+  const tRelative = useTranslations('relative')
+  const numberLocale = locale.startsWith('ko') ? 'ko-KR' : locale.startsWith('mn') ? 'mn-MN' : 'en-US'
 
   const [isLoading, setIsLoading] = useState(true)
   const [detail, setDetail] = useState<ApplicationPublicDetail | null>(null)
@@ -292,7 +297,7 @@ export function ApplicationVideoDetailClient() {
           <div className="px-4 py-3">
             <h1 className="text-base font-semibold leading-snug">{detail.title}</h1>
             <div className="mt-1 text-sm text-neutral-500">
-              조회 {detail.viewCount.toLocaleString('ko-KR')}회 · {formatRelativeKo(detail.publishedAt)}
+              {tVideo('viewsCount', { n: detail.viewCount.toLocaleString(numberLocale) })} · {formatRelative(detail.publishedAt, tRelative)}
             </div>
           </div>
 
@@ -413,7 +418,7 @@ export function ApplicationVideoDetailClient() {
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-baseline gap-2">
                       <span className="text-sm font-semibold">{c.authorDisplayName}</span>
-                      <span className="text-xs text-neutral-500">{formatRelativeKo(c.createdAt)}</span>
+                      <span className="text-xs text-neutral-500">{formatRelative(c.createdAt, tRelative)}</span>
                     </div>
                     <p className="mt-1 mb-0 text-sm leading-relaxed whitespace-pre-wrap">{c.content}</p>
                     <div className="mt-2 flex items-center gap-3 text-xs text-neutral-500">
@@ -441,7 +446,7 @@ export function ApplicationVideoDetailClient() {
                   channelName={item.channelDisplayName}
                   channelImageSrc={null}
                   viewCount={item.viewCount}
-                  dateLabel={formatRelativeKo(item.publishedAt)}
+                  dateLabel={formatRelative(item.publishedAt, tRelative)}
                 />
               </div>
             ))}

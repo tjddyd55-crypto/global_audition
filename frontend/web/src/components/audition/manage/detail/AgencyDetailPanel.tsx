@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { format } from 'date-fns'
-import { ko } from 'date-fns/locale'
+import { enUS, ko as koDate, mn } from 'date-fns/locale'
+import { useLocale, useTranslations } from 'next-intl'
 import type { AgencyBoardStatus, ApplicationAgencyDetail } from '@/shared/api/auditions'
 import { resolveVideoThumbnailUrl } from '@/shared/audition/videoThumbnail'
 import { getVideoEmbedSrc } from '@/shared/utils/videoEmbed'
@@ -36,6 +37,9 @@ export default function AgencyDetailPanel({
   patchingId,
   onPatch,
 }: AgencyDetailPanelProps) {
+  const tAgency = useTranslations('agency')
+  const locale = useLocale()
+  const dateLocale = locale.startsWith('ko') ? koDate : locale.startsWith('mn') ? mn : enUS
   const [confirmStatus, setConfirmStatus] = useState<AgencyBoardStatus | null>(null)
   const patching = patchingId === applicationId
 
@@ -45,7 +49,7 @@ export default function AgencyDetailPanel({
   const birth = detail?.birthDate
     ? (() => {
         try {
-          return format(new Date(detail.birthDate!), 'yyyy-MM-dd', { locale: ko })
+          return format(new Date(detail.birthDate!), 'yyyy-MM-dd', { locale: dateLocale })
         } catch {
           return detail.birthDate
         }
@@ -57,7 +61,7 @@ export default function AgencyDetailPanel({
       <button
         type="button"
         className="fixed inset-0 z-[60] bg-black/40"
-        aria-label="패널 닫기"
+        aria-label={tAgency('closePanelAria')}
         onClick={onClose}
       />
       <aside
@@ -68,8 +72,8 @@ export default function AgencyDetailPanel({
         <ApplicantDetailPanelHeader onClose={onClose} />
 
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
-          {isLoading ? <ApplicantDetailPanelState message="불러오는 중…" /> : null}
-          {isError ? <ApplicantDetailPanelState message="상세를 불러오지 못했습니다." tone="danger" /> : null}
+          {isLoading ? <ApplicantDetailPanelState message={tAgency('loading')} /> : null}
+          {isError ? <ApplicantDetailPanelState message={tAgency('detailLoadFailed')} tone="danger" /> : null}
           {detail && (
             <div className="flex flex-col gap-6">
               <ApplicantDetailVideoSection

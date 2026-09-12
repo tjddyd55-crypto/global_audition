@@ -30,6 +30,7 @@ import {
 export default function PcAuditionDetailPage() {
   const params = useParams()
   const t = useTranslations('common')
+  const tDetail = useTranslations('auditionDetail')
   const id = params.id as string
 
   const {
@@ -156,7 +157,7 @@ export default function PcAuditionDetailPage() {
               paddingRight: 'max(1rem, env(safe-area-inset-right))',
             }}
           >
-            소개 영상
+            {tDetail('introVideoTitle')}
           </h2>
           <div className="aspect-video w-full bg-black">
             <iframe

@@ -217,7 +217,10 @@
     "rejected": "Rejected",
     "loadFailed": "Could not load auditions.",
     "emptyBody": "New listings will appear here.",
-    "loginCue": "Sign in to apply and vote."
+    "loginCue": "Sign in to apply and vote.",
+    "latestVideosHint": "See the latest uploaded videos",
+    "videosLoadFailed": "Could not load videos. Try again shortly.",
+    "seeAllVideos": "See all videos"
   },
   "auditions": {
     "title": "Auditions",
@@ -293,7 +296,8 @@
     "tags": "Tags",
     "agencyFallback": "Agency",
     "daysLeftPeriod": "Time left D-{n}",
-    "quickInfo": "Quick info"
+    "quickInfo": "Quick info",
+    "galleryAria": "Gallery"
   },
   "apply": {
     "title": "Apply",
@@ -740,7 +744,10 @@
     "imageRules": "JPG, PNG, or WebP, max 10MB. To change the cover: choose a new image or remove it first. Only the public storage URL is saved.",
     "coverEmptyPreview": "Upload a cover image to preview it here",
     "videoPreview": "Video preview",
-    "youtubePreviewTitle": "YouTube preview"
+    "youtubePreviewTitle": "YouTube preview",
+    "editPosting": "Edit posting",
+    "backToPublicDetail": "Back to detail",
+    "savedRedirect": "Posting saved. Opening the public detail."
   },
   "country": {
     "KR": "Korea",
@@ -780,7 +787,7 @@
     "markReject": "Reject",
     "openVideo": "Open application video",
     "nameUnset": "Name not set",
-    "detailLoadFailed": "Could not load applicant detail.",
+    "detailLoadFailed": "Could not load the detail.",
     "agencyAdminOnly": "Only agencies and admins can use this page.",
     "statusChanged": "Status updated.",
     "roundCreated": "The next round posting was created as a draft.",
@@ -837,7 +844,14 @@
     "navApplicants": "Applicants",
     "navStats": "Stats",
     "navSettings": "Settings",
-    "navAria": "Agency menu"
+    "navAria": "Agency menu",
+    "closePanelAria": "Close panel",
+    "noIntro": "No intro written.",
+    "introTitle": "Motivation · intro",
+    "applyVideo": "Application video",
+    "noVideoLink": "No video link.",
+    "noAuditionsHint": "No auditions yet. Create a posting in Audition management first.",
+    "pickAudition": "Select an audition."
   },
   "errors": {
     "INSUFFICIENT_CREDITS": "Not enough credits",
@@ -1179,5 +1193,8 @@
     "hoursAgo": "{n} hr ago",
     "daysAgo": "{n} days ago",
     "monthsAgo": "{n} mo ago"
+  },
+  "video": {
+    "viewsCount": "{n} views"
   }
 }
