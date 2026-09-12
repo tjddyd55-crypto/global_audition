@@ -1,14 +1,15 @@
 import { useRouter } from 'expo-router'
 import { useState } from 'react'
-import { KeyboardAvoidingView, StyleSheet, Text } from 'react-native'
+import { StyleSheet, Text } from 'react-native'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../src/auth/AuthProvider'
 import { ApiError } from '../../src/api/http'
 import { API_BASE_URL, isCurrentApiLoopback } from '../../src/config/env'
+import { AuthScreenShell } from '../../src/ui/AuthScreenShell'
 import { Button } from '../../src/ui/Button'
 import { Screen } from '../../src/ui/Screen'
 import { TextField } from '../../src/ui/TextField'
 import { colors } from '../../src/theme/tokens'
-import { useTranslation } from 'react-i18next'
 
 export default function LoginScreen() {
   const { t } = useTranslation()
@@ -21,8 +22,7 @@ export default function LoginScreen() {
 
   return (
     <Screen>
-      <KeyboardAvoidingView behavior="padding" style={styles.box}>
-        <Text style={styles.title}>{t('auth.loginTitle')}</Text>
+      <AuthScreenShell title={t('auth.loginTitle')} subtitle={t('auth.loginButton')}>
         {isCurrentApiLoopback() ? (
           <Text style={styles.warn}>
             {t('auth.apiLoopbackWarn')} {API_BASE_URL}
@@ -49,14 +49,12 @@ export default function LoginScreen() {
         />
         <Button label={t('auth.registerButton')} variant="secondary" onPress={() => router.push('/(auth)/register')} />
         <Button label={t('auth.findAccount')} variant="secondary" onPress={() => router.push('/(auth)/recover')} />
-      </KeyboardAvoidingView>
+      </AuthScreenShell>
     </Screen>
   )
 }
 
 const styles = StyleSheet.create({
-  box: { gap: 12 },
-  title: { fontSize: 24, fontWeight: '800', color: colors.text, marginBottom: 8 },
   error: { color: colors.dangerText },
   warn: { color: colors.warnText, backgroundColor: colors.warnBg, padding: 10, borderRadius: 8, lineHeight: 20 },
 })

@@ -76,7 +76,8 @@ export default function HomeScreen() {
         <QuickAction label={t('nav.vote')} onPress={() => router.push('/(tabs)/vote')} />
         <QuickAction label={t('common.ranking')} onPress={() => router.push('/(tabs)/auditions')} />
         <QuickAction label={t('nav.applications')} onPress={() => router.push('/(tabs)/applications')} />
-        <QuickAction label={t('common.videos')} onPress={() => router.push('/web')} />
+        <QuickAction label={t('common.videos')} onPress={() => router.push('/videos')} />
+        <QuickAction label={t('common.channels')} onPress={() => router.push('/channels')} />
       </View>
 
       {auditionsQuery.isError ? (

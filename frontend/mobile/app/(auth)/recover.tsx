@@ -1,13 +1,16 @@
 import { useRouter } from 'expo-router'
 import { useState } from 'react'
-import { KeyboardAvoidingView, Pressable, StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, Text, View } from 'react-native'
+import { useTranslation } from 'react-i18next'
 import { authApi } from '../../src/api/endpoints'
 import { ApiError } from '../../src/api/http'
+import { AuthScreenShell } from '../../src/ui/AuthScreenShell'
 import { Button } from '../../src/ui/Button'
+import { Chip } from '../../src/ui/Chip'
 import { Screen } from '../../src/ui/Screen'
 import { TextField } from '../../src/ui/TextField'
-import { colors, radius } from '../../src/theme/tokens'
-import { useTranslation } from 'react-i18next'
+import { narrow } from '../../src/theme/narrow'
+import { colors } from '../../src/theme/tokens'
 
 type Mode = 'identify' | 'reset' | 'lost'
 
@@ -29,12 +32,11 @@ export default function RecoverScreen() {
 
   return (
     <Screen>
-      <KeyboardAvoidingView behavior="padding" style={styles.box}>
-        <Text style={styles.title}>{t('auth.findAccount')}</Text>
+      <AuthScreenShell title={t('auth.findAccount')} subtitle={t('auth.recoverHint')}>
         <View style={styles.modes}>
-          <ModeChip label={t('auth.identify')} selected={mode === 'identify'} onPress={() => setMode('identify')} />
-          <ModeChip label={t('auth.resetPassword')} selected={mode === 'reset'} onPress={() => setMode('reset')} />
-          <ModeChip label={t('auth.lostCode')} selected={mode === 'lost'} onPress={() => setMode('lost')} />
+          <Chip label={t('auth.identify')} selected={mode === 'identify'} onPress={() => setMode('identify')} />
+          <Chip label={t('auth.resetPassword')} selected={mode === 'reset'} onPress={() => setMode('reset')} />
+          <Chip label={t('auth.lostCode')} selected={mode === 'lost'} onPress={() => setMode('lost')} />
         </View>
         {hint ? <Text style={styles.hint}>{t('auth.confirmedAccount', { id: hint })}</Text> : null}
         {success ? <Text style={styles.ok}>{success}</Text> : null}
@@ -142,38 +144,15 @@ export default function RecoverScreen() {
         ) : null}
 
         <Button label={t('auth.backToLogin')} variant="secondary" onPress={() => router.replace('/(auth)/login')} />
-      </KeyboardAvoidingView>
+      </AuthScreenShell>
     </Screen>
   )
 }
 
-function ModeChip({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) {
-  return (
-    <Pressable onPress={onPress} style={[styles.chip, selected && styles.chipOn]} accessibilityRole="button">
-      <Text style={[styles.chipText, selected && styles.chipTextOn]}>{label}</Text>
-    </Pressable>
-  )
-}
-
 const styles = StyleSheet.create({
-  box: { gap: 12, paddingBottom: 24 },
-  title: { fontSize: 22, fontWeight: '800', color: colors.text },
-  body: { color: colors.muted, lineHeight: 22, fontSize: 14 },
-  modes: { flexDirection: 'row', gap: 6 },
-  chip: {
-    flex: 1,
-    minHeight: 44,
-    borderRadius: radius.button,
-    borderWidth: 1,
-    borderColor: colors.inputBorder,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 4,
-  },
-  chipOn: { borderColor: colors.purple, backgroundColor: colors.heroStart },
-  chipText: { fontSize: 12, fontWeight: '600', color: colors.muted, textAlign: 'center' },
-  chipTextOn: { color: colors.purple },
+  body: { color: colors.muted, lineHeight: 22, fontSize: 14, ...narrow.shrink },
+  modes: { ...narrow.wrap },
   hint: { color: colors.purple, fontWeight: '600' },
-  ok: { color: '#166534', lineHeight: 20 },
+  ok: { color: colors.successText, lineHeight: 20 },
   error: { color: colors.dangerText, lineHeight: 20 },
 })

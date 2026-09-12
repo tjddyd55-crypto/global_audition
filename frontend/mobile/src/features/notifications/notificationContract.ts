@@ -12,13 +12,21 @@ export type NotificationInboxItem = {
   title: string
   body: string
   createdAt: string
+  /** 지원서 상세 등 기존 라우팅 semantics */
+  applicationId?: string | null
+  auditionId?: string | null
 }
 
-export const NOTIFICATION_TYPE_COPY: Record<NotificationType, string> = {
-  ROUND_OPEN: '라운드가 열리면 알려 드립니다.',
-  PASS_NOTICE: '라운드 통과 안내',
-  FAIL_NOTICE: '라운드 결과 안내',
-  FINAL_NOTICE: '최종 결과 안내',
+/** 알림 타입별 i18n 키 (렌더 시 t() 사용) */
+export const NOTIFICATION_TYPE_I18N: Record<NotificationType, string> = {
+  ROUND_OPEN: 'notifications.ROUND_OPEN',
+  PASS_NOTICE: 'notifications.PASS_NOTICE',
+  FAIL_NOTICE: 'notifications.FAIL_NOTICE',
+  FINAL_NOTICE: 'notifications.FINAL_NOTICE',
 }
 
-export const NOTIFICATION_API_MISSING = '알림 수신 API가 아직 공개되어 있지 않습니다. 결과는 내 지원서에서 확인할 수 있습니다.'
+export function notificationDeepLinkPath(item: NotificationInboxItem): string | null {
+  if (item.applicationId) return `/applications/${item.applicationId}`
+  if (item.auditionId) return `/auditions/${item.auditionId}`
+  return null
+}
