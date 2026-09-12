@@ -1195,6 +1195,36 @@
     "monthsAgo": "{n} сарын өмнө"
   },
   "video": {
-    "viewsCount": "{n} үзэлт"
+    "viewsCount": "{n} үзэлт",
+    "notFound": "Видео олдсонгүй.",
+    "loading": "Ачааллаж байна…",
+    "noPlayableUrl": "Тоглуулах видео URL алга.",
+    "dislike": "Таалагдахгүй",
+    "linkCopied": "Холбоос хууллаа",
+    "saved": "Хадгалсан",
+    "subscribersCount": "{n} бүртгэл",
+    "subscribed": "Бүртгүүлсэн",
+    "collapse": "Хураах",
+    "more": "Дэлгэрэнгүй",
+    "commentsCount": "{n} сэтгэгдэл",
+    "commentPlaceholder": "Сэтгэгдэл бичнэ үү...",
+    "commentSubmit": "Сэтгэгдэл",
+    "reply": "Хариу",
+    "recommended": "Санал болгох видео",
+    "profileAria": "{name} профайл",
+    "cannotEmbed": "Энэ URL-ийг энд суулгах боломжгүй.",
+    "openInNewWindow": "Шинэ цонхонд нээх",
+    "preparing": "Видео бэлдэж байна...",
+    "playAria": "Видео тоглуулах",
+    "titleFallback": "Видео",
+    "previousAria": "Өмнөх видео",
+    "nextAria": "Дараагийн видео",
+    "browseTitle": "Видео үзэх",
+    "browseHint": "Нийтийн видео шинэчлэгдсэн байдлаар харагдана",
+    "allCategories": "Бүх ангилал",
+    "sortLatest": "Шинэ",
+    "sortPopular": "Алдартай",
+    "browseLoading": "Видео ачааллаж байна…",
+    "browseEmpty": "Нийтэлсэн нийтийн видео алга"
   }
 }

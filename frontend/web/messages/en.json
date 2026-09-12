@@ -1195,6 +1195,36 @@
     "monthsAgo": "{n} mo ago"
   },
   "video": {
-    "viewsCount": "{n} views"
+    "viewsCount": "{n} views",
+    "notFound": "Video not found.",
+    "loading": "Loading…",
+    "noPlayableUrl": "No playable video URL.",
+    "dislike": "Dislike",
+    "linkCopied": "Link copied",
+    "saved": "Saved",
+    "subscribersCount": "{n} subscribers",
+    "subscribed": "Subscribed",
+    "collapse": "Show less",
+    "more": "Show more",
+    "commentsCount": "{n} comments",
+    "commentPlaceholder": "Add a comment...",
+    "commentSubmit": "Comment",
+    "reply": "Reply",
+    "recommended": "Recommended",
+    "profileAria": "{name} profile",
+    "cannotEmbed": "This URL cannot be embedded here.",
+    "openInNewWindow": "Open in new window",
+    "preparing": "Preparing video...",
+    "playAria": "Play video",
+    "titleFallback": "Video",
+    "previousAria": "Previous video",
+    "nextAria": "Next video",
+    "browseTitle": "Browse videos",
+    "browseHint": "Public videos stay up to date as they are published",
+    "allCategories": "All categories",
+    "sortLatest": "Latest",
+    "sortPopular": "Popular",
+    "browseLoading": "Loading videos…",
+    "browseEmpty": "No public videos uploaded yet"
   }
 }

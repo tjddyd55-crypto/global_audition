@@ -82,6 +82,8 @@ describe('i18n catalogs', () => {
       'editor.editPosting',
       'home.latestVideosHint',
       'video.viewsCount',
+      'video.browseTitle',
+      'video.commentsCount',
     ]
     for (const tree of [ko, en, mn] as const) {
       const keys = new Set(collectMessageKeys(tree))
@@ -133,6 +135,8 @@ describe('i18n catalogs', () => {
       expect(root.editor.editPosting).toBeTruthy()
       expect(root.home.latestVideosHint).toBeTruthy()
       expect(root.video.viewsCount).toBeTruthy()
+      expect(root.video.browseTitle).toBeTruthy()
+      expect(root.video.commentsCount).toBeTruthy()
     }
   })
 

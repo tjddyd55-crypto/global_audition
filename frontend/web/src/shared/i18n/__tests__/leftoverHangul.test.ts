@@ -92,6 +92,12 @@ const CATALOGUED_FILES = [
   'src/components/auth/RoleSelector.tsx',
   'src/components/channel/ChannelPublicVideoList.tsx',
   'src/components/home/HomeVideoSection.tsx',
+  'src/components/video/ChannelVideoDetailClient.tsx',
+  'src/components/video/ApplicationVideoDetailClient.tsx',
+  'src/components/video/VideoListItem.tsx',
+  'src/components/video/VideoEmbedOverlay.tsx',
+  'src/components/videos/VideosBrowsePageClient.tsx',
+  'src/components/video/VideoDetailPageClient.tsx',
 ]
 
 describe('catalogued user-facing files', () => {

@@ -1195,6 +1195,36 @@
     "monthsAgo": "{n}개월 전"
   },
   "video": {
-    "viewsCount": "조회 {n}회"
+    "viewsCount": "조회 {n}회",
+    "notFound": "영상을 찾을 수 없습니다.",
+    "loading": "불러오는 중…",
+    "noPlayableUrl": "재생할 수 있는 영상 URL이 없습니다.",
+    "dislike": "싫어요",
+    "linkCopied": "링크 복사됨",
+    "saved": "저장됨",
+    "subscribersCount": "구독자 {n}명",
+    "subscribed": "구독중",
+    "collapse": "접기",
+    "more": "더보기",
+    "commentsCount": "댓글 {n}개",
+    "commentPlaceholder": "댓글을 입력하세요...",
+    "commentSubmit": "댓글",
+    "reply": "답글",
+    "recommended": "추천 영상",
+    "profileAria": "{name} 프로필",
+    "cannotEmbed": "이 URL은 여기에서 임베드할 수 없습니다.",
+    "openInNewWindow": "새 창에서 열기",
+    "preparing": "영상 준비 중...",
+    "playAria": "영상 재생",
+    "titleFallback": "영상",
+    "previousAria": "이전 영상",
+    "nextAria": "다음 영상",
+    "browseTitle": "영상 둘러보기",
+    "browseHint": "실제 공개 영상이 최신 상태로 반영됩니다",
+    "allCategories": "전체 카테고리",
+    "sortLatest": "최신순",
+    "sortPopular": "인기순",
+    "browseLoading": "영상을 불러오는 중…",
+    "browseEmpty": "아직 업로드된 공개 영상이 없습니다"
   }
 }
