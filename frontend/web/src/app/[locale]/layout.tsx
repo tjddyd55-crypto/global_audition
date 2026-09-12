@@ -12,12 +12,11 @@ import ErrorBoundary from '../../components/ErrorBoundary'
 import { getDeviceFromHeaders } from '@/shared/device/resolveDevice'
 import { MobileShell } from '@/mobile/layouts/MobileShell'
 
-// 폰트 최적화: display swap으로 로딩 성능 개선
-const inter = Inter({ 
-  subsets: ['latin'], 
+const inter = Inter({
+  subsets: ['latin'],
   variable: '--font-inter',
-  display: 'swap', // 폰트 로딩 중에도 텍스트 표시
-  preload: true, // 폰트 프리로드
+  display: 'swap',
+  preload: true,
 })
 
 export const metadata: Metadata = {
@@ -43,19 +42,13 @@ export default async function LocaleLayout({
 }) {
   const { locale } = await params
 
-  // 지원하지 않는 언어인 경우 404
   if (!routing.locales.includes(locale as any)) {
     notFound()
   }
 
-  // 정적 렌더링을 위해 setRequestLocale 호출 (필수)
   setRequestLocale(locale)
 
-  // 번역 메시지 로드 (캐싱으로 최적화됨)
   const messages = await getMessages()
-
-  // 모바일은 바텀탭 + safe-area를 가진 Shell로 감싸고, Footer는 숨긴다.
-  // PC/태블릿은 기존 Header/Footer 레이아웃을 그대로 유지.
   const device = getDeviceFromHeaders()
 
   const body = (

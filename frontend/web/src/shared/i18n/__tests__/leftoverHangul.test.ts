@@ -116,6 +116,11 @@ const CATALOGUED_FILES = [
   'src/components/cards/VideoCard.tsx',
   'src/shared/api/uploads.ts',
   'src/shared/i18n/mapDisplayError.ts',
+  'src/components/audition/AuditionCard.tsx',
+  'src/shared/constants/fallbacks.ts',
+  'src/components/admin/DataTable.tsx',
+  'src/shared/utils/countries.ts',
+  'src/app/[locale]/layout.tsx',
 ]
 
 describe('catalogued user-facing files', () => {

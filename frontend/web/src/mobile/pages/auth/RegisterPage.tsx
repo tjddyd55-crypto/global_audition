@@ -66,6 +66,8 @@ export default function MobileRegisterPage() {
   const tAuth = useTranslations('auth')
   const tReg = useTranslations('register')
   const tVal = useTranslations('validation')
+  const tCountries = useTranslations('countries')
+  const tLanguages = useTranslations('languages')
   const router = useRouter()
   const queryClient = useQueryClient()
   const [error, setError] = useState<string | null>(null)
@@ -340,7 +342,7 @@ export default function MobileRegisterPage() {
                   <option value="">{tReg('selectCountry')}</option>
                   {countries.map((country) => (
                     <option key={country.code} value={country.code}>
-                      {country.name}
+                      {tCountries(country.code)}
                     </option>
                   ))}
                 </select>
@@ -421,7 +423,7 @@ export default function MobileRegisterPage() {
                         onChange={() => toggleLanguage(lang.code)}
                         className="rounded"
                       />
-                      <span>{lang.name}</span>
+                      <span>{tLanguages(lang.code)}</span>
                     </label>
                   ))}
                 </div>
@@ -453,7 +455,7 @@ export default function MobileRegisterPage() {
                   <option value="">{tReg('selectCountry')}</option>
                   {countries.map((country) => (
                     <option key={country.code} value={country.code}>
-                      {country.name}
+                      {tCountries(country.code)}
                     </option>
                   ))}
                 </select>

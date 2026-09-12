@@ -30,7 +30,13 @@ const mockAudition: AuditionDto = {
 
 function renderAuditionCard(audition: AuditionDto) {
   return render(
-    <NextIntlClientProvider locale="ko" messages={{ status: { open: '모집중', closed: '마감', draft: '초안' } }}>
+    <NextIntlClientProvider
+      locale="ko"
+      messages={{
+        status: { open: '모집중', closed: '마감', draft: '초안' },
+        fallback: { videoTitle: '제목 없음', date: '날짜 없음' },
+      }}
+    >
       <AuditionCard audition={audition} />
     </NextIntlClientProvider>,
   )

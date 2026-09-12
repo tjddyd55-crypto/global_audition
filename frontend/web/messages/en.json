@@ -30,6 +30,7 @@
     "language": "Language",
     "retry": "Try again",
     "empty": "Nothing to show",
+    "noData": "No data.",
     "myAccount": "My account",
     "close": "Close",
     "add": "Add",
@@ -788,6 +789,31 @@
     "OTHER": "Other",
     "unspecified": "Not selected"
   },
+  "countries": {
+    "KR": "South Korea",
+    "US": "United States",
+    "JP": "Japan",
+    "CN": "China",
+    "GB": "United Kingdom",
+    "FR": "France",
+    "DE": "Germany",
+    "IT": "Italy",
+    "ES": "Spain",
+    "CA": "Canada",
+    "AU": "Australia",
+    "BR": "Brazil",
+    "MX": "Mexico",
+    "IN": "India",
+    "RU": "Russia",
+    "TH": "Thailand",
+    "VN": "Vietnam",
+    "PH": "Philippines",
+    "ID": "Indonesia",
+    "SG": "Singapore",
+    "MY": "Malaysia",
+    "TW": "Taiwan",
+    "HK": "Hong Kong"
+  },
   "agency": {
     "applicants": "Applicant management",
     "pass": "Pass",
@@ -1309,7 +1335,12 @@
     "zh": "中文",
     "es": "Español",
     "fr": "Français",
-    "de": "Deutsch"
+    "de": "Deutsch",
+    "it": "Italiano",
+    "pt": "Português",
+    "ru": "Русский",
+    "th": "ไทย",
+    "vi": "Tiếng Việt"
   },
   "device": {
     "viewPc": "View desktop version",

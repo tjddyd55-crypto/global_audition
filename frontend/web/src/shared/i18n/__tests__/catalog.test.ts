@@ -94,6 +94,9 @@ describe('i18n catalogs', () => {
       'common.errorTemp',
       'fallback.videoTitle',
       'uploader.loginRequired',
+      'countries.KR',
+      'languages.it',
+      'common.noData',
     ]
     for (const tree of [ko, en, mn] as const) {
       const keys = new Set(collectMessageKeys(tree))
@@ -157,6 +160,9 @@ describe('i18n catalogs', () => {
       expect(root.common.errorTemp).toBeTruthy()
       expect(root.fallback.videoTitle).toBeTruthy()
       expect(root.uploader.loginRequired).toBeTruthy()
+      expect(root.countries.KR).toBeTruthy()
+      expect(root.languages.it).toBeTruthy()
+      expect(root.common.noData).toBeTruthy()
     }
   })
 

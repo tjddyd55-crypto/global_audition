@@ -30,6 +30,7 @@
     "language": "언어",
     "retry": "다시 시도",
     "empty": "표시할 항목이 없습니다",
+    "noData": "데이터가 없습니다.",
     "myAccount": "내 계정",
     "close": "닫기",
     "add": "추가",
@@ -788,6 +789,31 @@
     "OTHER": "기타",
     "unspecified": "선택 안 함"
   },
+  "countries": {
+    "KR": "대한민국 (South Korea)",
+    "US": "미국 (United States)",
+    "JP": "일본 (Japan)",
+    "CN": "중국 (China)",
+    "GB": "영국 (United Kingdom)",
+    "FR": "프랑스 (France)",
+    "DE": "독일 (Germany)",
+    "IT": "이탈리아 (Italy)",
+    "ES": "스페인 (Spain)",
+    "CA": "캐나다 (Canada)",
+    "AU": "호주 (Australia)",
+    "BR": "브라질 (Brazil)",
+    "MX": "멕시코 (Mexico)",
+    "IN": "인도 (India)",
+    "RU": "러시아 (Russia)",
+    "TH": "태국 (Thailand)",
+    "VN": "베트남 (Vietnam)",
+    "PH": "필리핀 (Philippines)",
+    "ID": "인도네시아 (Indonesia)",
+    "SG": "싱가포르 (Singapore)",
+    "MY": "말레이시아 (Malaysia)",
+    "TW": "대만 (Taiwan)",
+    "HK": "홍콩 (Hong Kong)"
+  },
   "agency": {
     "applicants": "지원자 관리",
     "pass": "합격",
@@ -1309,7 +1335,12 @@
     "zh": "中文",
     "es": "Español",
     "fr": "Français",
-    "de": "Deutsch"
+    "de": "Deutsch",
+    "it": "Italiano",
+    "pt": "Português",
+    "ru": "Русский",
+    "th": "ไทย",
+    "vi": "Tiếng Việt"
   },
   "device": {
     "viewPc": "PC 버전으로 보기",
