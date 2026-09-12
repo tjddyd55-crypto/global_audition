@@ -1,15 +1,20 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useLocalSearchParams, useRouter } from 'expo-router'
-import { Linking, StyleSheet, Text, View } from 'react-native'
+import { useState } from 'react'
+import { StyleSheet, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { voteApi } from '../../../src/api/endpoints'
 import { queryKeys } from '../../../src/api/queryKeys'
 import { useAuth } from '../../../src/auth/AuthProvider'
 import { ApiError } from '../../../src/api/http'
+import { narrow } from '../../../src/theme/narrow'
 import { Button } from '../../../src/ui/Button'
+import { Chip } from '../../../src/ui/Chip'
 import { EmptyState, ErrorState } from '../../../src/ui/EmptyState'
 import { Screen } from '../../../src/ui/Screen'
-import { colors, radius } from '../../../src/theme/tokens'
+import { VoteBoardRow } from '../../../src/ui/VoteBoardRow'
+import { VoteSummaryGrid } from '../../../src/ui/VoteSummaryGrid'
+import { colors, space } from '../../../src/theme/tokens'
 
 export default function VoteScreen() {
   const { t } = useTranslation()
@@ -17,73 +22,132 @@ export default function VoteScreen() {
   const router = useRouter()
   const queryClient = useQueryClient()
   const { isAuthenticated } = useAuth()
-  const query = useQuery({ queryKey: queryKeys.votes(id), queryFn: () => voteApi.list(id), enabled: Boolean(id) })
+  const [category, setCategory] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
+
+  const query = useQuery({
+    queryKey: queryKeys.votes(id, category ?? undefined),
+    queryFn: () => voteApi.list(id, category ?? undefined),
+    enabled: Boolean(id),
+  })
+
+  const invalidate = () => void queryClient.invalidateQueries({ queryKey: ['auditions', id, 'votes'] })
+
   const voteMutation = useMutation({
     mutationFn: (applicationId: string) => voteApi.cast(id, applicationId),
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: queryKeys.votes(id) }),
+    onSuccess: () => {
+      invalidate()
+      setNotice(t('vote.castSuccess'))
+    },
+    onError: () => setNotice(t('vote.failed')),
+  })
+
+  const cancelMutation = useMutation({
+    mutationFn: (applicationId: string) => voteApi.cancel(applicationId),
+    onSuccess: () => {
+      invalidate()
+      setNotice(t('vote.cancelSuccess'))
+    },
+    onError: () => setNotice(t('vote.cancelFailed')),
   })
 
   const page = query.data
+  const summary = page?.summary
+  const mutationBusy = voteMutation.isPending || cancelMutation.isPending
+
+  const requireAuth = () => {
+    if (!isAuthenticated) {
+      router.push('/(auth)/login')
+      return false
+    }
+    return true
+  }
 
   return (
-    <Screen loading={query.isLoading}>
-      {query.isError ? <ErrorState message={t('vote.loadFailed')} onRetry={() => void query.refetch()} /> : null}
+    <Screen loading={query.isLoading} refreshing={query.isFetching} onRefresh={() => void query.refetch()}>
+      {query.isError ? <ErrorState message={t('vote.loadBoardFailed')} onRetry={() => void query.refetch()} /> : null}
       {page ? (
         <View style={styles.head}>
-          <Text style={styles.title}>{page.audition.title}</Text>
+          <Text style={styles.title} numberOfLines={2}>{page.audition.title}</Text>
+          <Text style={styles.meta}>{t('vote.cheerHint')}</Text>
           <Text style={styles.meta}>
             {t('vote.summary', {
-              applicants: page.summary.applicantCount,
-              votes: page.summary.totalVotes,
-              mine: page.summary.myVoteCount,
+              applicants: summary?.applicantCount ?? 0,
+              votes: summary?.totalVotes ?? 0,
+              mine: summary?.myVoteCount ?? 0,
             })}
           </Text>
+          <View style={styles.actions}>
+            <Button label={t('ranking.title')} variant="secondary" onPress={() => router.push(`/auditions/${id}/ranking`)} />
+            <Button label={t('vote.backToAudition')} variant="secondary" onPress={() => router.push(`/auditions/${id}`)} />
+          </View>
         </View>
       ) : null}
-      {(page?.items ?? []).map((item) => (
-        <View key={item.applicationId} style={styles.card}>
-          <Text style={styles.rank}>#{item.rank || '-'}</Text>
-          <Text style={styles.name}>{item.userName || t('vote.applicantFallback')}</Text>
-          <Text style={styles.meta}>{item.description}</Text>
-          <Text style={styles.meta}>{t('vote.voteCount', { n: item.voteCount })}</Text>
-          {item.videoUrl ? (
-            <Button label={t('vote.watchVideo')} variant="secondary" onPress={() => void Linking.openURL(item.videoUrl)} />
-          ) : null}
-          <Button
-            label={item.isVoted ? t('vote.myVote') : t('vote.castFor')}
-            disabled={item.isVoted || voteMutation.isPending}
-            onPress={() => {
-              if (!isAuthenticated) {
-                router.push('/(auth)/login')
-                return
-              }
-              voteMutation.mutate(item.applicationId)
-            }}
-          />
+
+      {summary ? (
+        <VoteSummaryGrid
+          applicants={summary.applicantCount}
+          totalVotes={summary.totalVotes}
+          totalViews={summary.totalViewCount}
+          myVotes={summary.myVoteCount}
+        />
+      ) : null}
+
+      {page?.audition.categories && page.audition.categories.length > 0 ? (
+        <View style={styles.chips}>
+          {page.audition.categories.map((c) => {
+            const selected = (c.name === '전체' && category === null) || c.name === category
+            return (
+              <Chip
+                key={c.name}
+                label={c.name === '전체' ? t('vote.allCategories') : `${c.name}${c.count > 0 ? ` ${c.count}` : ''}`}
+                selected={selected}
+                disabled={mutationBusy}
+                onPress={() => setCategory(c.name === '전체' ? null : c.name)}
+              />
+            )
+          })}
         </View>
-      ))}
+      ) : null}
+
+      {notice ? <Text style={styles.notice}>{notice}</Text> : null}
       {voteMutation.isError ? (
-        <Text style={styles.error}>{voteMutation.error instanceof ApiError ? voteMutation.error.message : t('vote.failed')}</Text>
+        <Text style={styles.error}>
+          {voteMutation.error instanceof ApiError ? voteMutation.error.message : t('vote.failed')}
+        </Text>
       ) : null}
-      {!query.isLoading && (page?.items.length ?? 0) === 0 ? <EmptyState title={t('vote.emptyBoard')} /> : null}
+
+      {(page?.items ?? []).map((item) => (
+        <VoteBoardRow
+          key={item.applicationId}
+          item={item}
+          disabled={mutationBusy}
+          onVote={() => {
+            if (!requireAuth()) return
+            voteMutation.mutate(item.applicationId)
+          }}
+          onCancel={
+            item.isVoted
+              ? () => {
+                  if (!requireAuth()) return
+                  cancelMutation.mutate(item.applicationId)
+                }
+              : undefined
+          }
+        />
+      ))}
+
+      {!query.isLoading && (page?.items.length ?? 0) === 0 ? <EmptyState title={t('vote.emptyApplicants')} /> : null}
     </Screen>
   )
 }
 
 const styles = StyleSheet.create({
-  head: { marginBottom: 16, gap: 6 },
-  title: { fontSize: 22, fontWeight: '800', color: colors.text },
-  meta: { color: colors.muted, fontSize: 13, lineHeight: 20 },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: 16,
-    gap: 8,
-    marginBottom: 12,
-  },
-  rank: { color: colors.purple, fontWeight: '800' },
-  name: { fontSize: 16, fontWeight: '700', color: colors.text },
-  error: { color: colors.dangerText },
+  head: { marginBottom: space.md, gap: space.xs },
+  title: { fontSize: 22, fontWeight: '800', color: colors.text, ...narrow.shrink },
+  meta: { color: colors.muted, fontSize: 13, lineHeight: 20, ...narrow.shrink },
+  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: space.xs, marginTop: space.xs },
+  chips: { ...narrow.wrap, marginBottom: space.md },
+  notice: { color: colors.purple, fontWeight: '600', marginBottom: space.sm, ...narrow.shrink },
+  error: { color: colors.dangerText, marginBottom: space.sm, ...narrow.shrink },
 })

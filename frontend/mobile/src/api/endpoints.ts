@@ -118,6 +118,26 @@ export const profileApi = {
     unwrapData(await apiRequest<unknown>('/me', { method: 'PATCH', body })) as MeProfile,
 }
 
+export const CREDIT_POLICY_AUDITION_APPLY = 'AUDITION_APPLY' as const
+
+export type CreditPolicyPublic = {
+  policyKey: string
+  cost: number
+  active: boolean
+}
+
+export type CreditBalance = {
+  balance: number
+}
+
+/** 지원 화면 크레딧 표시용 read-only API. 결제·차감은 서버가 처리한다. */
+export const creditApi = {
+  getPublicPolicy: async (policyKey: string): Promise<CreditPolicyPublic> =>
+    unwrapData(await apiRequest<unknown>(`/credits/public/policies/${encodeURIComponent(policyKey)}`)),
+  getBalance: async (): Promise<CreditBalance> =>
+    unwrapData(await apiRequest<unknown>('/credits/balance')) as CreditBalance,
+}
+
 export const dashboardApi = {
   applicant: async (): Promise<ApplicantDashboard> =>
     parseApplicantDashboard(unwrapData(await apiRequest<unknown>('/me/dashboard'))),

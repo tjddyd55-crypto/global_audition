@@ -12,3 +12,13 @@ export function formatWholeUsd(amount: number): string {
 export function formatUsd(amount: number, _locale = getRuntimeLocale()): string {
   return formatWholeUsd(amount)
 }
+
+export function formatLocaleDate(iso: string, locale = getRuntimeLocale()): string {
+  const parsed = Date.parse(iso)
+  if (!Number.isFinite(parsed)) return iso
+  try {
+    return new Intl.DateTimeFormat(locale, { year: 'numeric', month: 'short', day: 'numeric' }).format(parsed)
+  } catch {
+    return iso.slice(0, 10)
+  }
+}
