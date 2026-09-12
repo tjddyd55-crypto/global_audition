@@ -7,6 +7,8 @@ import com.audition.platform.api.dto.CreateAuditionRequest;
 import com.audition.platform.api.dto.UpdateAuditionRequest;
 import com.audition.platform.application.audition.AuditionSeriesEligibilityService;
 import com.audition.platform.application.audition.AuditionSeriesPresentation;
+import com.audition.platform.application.i18n.AuditionLocalizationService;
+import com.audition.platform.application.i18n.ContentLocales;
 import com.audition.platform.api.dto.AuditionTagRefDto;
 import com.audition.platform.application.round.AuditionProcessModes;
 import com.audition.platform.application.round.AuditionRoundService;
@@ -48,19 +50,22 @@ public class AuditionService {
     private final AuditionRoundService auditionRoundService;
     private final AuditionTagService auditionTagService;
     private final AuditionSeriesEligibilityService auditionSeriesEligibilityService;
+    private final AuditionLocalizationService auditionLocalizationService;
 
     public AuditionService(AuditionRepository auditionRepository,
                            UserRepository userRepository,
                            ApplicationRepository applicationRepository,
                            AuditionRoundService auditionRoundService,
                            AuditionTagService auditionTagService,
-                           AuditionSeriesEligibilityService auditionSeriesEligibilityService) {
+                           AuditionSeriesEligibilityService auditionSeriesEligibilityService,
+                           AuditionLocalizationService auditionLocalizationService) {
         this.auditionRepository = auditionRepository;
         this.userRepository = userRepository;
         this.applicationRepository = applicationRepository;
         this.auditionRoundService = auditionRoundService;
         this.auditionTagService = auditionTagService;
         this.auditionSeriesEligibilityService = auditionSeriesEligibilityService;
+        this.auditionLocalizationService = auditionLocalizationService;
     }
 
     private static Instant parseInstantRequired(String value, String field) {
@@ -111,6 +116,24 @@ public class AuditionService {
         a.setQualifications(a.getQualifications());
         a.setSchedules(a.getSchedules());
         a.setBenefits(a.getBenefits());
+    }
+
+    /**
+     * 기존 {@code auditions.country_code} 재사용. 대상 국가/권역: KR, MN, GLOBAL, JP, OTHER.
+     * 새 컬럼을 만들지 않는다.
+     */
+    private static String normalizeCountryCode(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        String code = raw.trim().toUpperCase();
+        return switch (code) {
+            case "KR", "MN", "GLOBAL", "JP", "OTHER" -> code;
+            case "KOREA", "KOR" -> "KR";
+            case "MONGOLIA", "MNG" -> "MN";
+            case "WORLD", "ALL", "WW" -> "GLOBAL";
+            default -> code.length() <= 16 ? code : code.substring(0, 16);
+        };
     }
 
     private static String trimOrNull(String s) {
@@ -217,6 +240,7 @@ public class AuditionService {
         r.setDisplayTitle(AuditionSeriesPresentation.displayTitle(a.getTitle(), a.getSeriesRound()));
         r.setRecruitmentRoundLabel(
                 AuditionSeriesPresentation.recruitmentRoundLabel(statusForLabel, a.getSeriesRound()));
+        auditionLocalizationService.apply(a, r);
         return r;
     }
 
@@ -251,7 +275,10 @@ public class AuditionService {
         a.setEndDate(end);
         Instant deadlineParsed = parseInstantOrNull(req.getDeadlineAt());
         a.setDeadlineAt(deadlineParsed != null ? deadlineParsed : end);
-        a.setCountryCode(req.getCountryCode());
+        a.setCountryCode(normalizeCountryCode(req.getCountryCode()));
+        if (req.getDefaultLocale() != null && !req.getDefaultLocale().isBlank()) {
+            a.setDefaultLocale(ContentLocales.normalize(req.getDefaultLocale()));
+        }
         a.setRemainingDays(computeRemainingDays(end));
         a.setApplicantsCount(0);
         if (req.getProcessMode() != null && AuditionProcessModes.isMultiRound(req.getProcessMode())) {
@@ -317,9 +344,30 @@ public class AuditionService {
     }
 
     public List<AuditionResponse> listOpen() {
+        return listOpen(null);
+    }
+
+    public List<AuditionResponse> listOpen(String country) {
         return auditionRepository.findByStatusOrderByCreatedAtDesc("OPEN").stream()
+                .filter(a -> matchesAudience(a.getCountryCode(), country))
                 .map(this::toResponse)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 기존 country_code 재사용. MN 요청은 MN+GLOBAL(+미지정), KR은 KR+GLOBAL.
+     * GLOBAL/빈 값은 전체 OPEN.
+     */
+    static boolean matchesAudience(String stored, String requestedRaw) {
+        if (requestedRaw == null || requestedRaw.isBlank()) {
+            return true;
+        }
+        String requested = requestedRaw.trim().toUpperCase();
+        if ("GLOBAL".equals(requested) || "ALL".equals(requested)) {
+            return true;
+        }
+        String code = stored == null || stored.isBlank() ? "GLOBAL" : stored.trim().toUpperCase();
+        return requested.equals(code) || "GLOBAL".equals(code);
     }
 
     public List<AuditionResponse> listByStatus(String status) {
@@ -380,6 +428,7 @@ public class AuditionService {
                 r.setRoundSummaries(new ArrayList<>());
             }
         }
+        auditionLocalizationService.apply(a, r);
         return r;
     }
 
@@ -405,7 +454,10 @@ public class AuditionService {
             audition.setStatus(request.getStatus());
         }
         if (request.getCountryCode() != null) {
-            audition.setCountryCode(request.getCountryCode());
+            audition.setCountryCode(normalizeCountryCode(request.getCountryCode()));
+        }
+        if (request.getDefaultLocale() != null && !request.getDefaultLocale().isBlank()) {
+            audition.setDefaultLocale(ContentLocales.normalize(request.getDefaultLocale()));
         }
         boolean patchNewTags = request.getTagIds() != null || request.getCustomTagNames() != null;
         if (patchNewTags) {
@@ -526,6 +578,7 @@ public class AuditionService {
         n.setDescription(source.getDescription());
         n.setStatus("DRAFT");
         n.setCountryCode(source.getCountryCode());
+        n.setDefaultLocale(source.getDefaultLocale());
         n.setDeadlineAt(source.getDeadlineAt());
         n.setCoverImage(source.getCoverImage());
         n.setImageOriginalUrl(source.getImageOriginalUrl());

@@ -6,6 +6,7 @@ import type { Metadata, Viewport } from 'next'
 import { Providers } from './providers'
 import { DeviceProvider } from '@/shared/device/DeviceContext'
 import { getDeviceFromHeaders } from '@/shared/device/resolveDevice'
+import { getLocale } from 'next-intl/server'
 
 /**
  * PWA 메타데이터.
@@ -36,7 +37,7 @@ export const viewport: Viewport = {
   viewportFit: 'cover',
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
@@ -44,8 +45,14 @@ export default function RootLayout({
   // Next.js App Router에서는 루트 레이아웃이 <html>과 <body>를 반환해야 합니다
   // [locale]/layout.tsx는 내용만 제공합니다
   const device = getDeviceFromHeaders()
+  let locale = 'ko'
+  try {
+    locale = await getLocale()
+  } catch {
+    locale = 'ko'
+  }
   return (
-    <html suppressHydrationWarning lang="ko" data-device={device}>
+    <html suppressHydrationWarning lang={locale} data-device={device}>
       <body suppressHydrationWarning>
         <DeviceProvider value={device}>
           <Providers>{children}</Providers>

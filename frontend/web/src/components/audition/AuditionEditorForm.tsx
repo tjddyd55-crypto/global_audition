@@ -14,14 +14,22 @@ import {
 } from '@/shared/types/audition'
 import { auditionApi } from '@/shared/api/auditions'
 import { fetchTagCatalog } from '@/shared/api/tags'
-import { apiErrorMessage } from '@/shared/api/uploads'
+import { bindCatalogTranslator, mapDisplayError } from '@/shared/i18n/mapDisplayError'
 import { isoToDatetimeLocalValue } from '@/shared/audition/datetimeLocal'
 import { isBlankOrValidYoutubeUrl } from '@/shared/audition/youtubeEmbed'
 import { AuditionEditorPreview } from '@/components/audition/AuditionEditorPreview'
 import { SingleImageUploadField } from '@/components/audition/AuditionEditorImageUpload'
 import { ImageUploader } from '@/components/common/ImageUploader'
-import { EDITOR_LABELS, AUDITION_STATUS_LABEL_KO } from '@/shared/audition/auditionEditorCopy'
+import { editorStatusMessageKey } from '@/shared/audition/auditionEditorCopy'
 import { normalizeCustomTagNamesForPayload } from '@/shared/audition/auditionTags'
+import { AuditionTranslationPanel } from '@/components/audition/AuditionTranslationPanel'
+import {
+  AUDITION_TARGET_COUNTRIES,
+  CONTENT_LOCALES,
+  normalizeTargetCountry,
+  type ContentLocale,
+} from '@/shared/audition/audience'
+import { useTranslations } from 'next-intl'
 
 function trimNonEmpty(lines: string[] | undefined): string[] {
   return (lines ?? []).map((s) => (s ?? '').trim()).filter((s) => s.length > 0)
@@ -44,6 +52,7 @@ function StringListEditor({
   values: string[]
   onChange: (next: string[]) => void
 }) {
+  const t = useTranslations('editor')
   const list = values.length > 0 ? values : ['']
   const add = () => onChange([...list, ''])
   const setAt = (i: number, v: string) => {
@@ -71,7 +80,7 @@ function StringListEditor({
           onClick={add}
           style={{ fontSize: AUDITION_DETAIL.bodyFontPx, color: HERO.primaryGradientStart, background: 'none', border: 'none', cursor: 'pointer' }}
         >
-          + 항목 추가
+          {t('addItem')}
         </button>
       </div>
       {list.map((v, i) => (
@@ -101,7 +110,7 @@ function StringListEditor({
               background: '#fff',
             }}
           >
-            삭제
+            {t('deleteItem')}
           </button>
         </div>
       ))}
@@ -150,6 +159,10 @@ function applyInitial(a: AuditionDto) {
     location: a.location ?? '',
     startDate: isoToDatetimeLocalValue(a.startDate ?? ''),
     endDate: isoToDatetimeLocalValue(a.endDate ?? ''),
+    countryCode: normalizeTargetCountry(a.countryCode),
+    defaultLocale: (CONTENT_LOCALES.includes((a.defaultLocale ?? 'ko') as ContentLocale)
+      ? a.defaultLocale
+      : 'ko') as ContentLocale,
   }
 }
 
@@ -163,6 +176,13 @@ export type AuditionEditorFormProps = {
 }
 
 export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot, onSuccess }: AuditionEditorFormProps) {
+  const tEditor = useTranslations('editor')
+  const tCountry = useTranslations('country')
+  const tLocale = useTranslations('locale')
+  const tCommon = useTranslations('common')
+  const tUploader = useTranslations('uploader')
+  const tErrors = useTranslations('errors')
+  const translateError = bindCatalogTranslator({ uploader: tUploader, errors: tErrors })
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   /** 필수·검증 실패 시 빨간 테두리 */
@@ -200,6 +220,8 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
   const [location, setLocation] = useState('')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
+  const [countryCode, setCountryCode] = useState('')
+  const [defaultLocale, setDefaultLocale] = useState<ContentLocale>('ko')
 
   const effectiveId = mode === 'edit' ? auditionId : draftId
 
@@ -228,6 +250,8 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
     setLocation(v.location)
     setStartDate(v.startDate || defaultDatetimeLocalStart())
     setEndDate(v.endDate || defaultDatetimeLocalEnd())
+    setCountryCode(v.countryCode)
+    setDefaultLocale(v.defaultLocale)
   }, [mode, initialAudition])
 
   useEffect(() => {
@@ -297,44 +321,46 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
       images: buildAuditionImagesPayload(images),
       videoUrl: (videoUrl ?? '').trim() || undefined,
       galleryImages: trimNonEmpty(galleryImages),
-      agencyName: (agencyName ?? '').trim() || '미지정',
+      agencyName: (agencyName ?? '').trim() || '—',
       agencyLogo: (agencyLogo ?? '').trim() || undefined,
       recruitFields: trimNonEmpty(recruitFields),
       qualifications: trimNonEmpty(qualifications),
       schedules: trimNonEmpty(schedules),
       benefits: trimNonEmpty(benefits),
-      location: (location ?? '').trim() || '미지정',
+      location: (location ?? '').trim() || '—',
       startDate: new Date(sd).toISOString(),
       endDate: new Date(ed).toISOString(),
+      countryCode: countryCode || undefined,
+      defaultLocale,
     }
   }
 
   const validate = (intent: 'draft' | 'publish'): string | null => {
     if (!(title ?? '').trim()) {
       setShowTitleError(true)
-      return '제목을 입력해 주세요.'
+      return tEditor('titleRequired')
     }
     setShowTitleError(false)
 
     if (intent === 'publish') {
       if (!(description ?? '').trim() || (description ?? '').trim() === '—') {
         setShowDescriptionError(true)
-        return '게시하려면 상세 설명을 입력해 주세요.'
+        return tEditor('publishDescriptionRequired')
       }
       setShowDescriptionError(false)
       if (!(images.original ?? '').trim() && !(images.medium ?? '').trim() && !(images.thumb ?? '').trim()) {
         setShowCoverError(true)
-        return '게시하려면 대표 이미지를 업로드해 주세요.'
+        return tEditor('publishCoverRequired')
       }
       setShowCoverError(false)
       if (!isBlankOrValidYoutubeUrl(videoUrl)) {
         setShowVideoUrlError(true)
-        return '영상은 YouTube URL만 입력할 수 있습니다.'
+        return tEditor('youtubeOnly')
       }
       setShowVideoUrlError(false)
-      if (!(agencyName ?? '').trim()) return '게시하려면 기획사명을 입력해 주세요.'
-      if (!(location ?? '').trim()) return '게시하려면 위치를 입력해 주세요.'
-      if (!startDate || !endDate) return '시작일과 종료일을 입력해 주세요.'
+      if (!(agencyName ?? '').trim()) return tEditor('publishAgencyRequired')
+      if (!(location ?? '').trim()) return tEditor('publishLocationRequired')
+      if (!startDate || !endDate) return tEditor('datesRequired')
     } else {
       setShowDescriptionError(false)
       setShowVideoUrlError(false)
@@ -361,15 +387,15 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
         setStatus(forced)
         if (intent === 'draft') {
           setDraftSavedBanner(true)
-          toast.success('임시 저장되었습니다', { duration: 5000 })
+          toast.success(tEditor('draftSaved'), { duration: 5000 })
         } else {
           setDraftSavedBanner(false)
-          toast.success('공고가 등록되었습니다', { duration: 4000 })
+          toast.success(tEditor('published'), { duration: 4000 })
         }
         if (intent === 'publish') onSuccess?.(created)
       } catch (e: unknown) {
-        const msg = apiErrorMessage(e)
-        setError(msg || '저장에 실패했습니다.')
+        const msg = mapDisplayError(e, translateError, tEditor('saveFailed'))
+        setError(msg)
       } finally {
         setIsLoading(false)
       }
@@ -383,16 +409,16 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
       setStatus(forced)
       if (intent === 'draft') {
         setDraftSavedBanner(true)
-        toast.success('임시 저장되었습니다', { duration: 5000 })
+        toast.success(tEditor('draftSaved'), { duration: 5000 })
       } else {
         setDraftSavedBanner(false)
-        toast.success('공고가 등록되었습니다', { duration: 4000 })
+        toast.success(tEditor('published'), { duration: 4000 })
       }
       if (intent === 'publish') onSuccess?.(updated)
     } catch (e: unknown) {
-      const msg = apiErrorMessage(e)
-      setError(msg || '저장에 실패했습니다.')
-      if (mode === 'edit') toast.error(msg || '저장 실패')
+      const msg = mapDisplayError(e, translateError, tEditor('saveFailed'))
+      setError(msg)
+      if (mode === 'edit') toast.error(msg || tEditor('saveFailedShort'))
     } finally {
       setIsLoading(false)
     }
@@ -401,11 +427,11 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
   const persistClosed = async () => {
     const err = validate('publish')
     if (err) {
-      setError('마감 저장 전에 게시와 동일한 필수 항목을 채워 주세요.')
+      setError(tEditor('closeNeedsPublishFields'))
       return
     }
     if (mode === 'create' && !effectiveId) {
-      setError('먼저 임시 저장 또는 게시로 공고를 만든 뒤 마감할 수 있습니다.')
+      setError(tEditor('closeNeedsExisting'))
       return
     }
     const id = mode === 'edit' ? auditionId! : draftId!
@@ -415,10 +441,10 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
       const payload = buildPayload('CLOSED')
       await auditionApi.update(id, payload)
       setStatus('CLOSED')
-      toast.success('마감 상태로 저장되었습니다.')
+      toast.success(tEditor('closedSaved'))
     } catch (e: unknown) {
-      const msg = apiErrorMessage(e)
-      setError(msg || '저장에 실패했습니다.')
+      const msg = mapDisplayError(e, translateError, tEditor('saveFailed'))
+      setError(msg)
     } finally {
       setIsLoading(false)
     }
@@ -462,21 +488,21 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
         onSubmit={(e: FormEvent) => e.preventDefault()}
         className="w-full max-w-none"
       >
-        <h2 style={sectionTitle}>{EDITOR_LABELS.sectionBasic}</h2>
+        <h2 style={sectionTitle}>{tEditor('sectionBasic')}</h2>
         {draftSavedBanner && (
           <div
             role="status"
             className="mb-4 flex items-start justify-between gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900"
           >
             <span>
-              <strong>임시 저장됨</strong> — 서버에 반영되었습니다. 이어서 수정한 뒤 다시 임시 저장하거나 등록할 수 있습니다.
+              {tEditor('draftSavedBanner')}
             </span>
             <button
               type="button"
               className="shrink-0 text-emerald-700 underline"
               onClick={() => setDraftSavedBanner(false)}
             >
-              닫기
+              {tCommon('close')}
             </button>
           </div>
         )}
@@ -484,7 +510,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
           <label
             style={{ display: 'block', marginBottom: AUDITION_DETAIL.galleryGapPx, fontSize: AUDITION_DETAIL.bodyFontPx, fontWeight: 600 }}
           >
-            {EDITOR_LABELS.title}{' '}
+            {tEditor('title')}{' '}
             <span className="text-red-600" aria-hidden>
               *
             </span>
@@ -496,7 +522,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
               setShowTitleError(false)
             }}
             style={titleInputStyle}
-            placeholder="예: 2025 글로벌 보컬 오디션"
+            placeholder={tEditor('titleExample')}
             aria-invalid={showTitleError}
             required
           />
@@ -505,11 +531,11 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
           <label
             style={{ display: 'block', marginBottom: AUDITION_DETAIL.galleryGapPx, fontSize: AUDITION_DETAIL.bodyFontPx, fontWeight: 600 }}
           >
-            {EDITOR_LABELS.description}{' '}
+            {tEditor('description')}{' '}
             <span className="text-red-600" aria-hidden>
               *
             </span>
-            <span className="ml-1 text-xs font-normal text-gray-500">(등록·마감 시 필수)</span>
+            <span className="ml-1 text-xs font-normal text-gray-500">{tEditor('requiredOnPublish')}</span>
           </label>
           <textarea
             value={description}
@@ -518,9 +544,43 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
               setShowDescriptionError(false)
             }}
             style={descriptionInputStyle}
-            placeholder="모집 내용, 자격 요건, 진행 방식 등을 적어 주세요."
+            placeholder={tEditor('descriptionExample')}
             aria-invalid={showDescriptionError}
           />
+        </div>
+
+        <div className="mb-4 grid gap-3 sm:grid-cols-2">
+          <label className="block">
+            <span className="mb-1 block text-sm font-semibold">{tEditor('contentLanguage')}</span>
+            <select
+              value={defaultLocale}
+              onChange={(e) => setDefaultLocale(e.target.value as ContentLocale)}
+              style={inputStyle}
+            >
+              {CONTENT_LOCALES.map((code) => (
+                <option key={code} value={code}>
+                  {tLocale(code)}
+                </option>
+              ))}
+            </select>
+            <span className="mt-1 block text-xs text-gray-500">{tEditor('contentLanguageHint')}</span>
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-sm font-semibold">{tEditor('targetCountry')}</span>
+            <select
+              value={countryCode}
+              onChange={(e) => setCountryCode(e.target.value)}
+              style={inputStyle}
+            >
+              <option value="">{tCountry('unspecified')}</option>
+              {AUDITION_TARGET_COUNTRIES.map((code) => (
+                <option key={code} value={code}>
+                  {tCountry(code)}
+                </option>
+              ))}
+            </select>
+            <span className="mt-1 block text-xs text-gray-500">{tEditor('targetCountryHint')}</span>
+          </label>
         </div>
 
         {mode === 'edit' && (
@@ -528,17 +588,17 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
             <label
               style={{ display: 'block', marginBottom: AUDITION_DETAIL.galleryGapPx, fontSize: AUDITION_DETAIL.bodyFontPx, fontWeight: 600 }}
             >
-              {EDITOR_LABELS.status}
+              {tEditor('status')}
             </label>
             <select value={status} onChange={(e) => setStatus(e.target.value as AuditionStatus)} style={inputStyle}>
-              {(Object.keys(AUDITION_STATUS_LABEL_KO) as AuditionStatus[]).map((s) => (
+              {(['DRAFT', 'OPEN', 'CLOSED'] as AuditionStatus[]).map((s) => (
                 <option key={s} value={s}>
-                  {AUDITION_STATUS_LABEL_KO[s]}
+                  {tEditor(editorStatusMessageKey(s) ?? 'unspecified')}
                 </option>
               ))}
             </select>
             <p style={{ marginTop: AUDITION_DETAIL.galleryGapPx, fontSize: 12, color: '#6b7280' }}>
-              「임시 저장」은 임시저장(DRAFT), 「등록하기」는 게시중(OPEN)으로 저장합니다. 마감은 아래 버튼을 사용하세요.
+              {tEditor('statusHint')}
             </p>
           </div>
         )}
@@ -547,11 +607,11 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
           <label
             style={{ display: 'block', marginBottom: AUDITION_DETAIL.galleryGapPx, fontSize: AUDITION_DETAIL.bodyFontPx, fontWeight: 600 }}
           >
-            {EDITOR_LABELS.tags}
+            {tEditor('tags')}
           </label>
-          <p style={{ margin: '0 0 10px 0', fontSize: 12, color: '#6b7280' }}>{EDITOR_LABELS.tagsHint}</p>
+          <p style={{ margin: '0 0 10px 0', fontSize: 12, color: '#6b7280' }}>{tEditor('tagsHint')}</p>
           {tagCatalogLoading ? (
-            <p className="text-sm text-gray-500">태그 목록 불러오는 중…</p>
+            <p className="text-sm text-gray-500">{tEditor('tagsLoading')}</p>
           ) : (
             <div className="flex flex-wrap gap-2">
               {tagCatalog.map((tag) => {
@@ -595,7 +655,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
                   <button
                     type="button"
                     className="rounded px-1 text-violet-600 hover:bg-violet-100"
-                    aria-label={`${ct} 제거`}
+                    aria-label={tEditor('removeTag', { name: ct })}
                     onClick={() => setCustomTags((prev) => prev.filter((x) => x !== ct))}
                   >
                     ×
@@ -607,7 +667,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
               <input
                 value={tagCustomInput}
                 onChange={(e) => setTagCustomInput(e.target.value)}
-                placeholder="직접 입력 후 추가"
+                placeholder={tEditor('customTagPlaceholder')}
                 className="min-w-[12rem] flex-1"
                 style={{
                   ...inputStyle,
@@ -635,25 +695,25 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
                   setTagCustomInput('')
                 }}
               >
-                추가
+                {tCommon('add')}
               </button>
             </div>
           </div>
         </div>
 
-        <h2 style={sectionTitle}>{EDITOR_LABELS.sectionMedia}</h2>
+        <h2 style={sectionTitle}>{tEditor('sectionMedia')}</h2>
         <ImageUploader
           className="mb-8"
           label={
             <>
-              {EDITOR_LABELS.coverImage}{' '}
+              {tEditor('coverImage')}{' '}
               <span className="text-red-600" aria-hidden>
                 *
               </span>
-              <span className="ml-1 text-xs font-normal text-gray-500">(등록·마감 시 필수)</span>
+              <span className="ml-1 text-xs font-normal text-gray-500">{tEditor('requiredOnPublish')}</span>
             </>
           }
-          guide="세로형 (3:4) 권장. 카드·리스트·상단 히어로에 동일 비율(3:4, cover)로 표시됩니다."
+          guide={tEditor('coverGuide')}
           multiple={false}
           aspect="portrait"
           maxCount={1}
@@ -683,8 +743,8 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
           <label
             style={{ display: 'block', marginBottom: AUDITION_DETAIL.galleryGapPx, fontSize: AUDITION_DETAIL.bodyFontPx, fontWeight: 600 }}
           >
-            {EDITOR_LABELS.videoUrl}
-            <span className="ml-1 text-xs font-normal text-gray-500">(YouTube만, 등록·마감 시 형식 검사)</span>
+            {tEditor('videoUrl')}
+            <span className="ml-1 text-xs font-normal text-gray-500">{tEditor('youtubeHint')}</span>
           </label>
           <input
             value={videoUrl}
@@ -693,14 +753,14 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
               setShowVideoUrlError(false)
             }}
             style={videoInputStyle}
-            placeholder="https://www.youtube.com/watch?v=… 또는 youtu.be/…"
+            placeholder={tEditor('youtubePlaceholder')}
             aria-invalid={showVideoUrlError}
           />
         </div>
         <ImageUploader
           className="mb-8"
-          label={EDITOR_LABELS.galleryImages}
-          guide="가로형 (16:9) 권장. 상세 페이지 갤러리 영역은 16:9 · contain으로 표시됩니다. 드래그로 순서를 바꿀 수 있습니다."
+          label={tEditor('galleryImages')}
+          guide={tEditor('galleryGuide')}
           multiple
           aspect="landscape"
           maxCount={10}
@@ -710,22 +770,22 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
           disabled={isLoading}
         />
 
-        <h2 style={sectionTitle}>{EDITOR_LABELS.sectionAgency}</h2>
+        <h2 style={sectionTitle}>{tEditor('sectionAgency')}</h2>
         <div style={{ marginBottom: AUDITION_DETAIL.benefitGridGapPx }}>
           <label
             style={{ display: 'block', marginBottom: AUDITION_DETAIL.galleryGapPx, fontSize: AUDITION_DETAIL.bodyFontPx, fontWeight: 600 }}
           >
-            {EDITOR_LABELS.agencyName}
+            {tEditor('agencyName')}
           </label>
           <input
             value={agencyName}
             onChange={(e) => setAgencyName(e.target.value)}
             style={inputStyle}
-            placeholder="운영 기획사 또는 주최"
+            placeholder={tEditor('agencyPlaceholder')}
           />
         </div>
         <SingleImageUploadField
-          label={EDITOR_LABELS.agencyLogo}
+          label={tEditor('agencyLogo')}
           uploadDir="profile"
           imageUrl={agencyLogo}
           onImageUrlChange={setAgencyLogo}
@@ -734,25 +794,25 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
           disabled={isLoading}
         />
 
-        <h2 style={sectionTitle}>{EDITOR_LABELS.sectionSchedule}</h2>
+        <h2 style={sectionTitle}>{tEditor('sectionSchedule')}</h2>
         <div style={{ marginBottom: AUDITION_DETAIL.benefitGridGapPx }}>
           <label
             style={{ display: 'block', marginBottom: AUDITION_DETAIL.galleryGapPx, fontSize: AUDITION_DETAIL.bodyFontPx, fontWeight: 600 }}
           >
-            {EDITOR_LABELS.location}
+            {tEditor('location')}
           </label>
           <input
             value={location}
             onChange={(e) => setLocation(e.target.value)}
             style={inputStyle}
-            placeholder="예: 서울 강남구, 온라인"
+            placeholder={tEditor('locationPlaceholder')}
           />
         </div>
         <div style={{ marginBottom: AUDITION_DETAIL.benefitGridGapPx }}>
           <label
             style={{ display: 'block', marginBottom: AUDITION_DETAIL.galleryGapPx, fontSize: AUDITION_DETAIL.bodyFontPx, fontWeight: 600 }}
           >
-            {EDITOR_LABELS.startDate}
+            {tEditor('startDate')}
           </label>
           <input type="datetime-local" value={startDate} onChange={(e) => setStartDate(e.target.value)} style={inputStyle} />
         </div>
@@ -760,18 +820,18 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
           <label
             style={{ display: 'block', marginBottom: AUDITION_DETAIL.galleryGapPx, fontSize: AUDITION_DETAIL.bodyFontPx, fontWeight: 600 }}
           >
-            {EDITOR_LABELS.endDate}
+            {tEditor('endDate')}
           </label>
           <input type="datetime-local" value={endDate} onChange={(e) => setEndDate(e.target.value)} style={inputStyle} />
         </div>
 
-        <h2 style={sectionTitle}>{EDITOR_LABELS.sectionLists}</h2>
-        <StringListEditor label={EDITOR_LABELS.recruitFields} values={recruitFields} onChange={setRecruitFields} />
-        <StringListEditor label={EDITOR_LABELS.qualifications} values={qualifications} onChange={setQualifications} />
-        <StringListEditor label={EDITOR_LABELS.schedules} values={schedules} onChange={setSchedules} />
+        <h2 style={sectionTitle}>{tEditor('sectionLists')}</h2>
+        <StringListEditor label={tEditor('recruitFields')} values={recruitFields} onChange={setRecruitFields} />
+        <StringListEditor label={tEditor('qualifications')} values={qualifications} onChange={setQualifications} />
+        <StringListEditor label={tEditor('schedules')} values={schedules} onChange={setSchedules} />
 
-        <h2 style={sectionTitle}>{EDITOR_LABELS.sectionBenefits}</h2>
-        <StringListEditor label={EDITOR_LABELS.benefits} values={benefits} onChange={setBenefits} />
+        <h2 style={sectionTitle}>{tEditor('sectionBenefits')}</h2>
+        <StringListEditor label={tEditor('benefits')} values={benefits} onChange={setBenefits} />
 
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap" style={{ marginTop: AUDITION_DETAIL.mainGridGapPx }}>
           <button
@@ -790,7 +850,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
               opacity: formBusy ? 0.7 : 1,
             }}
           >
-            {isLoading ? '저장 중…' : '임시 저장'}
+            {isLoading ? tEditor('saving') : tEditor('saveDraft')}
           </button>
           <button
             type="button"
@@ -808,7 +868,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
               opacity: formBusy ? 0.7 : 1,
             }}
           >
-            {isLoading ? '처리 중…' : '등록하기'}
+            {isLoading ? tEditor('processing') : tEditor('publish')}
           </button>
           {(mode === 'edit' || !!draftId) && (
             <button
@@ -827,7 +887,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
                 opacity: formBusy ? 0.7 : 1,
               }}
             >
-              마감으로 저장
+              {tEditor('saveClosed')}
             </button>
           )}
         </div>
@@ -877,6 +937,11 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
         {formCol}
         {previewCol}
       </div>
+      {effectiveId ? (
+        <AuditionTranslationPanel auditionId={effectiveId} defaultLocale={defaultLocale} />
+      ) : (
+        <p className="mt-6 text-sm text-gray-500">{tEditor('translationAfterSave')}</p>
+      )}
     </>
   )
 }

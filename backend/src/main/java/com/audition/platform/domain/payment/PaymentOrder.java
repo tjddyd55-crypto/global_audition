@@ -37,7 +37,7 @@ public class PaymentOrder {
     private String provider;
 
     /** 청구 금액 (USD, 달러 단위). Stripe 연동 시 {@link com.audition.platform.application.payment.UsdMoney#toStripeCents} 사용. */
-    @Column(nullable = false, precision = 14, scale = 2)
+    @Column(nullable = false)
     private BigDecimal amount;
 
     @Column(nullable = false, length = 8)
@@ -65,6 +65,10 @@ public class PaymentOrder {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "raw_payload", columnDefinition = "jsonb")
     private JsonNode rawPayload;
+
+    /** 토스 paymentKey. 승인 이후 저장. 유니크(부분 인덱스). */
+    @Column(name = "payment_key", length = 200)
+    private String paymentKey;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
@@ -182,6 +186,14 @@ public class PaymentOrder {
 
     public void setRawPayload(JsonNode rawPayload) {
         this.rawPayload = rawPayload;
+    }
+
+    public String getPaymentKey() {
+        return paymentKey;
+    }
+
+    public void setPaymentKey(String paymentKey) {
+        this.paymentKey = paymentKey;
     }
 
     public Instant getCreatedAt() {

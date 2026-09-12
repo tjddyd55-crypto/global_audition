@@ -14,6 +14,7 @@ import { useAuthStore } from '@/shared/auth/authStore'
 
 function MyApplicantsInner() {
   const t = useTranslations('common')
+  const tAgency = useTranslations('agency')
   const router = useRouter()
   const searchParams = useSearchParams()
   const accessToken = useAuthStore((s) => s.accessToken)
@@ -99,22 +100,25 @@ function MyApplicantsInner() {
         auditionId={effectiveAuditionId}
         auditionTitle={selectedAudition.title}
         backHref="/my/auditions"
-        backLabel="← 오디션 관리"
+        backLabel={`← ${tAgency('navAuditions')}`}
         queryKeyPrefix="my-applicants-hub"
       />
     </AgencyDashboardShell>
   )
 }
 
+function MyApplicantsFallback() {
+  const t = useTranslations('common')
+  return (
+    <AgencyDashboardShell>
+      <div className="flex min-h-[40vh] items-center justify-center text-sm text-gray-600">{t('loading')}</div>
+    </AgencyDashboardShell>
+  )
+}
+
 export default function MyApplicantsPage() {
   return (
-    <Suspense
-      fallback={
-        <AgencyDashboardShell>
-          <div className="flex min-h-[40vh] items-center justify-center text-sm text-gray-600">로딩 중…</div>
-        </AgencyDashboardShell>
-      }
-    >
+    <Suspense fallback={<MyApplicantsFallback />}>
       <MyApplicantsInner />
     </Suspense>
   )

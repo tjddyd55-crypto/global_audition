@@ -23,6 +23,7 @@ import { isYoutubeShortsLikeUrl } from '@/shared/utils/videoEmbed'
 
 export default function MyApplicationEditPage() {
   const t = useTranslations('common')
+  const tMy = useTranslations('myApplications')
   const params = useParams()
   const id = params.id as string
   const queryClient = useQueryClient()
@@ -49,7 +50,7 @@ export default function MyApplicationEditPage() {
     },
     onError: (e: unknown) => {
       const err = e as { response?: { data?: { message?: string } } }
-      setErrorMessage(err?.response?.data?.message ?? '영상 URL 등록에 실패했습니다.')
+      setErrorMessage(err?.response?.data?.message ?? tMy('videoRegisterFailed'))
     },
   })
 
@@ -71,24 +72,25 @@ export default function MyApplicationEditPage() {
     <div className="min-h-screen bg-gray-50">
       <div className={`${PAGE_CONTAINER} py-6 ${SECTION_GAP}`}>
         <Link href={`/my/applications/${id}`} className="text-sm font-medium text-[#3B82F6] no-underline">
-          ← 지원서 보기
+          ← {tMy('backToDetail')}
         </Link>
 
         <div className={CARD_BASE}>
-          <h1 className={TITLE_PAGE}>지원 수정 · 영상 관리</h1>
+          <h1 className={TITLE_PAGE}>{tMy('editTitle')}</h1>
           <p className={`${TEXT_SUB} mt-2`}>
-            {app.auditionTitle ? `「${app.auditionTitle}」` : '지원서'}에 연결된 영상을 추가하거나 삭제할 수 있습니다.
-            기본 정보·자기소개 수정은 별도 정책에 따릅니다.
+            {app.auditionTitle
+              ? tMy('editHintNamed', { title: app.auditionTitle })
+              : tMy('editHint')}
           </p>
         </div>
 
         <div className={CARD_BASE}>
-          <h2 className={`${TITLE_PAGE} mb-4`}>영상 URL</h2>
+          <h2 className={`${TITLE_PAGE} mb-4`}>{tMy('videoUrl')}</h2>
           {locked ? (
-            <p className="text-sm text-amber-800">검토가 완료된 지원서는 영상을 변경할 수 없습니다.</p>
+            <p className="text-sm text-amber-800">{tMy('lockedVideos')}</p>
           ) : (
             <>
-              <p className={`${TEXT_SUB} mb-2`}>YouTube URL 추가</p>
+              <p className={`${TEXT_SUB} mb-2`}>{tMy('addYoutube')}</p>
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-3">
                 <input
                   value={videoUrl}
@@ -102,14 +104,14 @@ export default function MyApplicationEditPage() {
                   disabled={!(videoUrl ?? '').trim() || createVideoMutation.isPending}
                   className={BTN_PRIMARY}
                 >
-                  {createVideoMutation.isPending ? '추가 중...' : '+ 추가'}
+                  {createVideoMutation.isPending ? tMy('adding') : tMy('addPlus')}
                 </button>
               </div>
               {errorMessage && <p className="mt-2 text-sm text-red-600">{errorMessage}</p>}
             </>
           )}
 
-          <p className={`${TEXT_SUB} mb-2 mt-6`}>등록된 영상</p>
+          <p className={`${TEXT_SUB} mb-2 mt-6`}>{tMy('registeredVideos')}</p>
           <ul className="grid gap-4 sm:grid-cols-2">
             {videos.map((video) => {
               const thumb = resolveVideoThumbnailUrl(video.videoUrl, video.thumbnailUrl)
@@ -130,7 +132,7 @@ export default function MyApplicationEditPage() {
                         <Image src={thumb} alt="" fill className="object-cover" unoptimized />
                       ) : (
                         <span className="absolute inset-0 flex items-center justify-center text-xs text-neutral-500">
-                          영상
+                          {tMy('video')}
                         </span>
                       )}
                       <span className="absolute inset-0 flex items-center justify-center bg-black/30">
@@ -147,7 +149,7 @@ export default function MyApplicationEditPage() {
                           onClick={() => removeVideoMutation.mutate(video.id)}
                           className="self-start rounded-lg border border-red-100 px-3 py-1.5 text-sm text-red-600"
                         >
-                          삭제
+                          {t('delete')}
                         </button>
                       ) : null}
                     </div>
@@ -155,7 +157,7 @@ export default function MyApplicationEditPage() {
                 </li>
               )
             })}
-            {videos.length === 0 && <li className={TEXT_SUB}>등록된 영상이 없습니다.</li>}
+            {videos.length === 0 && <li className={TEXT_SUB}>{tMy('noVideos')}</li>}
           </ul>
         </div>
       </div>

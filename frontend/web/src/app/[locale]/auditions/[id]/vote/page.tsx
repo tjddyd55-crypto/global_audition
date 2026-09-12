@@ -2,18 +2,19 @@
 
 import { useQuery } from '@tanstack/react-query'
 import { useParams } from 'next/navigation'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { auditionApi } from '@/shared/api/auditions'
 import { PublicVoteBoard } from '@/components/audition/PublicVoteBoard'
 
 export default function AuditionPublicVotePage() {
   const params = useParams()
   const t = useTranslations('common')
+  const locale = useLocale()
   const auditionId = params.id as string
 
   const { data: audition, isLoading, error } = useQuery({
-    queryKey: ['audition', auditionId],
-    queryFn: () => auditionApi.getById(auditionId),
+    queryKey: ['audition', auditionId, locale],
+    queryFn: () => auditionApi.getById(auditionId, locale),
     enabled: !!auditionId,
   })
 

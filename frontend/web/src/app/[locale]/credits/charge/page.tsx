@@ -15,8 +15,12 @@ import {
 } from '@/shared/ui/specClasses'
 import { formatCurrency } from '@/shared/money/currency'
 import { formatCreditsCount } from '@/shared/money/creditsDisplay'
+import { useTranslations } from 'next-intl'
 
 export default function CreditsChargePage() {
+  const t = useTranslations('credits')
+  const tPay = useTranslations('payments')
+  const tCommon = useTranslations('common')
   const router = useRouter()
   const [packages, setPackages] = useState<CreditPackageCatalogItem[]>([])
   const [selectedPackage, setSelectedPackage] = useState<CreditPackageCatalogItem | null>(null)
@@ -39,7 +43,7 @@ export default function CreditsChargePage() {
         setPackages(list)
       } catch {
         if (!cancelled) {
-          setError('패키지 목록을 불러오지 못했습니다.')
+          setError(t('loadFailed'))
           setPackages([])
         }
       } finally {
@@ -50,7 +54,7 @@ export default function CreditsChargePage() {
     return () => {
       cancelled = true
     }
-  }, [router])
+  }, [router, t])
 
   const goCheckout = () => {
     if (!selectedPackage) return
@@ -61,20 +65,20 @@ export default function CreditsChargePage() {
     <div className="min-h-screen bg-gray-50">
       <div className={`${PAGE_CONTAINER} py-6 ${SECTION_GAP}`}>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <h1 className={TITLE_PAGE}>크레딧 충전</h1>
+          <h1 className={TITLE_PAGE}>{t('chargeTitle')}</h1>
           <div className="flex flex-col gap-2 sm:flex-row">
             <Link href="/credits" className={`${BTN_SECONDARY} text-center text-sm`}>
-              크레딧 홈
+              {t('home')}
             </Link>
           </div>
         </div>
 
-        <p className={TEXT_SUB}>충전할 상품을 선택한 뒤 결제 단계로 이동합니다. (PG 연동 전까지 실제 결제는 진행되지 않습니다.)</p>
+        <p className={TEXT_SUB}>{t('chargeHint')}</p>
 
         {error && <p className="text-sm text-red-600">{error}</p>}
 
         {isLoading ? (
-          <p className={TEXT_SUB}>불러오는 중…</p>
+          <p className={TEXT_SUB}>{tCommon('loading')}</p>
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {packages.map((p) => {
@@ -91,15 +95,15 @@ export default function CreditsChargePage() {
                   <p className="text-base font-semibold text-gray-900">{p.name}</p>
                   <p className="mt-2 text-2xl font-bold text-[#3B82F6]">{formatCurrency(p.price)}</p>
                   <p className={`${TEXT_SUB} mt-2`}>
-                    기본 {formatCreditsCount(p.credits)} 크레딧
+                    {formatCreditsCount(p.credits)} {t('creditUnit')}
                     {p.bonusCredits > 0 && (
                       <span className="ml-1 font-medium text-green-600">
-                        + 보너스 {formatCreditsCount(p.bonusCredits)}
+                        + {formatCreditsCount(p.bonusCredits)}
                       </span>
                     )}
                   </p>
                   <p className="mt-1 text-sm font-semibold text-gray-800">
-                    총 {formatCreditsCount(p.credits + p.bonusCredits)} 크레딧 지급
+                    {formatCreditsCount(p.credits + p.bonusCredits)} {t('creditUnit')}
                   </p>
                 </button>
               )
@@ -108,7 +112,7 @@ export default function CreditsChargePage() {
         )}
 
         {!isLoading && packages.length === 0 && !error && (
-          <p className={TEXT_SUB}>판매 중인 패키지가 없습니다.</p>
+          <p className={TEXT_SUB}>{t('emptyPackages')}</p>
         )}
 
         <div className="flex flex-col gap-3 sm:flex-row">
@@ -118,7 +122,7 @@ export default function CreditsChargePage() {
             onClick={goCheckout}
             className={BTN_PRIMARY}
           >
-            결제하기
+            {tPay('checkout')}
           </button>
         </div>
       </div>

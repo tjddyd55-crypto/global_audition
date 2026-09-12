@@ -11,10 +11,15 @@ import { getDisplayNickname } from '@/shared/user/getDisplayNickname'
 import { BTN_PRIMARY, DROPDOWN_ITEM } from '@/shared/ui/specClasses'
 import { DeviceToggle } from '@/shared/device/DeviceToggle'
 
-const locales = ['ko', 'en', 'ja', 'zh', 'es', 'fr', 'de'] as const
+const locales = ['ko', 'en', 'mn', 'ja', 'zh', 'es', 'fr', 'de'] as const
 
 export default function MainHeader() {
   const t = useTranslations('common')
+  const tFallback = useTranslations('fallback')
+  const tNav = useTranslations('nav')
+  const tAgency = useTranslations('agency')
+  const tChannel = useTranslations('channel')
+  const tVault = useTranslations('vault')
   const locale = useLocale()
   const router = useRouter()
   const pathname = usePathname()
@@ -67,13 +72,16 @@ export default function MainHeader() {
   const closeUserMenu = () => setIsUserMenuOpen(false)
 
   const displayName = user
-    ? getDisplayNickname({
-        nickname: user.nickname,
-        legalName: user.legalName,
-        email: user.email,
-        displayName: user.displayName,
-      })
-    : '내 계정'
+    ? getDisplayNickname(
+        {
+          nickname: user.nickname,
+          legalName: user.legalName,
+          email: user.email,
+          displayName: user.displayName,
+        },
+        tFallback('userName'),
+      )
+    : t('myAccount')
   const loggedIn = Boolean(accessToken)
   const showUserChrome = loggedIn && (!meLoading || !!user)
 
@@ -87,18 +95,18 @@ export default function MainHeader() {
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-[#7c3aed] to-[#ec4899] text-base font-bold text-white">
             G
           </div>
-          <span className="truncate text-base font-semibold text-black max-md:max-w-[140px]">글로벌 오디션</span>
+          <span className="truncate text-base font-semibold text-black max-md:max-w-[140px]">{t('appName')}</span>
         </Link>
 
         <nav className="hidden gap-8 lg:flex">
           <Link href="/auditions" className={navLinkClass}>
-            오디션
+            {t('auditions')}
           </Link>
           <Link href="/channels" className={navLinkClass}>
-            채널
+            {t('channels')}
           </Link>
           <Link href="/videos" className={navLinkClass}>
-            영상
+            {t('videos')}
           </Link>
         </nav>
 
@@ -153,32 +161,32 @@ export default function MainHeader() {
               {isUserMenuOpen && (
                 <div className="absolute right-0 top-full z-50 mt-1 min-w-[200px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
                   <Link href="/profile" className={DROPDOWN_ITEM} onClick={closeUserMenu}>
-                    프로필
+                    {t('profile')}
                   </Link>
                   {userRole === 'SUPER_ADMIN' ? (
                     <Link href="/admin/super" className={DROPDOWN_ITEM} onClick={closeUserMenu}>
-                      관리자 콘솔
+                      {tNav('adminConsole')}
                     </Link>
                   ) : null}
                   {userRole === 'AGENCY' || userRole === 'ADMIN' ? (
                     <Link href="/my/dashboard" className={DROPDOWN_ITEM} onClick={closeUserMenu}>
-                      기획사 대시보드
+                      {tAgency('dashboard')}
                     </Link>
                   ) : userRole === 'APPLICANT' ? (
                     <Link href="/my/applications" className={DROPDOWN_ITEM} onClick={closeUserMenu}>
-                      내 지원
+                      {tNav('applications')}
                     </Link>
                   ) : null}
                   <Link href="/channel" className={DROPDOWN_ITEM} onClick={closeUserMenu}>
-                    내 채널 관리
+                    {tChannel('manageMine')}
                   </Link>
                   <Link href="/vault" className={DROPDOWN_ITEM} onClick={closeUserMenu}>
-                    창작물 보관소
+                    {tVault('title')}
                   </Link>
                   <div className="my-1 border-t border-gray-100" />
                   <DeviceToggle className={DROPDOWN_ITEM} onToggled={closeUserMenu} />
                   <button type="button" onClick={handleLogout} className={`${DROPDOWN_ITEM} text-red-600`}>
-                    로그아웃
+                    {t('logout')}
                   </button>
                 </div>
               )}
@@ -190,7 +198,7 @@ export default function MainHeader() {
           type="button"
           onClick={() => setIsMobileOpen((p) => !p)}
           className="flex h-9 w-9 items-center justify-center rounded border border-gray-200 lg:hidden"
-          aria-label="메뉴"
+          aria-label={tNav('menu')}
         >
           <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             {isMobileOpen ? (
@@ -206,17 +214,17 @@ export default function MainHeader() {
         <div className="border-t border-gray-200 bg-white px-4 py-4 shadow-md lg:hidden">
           <div className="flex flex-col gap-1">
             <Link href="/auditions" onClick={() => setIsMobileOpen(false)} className="py-2 text-sm text-gray-900">
-              오디션
+              {t('auditions')}
             </Link>
             <Link href="/channels" onClick={() => setIsMobileOpen(false)} className="py-2 text-sm text-gray-900">
-              채널
+              {t('channels')}
             </Link>
             <Link href="/videos" onClick={() => setIsMobileOpen(false)} className="py-2 text-sm text-gray-900">
-              영상
+              {t('videos')}
             </Link>
           </div>
           <div className="mt-3 border-t border-gray-200 pt-3">
-            <div className="mb-2 text-sm text-gray-600">언어</div>
+            <div className="mb-2 text-sm text-gray-600">{t('language')}</div>
             <div className="flex flex-wrap gap-2">
               {locales.map((item) => (
                 <button
@@ -243,7 +251,7 @@ export default function MainHeader() {
                   onClick={() => setIsMobileOpen(false)}
                   className="w-full rounded-lg border border-[#E5E7EB] py-3 text-center text-sm text-gray-900"
                 >
-                  프로필
+                  {t('profile')}
                 </Link>
                 {userRole === 'SUPER_ADMIN' ? (
                   <Link
@@ -251,7 +259,7 @@ export default function MainHeader() {
                     onClick={() => setIsMobileOpen(false)}
                     className="w-full rounded-lg border border-[#E5E7EB] py-3 text-center text-sm font-medium text-violet-700"
                   >
-                    관리자 콘솔
+                    {tNav('adminConsole')}
                   </Link>
                 ) : null}
                 {userRole === 'AGENCY' || userRole === 'ADMIN' ? (
@@ -260,7 +268,7 @@ export default function MainHeader() {
                     onClick={() => setIsMobileOpen(false)}
                     className="w-full rounded-lg border border-[#E5E7EB] py-3 text-center text-sm text-gray-900"
                   >
-                    기획사 대시보드
+                    {tAgency('dashboard')}
                   </Link>
                 ) : userRole === 'APPLICANT' ? (
                   <Link
@@ -268,7 +276,7 @@ export default function MainHeader() {
                     onClick={() => setIsMobileOpen(false)}
                     className="w-full rounded-lg border border-[#E5E7EB] py-3 text-center text-sm text-gray-900"
                   >
-                    내 지원
+                    {tNav('applications')}
                   </Link>
                 ) : null}
                 <Link
@@ -276,21 +284,21 @@ export default function MainHeader() {
                   onClick={() => setIsMobileOpen(false)}
                   className="w-full rounded-lg border border-[#E5E7EB] py-3 text-center text-sm text-gray-900"
                 >
-                  내 채널 관리
+                  {tChannel('manageMine')}
                 </Link>
                 <Link
                   href="/vault"
                   onClick={() => setIsMobileOpen(false)}
                   className="w-full rounded-lg border border-[#E5E7EB] py-3 text-center text-sm text-gray-900"
                 >
-                  창작물 보관소
+                  {tVault('title')}
                 </Link>
                 <button
                   type="button"
                   onClick={() => handleLogout()}
                   className="w-full rounded-lg border border-red-100 py-3 text-center text-sm text-red-600"
                 >
-                  로그아웃
+                  {t('logout')}
                 </button>
               </>
             ) : (

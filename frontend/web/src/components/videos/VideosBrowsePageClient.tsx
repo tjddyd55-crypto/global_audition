@@ -6,18 +6,24 @@ import EmptyState from '@/components/ui/EmptyState'
 import { VideoListItem } from '@/components/video/VideoListItem'
 import { listBrowsePublicVideos } from '@/shared/api/channelVideoPublic'
 import { resolveVideoThumbnailUrl } from '@/shared/audition/videoThumbnail'
-import { formatRelativeKo } from '@/shared/formatRelativeKo'
+import { formatRelative } from '@/shared/i18n/formatRelative'
+import { useTranslations } from 'next-intl'
 import { channelVideoKeys } from '@/shared/query/channelVideoQuery'
 
-const CATEGORIES = ['전체 카테고리', 'Vocal', 'Dance', 'Rap'] as const
+const ALL_CATEGORIES_VALUE = ''
+const CATEGORIES = [ALL_CATEGORIES_VALUE, 'Vocal', 'Dance', 'Rap'] as const
 
 export function VideosBrowsePageClient() {
+  const tRelative = useTranslations('relative')
+  const tChannel = useTranslations('channel')
+  const tVideo = useTranslations('video')
+  const tHome = useTranslations('home')
   const [sortBy, setSortBy] = useState<'latest' | 'popular'>('latest')
-  const [filterCategory, setFilterCategory] = useState<(typeof CATEGORIES)[number]>('전체 카테고리')
+  const [filterCategory, setFilterCategory] = useState<(typeof CATEGORIES)[number]>(ALL_CATEGORIES_VALUE)
 
   const { data: videos = [], isLoading, isError } = useQuery({
-    queryKey: channelVideoKeys.browse(filterCategory === '전체 카테고리' ? null : filterCategory),
-    queryFn: () => listBrowsePublicVideos(filterCategory),
+    queryKey: channelVideoKeys.browse(filterCategory || null),
+    queryFn: () => listBrowsePublicVideos(filterCategory || undefined),
     staleTime: 0,
     refetchOnMount: 'always',
   })
@@ -34,8 +40,8 @@ export function VideosBrowsePageClient() {
   return (
     <div className="w-full pb-16 pt-20">
       <div className="px-4 pb-6">
-        <h1 className="text-[28px] font-bold leading-tight">영상 둘러보기</h1>
-        <p className="mt-2 text-base text-neutral-600">실제 공개 영상이 최신 상태로 반영됩니다</p>
+        <h1 className="text-[28px] font-bold leading-tight">{tVideo('browseTitle')}</h1>
+        <p className="mt-2 text-base text-neutral-600">{tVideo('browseHint')}</p>
       </div>
 
       <div className="mb-4 flex flex-wrap gap-2 px-4">
@@ -45,8 +51,8 @@ export function VideosBrowsePageClient() {
           className="h-10 min-w-0 flex-1 rounded-lg border border-neutral-300 px-3 text-sm sm:flex-none sm:min-w-[160px]"
         >
           {CATEGORIES.map((c) => (
-            <option key={c} value={c}>
-              {c}
+            <option key={c || 'all'} value={c}>
+              {c === ALL_CATEGORIES_VALUE ? tVideo('allCategories') : c}
             </option>
           ))}
         </select>
@@ -55,19 +61,19 @@ export function VideosBrowsePageClient() {
           onChange={(e) => setSortBy(e.target.value as 'latest' | 'popular')}
           className="h-10 min-w-0 flex-1 rounded-lg border border-neutral-300 px-3 text-sm sm:flex-none sm:min-w-[120px]"
         >
-          <option value="latest">최신순</option>
-          <option value="popular">인기순</option>
+          <option value="latest">{tVideo('sortLatest')}</option>
+          <option value="popular">{tVideo('sortPopular')}</option>
         </select>
       </div>
 
       {isLoading ? (
-        <div className="py-12 text-center text-sm text-neutral-500">영상을 불러오는 중…</div>
+        <div className="py-12 text-center text-sm text-neutral-500">{tVideo('browseLoading')}</div>
       ) : isError ? (
         <div className="border border-red-100 bg-red-50 px-4 py-8 text-center text-sm text-red-600">
-          영상 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.
+          {tHome('videosLoadFailed')}
         </div>
       ) : sorted.length === 0 ? (
-        <EmptyState message="아직 업로드된 공개 영상이 없습니다" />
+        <EmptyState message={tVideo('browseEmpty')} />
       ) : (
         <div className="w-full">
           {sorted.map((video, index) => (
@@ -76,10 +82,10 @@ export function VideosBrowsePageClient() {
                 href={`/videos/${video.videoId}`}
                 title={video.title}
                 thumbnailSrc={resolveVideoThumbnailUrl(video.videoUrl, video.thumbnailUrl)}
-                channelName={video.channelDisplayName || '채널'}
+                channelName={video.channelDisplayName || tChannel('title')}
                 channelImageSrc={video.channelProfileImageUrl}
                 viewCount={Number(video.viewCount ?? 0)}
-                dateLabel={formatRelativeKo(video.publishedAt ?? '')}
+                dateLabel={formatRelative(video.publishedAt ?? '', tRelative)}
                 categoryBadge={video.category?.trim() || null}
               />
             </div>

@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 import { Link } from '@/i18n.config'
 import {
@@ -9,14 +10,12 @@ import {
   type AdminAuditionRoundRow,
   type AdminRoundApplicantRow,
 } from '@/shared/api/adminAuditionRounds'
-import { BTN_PRIMARY, BTN_SECONDARY, CARD_BASE, PAGE_CONTAINER, TEXT_SUB } from '@/shared/ui/specClasses'
+import { BTN_SECONDARY, CARD_BASE, PAGE_CONTAINER, TEXT_SUB } from '@/shared/ui/specClasses'
 
 type Props = {
   auditionId: string
   auditionTitle: string
-  /** 기본: 기획사 허브 지원자 관리 */
   applicantsHubHref?: string
-  /** 기본: 시리즈·간편 상태 관리 */
   statusManageHref?: string
 }
 
@@ -26,6 +25,9 @@ export function AuditionRoundReviewPanel({
   applicantsHubHref,
   statusManageHref,
 }: Props) {
+  const t = useTranslations('roundReview')
+  const tAgency = useTranslations('agency')
+  const tRanking = useTranslations('ranking')
   const applicantsHref = applicantsHubHref ?? `/my/applicants?auditionId=${encodeURIComponent(auditionId)}`
   const manageHref = statusManageHref ?? `/my/auditions/${auditionId}/manage`
   const queryClient = useQueryClient()
@@ -40,7 +42,7 @@ export function AuditionRoundReviewPanel({
 
   const roundsSorted = useMemo(
     () => [...(roundsQuery.data ?? [])].sort((a, b) => a.roundNumber - b.roundNumber),
-    [roundsQuery.data]
+    [roundsQuery.data],
   )
 
   useEffect(() => {
@@ -58,64 +60,64 @@ export function AuditionRoundReviewPanel({
   const openMutation = useMutation({
     mutationFn: (roundId: string) => adminAuditionRoundsApi.openRound(auditionId, roundId),
     onSuccess: () => {
-      toast.success('라운드를 열었습니다.')
+      toast.success(t('opened'))
       queryClient.invalidateQueries({ queryKey: ['admin-audition-rounds', auditionId] })
     },
-    onError: () => toast.error('오픈 처리에 실패했습니다.'),
+    onError: () => toast.error(t('openFailed')),
   })
 
   const closeMutation = useMutation({
     mutationFn: (roundId: string) => adminAuditionRoundsApi.closeRound(auditionId, roundId),
     onSuccess: () => {
-      toast.success('라운드를 닫았습니다.')
+      toast.success(t('closed'))
       queryClient.invalidateQueries({ queryKey: ['admin-audition-rounds', auditionId] })
     },
-    onError: () => toast.error('종료 처리에 실패했습니다.'),
+    onError: () => toast.error(t('closeFailed')),
   })
 
   const passMutation = useMutation({
     mutationFn: ({ applicationId, roundId }: { applicationId: string; roundId: string }) =>
       adminAuditionRoundsApi.pass(applicationId, roundId),
     onSuccess: () => {
-      toast.success('합격 처리했습니다.')
+      toast.success(t('passed'))
       queryClient.invalidateQueries({ queryKey: ['admin-round-applicants', auditionId, selectedRoundId] })
       queryClient.invalidateQueries({ queryKey: ['admin-audition-rounds', auditionId] })
     },
-    onError: () => toast.error('합격 처리에 실패했습니다.'),
+    onError: () => toast.error(t('passFailed')),
   })
 
   const failMutation = useMutation({
     mutationFn: ({ applicationId, roundId }: { applicationId: string; roundId: string }) =>
       adminAuditionRoundsApi.fail(applicationId, roundId),
     onSuccess: () => {
-      toast.success('탈락 처리했습니다.')
+      toast.success(t('failed'))
       queryClient.invalidateQueries({ queryKey: ['admin-round-applicants', auditionId, selectedRoundId] })
       queryClient.invalidateQueries({ queryKey: ['admin-audition-rounds', auditionId] })
     },
-    onError: () => toast.error('탈락 처리에 실패했습니다.'),
+    onError: () => toast.error(t('failFailed')),
   })
 
   const holdMutation = useMutation({
     mutationFn: ({ applicationId, roundId }: { applicationId: string; roundId: string }) =>
       adminAuditionRoundsApi.hold(applicationId, roundId),
     onSuccess: () => {
-      toast.success('보류 처리했습니다.')
+      toast.success(t('held'))
       queryClient.invalidateQueries({ queryKey: ['admin-round-applicants', auditionId, selectedRoundId] })
       queryClient.invalidateQueries({ queryKey: ['admin-audition-rounds', auditionId] })
     },
-    onError: () => toast.error('보류 처리에 실패했습니다.'),
+    onError: () => toast.error(t('holdFailed')),
   })
 
   if (roundsQuery.isLoading) {
-    return <div className="flex min-h-[40vh] items-center justify-center text-sm text-gray-600">불러오는 중…</div>
+    return <div className="flex min-h-[40vh] items-center justify-center text-sm text-gray-600">{tAgency('loading')}</div>
   }
 
   if (roundsQuery.isError) {
     return (
       <div className={`${PAGE_CONTAINER} py-12 text-center`}>
-        <p className="text-sm text-red-600">라운드 목록을 불러오지 못했습니다. 권한을 확인해 주세요.</p>
+        <p className="text-sm text-red-600">{t('loadRoundsFailed')}</p>
         <Link href={manageHref} className="mt-4 inline-block text-sm font-medium text-violet-700 no-underline">
-          ← 상태 관리
+          ← {t('statusManage')}
         </Link>
       </div>
     )
@@ -126,20 +128,20 @@ export function AuditionRoundReviewPanel({
       <div className="border-b border-violet-100 bg-white py-8">
         <div className={PAGE_CONTAINER}>
           <Link href={`/auditions/${auditionId}`} className="text-sm font-medium text-violet-700 no-underline hover:underline">
-            ← 오디션 상세
+            ← {tRanking('backToAudition')}
           </Link>
-          <h1 className="mt-4 text-2xl font-bold text-gray-900">다단계 라운드 관리</h1>
+          <h1 className="mt-4 text-2xl font-bold text-gray-900">{t('title')}</h1>
           <p className={`${TEXT_SUB} mt-1`}>{auditionTitle}</p>
           <Link href={applicantsHref} className="mt-3 inline-block text-sm text-violet-600 no-underline hover:underline">
-            지원자 관리(보드) →
+            {t('applicantsBoard')}
           </Link>
         </div>
       </div>
 
       <div className={`${PAGE_CONTAINER} mt-6 grid gap-6 lg:grid-cols-[320px_1fr]`}>
         <div className={CARD_BASE}>
-          <h2 className="text-lg font-semibold text-gray-900">라운드 목록</h2>
-          <p className={`${TEXT_SUB} mt-1 text-xs`}>항목을 선택하면 해당 라운드 지원자를 심사합니다.</p>
+          <h2 className="text-lg font-semibold text-gray-900">{t('roundList')}</h2>
+          <p className={`${TEXT_SUB} mt-1 text-xs`}>{t('roundListHint')}</p>
           <ul className="mt-4 flex flex-col gap-2">
             {roundsSorted.map((r: AdminAuditionRoundRow) => (
               <li key={r.id}>
@@ -151,11 +153,11 @@ export function AuditionRoundReviewPanel({
                   }`}
                 >
                   <div className="font-semibold text-gray-900">
-                    {r.roundNumber}차 {r.roundName}
+                    {t('roundName', { n: r.roundNumber, name: r.roundName })}
                   </div>
-                  <div className={`${TEXT_SUB} text-xs`}>방식: {r.reviewMethod}</div>
+                  <div className={`${TEXT_SUB} text-xs`}>{t('method', { method: r.reviewMethod })}</div>
                   <div className="mt-1 text-xs font-medium text-gray-700">
-                    상태:{' '}
+                    {t('statusLine')}{' '}
                     <span className={r.active ? 'text-green-700' : 'text-gray-500'}>{r.active ? 'OPEN' : 'CLOSED'}</span>
                   </div>
                 </button>
@@ -166,7 +168,7 @@ export function AuditionRoundReviewPanel({
                     className={`${BTN_SECONDARY} flex-1 py-1.5 text-xs`}
                     onClick={() => openMutation.mutate(r.id)}
                   >
-                    오픈
+                    {t('open')}
                   </button>
                   <button
                     type="button"
@@ -174,7 +176,7 @@ export function AuditionRoundReviewPanel({
                     className={`${BTN_SECONDARY} flex-1 py-1.5 text-xs`}
                     onClick={() => closeMutation.mutate(r.id)}
                   >
-                    종료
+                    {t('close')}
                   </button>
                 </div>
               </li>
@@ -184,20 +186,20 @@ export function AuditionRoundReviewPanel({
 
         <div className={CARD_BASE}>
           {!selectedRoundId ? (
-            <p className="text-sm text-gray-600">왼쪽에서 라운드를 선택하세요.</p>
+            <p className="text-sm text-gray-600">{t('pickRound')}</p>
           ) : applicantsQuery.isLoading ? (
-            <p className="text-sm text-gray-600">지원자 목록을 불러오는 중…</p>
+            <p className="text-sm text-gray-600">{t('loadingApplicants')}</p>
           ) : applicantsQuery.isError ? (
-            <p className="text-sm text-red-600">지원자 목록을 불러오지 못했습니다.</p>
+            <p className="text-sm text-red-600">{t('loadApplicantsFailed')}</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full text-left text-sm">
                 <thead>
                   <tr className="border-b text-xs text-gray-500">
-                    <th className="py-2 pr-3">이름</th>
-                    <th className="py-2 pr-3">현재 라운드</th>
-                    <th className="py-2 pr-3">제출 상태</th>
-                    <th className="py-2 pr-3">액션</th>
+                    <th className="py-2 pr-3">{t('colName')}</th>
+                    <th className="py-2 pr-3">{t('colCurrentRound')}</th>
+                    <th className="py-2 pr-3">{t('colSubmission')}</th>
+                    <th className="py-2 pr-3">{t('colActions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -217,7 +219,7 @@ export function AuditionRoundReviewPanel({
                             disabled={passMutation.isPending}
                             onClick={() => passMutation.mutate({ applicationId: row.applicationId, roundId: selectedRoundId })}
                           >
-                            합격
+                            {tAgency('pass')}
                           </button>
                           <button
                             type="button"
@@ -225,7 +227,7 @@ export function AuditionRoundReviewPanel({
                             disabled={failMutation.isPending}
                             onClick={() => failMutation.mutate({ applicationId: row.applicationId, roundId: selectedRoundId })}
                           >
-                            탈락
+                            {tAgency('dropped')}
                           </button>
                           <button
                             type="button"
@@ -233,7 +235,7 @@ export function AuditionRoundReviewPanel({
                             disabled={holdMutation.isPending}
                             onClick={() => holdMutation.mutate({ applicationId: row.applicationId, roundId: selectedRoundId })}
                           >
-                            보류
+                            {t('hold')}
                           </button>
                         </div>
                       </td>
@@ -242,7 +244,7 @@ export function AuditionRoundReviewPanel({
                 </tbody>
               </table>
               {(applicantsQuery.data ?? []).length === 0 ? (
-                <p className={`${TEXT_SUB} mt-4 text-sm`}>이 라운드에 등록된 지원자가 없습니다.</p>
+                <p className={`${TEXT_SUB} mt-4 text-sm`}>{t('emptyRound')}</p>
               ) : null}
             </div>
           )}

@@ -162,7 +162,7 @@ export const superAdminApi = {
     userId?: string
     email?: string
     amount: number
-    note?: string
+    note: string
   }): Promise<{ userId: string; balanceAfter: number }> => {
     const { data } = await apiClient.post<{ userId: string; balanceAfter: number }>('/admin/credits/adjust', body)
     return data
@@ -292,6 +292,62 @@ export const superAdminApi = {
     const { data } = await apiClient.post<unknown>(`/admin/recovery-requests/${id}/reject`)
     return unwrapAdminData<RecoveryRequestAdminRow>(data)
   },
+
+  getPaymentSettings: async (): Promise<PaymentSettingsAdmin> => {
+    const { data } = await apiClient.get<PaymentSettingsAdmin>('/admin/payment-settings')
+    return data
+  },
+
+  patchPaymentSettings: async (body: PaymentSettingsPatch): Promise<PaymentSettingsAdmin> => {
+    const { data } = await apiClient.patch<PaymentSettingsAdmin>('/admin/payment-settings', body)
+    return data
+  },
+
+  testPaymentConnection: async (): Promise<{ result: string; environment: string; connected: boolean }> => {
+    const { data } = await apiClient.post<{ result: string; environment: string; connected: boolean }>(
+      '/admin/payment-settings/connection-test'
+    )
+    return data
+  },
+
+  cancelPaymentOrder: async (orderNo: string, reason: string): Promise<unknown> => {
+    const { data } = await apiClient.post(`/payments/${encodeURIComponent(orderNo)}/cancel`, { reason })
+    return data
+  },
+}
+
+export type PaymentSettingsAdmin = {
+  enabled: boolean
+  environment: 'TEST' | 'LIVE' | string
+  currency: string
+  testClientKey?: string | null
+  liveClientKey?: string | null
+  testSecretMasked?: string | null
+  liveSecretMasked?: string | null
+  testSecretConfigured: boolean
+  liveSecretConfigured: boolean
+  foreignCardKrw: boolean
+  foreignCurrencyEnabled: boolean
+  variantKey?: string | null
+  mid?: string | null
+  updatedAt?: string
+  tossMethod?: string | null
+  foreignEasyPayProvider?: string | null
+  activationReady?: boolean
+}
+
+export type PaymentSettingsPatch = {
+  enabled?: boolean
+  environment?: 'TEST' | 'LIVE'
+  currency?: string
+  testClientKey?: string
+  liveClientKey?: string
+  testSecretKey?: string
+  liveSecretKey?: string
+  foreignCardKrw?: boolean
+  foreignCurrencyEnabled?: boolean
+  variantKey?: string
+  mid?: string
 }
 
 export type RecoveryRequestAdminRow = {

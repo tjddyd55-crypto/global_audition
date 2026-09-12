@@ -11,6 +11,7 @@ import {
 } from '@/shared/api/channel'
 import { useRouter } from 'next/navigation'
 import { invalidateAfterChannelVideoMutation } from '@/shared/query/channelVideoQuery'
+import { useTranslations } from 'next-intl'
 
 /** 풀 가로·유튜브형 채널 UI와 통일: 카드/그림자 없음 */
 const SECTION =
@@ -28,7 +29,7 @@ const SNS_BASE: { value: SnsPlatformCode; label: string }[] = [
   { value: 'TIKTOK', label: 'TikTok' },
   { value: 'TWITTER', label: 'X (Twitter)' },
   { value: 'FACEBOOK', label: 'Facebook' },
-  { value: 'OTHER', label: '기타' },
+  { value: 'OTHER', label: 'OTHER' },
 ]
 
 /** GET 응답은 소문자 플랫폼일 수 있음 → 선택 값은 대문자 enum 과 맞춤 */
@@ -68,7 +69,7 @@ function PublicToggle({
       type="button"
       role="switch"
       aria-checked={checked}
-      aria-label="채널 공개"
+      aria-label={useTranslations('channel')('public')}
       disabled={disabled}
       onClick={() => onChange(!checked)}
       className={`${SWITCH} ${checked ? 'bg-neutral-900' : 'bg-neutral-300'}`}
@@ -95,6 +96,8 @@ function mapSummaryToState(data: MyChannelSummary) {
 }
 
 export function ChannelSettingsPanel() {
+  const t = useTranslations('channel')
+  const tCommon = useTranslations('common')
   const queryClient = useQueryClient()
   const router = useRouter()
   const { data, isLoading, isError } = useQuery({
@@ -164,16 +167,16 @@ export function ChannelSettingsPanel() {
   }
 
   const statusHint = useMemo(() => {
-    if (saveMutation.isError) return { tone: 'text-red-600' as const, text: '저장에 실패했습니다.' }
-    if (saveMutation.isSuccess && !saveMutation.isPending) return { tone: 'text-neutral-700' as const, text: '저장되었습니다.' }
-    if (!dirty) return { tone: 'text-neutral-500' as const, text: '변경 사항이 없습니다.' }
+    if (saveMutation.isError) return { tone: 'text-red-600' as const, text: t('saveFailed') }
+    if (saveMutation.isSuccess && !saveMutation.isPending) return { tone: 'text-neutral-700' as const, text: t('saved') }
+    if (!dirty) return { tone: 'text-neutral-500' as const, text: t('noChanges') }
     return null
-  }, [dirty, saveMutation.isError, saveMutation.isPending, saveMutation.isSuccess])
+  }, [dirty, saveMutation.isError, saveMutation.isPending, saveMutation.isSuccess, t])
 
   if (isLoading || !data) {
     return (
       <section className={SECTION}>
-        <p className="text-sm text-neutral-500">채널 설정을 불러오는 중…</p>
+        <p className="text-sm text-neutral-500">{t('loadingSettings')}</p>
       </section>
     )
   }
@@ -181,7 +184,7 @@ export function ChannelSettingsPanel() {
   if (isError) {
     return (
       <section className={SECTION}>
-        <p className="text-sm text-red-600">채널 설정을 불러오지 못했습니다.</p>
+        <p className="text-sm text-red-600">{t('loadFailed')}</p>
       </section>
     )
   }
@@ -189,17 +192,16 @@ export function ChannelSettingsPanel() {
   return (
     <section className={`${SECTION} flex flex-col gap-4`}>
       <header>
-        <h2 className="text-lg font-semibold text-neutral-900">채널 설정</h2>
-        <p className="mt-1 text-sm text-neutral-500">
-          닉네임·프로필·채널 소개(정보 탭)은 위 「채널 프로필」에서 저장합니다. 여기서는 공개 여부·SNS·추가 소개만
-          다룹니다.
+        <h2 className="text-lg font-semibold text-neutral-900">{t('settingsTitle')}</h2>
+        <p className="mt-1 whitespace-normal break-words text-sm text-neutral-500">
+          {t('settingsHint')}
         </p>
       </header>
 
       <div className="min-w-0 flex-1 space-y-4">
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-neutral-800">추가 소개 (선택)</label>
-            <p className="mb-1.5 text-xs text-neutral-500">정보 탭에 표시될 수 있는 보조 텍스트입니다.</p>
+            <label className="mb-1.5 block whitespace-normal break-words text-sm font-medium text-neutral-800">{t('extraIntro')}</label>
+            <p className="mb-1.5 whitespace-normal break-words text-xs text-neutral-500">{t('extraIntroHint')}</p>
             <textarea
               value={introText}
               onChange={(e) => {
@@ -208,7 +210,7 @@ export function ChannelSettingsPanel() {
               }}
               rows={4}
               className={INPUT_STYLE}
-              placeholder="추가로 남기고 싶은 소개가 있으면 입력하세요."
+              placeholder={t('extraIntroPlaceholder')}
               maxLength={4000}
             />
           </div>
@@ -216,9 +218,9 @@ export function ChannelSettingsPanel() {
           <div className="border-t border-neutral-100 pt-4">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-neutral-900">채널 공개</p>
-                <p className="mt-1 text-xs leading-relaxed text-neutral-600 sm:text-sm">
-                  공개 시 다른 사용자가 내 채널과 영상을 볼 수 있습니다
+                <p className="text-sm font-semibold text-neutral-900">{t('public')}</p>
+                <p className="mt-1 whitespace-normal break-words text-xs leading-relaxed text-neutral-600 sm:text-sm">
+                  {t('publicHint')}
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-2">
@@ -240,13 +242,13 @@ export function ChannelSettingsPanel() {
 
       <div className="border-t border-neutral-100 pt-4">
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-          <span className="text-sm font-medium text-neutral-800">SNS 링크</span>
+          <span className="text-sm font-medium text-neutral-800">{t('snsLinks')}</span>
           <button
             type="button"
             className="rounded-md border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-800 sm:text-sm"
             onClick={addSnsRow}
           >
-            + SNS 추가
+            {t('addSns')}
           </button>
         </div>
         <div className="flex flex-col divide-y divide-neutral-200">
@@ -262,7 +264,7 @@ export function ChannelSettingsPanel() {
               >
                 {selectOptionsForRow(row.platform).map((p) => (
                   <option key={p.value} value={p.value}>
-                    {p.label}
+                    {p.value === 'OTHER' ? t('snsOther') : p.label}
                   </option>
                 ))}
               </select>
@@ -278,17 +280,17 @@ export function ChannelSettingsPanel() {
                 className="rounded-md border border-neutral-200 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 sm:w-20 sm:shrink-0"
                 onClick={() => removeSnsRow(idx)}
               >
-                삭제
+                {tCommon('delete')}
               </button>
             </div>
           ))}
         </div>
-        <p className="mt-2 text-xs text-neutral-500">https URL만 저장됩니다. 빈 행은 저장 시 제외됩니다.</p>
+        <p className="mt-2 whitespace-normal break-words text-xs text-neutral-500">{t('snsUrlHint')}</p>
       </div>
 
       <div className="space-y-2 border-t border-neutral-100 pt-4">
         <button type="button" className={BTN_SAVE} disabled={saveMutation.isPending || !dirty} onClick={() => void onSave()}>
-          {saveMutation.isPending ? '저장 중…' : '저장하기'}
+          {saveMutation.isPending ? t('saving') : t('save')}
         </button>
         {statusHint ? <p className={`text-left text-xs sm:text-sm ${statusHint.tone}`}>{statusHint.text}</p> : null}
       </div>

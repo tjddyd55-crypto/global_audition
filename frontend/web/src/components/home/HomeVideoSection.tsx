@@ -5,8 +5,9 @@ import { VideoListItem } from '../video/VideoListItem'
 import { SkeletonVideoCard } from '../ui/SkeletonCard'
 import EmptyState from '../ui/EmptyState'
 import { LAYOUT } from '@/shared/design-tokens'
-import { formatRelativeKo } from '@/shared/formatRelativeKo'
+import { formatRelative } from '@/shared/i18n/formatRelative'
 import { resolveVideoThumbnailUrl } from '@/shared/audition/videoThumbnail'
+import { useTranslations } from 'next-intl'
 import type { ChannelVideoBrowseItem } from '@/shared/api/channelVideoPublic'
 
 const sectionStyle: React.CSSProperties = {
@@ -21,14 +22,17 @@ type HomeVideoSectionProps = {
 }
 
 export default function HomeVideoSection({ videos, isLoading, isError }: HomeVideoSectionProps) {
+  const t = useTranslations('home')
+  const tChannel = useTranslations('channel')
+  const tRelative = useTranslations('relative')
   const isEmpty = !isLoading && !isError && videos.length === 0
 
   return (
     <section style={sectionStyle}>
       <div className="w-full">
         <div style={{ marginBottom: 24, textAlign: 'center' }}>
-          <h2 style={{ fontSize: 24, fontWeight: 700, margin: '0 0 8px 0' }}>최신 영상</h2>
-          <p style={{ fontSize: 14, color: '#666', margin: 0 }}>최근 업로드된 영상을 확인하세요</p>
+          <h2 style={{ fontSize: 24, fontWeight: 700, margin: '0 0 8px 0' }}>{t('latestVideos')}</h2>
+          <p style={{ fontSize: 14, color: '#666', margin: 0 }}>{t('latestVideosHint')}</p>
         </div>
 
         {isLoading ? (
@@ -40,9 +44,9 @@ export default function HomeVideoSection({ videos, isLoading, isError }: HomeVid
             ))}
           </div>
         ) : isError ? (
-          <EmptyState message="영상 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요." />
+          <EmptyState message={t('videosLoadFailed')} />
         ) : isEmpty ? (
-          <EmptyState message="아직 공개된 영상이 없습니다" />
+          <EmptyState message={tChannel('emptyVideos')} />
         ) : (
           <div className="w-full">
             {videos.map((v, i) => (
@@ -51,10 +55,10 @@ export default function HomeVideoSection({ videos, isLoading, isError }: HomeVid
                   href={`/videos/${v.videoId}`}
                   title={v.title}
                   thumbnailSrc={resolveVideoThumbnailUrl(v.videoUrl, v.thumbnailUrl)}
-                  channelName={v.channelDisplayName || '채널'}
+                  channelName={v.channelDisplayName || tChannel('title')}
                   channelImageSrc={v.channelProfileImageUrl}
                   viewCount={Number(v.viewCount ?? 0)}
-                  dateLabel={formatRelativeKo(v.publishedAt ?? '')}
+                  dateLabel={formatRelative(v.publishedAt ?? '', tRelative)}
                   categoryBadge={v.category?.trim() || null}
                 />
               </div>
@@ -80,7 +84,7 @@ export default function HomeVideoSection({ videos, isLoading, isError }: HomeVid
               textDecoration: 'none',
             }}
           >
-            모든 영상 보기
+            {t('seeAllVideos')}
           </Link>
         </div>
       </div>

@@ -31,22 +31,17 @@ export function useAuditionApplyCreditGate({
   })
 
   const creditBalanceAmount = creditBalance?.balance ?? 0
-  const needCreditsForApply =
-    !!applyPolicySnapshot && applyPolicySnapshot.active && applyPolicySnapshot.cost > 0
+  const applicationPaymentMode =
+    applyPolicySnapshot?.applicationPaymentMode ??
+    (!applyPolicySnapshot || !applyPolicySnapshot.active || applyPolicySnapshot.cost <= 0 ? 'FREE' : 'CREDIT')
+  const applicationFeeCredits = applyPolicySnapshot?.applicationFeeCredits ?? applyPolicySnapshot?.cost ?? 0
+  const needCreditsForApply = applicationPaymentMode === 'CREDIT' && applicationFeeCredits > 0
   const creditGateReady = !needCreditsForApply || !balanceLoading
-  const hasEnoughCredits =
-    !applyPolicySnapshot || !applyPolicySnapshot.active || applyPolicySnapshot.cost <= 0
-      ? true
-      : creditBalanceAmount >= applyPolicySnapshot.cost
+  const hasEnoughCredits = !needCreditsForApply || creditBalanceAmount >= applicationFeeCredits
   const applyNavDisabledForCredits = Boolean(
     showApplySubmitCta &&
       !alreadyApplied &&
-      (applyPolicyLoading ||
-        applyPolicyError ||
-        !applyPolicySnapshot ||
-        !applyPolicySnapshot.active ||
-        !creditGateReady ||
-        !hasEnoughCredits)
+      (applyPolicyLoading || applyPolicyError || !applyPolicySnapshot || !creditGateReady || !hasEnoughCredits)
   )
 
   return {

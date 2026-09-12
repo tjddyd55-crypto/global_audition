@@ -2,7 +2,7 @@ export const queryKeys = {
   me: ['auth', 'me'] as const,
   profile: ['me', 'profile'] as const,
   dashboard: ['me', 'dashboard'] as const,
-  auditionsOpen: ['auditions', 'open'] as const,
+  auditionsOpen: (country?: string) => ['auditions', 'open', country ?? 'GLOBAL'] as const,
   audition: (id: string) => ['auditions', id] as const,
   myAuditions: ['auditions', 'mine'] as const,
   myApplications: ['me', 'applications'] as const,
@@ -13,4 +13,8 @@ export const queryKeys = {
   agencyDetail: (id: string) => ['agency', 'application', id] as const,
   roundEligibility: (applicationId: string, roundId: string) =>
     ['me', 'applications', applicationId, 'rounds', roundId, 'eligibility'] as const,
+  creditRuntime: ['credits', 'runtime'] as const,
+  creditBalance: ['credits', 'balance'] as const,
+  creditPackages: ['credits', 'packages'] as const,
+  creditLedger: ['credits', 'ledger'] as const,
 }

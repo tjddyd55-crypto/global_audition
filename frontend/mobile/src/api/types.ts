@@ -249,3 +249,64 @@ export type MeRoundEligibility = {
 
 export type NotificationType = 'ROUND_OPEN' | 'PASS_NOTICE' | 'FAIL_NOTICE' | 'FINAL_NOTICE'
 export type NotificationDeliveryStatus = 'PENDING' | 'SENT' | 'FAILED'
+
+export type CreditRuntimePublic = {
+  applicationPaymentMode: 'FREE' | 'CREDIT' | string
+  applicationFeeCredits: number
+  signupCreditEnabled: boolean
+  signupCreditAmount: number
+}
+
+export type CreditBalance = {
+  balance: number
+}
+
+export type CreditPackageItem = {
+  id: string
+  name: string
+  price: number
+  credits: number
+  bonusCredits: number
+}
+
+export type CreditLedgerItem = {
+  id: string
+  amount: number
+  type: string
+  reason: string
+  createdAt: string
+  note?: string | null
+}
+
+export type CreditLedgerPage = {
+  content: CreditLedgerItem[]
+}
+
+export type PreparePaymentResult = {
+  orderNo: string
+  orderId: string
+  packageId: string
+  packageName: string
+  amount: number
+  credits: number
+  bonusCredits: number
+  currency: string
+  status: string
+  provider?: string
+  clientKey?: string
+  tossAmount?: number
+  orderName?: string
+  successUrl?: string
+  failUrl?: string
+  variantKey?: string
+  tossMethod?: string
+  foreignEasyPayProvider?: string
+}
+
+export type InsufficientCredits = {
+  code: 'INSUFFICIENT_CREDITS'
+  requiredCredits: number
+  currentCredits: number
+  shortfallCredits: number
+  message: string
+}

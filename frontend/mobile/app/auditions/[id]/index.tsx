@@ -13,8 +13,10 @@ import { Screen } from '../../../src/ui/Screen'
 import { StatusPill, toneForApplicationStatus } from '../../../src/ui/StatusPill'
 import { StickyCta } from '../../../src/ui/StickyCta'
 import { colors } from '../../../src/theme/tokens'
+import { useTranslation } from 'react-i18next'
 
 export default function AuditionDetailScreen() {
+  const { t } = useTranslation()
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()
   const { isAuthenticated } = useAuth()
@@ -23,7 +25,7 @@ export default function AuditionDetailScreen() {
 
   const applyBlocked = audition?.canApply === false
   const alreadyApplied = audition?.hasApplied === true
-  const ctaLabel = alreadyApplied ? '내 지원서 보기' : applyBlocked ? '지원 불가' : '지원하기'
+  const ctaLabel = alreadyApplied ? t('auditionDetail.viewApplication') : applyBlocked ? t('auditionDetail.cannotApply') : t('apply.title')
 
   return (
     <Screen
@@ -51,7 +53,7 @@ export default function AuditionDetailScreen() {
         ) : null
       }
     >
-      {query.isError ? <ErrorState message="오디션을 불러오지 못했습니다." onRetry={() => void query.refetch()} /> : null}
+      {query.isError ? <ErrorState message={t('auditionDetail.loadFailed')} onRetry={() => void query.refetch()} /> : null}
       {audition ? (
         <View>
           <PosterImage uri={auditionDetailImageUrl(audition.images)} />
@@ -64,22 +66,27 @@ export default function AuditionDetailScreen() {
             <Text style={styles.meta}>{audition.agencyName}</Text>
             {audition.applyBlockedMessage ? <Text style={styles.warn}>{audition.applyBlockedMessage}</Text> : null}
             <Text style={styles.desc}>{audition.description}</Text>
-            <Info label="모집 분야" items={audition.recruitFields} />
-            <Info label="자격" items={audition.qualifications} />
-            <Info label="일정" items={audition.schedules} />
-            <Info label="혜택" items={audition.benefits} />
-            {audition.location ? <Text style={styles.meta}>장소 {audition.location}</Text> : null}
+            <Info label={t('auditionDetail.recruitFields')} items={audition.recruitFields} />
+            <Info label={t('auditionDetail.qualifications')} items={audition.qualifications} />
+            <Info label={t('auditionDetail.schedules')} items={audition.schedules} />
+            <Info label={t('auditionDetail.benefits')} items={audition.benefits} />
+            {audition.location ? (
+              <Text style={styles.meta}>{t('auditionDetail.locationLabel', { location: audition.location })}</Text>
+            ) : null}
             {audition.processMode === 'MULTI_ROUND' ? (
               <Text style={styles.meta}>
-                진행 {audition.currentRoundNumber ?? '-'} / {audition.maxRoundNumber ?? audition.roundSummaries?.length ?? '-'} 라운드
+                {t('auditionDetail.roundProgress', {
+                  current: audition.currentRoundNumber ?? '-',
+                  max: audition.maxRoundNumber ?? audition.roundSummaries?.length ?? '-',
+                })}
               </Text>
             ) : null}
             <View style={styles.row}>
-              <Button label="투표 보기" variant="secondary" onPress={() => router.push(`/auditions/${id}/vote`)} />
-              <Button label="랭킹" variant="secondary" onPress={() => router.push(`/auditions/${id}/ranking`)} />
+              <Button label={t('auditionDetail.viewVote')} variant="secondary" onPress={() => router.push(`/auditions/${id}/vote`)} />
+              <Button label={t('common.ranking')} variant="secondary" onPress={() => router.push(`/auditions/${id}/ranking`)} />
             </View>
             {audition.videoUrl ? (
-              <Button label="소개 영상 열기" variant="secondary" onPress={() => void Linking.openURL(audition.videoUrl ?? '')} />
+              <Button label={t('auditionDetail.introVideo')} variant="secondary" onPress={() => void Linking.openURL(audition.videoUrl ?? '')} />
             ) : null}
           </View>
         </View>

@@ -12,17 +12,14 @@ import { useLocale, useTranslations } from 'next-intl'
 import { Link } from '@/i18n.config'
 import AuthCardLayout from '@/components/auth/AuthCardLayout'
 
-const loginSchema = z.object({
-  email: z
-    .string({ required_error: '필수값을 입력하세요' })
-    .min(1, '필수값을 입력하세요')
-    .email('유효한 이메일을 입력해주세요'),
-  password: z
-    .string({ required_error: '필수값을 입력하세요' })
-    .min(1, '필수값을 입력하세요'),
-})
+function createLoginSchema(required: string, emailInvalid: string) {
+  return z.object({
+    email: z.string({ required_error: required }).min(1, required).email(emailInvalid),
+    password: z.string({ required_error: required }).min(1, required),
+  })
+}
 
-type LoginFormData = z.infer<typeof loginSchema>
+type LoginFormData = z.infer<ReturnType<typeof createLoginSchema>>
 
 function isSafeInternalNextPath(path: string): boolean {
   return path.startsWith('/') && !path.startsWith('//') && !path.includes('://')
@@ -34,6 +31,7 @@ export default function PcLoginPage() {
   const searchParams = useSearchParams()
   const queryClient = useQueryClient()
   const t = useTranslations('auth')
+  const tValidation = useTranslations('validation')
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [socialMessage, setSocialMessage] = useState<string | null>(null)
@@ -43,7 +41,7 @@ export default function PcLoginPage() {
     handleSubmit,
     formState: { errors },
   } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
+    resolver: zodResolver(createLoginSchema(t('requiredValues'), tValidation('emailInvalid'))),
   })
 
   const onSubmit = async (data: LoginFormData) => {
@@ -55,14 +53,14 @@ export default function PcLoginPage() {
       const token = response.token
       const userRole = response.role
       if (!response || !token) {
-        setError('로그인 응답이 올바르지 않습니다. 다시 시도해주세요.')
+        setError(t('loginInvalidResponse'))
         setIsLoading(false)
         return
       }
 
       const savedToken = localStorage.getItem('accessToken') || localStorage.getItem('auth_token')
       if (!savedToken) {
-        setError('토큰 저장에 실패했습니다. 다시 시도해주세요.')
+        setError(t('tokenSaveFailed'))
         setIsLoading(false)
         return
       }
@@ -92,11 +90,11 @@ export default function PcLoginPage() {
       }
     } catch (err: any) {
       if (!err.response) {
-        setError('서버 연결 실패')
+        setError(t('serverUnreachable'))
       } else {
         const status = err.response.status
-        if (status === 401 || status === 403) setError('이메일 또는 비밀번호가 올바르지 않습니다')
-        else if (status === 400) setError('필수값을 입력하세요')
+        if (status === 401 || status === 403) setError(t('loginError'))
+        else if (status === 400) setError(t('requiredValues'))
         else setError(err.response?.data?.message || t('loginError'))
       }
 
@@ -105,7 +103,7 @@ export default function PcLoginPage() {
   }
 
   const handleSocialClick = () => {
-    setSocialMessage('소셜 로그인은 준비 중입니다')
+    setSocialMessage(t('socialSoon'))
   }
 
   return (
@@ -155,7 +153,7 @@ export default function PcLoginPage() {
           disabled={isLoading}
           className="w-full rounded-md bg-gradient-to-r from-purple-500 to-pink-500 py-2 font-medium text-white transition hover:opacity-95 disabled:opacity-60"
         >
-          {isLoading ? '처리 중...' : t('loginButton')}
+          {isLoading ? t('processing') : t('loginButton')}
         </button>
       </form>
 
@@ -164,12 +162,12 @@ export default function PcLoginPage() {
           <div className="w-full border-t border-gray-200" />
         </div>
         <div className="relative flex justify-center">
-          <span className="bg-white px-2 text-sm text-gray-500">또는</span>
+          <span className="bg-white px-2 text-sm text-gray-500">{t('or')}</span>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-2.5">
-        {['Google', '카카오', '네이버', 'Facebook'].map((provider) => (
+        {['Google', t('kakao'), t('naver'), 'Facebook'].map((provider) => (
           <button
             key={provider}
             type="button"
@@ -183,18 +181,18 @@ export default function PcLoginPage() {
 
       <div className="mt-5 text-center text-sm">
         <p className="text-gray-600">
-          계정이 없으신가요?{' '}
+          {t('noAccount')}{' '}
           <Link href="/register" className="font-semibold text-purple-600 hover:underline">
-            회원가입
+            {t('registerButton')}
           </Link>
         </p>
         <div className="mt-1.5 flex items-center justify-center gap-3 text-gray-600">
           <Link href="/find-user-id" className="hover:text-purple-600">
-            아이디 찾기
+            {t('findId')}
           </Link>
           <span>·</span>
           <Link href="/find-password" className="hover:text-purple-600">
-            비밀번호 찾기
+            {t('findPassword')}
           </Link>
         </div>
       </div>

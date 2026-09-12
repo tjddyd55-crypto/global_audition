@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { format } from 'date-fns'
-import { ko } from 'date-fns/locale'
 import { getVideoEmbedSrc } from '@/shared/utils/videoEmbed'
 import { safeArr, safeNum, safeStr } from '@/shared/utils/safe'
 import { AuditionDetailMediaSection } from '@/components/audition/AuditionDetailMedia'
@@ -12,9 +11,10 @@ import {
   auditionDetailOriginalUrl,
   auditionHeadlineTitle,
   normalizeAuditionImages,
-  PREV_ROUND_APPLY_BLOCKED_MSG,
   type AuditionDto,
 } from '@/shared/types/audition'
+import { useLocale, useTranslations } from 'next-intl'
+import { enUS, ko as koDate, mn } from 'date-fns/locale'
 
 type MobileAuditionDetailSummaryProps = {
   audition: AuditionDto
@@ -23,18 +23,27 @@ type MobileAuditionDetailSummaryProps = {
   applyBlocked: boolean
 }
 
-function fmtDate(iso: string): string {
+function dateLocale(locale: string) {
+  if (locale.startsWith('ko')) return koDate
+  if (locale.startsWith('mn')) return mn
+  return enUS
+}
+
+function fmtDate(iso: string, locale: string): string {
   try {
-    return format(new Date(iso), 'yyyy.MM.dd', { locale: ko })
+    return format(new Date(iso), 'yyyy.MM.dd', { locale: dateLocale(locale) })
   } catch {
     return '-'
   }
 }
 
-function statusBadgeCopy(status: string): string {
-  if (status === 'OPEN') return '모집중 · OPEN'
-  if (status === 'CLOSED') return '마감 · CLOSED'
-  return '초안 · DRAFT'
+function statusBadgeCopy(
+  status: string,
+  t: (key: 'statusOpenBadge' | 'statusClosedBadge' | 'statusDraftBadge') => string,
+): string {
+  if (status === 'OPEN') return t('statusOpenBadge')
+  if (status === 'CLOSED') return t('statusClosedBadge')
+  return t('statusDraftBadge')
 }
 
 function statusBadgeClass(status: string): string {
@@ -68,6 +77,9 @@ export default function MobileAuditionDetailSummary({
   alreadyApplied,
   applyBlocked,
 }: MobileAuditionDetailSummaryProps) {
+  const t = useTranslations('auditionDetail')
+  const tApply = useTranslations('apply')
+  const locale = useLocale()
   const embed = getVideoEmbedSrc(safeStr(audition.videoUrl))
   const videoHref = safeStr(audition.videoUrl).trim()
 
@@ -103,11 +115,11 @@ export default function MobileAuditionDetailSummary({
   const status = String(audition.status ?? '')
   const pillLabelRaw = audition.recruitmentRoundLabel != null ? String(audition.recruitmentRoundLabel).trim() : ''
   const pillLabel =
-    pillLabelRaw.length > 0 ? pillLabelRaw : statusBadgeCopy(status)
+    pillLabelRaw.length > 0 ? pillLabelRaw : statusBadgeCopy(status, t)
 
-  const endDateFormatted = fmtDate(safeStr(audition.endDate))
+  const endDateFormatted = fmtDate(safeStr(audition.endDate), locale)
   const location = safeStr(audition.location)
-  const createdAtFormatted = fmtDate(safeStr(audition.createdAt))
+  const createdAtFormatted = fmtDate(safeStr(audition.createdAt), locale)
 
   const hasMedium = heroMedium.length > 0
   const [posterFailed, setPosterFailed] = useState(false)
@@ -154,12 +166,12 @@ export default function MobileAuditionDetailSummary({
             {pillLabel}
           </span>
           {deadlineUrgent ? (
-            <span className="text-sm font-semibold text-red-600">🔥 마감 임박</span>
+            <span className="text-sm font-semibold text-red-600">🔥 {t('deadlineUrgent')}</span>
           ) : null}
         </div>
 
         {auditionTags.length > 0 ? (
-          <div className="flex flex-wrap gap-1.5" aria-label="태그">
+          <div className="flex flex-wrap gap-1.5" aria-label={t('tags')}>
             {auditionTags.map((tag) => (
               <span
                 key={tag}
@@ -176,16 +188,16 @@ export default function MobileAuditionDetailSummary({
         <dl className="grid gap-1 text-sm text-gray-700">
           {location.length > 0 ? (
             <div className="flex flex-wrap gap-x-2 gap-y-1">
-              <dt className="font-medium text-gray-500">위치</dt>
+              <dt className="font-medium text-gray-500">{t('location')}</dt>
               <dd>{location}</dd>
             </div>
           ) : null}
           <div className="flex flex-wrap gap-x-2 gap-y-1">
-            <dt className="font-medium text-gray-500">마감일</dt>
+            <dt className="font-medium text-gray-500">{t('endDate')}</dt>
             <dd>{endDateFormatted}</dd>
           </div>
           <div className="flex flex-wrap gap-x-2 gap-y-1">
-            <dt className="font-medium text-gray-500">등록일</dt>
+            <dt className="font-medium text-gray-500">{t('registeredAt')}</dt>
             <dd>{createdAtFormatted}</dd>
           </div>
         </dl>
@@ -193,7 +205,7 @@ export default function MobileAuditionDetailSummary({
 
       {embed ? (
         <section className="mt-8">
-          <h2 className="mb-2 text-lg font-semibold text-gray-900">소개 영상</h2>
+          <h2 className="mb-2 text-lg font-semibold text-gray-900">{t('introVideoTitle')}</h2>
           <div className="aspect-video overflow-hidden rounded-2xl bg-black">
             <iframe
               title="audition-video"
@@ -206,14 +218,14 @@ export default function MobileAuditionDetailSummary({
         </section>
       ) : videoHref.length > 0 ? (
         <section className="mt-8 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-          <h2 className="mb-2 text-lg font-semibold text-gray-900">소개 영상</h2>
+          <h2 className="mb-2 text-lg font-semibold text-gray-900">{t('introVideoTitle')}</h2>
           <a
             href={videoHref}
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm font-medium text-violet-700 underline"
           >
-            새 창에서 영상 열기
+            {t('openVideoNew')}
           </a>
         </section>
       ) : null}
@@ -225,46 +237,46 @@ export default function MobileAuditionDetailSummary({
       ) : null}
 
       {descriptionText.length > 0 ? (
-        <MobileDetailSectionCard title="상세 소개">
+        <MobileDetailSectionCard title={t('introTitle')}>
           <div className="whitespace-pre-line text-[15px] leading-relaxed text-gray-800">{descriptionText}</div>
-          <div className="mt-4 text-sm text-gray-600">지원 방법: 영상 업로드 후 간단 정보 입력</div>
+          <div className="mt-4 text-sm text-gray-600">{t('applyHow')}</div>
         </MobileDetailSectionCard>
       ) : (
         <div className="mt-6 rounded-2xl border border-gray-100 bg-white p-4 text-sm text-gray-600 shadow-sm">
-          지원 방법: 영상 업로드 후 간단 정보 입력
+          {t('applyHow')}
         </div>
       )}
 
       {recruitList.length > 0 ? (
-        <MobileDetailSectionCard title="모집 분야">
+        <MobileDetailSectionCard title={t('recruitFields')}>
           <StringListBlock items={recruitList} />
         </MobileDetailSectionCard>
       ) : null}
 
       {qualificationsList.length > 0 ? (
-        <MobileDetailSectionCard title="지원 자격">
+        <MobileDetailSectionCard title={t('qualificationsTitle')}>
           <StringListBlock items={qualificationsList} />
         </MobileDetailSectionCard>
       ) : null}
 
       {schedulesList.length > 0 ? (
-        <MobileDetailSectionCard title="일정">
+        <MobileDetailSectionCard title={t('schedules')}>
           <StringListBlock items={schedulesList} />
         </MobileDetailSectionCard>
       ) : null}
 
       {benefitsList.length > 0 ? (
-        <MobileDetailSectionCard title="혜택">
+        <MobileDetailSectionCard title={t('benefits')}>
           <StringListBlock items={benefitsList} />
         </MobileDetailSectionCard>
       ) : null}
 
       {alreadyApplied ? (
         <p className="mt-8 text-sm text-neutral-600">
-          이 오디션에 이미 지원하셨습니다. 결과는 마이페이지에서 확인할 수 있어요.
+          {t('alreadyAppliedMyPage')}
         </p>
       ) : applyBlocked ? (
-        <p className="mt-8 text-sm text-amber-800">{audition.applyBlockedMessage ?? PREV_ROUND_APPLY_BLOCKED_MSG}</p>
+        <p className="mt-8 text-sm text-amber-800">{audition.applyBlockedMessage ?? tApply('prevRoundBlocked')}</p>
       ) : null}
     </div>
   )

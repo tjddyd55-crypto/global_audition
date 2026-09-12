@@ -5,6 +5,7 @@ import AuditionCard from '../cards/AuditionCard'
 import { SkeletonAuditionCard } from '../ui/SkeletonCard'
 import EmptyState from '../ui/EmptyState'
 import { LAYOUT } from '@/shared/design-tokens'
+import { useTranslations } from 'next-intl'
 import type { AuditionDto } from '@/shared/types/audition'
 
 const containerStyle: React.CSSProperties = {
@@ -24,6 +25,8 @@ type HomeAuditionSectionProps = {
 }
 
 export default function HomeAuditionSection({ auditions, isLoading }: HomeAuditionSectionProps) {
+  const t = useTranslations('home')
+  const tAud = useTranslations('auditions')
   const displayAuditions = auditions.slice(0, 3)
   const isEmpty = !isLoading && displayAuditions.length === 0
 
@@ -31,8 +34,8 @@ export default function HomeAuditionSection({ auditions, isLoading }: HomeAuditi
     <section style={sectionStyle}>
       <div style={containerStyle}>
         <div style={{ marginBottom: 24, textAlign: 'center' }}>
-          <h2 style={{ fontSize: 24, fontWeight: 700, margin: '0 0 8px 0' }}>진행 중인 오디션</h2>
-          <p style={{ fontSize: 14, color: '#666', margin: 0 }}>지금 바로 지원 가능한 오디션을 확인하세요</p>
+          <h2 style={{ fontSize: 24, fontWeight: 700, margin: '0 0 8px 0' }}>{t('openAuditions')}</h2>
+          <p style={{ fontSize: 14, color: '#666', margin: 0 }}>{tAud('description')}</p>
         </div>
       </div>
 
@@ -44,7 +47,7 @@ export default function HomeAuditionSection({ auditions, isLoading }: HomeAuditi
         </div>
       ) : isEmpty ? (
         <div style={containerStyle}>
-          <EmptyState message="등록된 오디션이 없습니다" />
+          <EmptyState message={tAud('emptyList')} />
         </div>
       ) : (
         <div className="flex w-full flex-col">
@@ -73,7 +76,7 @@ export default function HomeAuditionSection({ auditions, isLoading }: HomeAuditi
               textDecoration: 'none',
             }}
           >
-            모든 오디션 보기
+            {t('seeAllAuditions')}
           </Link>
         </div>
       </div>

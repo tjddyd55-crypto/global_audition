@@ -15,6 +15,8 @@ public final class AdminAuditAction {
     public static final String CREDIT_PACKAGE_DELETE = "CREDIT_PACKAGE_DELETE";
     public static final String RECOVERY_REISSUE = "RECOVERY_REISSUE";
     public static final String RECOVERY_REJECT = "RECOVERY_REJECT";
+    public static final String PAYMENT_SETTINGS_PATCH = "PAYMENT_SETTINGS_PATCH";
+    public static final String PAYMENT_CONNECTION_TEST = "PAYMENT_CONNECTION_TEST";
 
     private AdminAuditAction() {
     }

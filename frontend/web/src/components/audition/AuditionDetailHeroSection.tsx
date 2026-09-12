@@ -5,6 +5,7 @@ import { Link } from '@/i18n.config'
 import { AUDITION_DETAIL, HERO } from '@/shared/design-tokens'
 import { safeStr } from '@/shared/utils/safe'
 import { AUDITION_COVER_PLACEHOLDER_SRC } from '@/components/audition/AuditionEditorPreview'
+import { useTranslations } from 'next-intl'
 
 type AuditionDetailHeroSectionProps = {
   auditionId: string
@@ -26,10 +27,10 @@ type AuditionDetailHeroSectionProps = {
   deadlineUrgent?: boolean
 }
 
-function statusBadgeCopy(status: string): string {
-  if (status === 'OPEN') return '모집중 · OPEN'
-  if (status === 'CLOSED') return '마감 · CLOSED'
-  return '초안 · DRAFT'
+function statusBadgeCopy(status: string, t: (key: 'statusOpenBadge' | 'statusClosedBadge' | 'statusDraftBadge') => string): string {
+  if (status === 'OPEN') return t('statusOpenBadge')
+  if (status === 'CLOSED') return t('statusClosedBadge')
+  return t('statusDraftBadge')
 }
 
 function statusBadgeClass(status: string): string {
@@ -54,6 +55,7 @@ export function AuditionDetailHeroSection({
   subtitle,
   deadlineUrgent = false,
 }: AuditionDetailHeroSectionProps) {
+  const t = useTranslations('auditionDetail')
   const cover = safeStr(heroImageMediumUrl)
   const fullSize = safeStr(heroImageOriginalUrl)
   const [shareHint, setShareHint] = useState<'idle' | 'ok' | 'err'>('idle')
@@ -74,7 +76,7 @@ export function AuditionDetailHeroSection({
   const pillLabel = (
     statusPillText != null && String(statusPillText).trim().length > 0
       ? String(statusPillText).trim()
-      : statusBadgeCopy(status)
+      : statusBadgeCopy(status, t)
   ).trim()
 
   const hasCover = cover.length > 0
@@ -120,7 +122,7 @@ export function AuditionDetailHeroSection({
                 background: `linear-gradient(135deg, ${HERO.gradientStart}, ${HERO.gradientEnd})`,
               }}
             >
-              <span className="text-sm font-medium text-white/90">대표 이미지 없음</span>
+              <span className="text-sm font-medium text-white/90">{t('noCover')}</span>
             </div>
           )}
         </div>
@@ -142,7 +144,7 @@ export function AuditionDetailHeroSection({
             <p className="mt-1 text-sm text-white/70">{String(subtitle).trim()}</p>
           ) : null}
           {tags.length > 0 ? (
-            <div className="mb-2 flex flex-wrap gap-1.5" aria-label="오디션 태그">
+            <div className="mb-2 flex flex-wrap gap-1.5" aria-label={t('tagsAria')}>
               {tags.map((tag) => (
                 <span
                   key={tag}
@@ -155,10 +157,10 @@ export function AuditionDetailHeroSection({
           ) : null}
           <div className="mt-2 flex flex-wrap items-center gap-2">
             {deadlineUrgent ? (
-              <span className="text-sm font-semibold text-red-500">🔥 마감 임박</span>
+              <span className="text-sm font-semibold text-red-500">🔥 {t('deadlineUrgent')}</span>
             ) : null}
             <p className="m-0 text-sm text-white/80">
-              마감 {endDateFormatted} · {safeStr(location)}
+              {t('deadlineLine', { date: endDateFormatted, location: safeStr(location) })}
             </p>
           </div>
           <div className="mt-3 flex flex-wrap gap-2">
@@ -168,14 +170,14 @@ export function AuditionDetailHeroSection({
               className="inline-flex items-center border border-white/40 bg-white/10 px-4 py-2 text-xs font-semibold text-white md:text-sm"
               style={{ borderRadius: HERO.buttonRadiusPx }}
             >
-              {shareHint === 'ok' ? '복사됨' : shareHint === 'err' ? '실패' : '공유'}
+              {shareHint === 'ok' ? t('copied') : shareHint === 'err' ? t('shareFailed') : t('share')}
             </button>
             <Link
               href={`/auditions/${auditionId}/vote`}
               className="inline-flex items-center border border-white/40 px-4 py-2 text-xs font-semibold text-white no-underline md:text-sm"
               style={{ borderRadius: HERO.buttonRadiusPx }}
             >
-              투표
+              {t('vote')}
             </Link>
           </div>
         </div>

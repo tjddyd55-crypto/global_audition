@@ -6,6 +6,7 @@ import { authApi } from '@/shared/api/auth'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { useAuthStore } from '@/shared/auth/authStore'
 import { ProfileManageForm } from '@/components/profile/ProfileManageForm'
 import { ChannelPublicSettings } from '@/components/channel/ChannelPublicSettings'
@@ -15,6 +16,9 @@ import { channelVideoKeys } from '@/shared/query/channelVideoQuery'
 
 export default function MobileProfilePage() {
   const router = useRouter()
+  const t = useTranslations('common')
+  const tProfile = useTranslations('profile')
+  const tChannel = useTranslations('channel')
   const role = useAuthStore((s) => s.role)
   const [hasToken, setHasToken] = useState(false)
 
@@ -39,7 +43,7 @@ export default function MobileProfilePage() {
   if (hasToken && role === null) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="text-xl">로딩 중...</div>
+        <div className="text-xl">{t('loading')}</div>
       </div>
     )
   }
@@ -48,7 +52,7 @@ export default function MobileProfilePage() {
     <div className="min-h-screen p-4 md:p-8">
       <div className="max-w-7xl mx-auto flex flex-col gap-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <h1 className="text-3xl md:text-4xl font-bold">내 프로필</h1>
+          <h1 className="text-3xl md:text-4xl font-bold">{tProfile('myTitle')}</h1>
           <button
             type="button"
             onClick={async () => {
@@ -57,7 +61,7 @@ export default function MobileProfilePage() {
             }}
             className="px-4 py-2 border rounded-lg hover:bg-gray-50"
           >
-            로그아웃
+            {t('logout')}
           </button>
         </div>
 
@@ -66,11 +70,11 @@ export default function MobileProfilePage() {
         {showApplicantVideos ? <ChannelPublicSettings /> : null}
 
         <div>
-          <h2 className="text-2xl font-semibold mb-4">내 영상</h2>
+          <h2 className="text-2xl font-semibold mb-4">{tProfile('videos')}</h2>
           {showApplicantVideos && isLoading ? (
-            <p className="text-gray-500">로딩 중...</p>
+            <p className="text-gray-500">{t('loading')}</p>
           ) : role === 'AGENCY' ? (
-            <p className="text-gray-500">지원자 전용 채널입니다. 기획사 계정은 오디션 관리 메뉴를 이용해 주세요.</p>
+            <p className="text-gray-500">{tProfile('agencyChannelHint')}</p>
           ) : showApplicantVideos && videos && videos.content.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {videos.content.map((video) => {
@@ -90,7 +94,7 @@ export default function MobileProfilePage() {
                       </div>
                     ) : (
                       <div className="flex aspect-video w-full items-center justify-center bg-gray-100 text-sm text-gray-600">
-                        썸네일 없음
+                        {tProfile('noThumbnail')}
                       </div>
                     )}
                     <div className="p-4">
@@ -99,8 +103,8 @@ export default function MobileProfilePage() {
                         <VideoVisibilitySwitch video={video} />
                       </div>
                       <div className="text-sm text-gray-600">
-                        <p>조회수: {video.viewCount}</p>
-                        <p>좋아요: {video.likeCount}</p>
+                        <p>{tProfile('viewsCount', { n: video.viewCount })}</p>
+                        <p>{tProfile('likesCount', { n: video.likeCount })}</p>
                       </div>
                     </div>
                   </div>
@@ -108,7 +112,7 @@ export default function MobileProfilePage() {
               })}
             </div>
           ) : showApplicantVideos ? (
-            <p className="text-gray-500">등록된 영상이 없습니다</p>
+            <p className="text-gray-500">{tChannel('emptyVideos')}</p>
           ) : null}
         </div>
       </div>

@@ -1,6 +1,7 @@
 ﻿'use client'
 
 import { useQueries } from '@tanstack/react-query'
+import { useTranslations } from 'next-intl'
 import { meApplicationRoundsApi } from '@/shared/api/meApplicationRounds'
 import type { AuditionRoundSummary } from '@/shared/audition/roundNav'
 import { CARD_BASE, TEXT_SUB, TITLE_PAGE } from '@/shared/ui/specClasses'
@@ -11,21 +12,27 @@ type Props = {
   currentRoundNumber: number
 }
 
-function statusLine(status: string | null | undefined, roundNumber: number, currentRoundNumber: number): string {
+function statusLine(
+  status: string | null | undefined,
+  roundNumber: number,
+  currentRoundNumber: number,
+  t: (key: 'roundDone' | 'roundFail' | 'roundInProgress' | 'roundSkipped' | 'roundWaitingUnsubmitted' | 'roundWaiting') => string,
+): string {
   const s = status ?? '—'
   if (roundNumber === currentRoundNumber) {
-    if (s === 'PASSED') return '✔ 완료'
-    if (s === 'FAILED') return '✖ 탈락'
-    return '▶ 진행 중'
+    if (s === 'PASSED') return `✔ ${t('roundDone')}`
+    if (s === 'FAILED') return `✖ ${t('roundFail')}`
+    return `▶ ${t('roundInProgress')}`
   }
-  if (s === 'PASSED') return '✔ 완료'
-  if (s === 'FAILED') return '✖ 탈락'
-  if (s === 'SKIPPED') return '⊘ 건너뜀'
-  if (roundNumber < currentRoundNumber) return '대기/미제출'
-  return '대기'
+  if (s === 'PASSED') return `✔ ${t('roundDone')}`
+  if (s === 'FAILED') return `✖ ${t('roundFail')}`
+  if (s === 'SKIPPED') return `⊘ ${t('roundSkipped')}`
+  if (roundNumber < currentRoundNumber) return t('roundWaitingUnsubmitted')
+  return t('roundWaiting')
 }
 
 export function ApplicationRoundTimeline({ applicationId, roundSummaries, currentRoundNumber }: Props) {
+  const t = useTranslations('application')
   const sorted = [...roundSummaries].sort((a, b) => a.roundNumber - b.roundNumber).filter((r) => r.roundId?.trim())
 
   const queries = useQueries({
@@ -43,14 +50,14 @@ export function ApplicationRoundTimeline({ applicationId, roundSummaries, curren
 
   return (
     <div className={CARD_BASE}>
-      <h2 className={`${TITLE_PAGE} mb-2`}>라운드 진행</h2>
-      <p className={`${TEXT_SUB} mb-4`}>각 차수별 제출·심사 상태입니다.</p>
+      <h2 className={`${TITLE_PAGE} mb-2`}>{t('roundProgress')}</h2>
+      <p className={`${TEXT_SUB} mb-4`}>{t('roundProgressHint')}</p>
       <ol className="flex flex-col gap-0 border-l-2 border-violet-200 pl-4">
         {sorted.map((r, i) => {
           const q = queries[i]
           const st = q.data?.submissionStatus ?? null
           const isCurrent = r.roundNumber === currentRoundNumber
-          const line = q.isSuccess ? statusLine(st, r.roundNumber, currentRoundNumber) : '불러오는 중…'
+          const statusText = q.isSuccess ? statusLine(st, r.roundNumber, currentRoundNumber, t) : '…'
           return (
             <li
               key={r.roundId}
@@ -59,10 +66,10 @@ export function ApplicationRoundTimeline({ applicationId, roundSummaries, curren
               } last:pb-0`}
             >
               <div className={`text-sm font-semibold ${isCurrent ? 'text-violet-800' : 'text-gray-800'}`}>
-                {r.roundNumber}차 · {line}
+                {t('roundLine', { n: r.roundNumber, line: statusText })}
               </div>
               {q.isSuccess && st ? (
-                <div className={`${TEXT_SUB} mt-0.5 text-xs`}>상태: {st}</div>
+                <div className={`${TEXT_SUB} mt-0.5 text-xs`}>{t('statusColon', { status: st })}</div>
               ) : null}
             </li>
           )

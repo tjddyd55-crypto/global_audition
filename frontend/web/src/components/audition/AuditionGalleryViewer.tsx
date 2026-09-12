@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { TEXT_SUB } from '@/shared/ui/specClasses'
 import { AUDITION_COVER_PLACEHOLDER_SRC } from '@/components/audition/AuditionEditorPreview'
 import { ImageViewerOverlay } from '@/components/gallery/ImageViewerOverlay'
+import { useTranslations } from 'next-intl'
 
 function GalleryThumb({ src, onOpen }: { src: string; onOpen: () => void }) {
   const [failed, setFailed] = useState(false)
@@ -39,6 +40,7 @@ function preloadUrl(url: string | undefined) {
  * 가로 스크롤 + snap, 탭 시 ImageViewerOverlay(순환·스와이프·도트).
  */
 export function AuditionGalleryViewer({ images }: Props) {
+  const t = useTranslations('auditionDetail')
   const [modalIndex, setModalIndex] = useState<number | null>(null)
   const [stripIndex, setStripIndex] = useState(0)
   const scrollerRef = useRef<HTMLDivElement>(null)
@@ -113,7 +115,7 @@ export function AuditionGalleryViewer({ images }: Props) {
           currentIndex={modalIndex}
           onIndexChange={setModalIndex}
           onClose={close}
-          ariaLabel="갤러리"
+          ariaLabel={t('galleryAria')}
         />
       )}
     </div>

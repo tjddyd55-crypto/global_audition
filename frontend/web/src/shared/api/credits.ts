@@ -22,6 +22,15 @@ export type CreditPolicyPublic = {
   policyKey: string
   cost: number
   active: boolean
+  applicationPaymentMode?: 'FREE' | 'CREDIT' | string
+  applicationFeeCredits?: number
+}
+
+export type CreditRuntimePublic = {
+  applicationPaymentMode: 'FREE' | 'CREDIT' | string
+  applicationFeeCredits: number
+  signupCreditEnabled: boolean
+  signupCreditAmount: number
 }
 
 /** 공개 조회 허용 정책 키 (백엔드와 동일) */
@@ -74,6 +83,14 @@ export type PreparePaymentResult = {
   message: string
   redirectUrl?: string
   provider?: string
+  clientKey?: string
+  tossAmount?: number
+  orderName?: string
+  successUrl?: string
+  failUrl?: string
+  variantKey?: string
+  tossMethod?: string
+  foreignEasyPayProvider?: string
 }
 
 export type CreditOrderSummary = {
@@ -107,6 +124,18 @@ export const creditsApi = {
     return data
   },
 
+  getPublicRuntime: async (): Promise<CreditRuntimePublic> => {
+    const { data } = await apiClient.get<CreditRuntimePublic>('/credits/public/runtime')
+    return data
+  },
+
+  getCheckoutHints: async (): Promise<{ enabled: boolean; environment: string; currency: string }> => {
+    const { data } = await apiClient.get<{ enabled: boolean; environment: string; currency: string }>(
+      '/payments/public/checkout-hints'
+    )
+    return data
+  },
+
   getBalance: async (): Promise<CreditBalance> => {
     const { data } = await apiClient.get<CreditBalance>('/credits/balance')
     return data
@@ -130,6 +159,13 @@ export const creditsApi = {
 
   getPackage: async (id: string): Promise<CreditPackageCatalogItem> => {
     const { data } = await apiClient.get<CreditPackageCatalogItem>(`/credit-packages/${encodeURIComponent(id)}`)
+    return data
+  },
+
+  getCheckoutSession: async (orderNo: string): Promise<PreparePaymentResult> => {
+    const { data } = await apiClient.get<PreparePaymentResult>(
+      `/credits/orders/${encodeURIComponent(orderNo)}/checkout`
+    )
     return data
   },
 
@@ -181,5 +217,14 @@ export const creditsApi = {
       }),
     })
     await assertPaymentCallbackOk(res)
+  },
+
+  confirmToss: async (body: {
+    paymentKey: string
+    orderId: string
+    amount: number
+  }): Promise<CreditOrderSummary> => {
+    const { data } = await apiClient.post<CreditOrderSummary>('/payments/toss/confirm', body)
+    return data
   },
 }

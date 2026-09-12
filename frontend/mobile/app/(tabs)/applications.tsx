@@ -9,8 +9,10 @@ import { EmptyState, ErrorState } from '../../src/ui/EmptyState'
 import { Screen } from '../../src/ui/Screen'
 import { StatusPill, toneForApplicationStatus } from '../../src/ui/StatusPill'
 import { colors, radius } from '../../src/theme/tokens'
+import { useTranslation } from 'react-i18next'
 
 export default function MyApplicationsScreen() {
+  const { t } = useTranslation()
   const router = useRouter()
   const { isAuthenticated, ready } = useAuth()
   const query = useQuery({
@@ -22,15 +24,15 @@ export default function MyApplicationsScreen() {
   if (ready && !isAuthenticated) {
     return (
       <Screen>
-        <EmptyState title="로그인이 필요합니다" body="내 지원 현황을 보려면 로그인하세요." actionLabel="로그인" onAction={() => router.push('/(auth)/login')} />
+        <EmptyState title={t('myApplications.loginTitle')} body={t('myApplications.loginBody')} actionLabel={t('common.login')} onAction={() => router.push('/(auth)/login')} />
       </Screen>
     )
   }
 
   return (
     <Screen loading={query.isLoading} refreshing={query.isFetching} onRefresh={() => void query.refetch()}>
-      <Text style={styles.heading}>내 지원</Text>
-      {query.isError ? <ErrorState message="지원 목록을 불러오지 못했습니다." onRetry={() => void query.refetch()} /> : null}
+      <Text style={styles.heading}>{t('myApplications.title')}</Text>
+      {query.isError ? <ErrorState message={t('myApplications.loadFailed')} onRetry={() => void query.refetch()} /> : null}
       {(query.data ?? []).map((item) => (
         <Pressable
           key={item.id}
@@ -45,7 +47,7 @@ export default function MyApplicationsScreen() {
         </Pressable>
       ))}
       {!query.isLoading && (query.data?.length ?? 0) === 0 ? (
-        <EmptyState title="아직 지원한 오디션이 없습니다" actionLabel="오디션 보기" onAction={() => router.push('/(tabs)/auditions')} />
+        <EmptyState title={t('myApplications.empty')} actionLabel={t('myApplications.browse')} onAction={() => router.push('/(tabs)/auditions')} />
       ) : null}
     </Screen>
   )

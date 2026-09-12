@@ -3,7 +3,8 @@
 import { VideoListItem } from '@/components/video/VideoListItem'
 import type { MyChannelVideoRow } from '@/shared/api/videos'
 import { resolveVideoThumbnailUrl } from '@/shared/audition/videoThumbnail'
-import { formatRelativeKo } from '@/shared/formatRelativeKo'
+import { formatRelative } from '@/shared/i18n/formatRelative'
+import { useTranslations } from 'next-intl'
 
 export type ChannelPublicVideoListProps = {
   videosLoading: boolean
@@ -23,15 +24,17 @@ export function ChannelPublicVideoList({
   channelDisplayName,
   channelProfileImageUrl,
 }: ChannelPublicVideoListProps) {
+  const t = useTranslations('channel')
+  const tRelative = useTranslations('relative')
   if (videosLoading && displayVideos.length === 0) {
-    return <p className="px-3 py-10 text-sm text-neutral-600">영상 목록을 불러오는 중…</p>
+    return <p className="px-3 py-10 text-sm text-neutral-600">{t('loadingVideos')}</p>
   }
 
   if (videosError && displayVideos.length === 0) {
     return (
       <div className="space-y-1 px-3 py-8">
-        <p className="text-sm text-red-600">영상 목록을 불러오지 못했습니다.</p>
-        <p className="text-xs text-neutral-600">잠시 후 다시 시도해 주세요.</p>
+        <p className="text-sm text-red-600">{t('videosLoadFailed')}</p>
+        <p className="text-xs text-neutral-600">{t('retryLater')}</p>
       </div>
     )
   }
@@ -39,13 +42,13 @@ export function ChannelPublicVideoList({
   if (displayVideos.length === 0) {
     return (
       <div className="border-y border-neutral-200 px-3 py-10">
-        <p className="text-sm font-medium text-neutral-900">아직 공개된 영상이 없습니다</p>
-        <p className="mt-1 text-xs text-neutral-600">크리에이터가 영상을 공개하면 여기에 표시됩니다.</p>
+        <p className="text-sm font-medium text-neutral-900">{t('emptyVideos')}</p>
+        <p className="mt-1 text-xs text-neutral-600">{t('emptyVideosHint')}</p>
       </div>
     )
   }
 
-  const chName = channelDisplayName.trim() || '채널'
+  const chName = channelDisplayName.trim() || t('title')
 
   return (
     <div className="w-full">
@@ -61,7 +64,7 @@ export function ChannelPublicVideoList({
               channelName={chName}
               channelImageSrc={channelProfileImageUrl}
               viewCount={Number(v.viewCount ?? 0)}
-              dateLabel={formatRelativeKo(v.createdAt ?? '')}
+              dateLabel={formatRelative(v.createdAt ?? '', tRelative)}
               categoryBadge={cat || null}
             />
           </div>

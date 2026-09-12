@@ -19,3 +19,9 @@ export {
   updateApplicationStatus,
   manageAuditionApi,
 } from './manage'
+export {
+  listAuditionTranslations,
+  upsertAuditionTranslation,
+  type AuditionTranslationView,
+  type AuditionTranslationUpsert,
+} from './translations'

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -9,50 +9,65 @@ import { z } from 'zod'
 import { authApi } from '@/shared/api/auth'
 import { RecoveryCodeNotice } from '@/components/auth/RecoveryCodeNotice'
 import { countries, languages, timezones } from '@/shared/utils/countries'
-import { nicknameZodField } from '@/shared/user/nicknameZod'
+import { createNicknameZodField } from '@/shared/user/nicknameZod'
+import { useTranslations } from 'next-intl'
 
-const applicantSchema = z.object({
-  email: z.string().email('유효한 이메일을 입력해주세요'),
-  password: z.string().min(6, '비밀번호는 최소 6자 이상이어야 합니다'),
-  nickname: nicknameZodField,
-  name: z.string().max(120).optional().or(z.literal('')),
-  userType: z.literal('APPLICANT'),
-  country: z.string().length(2, '국가를 선택해주세요'),
-  city: z.string().min(1, '도시를 입력해주세요'),
-  birthday: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, '생년월일 형식이 올바르지 않습니다 (YYYY-MM-DD)'),
-  phone: z.string().optional(),
-  address: z.string().optional(),
-  timezone: z.string().optional(),
-  languages: z.array(z.string()).optional(),
-  gender: z.string().optional(),
-})
+function createMobileRegisterSchema(
+  tReg: (key: string) => string,
+  tVal: (key: string) => string,
+  tAuth: (key: string) => string,
+) {
+  const nickname = createNicknameZodField({
+    required: tAuth('nameRequired'),
+    length: tAuth('nicknameLen'),
+    charset: tAuth('nicknameCharset'),
+  })
+  const applicantSchema = z.object({
+    email: z.string().email(tReg('emailInvalid')),
+    password: z.string().min(6, tReg('passwordMin6')),
+    nickname,
+    name: z.string().max(120).optional().or(z.literal('')),
+    userType: z.literal('APPLICANT'),
+    country: z.string().length(2, tVal('countryRequired')),
+    city: z.string().min(1, tVal('cityRequired')),
+    birthday: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, tVal('birthdayFormat')),
+    phone: z.string().optional(),
+    address: z.string().optional(),
+    timezone: z.string().optional(),
+    languages: z.array(z.string()).optional(),
+    gender: z.string().optional(),
+  })
+  const businessSchema = z.object({
+    email: z.string().email(tReg('emailInvalid')),
+    password: z.string().min(6, tReg('passwordMin6')),
+    nickname,
+    name: z.string().max(120).optional().or(z.literal('')),
+    userType: z.literal('BUSINESS'),
+    businessCountry: z.string().length(2, tVal('countryRequired')),
+    businessCity: z.string().min(1, tVal('cityRequired')),
+    companyName: z.string().min(1, tVal('companyNameRequired')),
+    legalName: z.string().min(1, tVal('legalNameRequired')),
+    representativeName: z.string().min(1, tVal('representativeNameRequired')),
+    businessRegistrationNumber: z.string().min(1, tVal('businessRegistrationNumberRequired')),
+    businessLicenseDocumentUrl: z.string().optional(),
+    taxId: z.string().optional(),
+    businessAddress: z.string().optional(),
+    website: z.string().url(tVal('urlInvalid')).optional().or(z.literal('')),
+    contactEmail: z.string().email(tReg('emailInvalid')).optional().or(z.literal('')),
+    contactPhone: z.string().optional(),
+    establishedYear: z.number().int().min(1800).max(new Date().getFullYear()).optional(),
+  })
+  return z.discriminatedUnion('userType', [applicantSchema, businessSchema])
+}
 
-const businessSchema = z.object({
-  email: z.string().email('유효한 이메일을 입력해주세요'),
-  password: z.string().min(6, '비밀번호는 최소 6자 이상이어야 합니다'),
-  nickname: nicknameZodField,
-  name: z.string().max(120).optional().or(z.literal('')),
-  userType: z.literal('BUSINESS'),
-  businessCountry: z.string().length(2, '국가를 선택해주세요'),
-  businessCity: z.string().min(1, '도시를 입력해주세요'),
-  companyName: z.string().min(1, '회사명을 입력해주세요'),
-  legalName: z.string().min(1, '법인명을 입력해주세요'),
-  representativeName: z.string().min(1, '대표자명을 입력해주세요'),
-  businessRegistrationNumber: z.string().min(1, '사업자 등록번호를 입력해주세요'),
-  businessLicenseDocumentUrl: z.string().optional(),
-  taxId: z.string().optional(),
-  businessAddress: z.string().optional(),
-  website: z.string().url('유효한 URL을 입력해주세요').optional().or(z.literal('')),
-  contactEmail: z.string().email('유효한 이메일을 입력해주세요').optional().or(z.literal('')),
-  contactPhone: z.string().optional(),
-  establishedYear: z.number().int().min(1800).max(new Date().getFullYear()).optional(),
-})
-
-const registerSchema = z.discriminatedUnion('userType', [applicantSchema, businessSchema])
-
-type RegisterFormData = z.infer<typeof registerSchema>
+type RegisterFormData = z.infer<ReturnType<typeof createMobileRegisterSchema>>
 
 export default function MobileRegisterPage() {
+  const tAuth = useTranslations('auth')
+  const tReg = useTranslations('register')
+  const tVal = useTranslations('validation')
+  const tCountries = useTranslations('countries')
+  const tLanguages = useTranslations('languages')
   const router = useRouter()
   const queryClient = useQueryClient()
   const [error, setError] = useState<string | null>(null)
@@ -60,6 +75,7 @@ export default function MobileRegisterPage() {
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([])
   const [issuedCode, setIssuedCode] = useState<string | null>(null)
   const [issuedRole, setIssuedRole] = useState<string>('APPLICANT')
+  const registerSchema = useMemo(() => createMobileRegisterSchema(tReg, tVal, tAuth), [tAuth, tReg, tVal])
 
   const {
     register,
@@ -88,7 +104,7 @@ export default function MobileRegisterPage() {
 
       if (userType === 'APPLICANT') {
         if (!submitData.country || submitData.country.trim() === '') {
-          setError('국가를 선택해주세요')
+          setError(tVal('countryRequired'))
           setIsLoading(false)
           return
         }
@@ -96,13 +112,13 @@ export default function MobileRegisterPage() {
         submitData.country = (submitData.country ?? '').trim().toUpperCase()
 
         if (!/^[A-Z]{2}$/.test(submitData.country)) {
-          setError('국가는 2자리 대문자 코드여야 합니다 (예: KR, US, JP)')
+          setError(tAuth('countryCodeHint'))
           setIsLoading(false)
           return
         }
 
         if (!submitData.city || submitData.city.trim() === '') {
-          setError('도시를 입력해주세요')
+          setError(tVal('cityRequired'))
           setIsLoading(false)
           return
         }
@@ -110,7 +126,7 @@ export default function MobileRegisterPage() {
         submitData.city = (submitData.city ?? '').trim()
 
         if (!submitData.birthday) {
-          setError('생년월일을 입력해주세요')
+          setError(tVal('birthdayRequired'))
           setIsLoading(false)
           return
         }
@@ -120,7 +136,7 @@ export default function MobileRegisterPage() {
         if (typeof submitData.birthday === 'string') {
           const dateRegex = /^\d{4}-\d{2}-\d{2}$/
           if (!dateRegex.test(submitData.birthday)) {
-            setError('생년월일은 YYYY-MM-DD 형식이어야 합니다 (예: 2000-01-01)')
+            setError(tAuth('birthdayIso'))
             setIsLoading(false)
             return
           }
@@ -131,7 +147,7 @@ export default function MobileRegisterPage() {
           const day = String(submitData.birthday.getDate()).padStart(2, '0')
           birthdayStr = `${year}-${month}-${day}`
         } else {
-          setError('생년월일 형식이 올바르지 않습니다')
+          setError(tVal('birthdayFormat'))
           setIsLoading(false)
           return
         }
@@ -153,7 +169,7 @@ export default function MobileRegisterPage() {
           submitData.businessCountry = submitData.businessCountry.trim().toUpperCase()
 
           if (!/^[A-Z]{2}$/.test(submitData.businessCountry)) {
-            setError('국가는 2자리 대문자 코드여야 합니다 (예: KR, US, JP)')
+            setError(tAuth('countryCodeHint'))
             setIsLoading(false)
             return
           }
@@ -187,11 +203,11 @@ export default function MobileRegisterPage() {
         window.location.href = '/'
       }
     } catch (err: any) {
-      console.error('회원가입 오류:', err)
-      console.error('오류 응답:', err.response?.data)
-      console.error('오류 상태 코드:', err.response?.status)
+      console.error('signup failed', err)
+      console.error('signup response', err.response?.data)
+      console.error('signup status', err.response?.status)
 
-      let errorMessage = '회원가입에 실패했습니다'
+      let errorMessage = tAuth('registerError')
 
       if (err.response?.data) {
         const errorData = err.response.data
@@ -241,7 +257,7 @@ export default function MobileRegisterPage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
       <div className="w-full max-w-2xl bg-white rounded-lg shadow-lg p-8">
-        <h1 className="text-3xl font-bold text-center mb-8">회원가입</h1>
+        <h1 className="text-3xl font-bold text-center mb-8">{tAuth('registerTitle')}</h1>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {error && (
@@ -251,7 +267,7 @@ export default function MobileRegisterPage() {
           )}
 
           <div>
-            <label className="block text-sm font-medium mb-2">이메일 *</label>
+            <label className="block text-sm font-medium mb-2">{tAuth('email')} *</label>
             <input
               type="email"
               autoComplete="email"
@@ -265,13 +281,13 @@ export default function MobileRegisterPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">비밀번호 *</label>
+            <label className="block text-sm font-medium mb-2">{tAuth('password')} *</label>
             <input
               type="password"
               autoComplete="new-password"
               {...register('password')}
               className="w-full px-4 py-2 border rounded-lg"
-              placeholder="비밀번호 (최소 6자)"
+              placeholder={tAuth('passwordMin6')}
             />
             {errors.password && (
               <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>
@@ -279,12 +295,12 @@ export default function MobileRegisterPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">닉네임 *</label>
+            <label className="block text-sm font-medium mb-2">{tAuth('nickname')} *</label>
             <input
               type="text"
               {...register('nickname')}
               className="w-full px-4 py-2 border rounded-lg"
-              placeholder="화면에 표시될 이름"
+              placeholder={tAuth('displayNamePlaceholder')}
             />
             {'nickname' in errors && errors.nickname && (
               <p className="text-red-500 text-sm mt-1">{errors.nickname.message}</p>
@@ -292,12 +308,12 @@ export default function MobileRegisterPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">실명 (선택)</label>
+            <label className="block text-sm font-medium mb-2">{tAuth('legalNameOptional')}</label>
             <input
               type="text"
               {...register('name')}
               className="w-full px-4 py-2 border rounded-lg"
-              placeholder="관리·결제용"
+              placeholder={tAuth('legalNamePlaceholder')}
             />
             {'name' in errors && errors.name && (
               <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
@@ -305,28 +321,28 @@ export default function MobileRegisterPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">회원 유형 *</label>
+            <label className="block text-sm font-medium mb-2">{tAuth('userType')} *</label>
             <select
               {...register('userType')}
               className="w-full px-4 py-2 border rounded-lg"
             >
-              <option value="APPLICANT">지망생</option>
-              <option value="BUSINESS">기획사</option>
+              <option value="APPLICANT">{tAuth('applicant')}</option>
+              <option value="BUSINESS">{tAuth('business')}</option>
             </select>
           </div>
 
           {userType === 'APPLICANT' && (
             <>
               <div>
-                <label className="block text-sm font-medium mb-2">국가 *</label>
+                <label className="block text-sm font-medium mb-2">{tReg('country')} *</label>
                 <select
                   {...register('country')}
                   className="w-full px-4 py-2 border rounded-lg"
                 >
-                  <option value="">국가를 선택하세요</option>
+                  <option value="">{tReg('selectCountry')}</option>
                   {countries.map((country) => (
                     <option key={country.code} value={country.code}>
-                      {country.name}
+                      {tCountries(country.code)}
                     </option>
                   ))}
                 </select>
@@ -336,12 +352,12 @@ export default function MobileRegisterPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">도시 *</label>
+                <label className="block text-sm font-medium mb-2">{tReg('city')} *</label>
                 <input
                   type="text"
                   {...register('city')}
                   className="w-full px-4 py-2 border rounded-lg"
-                  placeholder="도시명"
+                  placeholder={tReg('enterCity')}
                 />
                 {'city' in errors && errors.city && (
                   <p className="text-red-500 text-sm mt-1">{errors.city.message}</p>
@@ -349,7 +365,7 @@ export default function MobileRegisterPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">생년월일 *</label>
+                <label className="block text-sm font-medium mb-2">{tReg('birthday')} *</label>
                 <input
                   type="date"
                   {...register('birthday')}
@@ -362,32 +378,32 @@ export default function MobileRegisterPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">전화번호</label>
+                <label className="block text-sm font-medium mb-2">{tReg('phone')}</label>
                 <input
                   type="tel"
                   {...register('phone')}
                   className="w-full px-4 py-2 border rounded-lg"
-                  placeholder="전화번호 (선택사항)"
+                  placeholder={tReg('phoneOptional')}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">주소</label>
+                <label className="block text-sm font-medium mb-2">{tReg('address')}</label>
                 <input
                   type="text"
                   {...register('address')}
                   className="w-full px-4 py-2 border rounded-lg"
-                  placeholder="주소 (선택사항)"
+                  placeholder={tReg('addressOptional')}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">시차대</label>
+                <label className="block text-sm font-medium mb-2">{tReg('timezone')}</label>
                 <select
                   {...register('timezone')}
                   className="w-full px-4 py-2 border rounded-lg"
                 >
-                  <option value="">시차대를 선택하세요 (선택사항)</option>
+                  <option value="">{tReg('selectTimezone')}</option>
                   {timezones.map((tz) => (
                     <option key={tz.value} value={tz.value}>
                       {tz.label}
@@ -397,7 +413,7 @@ export default function MobileRegisterPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">사용 가능한 언어</label>
+                <label className="block text-sm font-medium mb-2">{tReg('languages')}</label>
                 <div className="grid grid-cols-2 gap-2 mt-2">
                   {languages.map((lang) => (
                     <label key={lang.code} className="flex items-center space-x-2 cursor-pointer">
@@ -407,22 +423,22 @@ export default function MobileRegisterPage() {
                         onChange={() => toggleLanguage(lang.code)}
                         className="rounded"
                       />
-                      <span>{lang.name}</span>
+                      <span>{tLanguages(lang.code)}</span>
                     </label>
                   ))}
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">성별</label>
+                <label className="block text-sm font-medium mb-2">{tReg('gender')}</label>
                 <select
                   {...register('gender')}
                   className="w-full px-4 py-2 border rounded-lg"
                 >
-                  <option value="">선택하세요</option>
-                  <option value="MALE">남성</option>
-                  <option value="FEMALE">여성</option>
-                  <option value="OTHER">기타</option>
+                  <option value="">{tAuth('selectOptional')}</option>
+                  <option value="MALE">{tReg('male')}</option>
+                  <option value="FEMALE">{tReg('female')}</option>
+                  <option value="OTHER">{tReg('other')}</option>
                 </select>
               </div>
             </>
@@ -431,15 +447,15 @@ export default function MobileRegisterPage() {
           {userType === 'BUSINESS' && (
             <>
               <div>
-                <label className="block text-sm font-medium mb-2">국가 *</label>
+                <label className="block text-sm font-medium mb-2">{tReg('country')} *</label>
                 <select
                   {...register('businessCountry')}
                   className="w-full px-4 py-2 border rounded-lg"
                 >
-                  <option value="">국가를 선택하세요</option>
+                  <option value="">{tReg('selectCountry')}</option>
                   {countries.map((country) => (
                     <option key={country.code} value={country.code}>
-                      {country.name}
+                      {tCountries(country.code)}
                     </option>
                   ))}
                 </select>
@@ -449,12 +465,12 @@ export default function MobileRegisterPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">도시 *</label>
+                <label className="block text-sm font-medium mb-2">{tReg('city')} *</label>
                 <input
                   type="text"
                   {...register('businessCity')}
                   className="w-full px-4 py-2 border rounded-lg"
-                  placeholder="도시명"
+                  placeholder={tReg('enterCity')}
                 />
                 {'businessCity' in errors && errors.businessCity && (
                   <p className="text-red-500 text-sm mt-1">{errors.businessCity.message}</p>
@@ -462,12 +478,12 @@ export default function MobileRegisterPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">회사명 *</label>
+                <label className="block text-sm font-medium mb-2">{tReg('companyName')} *</label>
                 <input
                   type="text"
                   {...register('companyName')}
                   className="w-full px-4 py-2 border rounded-lg"
-                  placeholder="회사명"
+                  placeholder={tReg('companyName')}
                 />
                 {'companyName' in errors && errors.companyName && (
                   <p className="text-red-500 text-sm mt-1">{errors.companyName.message}</p>
@@ -475,12 +491,12 @@ export default function MobileRegisterPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">법인명 *</label>
+                <label className="block text-sm font-medium mb-2">{tReg('legalName')} *</label>
                 <input
                   type="text"
                   {...register('legalName')}
                   className="w-full px-4 py-2 border rounded-lg"
-                  placeholder="공식 법인명"
+                  placeholder={tReg('legalNameOfficial')}
                 />
                 {'legalName' in errors && errors.legalName && (
                   <p className="text-red-500 text-sm mt-1">{errors.legalName.message}</p>
@@ -488,12 +504,12 @@ export default function MobileRegisterPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">대표자명 *</label>
+                <label className="block text-sm font-medium mb-2">{tReg('representativeName')} *</label>
                 <input
                   type="text"
                   {...register('representativeName')}
                   className="w-full px-4 py-2 border rounded-lg"
-                  placeholder="대표자명"
+                  placeholder={tReg('representativeName')}
                 />
                 {'representativeName' in errors && errors.representativeName && (
                   <p className="text-red-500 text-sm mt-1">{errors.representativeName.message}</p>
@@ -501,12 +517,12 @@ export default function MobileRegisterPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">사업자 등록번호 *</label>
+                <label className="block text-sm font-medium mb-2">{tReg('businessRegistrationNumber')} *</label>
                 <input
                   type="text"
                   {...register('businessRegistrationNumber')}
                   className="w-full px-4 py-2 border rounded-lg"
-                  placeholder="사업자 등록번호"
+                  placeholder={tReg('businessRegistrationNumber')}
                 />
                 {'businessRegistrationNumber' in errors && errors.businessRegistrationNumber && (
                   <p className="text-red-500 text-sm mt-1">
@@ -514,12 +530,12 @@ export default function MobileRegisterPage() {
                   </p>
                 )}
                 <p className="text-sm text-gray-500 mt-1">
-                  국가별 형식에 맞게 입력해주세요 (예: 한국 123-45-67890, 미국 EIN 등)
+                  {tReg('registrationFormat')}
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">사업자 등록증</label>
+                <label className="block text-sm font-medium mb-2">{tReg('businessLicense')}</label>
                 <input
                   type="file"
                   accept="image/*,.pdf"
@@ -529,37 +545,37 @@ export default function MobileRegisterPage() {
                   }}
                 />
                 <p className="text-sm text-gray-500 mt-1">
-                  사업자 등록증 파일을 업로드해주세요 (이미지 또는 PDF)
+                  {tReg('uploadLicense')}
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">세금 ID</label>
+                <label className="block text-sm font-medium mb-2">{tReg('taxId')}</label>
                 <input
                   type="text"
                   {...register('taxId')}
                   className="w-full px-4 py-2 border rounded-lg"
-                  placeholder="세금 ID (선택사항, 국가별 형식 다름)"
+                  placeholder={tReg('taxIdOptional')}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">주소</label>
+                <label className="block text-sm font-medium mb-2">{tReg('address')}</label>
                 <input
                   type="text"
                   {...register('businessAddress')}
                   className="w-full px-4 py-2 border rounded-lg"
-                  placeholder="회사 주소 (선택사항)"
+                  placeholder={tReg('companyAddressOptional')}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">웹사이트</label>
+                <label className="block text-sm font-medium mb-2">{tReg('website')}</label>
                 <input
                   type="url"
                   {...register('website')}
                   className="w-full px-4 py-2 border rounded-lg"
-                  placeholder="https://example.com (선택사항)"
+                  placeholder={tReg('websiteOptional')}
                 />
                 {'website' in errors && errors.website && (
                   <p className="text-red-500 text-sm mt-1">{errors.website.message}</p>
@@ -567,12 +583,12 @@ export default function MobileRegisterPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">연락 이메일</label>
+                <label className="block text-sm font-medium mb-2">{tReg('contactEmail')}</label>
                 <input
                   type="email"
                   {...register('contactEmail')}
                   className="w-full px-4 py-2 border rounded-lg"
-                  placeholder="contact@example.com (선택사항)"
+                  placeholder={tReg('contactEmail')}
                 />
                 {'contactEmail' in errors && errors.contactEmail && (
                   <p className="text-red-500 text-sm mt-1">{errors.contactEmail.message}</p>
@@ -580,22 +596,22 @@ export default function MobileRegisterPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">연락 전화번호</label>
+                <label className="block text-sm font-medium mb-2">{tReg('contactPhone')}</label>
                 <input
                   type="tel"
                   {...register('contactPhone')}
                   className="w-full px-4 py-2 border rounded-lg"
-                  placeholder="전화번호 (선택사항)"
+                  placeholder={tReg('phoneOptional')}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">설립 연도</label>
+                <label className="block text-sm font-medium mb-2">{tReg('establishedYear')}</label>
                 <input
                   type="number"
                   {...register('establishedYear', { valueAsNumber: true })}
                   className="w-full px-4 py-2 border rounded-lg"
-                  placeholder="설립 연도 (선택사항)"
+                  placeholder={tReg('establishedOptional')}
                   min={1800}
                   max={new Date().getFullYear()}
                 />
@@ -611,15 +627,15 @@ export default function MobileRegisterPage() {
             disabled={isLoading}
             className="w-full px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50"
           >
-            {isLoading ? '가입 중...' : '회원가입'}
+            {isLoading ? tAuth('signingUp') : tAuth('registerButton')}
           </button>
         </form>
 
         <div className="mt-6 text-center">
           <p className="text-gray-600">
-            이미 계정이 있으신가요?{' '}
+            {tAuth('alreadyHaveAccount')}{' '}
             <a href="/login" className="text-primary-600 hover:underline">
-              로그인
+              {tAuth('loginButton')}
             </a>
           </p>
         </div>

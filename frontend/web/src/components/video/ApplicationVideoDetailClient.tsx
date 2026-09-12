@@ -8,7 +8,8 @@ import { DEFAULT_IMAGES } from '@/shared/constants/fallbacks'
 import { getVideoEmbedSrc } from '@/shared/utils/videoEmbed'
 import { useAuthStore } from '@/shared/auth/authStore'
 import { auditionApi } from '@/shared/api/auditions'
-import { formatRelativeKo } from '@/shared/formatRelativeKo'
+import { formatRelative } from '@/shared/i18n/formatRelative'
+import { useLocale, useTranslations } from 'next-intl'
 import {
   bumpApplicationViewPublic,
   deleteApplicationLike,
@@ -70,6 +71,13 @@ export function ApplicationVideoDetailClient() {
   const params = useParams()
   const applicationId = typeof params?.applicationId === 'string' ? params.applicationId : ''
   const accessToken = useAuthStore((s) => s.accessToken)
+  const locale = useLocale()
+  const tVideo = useTranslations('video')
+  const tChannel = useTranslations('channel')
+  const tCommon = useTranslations('common')
+  const tVote = useTranslations('vote')
+  const tRelative = useTranslations('relative')
+  const numberLocale = locale.startsWith('ko') ? 'ko-KR' : locale.startsWith('mn') ? 'mn-MN' : 'en-US'
 
   const [isLoading, setIsLoading] = useState(true)
   const [detail, setDetail] = useState<ApplicationPublicDetail | null>(null)
@@ -155,7 +163,7 @@ export function ApplicationVideoDetailClient() {
   const onLike = useCallback(async () => {
     if (!applicationId) return
     if (!accessToken) {
-      console.error('[video-detail] 좋아요는 로그인 후 이용할 수 있습니다.')
+      console.error('[video-detail] like requires login')
       return
     }
     setLikeBusy(true)
@@ -173,7 +181,7 @@ export function ApplicationVideoDetailClient() {
   const onVote = useCallback(async () => {
     if (!applicationId || !detail) return
     if (!accessToken) {
-      console.error('[video-detail] 투표는 로그인 후 이용할 수 있습니다.')
+      console.error('[video-detail] vote requires login')
       return
     }
     setVoteBusy(true)
@@ -222,7 +230,7 @@ export function ApplicationVideoDetailClient() {
     const text = commentDraft.trim()
     if (!text) return
     if (!accessToken) {
-      console.error('[video-detail] 댓글 등록은 로그인 후 이용할 수 있습니다.')
+      console.error('[video-detail] comment requires login')
       return
     }
     setCommentBusy(true)
@@ -246,7 +254,7 @@ export function ApplicationVideoDetailClient() {
   if (isLoading && !detail) {
     return (
       <div className={shellClass}>
-        <p className="px-4 py-3">불러오는 중…</p>
+        <p className="px-4 py-3">{tVideo('loading')}</p>
       </div>
     )
   }
@@ -254,7 +262,7 @@ export function ApplicationVideoDetailClient() {
   if (!detail) {
     return (
       <div className={shellClass}>
-        <p className="px-4 py-3">영상을 찾을 수 없습니다.</p>
+        <p className="px-4 py-3">{tVideo('notFound')}</p>
       </div>
     )
   }
@@ -276,7 +284,7 @@ export function ApplicationVideoDetailClient() {
               />
             ) : (
               <div className="flex h-full min-h-[12rem] items-center justify-center px-4 text-center text-sm text-white">
-                재생할 수 있는 영상 URL이 없습니다.
+                {tVideo('noPlayableUrl')}
               </div>
             )}
           </div>
@@ -292,29 +300,29 @@ export function ApplicationVideoDetailClient() {
           <div className="px-4 py-3">
             <h1 className="text-base font-semibold leading-snug">{detail.title}</h1>
             <div className="mt-1 text-sm text-neutral-500">
-              조회 {detail.viewCount.toLocaleString('ko-KR')}회 · {formatRelativeKo(detail.publishedAt)}
+              {tVideo('viewsCount', { n: detail.viewCount.toLocaleString(numberLocale) })} · {formatRelative(detail.publishedAt, tRelative)}
             </div>
           </div>
 
           <div className="flex items-center gap-4 overflow-x-auto px-4 py-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <button type="button" disabled={likeBusy} onClick={() => void onLike()} style={actionBtnBase(isLiked)}>
               <span aria-hidden>👍</span>
-              <span>{likeCount.toLocaleString('ko-KR')}</span>
+              <span>{likeCount.toLocaleString(numberLocale)}</span>
             </button>
             <button type="button" style={actionBtnBase()}>
               <span aria-hidden>👎</span>
-              <span>싫어요</span>
+              <span>{tVideo('dislike')}</span>
             </button>
             <button type="button" disabled={voteBusy} onClick={() => void onVote()} style={actionBtnBase(isVoted)}>
-              {isVoted ? '투표 취소' : '투표하기'}
+              {isVoted ? tVote('cancelVote') : tVote('voteAction')}
             </button>
             <button type="button" onClick={() => void onShare()} style={actionBtnBase(shareHint)}>
               <span aria-hidden>🔗</span>
-              <span>{shareHint ? '링크 복사됨' : '공유'}</span>
+              <span>{shareHint ? tVideo('linkCopied') : tChannel('share')}</span>
             </button>
             <button type="button" onClick={() => onToggleSave()} style={actionBtnBase(savedLocal)}>
               <span aria-hidden>⭐</span>
-              <span>{savedLocal ? '저장됨' : '저장'}</span>
+              <span>{savedLocal ? tVideo('saved') : tCommon('save')}</span>
             </button>
           </div>
 
@@ -332,7 +340,7 @@ export function ApplicationVideoDetailClient() {
               <div className="min-w-0">
                 <div className="text-sm font-semibold">{detail.channelDisplayName}</div>
                 <div className="text-xs text-neutral-500">
-                  구독자 {detail.subscriberCount.toLocaleString('ko-KR')}명
+                  {tVideo('subscribersCount', { n: detail.subscriberCount.toLocaleString(numberLocale) })}
                 </div>
               </div>
             </div>
@@ -346,7 +354,7 @@ export function ApplicationVideoDetailClient() {
                 cursor: 'pointer',
               }}
             >
-              구독
+              {tChannel('subscribe')}
             </button>
           </div>
 
@@ -359,13 +367,13 @@ export function ApplicationVideoDetailClient() {
                 className="mt-2 border-0 bg-transparent p-0 text-sm font-semibold"
                 style={{ color: ACCENT, cursor: 'pointer' }}
               >
-                {descriptionExpanded ? '접기' : '더보기'}
+                {descriptionExpanded ? tVideo('collapse') : tVideo('more')}
               </button>
             ) : null}
           </div>
 
           <section className="px-4 pt-4">
-            <h2 className="mb-3 text-base font-bold">댓글 {comments.length}개</h2>
+            <h2 className="mb-3 text-base font-bold">{tVideo('commentsCount', { n: comments.length })}</h2>
             <div className="mb-4 flex gap-3 border-b border-neutral-200 pb-4">
               <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full">
                 <Image src={DEFAULT_IMAGES.avatar} alt="" fill className="object-cover" unoptimized />
@@ -375,7 +383,7 @@ export function ApplicationVideoDetailClient() {
                   type="text"
                   value={commentDraft}
                   onChange={(e) => setCommentDraft(e.target.value)}
-                  placeholder="댓글을 입력하세요..."
+                  placeholder={tVideo('commentPlaceholder')}
                   className="mb-2 box-border w-full rounded-lg border border-neutral-300 px-4 py-2 text-sm"
                 />
                 <div className="flex justify-end gap-2">
@@ -384,7 +392,7 @@ export function ApplicationVideoDetailClient() {
                     onClick={() => setCommentDraft('')}
                     className="cursor-pointer border-0 bg-transparent text-sm text-neutral-600"
                   >
-                    취소
+                    {tCommon('cancel')}
                   </button>
                   <button
                     type="button"
@@ -393,7 +401,7 @@ export function ApplicationVideoDetailClient() {
                     className="cursor-pointer rounded-full border-0 px-4 py-2 text-sm font-semibold text-white"
                     style={{ background: ACCENT }}
                   >
-                    댓글
+                    {tVideo('commentSubmit')}
                   </button>
                 </div>
               </div>
@@ -413,13 +421,13 @@ export function ApplicationVideoDetailClient() {
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-baseline gap-2">
                       <span className="text-sm font-semibold">{c.authorDisplayName}</span>
-                      <span className="text-xs text-neutral-500">{formatRelativeKo(c.createdAt)}</span>
+                      <span className="text-xs text-neutral-500">{formatRelative(c.createdAt, tRelative)}</span>
                     </div>
                     <p className="mt-1 mb-0 text-sm leading-relaxed whitespace-pre-wrap">{c.content}</p>
                     <div className="mt-2 flex items-center gap-3 text-xs text-neutral-500">
                       <span>👍 0</span>
                       <button type="button" className="cursor-pointer border-0 bg-transparent p-0 text-neutral-500">
-                        답글
+                        {tVideo('reply')}
                       </button>
                     </div>
                   </div>
@@ -430,7 +438,7 @@ export function ApplicationVideoDetailClient() {
         </div>
 
         <aside className="w-full border-t border-neutral-200 px-0 py-6 lg:w-[360px] lg:flex-shrink-0 lg:border-t-0 lg:border-l lg:border-neutral-200 lg:py-4 lg:pl-4 lg:pr-3">
-          <h2 className="mb-3 px-4 text-base font-bold lg:px-0">추천 영상</h2>
+          <h2 className="mb-3 px-4 text-base font-bold lg:px-0">{tVideo('recommended')}</h2>
           <div className="w-full">
             {recommendations.map((item, index) => (
               <div key={item.applicationId} className={index > 0 ? 'mt-4' : ''}>
@@ -441,7 +449,7 @@ export function ApplicationVideoDetailClient() {
                   channelName={item.channelDisplayName}
                   channelImageSrc={null}
                   viewCount={item.viewCount}
-                  dateLabel={formatRelativeKo(item.publishedAt)}
+                  dateLabel={formatRelative(item.publishedAt, tRelative)}
                 />
               </div>
             ))}

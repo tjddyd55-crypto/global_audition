@@ -13,10 +13,10 @@ public class CreditPackageUpsertRequest {
     @NotBlank
     private String name;
 
-    /** 패키지 판매가 (USD 달러, 소수 2자리까지). */
+    /** 패키지 판매가 (정수 USD 달러). */
     @NotNull
-    @DecimalMin(value = "0.01", inclusive = true)
-    @Digits(integer = 12, fraction = 2)
+    @DecimalMin(value = "1", inclusive = true)
+    @Digits(integer = 12, fraction = 0)
     private BigDecimal price;
 
     @NotNull

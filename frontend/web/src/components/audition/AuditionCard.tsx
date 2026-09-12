@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from '../../i18n.config'
 import { format } from 'date-fns'
-import { ko } from 'date-fns/locale'
+import { enUS, ko as koDate, mn } from 'date-fns/locale'
 import {
   auditionHeadlineTitle,
   auditionListImageUrl,
@@ -11,16 +11,11 @@ import {
   type AuditionDto,
 } from '@/shared/types/audition'
 import { stripImageUrlResizeParams } from '@/shared/utils/imageDisplayUrl'
-import { FALLBACK_TEXT, DEFAULT_IMAGES } from '@/shared/constants/fallbacks'
+import { DEFAULT_IMAGES } from '@/shared/constants/fallbacks'
+import { useLocale, useTranslations } from 'next-intl'
 
 interface AuditionCardProps {
   audition: AuditionDto
-}
-
-const statusLabels: Record<string, string> = {
-  DRAFT: '초안',
-  OPEN: '모집중',
-  CLOSED: '마감',
 }
 
 function statusBadgeClass(status: string): string {
@@ -30,12 +25,21 @@ function statusBadgeClass(status: string): string {
 }
 
 export default function AuditionCard({ audition }: AuditionCardProps) {
+  const tStatus = useTranslations('status')
+  const tFallback = useTranslations('fallback')
+  const locale = useLocale()
+  const dateLocale = locale.startsWith('ko') ? koDate : locale.startsWith('mn') ? mn : enUS
+  const statusLabels: Record<string, string> = {
+    DRAFT: tStatus('draft'),
+    OPEN: tStatus('open'),
+    CLOSED: tStatus('closed'),
+  }
   // React Hooks 규칙 준수를 위해 early return 전에 모든 훅을 호출한다.
   // `audition`이 null/undefined인 경우 하단에서 null을 반환하기 전까지 hook 순서가 고정되어야 한다.
   const id = audition?.id ?? ''
   const title = audition
-    ? auditionHeadlineTitle(audition).trim() || audition.title.trim() || FALLBACK_TEXT.videoTitle
-    : FALLBACK_TEXT.videoTitle
+    ? auditionHeadlineTitle(audition).trim() || audition.title.trim() || tFallback('videoTitle')
+    : tFallback('videoTitle')
   const status = audition?.status ?? 'DRAFT'
   const statusBadgeLabel =
     status === 'OPEN' && audition?.recruitmentRoundLabel?.trim()
@@ -74,12 +78,12 @@ export default function AuditionCard({ audition }: AuditionCardProps) {
   const dateStr = createdAt
     ? (() => {
         try {
-          return format(new Date(createdAt), 'yyyy.MM.dd', { locale: ko })
+          return format(new Date(createdAt), 'yyyy.MM.dd', { locale: dateLocale })
         } catch {
-          return FALLBACK_TEXT.date
+          return tFallback('date')
         }
       })()
-    : FALLBACK_TEXT.date
+    : tFallback('date')
 
   const location = (audition?.location ?? '').trim() || '—'
   const metaLine = `${dateStr} · ${location}`

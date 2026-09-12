@@ -1,6 +1,7 @@
 ﻿'use client'
 
 import { useQuery } from '@tanstack/react-query'
+import { useTranslations } from 'next-intl'
 import ChannelCard from '../../../components/cards/ChannelCard'
 import EmptyState from '../../../components/ui/EmptyState'
 import { LAYOUT, CHANNEL_CARD } from '@/shared/design-tokens'
@@ -13,6 +14,7 @@ const containerStyle: React.CSSProperties = {
 }
 
 export default function ChannelsPage() {
+  const tChannel = useTranslations('channel')
   const { data, isLoading, isError } = useQuery({
     queryKey: ['channels-public'],
     queryFn: () => channelApi.listPublic(),
@@ -23,16 +25,16 @@ export default function ChannelsPage() {
   return (
     <div style={{ ...containerStyle, paddingTop: 80, paddingBottom: 80 }}>
       <div style={{ marginBottom: 32 }}>
-        <h1 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 8px 0' }}>채널 리스트</h1>
-        <p style={{ fontSize: 16, color: '#666', margin: 0 }}>다양한 아티스트들의 채널을 탐색하고 영상을 감상하세요</p>
+        <h1 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 8px 0' }}>{tChannel('listTitle')}</h1>
+        <p style={{ fontSize: 16, color: '#666', margin: 0 }}>{tChannel('listHint')}</p>
       </div>
 
       {isLoading ? (
-        <p className="text-center text-sm text-neutral-500">채널을 불러오는 중…</p>
+        <p className="text-center text-sm text-neutral-500">{tChannel('listLoading')}</p>
       ) : isError ? (
-        <p className="text-center text-sm text-red-600">채널 목록을 불러오지 못했습니다.</p>
+        <p className="text-center text-sm text-red-600">{tChannel('listLoadFailed')}</p>
       ) : channels.length === 0 ? (
-        <EmptyState message="등록된 채널이 없습니다" />
+        <EmptyState message={tChannel('listEmpty')} />
       ) : (
         <div
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4"

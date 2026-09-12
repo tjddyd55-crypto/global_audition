@@ -2,6 +2,7 @@
 
 import type { ReactNode } from 'react'
 import Image from 'next/image'
+import { useLocale, useTranslations } from 'next-intl'
 import { Link } from '@/i18n.config'
 import { DEFAULT_IMAGES } from '@/shared/constants/fallbacks'
 
@@ -30,8 +31,14 @@ export function VideoListItem({
   categoryBadge,
   footer,
 }: VideoListItemProps) {
-  const viewsFormatted = Number(viewCount ?? 0).toLocaleString('ko-KR')
-  const meta = `${channelName || '채널'} · 조회수 ${viewsFormatted} · ${dateLabel}`
+  const locale = useLocale()
+  const tVideo = useTranslations('video')
+  const tChannel = useTranslations('channel')
+  const tProfile = useTranslations('profile')
+  const numberLocale = locale.startsWith('ko') ? 'ko-KR' : locale.startsWith('mn') ? 'mn-MN' : 'en-US'
+  const channelLabel = channelName || tChannel('title')
+  const viewsFormatted = Number(viewCount ?? 0).toLocaleString(numberLocale)
+  const meta = `${channelLabel} · ${tVideo('viewsCount', { n: viewsFormatted })} · ${dateLabel}`
 
   return (
     <article className="w-full">
@@ -48,7 +55,7 @@ export function VideoListItem({
             />
           ) : (
             <div className="flex h-full min-h-[10rem] w-full items-center justify-center text-sm text-neutral-400">
-              썸네일 없음
+              {tProfile('noThumbnail')}
             </div>
           )}
           {categoryBadge ? (
@@ -63,7 +70,7 @@ export function VideoListItem({
         <Link
           href={href}
           className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full bg-neutral-200"
-          aria-label={`${channelName || '채널'} 프로필`}
+          aria-label={tVideo('profileAria', { name: channelLabel })}
         >
           <Image
             src={channelImageSrc || DEFAULT_IMAGES.avatar}

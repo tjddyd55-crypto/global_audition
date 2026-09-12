@@ -10,11 +10,19 @@ import { Button } from '../../src/ui/Button'
 import { EmptyState, ErrorState } from '../../src/ui/EmptyState'
 import { Screen } from '../../src/ui/Screen'
 import { colors, radius } from '../../src/theme/tokens'
+import { useTranslation } from 'react-i18next'
+import { audienceCountryFromLocale } from '../../src/domain/audience'
+import { getRuntimeLocale } from '../../src/i18n/runtime'
 
 export default function HomeScreen() {
+  const { t } = useTranslation()
   const router = useRouter()
   const { isAuthenticated, session } = useAuth()
-  const auditionsQuery = useQuery({ queryKey: queryKeys.auditionsOpen, queryFn: auditionApi.listOpen })
+  const country = audienceCountryFromLocale(getRuntimeLocale())
+  const auditionsQuery = useQuery({
+    queryKey: queryKeys.auditionsOpen(country),
+    queryFn: () => auditionApi.listOpen(country),
+  })
   const dashQuery = useQuery({
     queryKey: queryKeys.dashboard,
     queryFn: dashboardApi.applicant,
@@ -24,24 +32,24 @@ export default function HomeScreen() {
   return (
     <Screen refreshing={auditionsQuery.isFetching} onRefresh={() => void auditionsQuery.refetch()}>
       <LinearGradient colors={[colors.heroStart, colors.surface]} style={styles.hero}>
-        <Text style={styles.kicker}>GLOBAL AUDITION</Text>
-        <Text style={styles.heroTitle}>기획사와 지망생을 잇는{'\n'}글로벌 오디션</Text>
-        <Text style={styles.heroBody}>모집중인 오디션을 보고, 영상 링크로 지원하고, 라운드 결과를 확인하세요.</Text>
-        <Button label="오디션 둘러보기" onPress={() => router.push('/(tabs)/auditions')} />
+        <Text style={styles.kicker}>{t('home.kicker')}</Text>
+        <Text style={styles.heroTitle}>{t('home.heroTitle')}</Text>
+        <Text style={styles.heroBody}>{t('home.heroBody')}</Text>
+        <Button label={t('home.browse')} onPress={() => router.push('/(tabs)/auditions')} />
       </LinearGradient>
 
       {isAuthenticated && dashQuery.data ? (
         <View style={styles.stats}>
-          <Stat label="지원" value={dashQuery.data.applied} />
-          <Stat label="검토중" value={dashQuery.data.reviewed} />
-          <Stat label="합격" value={dashQuery.data.accepted} />
-          <Stat label="불합격" value={dashQuery.data.rejected} />
+          <Stat label={t('home.applied')} value={dashQuery.data.applied} />
+          <Stat label={t('home.reviewing')} value={dashQuery.data.reviewed} />
+          <Stat label={t('home.accepted')} value={dashQuery.data.accepted} />
+          <Stat label={t('home.rejected')} value={dashQuery.data.rejected} />
         </View>
       ) : null}
 
-      <Text style={styles.section}>모집중인 오디션</Text>
+      <Text style={styles.section}>{t('home.openAuditions')}</Text>
       {auditionsQuery.isError ? (
-        <ErrorState message="오디션 목록을 불러오지 못했습니다." onRetry={() => void auditionsQuery.refetch()} />
+        <ErrorState message={t('home.loadFailed')} onRetry={() => void auditionsQuery.refetch()} />
       ) : null}
       {(auditionsQuery.data ?? []).slice(0, 5).map((audition) => (
         <View key={audition.id} style={styles.gap}>
@@ -49,13 +57,13 @@ export default function HomeScreen() {
         </View>
       ))}
       {!auditionsQuery.isLoading && (auditionsQuery.data?.length ?? 0) === 0 ? (
-        <EmptyState title="현재 모집중인 오디션이 없습니다" body="새로운 공고가 열리면 여기에 표시됩니다." />
+        <EmptyState title={t('auditions.empty')} body={t('home.emptyBody')} />
       ) : null}
 
       {!isAuthenticated ? (
         <View style={styles.authCue}>
-          <Text style={styles.meta}>{session?.nickname ?? '로그인하면 지원과 투표를 이어갈 수 있습니다.'}</Text>
-          <Button label="로그인" variant="secondary" onPress={() => router.push('/(auth)/login')} />
+          <Text style={styles.meta}>{session?.nickname ?? t('home.loginCue')}</Text>
+          <Button label={t('common.login')} variant="secondary" onPress={() => router.push('/(auth)/login')} />
         </View>
       ) : null}
     </Screen>

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useTranslations } from 'next-intl'
 import { calculateAge } from '@/shared/audition/calculateAge'
 import type { MeProfileForApply } from '@/shared/api/meProfile'
 import ApplyFormAlerts from './applyForm/ApplyFormAlerts'
@@ -13,25 +14,27 @@ import ApplySnsSection from './applyForm/ApplySnsSection'
 import ApplyIntroSection from './applyForm/ApplyIntroSection'
 import ApplySubmitButton from './applyForm/ApplySubmitButton'
 
-const formSchema = z
-  .object({
-    name: z.string().max(120),
-    birthDate: z.string(),
-    nationality: z.enum(['', 'KR', 'MN', 'JP', 'OTHER']),
-    videoUrl: z.string().min(1, '영상 링크를 입력해 주세요.'),
-    introText: z.string().max(10000),
-  })
-  .superRefine((data, ctx) => {
-    if (data.birthDate !== '' && !/^\d{4}-\d{2}-\d{2}$/.test(data.birthDate)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: '생년월일 형식이 올바르지 않습니다.',
-        path: ['birthDate'],
-      })
-    }
-  })
+function createApplySchema(videoRequired: string, birthFormat: string) {
+  return z
+    .object({
+      name: z.string().max(120),
+      birthDate: z.string(),
+      nationality: z.enum(['', 'KR', 'MN', 'JP', 'OTHER']),
+      videoUrl: z.string().min(1, videoRequired),
+      introText: z.string().max(10000),
+    })
+    .superRefine((data, ctx) => {
+      if (data.birthDate !== '' && !/^\d{4}-\d{2}-\d{2}$/.test(data.birthDate)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: birthFormat,
+          path: ['birthDate'],
+        })
+      }
+    })
+}
 
-export type AuditionApplyFormValues = z.infer<typeof formSchema>
+export type AuditionApplyFormValues = z.infer<ReturnType<typeof createApplySchema>>
 
 export type SnsRow = { platform: string; url: string }
 
@@ -57,11 +60,16 @@ type Props = {
 }
 
 export function AuditionApplyForm({ auditionId, disabled, meProfile, meProfileReady, onSubmit }: Props) {
+  const t = useTranslations('apply')
   const [snsRows, setSnsRows] = useState<SnsRow[]>([])
   const [submitting, setSubmitting] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [profileAutofillNotice, setProfileAutofillNotice] = useState(false)
   const profileAppliedRef = useRef(false)
+  const formSchema = useMemo(
+    () => createApplySchema(t('videoRequiredMsg'), t('birthFormat')),
+    [t],
+  )
 
   const form = useForm<AuditionApplyFormValues>({
     resolver: zodResolver(formSchema),
@@ -124,7 +132,7 @@ export function AuditionApplyForm({ auditionId, disabled, meProfile, meProfileRe
     setFormError(null)
     const birth = values.birthDate.trim()
     if (birth && (computedAge == null || computedAge < 0)) {
-      setFormError('올바른 생년월일을 선택해 주세요.')
+      setFormError(t('invalidBirth'))
       return
     }
     const normalizedSns: Array<{ platform: string; url: string }> = []
@@ -133,7 +141,7 @@ export function AuditionApplyForm({ auditionId, disabled, meProfile, meProfileRe
       const u = row.url.trim()
       if (!p && !u) continue
       if (!p || !u) {
-        setFormError('SNS는 플랫폼과 URL을 함께 입력하거나, 행을 비워 주세요.')
+        setFormError(t('snsPairRequired'))
         return
       }
       normalizedSns.push({ platform: p, url: u })
@@ -151,7 +159,7 @@ export function AuditionApplyForm({ auditionId, disabled, meProfile, meProfileRe
         snsLinks: normalizedSns,
       })
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : '제출에 실패했습니다.'
+      const msg = e instanceof Error ? e.message : t('submitFailed')
       setFormError(msg)
     } finally {
       setSubmitting(false)

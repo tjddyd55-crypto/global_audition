@@ -128,6 +128,10 @@ public class Audition {
     @Column(name = "series_round", nullable = false)
     private int seriesRound = 1;
 
+    /** 원문 로케일. 번역 테이블 fallback 기준. */
+    @Column(name = "default_locale", nullable = false, length = 8)
+    private String defaultLocale = "ko";
+
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
     public UUID getOwnerId() { return ownerId; }
@@ -195,4 +199,6 @@ public class Audition {
     public void setGroupId(UUID groupId) { this.groupId = groupId; }
     public int getSeriesRound() { return seriesRound; }
     public void setSeriesRound(int seriesRound) { this.seriesRound = seriesRound; }
+    public String getDefaultLocale() { return defaultLocale; }
+    public void setDefaultLocale(String defaultLocale) { this.defaultLocale = defaultLocale; }
 }

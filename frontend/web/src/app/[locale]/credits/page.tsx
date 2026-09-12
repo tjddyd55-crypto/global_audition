@@ -1,6 +1,7 @@
 ﻿'use client'
 
 import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter, Link } from '../../../i18n.config'
 import { authApi } from '@/shared/api/auth'
 import { creditsApi, type CreditTransactionItem } from '@/shared/api/credits'
@@ -21,37 +22,39 @@ function formatSignedCredits(amount: number) {
   return amount > 0 ? `+${s}` : s
 }
 
-function typeLabel(type: string) {
-  if (type === 'CHARGE') return '충전'
-  if (type === 'USE') return '사용'
-  if (type === 'GRANT') return '지급'
-  return type
-}
-
-function reasonSummary(type: string, reason: string, referenceId: string | null) {
-  if (type === 'USE' && reason === 'AUDITION_APPLY' && referenceId) {
-    return `오디션 지원 (참조: ${referenceId.slice(0, 8)}…)`
-  }
-  if (type === 'CHARGE' && reason === 'PACKAGE_PURCHASE') {
-    return '패키지 결제 충전'
-  }
-  return reason
-}
-
-const TX_TYPE_FILTERS = [
-  { value: '', label: '전체' },
-  { value: 'CHARGE', label: '충전' },
-  { value: 'USE', label: '사용' },
-  { value: 'GRANT', label: '지급' },
-] as const
-
 export default function CreditsDashboardPage() {
+  const t = useTranslations('credits')
+  const tCommon = useTranslations('common')
   const router = useRouter()
   const [balance, setBalance] = useState<number | null>(null)
   const [transactions, setTransactions] = useState<CreditTransactionItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [typeFilter, setTypeFilter] = useState<string>('')
+
+  const typeLabel = (type: string) => {
+    if (type === 'CHARGE') return t('typeCharge')
+    if (type === 'USE') return t('typeUse')
+    if (type === 'GRANT') return t('typeGrant')
+    return type
+  }
+
+  const reasonSummary = (type: string, reason: string, referenceId: string | null) => {
+    if (type === 'USE' && reason === 'AUDITION_APPLY' && referenceId) {
+      return t('applyRef', { id: referenceId.slice(0, 8) })
+    }
+    if (type === 'CHARGE' && (reason === 'PACKAGE_PURCHASE' || reason === 'CREDIT_PURCHASE')) {
+      return t('packageCharge')
+    }
+    return reason
+  }
+
+  const filters = [
+    { value: '', label: t('all') },
+    { value: 'CHARGE', label: t('typeCharge') },
+    { value: 'USE', label: t('typeUse') },
+    { value: 'GRANT', label: t('typeGrant') },
+  ] as const
 
   useEffect(() => {
     if (!authApi.getToken()) {
@@ -73,7 +76,7 @@ export default function CreditsDashboardPage() {
         setTransactions(txRes.content ?? [])
       } catch {
         if (!cancelled) {
-          setError('크레딧 정보를 불러오지 못했습니다. 다시 시도해 주세요.')
+          setError(t('loadHomeFailed'))
           setBalance(null)
           setTransactions([])
         }
@@ -85,22 +88,22 @@ export default function CreditsDashboardPage() {
     return () => {
       cancelled = true
     }
-  }, [router, typeFilter])
+  }, [router, typeFilter, t])
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className={`${PAGE_CONTAINER} py-6 ${SECTION_GAP}`}>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <h1 className={TITLE_PAGE}>크레딧</h1>
+          <h1 className={TITLE_PAGE}>{t('title')}</h1>
           <Link href="/my/dashboard" className={`${BTN_SECONDARY} text-center text-sm`}>
-            대시보드로
+            {t('dashboard')}
           </Link>
         </div>
 
         <div className={CARD_BASE}>
-          <p className={`${TEXT_SUB} mb-2`}>현재 크레딧</p>
+          <p className={`${TEXT_SUB} mb-2`}>{t('currentBalance')}</p>
           {isLoading ? (
-            <p className="text-2xl font-semibold text-gray-400">불러오는 중…</p>
+            <p className="text-2xl font-semibold text-gray-400">{tCommon('loading')}</p>
           ) : error ? (
             <p className="text-sm text-red-600">{error}</p>
           ) : (
@@ -111,16 +114,16 @@ export default function CreditsDashboardPage() {
           )}
           <div className="mt-6">
             <Link href="/credits/charge" className={BTN_PRIMARY}>
-              충전하기
+              {t('charge')}
             </Link>
           </div>
         </div>
 
         <div className={CARD_BASE}>
-          <h2 className={`${TITLE_PAGE} mb-1`}>크레딧 사용 내역</h2>
-          <p className={`${TEXT_SUB} mb-3`}>충전·사용·지급을 구분해 조회합니다. (최근 50건)</p>
+          <h2 className={`${TITLE_PAGE} mb-1`}>{t('ledgerTitle')}</h2>
+          <p className={`${TEXT_SUB} mb-3`}>{t('ledgerHint')}</p>
           <div className="mb-4 flex flex-wrap gap-2">
-            {TX_TYPE_FILTERS.map((f) => (
+            {filters.map((f) => (
               <button
                 key={f.value || 'all'}
                 type="button"
@@ -136,9 +139,9 @@ export default function CreditsDashboardPage() {
             ))}
           </div>
           {isLoading ? (
-            <p className={TEXT_SUB}>불러오는 중…</p>
+            <p className={TEXT_SUB}>{tCommon('loading')}</p>
           ) : transactions.length === 0 ? (
-            <p className={TEXT_SUB}>거래 내역이 없습니다.</p>
+            <p className={TEXT_SUB}>{t('emptyTx')}</p>
           ) : (
             <ul className="flex flex-col divide-y divide-[#E5E7EB]">
               {transactions.map((tx) => (
@@ -148,7 +151,7 @@ export default function CreditsDashboardPage() {
                       {typeLabel(tx.type)} · {reasonSummary(tx.type, tx.reason, tx.referenceId ?? null)}
                     </p>
                     <p className={TEXT_SUB}>
-                      {tx.createdAt ? new Date(tx.createdAt).toLocaleString('ko-KR') : '-'}
+                      {tx.createdAt ? new Date(tx.createdAt).toLocaleString() : '-'}
                       {tx.referenceId ? (
                         <span className="mt-0.5 block font-mono text-[11px] text-gray-400">
                           ref: {tx.referenceId}
@@ -161,7 +164,7 @@ export default function CreditsDashboardPage() {
                       {formatSignedCredits(tx.amount)}
                     </p>
                     {tx.afterBalance != null && (
-                      <p className={TEXT_SUB}>잔액 {formatCreditsCount(tx.afterBalance)}</p>
+                      <p className={TEXT_SUB}>{t('afterBalance', { n: formatCreditsCount(tx.afterBalance) })}</p>
                     )}
                   </div>
                 </li>

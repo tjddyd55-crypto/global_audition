@@ -1,4 +1,12 @@
-# 결제(Stripe) 아키텍처(SSOT)
+# 결제 아키텍처(SSOT)
+
+## 현재 정산 통화 (Toss)
+- 플랫폼 정산 통화는 **USD** (`platform_payment_settings.currency`, `payment_orders.currency`).
+- 환율을 발명하지 않는다. KRW 정수 과금으로 되돌리지 않는다.
+- Toss 공식: checkout `amount.value` 와 confirm `amount` 는 **같은 정수**. USD 는 달러 major-unit (`$10` → `10`). Stripe 센트(×100)가 아니다.
+- 패키지 가격은 정수 달러만 허용 ($1 / $5 / $10). 소수 달러는 400.
+- Toss 영문 문서상 USD 는 `FOREIGN_EASY_PAY` 공식 지원. 현재 체크아웃은 기존 `CARD` 창을 유지한다. CARD+USD 는 MID 계약에 의존하며 샌드박스 미실행.
+- 지원 수수료는 **크레딧**이지 금액이 아니다.
 
 ## 1) 결제 대상(예시)
 - 기획사 플랜(구독) 또는 공고 등록/노출 패키지(일회성)

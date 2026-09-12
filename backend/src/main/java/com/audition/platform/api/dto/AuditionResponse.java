@@ -80,6 +80,19 @@ public class AuditionResponse {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String applyBlockedMessage;
 
+    /** 원문 로케일 (auditions.default_locale). */
+    private String defaultLocale;
+
+    /** 응답에 실제로 쓰인 콘텐츠 로케일. */
+    private String contentLocale;
+
+    /** 요청 로케일 번역이 없어 원문으로 내려간 경우. */
+    private boolean contentLocaleFallback;
+
+    /** 지원 차단 사유 코드. 클라이언트가 UI 카탈로그로 번역할 수 있다. */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String applyBlockedCode;
+
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
     public UUID getOwnerId() { return ownerId; }
@@ -250,4 +263,15 @@ public class AuditionResponse {
     public void setApplyBlockedMessage(String applyBlockedMessage) {
         this.applyBlockedMessage = applyBlockedMessage;
     }
+
+    public String getDefaultLocale() { return defaultLocale; }
+    public void setDefaultLocale(String defaultLocale) { this.defaultLocale = defaultLocale; }
+    public String getContentLocale() { return contentLocale; }
+    public void setContentLocale(String contentLocale) { this.contentLocale = contentLocale; }
+    public boolean isContentLocaleFallback() { return contentLocaleFallback; }
+    public void setContentLocaleFallback(boolean contentLocaleFallback) {
+        this.contentLocaleFallback = contentLocaleFallback;
+    }
+    public String getApplyBlockedCode() { return applyBlockedCode; }
+    public void setApplyBlockedCode(String applyBlockedCode) { this.applyBlockedCode = applyBlockedCode; }
 }

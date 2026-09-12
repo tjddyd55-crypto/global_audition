@@ -10,7 +10,8 @@ import { listPublicVideosForChannel, postChannelSubscribe, deleteChannelSubscrib
 import { channelVideoKeys } from '@/shared/query/channelVideoQuery'
 import { ChannelPublicVideoList } from '@/components/channel/ChannelPublicVideoList'
 import { getVideoEmbedSrc } from '@/shared/utils/videoEmbed'
-import { nationalityLabelKo } from '@/shared/channel/nationalityDisplay'
+import { formatNationalityLabel, knownNationalityCode } from '@/shared/channel/nationalityDisplay'
+import { useTranslations } from 'next-intl'
 import { userApi } from '@/shared/api/user'
 import { authApi } from '@/shared/api/auth'
 import { DEFAULT_IMAGES } from '@/shared/constants/fallbacks'
@@ -41,6 +42,8 @@ async function shareOrCopyChannelPage(url: string, title: string): Promise<'shar
 }
 
 export default function ChannelByUserIdPage() {
+  const t = useTranslations('channel')
+  const tNat = useTranslations('nationality')
   const params = useParams()
   const userId = typeof params.userId === 'string' ? params.userId : ''
   const [tab, setTab] = useState<TabId>('videos')
@@ -117,18 +120,18 @@ export default function ChannelByUserIdPage() {
   const onShare = useCallback(async () => {
     if (typeof window === 'undefined') return
     const url = window.location.href
-    const title = data?.nickname?.trim() || data?.displayName || '채널'
+    const title = data?.nickname?.trim() || data?.displayName || t('title')
     const r = await shareOrCopyChannelPage(url, title)
-    if (r === 'copied') setShareHint('링크를 복사했습니다.')
+    if (r === 'copied') setShareHint(t('copied'))
     else if (r === 'shared') setShareHint(null)
-    else if (r === 'noop') setShareHint('공유/복사를 할 수 없습니다.')
+    else if (r === 'noop') setShareHint(t('shareFailed'))
     setTimeout(() => setShareHint(null), 2500)
-  }, [data?.displayName, data?.nickname])
+  }, [data?.displayName, data?.nickname, t])
 
   if (!userId) {
     return (
       <div className="w-full py-10">
-        <p className="px-3 text-sm text-neutral-600">잘못된 주소입니다.</p>
+        <p className="px-3 text-sm text-neutral-600">{t('invalidUrl')}</p>
       </div>
     )
   }
@@ -136,7 +139,7 @@ export default function ChannelByUserIdPage() {
   if (isLoading) {
     return (
       <div className="w-full py-12">
-        <p className="px-3 text-sm text-neutral-700">프로필을 불러오는 중…</p>
+        <p className="px-3 text-sm text-neutral-700">{t('loadingProfile')}</p>
       </div>
     )
   }
@@ -149,12 +152,10 @@ export default function ChannelByUserIdPage() {
     return (
       <div className="w-full py-12">
         <p className="px-3 text-base font-medium text-neutral-900">
-          {blocked ? '이 채널은 비공개입니다' : '채널을 불러오지 못했습니다'}
+          {blocked ? t('privateNotice') : t('loadFailed')}
         </p>
         <p className="mt-1 px-3 text-sm text-neutral-600">
-          {blocked
-            ? '크리에이터가 채널 공개를 하지 않았거나 주소가 잘못되었을 수 있습니다.'
-            : '잠시 후 다시 시도해 주세요.'}
+          {blocked ? t('privateHint') : t('retryLater')}
         </p>
       </div>
     )
@@ -162,7 +163,8 @@ export default function ChannelByUserIdPage() {
 
   const nickname = data.nickname?.trim() || data.displayName
   const nat = (data.nationality ?? data.country ?? '').trim()
-  const natLabel = nationalityLabelKo(nat || null)
+  const natCode = knownNationalityCode(nat || null)
+  const natLabel = natCode ? formatNationalityLabel(natCode, tNat(natCode)) : null
   const shortBio = data.shortBio?.trim() ?? ''
   const longBio = data.bio?.trim() ?? ''
   const categories = (data.categories ?? []).slice(0, 3)
@@ -189,7 +191,7 @@ export default function ChannelByUserIdPage() {
                 <div className="mt-1 text-sm text-gray-700">{categories.join(' · ')}</div>
               ) : null}
               <div className="mt-2 text-sm text-gray-500">
-                구독자 {formatCount(stats.subs)} · 영상 {formatCount(stats.videos)}
+                {t('subscribersVideos', { subs: formatCount(stats.subs), videos: formatCount(stats.videos) })}
               </div>
             </div>
             <div className="ml-3 flex shrink-0 gap-2">
@@ -199,7 +201,7 @@ export default function ChannelByUserIdPage() {
                   className="rounded-full border border-neutral-900 bg-black px-3 py-1 text-sm text-white"
                   onClick={() => router.push('/my/channel')}
                 >
-                  채널 관리
+                  {t('manage')}
                 </button>
               ) : (
                 <button
@@ -214,7 +216,7 @@ export default function ChannelByUserIdPage() {
                   }}
                   className="rounded-full bg-black px-3 py-1 text-sm text-white disabled:opacity-50"
                 >
-                  {!me ? '로그인 후 구독' : data.subscribed ? '구독 취소' : '구독'}
+                  {!me ? t('loginToSubscribe') : data.subscribed ? t('unsubscribe') : t('subscribe')}
                 </button>
               )}
               <button
@@ -222,7 +224,7 @@ export default function ChannelByUserIdPage() {
                 onClick={() => void onShare()}
                 className="rounded-full border border-neutral-300 px-3 py-1 text-sm text-neutral-900"
               >
-                공유
+                {t('share')}
               </button>
             </div>
           </div>
@@ -233,7 +235,7 @@ export default function ChannelByUserIdPage() {
       {embedSrc ? (
         <div className="aspect-video w-full bg-black">
           <iframe
-            title="대표 영상"
+            title={t('featuredTitle')}
             src={embedSrc}
             className="h-full w-full"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -245,8 +247,8 @@ export default function ChannelByUserIdPage() {
       <div className="flex w-full border-b border-neutral-200 px-1">
         {(
           [
-            ['videos', '영상'],
-            ['info', '정보'],
+            ['videos', t('tabVideos')],
+            ['info', t('tabInfo')],
           ] as const
         ).map(([id, label]) => (
           <button
@@ -270,19 +272,19 @@ export default function ChannelByUserIdPage() {
           <div className="w-full space-y-0 px-3 py-4">
             {longBio ? (
               <section className="border-b border-neutral-100 py-4">
-                <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">채널 소개</h2>
+                <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{t('intro')}</h2>
                 <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-neutral-800">{longBio}</p>
               </section>
             ) : null}
             {intro ? (
               <section className="border-b border-neutral-100 py-4">
-                <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">추가 소개</h2>
+                <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{t('extraIntroTab')}</h2>
                 <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-neutral-800">{intro}</p>
               </section>
             ) : null}
             {data.channelDescription?.trim() ? (
               <section className="border-b border-neutral-100 py-4">
-                <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">채널 설명</h2>
+                <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{t('description')}</h2>
                 <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-neutral-800">
                   {data.channelDescription.trim()}
                 </p>
@@ -290,7 +292,7 @@ export default function ChannelByUserIdPage() {
             ) : null}
             {data.snsLinks && data.snsLinks.length > 0 ? (
               <section className="border-b border-neutral-100 py-4">
-                <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">SNS</h2>
+                <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{t('sns')}</h2>
                 <ul className="mt-2 flex flex-col gap-2">
                   {data.snsLinks.map((l, i) => (
                     <li key={`${l.platform}-${i}`}>
@@ -308,7 +310,7 @@ export default function ChannelByUserIdPage() {
               </section>
             ) : null}
             {!longBio && !intro && !data.channelDescription?.trim() && (!data.snsLinks || data.snsLinks.length === 0) ? (
-              <p className="py-2 text-sm text-neutral-500">등록된 상세 정보가 없습니다.</p>
+              <p className="py-2 text-sm text-neutral-500">{t('emptyInfo')}</p>
             ) : null}
           </div>
         ) : (

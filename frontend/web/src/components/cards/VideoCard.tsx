@@ -1,7 +1,8 @@
 ﻿'use client'
 
 import Image from 'next/image'
-import { DEFAULT_IMAGES, FALLBACK_TEXT } from '@/shared/constants/fallbacks'
+import { useTranslations } from 'next-intl'
+import { DEFAULT_IMAGES } from '@/shared/constants/fallbacks'
 import { AUDITION_CARD, VIDEO_CARD } from '@/shared/design-tokens'
 
 /** 목업·API 공통 카드 입력 (메인·목록 등에서 재사용) */
@@ -24,6 +25,8 @@ interface VideoCardProps {
 const safeStr = (v: unknown): string => (v != null && typeof v === 'string' ? v : '')
 
 export default function VideoCard({ video, compact = false }: VideoCardProps) {
+  const tFallback = useTranslations('fallback')
+  const tVideo = useTranslations('video')
   if (!video) return null
   const title = safeStr(video.title)
   const channelName = safeStr(video.channelName)
@@ -54,7 +57,7 @@ export default function VideoCard({ video, compact = false }: VideoCardProps) {
         {thumbnail ? (
           <Image
             src={thumbnail}
-            alt={title || FALLBACK_TEXT.videoTitle}
+            alt={title || tFallback('videoTitle')}
             fill
             className="object-cover"
             sizes="(max-width: 768px) 100vw, 33vw"
@@ -100,7 +103,7 @@ export default function VideoCard({ video, compact = false }: VideoCardProps) {
             </div>
           )}
           <span style={{ fontSize: 13, color: AUDITION_CARD.descColor }} className="truncate">
-            {channelName || FALLBACK_TEXT.channelName}
+            {channelName || tFallback('channelName')}
           </span>
         </div>
 
@@ -113,11 +116,11 @@ export default function VideoCard({ video, compact = false }: VideoCardProps) {
           }}
           className="line-clamp-2"
         >
-          {title || FALLBACK_TEXT.videoTitle}
+          {title || tFallback('videoTitle')}
         </h3>
 
         <p style={{ fontSize: VIDEO_CARD.metaFontSizePx, color: VIDEO_CARD.metaColor, margin: 0 }}>
-          조회 {views.toLocaleString()} · 좋아요 {likes.toLocaleString()}
+          {tVideo('statsLine', { views: views.toLocaleString(), likes: likes.toLocaleString() })}
         </p>
       </div>
     </article>

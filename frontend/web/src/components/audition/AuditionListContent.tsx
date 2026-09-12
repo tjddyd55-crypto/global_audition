@@ -1,5 +1,6 @@
 ﻿'use client'
 
+import { useTranslations } from 'next-intl'
 import type { AuditionDto } from '@/shared/types/audition'
 import AuditionCard from './AuditionCard'
 import { SkeletonAuditionCard } from '../ui/SkeletonCard'
@@ -13,6 +14,8 @@ type AuditionListContentProps = {
 }
 
 export default function AuditionListContent({ auditions, isLoading, error }: AuditionListContentProps) {
+  const t = useTranslations('auditions')
+
   if (isLoading) {
     return (
       <div className="flex w-full flex-col lg:gap-3">
@@ -24,11 +27,11 @@ export default function AuditionListContent({ auditions, isLoading, error }: Aud
   }
 
   if (error) {
-    return <ErrorMessage message="오디션 목록을 불러오는데 실패했습니다." />
+    return <ErrorMessage message={t('loadFailed')} />
   }
 
   if (!auditions || auditions.length === 0) {
-    return <EmptyState message="등록된 오디션이 없습니다" />
+    return <EmptyState message={t('emptyList')} />
   }
 
   return (

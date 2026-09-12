@@ -2,11 +2,12 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { useLocalSearchParams } from 'expo-router'
 import { useState } from 'react'
 import { Linking, StyleSheet, Text, View } from 'react-native'
+import { useTranslation } from 'react-i18next'
 import { applicationApi, roundApi } from '../../src/api/endpoints'
 import { queryKeys } from '../../src/api/queryKeys'
 import { ApiError } from '../../src/api/http'
 import { applicationResultCopy, applicationStatusLabel, nationalityLabel, roundSubmissionLabel, snsPlatformLabel } from '../../src/domain/statusLabels'
-import { VIDEO_URL_HINT, isValidAuditionVideoUrl } from '../../src/domain/videoUrl'
+import { videoUrlHint, isValidAuditionVideoUrl } from '../../src/domain/videoUrl'
 import { Button } from '../../src/ui/Button'
 import { ErrorState } from '../../src/ui/EmptyState'
 import { Screen } from '../../src/ui/Screen'
@@ -15,6 +16,7 @@ import { TextField } from '../../src/ui/TextField'
 import { colors, radius } from '../../src/theme/tokens'
 
 export default function ApplicationDetailScreen() {
+  const { t } = useTranslation()
   const { id } = useLocalSearchParams<{ id: string }>()
   const query = useQuery({ queryKey: queryKeys.myApplication(id), queryFn: () => applicationApi.getMine(id), enabled: Boolean(id) })
   const app = query.data
@@ -38,62 +40,70 @@ export default function ApplicationDetailScreen() {
         textAnswer: textAnswer.trim() || undefined,
       }),
     onSuccess: () => {
-      setMessage('라운드 자료가 제출되었습니다.')
+      setMessage(t('application.roundSubmitted'))
       void query.refetch()
       void eligibilityQuery.refetch()
     },
     onError: (error) => {
-      setMessage(error instanceof ApiError ? error.message : '라운드 제출에 실패했습니다.')
+      setMessage(error instanceof ApiError ? error.message : t('application.roundSubmitFailed'))
     },
   })
 
   return (
     <Screen loading={query.isLoading}>
-      {query.isError ? <ErrorState message="지원서를 불러오지 못했습니다." onRetry={() => void query.refetch()} /> : null}
+      {query.isError ? <ErrorState message={t('application.detailLoadFailed')} onRetry={() => void query.refetch()} /> : null}
       {app ? (
         <View style={styles.stack}>
           <StatusPill label={applicationStatusLabel(app.status)} tone={toneForApplicationStatus(app.status)} />
           <Text style={styles.title}>{app.auditionTitle}</Text>
           <Text style={styles.copy}>{applicationResultCopy(app.status)}</Text>
           <Text style={styles.meta}>
-            {app.name ?? '이름 미입력'} · {nationalityLabel(app.nationality)} {app.age != null ? `· ${app.age}세` : ''}
+            {app.name ?? t('application.nameUnset')} · {nationalityLabel(app.nationality)}{' '}
+            {app.age != null ? `· ${t('application.ageYears', { age: app.age })}` : ''}
           </Text>
           {app.introText ? <Text style={styles.body}>{app.introText}</Text> : null}
-          {app.videoUrl ? <Button label="제출 영상 열기" variant="secondary" onPress={() => void Linking.openURL(app.videoUrl ?? '')} /> : null}
+          {app.videoUrl ? (
+            <Button label={t('application.openSubmittedVideo')} variant="secondary" onPress={() => void Linking.openURL(app.videoUrl ?? '')} />
+          ) : null}
           {app.snsLinks.map((link) => (
             <Text key={`${link.platform}-${link.url}`} style={styles.meta}>
               {snsPlatformLabel(link.platform)} · {link.url}
             </Text>
           ))}
           <Text style={styles.section}>
-            진행 방식 {app.processMode}
+            {t('application.processMode', { mode: app.processMode })}
             {app.processMode === 'MULTI_ROUND'
-              ? ` · 현재 ${app.currentRoundNumber ?? '-'} / ${app.maxRoundNumber ?? app.roundSummaries.length} 라운드`
+              ? ` · ${t('application.currentRoundOf', {
+                  current: app.currentRoundNumber ?? '-',
+                  max: app.maxRoundNumber ?? app.roundSummaries.length,
+                })}`
               : ''}
           </Text>
           {app.roundSummaries.map((round) => (
             <Text key={round.roundId} style={styles.meta}>
-              라운드 {round.roundNumber}
-              {round.roundNumber === app.currentRoundNumber ? ' (현재)' : ''}
+              {t('application.roundN', { n: round.roundNumber })}
+              {round.roundNumber === app.currentRoundNumber ? ` ${t('application.currentMark')}` : ''}
             </Text>
           ))}
           {eligibilityQuery.data ? (
             <View style={styles.card}>
-              <Text style={styles.section}>다음 라운드</Text>
-              <Text style={styles.meta}>제출 상태 {roundSubmissionLabel(eligibilityQuery.data.submissionStatus)}</Text>
+              <Text style={styles.section}>{t('application.nextRound')}</Text>
+              <Text style={styles.meta}>
+                {t('application.submissionStatus', { status: roundSubmissionLabel(eligibilityQuery.data.submissionStatus) })}
+              </Text>
               {eligibilityQuery.data.reason ? <Text style={styles.copy}>{eligibilityQuery.data.reason}</Text> : null}
               {eligibilityQuery.data.canSubmit ? (
                 <>
-                  <Text style={styles.copy}>다음 라운드 제출이 열려 있습니다. 서버가 요구하는 형식만 보내세요.</Text>
-                  <TextField label="영상 URL" value={videoUrl} onChangeText={setVideoUrl} keyboardType="url" />
-                  <TextField label="파일 URL (백엔드 fileUrl)" value={fileUrl} onChangeText={setFileUrl} keyboardType="url" />
-                  <TextField label="텍스트 답변" value={textAnswer} onChangeText={setTextAnswer} multiline />
+                  <Text style={styles.copy}>{t('application.nextRoundOpen')}</Text>
+                  <TextField label={t('apply.videoUrl')} value={videoUrl} onChangeText={setVideoUrl} keyboardType="url" />
+                  <TextField label={t('application.fileUrl')} value={fileUrl} onChangeText={setFileUrl} keyboardType="url" />
+                  <TextField label={t('application.textAnswer')} value={textAnswer} onChangeText={setTextAnswer} multiline />
                   <Button
-                    label="라운드 제출"
+                    label={t('application.submitRound')}
                     loading={submitRound.isPending}
                     onPress={() => {
                       if (videoUrl.trim() && !isValidAuditionVideoUrl(videoUrl) && !fileUrl.trim() && !textAnswer.trim()) {
-                        setMessage(VIDEO_URL_HINT)
+                        setMessage(videoUrlHint())
                         return
                       }
                       submitRound.mutate()
@@ -101,7 +111,7 @@ export default function ApplicationDetailScreen() {
                   />
                 </>
               ) : (
-                <Text style={styles.copy}>지금은 이 라운드에 제출할 수 없습니다.</Text>
+                <Text style={styles.copy}>{t('application.cannotSubmitNow')}</Text>
               )}
             </View>
           ) : null}

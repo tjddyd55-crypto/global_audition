@@ -10,9 +10,13 @@ import { Button } from '../../src/ui/Button'
 import { EmptyState } from '../../src/ui/EmptyState'
 import { Screen } from '../../src/ui/Screen'
 import { TextField } from '../../src/ui/TextField'
+import { persistLocale } from '../../src/i18n/LocaleProvider'
+import { PRIMARY_LOCALES } from '../../src/i18n/runtime'
 import { colors, radius } from '../../src/theme/tokens'
+import { useTranslation } from 'react-i18next'
 
 export default function ProfileScreen() {
+  const { t, i18n } = useTranslation()
   const router = useRouter()
   const { isAuthenticated, ready, session, logout } = useAuth()
   const query = useQuery({ queryKey: queryKeys.profile, queryFn: profileApi.get, enabled: isAuthenticated })
@@ -33,25 +37,38 @@ export default function ProfileScreen() {
   if (ready && !isAuthenticated) {
     return (
       <Screen>
-        <EmptyState title="프로필을 보려면 로그인하세요" actionLabel="로그인" onAction={() => router.push('/(auth)/login')} />
+        <EmptyState title={t('auth.recoverLoginRequired')} actionLabel={t('common.login')} onAction={() => router.push('/(auth)/login')} />
         <View style={{ height: 12 }} />
-        <Button label="회원가입" variant="secondary" onPress={() => router.push('/(auth)/register')} />
+        <Button label={t('common.register')} variant="secondary" onPress={() => router.push('/(auth)/register')} />
       </Screen>
     )
   }
 
   return (
     <Screen loading={query.isLoading}>
-      <Text style={styles.heading}>프로필</Text>
+      <Text style={styles.heading}>{t('profile.title')}</Text>
+      <View style={styles.langRow}>
+        <Text style={styles.meta}>{t('profile.language')}</Text>
+        <View style={styles.langBtns}>
+          {PRIMARY_LOCALES.map((code) => (
+            <Button
+              key={code}
+              label={t(`locale.${code}`)}
+              variant={i18n.language === code ? 'primary' : 'secondary'}
+              onPress={() => void persistLocale(code)}
+            />
+          ))}
+        </View>
+      </View>
       <Text style={styles.meta}>{session?.email}</Text>
       <Text style={styles.role}>{session?.role}</Text>
 
       <View style={styles.card}>
-        <TextField label="이름" value={name} onChangeText={setName} autoCapitalize="words" />
-        <TextField label="닉네임" value={nickname} onChangeText={setNickname} />
-        <TextField label="소개" value={intro} onChangeText={setIntro} multiline />
+        <TextField label={t('profile.name')} value={name} onChangeText={setName} autoCapitalize="words" />
+        <TextField label={t('profile.nickname')} value={nickname} onChangeText={setNickname} />
+        <TextField label={t('profile.intro')} value={intro} onChangeText={setIntro} multiline />
         <Button
-          label="프로필 저장"
+          label={t('profile.save')}
           loading={saving}
           onPress={async () => {
             setSaving(true)
@@ -67,36 +84,37 @@ export default function ProfileScreen() {
 
       {issuedCode ? (
         <Text selectable style={styles.meta}>
-          기존 계정 복구 코드(한 번만): {issuedCode}
+          {t('profile.recoveryOnce', { code: issuedCode })}
         </Text>
       ) : null}
       {recoveryNote ? <Text style={styles.meta}>{recoveryNote}</Text> : null}
 
       <View style={styles.links}>
         <Button
-          label="복구 코드가 없으면 발급"
+          label={t('profile.issueRecovery')}
           variant="secondary"
           onPress={async () => {
             try {
               const res = await authApi.issueRecoveryCodeIfMissing()
               setIssuedCode(res.recoveryCode)
-              setRecoveryNote('코드를 안전한 곳에 저장하세요. 다시 볼 수 없습니다.')
+              setRecoveryNote(t('profile.recoveryKeep'))
             } catch (err) {
-              setRecoveryNote(err instanceof ApiError ? err.message : '발급에 실패했습니다.')
+              setRecoveryNote(err instanceof ApiError ? err.message : t('profile.issueFailed'))
             }
           }}
         />
-        <Button label="계정 찾기 / 비밀번호 재설정" variant="secondary" onPress={() => router.push('/(auth)/recover')} />
-        <Button label="알림" variant="secondary" onPress={() => router.push('/notifications')} />
+        <Button label={t('profile.findAccount')} variant="secondary" onPress={() => router.push('/(auth)/recover')} />
+        <Button label={t('nav.credits')} variant="secondary" onPress={() => router.push('/credits')} />
+        <Button label={t('profile.notifications')} variant="secondary" onPress={() => router.push('/notifications')} />
         {isAgencyRole(session?.role) ? (
-          <Button label="내 오디션 지원자 관리" variant="secondary" onPress={() => router.push('/agency/applicants')} />
+          <Button label={t('profile.manageApplicants')} variant="secondary" onPress={() => router.push('/agency/applicants')} />
         ) : null}
         <Button
-          label="오디션 생성 (웹)"
+          label={t('profile.createAuditionWeb')}
           variant="secondary"
           onPress={() => router.push({ pathname: '/web', params: { path: '/ko/my/auditions' } })}
         />
-        <Button label="로그아웃" variant="danger" onPress={() => void logout()} />
+        <Button label={t('common.logout')} variant="danger" onPress={() => void logout()} />
       </View>
     </Screen>
   )
@@ -115,4 +133,6 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   links: { marginTop: 20, gap: 10 },
+  langRow: { marginBottom: 16, gap: 8 },
+  langBtns: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
 })

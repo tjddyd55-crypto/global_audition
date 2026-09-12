@@ -12,14 +12,8 @@ import {
   mapChannelCategoriesForApi,
   resolveFeaturedVideoIdForMePatch,
 } from '@/shared/channel/channelProfilePatch'
-
-const NATIONALITIES = [
-  { value: '', label: '선택 안 함' },
-  { value: 'KR', label: '대한민국' },
-  { value: 'MN', label: '몽골' },
-  { value: 'JP', label: '일본' },
-  { value: 'OTHER', label: '기타' },
-] as const
+import { nationalityOptionValues } from '@/shared/i18n/nationalityOptions'
+import { useTranslations } from 'next-intl'
 
 const BTN_PRIMARY = 'rounded-md bg-neutral-900 px-4 py-2 text-sm font-semibold text-white hover:bg-neutral-800 disabled:opacity-50'
 const BTN_GHOST = 'rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-sm font-medium text-neutral-800 hover:bg-neutral-50'
@@ -40,6 +34,9 @@ function oneLine30(raw: string): string {
  * PATCH /api/me — 닉네임·프로필 이미지·국적·shortBio·bio·분야·대표 영상
  */
 export function ChannelMeStudioForm() {
+  const t = useTranslations('channel')
+  const tNat = useTranslations('nationality')
+  const tCommon = useTranslations('common')
   const queryClient = useQueryClient()
   const { data: me, isLoading } = useQuery({
     queryKey: ['me-profile-channel-studio'],
@@ -81,7 +78,7 @@ export function ChannelMeStudioForm() {
     mutationFn: () => {
       const nick = nickname.trim()
       if (!nick) {
-        return Promise.reject(new Error('닉네임이 필요합니다.'))
+        return Promise.reject(new Error(t('nicknameRequired')))
       }
       return meProfileApi.patch({
         nickname: nick,
@@ -136,13 +133,13 @@ export function ChannelMeStudioForm() {
   const previewSrc = profileImageUrl?.trim() || DEFAULT_IMAGES.avatar
 
   if (isLoading || !me) {
-    return <p className="px-3 py-2 text-sm text-neutral-600">프로필을 불러오는 중…</p>
+    return <p className="px-3 py-2 text-sm text-neutral-600">{t('loadingProfile')}</p>
   }
 
   return (
     <section className="w-full border-b border-neutral-200 py-4">
-      <h2 className="px-3 text-lg font-semibold text-neutral-900">채널 프로필</h2>
-      <p className="mt-1 px-3 text-sm text-neutral-500">공개 채널에 반영됩니다. (저장: PATCH /api/me)</p>
+      <h2 className="px-3 text-lg font-semibold text-neutral-900">{t('studioTitle')}</h2>
+      <p className="mt-1 px-3 whitespace-normal break-words text-sm text-neutral-500">{t('studioHint')}</p>
 
       <div className="mt-4 space-y-4 px-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
@@ -152,14 +149,14 @@ export function ChannelMeStudioForm() {
             </div>
             <label className="cursor-pointer">
               <span className={`inline-flex ${BTN_GHOST} justify-center`}>
-                {uploadBusy ? '업로드 중…' : '프로필 이미지'}
+                {uploadBusy ? t('uploading') : t('profileImage')}
               </span>
               <input type="file" accept="image/*" className="hidden" disabled={uploadBusy} onChange={(e) => void onPickProfileImage(e)} />
             </label>
           </div>
           <div className="min-w-0 flex-1 space-y-4">
             <div>
-              <label className="mb-1 block text-sm font-medium text-neutral-800">닉네임</label>
+              <label className="mb-1 block text-sm font-medium text-neutral-800">{t('nickname')}</label>
               <input
                 type="text"
                 value={nickname}
@@ -173,44 +170,44 @@ export function ChannelMeStudioForm() {
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-neutral-800">국적</label>
+          <label className="mb-1 block text-sm font-medium text-neutral-800">{t('nationality')}</label>
           <select value={country} onChange={(e) => setCountry(e.target.value)} className={INPUT_BASE}>
-            {NATIONALITIES.map((o) => (
-              <option key={o.value || 'none'} value={o.value}>
-                {o.label}
+            {nationalityOptionValues().map((code) => (
+              <option key={code || 'none'} value={code}>
+                {code === '' ? tNat('unspecified') : tNat(code)}
               </option>
             ))}
           </select>
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-neutral-800">한줄 소개 (최대 30자)</label>
+          <label className="mb-1 block whitespace-normal break-words text-sm font-medium text-neutral-800">{t('shortBio')}</label>
           <input
             type="text"
             value={shortBio}
             maxLength={30}
             onChange={(e) => setShortBio(e.target.value.replace(/\r?\n/g, ' ').slice(0, 30))}
             className={INPUT_BASE}
-            placeholder="채널을 한 줄로 소개해 주세요"
+            placeholder={t('shortBioPlaceholder')}
           />
           <p className="mt-0.5 text-xs text-neutral-500">{shortBio.length} / 30</p>
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-neutral-800">채널 소개 (정보 탭)</label>
+          <label className="mb-1 block whitespace-normal break-words text-sm font-medium text-neutral-800">{t('longBio')}</label>
           <textarea
             value={longBio}
             maxLength={LONG_BIO_MAX}
             onChange={(e) => setLongBio(e.target.value.slice(0, LONG_BIO_MAX))}
             rows={5}
             className={INPUT_BASE}
-            placeholder="상세 소개를 입력해 주세요"
+            placeholder={t('longBioPlaceholder')}
           />
           <p className="mt-0.5 text-xs text-neutral-500">{longBio.length} / {LONG_BIO_MAX}</p>
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-neutral-800">분야 (최대 3개)</label>
+          <label className="mb-1 block whitespace-normal break-words text-sm font-medium text-neutral-800">{t('fields')}</label>
           <div className="flex flex-wrap gap-2">
             {categories.map((c) => (
               <button
@@ -230,37 +227,37 @@ export function ChannelMeStudioForm() {
                 value={categoryInput}
                 onChange={(e) => setCategoryInput(e.target.value)}
                 className={`${INPUT_BASE} flex-1`}
-                placeholder="예: 보컬"
+                placeholder={t('fieldPlaceholder')}
               />
               <button type="button" className={BTN_GHOST} onClick={addCategory}>
-                추가
+                {tCommon('add')}
               </button>
             </div>
           ) : null}
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-neutral-800">대표 영상</label>
-          <p className="mb-2 text-xs text-neutral-500">
-            목록에서 선택하거나, 내 채널에 등록한 YouTube URL·영상 ID·채널 영상 UUID를 입력하세요. 비우면 저장 시 해제됩니다.
+          <label className="mb-1 block whitespace-normal break-words text-sm font-medium text-neutral-800">{t('featuredVideo')}</label>
+          <p className="mb-2 whitespace-normal break-words text-xs text-neutral-500">
+            {t('featuredHint')}
           </p>
           <input
             type="text"
             value={featuredVideoIdManual}
             onChange={(e) => setFeaturedVideoIdManual(e.target.value)}
             className={`${INPUT_BASE} mb-3 font-mono text-sm`}
-            placeholder="UUID 또는 YouTube URL"
+            placeholder={t('featuredPlaceholder')}
           />
 
           {videosLoading ? (
-            <p className="text-sm text-neutral-500">영상 목록을 불러오는 중…</p>
+            <p className="text-sm text-neutral-500">{t('loadingVideos')}</p>
           ) : (
             <ul className="divide-y divide-neutral-200 border-y border-neutral-200">
               {videos.map((v) => (
                 <li key={v.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
                   <span className="min-w-0 flex-1 truncate text-sm text-neutral-900">{v.title}</span>
                   <button type="button" className={BTN_GHOST} onClick={() => setFeaturedFromRow(v)}>
-                    대표로 설정
+                    {t('setFeatured')}
                   </button>
                 </li>
               ))}
@@ -274,12 +271,12 @@ export function ChannelMeStudioForm() {
           className={`${BTN_PRIMARY} w-full`}
           onClick={() => saveMutation.mutate()}
         >
-          {saveMutation.isPending ? '저장 중…' : '채널 프로필 저장'}
+          {saveMutation.isPending ? t('saving') : t('saveProfile')}
         </button>
         {saveMutation.isError ? (
-          <p className="text-sm text-red-600">저장에 실패했습니다. 입력 값을 확인해 주세요.</p>
+          <p className="text-sm text-red-600">{t('saveFailedDetail')}</p>
         ) : null}
-        {saveMutation.isSuccess ? <p className="text-sm text-neutral-600">저장되었습니다.</p> : null}
+        {saveMutation.isSuccess ? <p className="text-sm text-neutral-600">{t('saved')}</p> : null}
       </div>
     </section>
   )

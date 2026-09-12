@@ -6,8 +6,8 @@ import { AdminCard } from '@/components/admin/AdminCard'
 import { DataTable, type DataTableColumn } from '@/components/admin/DataTable'
 import { superAdminApi, type CreditPackageRow } from '@/shared/api/superAdmin'
 import { LAYOUT } from '@/shared/design-tokens'
-import { formatNumericInput, formatUsdInput, parseNonNegativeInt, parseUsdDecimal } from '@/shared/utils/numberFormat'
-import { formatCurrency } from '@/shared/money/currency'
+import { formatNumericInput, parseNonNegativeInt } from '@/shared/utils/numberFormat'
+import { formatWholeUsd, isWholeUsdDollars, parseWholeUsdDollars } from '@/shared/money/currency'
 import { formatCreditsCount } from '@/shared/money/creditsDisplay'
 
 type FormState = {
@@ -31,7 +31,7 @@ const emptyForm: FormState = {
 function rowToForm(p: CreditPackageRow): FormState {
   return {
     name: p.name,
-    price: formatUsdInput(String(p.price)),
+    price: formatNumericInput(String(p.price)),
     credits: formatNumericInput(String(p.credits)),
     bonusCredits: formatNumericInput(String(p.bonusCredits)),
     active: p.active,
@@ -42,7 +42,7 @@ function rowToForm(p: CreditPackageRow): FormState {
 function formToPayload(f: FormState) {
   return {
     name: f.name,
-    price: parseUsdDecimal(f.price, 0),
+    price: parseWholeUsdDollars(f.price, 0),
     credits: parseNonNegativeInt(f.credits, 0),
     bonusCredits: parseNonNegativeInt(f.bonusCredits, 0),
     active: f.active,
@@ -100,7 +100,7 @@ export default function SuperAdminCreditPackagesPage() {
     {
       id: 'price',
       header: 'price',
-      cell: (r) => formatCurrency(Number(r.price)),
+      cell: (r) => formatWholeUsd(Number(r.price)),
     },
     {
       id: 'credits',
@@ -162,15 +162,15 @@ export default function SuperAdminCreditPackagesPage() {
             />
           </label>
           <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 14 }}>
-            price (USD)
+            price (USD, whole dollars: $1 / $5 / $10)
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <input
                 type="text"
-                inputMode="decimal"
+                inputMode="numeric"
                 autoComplete="off"
                 style={{ ...fieldStyle, flex: 1 }}
                 value={createForm.price}
-                onChange={(e) => setCreateForm((f) => ({ ...f, price: formatUsdInput(e.target.value) }))}
+                onChange={(e) => setCreateForm((f) => ({ ...f, price: formatNumericInput(e.target.value) }))}
               />
               <span style={{ fontSize: 14, color: '#555' }}>$</span>
             </div>
@@ -224,7 +224,7 @@ export default function SuperAdminCreditPackagesPage() {
           </label>
           <button
             type="button"
-            disabled={!createForm.name.trim() || parseUsdDecimal(createForm.price, 0) < 0.01 || createMut.isPending}
+            disabled={!createForm.name.trim() || !isWholeUsdDollars(parseWholeUsdDollars(createForm.price, 0)) || createMut.isPending}
             onClick={() => createMut.mutate()}
             style={{
               padding: '10px 18px',
@@ -255,15 +255,15 @@ export default function SuperAdminCreditPackagesPage() {
               />
             </label>
             <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 14 }}>
-              price (USD)
+              price (USD, whole dollars: $1 / $5 / $10)
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <input
                   type="text"
-                  inputMode="decimal"
+                  inputMode="numeric"
                   autoComplete="off"
                   style={{ ...fieldStyle, flex: 1 }}
                   value={editForm.price}
-                  onChange={(e) => setEditForm((f) => ({ ...f, price: formatUsdInput(e.target.value) }))}
+                  onChange={(e) => setEditForm((f) => ({ ...f, price: formatNumericInput(e.target.value) }))}
                 />
                 <span style={{ fontSize: 14, color: '#555' }}>$</span>
               </div>
