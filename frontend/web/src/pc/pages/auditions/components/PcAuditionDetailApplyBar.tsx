@@ -2,7 +2,7 @@
 
 import { Link } from '@/i18n.config'
 import { MultiRoundSubmitCta } from '@/components/application/MultiRoundSubmitCta'
-import { PREV_ROUND_APPLY_BLOCKED_MSG } from '@/shared/types/audition'
+import { useTranslations } from 'next-intl'
 
 type PcAuditionDetailApplyBarProps = {
   auditionId: string
@@ -63,6 +63,9 @@ export default function PcAuditionDetailApplyBar({
   hasEnoughCredits,
   applyPolicyError,
 }: PcAuditionDetailApplyBarProps) {
+  const tDetail = useTranslations('auditionDetail')
+  const tApply = useTranslations('apply')
+  const blockedFallback = applyBlockedMessage ?? tApply('prevRoundBlocked')
   return (
     <div
       id="audition-detail-apply"
@@ -72,11 +75,11 @@ export default function PcAuditionDetailApplyBar({
       <div className="flex flex-col gap-2">
         {showApplySubmitCta && alreadyApplied ? (
           <button type="button" disabled className={mainCtaClass}>
-            지금 지원하기
+            {tDetail('applyNow')}
           </button>
         ) : !isOpen ? (
           <button type="button" disabled className={mainCtaClass}>
-            지금 지원하기
+            {tDetail('applyNow')}
           </button>
         ) : showApplySubmitCta ? (
           applyNavDisabledCombined ? (
@@ -85,16 +88,16 @@ export default function PcAuditionDetailApplyBar({
               disabled
               title={
                 applyNavBlockedBySeries
-                  ? (applyBlockedMessage ?? PREV_ROUND_APPLY_BLOCKED_MSG)
+                  ? blockedFallback
                   : undefined
               }
               className={mainCtaClass}
             >
-              {applyPolicyLoading || balanceLoading ? '확인 중...' : '지금 지원하기'}
+              {applyPolicyLoading || balanceLoading ? tDetail('checking') : tDetail('applyNow')}
             </button>
           ) : (
             <Link href={`/auditions/${auditionId}/apply`} className={`${mainCtaClass} no-underline`}>
-              지금 지원하기
+              {tDetail('applyNow')}
             </Link>
           )
         ) : showApplyLoginCta ? (
@@ -102,20 +105,20 @@ export default function PcAuditionDetailApplyBar({
             href={`/login?next=${encodeURIComponent(`/auditions/${auditionId}`)}`}
             className={`${mainCtaClass} no-underline`}
           >
-            지금 지원하기
+            {tDetail('applyNow')}
           </Link>
         ) : showApplyDisabledCta ? (
           <button
             type="button"
             disabled
-            title="지원자 계정으로 로그인 후 이용할 수 있습니다."
+            title={tDetail('applicantOnly')}
             className={mainCtaClass}
           >
-            지금 지원하기
+            {tDetail('applyNow')}
           </button>
         ) : (
           <button type="button" disabled className={mainCtaClass}>
-            지금 지원하기
+            {tDetail('applyNow')}
           </button>
         )}
 
@@ -123,19 +126,19 @@ export default function PcAuditionDetailApplyBar({
           <div className="flex flex-wrap gap-2">
             {showApplySubmitCta && alreadyApplied ? (
               <Link href={`/auditions/${auditionId}/vote`} className={`${subCtaClass} no-underline`}>
-                지원자 보기 &amp; 투표
+                {tDetail('viewApplicantsVote')}
               </Link>
             ) : null}
             {!isOpen ? (
               <Link href={`/auditions/${auditionId}/ranking`} className={`${subCtaClass} no-underline`}>
-                랭킹 보기
+                {tDetail('viewRanking')}
               </Link>
             ) : null}
           </div>
         ) : null}
 
         {showApplySubmitCta && alreadyApplied ? (
-          <p className="mt-2 text-center text-xs text-neutral-500">이 오디션에 이미 지원하셨습니다.</p>
+          <p className="mt-2 text-center text-xs text-neutral-500">{tDetail('alreadyAppliedHere')}</p>
         ) : null}
 
         {showApplySubmitCta && alreadyApplied && isMultiRoundAudition && myApplicationIdForRound ? (
@@ -145,13 +148,13 @@ export default function PcAuditionDetailApplyBar({
                 applicationId={myApplicationIdForRound}
                 auditionId={auditionId}
                 roundId={myCurrentRoundUuid}
-                label={`${myApplicantRoundNumber}차 지원하기`}
+                label={tApply('roundApplyCta', { n: myApplicantRoundNumber })}
                 className={`${mainCtaFullWidthClass} no-underline`}
               />
             </div>
           ) : (
             <p className="mt-2 text-center text-xs text-amber-700">
-              라운드 정보를 불러오지 못했습니다. 내 지원서 상세에서 다시 시도해 주세요.
+              {tDetail('roundInfoFailed')}
             </p>
           )
         ) : null}
@@ -159,17 +162,19 @@ export default function PcAuditionDetailApplyBar({
         {isOpen && showApplySubmitCta && !alreadyApplied ? (
           <div className="mt-2 space-y-1 text-xs">
             {applyNavBlockedBySeries ? (
-              <p className="text-center text-amber-800">{applyBlockedMessage ?? PREV_ROUND_APPLY_BLOCKED_MSG}</p>
+              <p className="text-center text-amber-800">{blockedFallback}</p>
             ) : null}
             {applyPolicySnapshot &&
             (applyPolicySnapshot.applicationPaymentMode ??
               (applyPolicySnapshot.active && applyPolicySnapshot.cost > 0 ? 'CREDIT' : 'FREE')) === 'FREE' ? (
-              <p className="text-center text-neutral-500">이번 지원은 무료입니다.</p>
+              <p className="text-center text-neutral-500">{tDetail('applyFree')}</p>
             ) : null}
             {needCreditsForApply && hasEnoughCredits ? (
               <p className="text-center text-neutral-500">
-                지원 시 크레딧 {applyPolicySnapshot?.applicationFeeCredits ?? applyPolicySnapshot?.cost} 소모 · 보유{' '}
-                {creditBalanceAmount}
+                {tDetail('creditCostHold', {
+                  fee: applyPolicySnapshot?.applicationFeeCredits ?? applyPolicySnapshot?.cost,
+                  balance: creditBalanceAmount,
+                })}
               </p>
             ) : null}
             {needCreditsForApply && creditGateReady && !hasEnoughCredits ? (
@@ -177,11 +182,11 @@ export default function PcAuditionDetailApplyBar({
                 href="/credits/charge"
                 className="flex min-h-10 items-center justify-center rounded-lg border-2 border-violet-600 bg-white text-sm font-semibold text-violet-700 no-underline hover:bg-violet-50"
               >
-                충전하기
+                {tApply('charge')}
               </Link>
             ) : null}
             {applyPolicyError ? (
-              <p className="text-center text-red-600">지원 비용 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</p>
+              <p className="text-center text-red-600">{tApply('policyLoadFailed')}</p>
             ) : null}
           </div>
         ) : null}

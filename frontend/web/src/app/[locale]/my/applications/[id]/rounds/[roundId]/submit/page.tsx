@@ -4,6 +4,7 @@ import { Suspense, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useParams, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
+import { useTranslations } from 'next-intl'
 import { Link, useRouter } from '@/i18n.config'
 import {
   BTN_PRIMARY,
@@ -25,6 +26,9 @@ function MyRoundSubmitContent() {
   const auditionIdFromQuery = searchParams.get('auditionId')
   const router = useRouter()
   const queryClient = useQueryClient()
+  const t = useTranslations('common')
+  const tApp = useTranslations('application')
+  const tMy = useTranslations('myApplications')
 
   const [videoUrl, setVideoUrl] = useState('')
   const [fileUrl, setFileUrl] = useState('')
@@ -51,7 +55,7 @@ function MyRoundSubmitContent() {
         },
       })
       const st = data?.submissionStatus ?? 'SUBMITTED'
-      toast.success(`영상이 정상적으로 제출되었습니다. 심사 결과를 기다려주세요. (상태: ${st})`)
+      toast.success(tApp('submitSuccess', { status: st }))
       router.push(`/my/applications/${encodeURIComponent(applicationId)}`)
     },
     onError: (e: unknown) => {
@@ -64,9 +68,9 @@ function MyRoundSubmitContent() {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className={`${PAGE_CONTAINER} py-6`}>
-          <p className="text-sm text-red-600">라운드 정보가 올바르지 않습니다.</p>
+          <p className="text-sm text-red-600">{tApp('invalidRound')}</p>
           <Link href="/my/applications" className="mt-2 inline-block text-sm text-violet-700 no-underline">
-            ← 내 지원서 목록
+            ← {tMy('backToList')}
           </Link>
         </div>
       </div>
@@ -77,18 +81,16 @@ function MyRoundSubmitContent() {
     <div className="min-h-screen bg-gray-50">
       <div className={`${PAGE_CONTAINER} py-6 ${SECTION_GAP}`}>
         <Link href={`/my/applications/${encodeURIComponent(applicationId)}`} className="text-sm font-medium text-[#3B82F6] no-underline">
-          ← 지원서 상세
+          ← {tMy('backToDetailPage')}
         </Link>
 
         <div className={CARD_BASE}>
-          <h1 className={TITLE_PAGE}>라운드 제출</h1>
-          <p className={`${TEXT_SUB} mt-2`}>
-            오디션에서 요구하는 유형(영상·파일·텍스트)에 맞게 입력해 주세요. YouTube URL은 videoUrl에 입력합니다.
-          </p>
+          <h1 className={TITLE_PAGE}>{tApp('submitTitle')}</h1>
+          <p className={`${TEXT_SUB} mt-2`}>{tApp('submitHint')}</p>
 
           <div className="mt-6 flex flex-col gap-4">
             <label className="flex flex-col gap-1">
-              <span className="text-sm font-medium text-gray-700">영상 URL (YouTube)</span>
+              <span className="text-sm font-medium text-gray-700">{tApp('videoUrlYoutube')}</span>
               <input
                 value={videoUrl}
                 onChange={(e) => setVideoUrl(e.target.value)}
@@ -97,16 +99,16 @@ function MyRoundSubmitContent() {
               />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="text-sm font-medium text-gray-700">파일 URL</span>
+              <span className="text-sm font-medium text-gray-700">{tApp('fileUrl')}</span>
               <input value={fileUrl} onChange={(e) => setFileUrl(e.target.value)} className={INPUT_BASE} placeholder="https://..." />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="text-sm font-medium text-gray-700">텍스트 답변</span>
+              <span className="text-sm font-medium text-gray-700">{tApp('textAnswer')}</span>
               <textarea
                 value={textAnswer}
                 onChange={(e) => setTextAnswer(e.target.value)}
                 className={`${INPUT_BASE} min-h-[120px]`}
-                placeholder="텍스트로 제출할 내용"
+                placeholder={tApp('textPlaceholder')}
               />
             </label>
           </div>
@@ -120,13 +122,13 @@ function MyRoundSubmitContent() {
               disabled={submitMutation.isPending}
               onClick={() => submitMutation.mutate()}
             >
-              {submitMutation.isPending ? '제출 중...' : '제출하기'}
+              {submitMutation.isPending ? tApp('submitting') : tApp('submitNow')}
             </button>
             <Link
               href={`/my/applications/${encodeURIComponent(applicationId)}`}
               className="inline-flex items-center rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-800 no-underline"
             >
-              취소
+              {t('cancel')}
             </Link>
           </div>
         </div>
@@ -136,10 +138,11 @@ function MyRoundSubmitContent() {
 }
 
 export default function MyRoundSubmitPage() {
+  const tVote = useTranslations('vote')
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center text-sm text-gray-600">불러오는 중…</div>
+        <div className="flex min-h-screen items-center justify-center text-sm text-gray-600">{tVote('loading')}</div>
       }
     >
       <MyRoundSubmitContent />

@@ -28,20 +28,24 @@ const BTN_PRIMARY =
 const BLOCK_FORM = 'w-full border-b border-neutral-200 py-4'
 const SECTION_DIVIDER = 'border-b border-neutral-200'
 
-const videoSchema = z.object({
-  title: z.string().min(1, '제목을 입력해주세요'),
-  description: z.string().optional(),
-  videoUrl: z.string().url('유효한 YouTube URL을 입력해주세요'),
-  category: z.string().optional(),
-  status: z.enum(['PUBLISHED', 'DRAFT', 'PRIVATE']),
-})
+function createVideoSchema(titleRequired: string, youtubeInvalid: string) {
+  return z.object({
+    title: z.string().min(1, titleRequired),
+    description: z.string().optional(),
+    videoUrl: z.string().url(youtubeInvalid),
+    category: z.string().optional(),
+    status: z.enum(['PUBLISHED', 'DRAFT', 'PRIVATE']),
+  })
+}
 
-type VideoFormData = z.infer<typeof videoSchema>
+type VideoFormData = z.infer<ReturnType<typeof createVideoSchema>>
 
 export default function MyChannelStudioPage() {
   const router = useRouter()
   const nextRouter = useNextRouter()
   const t = useTranslations('common')
+  const tCh = useTranslations('myChannel')
+  const tEditor = useTranslations('editor')
   const queryClient = useQueryClient()
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
   const [userType, setUserType] = useState<'APPLICANT' | 'BUSINESS' | null>(null)
@@ -54,7 +58,7 @@ export default function MyChannelStudioPage() {
     reset,
     formState: { errors },
   } = useForm<VideoFormData>({
-    resolver: zodResolver(videoSchema),
+    resolver: zodResolver(createVideoSchema(tCh('titleRequiredMsg'), tCh('youtubeInvalid'))),
     defaultValues: {
       status: 'PRIVATE',
     },
@@ -148,7 +152,7 @@ export default function MyChannelStudioPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('정말 삭제하시겠습니까?')) return
+    if (!confirm(tCh('confirmDelete'))) return
     await deleteMutation.mutateAsync(id)
   }
 
@@ -173,7 +177,7 @@ export default function MyChannelStudioPage() {
   return (
     <div className="min-h-screen w-full bg-white">
       <div className={`w-full px-3 py-3 ${SECTION_GAP}`}>
-        <h1 className={TITLE_PAGE}>내 채널 관리</h1>
+        <h1 className={TITLE_PAGE}>{tCh('title')}</h1>
 
         <ChannelMeStudioForm />
 
@@ -184,27 +188,27 @@ export default function MyChannelStudioPage() {
         <div className={SECTION_DIVIDER} aria-hidden />
 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-base font-semibold text-neutral-900">영상 관리</h2>
+          <h2 className="text-base font-semibold text-neutral-900">{tCh('videos')}</h2>
           <button type="button" onClick={openUploadForm} className={`${BTN_PRIMARY} w-full shrink-0 sm:w-auto`}>
-            + 영상 업로드
+            {tCh('upload')}
           </button>
         </div>
 
         {showCreateForm && (
           <div className={BLOCK_FORM}>
-            <h2 className={`${TITLE_PAGE} mb-3`}>{editingVideo ? '영상 수정' : '새 영상 추가'}</h2>
+            <h2 className={`${TITLE_PAGE} mb-3`}>{editingVideo ? tCh('editVideo') : tCh('addVideo')}</h2>
             <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-900">제목 *</label>
-                <input type="text" {...register('title')} className={INPUT_BASE} placeholder="영상 제목" />
+                <label className="mb-2 block text-sm font-medium text-gray-900">{tCh('titleRequired')}</label>
+                <input type="text" {...register('title')} className={INPUT_BASE} placeholder={tCh('titlePlaceholder')} />
                 {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title.message}</p>}
               </div>
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-900">설명</label>
-                <textarea {...register('description')} rows={4} className={INPUT_BASE} placeholder="영상 설명" />
+                <label className="mb-2 block text-sm font-medium text-gray-900">{tCh('description')}</label>
+                <textarea {...register('description')} rows={4} className={INPUT_BASE} placeholder={tCh('descriptionPlaceholder')} />
               </div>
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-900">YouTube URL *</label>
+                <label className="mb-2 block text-sm font-medium text-gray-900">{tCh('youtubeRequired')}</label>
                 <input
                   type="url"
                   {...register('videoUrl')}
@@ -212,18 +216,18 @@ export default function MyChannelStudioPage() {
                   placeholder="https://www.youtube.com/watch?v=..."
                 />
                 {errors.videoUrl && <p className="mt-1 text-sm text-red-600">{errors.videoUrl.message}</p>}
-                <p className={`${TEXT_SUB} mt-1`}>YouTube 영상 URL을 입력해주세요</p>
+                <p className={`${TEXT_SUB} mt-1`}>{tCh('youtubeHint')}</p>
               </div>
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-900">카테고리</label>
-                <input type="text" {...register('category')} className={INPUT_BASE} placeholder="카테고리 (선택)" />
+                <label className="mb-2 block text-sm font-medium text-gray-900">{tCh('category')}</label>
+                <input type="text" {...register('category')} className={INPUT_BASE} placeholder={tCh('categoryPlaceholder')} />
               </div>
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-900">공개 상태 *</label>
+                <label className="mb-2 block text-sm font-medium text-gray-900">{tCh('visibilityRequired')}</label>
                 <select {...register('status')} className={INPUT_BASE}>
-                  <option value="PUBLISHED">공개</option>
-                  <option value="PRIVATE">비공개</option>
-                  <option value="DRAFT">초안</option>
+                  <option value="PUBLISHED">{tCh('published')}</option>
+                  <option value="PRIVATE">{tCh('private')}</option>
+                  <option value="DRAFT">{tCh('draft')}</option>
                 </select>
               </div>
               <div className="flex flex-col gap-3 md:flex-row">
@@ -232,7 +236,11 @@ export default function MyChannelStudioPage() {
                   disabled={createMutation.isPending || updateMutation.isPending}
                   className={`${BTN_PRIMARY} w-full md:flex-1`}
                 >
-                  {createMutation.isPending || updateMutation.isPending ? '저장 중...' : editingVideo ? '수정' : '등록'}
+                  {createMutation.isPending || updateMutation.isPending
+                    ? tEditor('saving')
+                    : editingVideo
+                      ? t('edit')
+                      : tCh('register')}
                 </button>
                 <button
                   type="button"
@@ -243,7 +251,7 @@ export default function MyChannelStudioPage() {
                   }}
                   className={BTN_SECONDARY}
                 >
-                  취소
+                  {t('cancel')}
                 </button>
               </div>
             </form>

@@ -66,6 +66,12 @@ describe('i18n catalogs', () => {
       'ranking.backToAudition',
       'application.roundProgress',
       'native.otaTitle',
+      'dashboard.title',
+      'myAuditions.create',
+      'roundReview.title',
+      'auditionDetail.statusOpenBadge',
+      'apply.roundApplyCta',
+      'myApplications.listTitle',
     ]
     for (const tree of [ko, en, mn] as const) {
       const keys = new Set(collectMessageKeys(tree))
@@ -101,6 +107,12 @@ describe('i18n catalogs', () => {
       expect(root.ranking.backToAudition).toBeTruthy()
       expect(root.apply.vaultAttach).toBeTruthy()
       expect(root.application.roundProgress).toBeTruthy()
+      expect(root.dashboard.title).toBeTruthy()
+      expect(root.myAuditions.create).toBeTruthy()
+      expect(root.roundReview.title).toBeTruthy()
+      expect(root.auditionDetail.statusOpenBadge).toBeTruthy()
+      expect(root.apply.roundApplyCta).toBeTruthy()
+      expect(root.myApplications.listTitle).toBeTruthy()
     }
   })
 

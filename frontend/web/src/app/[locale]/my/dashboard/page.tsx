@@ -5,7 +5,7 @@ import { useRouter, Link } from '../../../../i18n.config'
 import { useQuery } from '@tanstack/react-query'
 import { authApi } from '@/shared/api/auth'
 import { dashboardApi } from '@/shared/api/dashboard'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { useAuthStore } from '@/shared/auth/authStore'
 import {
   BTN_PRIMARY,
@@ -17,13 +17,12 @@ import {
   TITLE_PAGE,
 } from '@/shared/ui/specClasses'
 import { AgencyDashboardShell } from '@/components/agency/AgencyDashboardShell'
+import { applicationStatusMessageKey } from '@/shared/i18n/applicationStatusKey'
 
-function statusLabel(status?: string) {
-  if (status === 'ACCEPTED') return '합격'
-  if (status === 'REJECTED') return '불합격'
-  if (status === 'REVIEWING' || status === 'REVIEWED') return '검토중'
-  if (status === 'SUBMITTED') return '제출완료'
-  return status ?? '-'
+function formatLocaleDate(iso: string | undefined, locale: string): string {
+  if (!iso) return ''
+  const tag = locale.startsWith('ko') ? 'ko-KR' : locale.startsWith('mn') ? 'mn-MN' : 'en-US'
+  return new Date(iso).toLocaleDateString(tag)
 }
 
 function StatCard({
@@ -57,10 +56,21 @@ function StatCard({
 
 export default function MyDashboardPage() {
   const router = useRouter()
+  const locale = useLocale()
   const t = useTranslations('common')
+  const tDash = useTranslations('dashboard')
+  const tStatus = useTranslations('status')
+  const tAgency = useTranslations('agency')
   const accessToken = useAuthStore((s) => s.accessToken)
   const role = useAuthStore((s) => s.role)
   const [hydrated, setHydrated] = useState(false)
+
+  const statusLabel = (status?: string) => {
+    const key = applicationStatusMessageKey(status)
+    if (key === 'submitted') return tDash('submittedDone')
+    if (key) return tStatus(key)
+    return status ?? '-'
+  }
 
   useEffect(() => {
     useAuthStore.getState().syncFromStorage()
@@ -108,7 +118,7 @@ export default function MyDashboardPage() {
   if (role === 'APPLICANT') {
     return (
       <div className="flex min-h-screen items-center justify-center text-sm text-gray-600">
-        내 지원으로 이동 중…
+        {tDash('redirectingApplications')}
       </div>
     )
   }
@@ -120,27 +130,25 @@ export default function MyDashboardPage() {
         <div className={`${PAGE_CONTAINER} py-6 ${SECTION_GAP}`}>
           <div>
             <h1 className={TITLE_PAGE}>
-              {role === 'SUPER_ADMIN' ? '슈퍼관리자' : '내 대시보드'}
+              {role === 'SUPER_ADMIN' ? tDash('superTitle') : tDash('title')}
             </h1>
             <p className={`${TEXT_SUB} mt-2`}>
-              {role === 'SUPER_ADMIN'
-                ? '플랫폼 운영 메뉴로 이동하거나 크레딧을 관리할 수 있습니다.'
-                : '일반 계정입니다. 서비스 메뉴를 이용해 주세요.'}
+              {role === 'SUPER_ADMIN' ? tDash('superHint') : tDash('userHint')}
             </p>
           </div>
           <div className={CARD_BASE}>
-            <h2 className={`${TITLE_PAGE} mb-4`}>바로가기</h2>
+            <h2 className={`${TITLE_PAGE} mb-4`}>{tDash('shortcuts')}</h2>
             <div className="flex flex-col gap-3 md:flex-row md:flex-wrap">
               {role === 'SUPER_ADMIN' && (
                 <Link href="/admin/super" className={BTN_PRIMARY}>
-                  슈퍼관리자 콘솔
+                  {tDash('superConsole')}
                 </Link>
               )}
               <Link href="/credits" className={BTN_SECONDARY}>
-                크레딧
+                {t('credits')}
               </Link>
               <Link href="/auditions" className={BTN_SECONDARY}>
-                오디션
+                {t('auditions')}
               </Link>
             </div>
           </div>
@@ -155,29 +163,27 @@ export default function MyDashboardPage() {
     return (
       <AgencyDashboardShell>
         <div className={`${PAGE_CONTAINER} py-6 ${SECTION_GAP}`}>
-          <h1 className={TITLE_PAGE}>기획사 대시보드</h1>
-          <p className={`${TEXT_SUB} mt-2 max-w-2xl`}>
-            공고·지원자 처리는 상단 메뉴에서 이동할 수 있습니다. 숫자 요약은 통계 메뉴에서 확인하세요.
-          </p>
+          <h1 className={TITLE_PAGE}>{tAgency('dashboard')}</h1>
+          <p className={`${TEXT_SUB} mt-2 max-w-2xl`}>{tDash('agencyHint')}</p>
           <div className="flex flex-col gap-3 md:flex-row md:flex-wrap">
             <Link href="/dashboard/auditions/create" className={BTN_PRIMARY}>
-              공고 등록
+              {tDash('createPosting')}
             </Link>
             <Link href="/my/auditions" className={BTN_SECONDARY}>
-              오디션 관리
+              {tAgency('navAuditions')}
             </Link>
             <Link href="/my/applicants" className={BTN_SECONDARY}>
-              지원자 관리
+              {tAgency('navApplicants')}
             </Link>
             <Link href="/my/stats" className={BTN_SECONDARY}>
-              통계
+              {tAgency('navStats')}
             </Link>
             <Link href="/credits" className={BTN_SECONDARY}>
-              크레딧
+              {t('credits')}
             </Link>
           </div>
           <div>
-            <h2 className={`${TITLE_PAGE} mb-2`}>최근 지원</h2>
+            <h2 className={`${TITLE_PAGE} mb-2`}>{tDash('recentApplications')}</h2>
             <ul className="divide-y divide-gray-200 border border-gray-200 bg-white">
               {data.recentApplications.map((a) => (
                 <li key={a.id} className="flex items-center justify-between gap-3 px-4 py-3">
@@ -193,7 +199,7 @@ export default function MyDashboardPage() {
                 </li>
               ))}
               {data.recentApplications.length === 0 && (
-                <li className={`${TEXT_SUB} px-4 py-6 text-center`}>데이터 없음</li>
+                <li className={`${TEXT_SUB} px-4 py-6 text-center`}>{tDash('noData')}</li>
               )}
             </ul>
           </div>
@@ -207,9 +213,9 @@ export default function MyDashboardPage() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-gray-50 px-4 text-center">
         <p className="text-red-600">{t('error')}</p>
-        <p className={TEXT_SUB}>대시보드 데이터를 불러오지 못했습니다. 다시 로그인하거나 잠시 후 시도해 주세요.</p>
+        <p className={TEXT_SUB}>{tDash('loadFailed')}</p>
         <Link href="/auditions" className={BTN_SECONDARY}>
-          오디션으로 이동
+          {tDash('goAuditions')}
         </Link>
       </div>
     )
@@ -218,32 +224,32 @@ export default function MyDashboardPage() {
     <div className="min-h-screen bg-gray-50">
       <div className={`${PAGE_CONTAINER} py-6 ${SECTION_GAP}`}>
         <div>
-          <h1 className={TITLE_PAGE}>지원자 대시보드</h1>
-          <p className={`${TEXT_SUB} mt-2`}>안녕하세요! 👋</p>
+          <h1 className={TITLE_PAGE}>{tDash('applicantTitle')}</h1>
+          <p className={`${TEXT_SUB} mt-2`}>{tDash('hello')}</p>
         </div>
 
         <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
-          <StatCard icon={<span aria-hidden>📄</span>} value={applicant.applied} label="지원" tone="violet" />
-          <StatCard icon={<span aria-hidden>👁</span>} value={applicant.reviewed} label="검토중" tone="blue" />
-          <StatCard icon={<span aria-hidden>✓</span>} value={applicant.accepted} label="합격" tone="green" />
-          <StatCard icon={<span aria-hidden>✕</span>} value={applicant.rejected} label="불합격" tone="red" />
-          <StatCard icon={<span aria-hidden>🎬</span>} value={applicant.videosCount} label="영상" tone="pink" />
+          <StatCard icon={<span aria-hidden>📄</span>} value={applicant.applied} label={tDash('applied')} tone="violet" />
+          <StatCard icon={<span aria-hidden>👁</span>} value={applicant.reviewed} label={tStatus('underReview')} tone="blue" />
+          <StatCard icon={<span aria-hidden>✓</span>} value={applicant.accepted} label={tStatus('accepted')} tone="green" />
+          <StatCard icon={<span aria-hidden>✕</span>} value={applicant.rejected} label={tStatus('rejected')} tone="red" />
+          <StatCard icon={<span aria-hidden>🎬</span>} value={applicant.videosCount} label={t('videos')} tone="pink" />
         </div>
 
         <div className="flex flex-col gap-3 md:flex-row">
           <Link href="/auditions" className={BTN_PRIMARY}>
-            오디션 보기
+            {tDash('browseAuditions')}
           </Link>
           <Link href="/my/applications" className={BTN_SECONDARY}>
-            내 지원서
+            {tDash('myApplications')}
           </Link>
           <Link href="/credits" className={BTN_SECONDARY}>
-            크레딧
+            {t('credits')}
           </Link>
         </div>
 
         <div>
-          <p className={`${TEXT_SUB} mb-2`}>최근 지원</p>
+          <p className={`${TEXT_SUB} mb-2`}>{tDash('recentApplications')}</p>
           <div className={CARD_BASE}>
             <ul className="flex flex-col divide-y divide-[#E5E7EB]">
               {applicant.recentApplications.map((a) => (
@@ -252,14 +258,12 @@ export default function MyDashboardPage() {
                     <Link href={`/my/applications/${a.id}`} className="text-sm font-semibold text-gray-900 no-underline">
                       {a.auditionTitle ?? a.auditionId}
                     </Link>
-                    <p className={TEXT_SUB}>
-                      {a.createdAt ? new Date(a.createdAt).toLocaleDateString('ko-KR') : ''}
-                    </p>
+                    <p className={TEXT_SUB}>{formatLocaleDate(a.createdAt, locale)}</p>
                   </div>
                   <span className="rounded-full bg-blue-50 px-3 py-1 text-sm text-blue-700">{statusLabel(a.status)}</span>
                 </li>
               ))}
-              {applicant.recentApplications.length === 0 && <li className={`${TEXT_SUB} py-2`}>데이터 없음</li>}
+              {applicant.recentApplications.length === 0 && <li className={`${TEXT_SUB} py-2`}>{tDash('noData')}</li>}
             </ul>
           </div>
         </div>

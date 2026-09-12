@@ -6,18 +6,23 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQueryClient } from '@tanstack/react-query'
 import { z } from 'zod'
+import { useTranslations } from 'next-intl'
 import { authApi } from '@/shared/api/auth'
 
-const loginSchema = z.object({
-  email: z.string().email('유효한 이메일을 입력해주세요'),
-  password: z.string().min(1, '비밀번호를 입력해주세요'),
-})
+function createMobileLoginSchema(emailInvalid: string, passwordRequired: string) {
+  return z.object({
+    email: z.string().email(emailInvalid),
+    password: z.string().min(1, passwordRequired),
+  })
+}
 
-type LoginFormData = z.infer<typeof loginSchema>
+type LoginFormData = z.infer<ReturnType<typeof createMobileLoginSchema>>
 
 export default function MobileLoginPage() {
   const router = useRouter()
   const queryClient = useQueryClient()
+  const t = useTranslations('auth')
+  const tValidation = useTranslations('validation')
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
@@ -26,7 +31,7 @@ export default function MobileLoginPage() {
     handleSubmit,
     formState: { errors },
   } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
+    resolver: zodResolver(createMobileLoginSchema(tValidation('emailInvalid'), t('passwordRequired'))),
   })
 
   const onSubmit = async (data: LoginFormData) => {
@@ -39,7 +44,7 @@ export default function MobileLoginPage() {
       const userRole = response.role
 
       if (!response || !token) {
-        setError('로그인 응답이 올바르지 않습니다. 다시 시도해주세요.')
+        setError(t('loginInvalidResponse'))
         setIsLoading(false)
         return
       }
@@ -47,7 +52,7 @@ export default function MobileLoginPage() {
       const savedToken = localStorage.getItem('accessToken') || localStorage.getItem('auth_token')
 
       if (!savedToken) {
-        setError('토큰 저장에 실패했습니다. 다시 시도해주세요.')
+        setError(t('tokenSaveFailed'))
         setIsLoading(false)
         return
       }
@@ -55,7 +60,7 @@ export default function MobileLoginPage() {
       queryClient.invalidateQueries({ queryKey: ['currentUser'] })
       queryClient.invalidateQueries({ queryKey: ['currentUser', savedToken] })
 
-      await new Promise(resolve => setTimeout(resolve, 300))
+      await new Promise((resolve) => setTimeout(resolve, 300))
 
       if (userRole === 'BUSINESS' || userRole === 'AGENCY') {
         router.push('/my/dashboard')
@@ -64,77 +69,77 @@ export default function MobileLoginPage() {
       } else {
         router.push('/')
       }
-    } catch (err: any) {
-      console.error('로그인 오류:', err)
-      const errorMessage = err.response?.data?.message || err.message || '로그인에 실패했습니다'
+    } catch (err: unknown) {
+      const ax = err as { response?: { data?: { message?: string } }; message?: string }
+      const errorMessage = ax.response?.data?.message || ax.message || t('loginFailed')
       setError(errorMessage)
       setIsLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="flex min-h-screen items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <h1 className="text-3xl font-bold text-center mb-8">로그인</h1>
+        <h1 className="mb-8 text-center text-3xl font-bold">{t('loginTitle')}</h1>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+            <div className="rounded border border-red-200 bg-red-50 px-4 py-3 text-red-700">
               {error}
             </div>
           )}
 
           <div>
-            <label className="block text-sm font-medium mb-2">이메일</label>
+            <label className="mb-2 block text-sm font-medium">{t('email')}</label>
             <input
               type="email"
               autoComplete="email"
               {...register('email')}
-              className="w-full px-4 py-2 border rounded-lg"
+              className="w-full rounded-lg border px-4 py-2"
               placeholder="email@example.com"
             />
             {errors.email && (
-              <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
+              <p className="mt-1 text-sm text-red-500">{errors.email.message}</p>
             )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">비밀번호</label>
+            <label className="mb-2 block text-sm font-medium">{t('password')}</label>
             <input
               type="password"
               autoComplete="current-password"
               {...register('password')}
-              className="w-full px-4 py-2 border rounded-lg"
-              placeholder="비밀번호"
+              className="w-full rounded-lg border px-4 py-2"
+              placeholder={t('password')}
             />
             {errors.password && (
-              <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>
+              <p className="mt-1 text-sm text-red-500">{errors.password.message}</p>
             )}
           </div>
 
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50"
+            className="bg-primary-600 hover:bg-primary-700 w-full rounded-lg px-6 py-3 text-white disabled:opacity-50"
           >
-            {isLoading ? '로그인 중...' : '로그인'}
+            {isLoading ? t('loggingIn') : t('loginButton')}
           </button>
         </form>
 
-        <div className="mt-6 text-center space-y-2">
+        <div className="mt-6 space-y-2 text-center">
           <p className="text-gray-600">
-            계정이 없으신가요?{' '}
+            {t('noAccount')}{' '}
             <a href="/register" className="text-primary-600 hover:underline">
-              회원가입
+              {t('registerButton')}
             </a>
           </p>
           <div className="flex justify-center gap-4 text-sm">
-            <a href="/find-user-id" className="text-gray-600 hover:text-primary-600">
-              아이디 찾기
+            <a href="/find-user-id" className="hover:text-primary-600 text-gray-600">
+              {t('findId')}
             </a>
             <span className="text-gray-400">|</span>
-            <a href="/find-password" className="text-gray-600 hover:text-primary-600">
-              비밀번호 찾기
+            <a href="/find-password" className="hover:text-primary-600 text-gray-600">
+              {t('findPassword')}
             </a>
           </div>
         </div>

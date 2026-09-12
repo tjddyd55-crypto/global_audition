@@ -2,6 +2,7 @@
 
 import type { CSSProperties } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n.config'
 import { meApplicationRoundsApi } from '@/shared/api/meApplicationRounds'
 import { messageForReasonCode } from '@/shared/audition/reasonMessages'
@@ -38,6 +39,7 @@ export function MultiRoundSubmitCta({
   className,
   style,
 }: Props) {
+  const tApp = useTranslations('application')
   const roundIdTrimmed = roundId?.trim() ?? ''
   const q = useQuery({
     queryKey: ['me-round-eligibility', applicationId, roundIdTrimmed],
@@ -51,16 +53,16 @@ export function MultiRoundSubmitCta({
   }
 
   if (q.isPending) {
-    return <p className="text-sm text-gray-500">제출 가능 여부 확인 중…</p>
+    return <p className="text-sm text-gray-500">{tApp('checkingEligibility')}</p>
   }
 
   if (q.isError) {
-    return <p className="text-sm text-red-600">제출 조건을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</p>
+    return <p className="text-sm text-red-600">{tApp('eligibilityFailed')}</p>
   }
 
   if (!q.data.canSubmit) {
     const reasonKey = q.data.reason?.trim() || null
-    const msg = reasonKey ? messageForReasonCode(reasonKey) : '현재는 제출할 수 없습니다.'
+    const msg = reasonKey ? messageForReasonCode(reasonKey) : tApp('cannotSubmit')
     return <p className="text-sm text-gray-500">{msg}</p>
   }
 

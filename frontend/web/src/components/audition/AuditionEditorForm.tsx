@@ -179,6 +179,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
   const tEditor = useTranslations('editor')
   const tCountry = useTranslations('country')
   const tLocale = useTranslations('locale')
+  const tCommon = useTranslations('common')
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   /** 필수·검증 실패 시 빨간 테두리 */
@@ -341,22 +342,22 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
     if (intent === 'publish') {
       if (!(description ?? '').trim() || (description ?? '').trim() === '—') {
         setShowDescriptionError(true)
-        return '게시하려면 상세 설명을 입력해 주세요.'
+        return tEditor('publishDescriptionRequired')
       }
       setShowDescriptionError(false)
       if (!(images.original ?? '').trim() && !(images.medium ?? '').trim() && !(images.thumb ?? '').trim()) {
         setShowCoverError(true)
-        return '게시하려면 대표 이미지를 업로드해 주세요.'
+        return tEditor('publishCoverRequired')
       }
       setShowCoverError(false)
       if (!isBlankOrValidYoutubeUrl(videoUrl)) {
         setShowVideoUrlError(true)
-        return '영상은 YouTube URL만 입력할 수 있습니다.'
+        return tEditor('youtubeOnly')
       }
       setShowVideoUrlError(false)
-      if (!(agencyName ?? '').trim()) return '게시하려면 기획사명을 입력해 주세요.'
-      if (!(location ?? '').trim()) return '게시하려면 위치를 입력해 주세요.'
-      if (!startDate || !endDate) return '시작일과 종료일을 입력해 주세요.'
+      if (!(agencyName ?? '').trim()) return tEditor('publishAgencyRequired')
+      if (!(location ?? '').trim()) return tEditor('publishLocationRequired')
+      if (!startDate || !endDate) return tEditor('datesRequired')
     } else {
       setShowDescriptionError(false)
       setShowVideoUrlError(false)
@@ -383,15 +384,15 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
         setStatus(forced)
         if (intent === 'draft') {
           setDraftSavedBanner(true)
-          toast.success('임시 저장되었습니다', { duration: 5000 })
+          toast.success(tEditor('draftSaved'), { duration: 5000 })
         } else {
           setDraftSavedBanner(false)
-          toast.success('공고가 등록되었습니다', { duration: 4000 })
+          toast.success(tEditor('published'), { duration: 4000 })
         }
         if (intent === 'publish') onSuccess?.(created)
       } catch (e: unknown) {
         const msg = apiErrorMessage(e)
-        setError(msg || '저장에 실패했습니다.')
+        setError(msg || tEditor('saveFailed'))
       } finally {
         setIsLoading(false)
       }
@@ -405,16 +406,16 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
       setStatus(forced)
       if (intent === 'draft') {
         setDraftSavedBanner(true)
-        toast.success('임시 저장되었습니다', { duration: 5000 })
+        toast.success(tEditor('draftSaved'), { duration: 5000 })
       } else {
         setDraftSavedBanner(false)
-        toast.success('공고가 등록되었습니다', { duration: 4000 })
+        toast.success(tEditor('published'), { duration: 4000 })
       }
       if (intent === 'publish') onSuccess?.(updated)
     } catch (e: unknown) {
       const msg = apiErrorMessage(e)
-      setError(msg || '저장에 실패했습니다.')
-      if (mode === 'edit') toast.error(msg || '저장 실패')
+      setError(msg || tEditor('saveFailed'))
+      if (mode === 'edit') toast.error(msg || tEditor('saveFailedShort'))
     } finally {
       setIsLoading(false)
     }
@@ -423,11 +424,11 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
   const persistClosed = async () => {
     const err = validate('publish')
     if (err) {
-      setError('마감 저장 전에 게시와 동일한 필수 항목을 채워 주세요.')
+      setError(tEditor('closeNeedsPublishFields'))
       return
     }
     if (mode === 'create' && !effectiveId) {
-      setError('먼저 임시 저장 또는 게시로 공고를 만든 뒤 마감할 수 있습니다.')
+      setError(tEditor('closeNeedsExisting'))
       return
     }
     const id = mode === 'edit' ? auditionId! : draftId!
@@ -437,10 +438,10 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
       const payload = buildPayload('CLOSED')
       await auditionApi.update(id, payload)
       setStatus('CLOSED')
-      toast.success('마감 상태로 저장되었습니다.')
+      toast.success(tEditor('closedSaved'))
     } catch (e: unknown) {
       const msg = apiErrorMessage(e)
-      setError(msg || '저장에 실패했습니다.')
+      setError(msg || tEditor('saveFailed'))
     } finally {
       setIsLoading(false)
     }
@@ -491,14 +492,14 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
             className="mb-4 flex items-start justify-between gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900"
           >
             <span>
-              <strong>임시 저장됨</strong> — 서버에 반영되었습니다. 이어서 수정한 뒤 다시 임시 저장하거나 등록할 수 있습니다.
+              {tEditor('draftSavedBanner')}
             </span>
             <button
               type="button"
               className="shrink-0 text-emerald-700 underline"
               onClick={() => setDraftSavedBanner(false)}
             >
-              닫기
+              {tCommon('close')}
             </button>
           </div>
         )}
@@ -518,7 +519,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
               setShowTitleError(false)
             }}
             style={titleInputStyle}
-            placeholder="예: 2025 글로벌 보컬 오디션"
+            placeholder={tEditor('titleExample')}
             aria-invalid={showTitleError}
             required
           />
@@ -531,16 +532,16 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
             <span className="text-red-600" aria-hidden>
               *
             </span>
-            <span className="ml-1 text-xs font-normal text-gray-500">(등록·마감 시 필수)</span>
+            <span className="ml-1 text-xs font-normal text-gray-500">{tEditor('requiredOnPublish')}</span>
           </label>
-          <textarea
+          <textarea>
             value={description}
             onChange={(e) => {
               setDescription(e.target.value)
               setShowDescriptionError(false)
             }}
             style={descriptionInputStyle}
-            placeholder="모집 내용, 자격 요건, 진행 방식 등을 적어 주세요."
+            placeholder={tEditor('descriptionExample')}
             aria-invalid={showDescriptionError}
           />
         </div>
@@ -594,7 +595,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
               ))}
             </select>
             <p style={{ marginTop: AUDITION_DETAIL.galleryGapPx, fontSize: 12, color: '#6b7280' }}>
-              「임시 저장」은 임시저장(DRAFT), 「등록하기」는 게시중(OPEN)으로 저장합니다. 마감은 아래 버튼을 사용하세요.
+              {tEditor('statusHint')}
             </p>
           </div>
         )}
@@ -607,7 +608,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
           </label>
           <p style={{ margin: '0 0 10px 0', fontSize: 12, color: '#6b7280' }}>{tEditor('tagsHint')}</p>
           {tagCatalogLoading ? (
-            <p className="text-sm text-gray-500">태그 목록 불러오는 중…</p>
+            <p className="text-sm text-gray-500">{tEditor('tagsLoading')}</p>
           ) : (
             <div className="flex flex-wrap gap-2">
               {tagCatalog.map((tag) => {
@@ -651,7 +652,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
                   <button
                     type="button"
                     className="rounded px-1 text-violet-600 hover:bg-violet-100"
-                    aria-label={`${ct} 제거`}
+                    aria-label={tEditor('removeTag', { name: ct })}
                     onClick={() => setCustomTags((prev) => prev.filter((x) => x !== ct))}
                   >
                     ×
@@ -663,7 +664,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
               <input
                 value={tagCustomInput}
                 onChange={(e) => setTagCustomInput(e.target.value)}
-                placeholder="직접 입력 후 추가"
+                placeholder={tEditor('customTagPlaceholder')}
                 className="min-w-[12rem] flex-1"
                 style={{
                   ...inputStyle,
@@ -691,7 +692,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
                   setTagCustomInput('')
                 }}
               >
-                추가
+                {tCommon('add')}
               </button>
             </div>
           </div>
@@ -706,10 +707,10 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
               <span className="text-red-600" aria-hidden>
                 *
               </span>
-              <span className="ml-1 text-xs font-normal text-gray-500">(등록·마감 시 필수)</span>
+              <span className="ml-1 text-xs font-normal text-gray-500">{tEditor('requiredOnPublish')}</span>
             </>
           }
-          guide="세로형 (3:4) 권장. 카드·리스트·상단 히어로에 동일 비율(3:4, cover)로 표시됩니다."
+          guide={tEditor('coverGuide')}
           multiple={false}
           aspect="portrait"
           maxCount={1}
@@ -740,7 +741,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
             style={{ display: 'block', marginBottom: AUDITION_DETAIL.galleryGapPx, fontSize: AUDITION_DETAIL.bodyFontPx, fontWeight: 600 }}
           >
             {tEditor('videoUrl')}
-            <span className="ml-1 text-xs font-normal text-gray-500">(YouTube만, 등록·마감 시 형식 검사)</span>
+            <span className="ml-1 text-xs font-normal text-gray-500">{tEditor('youtubeHint')}</span>
           </label>
           <input
             value={videoUrl}
@@ -749,14 +750,14 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
               setShowVideoUrlError(false)
             }}
             style={videoInputStyle}
-            placeholder="https://www.youtube.com/watch?v=… 또는 youtu.be/…"
+            placeholder={tEditor('youtubePlaceholder')}
             aria-invalid={showVideoUrlError}
           />
         </div>
         <ImageUploader
           className="mb-8"
           label={tEditor('galleryImages')}
-          guide="가로형 (16:9) 권장. 상세 페이지 갤러리 영역은 16:9 · contain으로 표시됩니다. 드래그로 순서를 바꿀 수 있습니다."
+          guide={tEditor('galleryGuide')}
           multiple
           aspect="landscape"
           maxCount={10}
@@ -777,7 +778,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
             value={agencyName}
             onChange={(e) => setAgencyName(e.target.value)}
             style={inputStyle}
-            placeholder="운영 기획사 또는 주최"
+            placeholder={tEditor('agencyPlaceholder')}
           />
         </div>
         <SingleImageUploadField
@@ -801,7 +802,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
             value={location}
             onChange={(e) => setLocation(e.target.value)}
             style={inputStyle}
-            placeholder="예: 서울 강남구, 온라인"
+            placeholder={tEditor('locationPlaceholder')}
           />
         </div>
         <div style={{ marginBottom: AUDITION_DETAIL.benefitGridGapPx }}>
@@ -846,7 +847,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
               opacity: formBusy ? 0.7 : 1,
             }}
           >
-            {isLoading ? '저장 중…' : '임시 저장'}
+            {isLoading ? tEditor('saving') : tEditor('saveDraft')}
           </button>
           <button
             type="button"
@@ -864,7 +865,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
               opacity: formBusy ? 0.7 : 1,
             }}
           >
-            {isLoading ? '처리 중…' : '등록하기'}
+            {isLoading ? tEditor('processing') : tEditor('publish')}
           </button>
           {(mode === 'edit' || !!draftId) && (
             <button
@@ -883,7 +884,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
                 opacity: formBusy ? 0.7 : 1,
               }}
             >
-              마감으로 저장
+              {tEditor('saveClosed')}
             </button>
           )}
         </div>

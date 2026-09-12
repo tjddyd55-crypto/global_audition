@@ -12,17 +12,14 @@ import { useLocale, useTranslations } from 'next-intl'
 import { Link } from '@/i18n.config'
 import AuthCardLayout from '@/components/auth/AuthCardLayout'
 
-const loginSchema = z.object({
-  email: z
-    .string({ required_error: '필수값을 입력하세요' })
-    .min(1, '필수값을 입력하세요')
-    .email('유효한 이메일을 입력해주세요'),
-  password: z
-    .string({ required_error: '필수값을 입력하세요' })
-    .min(1, '필수값을 입력하세요'),
-})
+function createLoginSchema(required: string, emailInvalid: string) {
+  return z.object({
+    email: z.string({ required_error: required }).min(1, required).email(emailInvalid),
+    password: z.string({ required_error: required }).min(1, required),
+  })
+}
 
-type LoginFormData = z.infer<typeof loginSchema>
+type LoginFormData = z.infer<ReturnType<typeof createLoginSchema>>
 
 function isSafeInternalNextPath(path: string): boolean {
   return path.startsWith('/') && !path.startsWith('//') && !path.includes('://')
@@ -34,6 +31,7 @@ export default function PcLoginPage() {
   const searchParams = useSearchParams()
   const queryClient = useQueryClient()
   const t = useTranslations('auth')
+  const tValidation = useTranslations('validation')
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [socialMessage, setSocialMessage] = useState<string | null>(null)
@@ -43,7 +41,7 @@ export default function PcLoginPage() {
     handleSubmit,
     formState: { errors },
   } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
+    resolver: zodResolver(createLoginSchema(t('requiredValues'), tValidation('emailInvalid'))),
   })
 
   const onSubmit = async (data: LoginFormData) => {
@@ -169,7 +167,7 @@ export default function PcLoginPage() {
       </div>
 
       <div className="grid grid-cols-2 gap-2.5">
-        {['Google', '카카오', '네이버', 'Facebook'].map((provider) => (
+        {['Google', t('kakao'), t('naver'), 'Facebook'].map((provider) => (
           <button
             key={provider}
             type="button"

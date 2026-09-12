@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { useState } from 'react'
 import { resolveVideoThumbnailUrl } from '@/shared/audition/videoThumbnail'
 import { isYoutubeShortsLikeUrl } from '@/shared/utils/videoEmbed'
+import { useTranslations } from 'next-intl'
 import { CARD_BASE, TEXT_SUB, TITLE_PAGE } from '@/shared/ui/specClasses'
 import { VideoEmbedOverlay } from '@/components/video/VideoEmbedOverlay'
 
@@ -19,14 +20,16 @@ export type VideoSectionProps = {
 }
 
 export function VideoSection({ videos }: VideoSectionProps) {
+  const tApply = useTranslations('apply')
+  const tMy = useTranslations('myApplications')
   const [play, setPlay] = useState<{ url: string; title?: string; thumbnail?: string } | null>(null)
 
   return (
     <>
       <section className={CARD_BASE}>
-        <h2 className={`${TITLE_PAGE} mb-4`}>영상</h2>
+        <h2 className={`${TITLE_PAGE} mb-4`}>{tApply('sectionVideo')}</h2>
         {videos.length === 0 ? (
-          <p className={TEXT_SUB}>등록된 영상이 없습니다.</p>
+          <p className={TEXT_SUB}>{tMy('noVideos')}</p>
         ) : (
           <ul className="grid gap-4 sm:grid-cols-2">
             {videos.map((v) => {
@@ -63,7 +66,7 @@ export function VideoSection({ videos }: VideoSectionProps) {
                         />
                       ) : (
                         <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-neutral-800 to-neutral-950">
-                          <span className="text-xs text-neutral-400">미리보기 없음</span>
+                          <span className="text-xs text-neutral-400">{tMy('noPreview')}</span>
                         </div>
                       )}
                       <div className="absolute inset-0 flex items-center justify-center bg-black/35 transition group-hover:bg-black/45">
