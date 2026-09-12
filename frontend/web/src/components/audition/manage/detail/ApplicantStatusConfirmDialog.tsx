@@ -1,5 +1,6 @@
 ﻿'use client'
 
+import { useTranslations } from 'next-intl'
 import type { AgencyBoardStatus } from '@/shared/api/auditions'
 import { BTN_PRIMARY, BTN_SECONDARY } from '@/shared/ui/specClasses'
 
@@ -10,19 +11,23 @@ type ApplicantStatusConfirmDialogProps = {
   onConfirm: () => void
 }
 
-function confirmMessageForStatus(status: AgencyBoardStatus) {
-  if (status === 'APPROVED') return '이 지원자를 합격 처리하시겠습니까?'
-  if (status === 'REJECTED') return '이 지원자를 불합격 처리하시겠습니까?'
-  if (status === 'REVIEWING') return '이 지원자를 검토중 상태로 변경하시겠습니까?'
-  return '상태를 변경하시겠습니까?'
-}
-
 export default function ApplicantStatusConfirmDialog({
   status,
   patching,
   onCancel,
   onConfirm,
 }: ApplicantStatusConfirmDialogProps) {
+  const t = useTranslations('agency')
+  const tCommon = useTranslations('common')
+  const message =
+    status === 'APPROVED'
+      ? t('confirmPass')
+      : status === 'REJECTED'
+        ? t('confirmReject')
+        : status === 'REVIEWING'
+          ? t('confirmReview')
+          : t('confirmChange')
+
   return (
     <div
       className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-4"
@@ -35,10 +40,10 @@ export default function ApplicantStatusConfirmDialog({
         aria-modal="true"
         onClick={(e) => e.stopPropagation()}
       >
-        <p className="text-sm leading-relaxed text-gray-900">{confirmMessageForStatus(status)}</p>
+        <p className="whitespace-normal break-words text-sm leading-relaxed text-gray-900">{message}</p>
         <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <button type="button" className={`${BTN_SECONDARY} sm:!w-auto`} onClick={onCancel}>
-            취소
+            {tCommon('cancel')}
           </button>
           <button
             type="button"
@@ -46,7 +51,7 @@ export default function ApplicantStatusConfirmDialog({
             className={`${BTN_PRIMARY} sm:!w-auto`}
             onClick={onConfirm}
           >
-            확인
+            {tCommon('confirm')}
           </button>
         </div>
       </div>

@@ -1,12 +1,25 @@
-﻿/** 공개 채널 등 UI용 국적 라벨 (API 코드: KR | MN | JP | OTHER) */
-export function nationalityLabelKo(code: string | null | undefined): string | null {
-  const c = (code ?? '').trim().toUpperCase()
-  if (!c) return null
-  const map: Record<string, string> = {
-    KR: '🇰🇷 대한민국',
-    MN: '🇲🇳 몽골',
-    JP: '🇯🇵 일본',
-    OTHER: '기타',
+﻿import type { NationalityCode } from '@/shared/i18n/nationalityOptions'
+
+const NATIONALITY_FLAGS: Record<NationalityCode, string> = {
+  KR: '🇰🇷',
+  MN: '🇲🇳',
+  JP: '🇯🇵',
+  OTHER: '',
+}
+
+export function knownNationalityCode(code: string | null | undefined): NationalityCode | null {
+  const normalized = (code ?? '').trim().toUpperCase()
+  if (normalized === 'KR' || normalized === 'MN' || normalized === 'JP' || normalized === 'OTHER') {
+    return normalized
   }
-  return map[c] ?? null
+  return null
+}
+
+export function nationalityFlag(code: NationalityCode): string {
+  return NATIONALITY_FLAGS[code]
+}
+
+export function formatNationalityLabel(code: NationalityCode, label: string): string {
+  const flag = nationalityFlag(code)
+  return flag ? `${flag} ${label}` : label
 }

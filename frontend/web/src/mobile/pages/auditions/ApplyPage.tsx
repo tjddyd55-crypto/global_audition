@@ -3,6 +3,7 @@
 import { useParams } from 'next/navigation'
 import { useRouter } from '@/i18n.config'
 import { useQueryClient } from '@tanstack/react-query'
+import { useTranslations } from 'next-intl'
 import { applicationApi } from '@/shared/api/applications'
 import { AuditionApplyForm } from '@/components/application/AuditionApplyForm'
 import { auditionHeadlineTitle, PREV_ROUND_APPLY_BLOCKED_MSG } from '@/shared/types/audition'
@@ -17,6 +18,9 @@ export default function MobileAuditionApplyPage() {
   const params = useParams()
   const router = useRouter()
   const queryClient = useQueryClient()
+  const t = useTranslations('common')
+  const tApply = useTranslations('apply')
+  const tDetail = useTranslations('auditionDetail')
   const auditionId = params.id as string
 
   const {
@@ -41,7 +45,7 @@ export default function MobileAuditionApplyPage() {
   if (isLoading || !audition) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="text-xl">로딩 중...</div>
+        <div className="text-xl">{t('loading')}</div>
       </div>
     )
   }
@@ -49,9 +53,9 @@ export default function MobileAuditionApplyPage() {
   if (audition.status !== 'OPEN') {
     return (
       <ApplyPageGuardState
-        message="이 오디션은 현재 모집 중이 아닙니다."
+        message={tApply('notRecruiting')}
         href={`/auditions/${auditionId}`}
-        linkLabel="오디션 상세로"
+        linkLabel={tApply('backToDetailShort')}
         messageClassName="mb-4 text-red-600"
       />
     )
@@ -60,9 +64,9 @@ export default function MobileAuditionApplyPage() {
   if (!token) {
     return (
       <ApplyPageGuardState
-        message="지원하려면 로그인해 주세요."
+        message={tDetail('loginToApply')}
         href="/login"
-        linkLabel="로그인"
+        linkLabel={t('login')}
         messageClassName="mb-4"
       />
     )
@@ -71,9 +75,9 @@ export default function MobileAuditionApplyPage() {
   if (role !== 'APPLICANT' && role !== 'ADMIN') {
     return (
       <ApplyPageGuardState
-        message="지원자 계정으로 로그인 후 이용할 수 있습니다."
+        message={tApply('applicantAccountOnly')}
         href={`/auditions/${auditionId}`}
-        linkLabel="오디션 상세로"
+        linkLabel={tApply('backToDetailShort')}
         messageClassName="mb-4 text-neutral-600"
       />
     )
@@ -82,9 +86,9 @@ export default function MobileAuditionApplyPage() {
   if (audition.hasApplied === true) {
     return (
       <ApplyPageGuardState
-        message="이 오디션에 이미 지원하셨습니다."
+        message={tApply('alreadyAppliedHere')}
         href={`/auditions/${auditionId}`}
-        linkLabel="오디션 상세로 돌아가기"
+        linkLabel={tApply('backToDetail')}
         messageClassName="mb-4 text-neutral-800"
       />
     )
@@ -97,7 +101,7 @@ export default function MobileAuditionApplyPage() {
       <ApplyPageGuardState
         message={msg}
         href={`/auditions/${auditionId}`}
-        linkLabel="오디션 상세로"
+        linkLabel={tApply('backToDetailShort')}
         messageClassName="mb-2 max-w-md text-neutral-800"
         className="flex min-h-screen flex-col items-center justify-center bg-neutral-50 p-4 text-center"
       />
@@ -117,7 +121,7 @@ export default function MobileAuditionApplyPage() {
         creditBalanceAmount={creditBalanceAmount}
         creditGateReady={creditGateReady}
         hasEnoughCredits={hasEnoughCredits}
-        errorMessage="지원 비용 정보를 불러오지 못했습니다."
+        errorMessage={undefined}
       />
 
       <AuditionApplyForm
@@ -132,12 +136,12 @@ export default function MobileAuditionApplyPage() {
             const ax = err as { response?: { status?: number; data?: { message?: string } } }
             const serverMsg = ax.response?.data?.message
             if (ax.response?.status === 409) {
-              throw new Error(serverMsg || '이미 지원 완료입니다.')
+              throw new Error(serverMsg || tApply('alreadyDone'))
             }
             if (ax.response?.status === 403) {
               throw new Error(serverMsg || PREV_ROUND_APPLY_BLOCKED_MSG)
             }
-            throw new Error(serverMsg || (err instanceof Error ? err.message : '지원에 실패했습니다.'))
+            throw new Error(serverMsg || (err instanceof Error ? err.message : tApply('failed')))
           }
           queryClient.invalidateQueries({ queryKey: ['audition', auditionId] })
           queryClient.invalidateQueries({ queryKey: ['credits', 'balance'] })

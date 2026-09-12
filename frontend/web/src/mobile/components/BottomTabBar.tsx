@@ -89,7 +89,7 @@ export function BottomTabBar() {
             <li key={tab.key}>
               <Link
                 href={tab.href}
-                className={`flex min-h-[64px] flex-col items-center justify-center gap-0.5 px-1 py-2 text-[11px] leading-tight ${active ? 'text-neutral-900' : 'text-neutral-500'} no-underline`}
+                className={`flex min-h-[64px] flex-col items-center justify-center gap-0.5 px-1 py-2 text-xs leading-tight ${active ? 'text-neutral-900' : 'text-neutral-500'} no-underline`}
               >
                 <span aria-hidden>{tab.icon}</span>
                 <span className="max-w-[72px] whitespace-normal break-words text-center">{tab.label}</span>

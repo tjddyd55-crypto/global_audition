@@ -48,6 +48,62 @@ describe('i18n catalogs', () => {
     }
   })
 
+  it('keeps apply/vote/agency/vault/channel/editor namespaces aligned', () => {
+    const required = [
+      'apply.sectionBasic',
+      'apply.vaultAttach',
+      'vote.cheerHint',
+      'vote.allCategories',
+      'agency.filter',
+      'agency.manageTitle',
+      'agency.dashboard',
+      'vault.expertReview',
+      'channel.settingsTitle',
+      'channel.studioTitle',
+      'editor.statusOpen',
+      'editor.addItem',
+      'auditions.filterRegion',
+      'ranking.backToAudition',
+      'application.roundProgress',
+      'native.otaTitle',
+    ]
+    for (const tree of [ko, en, mn] as const) {
+      const keys = new Set(collectMessageKeys(tree))
+      for (const key of required) {
+        expect(keys.has(key)).toBe(true)
+      }
+    }
+  })
+
+  it('keeps user-facing namespaces on ko/en/mn', () => {
+    for (const tree of [ko, en, mn] as const) {
+      const root = tree as Record<string, Record<string, string>>
+      expect(root.apply.sectionBasic).toBeTruthy()
+      expect(root.vote.cheerHint).toBeTruthy()
+      expect(root.vault.title).toBeTruthy()
+      expect(root.channel.save).toBeTruthy()
+      expect(root.editor.statusOpen).toBeTruthy()
+      expect(root.editor.titlePlaceholder).toBeTruthy()
+      expect(root.auditions.filterRegion).toBeTruthy()
+      expect(root.auditions.filterHint).toBeTruthy()
+      expect(root.native.otaTitle).toBeTruthy()
+      expect(root.agency.confirmPass).toBeTruthy()
+      expect(root.agency.filter).toBeTruthy()
+      expect(root.agency.manageTitle).toBeTruthy()
+      expect(root.agency.dashboard).toBeTruthy()
+      expect(root.nationality.unspecified).toBeTruthy()
+      expect(root.channel.settingsTitle).toBeTruthy()
+      expect(root.channel.studioTitle).toBeTruthy()
+      expect(root.channel.emptyVideos).toBeTruthy()
+      expect(root.vault.expertReview).toBeTruthy()
+      expect(root.vault.notFound).toBeTruthy()
+      expect(root.ranking.name).toBeTruthy()
+      expect(root.ranking.backToAudition).toBeTruthy()
+      expect(root.apply.vaultAttach).toBeTruthy()
+      expect(root.application.roundProgress).toBeTruthy()
+    }
+  })
+
   it('lists mn as a first-class locale', () => {
     expect(locales.primary).toEqual(['ko', 'en', 'mn'])
     expect(locales.supported).toContain('mn')

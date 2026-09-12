@@ -20,7 +20,7 @@ import { isBlankOrValidYoutubeUrl } from '@/shared/audition/youtubeEmbed'
 import { AuditionEditorPreview } from '@/components/audition/AuditionEditorPreview'
 import { SingleImageUploadField } from '@/components/audition/AuditionEditorImageUpload'
 import { ImageUploader } from '@/components/common/ImageUploader'
-import { AUDITION_STATUS_LABEL_KO } from '@/shared/audition/auditionEditorCopy'
+import { editorStatusMessageKey } from '@/shared/audition/auditionEditorCopy'
 import { normalizeCustomTagNamesForPayload } from '@/shared/audition/auditionTags'
 import { AuditionTranslationPanel } from '@/components/audition/AuditionTranslationPanel'
 import {
@@ -52,6 +52,7 @@ function StringListEditor({
   values: string[]
   onChange: (next: string[]) => void
 }) {
+  const t = useTranslations('editor')
   const list = values.length > 0 ? values : ['']
   const add = () => onChange([...list, ''])
   const setAt = (i: number, v: string) => {
@@ -79,7 +80,7 @@ function StringListEditor({
           onClick={add}
           style={{ fontSize: AUDITION_DETAIL.bodyFontPx, color: HERO.primaryGradientStart, background: 'none', border: 'none', cursor: 'pointer' }}
         >
-          + 항목 추가
+          {t('addItem')}
         </button>
       </div>
       {list.map((v, i) => (
@@ -109,7 +110,7 @@ function StringListEditor({
               background: '#fff',
             }}
           >
-            삭제
+            {t('deleteItem')}
           </button>
         </div>
       ))}
@@ -316,13 +317,13 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
       images: buildAuditionImagesPayload(images),
       videoUrl: (videoUrl ?? '').trim() || undefined,
       galleryImages: trimNonEmpty(galleryImages),
-      agencyName: (agencyName ?? '').trim() || '미지정',
+      agencyName: (agencyName ?? '').trim() || '—',
       agencyLogo: (agencyLogo ?? '').trim() || undefined,
       recruitFields: trimNonEmpty(recruitFields),
       qualifications: trimNonEmpty(qualifications),
       schedules: trimNonEmpty(schedules),
       benefits: trimNonEmpty(benefits),
-      location: (location ?? '').trim() || '미지정',
+      location: (location ?? '').trim() || '—',
       startDate: new Date(sd).toISOString(),
       endDate: new Date(ed).toISOString(),
       countryCode: countryCode || undefined,
@@ -333,7 +334,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
   const validate = (intent: 'draft' | 'publish'): string | null => {
     if (!(title ?? '').trim()) {
       setShowTitleError(true)
-      return '제목을 입력해 주세요.'
+      return tEditor('titleRequired')
     }
     setShowTitleError(false)
 
@@ -586,9 +587,9 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
               {tEditor('status')}
             </label>
             <select value={status} onChange={(e) => setStatus(e.target.value as AuditionStatus)} style={inputStyle}>
-              {(Object.keys(AUDITION_STATUS_LABEL_KO) as AuditionStatus[]).map((s) => (
+              {(['DRAFT', 'OPEN', 'CLOSED'] as AuditionStatus[]).map((s) => (
                 <option key={s} value={s}>
-                  {AUDITION_STATUS_LABEL_KO[s]}
+                  {tEditor(editorStatusMessageKey(s) ?? 'unspecified')}
                 </option>
               ))}
             </select>

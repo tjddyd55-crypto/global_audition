@@ -1,39 +1,25 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from '@/i18n.config'
+import { useMemo, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { authApi } from '@/shared/api/auth'
-import { Link } from '@/i18n.config'
+import { Link, useRouter } from '@/i18n.config'
 import RoleSelectCard from '@/components/auth/RoleSelectCard'
 import AuthCardLayout from '@/components/auth/AuthCardLayout'
 import { RecoveryCodeNotice } from '@/components/auth/RecoveryCodeNotice'
 import { SIGNUP } from '@/shared/design-tokens'
-import { nicknameZodField } from '@/shared/user/nicknameZod'
+import { createNicknameZodField } from '@/shared/user/nicknameZod'
 
-const registerSchema = z.object({
-  email: z
-    .string({ required_error: '필수값을 입력하세요' })
-    .min(1, '필수값을 입력하세요')
-    .email('유효한 이메일을 입력해주세요'),
-  nickname: nicknameZodField,
-  legalName: z.string().max(120, '실명은 120자 이하').optional().or(z.literal('')),
-  password: z
-    .string({ required_error: '필수값을 입력하세요' })
-    .min(1, '필수값을 입력하세요')
-    .min(6, '비밀번호는 최소 6자 이상이어야 합니다'),
-  confirmPassword: z
-    .string({ required_error: '필수값을 입력하세요' })
-    .min(1, '필수값을 입력하세요')
-    .min(6, '비밀번호는 최소 6자 이상이어야 합니다'),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: '비밀번호가 일치하지 않습니다',
-  path: ['confirmPassword'],
-})
-
-type RegisterFormData = z.infer<typeof registerSchema>
+type RegisterFormData = {
+  email: string
+  nickname: string
+  legalName?: string
+  password: string
+  confirmPassword: string
+}
 type RegisterRole = 'APPLICANT' | 'AGENCY'
 
 const inputStyle: React.CSSProperties = {
@@ -46,12 +32,40 @@ const inputStyle: React.CSSProperties = {
   boxSizing: 'border-box',
 }
 
+function createRegisterSchema(tAuth: (key: string) => string, tReg: (key: string) => string) {
+  return z
+    .object({
+      email: z.string({ required_error: tAuth('requiredValues') }).min(1, tAuth('requiredValues')).email(tReg('emailInvalid')),
+      nickname: createNicknameZodField({
+        required: tAuth('nameRequired'),
+        length: tAuth('nicknameLen'),
+        charset: tAuth('nicknameCharset'),
+      }),
+      legalName: z.string().max(120, tAuth('legalNameMax')).optional().or(z.literal('')),
+      password: z
+        .string({ required_error: tAuth('requiredValues') })
+        .min(1, tAuth('requiredValues'))
+        .min(6, tReg('passwordMin6')),
+      confirmPassword: z
+        .string({ required_error: tAuth('requiredValues') })
+        .min(1, tAuth('requiredValues'))
+        .min(6, tReg('passwordMin6')),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+      message: tAuth('passwordMismatch'),
+      path: ['confirmPassword'],
+    })
+}
+
 export default function PcRegisterPage() {
   const router = useRouter()
+  const tAuth = useTranslations('auth')
+  const tReg = useTranslations('register')
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [role, setRole] = useState<RegisterRole>('APPLICANT')
   const [issuedCode, setIssuedCode] = useState<string | null>(null)
+  const registerSchema = useMemo(() => createRegisterSchema(tAuth, tReg), [tAuth, tReg])
 
   const { register, handleSubmit, formState: { errors } } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -74,11 +88,12 @@ export default function PcRegisterPage() {
       }
       if (role === 'AGENCY') router.push('/my/dashboard')
       else router.push('/auditions')
-    } catch (err: any) {
-      if (!err.response) setError('서버 연결 실패')
-      else if (err.response.status === 400) setError('필수값을 입력하세요')
-      else if (err.response.status === 409) setError('이미 가입된 이메일입니다.')
-      else setError(err.response?.data?.message || '회원가입에 실패했습니다.')
+    } catch (err: unknown) {
+      const ax = err as { response?: { status?: number; data?: { message?: string } } }
+      if (!ax.response) setError(tAuth('serverUnreachable'))
+      else if (ax.response.status === 400) setError(tAuth('requiredValues'))
+      else if (ax.response.status === 409) setError(tAuth('emailTaken'))
+      else setError(ax.response?.data?.message || tAuth('registerError'))
     } finally {
       setIsLoading(false)
     }
@@ -86,7 +101,7 @@ export default function PcRegisterPage() {
 
   if (issuedCode) {
     return (
-      <AuthCardLayout title="복구 보안 코드">
+      <AuthCardLayout title={tAuth('recoveryCode')}>
         <RecoveryCodeNotice
           recoveryCode={issuedCode}
           onAcknowledged={() => {
@@ -99,7 +114,7 @@ export default function PcRegisterPage() {
   }
 
   return (
-    <AuthCardLayout title="회원가입">
+    <AuthCardLayout title={tAuth('registerTitle')}>
       {error && (
         <div style={{ marginBottom: 16, padding: '8px 12px', borderRadius: 8, border: '1px solid #fecaca', background: '#fef2f2', fontSize: 14, color: '#b91c1c' }}>
           {error}
@@ -108,52 +123,27 @@ export default function PcRegisterPage() {
 
       <form onSubmit={handleSubmit(onSubmit)}>
         <RoleSelectCard value={role} onChange={setRole} />
-
-        <div style={{ marginBottom: 16 }}>
-          <label htmlFor="email" style={{ display: 'block', fontSize: 14, fontWeight: 500, marginBottom: 4 }}>
-            이메일
-          </label>
+        <Field id="email" label={tAuth('email')} error={errors.email?.message}>
           <input id="email" type="email" autoComplete="email" {...register('email')} placeholder="your@email.com" style={inputStyle} />
-          {errors.email && <p style={{ marginTop: 4, fontSize: 12, color: '#b91c1c' }}>{errors.email.message}</p>}
-        </div>
-
-        <div style={{ marginBottom: 16 }}>
-          <label htmlFor="nickname" style={{ display: 'block', fontSize: 14, fontWeight: 500, marginBottom: 4 }}>
-            닉네임 (필수)
-          </label>
-          <input id="nickname" type="text" {...register('nickname')} placeholder="화면에 표시될 이름" style={inputStyle} />
-          {errors.nickname && <p style={{ marginTop: 4, fontSize: 12, color: '#b91c1c' }}>{errors.nickname.message}</p>}
-        </div>
-
-        <div style={{ marginBottom: 16 }}>
-          <label htmlFor="legalName" style={{ display: 'block', fontSize: 14, fontWeight: 500, marginBottom: 4 }}>
-            실명 (선택)
-          </label>
-          <input id="legalName" type="text" {...register('legalName')} placeholder="관리·결제용" style={inputStyle} />
-          {errors.legalName && <p style={{ marginTop: 4, fontSize: 12, color: '#b91c1c' }}>{errors.legalName.message}</p>}
-        </div>
-
-        <div style={{ marginBottom: 16 }}>
-          <label htmlFor="password" style={{ display: 'block', fontSize: 14, fontWeight: 500, marginBottom: 4 }}>
-            비밀번호
-          </label>
-          <input id="password" type="password" autoComplete="new-password" {...register('password')} placeholder="6자 이상" style={inputStyle} />
-          {errors.password && <p style={{ marginTop: 4, fontSize: 12, color: '#b91c1c' }}>{errors.password.message}</p>}
-        </div>
-
-        <div style={{ marginBottom: 20 }}>
-          <label htmlFor="confirmPassword" style={{ display: 'block', fontSize: 14, fontWeight: 500, marginBottom: 4 }}>
-            비밀번호 확인
-          </label>
-          <input id="confirmPassword" type="password" autoComplete="new-password" {...register('confirmPassword')} placeholder="비밀번호 확인" style={inputStyle} />
-          {errors.confirmPassword && <p style={{ marginTop: 4, fontSize: 12, color: '#b91c1c' }}>{errors.confirmPassword.message}</p>}
-        </div>
+        </Field>
+        <Field id="nickname" label={`${tAuth('nickname')} *`} error={errors.nickname?.message}>
+          <input id="nickname" type="text" {...register('nickname')} placeholder={tAuth('displayNamePlaceholder')} style={inputStyle} />
+        </Field>
+        <Field id="legalName" label={tAuth('legalNameOptional')} error={errors.legalName?.message}>
+          <input id="legalName" type="text" {...register('legalName')} placeholder={tAuth('legalNamePlaceholder')} style={inputStyle} />
+        </Field>
+        <Field id="password" label={tAuth('password')} error={errors.password?.message}>
+          <input id="password" type="password" autoComplete="new-password" {...register('password')} placeholder={tReg('passwordMin6')} style={inputStyle} />
+        </Field>
+        <Field id="confirmPassword" label={tAuth('confirmPassword')} error={errors.confirmPassword?.message}>
+          <input id="confirmPassword" type="password" autoComplete="new-password" {...register('confirmPassword')} placeholder={tAuth('confirmPasswordPlaceholder')} style={inputStyle} />
+        </Field>
 
         <button
           type="submit"
           disabled={isLoading}
+          className="min-h-11 w-full whitespace-normal break-words"
           style={{
-            width: '100%',
             height: 44,
             borderRadius: 8,
             background: 'linear-gradient(90deg, #7c3aed, #ec4899)',
@@ -165,16 +155,38 @@ export default function PcRegisterPage() {
             opacity: isLoading ? 0.7 : 1,
           }}
         >
-          {isLoading ? '처리 중...' : '회원가입'}
+          {isLoading ? tAuth('processing') : tAuth('registerButton')}
         </button>
       </form>
 
       <p style={{ marginTop: 24, textAlign: 'center', fontSize: 14, color: '#666' }}>
-        이미 계정이 있으신가요?{' '}
+        {tAuth('alreadyHaveAccount')}{' '}
         <Link href="/login" style={{ color: '#7c3aed', fontWeight: 600, textDecoration: 'none' }}>
-          로그인
+          {tAuth('loginButton')}
         </Link>
       </p>
     </AuthCardLayout>
+  )
+}
+
+function Field({
+  id,
+  label,
+  error,
+  children,
+}: {
+  id: string
+  label: string
+  error?: string
+  children: React.ReactNode
+}) {
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <label htmlFor={id} style={{ display: 'block', fontSize: 14, fontWeight: 500, marginBottom: 4 }}>
+        {label}
+      </label>
+      {children}
+      {error ? <p style={{ marginTop: 4, fontSize: 12, color: '#b91c1c' }}>{error}</p> : null}
+    </div>
   )
 }

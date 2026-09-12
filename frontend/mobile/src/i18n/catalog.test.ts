@@ -21,6 +21,12 @@ describe('native i18n catalogs', () => {
     expect(keys(mn as Tree)).toEqual(keys(ko as Tree))
   })
 
+  it('includes native shell copy on the shared catalog', () => {
+    expect((ko as { native: { otaTitle: string } }).native.otaTitle.length).toBeGreaterThan(0)
+    expect((en as { native: { offlineRetry: string } }).native.offlineRetry.length).toBeGreaterThan(0)
+    expect((mn as { native: { otaNow: string } }).native.otaNow.length).toBeGreaterThan(0)
+  })
+
   it('falls back to en for unknown or non-primary device locales', () => {
     expect(detectDeviceLocale('mn-MN')).toBe('mn')
     expect(detectDeviceLocale('ko-KR')).toBe('ko')

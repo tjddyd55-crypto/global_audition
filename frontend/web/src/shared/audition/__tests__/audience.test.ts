@@ -7,4 +7,8 @@ describe('audienceCountryFromLocale', () => {
     expect(audienceCountryFromLocale('en')).toBe('GLOBAL')
     expect(audienceCountryFromLocale('ja')).toBe('JP')
   })
+
+  it('keeps Mongolia discovery on MN so the backend can add GLOBAL', () => {
+    expect(audienceCountryFromLocale('mn-MN')).toBe('MN')
+  })
 })

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { AuditionStatus } from '@/shared/types/audition'
 import { AUDITION_DETAIL, HERO } from '@/shared/design-tokens'
-import { auditionStatusLabelKo } from '@/shared/audition/auditionEditorCopy'
+import { editorStatusMessageKey } from '@/shared/audition/auditionEditorCopy'
 import { useTranslations } from 'next-intl'
 import { getVideoEmbedSrc } from '@/shared/utils/videoEmbed'
 
@@ -30,12 +30,13 @@ export function AuditionEditorPreview({
 }: AuditionEditorPreviewProps) {
   const tEditor = useTranslations('editor')
   const embedSrc = useMemo(() => getVideoEmbedSrc(videoUrl) ?? '', [videoUrl])
+  const statusKey = editorStatusMessageKey(status)
 
-  const displayTitle = useMemo(() => title.trim() || '제목을 입력하세요', [title])
+  const displayTitle = useMemo(() => title.trim() || tEditor('titlePlaceholder'), [title, tEditor])
   const displayTags = useMemo(() => tags.map((t) => t.trim()).filter(Boolean), [tags])
   const displayDesc = useMemo(
-    () => description.trim() || '상세 설명이 여기에 표시됩니다.',
-    [description],
+    () => description.trim() || tEditor('descriptionPlaceholder'),
+    [description, tEditor],
   )
 
   const coverTrimmed = coverThumbUrl.trim()
@@ -99,7 +100,7 @@ export function AuditionEditorPreview({
                   color: status === 'OPEN' ? HERO.primaryGradientStart : '#4b5563',
                 }}
               >
-                {auditionStatusLabelKo(status)}
+                {statusKey ? tEditor(statusKey) : status}
               </span>
               {displayTags.length > 0
                 ? displayTags.map((tag) => (

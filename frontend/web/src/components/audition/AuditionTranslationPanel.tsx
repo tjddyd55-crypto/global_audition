@@ -232,7 +232,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-sm font-semibold" style={{ fontSize: AUDITION_DETAIL.bodyFontPx }}>
+      <span className="mb-1 block min-w-0 whitespace-normal break-words text-sm font-semibold" style={{ fontSize: AUDITION_DETAIL.bodyFontPx }}>
         {label}
         {required ? <span className="ml-1 text-red-600">*</span> : null}
       </span>

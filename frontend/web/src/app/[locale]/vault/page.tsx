@@ -9,6 +9,7 @@ import { BTN_PRIMARY, BTN_SECONDARY, CARD_BASE, INPUT_BASE, PAGE_CONTAINER, SECT
 
 export default function VaultPage() {
   const t = useTranslations('common')
+  const tVault = useTranslations('vault')
   const queryClient = useQueryClient()
   const [showCreateModal, setShowCreateModal] = useState(false)
 
@@ -38,12 +39,12 @@ export default function VaultPage() {
       <div className={`${PAGE_CONTAINER} py-6 ${SECTION_GAP}`}>
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
-            <h1 className={TITLE_PAGE}>창작물 보관소</h1>
-            <p className={`${TEXT_SUB} mt-2`}>업로드 즉시 존재 확인 기록이 생성됩니다.</p>
-            <p className={`${TEXT_SUB} mt-2`}>본 플랫폼은 저작권 등록기관이 아니며, 업로더 선언과 기록을 저장합니다.</p>
+            <h1 className={`${TITLE_PAGE} whitespace-normal break-words`}>{tVault('title')}</h1>
+            <p className={`${TEXT_SUB} mt-2 whitespace-normal break-words`}>{tVault('hint')}</p>
+            <p className={`${TEXT_SUB} mt-2 whitespace-normal break-words`}>{tVault('legal')}</p>
           </div>
-          <button type="button" onClick={() => setShowCreateModal(true)} className={BTN_PRIMARY}>
-            + 창작물 등록
+          <button type="button" onClick={() => setShowCreateModal(true)} className={`${BTN_PRIMARY} min-h-11 whitespace-normal break-words`}>
+            {tVault('add')}
           </button>
         </div>
 
@@ -60,7 +61,7 @@ export default function VaultPage() {
             assets.content.map((asset: CreativeAsset) => <AssetCard key={asset.id} asset={asset} />)
           ) : (
             <div className="col-span-full py-12 text-center">
-              <p className={TEXT_SUB}>등록된 창작물이 없습니다.</p>
+              <p className={TEXT_SUB}>{tVault('empty')}</p>
             </div>
           )}
         </div>
@@ -69,7 +70,14 @@ export default function VaultPage() {
   )
 }
 
+function accessLabel(control: string, tVault: (key: string) => string) {
+  if (control === 'PUBLIC') return tVault('public')
+  if (control === 'AUDITION_ONLY') return tVault('auditionOnly')
+  return tVault('private')
+}
+
 function AssetCard({ asset }: { asset: CreativeAsset }) {
+  const tVault = useTranslations('vault')
   return (
     <Link href={`/vault/${asset.id}`} className="block no-underline">
       <div className={CARD_BASE}>
@@ -84,7 +92,7 @@ function AssetCard({ asset }: { asset: CreativeAsset }) {
         </div>
         {asset.description ? <p className={`${TEXT_SUB} mb-4 line-clamp-2`}>{asset.description}</p> : null}
         <div className="flex items-center justify-between">
-          <span className={TEXT_SUB}>등록일: {new Date(asset.registeredAt).toLocaleDateString('ko-KR')}</span>
+          <span className={TEXT_SUB}>{tVault('registeredAt', { date: new Date(asset.registeredAt).toLocaleDateString() })}</span>
           <span
             className={
               asset.accessControl === 'PUBLIC'
@@ -94,7 +102,7 @@ function AssetCard({ asset }: { asset: CreativeAsset }) {
                   : 'rounded-full bg-gray-100 px-3 py-0.5 text-sm text-gray-700'
             }
           >
-            {asset.accessControl === 'PUBLIC' ? '공개' : asset.accessControl === 'AUDITION_ONLY' ? '오디션만' : '비공개'}
+            {accessLabel(asset.accessControl, tVault)}
           </span>
         </div>
       </div>
@@ -111,6 +119,8 @@ function CreateAssetModal({
   onCreate: (params: Parameters<typeof vaultApi.createAsset>[0]) => void
   isLoading: boolean
 }) {
+  const tVault = useTranslations('vault')
+  const tCommon = useTranslations('common')
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [assetType, setAssetType] = useState('LYRIC')
@@ -147,46 +157,46 @@ function CreateAssetModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className={`${CARD_BASE} max-h-[90vh] w-full max-w-2xl overflow-y-auto`}>
-        <h2 className={`${TITLE_PAGE} mb-4`}>창작물 등록</h2>
+        <h2 className={`${TITLE_PAGE} mb-4`}>{tVault('createTitle')}</h2>
         <form onSubmit={handleSubmitForm} className="flex flex-col gap-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-900">제목 *</label>
+            <label className="mb-1 block text-sm font-medium text-gray-900">{tVault('fieldTitle')} *</label>
             <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} className={INPUT_BASE} required />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-900">설명</label>
+            <label className="mb-1 block text-sm font-medium text-gray-900">{tVault('fieldDescription')}</label>
             <textarea value={description} onChange={(e) => setDescription(e.target.value)} className={INPUT_BASE} rows={3} />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-900">자산 타입 *</label>
+            <label className="mb-1 block text-sm font-medium text-gray-900">{tVault('assetType')} *</label>
             <select value={assetType} onChange={(e) => setAssetType(e.target.value)} className={INPUT_BASE} required>
-              <option value="LYRIC">가사</option>
-              <option value="COMPOSITION">악보/미디</option>
-              <option value="DEMO_AUDIO">데모 음원</option>
-              <option value="VOCAL_GUIDE">가이드 보컬</option>
-              <option value="STEMS">스텝/트랙</option>
-              <option value="AI_GENERATED">AI 생성물</option>
-              <option value="AI_ASSISTED">AI 보조</option>
+              <option value="LYRIC">{tVault('lyric')}</option>
+              <option value="COMPOSITION">{tVault('composition')}</option>
+              <option value="DEMO_AUDIO">{tVault('demoAudio')}</option>
+              <option value="VOCAL_GUIDE">{tVault('vocalGuide')}</option>
+              <option value="STEMS">{tVault('stems')}</option>
+              <option value="AI_GENERATED">{tVault('aiGenerated')}</option>
+              <option value="AI_ASSISTED">{tVault('aiAssisted')}</option>
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-900">창작 방식</label>
+            <label className="mb-1 block text-sm font-medium text-gray-900">{tVault('creationType')}</label>
             <select value={declaredCreationType} onChange={(e) => setDeclaredCreationType(e.target.value)} className={INPUT_BASE}>
-              <option value="HUMAN">인간 창작</option>
-              <option value="AI_ASSISTED">AI 보조</option>
-              <option value="AI_GENERATED">AI 생성</option>
+              <option value="HUMAN">{tVault('human')}</option>
+              <option value="AI_ASSISTED">{tVault('aiAssisted')}</option>
+              <option value="AI_GENERATED">{tVault('aiGen')}</option>
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-900">공개 범위 *</label>
+            <label className="mb-1 block text-sm font-medium text-gray-900">{tVault('access')} *</label>
             <select value={accessControl} onChange={(e) => setAccessControl(e.target.value)} className={INPUT_BASE} required>
-              <option value="PUBLIC">공개</option>
-              <option value="AUDITION_ONLY">오디션만</option>
-              <option value="PRIVATE">비공개</option>
+              <option value="PUBLIC">{tVault('public')}</option>
+              <option value="AUDITION_ONLY">{tVault('auditionOnly')}</option>
+              <option value="PRIVATE">{tVault('private')}</option>
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-900">파일 업로드</label>
+            <label className="mb-1 block text-sm font-medium text-gray-900">{tVault('fileUpload')}</label>
             <input
               type="file"
               onChange={(e) => {
@@ -197,25 +207,25 @@ function CreateAssetModal({
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-900">또는 텍스트 입력 (가사 등)</label>
+            <label className="mb-1 block text-sm font-medium text-gray-900">{tVault('orText')}</label>
             <textarea
               value={textContent}
               onChange={(e) => setTextContent(e.target.value)}
               className={INPUT_BASE}
               rows={5}
-              placeholder="텍스트를 입력하세요..."
+              placeholder={tVault('textPlaceholder')}
             />
           </div>
           <div className="flex flex-col gap-3 pt-4 md:flex-row">
             <button type="button" onClick={onClose} className={`${BTN_SECONDARY} md:flex-1`}>
-              취소
+              {tCommon('cancel')}
             </button>
             <button
               type="submit"
               disabled={isLoading || !title || (!file && !(textContent ?? '').trim())}
               className={`${BTN_PRIMARY} md:flex-1`}
             >
-              {isLoading ? '등록 중...' : '등록'}
+              {isLoading ? tVault('registering') : tVault('register')}
             </button>
           </div>
         </form>

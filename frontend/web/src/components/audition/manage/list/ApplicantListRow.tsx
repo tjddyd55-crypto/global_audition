@@ -6,14 +6,15 @@ import { ko } from 'date-fns/locale'
 import type { ManageApplicantItem } from '@/shared/api/auditions'
 import { BTN_SECONDARY } from '@/shared/ui/specClasses'
 import { resolveVideoThumbnailUrl } from '@/shared/audition/videoThumbnail'
+import { useLocale, useTranslations } from 'next-intl'
 import {
-  APPLICANT_NATIONALITY_LABEL,
   applicantStatusBadgeClass,
-  applicantStatusLabel,
+  applicantStatusMessageKey,
+  nationalityCatalogKey,
 } from '../detail/applicantDetailLabels'
 
-function formatCount(n: number) {
-  return new Intl.NumberFormat('ko-KR').format(n)
+function formatCount(n: number, locale: string) {
+  return new Intl.NumberFormat(locale).format(n)
 }
 
 function formatAppliedDate(createdAt?: string | null) {
@@ -31,6 +32,12 @@ type ApplicantListRowProps = {
 }
 
 export default function ApplicantListRow({ app, onOpen }: ApplicantListRowProps) {
+  const locale = useLocale()
+  const tAgency = useTranslations('agency')
+  const tApply = useTranslations('apply')
+  const tStatus = useTranslations('status')
+  const tNat = useTranslations('nationality')
+  const tVote = useTranslations('vote')
   const listThumb = resolveVideoThumbnailUrl(app.videoUrl, app.thumbnailUrl)
   const applied = formatAppliedDate(app.createdAt)
 
@@ -51,24 +58,26 @@ export default function ApplicantListRow({ app, onOpen }: ApplicantListRowProps)
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <span className="font-semibold text-gray-900">{app.name || app.userName || '지원자'}</span>
-          <span className="text-sm text-gray-500">{app.age != null ? `${app.age}세` : '나이 —'}</span>
+          <span className="font-semibold text-gray-900">{app.name || app.userName || tVote('applicantFallback')}</span>
           <span className="text-sm text-gray-500">
-            {app.nationality ? APPLICANT_NATIONALITY_LABEL[app.nationality] ?? app.nationality : '국적 —'}
+            {app.age != null ? tApply('ageAuto', { age: app.age }) : tAgency('ageUnknown')}
+          </span>
+          <span className="text-sm text-gray-500">
+            {app.nationality ? tNat(nationalityCatalogKey(app.nationality)) : tAgency('nationalityUnknown')}
           </span>
         </div>
-        <p className="mt-0.5 text-xs font-semibold text-violet-700">{app.round}차 지원</p>
+        <p className="mt-0.5 text-xs font-semibold text-violet-700">{tAgency('roundApply', { n: app.round })}</p>
         <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-gray-500">
-          <span>SNS {formatCount(app.snsCount)}</span>
+          <span>{tAgency('snsCount', { n: formatCount(app.snsCount, locale) })}</span>
           <span>·</span>
-          <span>지원 {applied}</span>
+          <span>{tAgency('appliedOn', { date: applied })}</span>
         </div>
       </div>
       <div className="flex shrink-0 flex-col items-end gap-2">
         <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${applicantStatusBadgeClass(app.status)}`}>
-          {applicantStatusLabel(app.status)}
+          {tStatus(applicantStatusMessageKey(app.status))}
         </span>
-        <span className={`${BTN_SECONDARY} !w-auto !py-1.5 !text-xs`}>보기</span>
+        <span className={`${BTN_SECONDARY} !w-auto !py-1.5 !text-xs`}>{tAgency('viewRow')}</span>
       </div>
     </button>
   )
