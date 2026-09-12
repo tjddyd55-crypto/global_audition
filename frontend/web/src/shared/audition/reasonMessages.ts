@@ -1,30 +1,39 @@
 ﻿/**
  * 백엔드 ReasonCode.name() 또는 ApiFailResponse.message 와 매핑되는 사용자 문구.
+ * 문구는 messages.errors SSOT — 화면은 translate(code)만 호출한다.
  */
-export const REASON_MESSAGE_MAP: Record<string, string> = {
-  UNDER_REVIEW_LOCKED: '심사 중입니다.',
-  ROUND_NOT_ACTIVE: '접수 기간이 아닙니다.',
-  NOT_ELIGIBLE_ROUND: '지원 대상이 아닙니다.',
-  SUBMISSION_NOT_FOUND: '제출 정보를 찾을 수 없습니다',
-  NOT_MULTI_ROUND: '다단계 오디션이 아닙니다',
-  AUDITION_ROUND_MISMATCH: '오디션과 라운드가 일치하지 않습니다',
-  APPLICATION_NOT_FOUND: '지원서를 찾을 수 없습니다',
-  AUDITION_NOT_FOUND: '오디션을 찾을 수 없습니다',
-  ROUND_NOT_FOUND: '라운드를 찾을 수 없습니다',
-  AUDITION_NOT_OPEN: '모집 중인 오디션이 아닙니다',
-  APPLICATION_CLOSED: '이미 종료된 지원입니다',
-  WRONG_CURRENT_ROUND: '현재 진행 라운드가 아닙니다',
-  PREVIOUS_ROUND_NOT_PASSED: '이전 라운드를 통과하지 않았습니다',
-  NO_SUBMISSION_ROW: '제출 준비 중입니다. 잠시 후 다시 시도해 주세요',
-  SUBMISSION_CLOSED: '이 라운드는 더 이상 제출할 수 없습니다',
-  ROUND_ALREADY_DECIDED: '이미 심사가 완료된 라운드입니다',
-}
+export const REASON_ERROR_CODES = [
+  'UNDER_REVIEW_LOCKED',
+  'ROUND_NOT_ACTIVE',
+  'NOT_ELIGIBLE_ROUND',
+  'SUBMISSION_NOT_FOUND',
+  'NOT_MULTI_ROUND',
+  'AUDITION_ROUND_MISMATCH',
+  'APPLICATION_NOT_FOUND',
+  'AUDITION_NOT_FOUND',
+  'ROUND_NOT_FOUND',
+  'AUDITION_NOT_OPEN',
+  'APPLICATION_CLOSED',
+  'WRONG_CURRENT_ROUND',
+  'PREVIOUS_ROUND_NOT_PASSED',
+  'NO_SUBMISSION_ROW',
+  'SUBMISSION_CLOSED',
+  'ROUND_ALREADY_DECIDED',
+] as const
 
-export function messageForReasonCode(reasonOrMessage: string | null | undefined): string {
+export function messageForReasonCode(
+  reasonOrMessage: string | null | undefined,
+  translate: (code: string) => string,
+  fallback: string,
+): string {
   if (reasonOrMessage == null || reasonOrMessage === '') {
-    return '요청을 처리할 수 없습니다'
+    return fallback
   }
-  return REASON_MESSAGE_MAP[reasonOrMessage] ?? reasonOrMessage
+  const mapped = translate(reasonOrMessage)
+  if (!mapped || mapped === reasonOrMessage || mapped === `errors.${reasonOrMessage}`) {
+    return reasonOrMessage
+  }
+  return mapped
 }
 
 export function extractMeApiErrorMessage(err: unknown): string | null {

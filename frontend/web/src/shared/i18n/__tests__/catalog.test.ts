@@ -72,6 +72,12 @@ describe('i18n catalogs', () => {
       'auditionDetail.statusOpenBadge',
       'apply.roundApplyCta',
       'myApplications.listTitle',
+      'dashboard.statsHint',
+      'profile.noThumbnail',
+      'editor.createNew',
+      'channel.firstVideo',
+      'relative.justNow',
+      'errors.PREVIOUS_ROUND_NOT_PASSED',
     ]
     for (const tree of [ko, en, mn] as const) {
       const keys = new Set(collectMessageKeys(tree))
@@ -113,6 +119,12 @@ describe('i18n catalogs', () => {
       expect(root.auditionDetail.statusOpenBadge).toBeTruthy()
       expect(root.apply.roundApplyCta).toBeTruthy()
       expect(root.myApplications.listTitle).toBeTruthy()
+      expect(root.dashboard.statsHint).toBeTruthy()
+      expect(root.profile.noThumbnail).toBeTruthy()
+      expect(root.editor.createNew).toBeTruthy()
+      expect(root.channel.firstVideo).toBeTruthy()
+      expect(root.relative.justNow).toBeTruthy()
+      expect(root.errors.PREVIOUS_ROUND_NOT_PASSED).toBeTruthy()
     }
   })
 

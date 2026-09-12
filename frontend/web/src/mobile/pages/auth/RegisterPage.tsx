@@ -201,9 +201,9 @@ export default function MobileRegisterPage() {
         window.location.href = '/'
       }
     } catch (err: any) {
-      console.error('회원가입 오류:', err)
-      console.error('오류 응답:', err.response?.data)
-      console.error('오류 상태 코드:', err.response?.status)
+      console.error('signup failed', err)
+      console.error('signup response', err.response?.data)
+      console.error('signup status', err.response?.status)
 
       let errorMessage = tAuth('registerError')
 
@@ -573,7 +573,7 @@ export default function MobileRegisterPage() {
                   type="url"
                   {...register('website')}
                   className="w-full px-4 py-2 border rounded-lg"
-                  placeholder="https://example.com (선택사항)"
+                  placeholder={tReg('websiteOptional')}
                 />
                 {'website' in errors && errors.website && (
                   <p className="text-red-500 text-sm mt-1">{errors.website.message}</p>
@@ -586,7 +586,7 @@ export default function MobileRegisterPage() {
                   type="email"
                   {...register('contactEmail')}
                   className="w-full px-4 py-2 border rounded-lg"
-                  placeholder="contact@example.com (선택사항)"
+                  placeholder={tReg('contactEmail')}
                 />
                 {'contactEmail' in errors && errors.contactEmail && (
                   <p className="text-red-500 text-sm mt-1">{errors.contactEmail.message}</p>

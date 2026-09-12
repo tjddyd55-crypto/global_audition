@@ -10,6 +10,7 @@ import {
 } from '@/shared/api/uploads'
 import { AUDITION_IMAGE_ACCEPT_ATTR } from '@/shared/audition/auditionImageRules'
 import { AUDITION_COVER_PLACEHOLDER_SRC } from '@/components/audition/AuditionEditorPreview'
+import { useTranslations } from 'next-intl'
 
 const inputBaseStyle: React.CSSProperties = {
   width: '100%',
@@ -43,6 +44,8 @@ export function SingleImageUploadField({
   showFieldError,
 }: SingleImageUploadFieldProps) {
   const fileInputId = useId()
+  const tEditor = useTranslations('editor')
+  const t = useTranslations('common')
 
   const onPick = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -53,7 +56,7 @@ export function SingleImageUploadField({
         const url = await uploadAuditionImage(file, uploadDir)
         onImageUrlChange(url)
       } catch (err: unknown) {
-        toast.error(apiUploadErrorMessage(err) || '이미지 업로드 실패')
+        toast.error(apiUploadErrorMessage(err) || tEditor('uploadFailed'))
       } finally {
         onUploadingChange(false)
       }
@@ -97,7 +100,7 @@ export function SingleImageUploadField({
           className="sr-only"
           onChange={onPick}
           disabled={busy}
-          aria-label="이미지 파일 선택"
+          aria-label={tEditor('pickImageAria')}
         />
         <label
           htmlFor={fileInputId}
@@ -113,11 +116,11 @@ export function SingleImageUploadField({
             opacity: busy ? 0.7 : 1,
           }}
         >
-          {uploading ? '업로드 중…' : '파일 선택'}
+          {uploading ? tEditor('uploadingNow') : tEditor('pickFile')}
         </label>
         {uploading ? (
           <span className="text-sm text-gray-600" aria-live="polite">
-            업로드 중...
+            {tEditor('uploadingNow')}
           </span>
         ) : null}
         {imageUrl ? (
@@ -134,7 +137,7 @@ export function SingleImageUploadField({
               textDecoration: 'underline',
             }}
           >
-            제거
+            {t('remove')}
           </button>
         ) : null}
       </div>
@@ -156,8 +159,7 @@ export function SingleImageUploadField({
         </div>
       ) : null}
       <p style={{ ...inputBaseStyle, marginTop: AUDITION_DETAIL.galleryGapPx, color: '#6b7280' }}>
-        JPG·PNG·WebP, 최대 10MB. 대표 이미지 변경: 「이미지 변경」 또는 「제거」 후 다시 선택. 스토리지 공개
-        URL만 DB에 저장됩니다.
+        {tEditor('imageRules')}
       </p>
     </div>
   )

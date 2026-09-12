@@ -29,6 +29,7 @@ function MyRoundSubmitContent() {
   const t = useTranslations('common')
   const tApp = useTranslations('application')
   const tMy = useTranslations('myApplications')
+  const tErrors = useTranslations('errors')
 
   const [videoUrl, setVideoUrl] = useState('')
   const [fileUrl, setFileUrl] = useState('')
@@ -60,7 +61,7 @@ function MyRoundSubmitContent() {
     },
     onError: (e: unknown) => {
       const code = extractMeApiErrorMessage(e)
-      setErrorMessage(messageForReasonCode(code))
+      setErrorMessage(messageForReasonCode(code, (key) => tErrors(key as never), tErrors('GENERIC')))
     },
   })
 

@@ -83,7 +83,7 @@ export function AuditionEditorPreview({
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-sm text-gray-400">
-                대표 이미지를 업로드하면 여기에 표시됩니다
+                {tEditor('coverEmptyPreview')}
               </div>
             )}
           </div>
@@ -119,11 +119,11 @@ export function AuditionEditorPreview({
 
             {embedSrc ? (
               <div className="pt-2">
-                <p className="mb-1 text-xs font-medium text-gray-500">영상 미리보기</p>
+                <p className="mb-1 text-xs font-medium text-gray-500">{tEditor('videoPreview')}</p>
                 <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-black">
                   <iframe
                     key={embedSrc}
-                    title="YouTube 미리보기"
+                    title={tEditor('youtubePreviewTitle')}
                     className="absolute inset-0 h-full w-full"
                     src={embedSrc}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

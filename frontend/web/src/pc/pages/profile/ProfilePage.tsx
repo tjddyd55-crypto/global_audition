@@ -26,6 +26,8 @@ import { channelVideoKeys } from '@/shared/query/channelVideoQuery'
 export default function PcProfilePage() {
   const router = useRouter()
   const t = useTranslations('common')
+  const tProfile = useTranslations('profile')
+  const tChannel = useTranslations('channel')
   const role = useAuthStore((s) => s.role)
   const [hasToken, setHasToken] = useState(false)
 
@@ -82,7 +84,7 @@ export default function PcProfilePage() {
             </div>
           ) : role === 'AGENCY' ? (
             <div className={CARD_BASE}>
-              <p className={TEXT_SUB}>지원자 전용 채널 영역입니다. 기획사 계정은 오디션 관리 메뉴를 이용해 주세요.</p>
+              <p className={TEXT_SUB}>{tProfile('agencyChannelHint')}</p>
             </div>
           ) : showApplicantVideos && videos && videos.content.length > 0 ? (
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -103,7 +105,7 @@ export default function PcProfilePage() {
                       </div>
                     ) : (
                       <div className="flex aspect-video w-full items-center justify-center bg-gray-100 text-sm text-gray-600">
-                        썸네일 없음
+                        {tProfile('noThumbnail')}
                       </div>
                     )}
                     <div className="p-4">
@@ -112,8 +114,8 @@ export default function PcProfilePage() {
                         <VideoVisibilitySwitch video={video} />
                       </div>
                       <div className={`${TEXT_SUB} mt-2 flex flex-col gap-1`}>
-                        <span>조회수: {video.viewCount}</span>
-                        <span>좋아요: {video.likeCount}</span>
+                        <span>{tProfile('viewsCount', { n: video.viewCount })}</span>
+                        <span>{tProfile('likesCount', { n: video.likeCount })}</span>
                       </div>
                     </div>
                   </div>
@@ -122,7 +124,7 @@ export default function PcProfilePage() {
             </div>
           ) : showApplicantVideos ? (
             <div className={CARD_BASE}>
-              <p className={TEXT_SUB}>등록된 영상이 없습니다</p>
+              <p className={TEXT_SUB}>{tChannel('emptyVideos')}</p>
             </div>
           ) : null}
         </div>

@@ -124,7 +124,7 @@
     "loginAfterReset": "Password updated. Sign in with the new password.",
     "loginRequiredBody": "Sign in to use this screen.",
     "recoverySaveTitle": "Save your recovery code",
-    "recoverySaveBody": "This code is shown once. Use it to identify the account and reset the password. The server stores only a hash and never returns the old password.",
+    "recoverySaveBody": "This code is shown <strong>only once</strong>. Use it to confirm your account and reset your password. The server stores a hash only and never returns the old password.",
     "saveOnDevice": "Save on this device",
     "savedOnDevice": "Saved on this device",
     "recoveryAck": "I saved the code in a safe place and understand I cannot see it again.",
@@ -150,7 +150,8 @@
     "loggingIn": "Signing in...",
     "loginFailed": "Sign-in failed",
     "kakao": "Kakao",
-    "naver": "Naver"
+    "naver": "Naver",
+    "copyCode": "Copy code"
   },
   "register": {
     "title": "Register",
@@ -289,7 +290,10 @@
     "alreadyAppliedMyPage": "You already applied. Check results in My applications.",
     "qualificationsTitle": "Requirements",
     "introTitle": "About",
-    "tags": "Tags"
+    "tags": "Tags",
+    "agencyFallback": "Agency",
+    "daysLeftPeriod": "Time left D-{n}",
+    "quickInfo": "Quick info"
   },
   "apply": {
     "title": "Apply",
@@ -419,7 +423,8 @@
     "noSns": "No SNS links",
     "introTitle": "Intro · motivation",
     "noIntro": "No intro written.",
-    "backToDetailPage": "Application detail"
+    "backToDetailPage": "Application detail",
+    "browseArrow": "Browse auditions →"
   },
   "vote": {
     "title": "Vote",
@@ -488,7 +493,12 @@
     "findAccount": "Find account / reset password",
     "notifications": "Notifications",
     "manageApplicants": "Manage my audition applicants",
-    "createAuditionWeb": "Create audition (web)"
+    "createAuditionWeb": "Create audition (web)",
+    "myTitle": "My profile",
+    "agencyChannelHint": "This channel is for applicants. Agency accounts should use audition management.",
+    "noThumbnail": "No thumbnail",
+    "viewsCount": "Views: {n}",
+    "likesCount": "Likes: {n}"
   },
   "credits": {
     "title": "Credits",
@@ -714,7 +724,23 @@
     "saveDraft": "Save draft",
     "publish": "Publish",
     "processing": "Working…",
-    "saveClosed": "Save as closed"
+    "saveClosed": "Save as closed",
+    "createNew": "New audition",
+    "descOptional": "Description (optional)",
+    "statusDraftParen": "Draft (DRAFT)",
+    "statusOpenParen": "Open (OPEN)",
+    "statusClosedParen": "Closed (CLOSED)",
+    "createFailed": "Could not create the audition.",
+    "creating": "Creating...",
+    "createSubmit": "Create",
+    "uploadFailed": "Image upload failed",
+    "pickImageAria": "Choose an image file",
+    "pickFile": "Choose file",
+    "uploadingNow": "Uploading...",
+    "imageRules": "JPG, PNG, or WebP, max 10MB. To change the cover: choose a new image or remove it first. Only the public storage URL is saved.",
+    "coverEmptyPreview": "Upload a cover image to preview it here",
+    "videoPreview": "Video preview",
+    "youtubePreviewTitle": "YouTube preview"
   },
   "country": {
     "KR": "Korea",
@@ -831,7 +857,17 @@
     "NOT_ELIGIBLE_ROUND": "Not eligible for this round",
     "APPLICATION_NOT_FOUND": "Application not found",
     "AUDITION_NOT_FOUND": "Audition not found",
-    "AUDITION_NOT_OPEN": "This audition is not open"
+    "AUDITION_NOT_OPEN": "This audition is not open",
+    "SUBMISSION_NOT_FOUND": "Submission not found",
+    "NOT_MULTI_ROUND": "This is not a multi-round audition",
+    "AUDITION_ROUND_MISMATCH": "Audition and round do not match",
+    "ROUND_NOT_FOUND": "Round not found",
+    "APPLICATION_CLOSED": "This application is already closed",
+    "WRONG_CURRENT_ROUND": "This is not the current round",
+    "PREVIOUS_ROUND_NOT_PASSED": "You did not pass the previous round",
+    "NO_SUBMISSION_ROW": "Preparing your submission. Try again shortly",
+    "SUBMISSION_CLOSED": "This round no longer accepts submissions",
+    "ROUND_ALREADY_DECIDED": "This round has already been decided"
   },
   "application": {
     "detailLoadFailed": "Could not load the application.",
@@ -998,7 +1034,13 @@
     "saveRetry": "Could not save. Try again.",
     "settingsLoadFailed": "Could not load channel settings.",
     "visibilityPublic": "Public",
-    "visibilityPrivate": "Private"
+    "visibilityPrivate": "Private",
+    "myLabel": "My channel",
+    "firstVideo": "Add your first video",
+    "videoPublicAria": "Video public",
+    "videoPrivateAria": "Video private",
+    "videoPublicState": "Video public",
+    "videoPrivateState": "Video private"
   },
   "native": {
     "otaTitle": "A new version is ready",
@@ -1028,7 +1070,14 @@
     "applied": "Applied",
     "browseAuditions": "Browse auditions",
     "myApplications": "My applications",
-    "submittedDone": "Submitted"
+    "submittedDone": "Submitted",
+    "statsHint": "Totals for this agency account.",
+    "statTotalPostings": "Postings",
+    "statOpenPostings": "Open postings",
+    "statTotalApplications": "Applications",
+    "statPendingReview": "Pending / in review",
+    "createPageTitle": "Create audition",
+    "myPostings": "My postings"
   },
   "myAuditions": {
     "title": "Manage auditions",
@@ -1123,5 +1172,12 @@
     "emptyRound": "No applicants in this round.",
     "singleModeHint": "This audition is SINGLE mode. Manage applicants from Applicant management.",
     "backToApplicants": "Applicant management"
+  },
+  "relative": {
+    "justNow": "Just now",
+    "minutesAgo": "{n} min ago",
+    "hoursAgo": "{n} hr ago",
+    "daysAgo": "{n} days ago",
+    "monthsAgo": "{n} mo ago"
   }
 }

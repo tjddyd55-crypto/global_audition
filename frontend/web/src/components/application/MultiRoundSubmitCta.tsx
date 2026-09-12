@@ -40,6 +40,7 @@ export function MultiRoundSubmitCta({
   style,
 }: Props) {
   const tApp = useTranslations('application')
+  const tErrors = useTranslations('errors')
   const roundIdTrimmed = roundId?.trim() ?? ''
   const q = useQuery({
     queryKey: ['me-round-eligibility', applicationId, roundIdTrimmed],
@@ -62,7 +63,9 @@ export function MultiRoundSubmitCta({
 
   if (!q.data.canSubmit) {
     const reasonKey = q.data.reason?.trim() || null
-    const msg = reasonKey ? messageForReasonCode(reasonKey) : tApp('cannotSubmit')
+    const msg = reasonKey
+      ? messageForReasonCode(reasonKey, (code) => tErrors(code as never), tApp('cannotSubmit'))
+      : tApp('cannotSubmit')
     return <p className="text-sm text-gray-500">{msg}</p>
   }
 

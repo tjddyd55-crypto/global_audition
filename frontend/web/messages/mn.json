@@ -124,7 +124,7 @@
     "loginAfterReset": "Нууц үг шинэчлэгдлээ. Шинэ нууц үгээр нэвтэрнэ үү.",
     "loginRequiredBody": "Энэ дэлгэцийг ашиглахын тулд нэвтэрнэ үү.",
     "recoverySaveTitle": "Сэргээх кодоо хадгална уу",
-    "recoverySaveBody": "Энэ кодыг одоо л нэг удаа харуулна. Нууц үгээ мартсан үед бүртгэлээ баталгаажуулж шинэчлэхэд ашиглана. Сервер зөвхөн хэш хадгална.",
+    "recoverySaveBody": "Энэ кодыг <strong>зөвхөн одоо нэг удаа</strong> харуулна. Нууц үгээ мартсан үед бүртгэл баталгаажуулж шинэчилнэ. Сервер зөвхөн хэш хадгална.",
     "saveOnDevice": "Энэ төхөөрөмжид хадгалах",
     "savedOnDevice": "Төхөөрөмжид хадгаллаа",
     "recoveryAck": "Кодыг аюулгүй газар хадгалсан бөгөөд дахин харахгүйг ойлголоо.",
@@ -150,7 +150,8 @@
     "loggingIn": "Нэвтэрч байна...",
     "loginFailed": "Нэвтрэлт амжилтгүй",
     "kakao": "Kakao",
-    "naver": "Naver"
+    "naver": "Naver",
+    "copyCode": "Код хуулах"
   },
   "register": {
     "title": "Бүртгүүлэх",
@@ -289,7 +290,10 @@
     "alreadyAppliedMyPage": "Та аль хэдийн бүртгүүлсэн. Үр дүнг Өргөдлөөсөө харна уу.",
     "qualificationsTitle": "Шаардлага",
     "introTitle": "Тухай",
-    "tags": "Шошго"
+    "tags": "Шошго",
+    "agencyFallback": "Агентлаг",
+    "daysLeftPeriod": "Үлдсэн хугацаа D-{n}",
+    "quickInfo": "Товч мэдээлэл"
   },
   "apply": {
     "title": "Бүртгүүлэх",
@@ -419,7 +423,8 @@
     "noSns": "SNS холбоос алга",
     "introTitle": "Танилцуулга · хүсэл",
     "noIntro": "Бичсэн агуулга алга.",
-    "backToDetailPage": "Өргөдлийн дэлгэрэнгүй"
+    "backToDetailPage": "Өргөдлийн дэлгэрэнгүй",
+    "browseArrow": "Аудишн үзэх →"
   },
   "vote": {
     "title": "Санал",
@@ -488,7 +493,12 @@
     "findAccount": "Бүртгэл олох / нууц үг шинэчлэх",
     "notifications": "Мэдэгдэл",
     "manageApplicants": "Миний аудишний өргөдлийг удирдах",
-    "createAuditionWeb": "Аудишн үүсгэх (веб)"
+    "createAuditionWeb": "Аудишн үүсгэх (веб)",
+    "myTitle": "Миний профайл",
+    "agencyChannelHint": "Энэ суваг өргөдөл гаргагчид зориулагдсан. Агентлаг аудишн удирдлагыг ашиглана уу.",
+    "noThumbnail": "Хураангуй зураг алга",
+    "viewsCount": "Үзэлт: {n}",
+    "likesCount": "Таалагдсан: {n}"
   },
   "credits": {
     "title": "Кредит",
@@ -714,7 +724,23 @@
     "saveDraft": "Ноорог хадгалах",
     "publish": "Нийтлэх",
     "processing": "Боловсруулж байна…",
-    "saveClosed": "Хаасан болгож хадгалах"
+    "saveClosed": "Хаасан болгож хадгалах",
+    "createNew": "Шинэ аудишн",
+    "descOptional": "Тайлбар (заавал биш)",
+    "statusDraftParen": "Ноорог (DRAFT)",
+    "statusOpenParen": "Нээлттэй (OPEN)",
+    "statusClosedParen": "Хаалттай (CLOSED)",
+    "createFailed": "Аудишн үүсгэж чадсангүй.",
+    "creating": "Үүсгэж байна...",
+    "createSubmit": "Үүсгэх",
+    "uploadFailed": "Зураг байршуулахад алдаа",
+    "pickImageAria": "Зургийн файл сонгох",
+    "pickFile": "Файл сонгох",
+    "uploadingNow": "Байршуулж байна...",
+    "imageRules": "JPG, PNG, WebP, хамгийн ихдээ 10MB. Нүүр зураг солих: шинэ файл сонгох эсвэл устгаад дахин сонгоно. Зөвхөн нийтийн хадгалалтын URL хадгалагдана.",
+    "coverEmptyPreview": "Нүүр зураг байршуулбал энд харагдана",
+    "videoPreview": "Видео урьдчилан харах",
+    "youtubePreviewTitle": "YouTube урьдчилан харах"
   },
   "country": {
     "KR": "Солонгос",
@@ -831,7 +857,17 @@
     "NOT_ELIGIBLE_ROUND": "Энэ шатанд хамрагдахгүй",
     "APPLICATION_NOT_FOUND": "Өргөдөл олдсонгүй",
     "AUDITION_NOT_FOUND": "Аудишн олдсонгүй",
-    "AUDITION_NOT_OPEN": "Энэ аудишн нээлттэй биш"
+    "AUDITION_NOT_OPEN": "Энэ аудишн нээлттэй биш",
+    "SUBMISSION_NOT_FOUND": "Илгээлт олдсонгүй",
+    "NOT_MULTI_ROUND": "Энэ нь олон шатны аудишн биш",
+    "AUDITION_ROUND_MISMATCH": "Аудишн болон шат таарахгүй байна",
+    "ROUND_NOT_FOUND": "Шат олдсонгүй",
+    "APPLICATION_CLOSED": "Энэ өргөдөл аль хэдийн хаагдсан",
+    "WRONG_CURRENT_ROUND": "Энэ нь одоогийн шат биш",
+    "PREVIOUS_ROUND_NOT_PASSED": "Өмнөх шатыг даваагүй",
+    "NO_SUBMISSION_ROW": "Илгээлт бэлтгэж байна. Түр хүлээгээд дахин оролдоно уу",
+    "SUBMISSION_CLOSED": "Энэ шат илгээлт хүлээж авахгүй",
+    "ROUND_ALREADY_DECIDED": "Энэ шатыг аль хэдийн шийдсэн"
   },
   "application": {
     "detailLoadFailed": "Өргөдлийг ачаалж чадсангүй.",
@@ -998,7 +1034,13 @@
     "saveRetry": "Хадгалж чадсангүй. Дахин оролдоно уу.",
     "settingsLoadFailed": "Сувгийн тохиргоог ачаалж чадсангүй.",
     "visibilityPublic": "Нээлттэй",
-    "visibilityPrivate": "Хувийн"
+    "visibilityPrivate": "Хувийн",
+    "myLabel": "Миний суваг",
+    "firstVideo": "Анхны видео нэмэх",
+    "videoPublicAria": "Видео нээлттэй",
+    "videoPrivateAria": "Видео хувийн",
+    "videoPublicState": "Видео нээлттэй",
+    "videoPrivateState": "Видео хувийн"
   },
   "native": {
     "otaTitle": "Шинэ хувилбар бэлэн",
@@ -1028,7 +1070,14 @@
     "applied": "Бүртгэсэн",
     "browseAuditions": "Аудишн үзэх",
     "myApplications": "Миний өргөдөл",
-    "submittedDone": "Илгээсэн"
+    "submittedDone": "Илгээсэн",
+    "statsHint": "Энэ агентлагийн бүртгэлийн нийлбэр.",
+    "statTotalPostings": "Зарын тоо",
+    "statOpenPostings": "Нээлттэй зар",
+    "statTotalApplications": "Өргөдөл",
+    "statPendingReview": "Хүлээгдэж / шалгагдаж буй",
+    "createPageTitle": "Аудишн үүсгэх",
+    "myPostings": "Миний зарууд"
   },
   "myAuditions": {
     "title": "Аудишн удирдах",
@@ -1123,5 +1172,12 @@
     "emptyRound": "Энэ шатанд өргөдөл алга.",
     "singleModeHint": "Энэ аудишн SINGLE горимтой. Өргөдлийг өргөдөл удирдлагаас шийднэ.",
     "backToApplicants": "Өргөдөл удирдлага"
+  },
+  "relative": {
+    "justNow": "Саяхан",
+    "minutesAgo": "{n} мин өмнө",
+    "hoursAgo": "{n} цагийн өмнө",
+    "daysAgo": "{n} өдрийн өмнө",
+    "monthsAgo": "{n} сарын өмнө"
   }
 }

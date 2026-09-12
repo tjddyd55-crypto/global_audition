@@ -124,7 +124,7 @@
     "loginAfterReset": "새 비밀번호가 설정되었습니다. 새 비밀번호로 로그인해 주세요.",
     "loginRequiredBody": "이 화면은 로그인한 뒤 이용할 수 있습니다.",
     "recoverySaveTitle": "복구 보안 코드를 저장하세요",
-    "recoverySaveBody": "이 코드는 지금 한 번만 보여 줍니다. 비밀번호를 잊었을 때 계정 확인과 재설정에 사용합니다. 서버는 해시만 보관하며 이전 비밀번호는 절대 돌려주지 않습니다.",
+    "recoverySaveBody": "이 코드는 <strong>지금 한 번만</strong> 보여 줍니다. 비밀번호를 잊었을 때 계정 확인과 재설정에 사용합니다. 서버는 해시만 보관하며 이전 비밀번호는 절대 돌려주지 않습니다.",
     "saveOnDevice": "기기에 임시 저장",
     "savedOnDevice": "기기에 임시 저장됨",
     "recoveryAck": "안전한 곳에 코드를 저장했고, 다시 볼 수 없음을 이해했습니다.",
@@ -150,7 +150,8 @@
     "loggingIn": "로그인 중...",
     "loginFailed": "로그인에 실패했습니다",
     "kakao": "카카오",
-    "naver": "네이버"
+    "naver": "네이버",
+    "copyCode": "코드 복사"
   },
   "register": {
     "title": "회원가입",
@@ -289,7 +290,10 @@
     "alreadyAppliedMyPage": "이 오디션에 이미 지원하셨습니다. 결과는 마이페이지에서 확인할 수 있어요.",
     "qualificationsTitle": "지원 자격",
     "introTitle": "상세 소개",
-    "tags": "태그"
+    "tags": "태그",
+    "agencyFallback": "기획사",
+    "daysLeftPeriod": "남은 기간 D-{n}",
+    "quickInfo": "빠른 정보"
   },
   "apply": {
     "title": "지원하기",
@@ -419,7 +423,8 @@
     "noSns": "등록된 SNS 없음",
     "introTitle": "자기소개 · 지원 동기",
     "noIntro": "작성된 내용이 없습니다.",
-    "backToDetailPage": "지원서 상세"
+    "backToDetailPage": "지원서 상세",
+    "browseArrow": "오디션 보기 →"
   },
   "vote": {
     "title": "투표",
@@ -488,7 +493,12 @@
     "findAccount": "계정 찾기 / 비밀번호 재설정",
     "notifications": "알림",
     "manageApplicants": "내 오디션 지원자 관리",
-    "createAuditionWeb": "오디션 생성 (웹)"
+    "createAuditionWeb": "오디션 생성 (웹)",
+    "myTitle": "내 프로필",
+    "agencyChannelHint": "지원자 전용 채널입니다. 기획사 계정은 오디션 관리 메뉴를 이용해 주세요.",
+    "noThumbnail": "썸네일 없음",
+    "viewsCount": "조회수: {n}",
+    "likesCount": "좋아요: {n}"
   },
   "credits": {
     "title": "크레딧",
@@ -714,7 +724,23 @@
     "saveDraft": "임시 저장",
     "publish": "등록하기",
     "processing": "처리 중…",
-    "saveClosed": "마감으로 저장"
+    "saveClosed": "마감으로 저장",
+    "createNew": "새 오디션 등록",
+    "descOptional": "설명 (선택)",
+    "statusDraftParen": "초안 (DRAFT)",
+    "statusOpenParen": "모집중 (OPEN)",
+    "statusClosedParen": "마감 (CLOSED)",
+    "createFailed": "오디션 등록에 실패했습니다.",
+    "creating": "등록 중...",
+    "createSubmit": "등록",
+    "uploadFailed": "이미지 업로드 실패",
+    "pickImageAria": "이미지 파일 선택",
+    "pickFile": "파일 선택",
+    "uploadingNow": "업로드 중...",
+    "imageRules": "JPG·PNG·WebP, 최대 10MB. 대표 이미지 변경: 「이미지 변경」 또는 「제거」 후 다시 선택. 스토리지 공개 URL만 DB에 저장됩니다.",
+    "coverEmptyPreview": "대표 이미지를 업로드하면 여기에 표시됩니다",
+    "videoPreview": "영상 미리보기",
+    "youtubePreviewTitle": "YouTube 미리보기"
   },
   "country": {
     "KR": "한국",
@@ -831,7 +857,17 @@
     "NOT_ELIGIBLE_ROUND": "지원 대상이 아닙니다",
     "APPLICATION_NOT_FOUND": "지원서를 찾을 수 없습니다",
     "AUDITION_NOT_FOUND": "오디션을 찾을 수 없습니다",
-    "AUDITION_NOT_OPEN": "모집 중인 오디션이 아닙니다"
+    "AUDITION_NOT_OPEN": "모집 중인 오디션이 아닙니다",
+    "SUBMISSION_NOT_FOUND": "제출 정보를 찾을 수 없습니다",
+    "NOT_MULTI_ROUND": "다단계 오디션이 아닙니다",
+    "AUDITION_ROUND_MISMATCH": "오디션과 라운드가 일치하지 않습니다",
+    "ROUND_NOT_FOUND": "라운드를 찾을 수 없습니다",
+    "APPLICATION_CLOSED": "이미 종료된 지원입니다",
+    "WRONG_CURRENT_ROUND": "현재 진행 라운드가 아닙니다",
+    "PREVIOUS_ROUND_NOT_PASSED": "이전 라운드를 통과하지 않았습니다",
+    "NO_SUBMISSION_ROW": "제출 준비 중입니다. 잠시 후 다시 시도해 주세요",
+    "SUBMISSION_CLOSED": "이 라운드는 더 이상 제출할 수 없습니다",
+    "ROUND_ALREADY_DECIDED": "이미 심사가 완료된 라운드입니다"
   },
   "application": {
     "detailLoadFailed": "지원서를 불러오지 못했습니다.",
@@ -998,7 +1034,13 @@
     "saveRetry": "저장에 실패했습니다. 다시 시도해 주세요.",
     "settingsLoadFailed": "채널 설정을 불러오지 못했습니다.",
     "visibilityPublic": "공개",
-    "visibilityPrivate": "비공개"
+    "visibilityPrivate": "비공개",
+    "myLabel": "내 채널",
+    "firstVideo": "첫 영상 추가하기",
+    "videoPublicAria": "영상 공개",
+    "videoPrivateAria": "영상 비공개",
+    "videoPublicState": "영상 공개",
+    "videoPrivateState": "영상 비공개"
   },
   "native": {
     "otaTitle": "새 버전이 준비되었어요",
@@ -1028,7 +1070,14 @@
     "applied": "지원",
     "browseAuditions": "오디션 보기",
     "myApplications": "내 지원서",
-    "submittedDone": "제출완료"
+    "submittedDone": "제출완료",
+    "statsHint": "기획사 계정 기준 집계입니다.",
+    "statTotalPostings": "등록 공고 수",
+    "statOpenPostings": "진행 중 공고",
+    "statTotalApplications": "누적 지원",
+    "statPendingReview": "대기·검토",
+    "createPageTitle": "오디션 등록",
+    "myPostings": "내 공고 목록"
   },
   "myAuditions": {
     "title": "오디션 관리",
@@ -1123,5 +1172,12 @@
     "emptyRound": "이 라운드에 등록된 지원자가 없습니다.",
     "singleModeHint": "이 오디션은 단일(SINGLE) 모드입니다. 지원자 관리에서 처리할 수 있습니다.",
     "backToApplicants": "지원자 관리"
+  },
+  "relative": {
+    "justNow": "방금 전",
+    "minutesAgo": "{n}분 전",
+    "hoursAgo": "{n}시간 전",
+    "daysAgo": "{n}일 전",
+    "monthsAgo": "{n}개월 전"
   }
 }

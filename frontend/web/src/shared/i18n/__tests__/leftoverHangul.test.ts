@@ -63,6 +63,20 @@ const CATALOGUED_FILES = [
   'src/components/my-application/VideoSection.tsx',
   'src/components/my-application/SnsSection.tsx',
   'src/components/my-application/IntroSection.tsx',
+  'src/app/[locale]/my/stats/page.tsx',
+  'src/mobile/pages/profile/ProfilePage.tsx',
+  'src/pc/pages/profile/ProfilePage.tsx',
+  'src/pc/pages/auditions/components/PcAuditionDetailSidebar.tsx',
+  'src/app/[locale]/auditions/new/page.tsx',
+  'src/components/audition/AuditionEditorImageUpload.tsx',
+  'src/components/audition/AuditionEditorPreview.tsx',
+  'src/components/channel/ChannelMyVideoList.tsx',
+  'src/components/channel/VideoVisibilitySwitch.tsx',
+  'src/components/auth/RecoveryCodeNotice.tsx',
+  'src/mobile/pages/auth/RegisterPage.tsx',
+  'src/shared/audition/reasonMessages.ts',
+  'src/app/[locale]/dashboard/applications/page.tsx',
+  'src/app/[locale]/dashboard/auditions/create/page.tsx',
 ]
 
 describe('catalogued user-facing files', () => {

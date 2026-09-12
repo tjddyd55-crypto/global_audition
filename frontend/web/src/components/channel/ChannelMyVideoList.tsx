@@ -1,13 +1,14 @@
 ﻿'use client'
 
 import { useQuery } from '@tanstack/react-query'
+import { useTranslations } from 'next-intl'
 import { videoApi, type VideoContent } from '@/shared/api/videos'
 import { resolveVideoThumbnailUrl } from '@/shared/audition/videoThumbnail'
 import { VideoListItem } from '@/components/video/VideoListItem'
 import { VideoVisibilitySwitch } from '@/components/channel/VideoVisibilitySwitch'
 import { channelVideoKeys } from '@/shared/query/channelVideoQuery'
 import { TEXT_SUB } from '@/shared/ui/specClasses'
-import { formatRelativeKo } from '@/shared/formatRelativeKo'
+import { formatRelative } from '@/shared/i18n/formatRelative'
 
 const BTN_UPLOAD =
   'w-full rounded-md bg-neutral-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-neutral-800'
@@ -19,8 +20,6 @@ type ChannelMyVideoListProps = {
   onOpenUploadForm: () => void
 }
 
-const LIST_CHANNEL_LABEL = '내 채널'
-
 /**
  * 내 채널 영상 목록 — 풀 가로·유튜브 리스트 + 관리 영역.
  */
@@ -30,6 +29,9 @@ export function ChannelMyVideoList({
   onDelete,
   onOpenUploadForm,
 }: ChannelMyVideoListProps) {
+  const t = useTranslations('common')
+  const tChannel = useTranslations('channel')
+  const tRelative = useTranslations('relative')
   const { data: videos, isLoading } = useQuery({
     queryKey: channelVideoKeys.mine,
     queryFn: () => videoApi.getMyChannelVideos(),
@@ -55,10 +57,10 @@ export function ChannelMyVideoList({
                   href={`/videos/${video.id}`}
                   title={video.title}
                   thumbnailSrc={thumbnailUrl}
-                  channelName={LIST_CHANNEL_LABEL}
+                  channelName={tChannel('myLabel')}
                   channelImageSrc={null}
                   viewCount={Number(video.viewCount ?? 0)}
-                  dateLabel={formatRelativeKo(video.createdAt ?? '')}
+                  dateLabel={formatRelative(video.createdAt ?? '', tRelative)}
                   categoryBadge={video.category?.trim() || null}
                   footer={
                     <div className="space-y-2 border-t border-neutral-200 pt-2">
@@ -72,14 +74,14 @@ export function ChannelMyVideoList({
                           onClick={() => onEdit(video)}
                           className="flex-1 rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm font-medium text-neutral-900 hover:bg-neutral-50"
                         >
-                          수정
+                          {t('edit')}
                         </button>
                         <button
                           type="button"
                           onClick={() => onDelete(video.id)}
                           className="flex-1 rounded-md border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
                         >
-                          삭제
+                          {t('delete')}
                         </button>
                       </div>
                     </div>
@@ -91,9 +93,9 @@ export function ChannelMyVideoList({
         </div>
       ) : (
         <div className="border-y border-neutral-200 px-3 py-8">
-          <p className={`${TEXT_SUB} mb-3 text-center text-sm`}>등록된 영상이 없습니다</p>
+          <p className={`${TEXT_SUB} mb-3 text-center text-sm`}>{tChannel('emptyVideos')}</p>
           <button type="button" onClick={onOpenUploadForm} className={BTN_UPLOAD}>
-            첫 영상 추가하기
+            {tChannel('firstVideo')}
           </button>
         </div>
       )}
