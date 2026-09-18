@@ -8,6 +8,7 @@ import { sortAuditionsByRecent } from '../../src/domain/auditionLists'
 import { AuditionListRow } from '../../src/ui/AuditionListRow'
 import { EmptyState, ErrorState } from '../../src/ui/EmptyState'
 import { AuditionListSkeleton } from '../../src/ui/ListSkeleton'
+import { LanguageSwitcher } from '../../src/ui/LanguageSwitcher'
 import { Screen } from '../../src/ui/Screen'
 import { colors, space } from '../../src/theme/tokens'
 import { useTranslation } from 'react-i18next'
@@ -31,10 +32,15 @@ export default function AuditionsScreen() {
       refreshing={query.isFetching}
       onRefresh={() => void query.refetch()}
     >
-      <Text style={styles.title}>{t('auditions.listTitle')}</Text>
-      <Text style={styles.meta}>
-        {t('auditions.resultCount', { count: items.length })} · {t('auditions.sortRecent')}
-      </Text>
+      <View style={styles.listHeader}>
+        <View style={styles.listHeaderText}>
+          <Text style={styles.title}>{t('auditions.listTitle')}</Text>
+          <Text style={styles.meta}>
+            {t('auditions.resultCount', { count: items.length })} · {t('auditions.sortRecent')}
+          </Text>
+        </View>
+        <LanguageSwitcher />
+      </View>
 
       {query.isLoading ? <AuditionListSkeleton /> : null}
       {query.isError ? <ErrorState message={t('auditions.loadFailed')} onRetry={() => void query.refetch()} /> : null}
@@ -53,6 +59,14 @@ export default function AuditionsScreen() {
 }
 
 const styles = StyleSheet.create({
+  listHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: space.sm,
+    marginBottom: space.md,
+  },
+  listHeaderText: { flex: 1, minWidth: 0 },
   title: {
     fontSize: 24,
     fontWeight: '800',
@@ -62,7 +76,6 @@ const styles = StyleSheet.create({
   meta: {
     fontSize: 13,
     color: colors.textSecondary,
-    marginBottom: space.md,
   },
   rowGap: { marginBottom: space.sm },
 })

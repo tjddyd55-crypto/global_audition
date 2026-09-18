@@ -9,7 +9,8 @@ import { AuthProvider } from '../src/auth/AuthProvider'
 import { LocaleProvider } from '../src/i18n/LocaleProvider'
 import { OtaUpdatePrompt } from '../src/components/OtaUpdatePrompt'
 import { useOtaWatcher } from '../src/services/updates'
-import { colors } from '../src/theme/tokens'
+import { LanguageSwitcher } from '../src/ui/LanguageSwitcher'
+import { colors, space } from '../src/theme/tokens'
 
 export default function RootLayout() {
   useOtaWatcher()
@@ -51,6 +52,7 @@ function LocalizedStack() {
           headerTitleStyle: { fontWeight: '700' },
           headerShadowVisible: false,
           contentStyle: { backgroundColor: colors.bg },
+          headerRight: () => <LanguageSwitcher style={{ marginRight: space.xs }} />,
         }}
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -59,6 +61,7 @@ function LocalizedStack() {
         <Stack.Screen name="auditions/[id]/apply" options={{ title: t('apply.title') }} />
         <Stack.Screen name="auditions/[id]/vote" options={{ title: t('vote.title') }} />
         <Stack.Screen name="auditions/[id]/ranking" options={{ title: t('ranking.title') }} />
+        <Stack.Screen name="applications/index" options={{ title: t('myApplications.listTitle') }} />
         <Stack.Screen name="applications/[id]" options={{ title: t('common.applications') }} />
         <Stack.Screen name="agency/applicants" options={{ title: t('myApplications.title') }} />
         <Stack.Screen name="agency/[applicationId]" options={{ title: t('myApplications.viewDetail') }} />

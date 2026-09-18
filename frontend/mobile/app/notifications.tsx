@@ -26,7 +26,7 @@ export default function NotificationsScreen() {
           <Text style={styles.body}>{t(NOTIFICATION_TYPE_I18N[type])}</Text>
         </View>
       ))}
-      <Button label={t('myApplications.title')} variant="secondary" onPress={() => router.push('/(tabs)/applications')} />
+      <Button label={t('myApplications.title')} variant="secondary" onPress={() => router.push('/applications')} />
     </Screen>
   )
 }

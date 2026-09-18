@@ -13,7 +13,6 @@ import { Chip } from '../../../src/ui/Chip'
 import { EmptyState, ErrorState } from '../../../src/ui/EmptyState'
 import { Screen } from '../../../src/ui/Screen'
 import { VoteBoardRow } from '../../../src/ui/VoteBoardRow'
-import { VoteSummaryGrid } from '../../../src/ui/VoteSummaryGrid'
 import { colors, space } from '../../../src/theme/tokens'
 
 export default function VoteScreen() {
@@ -82,15 +81,6 @@ export default function VoteScreen() {
             <Button label={t('vote.backToAudition')} variant="secondary" onPress={() => router.push(`/auditions/${id}`)} />
           </View>
         </View>
-      ) : null}
-
-      {summary ? (
-        <VoteSummaryGrid
-          applicants={summary.applicantCount}
-          totalVotes={summary.totalVotes}
-          totalViews={summary.totalViewCount}
-          myVotes={summary.myVoteCount}
-        />
       ) : null}
 
       {page?.audition.categories && page.audition.categories.length > 0 ? (

@@ -12,7 +12,7 @@ type Props = {
 
 export function AuthScreenShell({ title, subtitle, children }: Props) {
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.wrap}>
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.wrap}>
       <LinearGradient colors={[colors.heroStart, colors.surface]} style={styles.hero}>
         <Text style={styles.title}>{title}</Text>
         {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
