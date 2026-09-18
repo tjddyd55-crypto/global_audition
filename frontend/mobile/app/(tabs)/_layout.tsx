@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons'
 import { Tabs } from 'expo-router'
 import { useTranslation } from 'react-i18next'
+import { tabBarLayoutStyle, useTabBarMetrics } from '../../src/theme/tabBarMetrics'
 import { colors, tabBar, touch } from '../../src/theme/tokens'
 
 type TabIconName = keyof typeof Ionicons.glyphMap
@@ -20,6 +21,8 @@ function TabIcon({ name, focused }: { name: TabIconName; focused: boolean }) {
 
 export default function TabsLayout() {
   const { t } = useTranslation()
+  const tabMetrics = useTabBarMetrics()
+
   return (
     <Tabs
       screenOptions={{
@@ -27,9 +30,7 @@ export default function TabsLayout() {
         tabBarActiveTintColor: colors.purple,
         tabBarInactiveTintColor: colors.tabInactive,
         tabBarStyle: {
-          minHeight: tabBar.height,
-          paddingTop: 6,
-          paddingBottom: 8,
+          ...tabBarLayoutStyle(tabMetrics),
           backgroundColor: colors.surface,
           borderTopColor: colors.border,
         },
@@ -66,12 +67,12 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="applications"
+        name="channels"
         options={{
-          title: t('nav.applications'),
-          tabBarAccessibilityLabel: t('nav.applications'),
+          title: t('nav.channel'),
+          tabBarAccessibilityLabel: t('nav.channel'),
           tabBarIcon: ({ focused }) => (
-            <TabIcon name={focused ? 'document-text' : 'document-text-outline'} focused={focused} />
+            <TabIcon name={focused ? 'people' : 'people-outline'} focused={focused} />
           ),
         }}
       />
