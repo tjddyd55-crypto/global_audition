@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useEffect, useMemo, useState } from 'react'
-import { KeyboardAvoidingView, StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { applicationApi, profileApi } from '../../../src/api/endpoints'
 import { queryKeys } from '../../../src/api/queryKeys'
@@ -106,7 +106,7 @@ export default function ApplyScreen() {
                     snsLinks: snsUrl.trim() ? [{ platform: snsPlatform, url: snsUrl.trim() }] : [],
                   })
                   setSuccess(t('apply.success'))
-                  router.replace('/(tabs)/applications')
+                  router.replace('/applications')
                 } catch (err) {
                   setError(err instanceof ApiError ? err.message : t('apply.failed'))
                 } finally {
@@ -117,7 +117,7 @@ export default function ApplyScreen() {
           </StickyCta>
         }
       >
-        <KeyboardAvoidingView behavior="padding" style={styles.form}>
+        <View style={styles.form}>
           <Text style={styles.pageTitle}>{t('apply.title')}</Text>
           <ApplyCreditBanner
             fee={credit.fee}
@@ -188,7 +188,7 @@ export default function ApplyScreen() {
 
           {success ? <Text style={styles.success}>{success}</Text> : null}
           {error ? <Text style={styles.error}>{error}</Text> : null}
-        </KeyboardAvoidingView>
+        </View>
       </Screen>
     </RequireAuth>
   )
