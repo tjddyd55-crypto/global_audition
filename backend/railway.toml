@@ -6,6 +6,10 @@ builder = "NIXPACKS"
 buildCommand = "chmod +x mvnw && ./mvnw -DskipTests package"
 
 [deploy]
-startCommand = "java -jar target/*.jar"
+# Idle RSS was ~1.55GB with plain `java -jar` (JVM auto-sized heap to a large fraction of
+# the Railway container limit). Cap heap + metaspace explicitly; pair with service memory
+# limit ~1024MB on develop first, then production after soak.
+# Optional Railway override: JAVA_TOOL_OPTIONS (merged by the JVM, use only for emergencies).
+startCommand = "java -Xms128m -Xmx512m -XX:MaxMetaspaceSize=192m -XX:ReservedCodeCacheSize=64m -XX:+UseContainerSupport -XX:+ExitOnOutOfMemoryError -jar target/*.jar"
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10

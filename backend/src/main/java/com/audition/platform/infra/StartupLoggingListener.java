@@ -9,6 +9,9 @@ import org.springframework.core.env.Environment;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+import java.lang.management.MemoryUsage;
 import java.util.Arrays;
 
 @Component
@@ -42,5 +45,34 @@ public class StartupLoggingListener implements ApplicationListener<ApplicationRe
         log.info("[Startup] Flyway applied count: {}", applied);
         log.info("[Startup] Flyway pending count: {}", pending);
         log.info("[Startup] Flyway migrations status: {}", pending == 0 ? "up-to-date" : "pending");
+
+        String javaToolOptions = System.getenv("JAVA_TOOL_OPTIONS");
+        if (javaToolOptions != null && !javaToolOptions.isBlank()) {
+            log.info("[Startup] JAVA_TOOL_OPTIONS is set (length={})", javaToolOptions.length());
+        }
+
+        MemoryMXBean memory = ManagementFactory.getMemoryMXBean();
+        MemoryUsage heap = memory.getHeapMemoryUsage();
+        MemoryUsage nonHeap = memory.getNonHeapMemoryUsage();
+        log.info(
+                "[Startup] JVM heap MB (init/max/used/committed): {}/{}/{}/{}",
+                mb(heap.getInit()),
+                mb(heap.getMax()),
+                mb(heap.getUsed()),
+                mb(heap.getCommitted())
+        );
+        log.info(
+                "[Startup] JVM non-heap MB (used/committed): {}/{}",
+                mb(nonHeap.getUsed()),
+                mb(nonHeap.getCommitted())
+        );
+        log.info("[Startup] JVM live threads: {}", ManagementFactory.getThreadMXBean().getThreadCount());
+    }
+
+    private static long mb(long bytes) {
+        if (bytes < 0) {
+            return -1;
+        }
+        return bytes / (1024 * 1024);
     }
 }

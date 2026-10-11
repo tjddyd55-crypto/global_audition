@@ -72,6 +72,10 @@ spring:
     hikari:
       schema: public
       connection-init-sql: SET search_path TO public
+      # Monolith scale: avoid default max pool (10) all idle; reduces DB + JVM footprint.
+      maximum-pool-size: 8
+      minimum-idle: 2
+      max-lifetime: 1800000
 
   jpa:
     hibernate:
@@ -96,3 +100,9 @@ spring:
 
 server:
   port: 8080
+  tomcat:
+    # Default max 200 threads × ~1MB stacks adds native RSS; 50 is enough at current traffic.
+    threads:
+      max: 50
+      min-spare: 5
+    max-connections: 200
