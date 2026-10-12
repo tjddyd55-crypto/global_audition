@@ -1,6 +1,14 @@
 # Global Audition Mobile (Expo)
 
-Global Audition 네이티브 앱. 기존 Next.js PWA(`frontend/web`)를 **Expo + react-native-webview**로 감싼 얇은 셸이다. 웹 UI는 그대로 유지하면서, 네이티브에서만 가치 있는 동작(안드로이드 물리 뒤로가기, 외부 링크 위임, 오프라인 폴백, 풀-투-리프레시)만 얹었다.
+applicant-first 네이티브 클라이언트다. 기존 Spring API·DTO·상태머신을 SSOT로 호출하며, 웹/백엔드 도메인을 다시 만들지 않는다.
+
+- **Expo Router + TypeScript strict + TanStack Query + SecureStore**
+- 탭: 홈 / 오디션 / 투표 / 내 지원 / 프로필
+- 지원 제출은 백엔드와 같이 **YouTube/TikTok/Instagram URL**
+- 복잡한 오디션 생성은 `/web` WebView 폴백. PC 웹은 유지한다.
+- 아키텍처: `NATIVE_ARCHITECTURE.md`
+
+레거시 WebView 셸은 웹 전용 화면 폴백으로만 남긴다.
 
 ---
 

@@ -9,6 +9,7 @@ import { authApi } from '@/shared/api/auth'
 import { Link } from '@/i18n.config'
 import RoleSelectCard from '@/components/auth/RoleSelectCard'
 import AuthCardLayout from '@/components/auth/AuthCardLayout'
+import { RecoveryCodeNotice } from '@/components/auth/RecoveryCodeNotice'
 import { SIGNUP } from '@/shared/design-tokens'
 import { nicknameZodField } from '@/shared/user/nicknameZod'
 
@@ -50,6 +51,7 @@ export default function PcRegisterPage() {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [role, setRole] = useState<RegisterRole>('APPLICANT')
+  const [issuedCode, setIssuedCode] = useState<string | null>(null)
 
   const { register, handleSubmit, formState: { errors } } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -59,13 +61,17 @@ export default function PcRegisterPage() {
     setIsLoading(true)
     setError(null)
     try {
-      await authApi.signup({
+      const res = await authApi.signup({
         email: data.email,
         password: data.password,
         role,
         nickname: data.nickname.trim(),
         name: data.legalName?.trim() ? data.legalName.trim() : undefined,
       })
+      if (res.recoveryCode) {
+        setIssuedCode(res.recoveryCode)
+        return
+      }
       if (role === 'AGENCY') router.push('/my/dashboard')
       else router.push('/auditions')
     } catch (err: any) {
@@ -76,6 +82,20 @@ export default function PcRegisterPage() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  if (issuedCode) {
+    return (
+      <AuthCardLayout title="복구 보안 코드">
+        <RecoveryCodeNotice
+          recoveryCode={issuedCode}
+          onAcknowledged={() => {
+            if (role === 'AGENCY') router.push('/my/dashboard')
+            else router.push('/auditions')
+          }}
+        />
+      </AuthCardLayout>
+    )
   }
 
   return (

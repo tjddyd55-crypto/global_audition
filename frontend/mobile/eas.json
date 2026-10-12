@@ -9,6 +9,7 @@
       "distribution": "internal",
       "env": {
         "EXPO_PUBLIC_WEB_URL": "http://10.0.2.2:3000",
+        "EXPO_PUBLIC_API_URL": "http://10.0.2.2:3000/api",
         "EXPO_PUBLIC_ALLOWED_HOSTS": "10.0.2.2,localhost"
       },
       "android": {
@@ -20,6 +21,7 @@
       "channel": "preview",
       "env": {
         "EXPO_PUBLIC_WEB_URL": "https://frontend-develop-3d3e.up.railway.app",
+        "EXPO_PUBLIC_API_URL": "https://frontend-develop-3d3e.up.railway.app/api",
         "EXPO_PUBLIC_ALLOWED_HOSTS": "frontend-develop-3d3e.up.railway.app"
       },
       "android": {
@@ -33,6 +35,7 @@
       "channel": "production",
       "env": {
         "EXPO_PUBLIC_WEB_URL": "https://frontend-production-8613a.up.railway.app",
+        "EXPO_PUBLIC_API_URL": "https://frontend-production-8613a.up.railway.app/api",
         "EXPO_PUBLIC_ALLOWED_HOSTS": "frontend-production-8613a.up.railway.app"
       },
       "android": {
@@ -44,6 +47,7 @@
       "autoIncrement": true,
       "env": {
         "EXPO_PUBLIC_WEB_URL": "https://frontend-production-8613a.up.railway.app",
+        "EXPO_PUBLIC_API_URL": "https://frontend-production-8613a.up.railway.app/api",
         "EXPO_PUBLIC_ALLOWED_HOSTS": "frontend-production-8613a.up.railway.app"
       },
       "android": {

@@ -265,4 +265,58 @@ export const superAdminApi = {
     })
     return data
   },
+
+  listRecoveryRequests: async (params: {
+    status?: string
+    page?: number
+    size?: number
+  }): Promise<SpringPage<RecoveryRequestAdminRow>> => {
+    const { data } = await apiClient.get<SpringPage<RecoveryRequestAdminRow>>('/admin/recovery-requests', {
+      params: {
+        status: params.status?.trim() || undefined,
+        page: params.page ?? 0,
+        size: params.size ?? 50,
+      },
+    })
+    return data
+  },
+
+  reissueRecoveryCode: async (
+    id: string,
+  ): Promise<{ recoveryCode: string; accountIdentifier: string }> => {
+    const { data } = await apiClient.post<unknown>(`/admin/recovery-requests/${id}/reissue`)
+    return unwrapAdminData<{ recoveryCode: string; accountIdentifier: string }>(data)
+  },
+
+  rejectRecoveryRequest: async (id: string): Promise<RecoveryRequestAdminRow> => {
+    const { data } = await apiClient.post<unknown>(`/admin/recovery-requests/${id}/reject`)
+    return unwrapAdminData<RecoveryRequestAdminRow>(data)
+  },
+}
+
+export type RecoveryRequestAdminRow = {
+  id: string
+  userId?: string | null
+  accountIdentifier: string
+  requesterName: string
+  contact: string
+  message?: string | null
+  status: 'PENDING' | 'RESOLVED' | 'REJECTED' | string
+  reviewedBy?: string | null
+  reviewedAt?: string | null
+  createdAt: string
+  updatedAt?: string
+}
+
+function unwrapAdminData<T>(body: unknown): T {
+  if (
+    typeof body === 'object' &&
+    body !== null &&
+    'success' in body &&
+    (body as { success: unknown }).success === true &&
+    'data' in body
+  ) {
+    return (body as { data: T }).data
+  }
+  return body as T
 }

@@ -2,22 +2,21 @@ import type { ExpoConfig, ConfigContext } from 'expo/config'
 
 /**
  * 이 앱의 역할
- * - 기존 Next.js PWA(web)를 react-native-webview로 감싼 얇은 네이티브 셸이다.
- * - 웹 UI는 그대로 두고 네이티브에서 가치 있는 동작(안드로이드 뒤로가기, 외부 링크, 오프라인
- *   감지, 네이티브 풀-투-리프레시)만 얹어 스토어 심사 통과 수준의 최소 네이티브성을 갖춘다.
+ * - applicant-first 네이티브 클라이언트 (Expo Router).
+ * - 기존 Spring API/DTO/상태머신을 SSOT로 호출한다. 도메인을 다시 만들지 않는다.
+ * - 복잡한 오디션 생성은 웹 폴백(WebView)으로 연다. PC/웹은 삭제하지 않는다.
  *
  * 환경변수
- * - EXPO_PUBLIC_WEB_URL: 앱이 로드할 웹 URL. 필수.
- * - EXPO_PUBLIC_ALLOWED_HOSTS: 콤마로 구분한 내부 호스트 목록(미지정시 EXPO_PUBLIC_WEB_URL의 host만).
- * - EAS_BUILD_PROFILE: EAS 빌드 프로필 이름(로그/상수용).
- *
- * 이 파일을 TypeScript로 둔 이유는 빌드 시점에 환경변수를 읽어
- * runtime(extra)으로 주입하기 위함이다. 값 자체는 app 코드에서 Constants.expoConfig?.extra를 통해 읽는다.
+ * - EXPO_PUBLIC_WEB_URL: 웹 폴백 URL + API 프록시 기본 origin.
+ * - EXPO_PUBLIC_API_URL: 직접 백엔드 `/api` origin. 비우면 `${WEB_URL}/api`.
+ * - EXPO_PUBLIC_ALLOWED_HOSTS: WebView 내부 호스트 목록.
+ * - EAS_BUILD_PROFILE: EAS 빌드 프로필 이름.
  */
 const DEFAULT_WEB_URL = 'https://frontend-production-8613a.up.railway.app'
 
 export default ({ config }: ConfigContext): ExpoConfig => {
   const webUrl = process.env.EXPO_PUBLIC_WEB_URL?.trim() || DEFAULT_WEB_URL
+  const apiUrl = process.env.EXPO_PUBLIC_API_URL?.trim() || `${webUrl.replace(/\/+$/, '')}/api`
   const allowedHosts = parseHosts(process.env.EXPO_PUBLIC_ALLOWED_HOSTS, webUrl)
 
   return {
@@ -87,9 +86,21 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     runtimeVersion: {
       policy: 'appVersion',
     },
-    plugins: ['expo-secure-store'],
+    plugins: [
+      'expo-router',
+      'expo-secure-store',
+      [
+        'expo-image-picker',
+        {
+          photosPermission: '오디션 지원 참고 영상·프로필 이미지를 선택하기 위해 사진 라이브러리에 접근합니다.',
+          cameraPermission: '오디션 지원 참고 영상을 촬영하기 위해 카메라에 접근합니다.',
+          microphonePermission: '오디션 지원 영상의 오디오를 녹음하기 위해 마이크에 접근합니다.',
+        },
+      ],
+    ],
     extra: {
       webUrl,
+      apiUrl,
       allowedHosts,
       buildProfile: process.env.EAS_BUILD_PROFILE ?? 'local',
       // EAS 프로젝트 연결 식별자. `eas init` 결과를 동적 config(app.config.ts)에

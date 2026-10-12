@@ -90,6 +90,21 @@ public class User {
     @Column(name = "updated_at")
     private Instant updatedAt = Instant.now();
 
+    @Column(name = "recovery_code_hash", columnDefinition = "TEXT")
+    private String recoveryCodeHash;
+
+    @Column(name = "recovery_code_lookup", columnDefinition = "TEXT")
+    private String recoveryCodeLookup;
+
+    @Column(name = "recovery_code_issued_at")
+    private Instant recoveryCodeIssuedAt;
+
+    @Column(name = "recovery_failed_attempts", nullable = false)
+    private int recoveryFailedAttempts;
+
+    @Column(name = "recovery_locked_until")
+    private Instant recoveryLockedUntil;
+
     @PrePersist
     @PreUpdate
     void syncDenormalizedDisplayName() {
@@ -199,4 +214,15 @@ public class User {
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
+
+    public String getRecoveryCodeHash() { return recoveryCodeHash; }
+    public void setRecoveryCodeHash(String recoveryCodeHash) { this.recoveryCodeHash = recoveryCodeHash; }
+    public String getRecoveryCodeLookup() { return recoveryCodeLookup; }
+    public void setRecoveryCodeLookup(String recoveryCodeLookup) { this.recoveryCodeLookup = recoveryCodeLookup; }
+    public Instant getRecoveryCodeIssuedAt() { return recoveryCodeIssuedAt; }
+    public void setRecoveryCodeIssuedAt(Instant recoveryCodeIssuedAt) { this.recoveryCodeIssuedAt = recoveryCodeIssuedAt; }
+    public int getRecoveryFailedAttempts() { return recoveryFailedAttempts; }
+    public void setRecoveryFailedAttempts(int recoveryFailedAttempts) { this.recoveryFailedAttempts = recoveryFailedAttempts; }
+    public Instant getRecoveryLockedUntil() { return recoveryLockedUntil; }
+    public void setRecoveryLockedUntil(Instant recoveryLockedUntil) { this.recoveryLockedUntil = recoveryLockedUntil; }
 }

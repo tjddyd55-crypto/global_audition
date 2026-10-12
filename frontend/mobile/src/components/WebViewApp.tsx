@@ -21,6 +21,20 @@ import { WEB_URL, isInternalUrl } from '../config/env'
 import { SHELL_BUILD_TAG } from '../config/shellBuild'
 import { OfflineScreen } from './OfflineScreen'
 
+type Props = {
+  /** 웹 전용 화면으로 바로 열 경로. 예: /ko/my/auditions */
+  initialPath?: string
+}
+
+function resolveStartUrl(initialPath?: string): string {
+  if (!initialPath) return WEB_URL
+  try {
+    return new URL(initialPath, WEB_URL.endsWith('/') ? WEB_URL : `${WEB_URL}/`).toString()
+  } catch {
+    return WEB_URL
+  }
+}
+
 /**
  * 앱 본체.
  *
@@ -34,7 +48,7 @@ import { OfflineScreen } from './OfflineScreen'
  * - 앱 컨텍스트 식별: UserAgent에 GlobalAuditionApp 마커를 주입해 웹에서 PWA 설치
  *   프롬프트처럼 앱 환경과 충돌하는 UI를 숨길 수 있게 한다.
  */
-export function WebViewApp() {
+export function WebViewApp({ initialPath }: Props = {}) {
   const webviewRef = useRef<WebViewType>(null)
   const [canGoBack, setCanGoBack] = useState(false)
   const [loadError, setLoadError] = useState(false)
@@ -93,7 +107,7 @@ export function WebViewApp() {
       <StatusBar style="dark" />
       <WebView
         ref={webviewRef}
-        source={{ uri: WEB_URL }}
+        source={{ uri: resolveStartUrl(initialPath) }}
         originWhitelist={['http://*', 'https://*']}
         applicationNameForUserAgent={userAgentSuffix}
         onNavigationStateChange={handleNavChange}

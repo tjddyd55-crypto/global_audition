@@ -39,7 +39,7 @@ public class AuditionController {
         if (status == null || status.isBlank() || "OPEN".equals(status)) {
             return auditionService.listOpen();
         }
-        if (!SecurityUtils.hasRole("AGENCY") && !SecurityUtils.hasRole("ADMIN")) {
+        if (!SecurityUtils.hasRole("AGENCY") && !SecurityUtils.hasRole("ADMIN") && !SecurityUtils.hasRole("SUPER_ADMIN")) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only AGENCY or ADMIN can query non-open auditions");
         }
         return auditionService.listByStatus(status);

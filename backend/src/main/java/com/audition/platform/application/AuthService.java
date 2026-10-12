@@ -5,6 +5,7 @@ import com.audition.platform.api.dto.AuthResponse;
 import com.audition.platform.api.dto.LoginRequest;
 import com.audition.platform.api.dto.SignupRequest;
 import com.audition.platform.application.me.MeApiMapping;
+import com.audition.platform.application.recovery.AuthRecoveryService;
 import com.audition.platform.application.user.UserNicknameService;
 import com.audition.platform.domain.user.User;
 import com.audition.platform.domain.user.UserRepository;
@@ -29,15 +30,18 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final UserNicknameService userNicknameService;
+    private final AuthRecoveryService authRecoveryService;
 
     public AuthService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
                        JwtService jwtService,
-                       UserNicknameService userNicknameService) {
+                       UserNicknameService userNicknameService,
+                       AuthRecoveryService authRecoveryService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.userNicknameService = userNicknameService;
+        this.authRecoveryService = authRecoveryService;
     }
 
     @Transactional
@@ -62,8 +66,11 @@ public class AuthService {
             user.setName(req.getName().trim());
         }
         user = userRepository.save(user);
+        String recoveryCode = authRecoveryService.issueNewCode(user);
         String token = jwtService.createToken(user.getId(), user.getEmail(), user.getRole());
-        return authResponse(token, user);
+        AuthResponse res = authResponse(token, user);
+        res.setRecoveryCode(recoveryCode);
+        return res;
     }
 
     public AuthResponse login(LoginRequest req) {
