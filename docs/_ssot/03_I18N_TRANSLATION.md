@@ -16,11 +16,14 @@
   - 없으면 원문 fallback
 
 ## 2-1) 현재 구현
-- `auditions.default_locale` + `audition_translations` (V42). 상태 `PENDING / COMPLETED / FAILED`, provider 기본 `MANUAL`.
-- 공개 조회: `GET /api/auditions?locale=` / `X-Content-Locale`. COMPLETED 번역이 있으면 오버레이, 없으면 원문 + `contentLocaleFallback=true`.
-- 쓰기: `GET/PUT /api/auditions/{id}/translations/{locale}` (owner / ADMIN).
-- 자동 번역 Provider·큐·`translation_jobs` 는 아직 없다.
-- 라운드 공고 문구(`audition_rounds`) 번역 테이블은 아직 없다.
+- 오디션 공고는 `auditions.default_locale`(V44 이후 VARCHAR(16))와 `audition_translations` 를 유지한다. `audition_translations.locale` 는 VARCHAR(8) 그대로다. 이 열은 언어 서브태그(ko, en, mn, zh)만 담는다. 행을 옮기거나 지우지 않는다.
+- 공개 오디션 조회는 `?locale=` 또는 `X-Content-Locale` 의 COMPLETED 번역을 덮어쓴다. 없으면 원문과 `contentLocaleFallback=true`.
+- 오디션 자동 번역 작업 `POST /api/auditions/{id}/translation-jobs` 는 동기 호출로 남긴다. 공통 큐로 옮기지 않는다.
+- 그 외 본문은 V47 `content_translations` / `content_translation_attempts` / `content_translation_jobs` 다. locale 열은 VARCHAR(35) 이며 pt-BR, zh-Hant 를 그대로 둔다.
+- 읽기 `GET /api/content-translations/{type}/{id}` 는 공급자를 호출하지 않는다. 저장된 번역이 없으면 원문과 `showingOriginal` 을 반환하고, 없을 때만 작업을 넣는다.
+- 큐는 `FOR UPDATE SKIP LOCKED` 와 임대 시각으로 재기동 뒤 RUNNING 행을 다시 집는다. 키가 없으면 작업은 `BLOCKED` / `NOT_CONFIGURED` 로 끝나고 토큰은 null 이다.
+- 원문 언어 열은 기본값 없이 비어 있다. 저장된 locale 을 영어나 한국어로 되돌리지 않는다.
+- 라운드 공지 문구는 `PATCH /api/admin/auditions/{id}/rounds/{roundId}/notices` 만 바꾼다. 라운드 활성, 일정, 심사 방식, 오디션 상태는 이 경로에서 바꾸지 않는다.
 
 ## 3) Provider 추상화(벤더 교체 대비)
 - `TranslationProvider`(interface) + 구현체(Ali/기타)
@@ -33,7 +36,7 @@
 ## 5) 아직 미완
 - 슈퍼 어드민 콘솔은 ko 유지(의도).
 - 일부 기획사 관리 심층 화면·라운드 제출 폼에 하드코딩 한국어가 남을 수 있다.
-- 라운드 공고 번역 테이블, 자동 번역 Provider 없음.
+- 오디션 공고의 동기 번역과 공통 큐는 분리되어 있다. 음성, 자막, 썸네일은 번역하지 않는다.
 - 법률 문서 기계번역 없음.
 
 ## 6) 기획사 번역 UI

@@ -70,6 +70,12 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/videos/*/view").permitAll()
                 // 이미지 업로드: 로그인(JWT)만 필수. 역할 제한 시 지원자 등 정상 세션에서 403 발생함.
                 .requestMatchers(HttpMethod.POST, "/api/uploads/**").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/content-translations/USER_INTRO/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/content-translations/AGENCY_PROFILE/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/content-translations/CHANNEL_DESCRIPTION/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/content-translations/CHANNEL_VIDEO/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/content-translations/APPLICATION_VIDEO/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/content-translations/AUDITION_ROUND/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/applications").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/applications/*/public").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/comments").permitAll()

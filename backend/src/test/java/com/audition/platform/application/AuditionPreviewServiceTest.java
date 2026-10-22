@@ -46,7 +46,7 @@ class AuditionPreviewServiceTest {
         AuditionLocalizationService localization = new AuditionLocalizationService(
                 translationRepository,
                 auditionRepository,
-                new ContentLocaleResolver(),
+                new ContentLocaleResolver(new com.audition.platform.application.i18n.LocaleRegistry()),
                 mock(com.audition.platform.domain.audition.AuditionTranslationAttemptRepository.class));
         auditionService = new AuditionService(
                 auditionRepository,

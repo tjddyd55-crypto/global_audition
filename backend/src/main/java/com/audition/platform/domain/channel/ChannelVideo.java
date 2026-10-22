@@ -31,6 +31,9 @@ public class ChannelVideo {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Column(name = "text_source_locale", length = 35)
+    private String textSourceLocale;
+
     @Column(columnDefinition = "TEXT")
     private String category;
 
@@ -104,6 +107,14 @@ public class ChannelVideo {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getTextSourceLocale() {
+        return textSourceLocale;
+    }
+
+    public void setTextSourceLocale(String textSourceLocale) {
+        this.textSourceLocale = textSourceLocale;
     }
 
     public String getCategory() {

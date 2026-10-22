@@ -169,7 +169,12 @@ describe('i18n catalogs', () => {
   it('lists mn as a first-class locale', () => {
     expect(locales.primary).toEqual(['ko', 'en', 'mn'])
     expect(locales.supported).toContain('mn')
+    expect(locales.contentLocales).toEqual(locales.providerLocales)
+    expect(locales.primary.every((code) => locales.providerLocales.includes(code))).toBe(true)
     expect(locales.settlementCurrency).toBe('USD')
+    expect(ko.translation.showingOriginal).toBeTruthy()
+    expect(en.translation.viewOriginal).toBeTruthy()
+    expect(mn.translation.viewTranslation).toBeTruthy()
   })
 
   it('merges english fallback for incomplete locales', () => {

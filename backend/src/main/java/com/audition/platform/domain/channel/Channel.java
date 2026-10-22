@@ -29,6 +29,9 @@ public class Channel {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Column(name = "description_source_locale", length = 35)
+    private String descriptionSourceLocale;
+
     @Column(name = "profile_image_url", columnDefinition = "TEXT")
     private String profileImageUrl;
 
@@ -82,6 +85,14 @@ public class Channel {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getDescriptionSourceLocale() {
+        return descriptionSourceLocale;
+    }
+
+    public void setDescriptionSourceLocale(String descriptionSourceLocale) {
+        this.descriptionSourceLocale = descriptionSourceLocale;
     }
 
     public String getProfileImageUrl() {

@@ -1,7 +1,8 @@
 import ko from '../../../web/messages/ko.json'
 import en from '../../../web/messages/en.json'
 import mn from '../../../web/messages/mn.json'
-import { DEFAULT_LOCALE, detectDeviceLocale, normalizeLocale, resolveInitialLocale } from './runtime'
+import locales from '../../../web/messages/locales.json'
+import { DEFAULT_LOCALE, PRIMARY_LOCALES, detectDeviceLocale, normalizeLocale, resolveInitialLocale } from './runtime'
 
 type Tree = Record<string, unknown>
 
@@ -25,6 +26,12 @@ describe('native i18n catalogs', () => {
     expect((ko as { native: { otaTitle: string } }).native.otaTitle.length).toBeGreaterThan(0)
     expect((en as { native: { offlineRetry: string } }).native.offlineRetry.length).toBeGreaterThan(0)
     expect((mn as { native: { otaNow: string } }).native.otaNow.length).toBeGreaterThan(0)
+  })
+
+  it('uses the same active locale list as web', () => {
+    expect([...PRIMARY_LOCALES]).toEqual(locales.primary)
+    expect(locales.defaultLocale).toBe('en')
+    expect(locales.contentLocales).toEqual(locales.providerLocales)
   })
 
   it('falls back to en for unknown or non-primary device locales', () => {

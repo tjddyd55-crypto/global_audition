@@ -30,7 +30,7 @@ class AuditionLocalizationServiceTest {
         service = new AuditionLocalizationService(
                 translationRepository,
                 auditionRepository,
-                new ContentLocaleResolver(),
+                new ContentLocaleResolver(new com.audition.platform.application.i18n.LocaleRegistry()),
                 mock(AuditionTranslationAttemptRepository.class));
     }
 
@@ -136,8 +136,8 @@ class AuditionLocalizationServiceTest {
 
         service.apply(audition, response, "pt-BR");
 
-        assertEquals("pt-br", response.getDefaultLocale());
-        assertEquals("pt-br", response.getContentLocale());
+        assertEquals("pt-BR", response.getDefaultLocale());
+        assertEquals("pt-BR", response.getContentLocale());
         assertEquals("원문 제목", response.getTitle());
         assertFalse(response.isContentLocaleFallback());
         assertTrue(response.isShowingOriginal());

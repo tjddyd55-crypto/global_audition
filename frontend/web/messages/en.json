@@ -1387,5 +1387,12 @@
     "channelName": "Untitled channel",
     "description": "No description",
     "date": "No date"
+  },
+  "translation": {
+    "showingOriginal": "Showing the original text.",
+    "viewOriginal": "View original",
+    "viewTranslation": "View translation",
+    "stale": "The source text changed, so this translation may be out of date.",
+    "sourceLocale": "Source language: {locale}"
   }
 }

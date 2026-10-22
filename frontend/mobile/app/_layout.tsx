@@ -11,6 +11,7 @@ import { AudienceCountryProvider } from '../src/domain/AudienceCountryProvider'
 import { OtaUpdatePrompt } from '../src/components/OtaUpdatePrompt'
 import { useOtaWatcher } from '../src/services/updates'
 import { colors } from '../src/theme/tokens'
+import { LanguageMenu } from '../src/i18n/LanguageMenu'
 
 export default function RootLayout() {
   useOtaWatcher()
@@ -53,6 +54,7 @@ function LocalizedStack() {
           headerTintColor: colors.purple,
           headerTitleStyle: { fontWeight: '700' },
           headerShadowVisible: false,
+          headerRight: () => <LanguageMenu />,
           contentStyle: { backgroundColor: colors.bg },
         }}
       >

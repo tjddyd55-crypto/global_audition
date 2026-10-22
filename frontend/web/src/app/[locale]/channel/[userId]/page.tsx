@@ -15,6 +15,7 @@ import { useTranslations } from 'next-intl'
 import { userApi } from '@/shared/api/user'
 import { authApi } from '@/shared/api/auth'
 import { DEFAULT_IMAGES } from '@/shared/constants/fallbacks'
+import { TranslationNotice, translatedText, useContentTranslation } from '@/components/i18n/TranslatedField'
 
 type TabId = 'videos' | 'info'
 
@@ -79,6 +80,10 @@ export default function ChannelByUserIdPage() {
   })
 
   const embeddedVideos = useMemo(() => data?.videos ?? [], [data?.videos])
+
+  const agencyCopy = useContentTranslation('AGENCY_PROFILE', userId)
+  const userCopy = useContentTranslation('USER_INTRO', userId)
+  const channelCopy = useContentTranslation('CHANNEL_DESCRIPTION', data?.channelId)
 
   const featuredId = data?.featuredVideo?.videoId ?? null
 
@@ -166,9 +171,12 @@ export default function ChannelByUserIdPage() {
   const natCode = knownNationalityCode(nat || null)
   const natLabel = natCode ? formatNationalityLabel(natCode, tNat(natCode)) : null
   const shortBio = data.shortBio?.trim() ?? ''
-  const longBio = data.bio?.trim() ?? ''
+  const longBio = agencyCopy.view
+    ? translatedText(data.bio, agencyCopy.view, 'bio', agencyCopy.showOriginal)
+    : (data.bio?.trim() ?? '')
   const categories = (data.categories ?? []).slice(0, 3)
-  const intro = data.introText?.trim()
+  const introSource = agencyCopy.view ? agencyCopy : userCopy
+  const intro = translatedText(data.introText, introSource.view, 'introText', introSource.showOriginal).trim()
   const profileSrc = data.profileImageUrl?.trim() || DEFAULT_IMAGES.avatar
 
   return (
@@ -274,20 +282,35 @@ export default function ChannelByUserIdPage() {
               <section className="border-b border-neutral-100 py-4">
                 <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{t('intro')}</h2>
                 <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-neutral-800">{longBio}</p>
+                <TranslationNotice
+                  view={agencyCopy.view}
+                  showOriginal={agencyCopy.showOriginal}
+                  onToggle={agencyCopy.setShowOriginal}
+                />
               </section>
             ) : null}
             {intro ? (
               <section className="border-b border-neutral-100 py-4">
                 <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{t('extraIntroTab')}</h2>
                 <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-neutral-800">{intro}</p>
+                <TranslationNotice
+                  view={introSource.view}
+                  showOriginal={introSource.showOriginal}
+                  onToggle={introSource.setShowOriginal}
+                />
               </section>
             ) : null}
-            {data.channelDescription?.trim() ? (
+            {translatedText(data.channelDescription, channelCopy.view, 'description', channelCopy.showOriginal).trim() ? (
               <section className="border-b border-neutral-100 py-4">
                 <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{t('description')}</h2>
                 <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-neutral-800">
-                  {data.channelDescription.trim()}
+                  {translatedText(data.channelDescription, channelCopy.view, 'description', channelCopy.showOriginal)}
                 </p>
+                <TranslationNotice
+                  view={channelCopy.view}
+                  showOriginal={channelCopy.showOriginal}
+                  onToggle={channelCopy.setShowOriginal}
+                />
               </section>
             ) : null}
             {data.snsLinks && data.snsLinks.length > 0 ? (
