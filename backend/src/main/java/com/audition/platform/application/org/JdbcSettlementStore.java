@@ -227,6 +227,19 @@ public class JdbcSettlementStore {
         return count == null ? 0 : count;
     }
 
+    public List<AdjustmentRow> adjustments(UUID settlementId) {
+        return jdbc.query("""
+                SELECT id, reason, delta_base_usd, created_at
+                FROM settlement_adjustments
+                WHERE settlement_id = ?
+                ORDER BY created_at
+                """, (rs, n) -> new AdjustmentRow(
+                rs.getObject("id", UUID.class),
+                rs.getString("reason"),
+                (Long) rs.getObject("delta_base_usd"),
+                rs.getTimestamp("created_at").toInstant()), settlementId);
+    }
+
     public List<SettlementRow> listSettlements(String country, String period, String status) {
         String sql = "SELECT * FROM monthly_settlements WHERE 1 = 1";
         List<Object> args = new ArrayList<>();
@@ -339,6 +352,9 @@ public class JdbcSettlementStore {
             String cashMappingPolicy,
             String confirmationState,
             String note) {
+    }
+
+    public record AdjustmentRow(UUID id, String reason, Long deltaBaseUsd, Instant createdAt) {
     }
 
     public record SettlementRow(

@@ -41,6 +41,11 @@ public class ContractController {
         return contracts.get(id);
     }
 
+    @GetMapping("/{id}/versions")
+    public List<ContractService.VersionView> versions(@PathVariable UUID id) {
+        return contracts.versions(id);
+    }
+
     @PostMapping
     public ContractView create(@RequestBody Draft draft) {
         return contracts.create(draft);

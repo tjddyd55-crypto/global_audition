@@ -58,6 +58,8 @@ class OrgScenarioIT {
     private SettlementService settlements;
     @Autowired
     private StatsService stats;
+    @Autowired
+    private CountryWorkspaceService workspace;
 
     @AfterEach
     void cleanup() {
@@ -268,6 +270,21 @@ class OrgScenarioIT {
         attributions.linkCash(extraPayment, money.id());
         SettlementView frozen = settlements.calculate(HOME, money.id(), "2026-01");
         assertEquals(12L, frozen.compensationUsd());
+        assertEquals("STORED", frozen.figureKind());
+        CountryWorkspaceService.Metrics hqMetrics = workspace.metrics(HOME, "2026-01");
+        asUser(secondRep);
+        CountryWorkspaceService.Metrics countryMetrics = workspace.metrics(HOME, "2026-01");
+        assertEquals(hqMetrics.feePerformanceUsd(), countryMetrics.feePerformanceUsd());
+        assertEquals(hqMetrics.paidUsageCredits(), countryMetrics.paidUsageCredits());
+        assertEquals(hqMetrics.freeUsageCredits(), countryMetrics.freeUsageCredits());
+        assertEquals(hqMetrics.settlementBaseUsd(), countryMetrics.settlementBaseUsd());
+        asUser(seller);
+        CountryWorkspaceService.Metrics staffMetrics = workspace.metrics(HOME, "2026-01");
+        assertNull(staffMetrics.rateBps());
+        assertNull(staffMetrics.expectedCompensation());
+        assertNull(staffMetrics.refundsUsd());
+        assertThrows(ResponseStatusException.class, () -> settlements.statement(january.id()));
+        asUser(hq);
         int paymentsBeforePayout = count("SELECT COUNT(*) FROM payment_orders");
         SettlementService.FxView incomplete = settlements.recordFx(january.id(), new SettlementService.FxDraft(
                 "USD", null, null, null, null, null, null));
@@ -291,6 +308,7 @@ class OrgScenarioIT {
         assertEquals(12L, adjusted.compensationUsd());
         assertEquals(1, count("SELECT COUNT(*) FROM settlement_adjustments WHERE settlement_id = '" + january.id() + "'"));
         contracts.end(money.id(), "term ended");
+        assertTrue(contractStore.versions(money.id()).stream().allMatch(row -> row.end() != null));
         ResponseStatusException revoked = assertThrows(ResponseStatusException.class, () -> contracts.download(money.id()));
         assertEquals("CONTRACT_ACCESS_REVOKED", revoked.getReason());
         assertEquals(2, contractStore.versions(money.id()).size());
@@ -300,8 +318,10 @@ class OrgScenarioIT {
         assertEquals(preservedPayments, count("SELECT COUNT(*) FROM payment_orders WHERE order_no NOT LIKE 'ORG-FLOW-%'"));
         assertEquals(preservedCredits, count("SELECT COUNT(*) FROM credit_transactions WHERE user_id NOT IN (SELECT id FROM users WHERE email LIKE '%@org.flow.test')"));
         assertTrue(otherContract.id() != null);
-        assertMixedCreditUseIsHeld(hq);
-        for (String file : List.of("V50__agency_crm.sql", "V51__contracts.sql", "V52__revenue_attribution_settlement.sql", "V53__settlement_policy_finalization.sql")) {
+        assertFreeCreditsAreConsumedFirst(hq);
+        for (String file : List.of(
+                "V50__agency_crm.sql", "V51__contracts.sql", "V52__revenue_attribution_settlement.sql",
+                "V53__settlement_policy_finalization.sql", "V54__free_first_credit_allocation.sql")) {
             String sql = java.nio.file.Files.readString(java.nio.file.Path.of("src/main/resources/db/migration/" + file)).toLowerCase();
             assertTrue(!sql.contains("update public.credit_transactions"));
             assertTrue(!sql.contains("update public.payment_orders"));
@@ -310,7 +330,7 @@ class OrgScenarioIT {
         }
     }
 
-    private void assertMixedCreditUseIsHeld(UUID hq) {
+    private void assertFreeCreditsAreConsumedFirst(UUID hq) {
         asUser(hq);
         cleanupQx();
         countries.createCountry("QX", "Mixed Home", "USD");
@@ -356,9 +376,30 @@ class OrgScenarioIT {
         insertUse(applicant, aprilAudition, "2026-04-02T00:00:00Z", 1);
         attributions.reconcileApplyUses();
         SettlementView april = settlements.calculate("QX", contract.id(), "2026-04");
-        assertEquals(SettlementMath.ALLOCATION_POLICY_PENDING, april.status());
-        assertNull(april.compensationUsd());
-        assertNull(april.compensationFinal());
+        assertEquals(SettlementMath.CALCULATED, april.status());
+        assertEquals(0L, april.compensationUsd());
+        assertEquals("0.00", april.compensationFinal());
+        assertEquals("EXPECTED", settlements.preview("QX", contract.id(), "2026-04").figureKind());
+        UUID grant = UUID.randomUUID();
+        jdbc.update("""
+                INSERT INTO credit_transactions (id, user_id, amount, type, reason, created_at)
+                VALUES (?, ?, 2, 'GRANT', 'TEST_GRANT', ?)
+                """, grant, applicant, Timestamp.from(OffsetDateTime.parse("2026-05-01T00:00:00Z").toInstant()));
+        UUID mayPackage = UUID.randomUUID();
+        jdbc.update("INSERT INTO credit_packages (id, name, price, credits, bonus_credits) VALUES (?, 'org-flow-package-split', 10, 10, 0)", mayPackage);
+        insertPayment(applicant, mayPackage, 10, "2026-05-01T01:00:00Z");
+        UUID mayAudition = insertAudition(owner, branch.id(), "PH");
+        insertApplication(mayAudition, applicant);
+        insertUse(applicant, mayAudition, "2026-05-02T00:00:00Z", 3);
+        attributions.reconcileApplyUses();
+        SettlementView may = settlements.calculate("QX", contract.id(), "2026-05");
+        assertEquals(SettlementMath.CALCULATED, may.status());
+        assertEquals(1L, may.targetRevenueUsd());
+        assertEquals("0.33", may.compensationFinal());
+        assertEquals(0, new java.math.BigDecimal(may.compensationRaw()).compareTo(new java.math.BigDecimal("0.3333")));
+        String csv = settlements.statementCsv(may.id());
+        assertTrue(csv.contains("free_credits"));
+        assertTrue(csv.contains("Mixed Agency"));
         cleanupQx();
     }
 
@@ -380,8 +421,8 @@ class OrgScenarioIT {
         jdbc.update("DELETE FROM crm_agencies WHERE country_code = 'QX'");
         jdbc.update("DELETE FROM country_admin_appointments WHERE country_code = 'QX'");
         jdbc.update("DELETE FROM country_org_audit WHERE country_code = 'QX'");
-        jdbc.update("DELETE FROM payment_orders WHERE package_id IN (SELECT id FROM credit_packages WHERE name IN ('org-flow-package-mix', 'org-flow-package-bonus'))");
-        jdbc.update("DELETE FROM credit_packages WHERE name IN ('org-flow-package-mix', 'org-flow-package-bonus')");
+        jdbc.update("DELETE FROM payment_orders WHERE package_id IN (SELECT id FROM credit_packages WHERE name IN ('org-flow-package-mix', 'org-flow-package-bonus', 'org-flow-package-split'))");
+        jdbc.update("DELETE FROM credit_packages WHERE name IN ('org-flow-package-mix', 'org-flow-package-bonus', 'org-flow-package-split')");
         jdbc.update("DELETE FROM countries WHERE code = 'QX'");
     }
 

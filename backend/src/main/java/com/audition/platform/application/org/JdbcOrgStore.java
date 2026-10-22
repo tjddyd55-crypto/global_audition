@@ -168,6 +168,52 @@ public class JdbcOrgStore implements OrgDirectory {
                 """, id, countryCode, userId, appointedBy, Timestamp.from(at));
     }
 
+    public List<StaffRow> listStaff(String countryCode) {
+        return jdbc.query("""
+                SELECT a.id, a.user_id, a.status, u.email, u.display_name, a.appointed_at, a.ended_at
+                FROM country_staff_assignments a
+                JOIN users u ON u.id = a.user_id
+                WHERE a.country_code = ?
+                ORDER BY a.appointed_at DESC
+                """, (rs, n) -> new StaffRow(
+                rs.getObject("id", UUID.class),
+                rs.getObject("user_id", UUID.class),
+                rs.getString("status"),
+                rs.getString("email"),
+                rs.getString("display_name"),
+                rs.getTimestamp("appointed_at").toInstant(),
+                rs.getTimestamp("ended_at") == null ? null : rs.getTimestamp("ended_at").toInstant()), countryCode);
+    }
+
+    public List<String> permissions(UUID assignmentId) {
+        return jdbc.query("""
+                SELECT permission FROM country_staff_permissions
+                WHERE assignment_id = ? ORDER BY permission
+                """, (rs, n) -> rs.getString(1), assignmentId);
+    }
+
+    public List<UUID> assignedAgencies(UUID assignmentId) {
+        return jdbc.query("""
+                SELECT crm_agency_id FROM country_staff_agencies WHERE assignment_id = ?
+                """, (rs, n) -> rs.getObject(1, UUID.class), assignmentId);
+    }
+
+    public void endStaff(UUID assignmentId, Instant at) {
+        jdbc.update("""
+                UPDATE country_staff_assignments
+                SET status = 'ENDED', ended_at = ?
+                WHERE id = ? AND status = 'ACTIVE'
+                """, Timestamp.from(at), assignmentId);
+    }
+
+    public int activeStaffCount(UUID userId) {
+        Integer count = jdbc.queryForObject("""
+                SELECT COUNT(*) FROM country_staff_assignments
+                WHERE user_id = ? AND status = 'ACTIVE'
+                """, Integer.class, userId);
+        return count == null ? 0 : count;
+    }
+
     public void grantPermission(UUID assignmentId, String permission) {
         jdbc.update("""
                 INSERT INTO country_staff_permissions (assignment_id, permission)
@@ -190,6 +236,16 @@ public class JdbcOrgStore implements OrgDirectory {
     }
 
     public record CountryRow(String code, String name, String status, String currency, UUID representativeUserId) {
+    }
+
+    public record StaffRow(
+            UUID assignmentId,
+            UUID userId,
+            String status,
+            String email,
+            String displayName,
+            Instant appointedAt,
+            Instant endedAt) {
     }
 
     public record AppointmentRow(

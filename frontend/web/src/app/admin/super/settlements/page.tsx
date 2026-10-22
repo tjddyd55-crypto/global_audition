@@ -40,7 +40,7 @@ export default function SettlementsPage() {
   return (
     <div>
       <h1 className="mb-2 text-xl font-semibold">{adminKo.settlement}</h1>
-      <p className="mb-4 text-sm text-gray-600">{adminKo.payoutManual}</p>
+      <p className="mb-4 text-sm text-gray-600">{adminKo.payoutManual} 저장된 행은 확정 원장입니다. 실시간 예상은 국가 실적 화면의 예상 보상과 구분합니다.</p>
       <div className="mb-6 grid max-w-xl gap-2">
         <input className="rounded border px-3 py-2" aria-label="정산 국가" placeholder="국가 코드" value={country} onChange={(e) => setCountry(e.target.value.toUpperCase())} />
         <input className="rounded border px-3 py-2" aria-label="계약 ID" placeholder="계약 ID" value={contractId} onChange={(e) => setContractId(e.target.value)} />

@@ -103,9 +103,17 @@ public class JdbcContractStore {
     }
 
     public void end(UUID id) {
-        jdbc.update("""
+        int updated = jdbc.update("""
                 UPDATE contracts SET status = 'ENDED', ended_at = NOW(), updated_at = NOW()
                 WHERE id = ? AND status <> 'ENDED'
+                """, id);
+        if (updated != 1) {
+            return;
+        }
+        jdbc.update("""
+                UPDATE contract_versions
+                SET end_date = (date_trunc('month', timezone('UTC', now())) + interval '1 month' - interval '1 day')::date
+                WHERE contract_id = ? AND end_date IS NULL
                 """, id);
     }
 

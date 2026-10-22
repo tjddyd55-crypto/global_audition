@@ -9,6 +9,9 @@ import com.audition.platform.application.org.StatsService;
 import com.audition.platform.application.org.StatsService.CountryDetail;
 import com.audition.platform.application.org.StatsService.GlobalStats;
 import com.audition.platform.application.org.StatsService.Policy;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -60,6 +63,22 @@ public class OrgFinanceController {
             @RequestParam(required = false) String period,
             @RequestParam(required = false) String status) {
         return settlements.list(country, period, status);
+    }
+
+    @GetMapping("/settlements/preview")
+    public SettlementView preview(
+            @RequestParam String country,
+            @RequestParam UUID contractId,
+            @RequestParam String period) {
+        return settlements.preview(country, contractId, period);
+    }
+
+    @GetMapping(value = "/settlements/{id}/statement", produces = "text/csv")
+    public ResponseEntity<String> statement(@PathVariable UUID id) {
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"settlement-" + id + ".csv\"")
+                .contentType(MediaType.parseMediaType("text/csv"))
+                .body(settlements.statementCsv(id));
     }
 
     @PostMapping("/settlements/calculate")

@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -108,6 +109,11 @@ public class CrmService {
 
     @Transactional
     public void logConsult(UUID id, String body) {
+        logConsult(id, body, null);
+    }
+
+    @Transactional
+    public void logConsult(UUID id, String body, LocalDate followUpOn) {
         AgencyRow current = requireVisible(id);
         OrgAccess.Actor actor = access.requireCountry(current.countryCode());
         access.requireStaffPermission(actor, current.countryCode(), OrgRoles.PERM_CONSULT_LOG);
@@ -115,7 +121,36 @@ public class CrmService {
         if (body == null || body.isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "NOTE_REQUIRED");
         }
-        crm.activity(UUID.randomUUID(), id, current.countryCode(), actor.id(), "CONSULT", body.trim());
+        crm.activity(UUID.randomUUID(), id, current.countryCode(), actor.id(), "CONSULT", body.trim(), followUpOn);
+    }
+
+    @Transactional
+    public void linkAudition(UUID agencyId, UUID auditionId) {
+        AgencyRow agency = requireVisible(agencyId);
+        OrgAccess.Actor actor = access.requireCountry(agency.countryCode());
+        if (OrgRoles.countryStaff(actor.role())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "STAFF_PERMISSION_DENIED");
+        }
+        if (!AgencyApproval.APPROVED.equals(agency.approvalState())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "AGENCY_NOT_APPROVED");
+        }
+        if (crm.linkAudition(agencyId, auditionId) != 1) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "AUDITION_NOT_FOUND");
+        }
+        org.audit(UUID.randomUUID(), "AUDITION_BRANCH_LINKED", actor.id(), agency.countryCode(), "AUDITION", auditionId.toString(), agencyId.toString());
+    }
+
+    public List<JdbcCrmStore.ActivityRow> activityLog(String rawCountry, UUID agencyId) {
+        String code = CountryCodes.iso2(rawCountry);
+        OrgAccess.Actor actor = access.requireCountry(code);
+        UUID only = OrgRoles.countryStaff(actor.role()) ? actor.id() : null;
+        if (only != null) {
+            access.requireStaffPermission(actor, code, OrgRoles.PERM_CONSULT_LOG);
+            if (agencyId != null) {
+                access.requireAssignedAgency(actor, code, agencyId);
+            }
+        }
+        return crm.activities(code, only, agencyId);
     }
 
     public List<AgencySelf> own() {

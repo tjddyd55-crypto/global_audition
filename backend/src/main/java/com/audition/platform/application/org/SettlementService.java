@@ -193,6 +193,99 @@ public class SettlementService {
         return fxView(store.findFx(id).orElseThrow());
     }
 
+    @Transactional
+    public SettlementView preview(String rawCountry, UUID contractId, String period) {
+        String country = CountryCodes.iso2(rawCountry);
+        OrgAccess.Actor actor = access.requireCountry(country);
+        if (OrgRoles.countryStaff(actor.role())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "STAFF_PERMISSION_DENIED");
+        }
+        YearMonth month = parse(period);
+        ContractRow contract = contracts.find(contractId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "CONTRACT_NOT_FOUND"));
+        if (!contract.countryCode().equals(country)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "COUNTRY_SCOPE_DENIED");
+        }
+        lots.rebuild();
+        SettlementRow computed = compute(UUID.randomUUID(), contract, month);
+        return view(computed, "EXPECTED");
+    }
+
+    public Statement statement(UUID id) {
+        SettlementRow row = require(id);
+        OrgAccess.Actor actor = access.requireCountry(row.countryCode());
+        if (OrgRoles.countryStaff(actor.role())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "STAFF_PERMISSION_DENIED");
+        }
+        YearMonth month = parse(row.periodKey());
+        Instant from = month.atDay(1).atStartOfDay().toInstant(ZoneOffset.UTC);
+        Instant to = month.plusMonths(1).atDay(1).atStartOfDay().toInstant(ZoneOffset.UTC);
+        ContractRow contract = contracts.find(row.contractId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "CONTRACT_NOT_FOUND"));
+        List<StatementLine> lines = lots.agencyUsage(row.contractId(), from, to).stream()
+                .map(usage -> new StatementLine(
+                        usage.agencyName(), usage.freeCredits(), usage.paidCredits(), usage.payableUsd(), usage.reviewCredits()))
+                .toList();
+        List<StatementAdjustment> adjustments = store.adjustments(id).stream()
+                .map(item -> new StatementAdjustment(item.reason(), item.deltaBaseUsd(), item.createdAt().toString()))
+                .toList();
+        return new Statement(
+                row.countryCode(),
+                contract.counterparty(),
+                row.periodKey(),
+                row.status(),
+                row.rateBps(),
+                row.settlementBasis(),
+                row.targetRevenueUsd(),
+                row.refundsUsd(),
+                row.paymentFeesUsd(),
+                row.extraDeductionsUsd(),
+                row.settlementBaseUsd(),
+                plain(row.baseFigure(), "settled"),
+                plain(row.compensationFigure(), "settled"),
+                plain(row.hqFigure(), "settled"),
+                row.payoutNote(),
+                row.note(),
+                lines,
+                adjustments);
+    }
+
+    public String statementCsv(UUID id) {
+        Statement statement = statement(id);
+        StringBuilder csv = new StringBuilder();
+        csv.append("country,counterparty,period,status,rate_bps,basis,target_usd,refunds_usd,payment_fees_usd,extra_deductions_usd,base_usd,base_final,compensation_final,hq_share_final,payout_note\n");
+        csv.append(csvCell(statement.countryCode())).append(',')
+                .append(csvCell(statement.counterparty())).append(',')
+                .append(csvCell(statement.period())).append(',')
+                .append(csvCell(statement.status())).append(',')
+                .append(statement.rateBps() == null ? "" : statement.rateBps()).append(',')
+                .append(csvCell(statement.basis())).append(',')
+                .append(num(statement.targetUsd())).append(',')
+                .append(num(statement.refundsUsd())).append(',')
+                .append(num(statement.paymentFeesUsd())).append(',')
+                .append(num(statement.extraDeductionsUsd())).append(',')
+                .append(num(statement.baseUsd())).append(',')
+                .append(csvCell(statement.baseFinal())).append(',')
+                .append(csvCell(statement.compensationFinal())).append(',')
+                .append(csvCell(statement.hqShareFinal())).append(',')
+                .append(csvCell(statement.payoutNote())).append('\n');
+        csv.append("agency,free_credits,paid_credits,settleable_usd,review_credits\n");
+        for (StatementLine line : statement.lines()) {
+            csv.append(csvCell(line.agencyName())).append(',')
+                    .append(line.freeCredits()).append(',')
+                    .append(line.paidCredits()).append(',')
+                    .append(line.settleableUsd()).append(',')
+                    .append(line.reviewCredits()).append('\n');
+        }
+        csv.append("adjustment_reason,delta_base_usd,created_at\n");
+        for (StatementAdjustment adjustment : statement.adjustments()) {
+            csv.append(csvCell(adjustment.reason())).append(',')
+                    .append(num(adjustment.deltaBaseUsd())).append(',')
+                    .append(csvCell(adjustment.createdAt())).append('\n');
+        }
+        return csv.toString();
+    }
+
     public List<SettlementView> list(String country, String period, String status) {
         if (country == null || country.isBlank()) {
             access.requireHq();
@@ -238,14 +331,13 @@ public class SettlementService {
         if (!SettlementMath.CALCULATED.equals(missing.status()) && !"NEGATIVE_BASE".equals(missing.note())) {
             return draft(id, contract, month, version, missing.note());
         }
-        long pending = usages.stream().filter(row -> CreditAllocation.PENDING.equals(row.allocationStatus())).count();
+        long excluded = usages.stream().filter(row ->
+                CreditAllocation.REVIEW.equals(row.allocationStatus())
+                        || CreditAllocation.PENDING.equals(row.allocationStatus())).count();
         long payable = usages.stream()
                 .filter(row -> CreditAllocation.ALLOCATED.equals(row.allocationStatus()))
                 .mapToLong(row -> row.payableUsd() == null ? 0 : row.payableUsd())
                 .sum();
-        if (pending > 0 && payable == 0) {
-            return held(id, contract, month, version, SettlementMath.ALLOCATION_POLICY_PENDING, "ALLOCATION_POLICY_PENDING");
-        }
         RefundDecision refunds = SettlementMath.DEDUCTION_NONE.equals(version.refundDeductionBasis())
                 ? new RefundDecision(false, 0)
                 : refunds(contract.id(), from, to);
@@ -260,8 +352,8 @@ public class SettlementService {
                 + ";PAYABLE_USAGE_NOT_CASH_COLLECTION"
                 + ";EXPERT_REVIEW_REVENUE_RECOGNITION"
                 + ";EXPERT_REVIEW_BREAKAGE";
-        if (pending > 0) {
-            note = note + ";HELD_USAGES_EXCLUDED";
+        if (excluded > 0) {
+            note = note + ";REVIEW_REQUIRED_EXCLUDED:" + excluded;
         }
         return new SettlementRow(
                 id, contract.countryCode(), contract.id(), month.toString(), math.status(),
@@ -289,7 +381,9 @@ public class SettlementService {
             Set<UUID> contracts = new HashSet<>();
             boolean unresolved = remaining > 0;
             for (JdbcCreditLotStore.PaidUse use : uses) {
-                if (use.contractId() == null || CreditAllocation.PENDING.equals(use.status())) {
+                if (use.contractId() == null
+                        || CreditAllocation.PENDING.equals(use.status())
+                        || CreditAllocation.REVIEW.equals(use.status())) {
                     unresolved = true;
                 }
                 if (use.contractId() != null) {
@@ -343,6 +437,10 @@ public class SettlementService {
     }
 
     private SettlementView view(SettlementRow row) {
+        return view(row, "STORED");
+    }
+
+    private SettlementView view(SettlementRow row, String figureKind) {
         return new SettlementView(
                 row.id(), row.countryCode(), row.contractId(), row.periodKey(), row.status(),
                 row.targetRevenueUsd(), row.refundsUsd(), row.paymentFeesUsd(), row.extraDeductionsUsd(),
@@ -351,7 +449,8 @@ public class SettlementService {
                 row.payoutCurrency(),
                 plain(row.baseFigure(), "raw"), plain(row.baseFigure(), "settled"), plain(row.baseFigure(), "diff"),
                 plain(row.compensationFigure(), "raw"), plain(row.compensationFigure(), "settled"), plain(row.compensationFigure(), "diff"),
-                plain(row.hqFigure(), "raw"), plain(row.hqFigure(), "settled"), plain(row.hqFigure(), "diff"));
+                plain(row.hqFigure(), "raw"), plain(row.hqFigure(), "settled"), plain(row.hqFigure(), "diff"),
+                figureKind);
     }
 
     private static FxView fxView(JdbcSettlementStore.FxRow row) {
@@ -402,6 +501,21 @@ public class SettlementService {
         return value == null || value.isBlank() ? null : value.trim();
     }
 
+    private static String num(Long value) {
+        return value == null ? "" : value.toString();
+    }
+
+    private static String csvCell(String value) {
+        if (value == null) {
+            return "";
+        }
+        String escaped = value.replace("\"", "\"\"");
+        if (escaped.contains(",") || escaped.contains("\n") || escaped.contains("\"")) {
+            return "\"" + escaped + "\"";
+        }
+        return escaped;
+    }
+
     public record SettlementView(
             UUID id,
             String countryCode,
@@ -429,7 +543,35 @@ public class SettlementService {
             String compensationDiff,
             String hqShareRaw,
             String hqShareFinal,
-            String hqShareDiff) {
+            String hqShareDiff,
+            String figureKind) {
+    }
+
+    public record Statement(
+            String countryCode,
+            String counterparty,
+            String period,
+            String status,
+            Integer rateBps,
+            String basis,
+            Long targetUsd,
+            Long refundsUsd,
+            Long paymentFeesUsd,
+            Long extraDeductionsUsd,
+            Long baseUsd,
+            String baseFinal,
+            String compensationFinal,
+            String hqShareFinal,
+            String payoutNote,
+            String note,
+            List<StatementLine> lines,
+            List<StatementAdjustment> adjustments) {
+    }
+
+    public record StatementLine(String agencyName, long freeCredits, long paidCredits, long settleableUsd, long reviewCredits) {
+    }
+
+    public record StatementAdjustment(String reason, Long deltaBaseUsd, String createdAt) {
     }
 
     public record FxDraft(

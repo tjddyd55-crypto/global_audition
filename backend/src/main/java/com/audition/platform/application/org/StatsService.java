@@ -32,7 +32,7 @@ public class StatsService {
                 List.of(
                         "Cash collection and credit usage are stored separately and are not added.",
                         "Country payout uses paid-credit usage linked to a real payment, attributed to the posting branch.",
-                        "Mixed paid and free usage stays ALLOCATION_POLICY_PENDING while allocation_policy is UNCONFIRMED.",
+                        "Free credits are consumed before paid credits. Uses that cannot be split reliably stay REVIEW_REQUIRED and are excluded from compensation.",
                         "Settlement USD is aggregated, then rounded once to 2 decimals HALF_UP. Raw, final, and difference are stored.",
                         "Accounting revenue recognition and unused-credit breakage require expert review.",
                         "Non-USD payout stays unfinalized until a super admin records a verified rate.",
@@ -41,6 +41,9 @@ public class StatsService {
 
     public GlobalStats global(String country, String period) {
         OrgAccess.Actor actor = access.requireUser();
+        if (OrgRoles.countryStaff(actor.role())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "STAFF_PERMISSION_DENIED");
+        }
         String scoped = scopedCountry(actor, country);
         List<CountrySlice> slices = slices(scoped, period);
         int countries = scoped == null
@@ -157,6 +160,11 @@ public class StatsService {
                 rs.getLong("hq_usd")), shareArgs.toArray());
         long payoutScheduled = shares.stream().filter(row -> "APPROVED".equals(row.status())).mapToLong(ContractShare::count).sum();
         long payoutDone = shares.stream().filter(row -> "PAID".equals(row.status())).mapToLong(ContractShare::count).sum();
+        if (OrgRoles.countryStaff(actor.role())) {
+            shares = List.of();
+            payoutScheduled = 0;
+            payoutDone = 0;
+        }
         return new CountryDetail(
                 code, auditions, applications, registered, approved,
                 registered == 0 ? null : approved + "/" + registered,

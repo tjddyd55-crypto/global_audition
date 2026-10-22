@@ -22,6 +22,7 @@ const MENU = [
   { name: '계약', path: '/admin/super/contracts' },
   { name: '매출 통계', path: '/admin/super/revenue' },
   { name: '월 정산', path: '/admin/super/settlements' },
+  { name: '국가 실적', path: '/admin/super/country-ops' },
 ] as const
 
 export default function SuperAdminLayout({ children }: { children: React.ReactNode }) {

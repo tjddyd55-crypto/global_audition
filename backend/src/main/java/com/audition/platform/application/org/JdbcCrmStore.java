@@ -3,6 +3,9 @@ package com.audition.platform.application.org;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Date;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -72,11 +75,46 @@ public class JdbcCrmStore {
                 """, id, agencyId, from, to, action, actor, reason);
     }
 
-    public void activity(UUID id, UUID agencyId, String country, UUID actor, String kind, String body) {
+    public void activity(UUID id, UUID agencyId, String country, UUID actor, String kind, String body, LocalDate followUpOn) {
         jdbc.update("""
-                INSERT INTO crm_activities (id, crm_agency_id, country_code, actor_id, kind, body)
-                VALUES (?, ?, ?, ?, ?, ?)
-                """, id, agencyId, country, actor, kind, body);
+                INSERT INTO crm_activities (id, crm_agency_id, country_code, actor_id, kind, body, follow_up_on)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """, id, agencyId, country, actor, kind, body, followUpOn == null ? null : Date.valueOf(followUpOn));
+    }
+
+    public List<ActivityRow> activities(String countryCode, UUID actorId, UUID agencyId) {
+        String sql = """
+                SELECT id, crm_agency_id, actor_id, kind, body, follow_up_on, created_at
+                FROM crm_activities
+                WHERE country_code = ?
+                """;
+        List<Object> args = new java.util.ArrayList<>();
+        args.add(countryCode);
+        if (actorId != null) {
+            sql += " AND actor_id = ?";
+            args.add(actorId);
+        }
+        if (agencyId != null) {
+            sql += " AND crm_agency_id = ?";
+            args.add(agencyId);
+        }
+        sql += " ORDER BY created_at DESC";
+        return jdbc.query(sql, (rs, n) -> new ActivityRow(
+                rs.getObject("id", UUID.class),
+                rs.getObject("crm_agency_id", UUID.class),
+                rs.getObject("actor_id", UUID.class),
+                rs.getString("kind"),
+                rs.getString("body"),
+                rs.getDate("follow_up_on") == null ? null : rs.getDate("follow_up_on").toLocalDate(),
+                rs.getTimestamp("created_at").toInstant()), args.toArray());
+    }
+
+    public int linkAudition(UUID agencyId, UUID auditionId) {
+        return jdbc.update("""
+                UPDATE auditions
+                SET posting_branch_id = ?
+                WHERE id = ? AND (posting_branch_id IS NULL OR posting_branch_id = ?)
+                """, agencyId, auditionId, agencyId);
     }
 
     public void assign(UUID assignmentId, UUID agencyId) {
@@ -134,6 +172,16 @@ public class JdbcCrmStore {
     }
 
     public record ActivityCount(UUID actorId, String kind, long total) {
+    }
+
+    public record ActivityRow(
+            UUID id,
+            UUID agencyId,
+            UUID actorId,
+            String kind,
+            String body,
+            LocalDate followUpOn,
+            Instant createdAt) {
     }
 
     public record AgencyRow(

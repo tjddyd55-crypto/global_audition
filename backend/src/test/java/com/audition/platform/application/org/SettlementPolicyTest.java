@@ -10,6 +10,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SettlementPolicyTest {
 
@@ -73,39 +74,74 @@ class SettlementPolicyTest {
     }
 
     @Test
-    void paidUsageAllocatesAndMixedUsageStaysPending() {
+    void freeCreditsAreSpentBeforePaidCredits() {
         UUID user = UUID.randomUUID();
-        UUID payment = UUID.randomUUID();
         CreditAllocation.Lot paid = new CreditAllocation.Lot(
-                UUID.randomUUID(), user, payment, CreditAllocation.PAID, 10, 10, true, Instant.parse("2026-01-01T00:00:00Z"));
+                UUID.randomUUID(), user, UUID.randomUUID(), CreditAllocation.PAID, 10, 10, true, Instant.parse("2026-01-01T00:00:00Z"));
+        CreditAllocation.Lot free = new CreditAllocation.Lot(
+                UUID.randomUUID(), user, null, CreditAllocation.FREE, 2, 0, true, Instant.parse("2026-01-01T00:00:01Z"));
+        CreditAllocation.Use mixed = new CreditAllocation.Use(
+                UUID.randomUUID(), user, 3, Instant.parse("2026-01-02T00:00:00Z"));
+        CreditAllocation.Replay replay = CreditAllocation.replay(List.of(paid, free), List.of(mixed), CreditAllocation.POLICY_FREE_FIRST);
+        assertEquals(2, replay.outcomes().size());
+        CreditAllocation.Outcome freeOutcome = replay.outcomes().get(0);
+        CreditAllocation.Outcome paidOutcome = replay.outcomes().get(1);
+        assertEquals(CreditAllocation.FREE, freeOutcome.bucket());
+        assertEquals(2L, freeOutcome.credits());
+        assertEquals(0L, freeOutcome.payableUsd());
+        assertEquals(CreditAllocation.PAID, paidOutcome.bucket());
+        assertEquals(1L, paidOutcome.credits());
+        assertEquals(1L, paidOutcome.payableUsd());
+        assertEquals(9L, replay.lots().get(0).remainingCredits());
+        assertEquals(0L, replay.lots().get(1).remainingCredits());
+        assertEquals(3L, freeOutcome.credits() + paidOutcome.credits());
+    }
+
+    @Test
+    void paidOnlyAndFreeOnlyStaySeparate() {
+        UUID user = UUID.randomUUID();
+        CreditAllocation.Lot paid = new CreditAllocation.Lot(
+                UUID.randomUUID(), user, UUID.randomUUID(), CreditAllocation.PAID, 10, 10, true, Instant.parse("2026-01-01T00:00:00Z"));
         CreditAllocation.Use clear = new CreditAllocation.Use(
                 UUID.randomUUID(), user, 4, Instant.parse("2026-01-02T00:00:00Z"));
-        CreditAllocation.Replay paidOnly = CreditAllocation.replay(List.of(paid), List.of(clear), CreditAllocation.POLICY_UNCONFIRMED);
+        CreditAllocation.Replay paidOnly = CreditAllocation.replay(List.of(paid), List.of(clear), CreditAllocation.POLICY_FREE_FIRST);
         assertEquals(CreditAllocation.ALLOCATED, paidOnly.outcomes().get(0).status());
         assertEquals(4L, paidOnly.outcomes().get(0).payableUsd());
         assertEquals(6L, paidOnly.lots().get(0).remainingCredits());
 
         CreditAllocation.Lot free = new CreditAllocation.Lot(
-                UUID.randomUUID(), user, null, CreditAllocation.FREE, 3, 0, true, Instant.parse("2026-01-01T00:00:00Z"));
-        CreditAllocation.Use mixed = new CreditAllocation.Use(
-                UUID.randomUUID(), user, 2, Instant.parse("2026-01-03T00:00:00Z"));
-        CreditAllocation.Replay held = CreditAllocation.replay(List.of(paid, free), List.of(mixed), CreditAllocation.POLICY_UNCONFIRMED);
-        assertEquals(CreditAllocation.PENDING, held.outcomes().get(0).status());
-        assertNull(held.outcomes().get(0).payableUsd());
-        assertEquals(10L, held.lots().get(0).remainingCredits());
-        assertEquals(3L, held.lots().get(1).remainingCredits());
-    }
-
-    @Test
-    void freeCreditsAreNotPayable() {
-        UUID user = UUID.randomUUID();
-        CreditAllocation.Lot free = new CreditAllocation.Lot(
                 UUID.randomUUID(), user, null, CreditAllocation.FREE, 5, 0, true, Instant.parse("2026-01-01T00:00:00Z"));
         CreditAllocation.Use use = new CreditAllocation.Use(
                 UUID.randomUUID(), user, 5, Instant.parse("2026-01-02T00:00:00Z"));
-        CreditAllocation.Replay replay = CreditAllocation.replay(List.of(free), List.of(use), CreditAllocation.POLICY_UNCONFIRMED);
-        assertEquals(CreditAllocation.ALLOCATED, replay.outcomes().get(0).status());
-        assertEquals(0L, replay.outcomes().get(0).payableUsd());
+        CreditAllocation.Replay freeOnly = CreditAllocation.replay(List.of(free), List.of(use), CreditAllocation.POLICY_FREE_FIRST);
+        assertEquals(0L, freeOnly.outcomes().get(0).payableUsd());
+        assertEquals(0L, freeOnly.lots().get(0).remainingCredits());
+    }
+
+    @Test
+    void insufficientOrUnconfirmedUsageIsNotEstimated() {
+        UUID user = UUID.randomUUID();
+        CreditAllocation.Lot paid = new CreditAllocation.Lot(
+                UUID.randomUUID(), user, UUID.randomUUID(), CreditAllocation.PAID, 1, 1, true, Instant.parse("2026-01-01T00:00:00Z"));
+        CreditAllocation.Lot free = new CreditAllocation.Lot(
+                UUID.randomUUID(), user, null, CreditAllocation.FREE, 1, 0, true, Instant.parse("2026-01-01T00:00:01Z"));
+        CreditAllocation.Lot unclassified = new CreditAllocation.Lot(
+                UUID.randomUUID(), user, UUID.randomUUID(), CreditAllocation.UNCLASSIFIED, 5, 0, false, Instant.parse("2026-01-01T00:00:02Z"));
+        CreditAllocation.Use shortfall = new CreditAllocation.Use(
+                UUID.randomUUID(), user, 3, Instant.parse("2026-01-02T00:00:00Z"));
+        CreditAllocation.Replay review = CreditAllocation.replay(
+                List.of(paid, free, unclassified), List.of(shortfall), CreditAllocation.POLICY_FREE_FIRST);
+        assertEquals(CreditAllocation.REVIEW, review.outcomes().get(0).status());
+        assertNull(review.outcomes().get(0).payableUsd());
+        assertEquals(1L, review.lots().get(0).remainingCredits());
+        assertEquals(1L, review.lots().get(1).remainingCredits());
+        assertEquals(5L, review.lots().get(2).remainingCredits());
+
+        CreditAllocation.Replay unconfirmed = CreditAllocation.replay(
+                List.of(paid), List.of(shortfall), CreditAllocation.POLICY_UNCONFIRMED);
+        assertEquals(CreditAllocation.REVIEW, unconfirmed.outcomes().get(0).status());
+        assertEquals(1L, unconfirmed.lots().get(0).remainingCredits());
+        assertTrue(review.outcomes().stream().noneMatch(row -> CreditAllocation.PENDING.equals(row.status())));
     }
 
     @Test

@@ -57,16 +57,55 @@ public class JdbcCreditLotStore {
 
     public List<UsageRow> usages(UUID contractId, Instant from, Instant to) {
         return jdbc.query("""
-                SELECT ra.id AS attribution_id, ra.contract_version_id, a.status, a.payable_usd
+                SELECT ra.id AS attribution_id,
+                       ra.contract_version_id,
+                       CASE
+                           WHEN COUNT(a.id) = 0 THEN NULL
+                           WHEN BOOL_OR(a.status = 'REVIEW_REQUIRED') THEN 'REVIEW_REQUIRED'
+                           WHEN BOOL_OR(a.status <> 'ALLOCATED') THEN 'ALLOCATION_POLICY_PENDING'
+                           ELSE 'ALLOCATED'
+                       END AS status,
+                       CASE
+                           WHEN COUNT(a.id) = 0 OR BOOL_OR(a.status <> 'ALLOCATED') THEN NULL
+                           ELSE SUM(a.payable_usd)::bigint
+                       END AS payable_usd,
+                       COALESCE(SUM(CASE WHEN a.status = 'ALLOCATED' AND a.bucket = 'FREE' THEN a.credits ELSE 0 END), 0)::bigint AS free_credits,
+                       COALESCE(SUM(CASE WHEN a.status = 'ALLOCATED' AND a.bucket = 'PAID' THEN a.credits ELSE 0 END), 0)::bigint AS paid_credits
                 FROM revenue_attributions ra
                 LEFT JOIN credit_lot_allocations a ON a.usage_credit_transaction_id = ra.credit_transaction_id
                 WHERE ra.contract_id = ? AND ra.recognition = 'SALES' AND ra.line_kind = 'REVENUE'
                   AND ra.occurred_at >= ? AND ra.occurred_at < ?
+                GROUP BY ra.id, ra.contract_version_id
                 """, (rs, n) -> new UsageRow(
                 rs.getObject("attribution_id", UUID.class),
                 rs.getObject("contract_version_id", UUID.class),
                 rs.getString("status"),
-                (Long) rs.getObject("payable_usd")),
+                (Long) rs.getObject("payable_usd"),
+                rs.getLong("free_credits"),
+                rs.getLong("paid_credits")),
+                contractId, Timestamp.from(from), Timestamp.from(to));
+    }
+
+    public List<AgencyUsage> agencyUsage(UUID contractId, Instant from, Instant to) {
+        return jdbc.query("""
+                SELECT COALESCE(g.display_name, '') AS agency_name,
+                       COALESCE(SUM(CASE WHEN a.status = 'ALLOCATED' AND a.bucket = 'FREE' THEN a.credits ELSE 0 END), 0)::bigint AS free_credits,
+                       COALESCE(SUM(CASE WHEN a.status = 'ALLOCATED' AND a.bucket = 'PAID' THEN a.credits ELSE 0 END), 0)::bigint AS paid_credits,
+                       COALESCE(SUM(CASE WHEN a.status = 'ALLOCATED' THEN a.payable_usd ELSE 0 END), 0)::bigint AS payable_usd,
+                       COALESCE(SUM(CASE WHEN a.status = 'REVIEW_REQUIRED' THEN a.credits ELSE 0 END), 0)::bigint AS review_credits
+                FROM revenue_attributions ra
+                LEFT JOIN credit_lot_allocations a ON a.usage_credit_transaction_id = ra.credit_transaction_id
+                LEFT JOIN crm_agencies g ON g.id = ra.crm_agency_id
+                WHERE ra.contract_id = ? AND ra.recognition = 'SALES' AND ra.line_kind = 'REVENUE'
+                  AND ra.occurred_at >= ? AND ra.occurred_at < ?
+                GROUP BY g.display_name
+                ORDER BY g.display_name
+                """, (rs, n) -> new AgencyUsage(
+                rs.getString("agency_name"),
+                rs.getLong("free_credits"),
+                rs.getLong("paid_credits"),
+                rs.getLong("payable_usd"),
+                rs.getLong("review_credits")),
                 contractId, Timestamp.from(from), Timestamp.from(to));
     }
 
@@ -167,7 +206,16 @@ public class JdbcCreditLotStore {
                 rs.getTimestamp("created_at").toInstant()));
     }
 
-    public record UsageRow(UUID attributionId, UUID versionId, String allocationStatus, Long payableUsd) {
+    public record AgencyUsage(String agencyName, long freeCredits, long paidCredits, long payableUsd, long reviewCredits) {
+    }
+
+    public record UsageRow(
+            UUID attributionId,
+            UUID versionId,
+            String allocationStatus,
+            Long payableUsd,
+            long freeCredits,
+            long paidCredits) {
     }
 
     public record RefundLink(UUID paymentOrderId, long amountUsd) {

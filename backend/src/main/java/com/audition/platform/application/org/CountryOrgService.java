@@ -16,10 +16,12 @@ import java.util.UUID;
 public class CountryOrgService {
 
     private final JdbcOrgStore store;
+    private final JdbcCrmStore crm;
     private final OrgAccess access;
 
-    public CountryOrgService(JdbcOrgStore store, OrgAccess access) {
+    public CountryOrgService(JdbcOrgStore store, JdbcCrmStore crm, OrgAccess access) {
         this.store = store;
+        this.crm = crm;
         this.access = access;
     }
 
@@ -114,6 +116,51 @@ public class CountryOrgService {
         store.audit(UUID.randomUUID(), "COUNTRY_STAFF_ADDED", actor.id(), code, "STAFF", assignmentId.toString(), null);
     }
 
+    public List<StaffView> listStaff(String rawCode) {
+        String code = CountryCodes.iso2(rawCode);
+        OrgAccess.Actor actor = access.requireCountry(code);
+        if (OrgRoles.countryStaff(actor.role())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "STAFF_PERMISSION_DENIED");
+        }
+        return store.listStaff(code).stream().map(row -> new StaffView(
+                row.assignmentId(), row.userId(), row.status(), row.email(), row.displayName(),
+                row.appointedAt(), row.endedAt(),
+                store.permissions(row.assignmentId()),
+                store.assignedAgencies(row.assignmentId()))).toList();
+    }
+
+    @Transactional
+    public void deactivateStaff(String rawCode, UUID userId) {
+        OrgAccess.Actor actor = access.requireCountry(rawCode);
+        if (OrgRoles.countryStaff(actor.role())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "STAFF_CANNOT_APPOINT");
+        }
+        String code = requireCountry(rawCode);
+        UUID assignmentId = store.activeStaffAssignment(code, userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "STAFF_NOT_FOUND"));
+        store.endStaff(assignmentId, Instant.now());
+        if (store.activeStaffCount(userId) == 0 && OrgRoles.COUNTRY_STAFF.equals(store.roleOf(userId))) {
+            store.setRoleIfNotHq(userId, "USER");
+        }
+        store.audit(UUID.randomUUID(), "COUNTRY_STAFF_DEACTIVATED", actor.id(), code, "STAFF", assignmentId.toString(), null);
+    }
+
+    @Transactional
+    public void assignAgency(String rawCode, UUID userId, UUID agencyId) {
+        OrgAccess.Actor actor = access.requireCountry(rawCode);
+        if (OrgRoles.countryStaff(actor.role())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "STAFF_CANNOT_APPOINT");
+        }
+        String code = requireCountry(rawCode);
+        UUID assignmentId = store.activeStaffAssignment(code, userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "STAFF_NOT_FOUND"));
+        if (crm.find(agencyId).filter(row -> code.equals(row.countryCode())).isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "AGENCY_NOT_FOUND");
+        }
+        crm.assign(assignmentId, agencyId);
+        store.audit(UUID.randomUUID(), "STAFF_AGENCY_ASSIGNED", actor.id(), code, "CRM_AGENCY", agencyId.toString(), userId.toString());
+    }
+
     private void grant(OrgAccess.Actor actor, UUID assignmentId, String permission) {
         if (permission == null || permission.isBlank()) {
             return;
@@ -138,6 +185,18 @@ public class CountryOrgService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "COUNTRY_NOT_FOUND");
         }
         return code;
+    }
+
+    public record StaffView(
+            UUID assignmentId,
+            UUID userId,
+            String status,
+            String email,
+            String displayName,
+            Instant appointedAt,
+            Instant endedAt,
+            List<String> permissions,
+            List<UUID> agencyIds) {
     }
 
     private void releaseRepRole(UUID userId) {

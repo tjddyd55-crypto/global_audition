@@ -48,6 +48,21 @@ public class CountryOrgController {
         countries.addStaff(code, request.userId(), request.permissions());
     }
 
+    @GetMapping("/{code}/staff")
+    public List<CountryOrgService.StaffView> staffList(@PathVariable String code) {
+        return countries.listStaff(code);
+    }
+
+    @PostMapping("/{code}/staff/{userId}/deactivate")
+    public void deactivate(@PathVariable String code, @PathVariable UUID userId) {
+        countries.deactivateStaff(code, userId);
+    }
+
+    @PostMapping("/{code}/staff/{userId}/agencies")
+    public void assignAgency(@PathVariable String code, @PathVariable UUID userId, @RequestBody AssignAgencyRequest request) {
+        countries.assignAgency(code, userId, request.agencyId());
+    }
+
     public record CountryCreateRequest(String code, String name, String defaultCurrency) {
     }
 
@@ -55,5 +70,8 @@ public class CountryOrgController {
     }
 
     public record StaffRequest(UUID userId, List<String> permissions) {
+    }
+
+    public record AssignAgencyRequest(UUID agencyId) {
     }
 }

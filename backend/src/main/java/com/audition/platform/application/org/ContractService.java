@@ -93,6 +93,21 @@ public class ContractService {
         return view(row, OrgRoles.countryStaff(actor.role()));
     }
 
+    public List<VersionView> versions(UUID contractId) {
+        ContractRow row = require(contractId);
+        OrgAccess.Actor actor = access.requireCountry(row.countryCode());
+        if (OrgRoles.countryStaff(actor.role())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "CONTRACT_ACCESS_REVOKED");
+        }
+        return contracts.versions(contractId).stream()
+                .map(version -> new VersionView(
+                        version.id(), version.versionNo(), version.start(), version.end(),
+                        version.rateBps(), version.basis(), version.roundingPolicy(), version.currency(),
+                        version.refundDeductionBasis(), version.paymentFeeDeductionBasis(), version.extraDeductionBasis(),
+                        version.paymentFeeUsd(), version.extraDeductionUsd()))
+                .toList();
+    }
+
     public List<ContractView> list(String rawCountry) {
         String country = CountryCodes.iso2(rawCountry);
         OrgAccess.Actor actor = access.requireCountry(country);
@@ -304,6 +319,22 @@ public class ContractService {
             String paymentFeeDeductionBasis,
             String extraDeductionBasis,
             String cycle) {
+    }
+
+    public record VersionView(
+            UUID id,
+            int versionNo,
+            LocalDate startDate,
+            LocalDate endDate,
+            Integer revenueShareBps,
+            String settlementBasis,
+            String roundingPolicy,
+            String payoutCurrency,
+            String refundDeductionBasis,
+            String paymentFeeDeductionBasis,
+            String extraDeductionBasis,
+            Long paymentFeeUsd,
+            Long extraDeductionUsd) {
     }
 
     public record Presign(UUID fileId, String url, Instant expiresAt) {
