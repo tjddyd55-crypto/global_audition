@@ -45,17 +45,37 @@ public class JdkTranslationHttpTransport implements TranslationHttpTransport {
 
     @Override
     public TranslationHttpResult postJson(String url, String bearerToken, String jsonBody) {
-        if (bearerToken == null || bearerToken.isBlank()
-                || bearerToken.indexOf('\r') >= 0 || bearerToken.indexOf('\n') >= 0) {
-            throw new TranslationProviderException(
-                    AuditionTranslation.ERROR_NOT_CONFIGURED,
-                    "번역 공급자가 설정되지 않았습니다.");
-        }
+        requireBearer(bearerToken);
+        return exchange("POST", url, "Bearer " + bearerToken, "application/json", jsonBody == null ? "" : jsonBody);
+    }
+
+    @Override
+    public TranslationHttpResult postForm(String url, String formBody) {
+        return exchange(
+                "POST",
+                url,
+                null,
+                "application/x-www-form-urlencoded",
+                formBody == null ? "" : formBody);
+    }
+
+    @Override
+    public TranslationHttpResult get(String url, String bearerToken) {
+        requireBearer(bearerToken);
+        return exchange("GET", url, "Bearer " + bearerToken, null, "");
+    }
+
+    private TranslationHttpResult exchange(
+            String method,
+            String url,
+            String authorization,
+            String contentType,
+            String body) {
         ResolvedEndpoint endpoint = endpointGuard.resolveForCall(url);
         TranslationProviderException last = null;
         for (InetAddress address : endpoint.addresses()) {
             try {
-                return postPinned(endpoint, address, bearerToken, jsonBody);
+                return sendPinned(endpoint, address, method, authorization, contentType, body);
             } catch (TranslationProviderException ex) {
                 if (!AuditionTranslation.ERROR_TIMEOUT.equals(ex.getErrorCode())
                         && !AuditionTranslation.ERROR_PROVIDER.equals(ex.getErrorCode())) {
@@ -72,11 +92,13 @@ public class JdkTranslationHttpTransport implements TranslationHttpTransport {
                 "번역 엔드포인트가 허용되지 않습니다.");
     }
 
-    private TranslationHttpResult postPinned(
+    private TranslationHttpResult sendPinned(
             ResolvedEndpoint endpoint,
             InetAddress address,
-            String bearerToken,
-            String jsonBody) {
+            String method,
+            String authorization,
+            String contentType,
+            String body) {
         try (Socket socket = new Socket()) {
             socket.connect(new InetSocketAddress(address, endpoint.port()), CONNECT_TIMEOUT_MS);
             socket.setSoTimeout(READ_TIMEOUT_MS);
@@ -86,16 +108,23 @@ public class JdkTranslationHttpTransport implements TranslationHttpTransport {
             params.setEndpointIdentificationAlgorithm("HTTPS");
             ssl.setSSLParameters(params);
             ssl.startHandshake();
-            byte[] payload = jsonBody.getBytes(StandardCharsets.UTF_8);
-            String request = "POST " + endpoint.pathAndQuery() + " HTTP/1.1\r\n"
-                    + "Host: " + hostHeader(endpoint) + "\r\n"
-                    + "Authorization: Bearer " + bearerToken + "\r\n"
-                    + "Content-Type: application/json\r\n"
-                    + "Accept: application/json\r\n"
-                    + "Content-Length: " + payload.length + "\r\n"
-                    + "Connection: close\r\n\r\n";
-            ssl.getOutputStream().write(request.getBytes(StandardCharsets.ISO_8859_1));
-            ssl.getOutputStream().write(payload);
+            byte[] payload = body == null ? new byte[0] : body.getBytes(StandardCharsets.UTF_8);
+            StringBuilder request = new StringBuilder();
+            request.append(method).append(' ').append(endpoint.pathAndQuery()).append(" HTTP/1.1\r\n");
+            request.append("Host: ").append(hostHeader(endpoint)).append("\r\n");
+            if (authorization != null) {
+                request.append("Authorization: ").append(authorization).append("\r\n");
+            }
+            if (contentType != null) {
+                request.append("Content-Type: ").append(contentType).append("\r\n");
+            }
+            request.append("Accept: application/json\r\n");
+            request.append("Content-Length: ").append(payload.length).append("\r\n");
+            request.append("Connection: close\r\n\r\n");
+            ssl.getOutputStream().write(request.toString().getBytes(StandardCharsets.ISO_8859_1));
+            if (payload.length > 0) {
+                ssl.getOutputStream().write(payload);
+            }
             ssl.getOutputStream().flush();
             return readHttpResponse(ssl.getInputStream());
         } catch (TranslationProviderException ex) {
@@ -108,6 +137,15 @@ public class JdkTranslationHttpTransport implements TranslationHttpTransport {
             throw new TranslationProviderException(
                     AuditionTranslation.ERROR_PROVIDER,
                     "번역 공급자에 연결하지 못했습니다.");
+        }
+    }
+
+    private static void requireBearer(String bearerToken) {
+        if (bearerToken == null || bearerToken.isBlank()
+                || bearerToken.indexOf('\r') >= 0 || bearerToken.indexOf('\n') >= 0) {
+            throw new TranslationProviderException(
+                    AuditionTranslation.ERROR_NOT_CONFIGURED,
+                    "번역 공급자가 설정되지 않았습니다.");
         }
     }
 
@@ -126,11 +164,6 @@ public class JdkTranslationHttpTransport implements TranslationHttpTransport {
                     "번역 공급자 리다이렉트를 따르지 않습니다.");
         }
         byte[] body = readBody(input, headers);
-        if (code < 200 || code >= 300) {
-            throw new TranslationProviderException(
-                    AuditionTranslation.ERROR_HTTP,
-                    "번역 공급자가 HTTP " + code + " 를 반환했습니다.");
-        }
         return new TranslationHttpResult(code, new String(body, StandardCharsets.UTF_8));
     }
 

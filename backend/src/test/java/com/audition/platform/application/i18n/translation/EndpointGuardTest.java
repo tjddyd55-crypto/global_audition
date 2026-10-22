@@ -89,6 +89,20 @@ class EndpointGuardTest {
         assertFalse(EndpointGuard.isDisallowedAddress(InetAddress.getByName("100.128.0.1")));
     }
 
+    @Test
+    void defaultAllowlistIncludesGoogleAndStillBlocksMetadata() throws Exception {
+        EndpointGuard guard = guard(EndpointGuard.DEFAULT_ALLOWED_HOSTS, Map.of(
+                "api.openai.com", List.of(InetAddress.getByName("1.1.1.1")),
+                "translate.googleapis.com", List.of(InetAddress.getByName("8.8.8.8")),
+                "oauth2.googleapis.com", List.of(InetAddress.getByName("8.8.4.4"))));
+
+        assertTrue(guard.permits("https://translate.googleapis.com/v3/projects/demo/locations/global:translateText"));
+        assertTrue(guard.permits("https://oauth2.googleapis.com/token"));
+        assertTrue(guard.permits("https://api.openai.com/v1/chat/completions"));
+        assertRejected(guard, "https://metadata.google.internal/computeMetadata/v1/");
+        assertRejected(guard, "https://localhost/token");
+    }
+
     private static void assertRejected(EndpointGuard guard, String url) {
         TranslationProviderException ex = assertThrows(TranslationProviderException.class, () -> guard.resolveForCall(url));
         assertEquals(AuditionTranslation.ERROR_ENDPOINT_REJECTED, ex.getErrorCode());

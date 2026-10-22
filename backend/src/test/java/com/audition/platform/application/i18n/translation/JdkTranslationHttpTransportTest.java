@@ -28,15 +28,14 @@ class JdkTranslationHttpTransportTest {
     }
 
     @Test
-    void httpErrorDoesNotIncludeBody() {
-        String raw = "HTTP/1.1 500 Error\r\nContent-Length: 18\r\n\r\nsk-live-secret-body";
+    void httpErrorIsReturnedSoTheAdapterCanMapTheStatus() throws Exception {
+        String raw = "HTTP/1.1 500 Error\r\nContent-Length: 19\r\n\r\nsk-live-secret-body";
 
-        TranslationProviderException ex = assertThrows(
-                TranslationProviderException.class,
-                () -> JdkTranslationHttpTransport.readHttpResponse(new ByteArrayInputStream(raw.getBytes(StandardCharsets.ISO_8859_1))));
+        TranslationHttpResult result = JdkTranslationHttpTransport.readHttpResponse(
+                new ByteArrayInputStream(raw.getBytes(StandardCharsets.ISO_8859_1)));
 
-        assertEquals(AuditionTranslation.ERROR_HTTP, ex.getErrorCode());
-        assertFalse(ex.getMessage().contains("sk-"));
+        assertEquals(500, result.statusCode());
+        assertEquals("sk-live-secret-body", result.body());
     }
 
     @Test

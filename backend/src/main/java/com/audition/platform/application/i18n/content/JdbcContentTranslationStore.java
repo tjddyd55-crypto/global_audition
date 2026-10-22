@@ -103,13 +103,14 @@ public class JdbcContentTranslationStore implements ContentTranslationStore {
         Integer prompt = finish.usage() == null ? null : finish.usage().promptTokens();
         Integer completion = finish.usage() == null ? null : finish.usage().completionTokens();
         Integer total = finish.usage() == null ? null : finish.usage().totalTokens();
+        Integer billed = finish.usage() == null ? null : finish.usage().billedCharacters();
         jdbc.update("""
                 UPDATE content_translation_attempts
                 SET status = ?, error_code = ?, error_message = ?, prompt_tokens = ?, completion_tokens = ?,
-                    total_tokens = ?, estimated_cost_micro_usd = ?, finished_at = NOW()
+                    total_tokens = ?, billed_characters = ?, estimated_cost_micro_usd = ?, finished_at = NOW()
                 WHERE id = ?
                 """,
-                finish.status(), finish.errorCode(), finish.errorMessage(), prompt, completion, total,
+                finish.status(), finish.errorCode(), finish.errorMessage(), prompt, completion, total, billed,
                 finish.estimatedCostMicroUsd(), finish.id());
     }
 

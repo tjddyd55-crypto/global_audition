@@ -121,17 +121,69 @@ export const superAdminApi = {
   getTranslationSettings: async () => {
     const { data } = await apiClient.get<{
       provider: string
+      activeProvider: string
       endpointUrl?: string | null
       model?: string | null
       apiKeyConfigured: boolean
+      openAiState: string
+      googleProjectId?: string | null
+      googleLocation?: string | null
+      googleModel?: string | null
+      googleCredentialsConfigured: boolean
+      googleState: string
+      googleCostMicroUsdPerMillion?: number | null
+      effectiveGoogleMicroUsdPerMillion: number
       state: string
     }>('/admin/translation-settings')
     return data
   },
 
-  patchTranslationSettings: async (body: { endpointUrl?: string; model?: string; apiKey?: string }) => {
+  patchTranslationSettings: async (body: {
+    activeProvider?: string
+    endpointUrl?: string
+    model?: string
+    apiKey?: string
+    googleProjectId?: string
+    googleLocation?: string
+    googleModel?: string
+    googleCredentialsJson?: string
+    googleCostMicroUsdPerMillion?: number
+  }) => {
     const { data } = await apiClient.patch('/admin/translation-settings', body)
-    return data as { state: string; apiKeyConfigured: boolean }
+    return data as { state: string; apiKeyConfigured: boolean; googleCredentialsConfigured: boolean }
+  },
+
+  testGoogleTranslation: async () => {
+    const { data } = await apiClient.post<{
+      state: string
+      errorCode?: string | null
+      calledProvider: boolean
+    }>('/admin/translation-settings/google/connection-test')
+    return data
+  },
+
+  googleTranslationLanguages: async () => {
+    const { data } = await apiClient.get<{
+      state: string
+      errorCode?: string | null
+      calledProvider: boolean
+      languageCodes?: string[]
+      koreanSupported: boolean
+      englishSupported: boolean
+      mongolianSupported: boolean
+    }>('/admin/translation-settings/google/languages')
+    return data
+  },
+
+  translationUsage: async (month?: string) => {
+    const { data } = await apiClient.get<{
+      month: string
+      attempts: number
+      billedCharacters: number
+      estimatedCostMicroUsd: number
+      providers: { provider: string; attempts: number; billedCharacters: number; estimatedCostMicroUsd: number }[]
+    }>('/admin/translation-settings/usage', { params: month ? { month } : {} })
+    return data
   },
 
   listCreditPackages: async (): Promise<CreditPackageRow[]> => {

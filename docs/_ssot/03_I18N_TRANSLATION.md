@@ -26,8 +26,12 @@
 - 라운드 공지 문구는 `PATCH /api/admin/auditions/{id}/rounds/{roundId}/notices` 만 바꾼다. 라운드 활성, 일정, 심사 방식, 오디션 상태는 이 경로에서 바꾸지 않는다.
 
 ## 3) Provider 추상화(벤더 교체 대비)
-- `TranslationProvider`(interface) + 구현체(Ali/기타)
-- 캐시/레이트리밋/에러 재시도 정책은 application 계층에서 통제
+- `TranslationProvider` 뒤에 `SelectingTranslationProvider` 가 활성 공급자를 고른다.
+- 기본 활성 공급자는 Google Cloud Translation Advanced v3 (`GOOGLE_CLOUD_TRANSLATION`) 이다. OpenAI 호환 공급자(`OPENAI_COMPATIBLE`)는 보조로 남고, 기존 endpoint/model/api_key_cipher 는 지우지 않는다.
+- Google 호출은 `projects/{project}/locations/{location}:translateText`, mimeType `text/plain`, 모델 기본값 `general/nmt` 이다. 인증은 서비스 계정 JSON 으로 만든 OAuth2 액세스 토큰이며 API 키가 아니다. JSON 은 `SettingsSecretCrypto` 암호문으로만 저장하고 응답과 로그에 넣지 않는다.
+- 허용 호스트 기본값은 `api.openai.com`, `translate.googleapis.com`, `oauth2.googleapis.com` 이다.
+- 문자 비용은 설정 단가로 추정한다. 공개 NMT 리스트 가격은 https://cloud.google.com/translate/pricing 이고, 월 500,000자 크레딧은 추정액에서 빼지 않는다. 추정액은 청구서가 아니다.
+- 캐시/레이트리밋/에러 재시도 정책은 application 계층에서 통제한다. 공급자 자격 증명이 없으면 작업은 `BLOCKED` / `NOT_CONFIGURED` 이고 원문을 보여 준다.
 
 ## 4) 운영/품질
 - 번역 실패/지연은 UX에 치명적이므로, 항상 fallback을 보장

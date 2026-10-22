@@ -14,12 +14,14 @@ import java.util.Set;
 
 /**
  * 저장 시점과 호출 시점에 같은 규칙을 적용한다.
- * 허용 호스트는 설정값만 사용한다. 기본값은 api.openai.com 이다.
+ * 허용 호스트는 설정값만 사용한다.
+ * 기본 허용은 api.openai.com, translate.googleapis.com, oauth2.googleapis.com 이다.
  */
 @Component
 public class EndpointGuard {
 
-    static final String DEFAULT_ALLOWED_HOSTS = "api.openai.com";
+    static final String DEFAULT_ALLOWED_HOSTS =
+            "api.openai.com,translate.googleapis.com,oauth2.googleapis.com";
 
     private final Set<String> allowedHosts;
     private final DnsResolver dnsResolver;
