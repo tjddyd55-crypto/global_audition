@@ -1,3 +1,5 @@
+import i18n from '../i18n'
+import { DEFAULT_LOCALE } from '../i18n/runtime'
 import {
   agencyBoardStatusLabel,
   agencyConfirmMessage,
@@ -9,6 +11,19 @@ import {
 } from './statusLabels'
 
 describe('statusLabels — 백엔드 문자열만 매핑', () => {
+  beforeEach(async () => {
+    await i18n.changeLanguage('ko')
+  })
+
+  afterAll(async () => {
+    await i18n.changeLanguage(DEFAULT_LOCALE)
+  })
+
+  it('저장된 선택이 없으면 영어 라벨을 쓴다', async () => {
+    await i18n.changeLanguage(DEFAULT_LOCALE)
+    expect(auditionStatusLabel('OPEN')).toBe('Open')
+  })
+
   it('오디션 상태를 카탈로그 라벨로 보여 준다', () => {
     expect(auditionStatusLabel('OPEN')).toBe('모집중')
     expect(auditionStatusLabel('CLOSED')).toBe('마감')
