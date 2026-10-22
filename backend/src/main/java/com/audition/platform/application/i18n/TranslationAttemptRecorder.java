@@ -1,5 +1,8 @@
 package com.audition.platform.application.i18n;
 
+import com.audition.platform.application.i18n.content.ContentTranslationRows.AttemptFinish;
+import com.audition.platform.application.i18n.content.ContentTranslationRows.NewAttempt;
+import com.audition.platform.application.i18n.content.ContentTranslationStore;
 import com.audition.platform.domain.audition.AuditionTranslation;
 import com.audition.platform.domain.audition.AuditionTranslationAttempt;
 import com.audition.platform.domain.audition.AuditionTranslationAttemptRepository;
@@ -14,9 +17,13 @@ import java.util.UUID;
 public class TranslationAttemptRecorder {
 
     private final AuditionTranslationAttemptRepository repository;
+    private final ContentTranslationStore contentStore;
 
-    public TranslationAttemptRecorder(AuditionTranslationAttemptRepository repository) {
+    public TranslationAttemptRecorder(
+            AuditionTranslationAttemptRepository repository,
+            ContentTranslationStore contentStore) {
         this.repository = repository;
+        this.contentStore = contentStore;
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -39,5 +46,15 @@ public class TranslationAttemptRecorder {
         row.setErrorMessage(errorMessage);
         row.setFinishedAt(Instant.now());
         return repository.saveAndFlush(row);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public UUID startContent(NewAttempt attempt) {
+        return contentStore.insertAttempt(attempt);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void finishContent(AttemptFinish finish) {
+        contentStore.finishAttempt(finish);
     }
 }

@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -122,6 +123,32 @@ class HttpTranslationProviderTest {
                 () -> provider.translate(source(), "en"));
 
         assertEquals(AuditionTranslation.ERROR_TIMEOUT, ex.getErrorCode());
+    }
+
+    @Test
+    void documentCallReusesTheSameTransportAndRecordsUsageOnlyWhenPresent() {
+        when(settings.loadRuntime()).thenReturn(configured());
+        when(transport.postJson(any(), any(), any())).thenReturn(new TranslationHttpResult(
+                200,
+                "{\"usage\":{\"prompt_tokens\":11,\"completion_tokens\":5,\"total_tokens\":16},\"choices\":[{\"message\":{\"content\":\"{\\\"introText\\\":\\\"Hello\\\"}\"}}]}"));
+
+        TranslationDocumentDraft draft = provider.translateDocument("ko", Map.of("introText", "안녕"), "en");
+
+        assertEquals("Hello", draft.fields().get("introText"));
+        assertEquals(11, draft.usage().promptTokens());
+        verify(transport, times(1)).postJson(any(), any(), any());
+    }
+
+    @Test
+    void missingUsageIsNullRatherThanInvented() {
+        when(settings.loadRuntime()).thenReturn(configured());
+        when(transport.postJson(any(), any(), any())).thenReturn(new TranslationHttpResult(
+                200,
+                "{\"choices\":[{\"message\":{\"content\":\"{\\\"introText\\\":\\\"Hello\\\"}\"}}]}"));
+
+        TranslationDocumentDraft draft = provider.translateDocument("ko", Map.of("introText", "안녕"), "en");
+
+        assertEquals(null, draft.usage());
     }
 
     private static TranslationRuntime configured() {

@@ -3,5 +3,7 @@
   "primary": ["ko", "en", "mn"],
   "defaultLocale": "en",
   "deviceFallback": "en",
-  "settlementCurrency": "USD"
+  "settlementCurrency": "USD",
+  "contentLocales": ["ko", "en", "mn", "ja", "zh", "es", "fr", "de"],
+  "providerLocales": ["ko", "en", "mn", "ja", "zh", "es", "fr", "de"]
 }

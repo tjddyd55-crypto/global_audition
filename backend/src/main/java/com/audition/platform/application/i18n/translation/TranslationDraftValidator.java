@@ -3,6 +3,7 @@ package com.audition.platform.application.i18n.translation;
 import com.audition.platform.domain.audition.AuditionTranslation;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 구조적 완전성만 본다. 번역이 의미적으로 맞는지, 원문과 같은 언어인지는 판정하지 않는다.
@@ -29,6 +30,21 @@ public final class TranslationDraftValidator {
         requireList("qualifications", source.qualifications(), draft.qualifications());
         requireList("schedules", source.schedules(), draft.schedules());
         requireList("benefits", source.benefits(), draft.benefits());
+    }
+
+    /** 공통 문서. 비어 있지 않은 원문 문자열은 결과에도 비어 있으면 안 된다. */
+    public static void validateFields(Map<String, String> source, Map<String, String> result) {
+        if (result == null) {
+            throw new TranslationProviderException(
+                    AuditionTranslation.ERROR_MALFORMED_JSON,
+                    "번역 본문이 비어 있습니다.");
+        }
+        if (source == null) {
+            return;
+        }
+        for (Map.Entry<String, String> entry : source.entrySet()) {
+            requireScalar(entry.getKey(), entry.getValue(), result.get(entry.getKey()));
+        }
     }
 
     private static void requireScalar(String field, String source, String result) {

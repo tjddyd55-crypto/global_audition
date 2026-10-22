@@ -4,6 +4,7 @@ import com.audition.platform.domain.audition.AuditionTranslation;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -61,5 +62,15 @@ class TranslationDraftValidatorTest {
                 "Title", "", "", "", List.of("", "Vocal"), List.of(), List.of(), List.of());
 
         assertDoesNotThrow(() -> TranslationDraftValidator.validate(source, draft));
+    }
+
+    @Test
+    void documentFieldsFollowTheSameCompletenessRule() {
+        TranslationProviderException missing = assertThrows(
+                TranslationProviderException.class,
+                () -> TranslationDraftValidator.validateFields(Map.of("introText", "안녕"), Map.of("introText", " ")));
+        assertEquals(AuditionTranslation.ERROR_MISSING_FIELD, missing.getErrorCode());
+        assertDoesNotThrow(() -> TranslationDraftValidator.validateFields(
+                Map.of("introText", ""), Map.of("introText", "")));
     }
 }
