@@ -24,6 +24,9 @@ public class AuditionTranslationView {
     private String origin;
     private boolean manuallyEdited;
     private boolean stale;
+    private String attemptStatus;
+    private String attemptErrorCode;
+    private String attemptErrorMessage;
     private Instant updatedAt;
 
     public UUID getAuditionId() { return auditionId; }
@@ -64,6 +67,12 @@ public class AuditionTranslationView {
     public void setManuallyEdited(boolean manuallyEdited) { this.manuallyEdited = manuallyEdited; }
     public boolean isStale() { return stale; }
     public void setStale(boolean stale) { this.stale = stale; }
+    public String getAttemptStatus() { return attemptStatus; }
+    public void setAttemptStatus(String attemptStatus) { this.attemptStatus = attemptStatus; }
+    public String getAttemptErrorCode() { return attemptErrorCode; }
+    public void setAttemptErrorCode(String attemptErrorCode) { this.attemptErrorCode = attemptErrorCode; }
+    public String getAttemptErrorMessage() { return attemptErrorMessage; }
+    public void setAttemptErrorMessage(String attemptErrorMessage) { this.attemptErrorMessage = attemptErrorMessage; }
     public Instant getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
 }

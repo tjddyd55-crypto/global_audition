@@ -32,6 +32,9 @@ app:
     public-read-acl: false
     public-base-url: ${AWS_S3_PUBLIC_BASE_URL:}
     endpoint: ${AWS_S3_ENDPOINT:}
+  # 번역 공급자 허용 호스트. 쉼표로 구분. 로직의 기본값은 이 설정뿐이며 호출은 저장된 모델을 쓴다.
+  translation:
+    allowed-hosts: ${APP_TRANSLATION_ALLOWED_HOSTS:api.openai.com}
   jwt:
     secret: "${JWT_SECRET:change-me-in-production-min-32-chars}"
     expiration-ms: 86400000  # 24h

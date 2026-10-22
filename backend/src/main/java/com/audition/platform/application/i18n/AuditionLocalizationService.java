@@ -7,6 +7,7 @@ import com.audition.platform.application.audition.AuditionSeriesPresentation;
 import com.audition.platform.domain.audition.Audition;
 import com.audition.platform.domain.audition.AuditionRepository;
 import com.audition.platform.domain.audition.AuditionTranslation;
+import com.audition.platform.domain.audition.AuditionTranslationAttemptRepository;
 import com.audition.platform.domain.audition.AuditionTranslationId;
 import com.audition.platform.domain.audition.AuditionTranslationRepository;
 import com.audition.platform.infra.SecurityUtils;
@@ -25,14 +26,17 @@ public class AuditionLocalizationService {
     private final AuditionTranslationRepository translationRepository;
     private final AuditionRepository auditionRepository;
     private final ContentLocaleResolver contentLocaleResolver;
+    private final AuditionTranslationAttemptRepository attemptRepository;
 
     public AuditionLocalizationService(
             AuditionTranslationRepository translationRepository,
             AuditionRepository auditionRepository,
-            ContentLocaleResolver contentLocaleResolver) {
+            ContentLocaleResolver contentLocaleResolver,
+            AuditionTranslationAttemptRepository attemptRepository) {
         this.translationRepository = translationRepository;
         this.auditionRepository = auditionRepository;
         this.contentLocaleResolver = contentLocaleResolver;
+        this.attemptRepository = attemptRepository;
     }
 
     public void apply(Audition audition, AuditionResponse response) {
@@ -113,7 +117,17 @@ public class AuditionLocalizationService {
     public List<AuditionTranslationView> list(UUID auditionId) {
         requireOwnerOrAdmin(auditionId);
         return translationRepository.findByAuditionIdOrderByLocaleAsc(auditionId).stream()
-                .map(AuditionTranslationMapper::toView)
+                .map(row -> {
+                    AuditionTranslationView view = AuditionTranslationMapper.toView(row);
+                    if (attemptRepository != null) {
+                        var latest = attemptRepository
+                                .findFirstByAuditionIdAndLocaleOrderByStartedAtDesc(row.getAuditionId(), row.getLocale());
+                        if (latest != null) {
+                            latest.ifPresent(attempt -> AuditionTranslationMapper.attachAttempt(view, attempt));
+                        }
+                    }
+                    return view;
+                })
                 .toList();
     }
 

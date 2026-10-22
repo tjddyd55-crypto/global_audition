@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -55,13 +54,17 @@ public class HttpTranslationProvider implements TranslationProvider {
                     AuditionTranslation.ERROR_NOT_CONFIGURED,
                     "번역 공급자가 설정되지 않았습니다.");
         }
-        assertHttpsEndpoint(runtime.endpointUrl());
         String body = requestBody(runtime.model(), source, targetLocale);
         TranslationHttpResult result = transport.postJson(runtime.endpointUrl(), runtime.apiKey(), body);
         log.info("translation provider {} responded status {}", PROVIDER_ID, result.statusCode());
+        if (result.statusCode() >= 300 && result.statusCode() < 400) {
+            throw new TranslationProviderException(
+                    AuditionTranslation.ERROR_HTTP,
+                    "번역 공급자 리다이렉트를 따르지 않습니다.");
+        }
         if (result.statusCode() < 200 || result.statusCode() >= 300) {
             throw new TranslationProviderException(
-                    AuditionTranslation.ERROR_PROVIDER,
+                    AuditionTranslation.ERROR_HTTP,
                     "번역 공급자가 HTTP " + result.statusCode() + " 를 반환했습니다.");
         }
         return parseDraft(result.body());
@@ -98,12 +101,18 @@ public class HttpTranslationProvider implements TranslationProvider {
             JsonNode root = objectMapper.readTree(body);
             String content = root.path("choices").path(0).path("message").path("content").asText("");
             if (content.isBlank()) {
-                throw new TranslationProviderException(AuditionTranslation.ERROR_PROVIDER, "번역 본문이 비어 있습니다.");
+                throw new TranslationProviderException(
+                        AuditionTranslation.ERROR_MALFORMED_JSON,
+                        "번역 본문이 비어 있습니다.");
             }
             JsonNode draft = objectMapper.readTree(content);
-            String title = requiredText(draft, "title");
+            if (draft == null || !draft.isObject()) {
+                throw new TranslationProviderException(
+                        AuditionTranslation.ERROR_MALFORMED_JSON,
+                        "번역 응답을 해석하지 못했습니다.");
+            }
             return new TranslationDraft(
-                    title,
+                    optionalText(draft, "title"),
                     optionalText(draft, "description"),
                     optionalText(draft, "location"),
                     optionalText(draft, "agencyName"),
@@ -114,52 +123,16 @@ public class HttpTranslationProvider implements TranslationProvider {
         } catch (TranslationProviderException e) {
             throw e;
         } catch (Exception e) {
-            throw new TranslationProviderException(AuditionTranslation.ERROR_PROVIDER, "번역 응답을 해석하지 못했습니다.");
-        }
-    }
-
-    private static void assertHttpsEndpoint(String url) {
-        try {
-            URI uri = URI.create(url);
-            String host = uri.getHost() == null ? "" : uri.getHost().toLowerCase();
-            if (!"https".equalsIgnoreCase(uri.getScheme()) || isBlockedHost(host)) {
-                throw new TranslationProviderException(
-                        AuditionTranslation.ERROR_NOT_CONFIGURED,
-                        "번역 엔드포인트는 공개 https 주소여야 합니다.");
-            }
-        } catch (TranslationProviderException e) {
-            throw e;
-        } catch (RuntimeException e) {
             throw new TranslationProviderException(
-                    AuditionTranslation.ERROR_NOT_CONFIGURED,
-                    "번역 엔드포인트가 올바르지 않습니다.");
+                    AuditionTranslation.ERROR_MALFORMED_JSON,
+                    "번역 응답을 해석하지 못했습니다.");
         }
-    }
-
-    private static boolean isBlockedHost(String host) {
-        return host.isBlank()
-                || "localhost".equals(host)
-                || host.endsWith(".local")
-                || host.equals("127.0.0.1")
-                || host.equals("0.0.0.0")
-                || host.equals("169.254.169.254")
-                || host.startsWith("10.")
-                || host.startsWith("192.168.")
-                || host.startsWith("172.16.");
-    }
-
-    private static String requiredText(JsonNode node, String field) {
-        String value = optionalText(node, field);
-        if (value.isBlank()) {
-            throw new TranslationProviderException(AuditionTranslation.ERROR_PROVIDER, "번역 제목이 없습니다.");
-        }
-        return value;
     }
 
     private static String optionalText(JsonNode node, String field) {
         String value = node.path(field).asText("");
         if (value.length() > MAX_TEXT) {
-            throw new TranslationProviderException(AuditionTranslation.ERROR_PROVIDER, "번역 필드가 너무 깁니다.");
+            throw new TranslationProviderException(AuditionTranslation.ERROR_MALFORMED_JSON, "번역 필드가 너무 깁니다.");
         }
         return value;
     }
@@ -170,17 +143,20 @@ public class HttpTranslationProvider implements TranslationProvider {
             return List.of();
         }
         if (!array.isArray() || array.size() > MAX_ITEMS) {
-            throw new TranslationProviderException(AuditionTranslation.ERROR_PROVIDER, "번역 목록 형식이 올바르지 않습니다.");
+            throw new TranslationProviderException(AuditionTranslation.ERROR_MALFORMED_JSON, "번역 목록 형식이 올바르지 않습니다.");
         }
         List<String> values = new ArrayList<>();
         for (JsonNode item : array) {
             String text = item.asText("");
+            if (!item.isTextual() && !item.isNumber()) {
+                throw new TranslationProviderException(
+                        AuditionTranslation.ERROR_MALFORMED_JSON,
+                        "번역 목록 형식이 올바르지 않습니다.");
+            }
             if (text.length() > MAX_TEXT) {
-                throw new TranslationProviderException(AuditionTranslation.ERROR_PROVIDER, "번역 항목이 너무 깁니다.");
+                throw new TranslationProviderException(AuditionTranslation.ERROR_MALFORMED_JSON, "번역 항목이 너무 깁니다.");
             }
-            if (!text.isBlank()) {
-                values.add(text.trim());
-            }
+            values.add(text.trim());
         }
         return List.copyOf(values);
     }

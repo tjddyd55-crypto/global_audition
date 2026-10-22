@@ -2,6 +2,7 @@ package com.audition.platform.application.i18n;
 
 import com.audition.platform.api.dto.AuditionTranslationView;
 import com.audition.platform.domain.audition.AuditionTranslation;
+import com.audition.platform.domain.audition.AuditionTranslationAttempt;
 
 public final class AuditionTranslationMapper {
 
@@ -31,5 +32,14 @@ public final class AuditionTranslationMapper {
         view.setStale(row.isStale());
         view.setUpdatedAt(row.getUpdatedAt());
         return view;
+    }
+
+    public static void attachAttempt(AuditionTranslationView view, AuditionTranslationAttempt attempt) {
+        if (view == null || attempt == null) {
+            return;
+        }
+        view.setAttemptStatus(attempt.getStatus());
+        view.setAttemptErrorCode(attempt.getErrorCode());
+        view.setAttemptErrorMessage(attempt.getErrorMessage());
     }
 }

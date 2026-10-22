@@ -128,11 +128,11 @@ export function AuditionTranslationPanel({ auditionId, defaultLocale }: Props) {
     mutationFn: (locale?: string) =>
       auditionApi.runTranslationJob(auditionId, { locale, force }),
     onSuccess: async (rows) => {
-      const failed = rows.find((row) => row.status === 'FAILED')
-      if (failed?.errorCode === 'NOT_CONFIGURED') {
+      const failed = rows.find((row) => row.attemptStatus === 'FAILED' || row.status === 'FAILED')
+      if (failed?.attemptErrorCode === 'NOT_CONFIGURED' || failed?.errorCode === 'NOT_CONFIGURED') {
         toast.error(t('translationNotConfigured'))
       } else if (failed) {
-        toast.error(failed.errorMessage || t('translationFailed'))
+        toast.error(failed.attemptErrorMessage || failed.errorMessage || t('translationFailed'))
       } else {
         toast.success(t('translationJobDone'))
       }
@@ -253,6 +253,9 @@ export function AuditionTranslationPanel({ auditionId, defaultLocale }: Props) {
             origin: byLocale.get(active)?.origin ?? '-',
             provider: byLocale.get(active)?.provider ?? '-',
           })}
+          {byLocale.get(active)?.attemptStatus === 'FAILED'
+            ? ` · ${byLocale.get(active)?.attemptErrorCode ?? ''} ${byLocale.get(active)?.attemptErrorMessage ?? ''}`
+            : ''}
           {byLocale.get(active)?.errorMessage ? ` · ${byLocale.get(active)?.errorMessage}` : ''}
         </p>
       ) : null}

@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -24,6 +25,13 @@ public class AuditionTranslation {
     public static final String ORIGIN_AUTO = "AUTO";
     public static final String ERROR_NOT_CONFIGURED = "NOT_CONFIGURED";
     public static final String ERROR_PROVIDER = "PROVIDER_ERROR";
+    public static final String ERROR_MISSING_FIELD = "MISSING_FIELD";
+    public static final String ERROR_ARRAY_LENGTH_MISMATCH = "ARRAY_LENGTH_MISMATCH";
+    public static final String ERROR_MALFORMED_JSON = "MALFORMED_JSON";
+    public static final String ERROR_HTTP = "HTTP_ERROR";
+    public static final String ERROR_TIMEOUT = "TIMEOUT";
+    public static final String ERROR_ENDPOINT_REJECTED = "ENDPOINT_REJECTED";
+    public static final String ERROR_CONCURRENT_EDIT = "CONCURRENT_EDIT";
 
     @Id
     @Column(name = "audition_id", nullable = false)
@@ -88,6 +96,10 @@ public class AuditionTranslation {
     @Column(nullable = false)
     private boolean stale;
 
+    @Version
+    @Column(name = "row_version", nullable = false)
+    private Long rowVersion;
+
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt = Instant.now();
 
@@ -132,6 +144,8 @@ public class AuditionTranslation {
     public void setManuallyEdited(boolean manuallyEdited) { this.manuallyEdited = manuallyEdited; }
     public boolean isStale() { return stale; }
     public void setStale(boolean stale) { this.stale = stale; }
+    public Long getRowVersion() { return rowVersion; }
+    public void setRowVersion(Long rowVersion) { this.rowVersion = rowVersion; }
     public Instant getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
     public Instant getCreatedAt() { return createdAt; }

@@ -4,11 +4,14 @@ import com.audition.platform.api.dto.TranslationSettingsPatchRequest;
 import com.audition.platform.api.dto.TranslationSettingsView;
 import com.audition.platform.application.credit.SuperAdminAuthHelper;
 import com.audition.platform.application.payment.SettingsSecretCrypto;
+import com.audition.platform.domain.audition.AuditionTranslation;
 import com.audition.platform.domain.i18n.PlatformTranslationSettings;
 import com.audition.platform.domain.i18n.PlatformTranslationSettingsRepository;
 import com.audition.platform.infra.SecurityUtils;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 
@@ -20,12 +23,15 @@ public class TranslationSettingsService {
 
     private final PlatformTranslationSettingsRepository repository;
     private final SettingsSecretCrypto crypto;
+    private final EndpointGuard endpointGuard;
 
     public TranslationSettingsService(
             PlatformTranslationSettingsRepository repository,
-            SettingsSecretCrypto crypto) {
+            SettingsSecretCrypto crypto,
+            EndpointGuard endpointGuard) {
         this.repository = repository;
         this.crypto = crypto;
+        this.endpointGuard = endpointGuard;
     }
 
     @Transactional
@@ -40,7 +46,7 @@ public class TranslationSettingsService {
             return unconfigured();
         }
         String key = decryptQuietly(row.getApiKeyCipher());
-        boolean configured = hasText(row.getEndpointUrl()) && hasText(row.getModel()) && hasText(key);
+        boolean configured = endpointAllowed(row.getEndpointUrl()) && hasText(row.getModel()) && hasText(key);
         return new TranslationRuntime(
                 HttpTranslationProvider.PROVIDER_ID,
                 blankToEmpty(row.getEndpointUrl()),
@@ -67,7 +73,15 @@ public class TranslationSettingsService {
         SuperAdminAuthHelper.requireSuperAdmin();
         PlatformTranslationSettings row = requireRow();
         if (request.getEndpointUrl() != null) {
-            row.setEndpointUrl(blankToNull(request.getEndpointUrl()));
+            String next = blankToNull(request.getEndpointUrl());
+            if (next != null) {
+                try {
+                    endpointGuard.resolveForCall(next);
+                } catch (TranslationProviderException ex) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, AuditionTranslation.ERROR_ENDPOINT_REJECTED);
+                }
+            }
+            row.setEndpointUrl(next);
         }
         if (request.getModel() != null) {
             row.setModel(blankToNull(request.getModel()));
@@ -102,7 +116,7 @@ public class TranslationSettingsService {
 
     private TranslationRuntime describe(PlatformTranslationSettings row) {
         String key = decryptQuietly(row.getApiKeyCipher());
-        boolean configured = hasText(row.getEndpointUrl()) && hasText(row.getModel()) && hasText(key);
+        boolean configured = endpointAllowed(row.getEndpointUrl()) && hasText(row.getModel()) && hasText(key);
         return new TranslationRuntime(
                 HttpTranslationProvider.PROVIDER_ID,
                 blankToEmpty(row.getEndpointUrl()),
@@ -124,6 +138,10 @@ public class TranslationSettingsService {
 
     private static TranslationRuntime unconfigured() {
         return new TranslationRuntime(HttpTranslationProvider.PROVIDER_ID, "", "", "", false);
+    }
+
+    private boolean endpointAllowed(String url) {
+        return hasText(url) && endpointGuard.permits(url);
     }
 
     private static boolean hasText(String value) {

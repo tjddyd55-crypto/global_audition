@@ -20,6 +20,9 @@ export type AuditionTranslationView = {
   origin?: 'MANUAL' | 'AUTO' | string
   manuallyEdited?: boolean
   stale?: boolean
+  attemptStatus?: string | null
+  attemptErrorCode?: string | null
+  attemptErrorMessage?: string | null
   updatedAt?: string | null
 }
 
@@ -60,6 +63,9 @@ function parseView(raw: Record<string, unknown>): AuditionTranslationView {
     origin: raw.origin != null ? String(raw.origin) : 'MANUAL',
     manuallyEdited: raw.manuallyEdited === true,
     stale: raw.stale === true,
+    attemptStatus: raw.attemptStatus != null ? String(raw.attemptStatus) : null,
+    attemptErrorCode: raw.attemptErrorCode != null ? String(raw.attemptErrorCode) : null,
+    attemptErrorMessage: raw.attemptErrorMessage != null ? String(raw.attemptErrorMessage) : null,
     updatedAt: raw.updatedAt != null ? String(raw.updatedAt) : null,
   }
 }

@@ -3,15 +3,19 @@ package com.audition.platform.application.i18n;
 import com.audition.platform.api.dto.AuditionTranslationView;
 import com.audition.platform.api.dto.TranslationProviderStatusView;
 import com.audition.platform.application.i18n.translation.TranslationDraft;
+import com.audition.platform.application.i18n.translation.TranslationDraftValidator;
 import com.audition.platform.application.i18n.translation.TranslationProvider;
 import com.audition.platform.application.i18n.translation.TranslationProviderException;
 import com.audition.platform.application.i18n.translation.TranslationSource;
 import com.audition.platform.domain.audition.Audition;
 import com.audition.platform.domain.audition.AuditionRepository;
 import com.audition.platform.domain.audition.AuditionTranslation;
+import com.audition.platform.domain.audition.AuditionTranslationAttempt;
 import com.audition.platform.domain.audition.AuditionTranslationId;
 import com.audition.platform.domain.audition.AuditionTranslationRepository;
 import com.audition.platform.infra.SecurityUtils;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +24,8 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -28,14 +34,17 @@ public class AuditionAutoTranslationService {
     private final AuditionRepository auditionRepository;
     private final AuditionTranslationRepository translationRepository;
     private final TranslationProvider translationProvider;
+    private final TranslationAttemptRecorder attemptRecorder;
 
     public AuditionAutoTranslationService(
             AuditionRepository auditionRepository,
             AuditionTranslationRepository translationRepository,
-            TranslationProvider translationProvider) {
+            TranslationProvider translationProvider,
+            TranslationAttemptRecorder attemptRecorder) {
         this.auditionRepository = auditionRepository;
         this.translationRepository = translationRepository;
         this.translationProvider = translationProvider;
+        this.attemptRecorder = attemptRecorder;
     }
 
     @Transactional(readOnly = true)
@@ -74,28 +83,98 @@ public class AuditionAutoTranslationService {
     }
 
     private AuditionTranslationView translateOne(Audition audition, String locale, boolean force) {
-        AuditionTranslation row = loadOrCreate(audition.getId(), locale);
-        if (isProtected(row) && !force) {
+        AuditionTranslationId id = new AuditionTranslationId(audition.getId(), locale);
+        Optional<AuditionTranslation> existing = translationRepository.findById(id);
+        if (existing.isPresent() && isProtected(existing.get()) && !force) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "TRANSLATION_PROTECTED");
         }
-        markPending(row);
-        translationRepository.saveAndFlush(row);
+        Long seenVersion = existing.map(AuditionTranslation::getRowVersion).orElse(null);
+        UUID attemptId = attemptRecorder.start(audition.getId(), locale, translationProvider.providerId());
+        TranslationSource source = TranslationSource.fromAudition(audition);
         try {
-            TranslationDraft draft = translationProvider.translate(TranslationSource.fromAudition(audition), locale);
-            applyDraft(row, audition, draft);
+            TranslationDraft draft = translationProvider.translate(source, locale);
+            TranslationDraftValidator.validate(source, draft);
+            applyIfCurrent(audition, locale, existing.isPresent(), seenVersion, draft);
+            return toView(audition.getId(), locale, attemptRecorder.finish(attemptId, AuditionTranslation.STATUS_COMPLETED, null, null));
+        } catch (TranslationConflictException ex) {
+            AuditionTranslationAttempt attempt = attemptRecorder.finish(
+                    attemptId,
+                    AuditionTranslation.STATUS_FAILED,
+                    AuditionTranslation.ERROR_CONCURRENT_EDIT,
+                    "번역 저장이 다른 수정과 겹쳤습니다. 다시 시도할 수 있습니다.");
+            if (ex.propagate()) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "TRANSLATION_CONFLICT");
+            }
+            return toView(audition.getId(), locale, attempt);
         } catch (TranslationProviderException ex) {
-            markFailed(row, ex);
+            return toView(audition.getId(), locale, attemptRecorder.finish(
+                    attemptId,
+                    AuditionTranslation.STATUS_FAILED,
+                    ex.getErrorCode(),
+                    publicError(ex.getMessage())));
         } catch (RuntimeException ex) {
-            markFailed(row, new TranslationProviderException(
+            return toView(audition.getId(), locale, attemptRecorder.finish(
+                    attemptId,
+                    AuditionTranslation.STATUS_FAILED,
                     AuditionTranslation.ERROR_PROVIDER,
-                    "번역 작업이 실패했습니다."));
+                    publicError("번역 작업이 실패했습니다.")));
         }
-        return AuditionTranslationMapper.toView(translationRepository.save(row));
     }
 
-    private AuditionTranslation loadOrCreate(UUID auditionId, String locale) {
-        return translationRepository.findById(new AuditionTranslationId(auditionId, locale))
-                .orElseGet(() -> newAutoRow(auditionId, locale));
+    private void applyIfCurrent(
+            Audition audition,
+            String locale,
+            boolean existed,
+            Long seenVersion,
+            TranslationDraft draft) {
+        AuditionTranslationId id = new AuditionTranslationId(audition.getId(), locale);
+        if (!existed) {
+            AuditionTranslation created = newAutoRow(audition.getId(), locale);
+            copyDraft(created, audition, draft);
+            try {
+                translationRepository.saveAndFlush(created);
+            } catch (DataIntegrityViolationException | OptimisticLockingFailureException ex) {
+                throw new TranslationConflictException(true);
+            }
+            return;
+        }
+        AuditionTranslation current = translationRepository.findById(id).orElse(null);
+        if (current == null || !Objects.equals(current.getRowVersion(), seenVersion)) {
+            throw new TranslationConflictException(false);
+        }
+        FieldSnapshot snapshot = FieldSnapshot.capture(current);
+        copyDraft(current, audition, draft);
+        try {
+            translationRepository.saveAndFlush(current);
+        } catch (DataIntegrityViolationException | OptimisticLockingFailureException ex) {
+            snapshot.restore(current);
+            throw new TranslationConflictException(true);
+        }
+    }
+
+    private AuditionTranslationView toView(UUID auditionId, String locale, AuditionTranslationAttempt attempt) {
+        AuditionTranslation row = translationRepository.findById(new AuditionTranslationId(auditionId, locale)).orElse(null);
+        AuditionTranslationView view = row == null ? emptyView(auditionId, locale, attempt) : AuditionTranslationMapper.toView(row);
+        AuditionTranslationMapper.attachAttempt(view, attempt);
+        return view;
+    }
+
+    private static AuditionTranslationView emptyView(UUID auditionId, String locale, AuditionTranslationAttempt attempt) {
+        AuditionTranslationView view = new AuditionTranslationView();
+        view.setAuditionId(auditionId);
+        view.setLocale(locale);
+        view.setTitle("");
+        view.setDescription("");
+        view.setLocation("");
+        view.setAgencyName("");
+        view.setRecruitFields(new String[0]);
+        view.setQualifications(new String[0]);
+        view.setSchedules(new String[0]);
+        view.setBenefits(new String[0]);
+        view.setStatus(attempt == null ? AuditionTranslation.STATUS_FAILED : attempt.getStatus());
+        view.setProvider("");
+        view.setOrigin("");
+        return view;
     }
 
     private static AuditionTranslation newAutoRow(UUID auditionId, String locale) {
@@ -104,27 +183,18 @@ public class AuditionAutoTranslationService {
         created.setAuditionId(auditionId);
         created.setLocale(locale);
         created.setCreatedAt(now);
-        created.setOrigin(AuditionTranslation.ORIGIN_AUTO);
         created.setProvider(AuditionTranslation.PROVIDER_MANUAL);
+        created.setOrigin(AuditionTranslation.ORIGIN_MANUAL);
         created.setManuallyEdited(false);
+        created.setStatus(AuditionTranslation.STATUS_PENDING);
         return created;
     }
 
-    private void markPending(AuditionTranslation row) {
-        row.setStatus(AuditionTranslation.STATUS_PENDING);
-        row.setErrorCode(null);
-        row.setErrorMessage(null);
-        row.setUpdatedAt(Instant.now());
-        if (!isProtected(row)) {
-            row.setOrigin(AuditionTranslation.ORIGIN_AUTO);
-        }
-    }
-
-    private void applyDraft(AuditionTranslation row, Audition audition, TranslationDraft draft) {
-        row.setTitle(draft.title().trim());
-        row.setDescription(draft.description());
-        row.setLocation(draft.location());
-        row.setAgencyName(draft.agencyName());
+    private void copyDraft(AuditionTranslation row, Audition audition, TranslationDraft draft) {
+        row.setTitle(draft.title() == null ? "" : draft.title().trim());
+        row.setDescription(nullToEmpty(draft.description()));
+        row.setLocation(nullToEmpty(draft.location()));
+        row.setAgencyName(nullToEmpty(draft.agencyName()));
         row.setRecruitFields(toArray(draft.recruitFields()));
         row.setQualifications(toArray(draft.qualifications()));
         row.setSchedules(toArray(draft.schedules()));
@@ -138,15 +208,6 @@ public class AuditionAutoTranslationService {
         row.setErrorMessage(null);
         row.setSourceHash(AuditionSourceFingerprint.hash(audition));
         row.setSourceRevision(audition.getContentRevision());
-        row.setUpdatedAt(Instant.now());
-    }
-
-    private void markFailed(AuditionTranslation row, TranslationProviderException ex) {
-        row.setStatus(AuditionTranslation.STATUS_FAILED);
-        row.setProvider(translationProvider.providerId());
-        row.setOrigin(AuditionTranslation.ORIGIN_AUTO);
-        row.setErrorCode(ex.getErrorCode());
-        row.setErrorMessage(publicError(ex.getMessage()));
         row.setUpdatedAt(Instant.now());
     }
 
@@ -184,10 +245,87 @@ public class AuditionAutoTranslationService {
         return cleaned.length() > 300 ? cleaned.substring(0, 300) : cleaned;
     }
 
+    private static String nullToEmpty(String value) {
+        return value == null ? "" : value;
+    }
+
     private static String[] toArray(List<String> values) {
         if (values == null || values.isEmpty()) {
             return new String[0];
         }
         return values.toArray(String[]::new);
+    }
+
+    private static final class TranslationConflictException extends RuntimeException {
+        private final boolean propagate;
+
+        private TranslationConflictException(boolean propagate) {
+            this.propagate = propagate;
+        }
+
+        private boolean propagate() {
+            return propagate;
+        }
+    }
+
+    private record FieldSnapshot(
+            String title,
+            String description,
+            String location,
+            String agencyName,
+            String[] recruitFields,
+            String[] qualifications,
+            String[] schedules,
+            String[] benefits,
+            String status,
+            String provider,
+            String origin,
+            boolean manuallyEdited,
+            boolean stale,
+            String errorCode,
+            String errorMessage,
+            String sourceHash,
+            Long sourceRevision) {
+
+        private static FieldSnapshot capture(AuditionTranslation row) {
+            return new FieldSnapshot(
+                    row.getTitle(),
+                    row.getDescription(),
+                    row.getLocation(),
+                    row.getAgencyName(),
+                    row.getRecruitFields(),
+                    row.getQualifications(),
+                    row.getSchedules(),
+                    row.getBenefits(),
+                    row.getStatus(),
+                    row.getProvider(),
+                    row.getOrigin(),
+                    row.isManuallyEdited(),
+                    row.isStale(),
+                    row.getErrorCode(),
+                    row.getErrorMessage(),
+                    row.getSourceHash(),
+                    row.getSourceRevision());
+        }
+
+        private void restore(AuditionTranslation row) {
+            row.setTitle(title);
+            row.setDescription(description);
+            row.setLocation(location);
+            row.setAgencyName(agencyName);
+            row.setRecruitFields(recruitFields);
+            row.setQualifications(qualifications);
+            row.setSchedules(schedules);
+            row.setBenefits(benefits);
+            row.setStatus(status);
+            row.setProvider(provider);
+            row.setOrigin(origin);
+            row.setManuallyEdited(manuallyEdited);
+            row.setStale(stale);
+            row.setErrorCode(errorCode);
+            row.setErrorMessage(errorMessage);
+            row.setSourceHash(sourceHash);
+            row.setSourceRevision(sourceRevision);
+        }
     }
 }

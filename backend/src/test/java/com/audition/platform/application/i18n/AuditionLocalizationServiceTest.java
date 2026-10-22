@@ -4,6 +4,7 @@ import com.audition.platform.api.dto.AuditionResponse;
 import com.audition.platform.domain.audition.Audition;
 import com.audition.platform.domain.audition.AuditionRepository;
 import com.audition.platform.domain.audition.AuditionTranslation;
+import com.audition.platform.domain.audition.AuditionTranslationAttemptRepository;
 import com.audition.platform.domain.audition.AuditionTranslationRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,7 +30,8 @@ class AuditionLocalizationServiceTest {
         service = new AuditionLocalizationService(
                 translationRepository,
                 auditionRepository,
-                new ContentLocaleResolver());
+                new ContentLocaleResolver(),
+                mock(AuditionTranslationAttemptRepository.class));
     }
 
     @Test
