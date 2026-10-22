@@ -1,7 +1,10 @@
+import { routing } from '../../../i18n.config'
+import localesMeta from '../../../../messages/locales.json'
 import {
   fallbackUiLocale,
   localeSwitchTarget,
   redirectPathForRetiredLocale,
+  redirectPathForSavedLocale,
   RETIRED_UI_LOCALES,
   UI_LOCALES,
 } from '../uiLocales'
@@ -50,5 +53,20 @@ describe('official UI locales', () => {
 
   it('refuses a retired locale and falls back to en', () => {
     expect(localeSwitchTarget('/auditions', 'ja').locale).toBe('en')
+  })
+
+  it('defaults first visits to English and does not let Accept-Language replace a saved choice', () => {
+    expect(routing.defaultLocale).toBe('en')
+    expect(routing.localeDetection).toBe(false)
+    expect(localesMeta.defaultLocale).toBe('en')
+  })
+
+  it('keeps explicit URL locale ahead of the saved cookie, then English', () => {
+    expect(redirectPathForSavedLocale('/ko/auditions/42', 'en')).toBeNull()
+    expect(redirectPathForSavedLocale('/auditions/42', 'mn')).toBe('/mn/auditions/42')
+    expect(redirectPathForSavedLocale('/', 'ko')).toBe('/ko')
+    expect(redirectPathForSavedLocale('/', undefined)).toBeNull()
+    expect(redirectPathForSavedLocale('/auditions', 'ja')).toBeNull()
+    expect(redirectPathForSavedLocale('/ja/auditions', 'mn')).toBeNull()
   })
 })

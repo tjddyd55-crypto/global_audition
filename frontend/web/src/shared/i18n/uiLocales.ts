@@ -42,6 +42,28 @@ export function localeSwitchTarget(
   return { href: unprefixedPathname(pathname), locale }
 }
 
+/**
+ * next-intl 기본 쿠키 이름.
+ * localeDetection을 끄면 미들웨어는 이 쿠키를 읽지 않으므로, 접두 없는 경로만 여기서 복원한다.
+ */
+export const SAVED_LOCALE_COOKIE = 'NEXT_LOCALE'
+
+/**
+ * 접두 없는 경로이고 쿠키가 공식 UI 로케일이면 그 접두를 붙인다.
+ * 이미 URL에 로케일이 있으면 null — 명시적 URL이 저장값보다 우선이다.
+ * 폐기 로케일 경로는 null. 호출부가 먼저 지원 로케일로 보낸다.
+ */
+export function redirectPathForSavedLocale(
+  pathname: string,
+  cookieValue: string | null | undefined,
+): string | null {
+  const head = (pathname.split('/')[1] ?? '').toLowerCase()
+  if (isUiLocale(head) || RETIRED_UI_LOCALES.includes(head)) return null
+  if (!cookieValue || !isUiLocale(cookieValue)) return null
+  const suffix = pathname === '/' ? '' : pathname
+  return `/${cookieValue}${suffix}`
+}
+
 /** 폐기 로케일 URL을 지원 로케일로 보낸다. 쿼리는 호출부가 유지한다. */
 export function redirectPathForRetiredLocale(pathname: string): string | null {
   const segments = pathname.split('/')

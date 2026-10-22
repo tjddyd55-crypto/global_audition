@@ -1,7 +1,7 @@
 import ko from '../../../web/messages/ko.json'
 import en from '../../../web/messages/en.json'
 import mn from '../../../web/messages/mn.json'
-import { DEFAULT_LOCALE, detectDeviceLocale, normalizeLocale } from './runtime'
+import { DEFAULT_LOCALE, detectDeviceLocale, normalizeLocale, resolveInitialLocale } from './runtime'
 
 type Tree = Record<string, unknown>
 
@@ -32,6 +32,14 @@ describe('native i18n catalogs', () => {
     expect(detectDeviceLocale('ko-KR')).toBe('ko')
     expect(detectDeviceLocale('fr-FR')).toBe('en')
     expect(normalizeLocale('xx-YY')).toBe('en')
-    expect(DEFAULT_LOCALE).toBe('ko')
+    expect(DEFAULT_LOCALE).toBe('en')
+  })
+
+  it('uses a saved locale, otherwise English, and ignores the device language', () => {
+    expect(resolveInitialLocale(null)).toBe('en')
+    expect(resolveInitialLocale(undefined)).toBe('en')
+    expect(resolveInitialLocale('ko')).toBe('ko')
+    expect(resolveInitialLocale('mn')).toBe('mn')
+    expect(resolveInitialLocale('ja')).toBe('en')
   })
 })

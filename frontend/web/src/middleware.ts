@@ -1,7 +1,7 @@
 import createIntlMiddleware from 'next-intl/middleware'
 import { NextResponse, type NextRequest } from 'next/server'
 import { routing } from './i18n.config'
-import { redirectPathForRetiredLocale } from './shared/i18n/uiLocales'
+import { redirectPathForRetiredLocale, redirectPathForSavedLocale, SAVED_LOCALE_COOKIE } from './shared/i18n/uiLocales'
 
 /**
  * 디바이스 타입 쿠키/헤더 이름.
@@ -37,6 +37,16 @@ export default function middleware(req: NextRequest) {
     return NextResponse.redirect(url, 307)
   }
 
+  const saved = redirectPathForSavedLocale(
+    req.nextUrl.pathname,
+    req.cookies.get(SAVED_LOCALE_COOKIE)?.value,
+  )
+  if (saved) {
+    const url = req.nextUrl.clone()
+    url.pathname = saved
+    return NextResponse.redirect(url, 307)
+  }
+
   const res = intlMiddleware(req)
   const device = resolveDevice(req)
 
@@ -56,6 +66,6 @@ export default function middleware(req: NextRequest) {
 export const config = {
   // 모든 경로에서 미들웨어 실행 (정적 파일 제외)
   // `/admin/*`는 로케일 접두 없이 동작 (슈퍼관리자 콘솔)
-  // 루트 경로(/)도 자동으로 기본 언어(/ko)로 리다이렉트됩니다
+  // 루트(/)는 저장 쿠키가 없으면 기본 언어(/en)로, 있으면 그 로케일로 리다이렉트됩니다
   matcher: ['/((?!api|_next|_vercel|admin|.*\\..*).*)'],
 }
