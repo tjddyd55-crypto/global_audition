@@ -93,12 +93,13 @@ export function SuperAdminAuthGate({ children }: SuperAdminAuthGateProps) {
     )
   }
 
-  if (me.role !== 'SUPER_ADMIN') {
+  if (me.role !== 'SUPER_ADMIN' && me.role !== 'GLOBAL_SUPER_ADMIN') {
     return (
       <div className="mx-auto max-w-lg px-4 py-16">
         <AdminNotice title="접근 거부">
           <p className="mb-4 text-gray-600">
-            슈퍼관리자(SUPER_ADMIN)만 이 영역에 접근할 수 있습니다. 현재 역할: <strong>{me.role}</strong>
+            본사 관리자(SUPER_ADMIN, GLOBAL_SUPER_ADMIN)만 이 영역에 접근할 수 있습니다. 현재 역할:{' '}
+            <strong>{me.role}</strong>
           </p>
           {jwtRoleHint && jwtRoleHint !== me.role && (
             <p className="mb-4 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
