@@ -9,6 +9,8 @@ import com.audition.platform.application.audition.AuditionSeriesEligibilityServi
 import com.audition.platform.application.audition.AuditionSeriesPresentation;
 import com.audition.platform.application.i18n.AuditionLocalizationService;
 import com.audition.platform.application.i18n.ContentLocales;
+import com.audition.platform.application.i18n.content.ContentTranslationService;
+import com.audition.platform.application.i18n.content.ContentTypes;
 import com.audition.platform.api.dto.AuditionTagRefDto;
 import com.audition.platform.application.round.AuditionProcessModes;
 import com.audition.platform.application.round.AuditionRoundService;
@@ -51,6 +53,7 @@ public class AuditionService {
     private final AuditionTagService auditionTagService;
     private final AuditionSeriesEligibilityService auditionSeriesEligibilityService;
     private final AuditionLocalizationService auditionLocalizationService;
+    private final ContentTranslationService contentTranslations;
 
     public AuditionService(AuditionRepository auditionRepository,
                            UserRepository userRepository,
@@ -58,7 +61,8 @@ public class AuditionService {
                            AuditionRoundService auditionRoundService,
                            AuditionTagService auditionTagService,
                            AuditionSeriesEligibilityService auditionSeriesEligibilityService,
-                           AuditionLocalizationService auditionLocalizationService) {
+                           AuditionLocalizationService auditionLocalizationService,
+                           ContentTranslationService contentTranslations) {
         this.auditionRepository = auditionRepository;
         this.userRepository = userRepository;
         this.applicationRepository = applicationRepository;
@@ -66,6 +70,7 @@ public class AuditionService {
         this.auditionTagService = auditionTagService;
         this.auditionSeriesEligibilityService = auditionSeriesEligibilityService;
         this.auditionLocalizationService = auditionLocalizationService;
+        this.contentTranslations = contentTranslations;
     }
 
     private static Instant parseInstantRequired(String value, String field) {
@@ -341,6 +346,7 @@ public class AuditionService {
             a = auditionRepository.save(a);
             auditionRoundService.bootstrapFirstRound(a.getId(), "OPEN".equals(a.getStatus()));
         }
+        enqueuePostingTranslation(a);
         return toResponse(a);
     }
 
@@ -549,7 +555,21 @@ public class AuditionService {
         }
         audition.setUpdatedAt(Instant.now());
         auditionLocalizationService.onSourceWritten(audition, translatableFieldsPresent(request));
-        return toResponse(auditionRepository.save(audition));
+        Audition saved = auditionRepository.save(audition);
+        enqueuePostingTranslation(saved);
+        return toResponse(saved);
+    }
+
+    /** 게시된 공고만 활성 대상(영어 우선)을 큐에 넣는다. 실패해도 공고 저장은 유지한다. */
+    private void enqueuePostingTranslation(Audition audition) {
+        if (audition == null || audition.getId() == null || !"OPEN".equals(audition.getStatus())) {
+            return;
+        }
+        try {
+            contentTranslations.requestActiveTargets(ContentTypes.AUDITION_POSTING, audition.getId(), audition.getOwnerId());
+        } catch (RuntimeException ex) {
+            log.warn("posting translation enqueue skipped type={}", ex.getClass().getSimpleName());
+        }
     }
 
     public void delete(UUID id) {

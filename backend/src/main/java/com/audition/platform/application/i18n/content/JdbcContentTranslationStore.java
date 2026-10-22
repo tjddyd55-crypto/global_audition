@@ -277,6 +277,14 @@ public class JdbcContentTranslationStore implements ContentTranslationStore {
         return value == null ? 0L : value;
     }
 
+    @Override
+    public long sumGlobalBilledCharactersSince(Instant since) {
+        Long value = jdbc.queryForObject(
+                "SELECT COALESCE(SUM(billed_characters), 0) FROM content_translation_attempts WHERE started_at >= ?",
+                Long.class, Timestamp.from(since));
+        return value == null ? 0L : value;
+    }
+
     private Optional<StoredJob> oneJob(String sql, Object... args) {
         return jdbc.query(sql, jobMapper(), args).stream().findFirst();
     }

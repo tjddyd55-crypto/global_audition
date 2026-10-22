@@ -4,6 +4,7 @@ export type ContentTranslationView = {
   stale?: boolean
   fallback?: boolean
   sourceLocale?: string | null
+  errorCode?: string | null
 }
 
 export function displayedField(

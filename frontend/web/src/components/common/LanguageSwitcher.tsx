@@ -3,7 +3,13 @@
 import { useLocale, useTranslations } from 'next-intl'
 import { usePathname, useRouter } from '../../i18n.config'
 import { useState } from 'react'
-import { localeSwitchTarget, UI_LOCALES, type UiLocale } from '@/shared/i18n/uiLocales'
+import {
+  AGENCY_UI_LOCALE,
+  isAgencyConsolePath,
+  localeSwitchTarget,
+  PUBLIC_SELECTOR,
+  type UiLocale,
+} from '@/shared/i18n/uiLocales'
 
 const FLAGS: Record<UiLocale, string> = {
   ko: '🇰🇷',
@@ -11,7 +17,7 @@ const FLAGS: Record<UiLocale, string> = {
   mn: '🇲🇳',
 }
 
-const LANGUAGE_OPTIONS = UI_LOCALES.map((code) => ({ code, flag: FLAGS[code] }))
+const LANGUAGE_OPTIONS = PUBLIC_SELECTOR.map((code) => ({ code, flag: FLAGS[code] }))
 
 export default function LanguageSwitcher() {
   const locale = useLocale()
@@ -28,7 +34,8 @@ export default function LanguageSwitcher() {
     setIsOpen(false)
   }
 
-  const currentLanguage = LANGUAGE_OPTIONS.find((lang) => lang.code === locale) || LANGUAGE_OPTIONS[0]
+  const options = isAgencyConsolePath(pathname) ? [{ code: AGENCY_UI_LOCALE, flag: FLAGS[AGENCY_UI_LOCALE] }] : LANGUAGE_OPTIONS
+  const currentLanguage = options.find((lang) => lang.code === locale) || options[0]
 
   return (
     <div className="relative">
@@ -57,7 +64,7 @@ export default function LanguageSwitcher() {
           />
           <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border z-20">
             <div className="py-1">
-              {LANGUAGE_OPTIONS.map((lang) => (
+              {options.map((lang) => (
                 <button
                   key={lang.code}
                   onClick={() => changeLanguage(lang.code)}

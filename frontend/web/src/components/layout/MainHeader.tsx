@@ -10,9 +10,12 @@ import { useAuthStore } from '@/shared/auth/authStore'
 import { getDisplayNickname } from '@/shared/user/getDisplayNickname'
 import { BTN_PRIMARY, DROPDOWN_ITEM } from '@/shared/ui/specClasses'
 import { DeviceToggle } from '@/shared/device/DeviceToggle'
-import { localeSwitchTarget, UI_LOCALES } from '@/shared/i18n/uiLocales'
-
-const locales = UI_LOCALES
+import {
+  AGENCY_UI_LOCALE,
+  isAgencyConsolePath,
+  localeSwitchTarget,
+  PUBLIC_SELECTOR,
+} from '@/shared/i18n/uiLocales'
 
 export default function MainHeader() {
   const t = useTranslations('common')
@@ -52,6 +55,8 @@ export default function MainHeader() {
     staleTime: Infinity,
     gcTime: 30 * 60 * 1000,
   })
+
+  const locales = isAgencyConsolePath(pathname) ? [AGENCY_UI_LOCALE] : PUBLIC_SELECTOR
 
   const changeLocale = (nextLocale: string) => {
     const target = localeSwitchTarget(pathname, nextLocale)
@@ -117,6 +122,7 @@ export default function MainHeader() {
               type="button"
               onClick={() => setIsLanguageOpen((p) => !p)}
               className="cursor-pointer border-0 bg-transparent text-sm text-[#555555]"
+              data-testid="language-current"
             >
               {locale.toUpperCase()}
             </button>

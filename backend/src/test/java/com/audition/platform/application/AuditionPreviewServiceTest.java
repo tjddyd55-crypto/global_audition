@@ -55,7 +55,8 @@ class AuditionPreviewServiceTest {
                 mock(AuditionRoundService.class),
                 mock(AuditionTagService.class),
                 mock(AuditionSeriesEligibilityService.class),
-                localization);
+                localization,
+                mock(com.audition.platform.application.i18n.content.ContentTranslationService.class));
     }
 
     @AfterEach

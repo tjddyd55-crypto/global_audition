@@ -22,7 +22,11 @@ public class LocaleRegistry {
     public static final String PROVIDER_UNSUPPORTED = "PROVIDER_UNSUPPORTED";
 
     private final String defaultLocale;
+    private final String agencyUiLocale;
+    private final String superAdminUiLocale;
     private final List<String> uiLocales;
+    private final List<String> publicSelector;
+    private final List<String> activeTargets;
     private final Set<String> providerLocales;
 
     public LocaleRegistry() {
@@ -41,14 +45,65 @@ public class LocaleRegistry {
                 throw new IllegalStateException("UI locale is not a provider locale: " + ui);
             }
         }
+        JsonNode targets = root.get("activeTranslationTargets");
+        this.activeTargets = List.copyOf(targets == null || !targets.isArray()
+                ? new ArrayList<>(providerLocales)
+                : stringList(targets));
+        for (String target : activeTargets) {
+            if (!providerSupports(target)) {
+                throw new IllegalStateException("active translation target is not a provider locale: " + target);
+            }
+        }
+        JsonNode selector = root.get("publicSelector");
+        this.publicSelector = List.copyOf(selector == null || !selector.isArray()
+                ? List.of(defaultLocale)
+                : stringList(selector));
+        for (String item : publicSelector) {
+            if (!uiLocales.contains(item)) {
+                throw new IllegalStateException("public selector locale is not a UI locale: " + item);
+            }
+        }
+        this.agencyUiLocale = text(root, "agencyUiLocale", "ko");
+        this.superAdminUiLocale = text(root, "superAdminUiLocale", "ko");
+        if (!uiLocales.contains(agencyUiLocale) || !uiLocales.contains(superAdminUiLocale)) {
+            throw new IllegalStateException("agency and super admin locales must be UI locales");
+        }
     }
 
     public String viewingDefault() {
         return defaultLocale;
     }
 
+    public String agencyUiLocale() {
+        return agencyUiLocale;
+    }
+
+    public String superAdminUiLocale() {
+        return superAdminUiLocale;
+    }
+
     public List<String> uiLocales() {
         return uiLocales;
+    }
+
+    public List<String> publicSelector() {
+        return publicSelector;
+    }
+
+    /** 1차 운영에서 실제로 큐에 넣는 대상. 영어가 목록의 앞에 온다. */
+    public List<String> activeTargets() {
+        return activeTargets;
+    }
+
+    public boolean activeTarget(String raw) {
+        String tag = Bcp47Tags.canonicalize(raw);
+        if (tag.isEmpty()) {
+            return false;
+        }
+        if (activeTargets.contains(tag)) {
+            return true;
+        }
+        return activeTargets.contains(Bcp47Tags.language(tag));
     }
 
     public Set<String> providerLocales() {

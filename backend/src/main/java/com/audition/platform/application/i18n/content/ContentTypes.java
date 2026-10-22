@@ -9,6 +9,7 @@ public final class ContentTypes {
     public static final String CHANNEL_VIDEO = "CHANNEL_VIDEO";
     public static final String APPLICATION_VIDEO = "APPLICATION_VIDEO";
     public static final String AUDITION_ROUND = "AUDITION_ROUND";
+    public static final String AUDITION_POSTING = "AUDITION_POSTING";
 
     public static final String NOT_CONFIGURED = "NOT_CONFIGURED";
     public static final String BLOCKED = "BLOCKED";
@@ -16,6 +17,7 @@ public final class ContentTypes {
     public static final String RATE_LIMITED = "RATE_LIMITED";
     public static final String ABUSE_BLOCKED = "ABUSE_BLOCKED";
     public static final String LOCALE_UNSUPPORTED = "LOCALE_UNSUPPORTED";
+    public static final String TARGET_INACTIVE = "TARGET_INACTIVE";
     public static final String TRANSLATION_PROTECTED = "TRANSLATION_PROTECTED";
     public static final String RETRY_EXHAUSTED = "RETRY_EXHAUSTED";
     public static final String CONTENT_NOT_FOUND = "CONTENT_NOT_FOUND";

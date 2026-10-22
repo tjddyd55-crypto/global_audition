@@ -1,10 +1,15 @@
 'use client'
 
 import { useState } from 'react'
+import axios from 'axios'
 import { useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { useLocale, useTranslations } from 'next-intl'
 import { auditionApi } from '@/shared/api/auditions'
+import { apiClient } from '@/shared/api/client'
+import { TranslationNotice } from '@/components/i18n/TranslatedField'
+import { overlayPosting } from '@/shared/i18n/postingTranslation'
+import type { ContentTranslationView } from '@/shared/i18n/contentTranslation'
 import { CONTENT_AUTHORING_LOCALES } from '@/shared/audition/audience'
 import { dateFnsLocale } from '@/shared/datetime/dateFnsLocale'
 import { safeArr, safeNum, safeStr } from '@/shared/utils/safe'
@@ -34,12 +39,30 @@ export function AuditionPostingPreview({ auditionId }: Props) {
   const uiLocale = useLocale()
   const [locale, setLocale] = useState('en')
   const [layout, setLayout] = useState<Layout>('pc')
+  const [showOriginal, setShowOriginal] = useState(false)
   const query = useQuery({
     queryKey: ['audition-preview', auditionId, locale],
     queryFn: () => auditionApi.getPreview(auditionId, locale),
     enabled: Boolean(auditionId),
   })
-  const audition = query.data
+  const engine = useQuery({
+    queryKey: ['content-translation', 'AUDITION_POSTING', auditionId, locale, showOriginal],
+    enabled: Boolean(auditionId),
+    retry: false,
+    queryFn: async (): Promise<ContentTranslationView | null> => {
+      try {
+        const { data } = await apiClient.get<ContentTranslationView>(
+          `/content-translations/AUDITION_POSTING/${auditionId}`,
+          { params: { locale, original: showOriginal } },
+        )
+        return data
+      } catch (error) {
+        if (axios.isAxiosError(error) && error.response?.status === 404) return null
+        throw error
+      }
+    },
+  })
+  const audition = query.data ? overlayPosting(query.data, engine.data) : undefined
 
   const fmt = (iso: string) => {
     try {
@@ -88,6 +111,14 @@ export function AuditionPostingPreview({ auditionId }: Props) {
         {audition?.translationErrorCode ? (
           <p className="mt-1 text-sm text-red-700">{audition.translationErrorCode}</p>
         ) : null}
+        <div className="mt-3" data-testid="preview-translation-compare">
+          <TranslationNotice
+            view={engine.data ?? null}
+            showOriginal={showOriginal}
+            onToggle={setShowOriginal}
+          />
+          {engine.data?.errorCode ? <p className="mt-1 text-sm text-amber-900">{engine.data.errorCode}</p> : null}
+        </div>
       </div>
 
       {query.isLoading ? <p>{t('previewLoading')}</p> : null}

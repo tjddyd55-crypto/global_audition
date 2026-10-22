@@ -32,7 +32,10 @@ public class AgencyProfileSource implements ContentTranslationSource {
                         type(),
                         user.getId(),
                         ContentTexts.locale(user.getTextSourceLocale()),
-                        ContentTexts.fields("bio", user.getBio(), "introText", user.getIntroText()),
+                        ContentTexts.proseFields(
+                                "bio", user.getBio(),
+                                "introText", user.getIntroText(),
+                                "shortBio", user.getShortBio()),
                         user.getId(),
                         user.getId()));
     }

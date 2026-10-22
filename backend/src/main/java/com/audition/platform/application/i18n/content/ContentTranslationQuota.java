@@ -4,6 +4,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
+import java.time.YearMonth;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
@@ -57,6 +59,27 @@ public class ContentTranslationQuota {
         if (overCost(properties.getGlobalDailyCostMicroUsd(), store.sumGlobalCostSince(day))) {
             reject(ContentTypes.QUOTA_EXCEEDED);
         }
+        Instant month = monthStart(now);
+        if (userId != null && overCost(properties.getUserMonthlyCostMicroUsd(), store.sumUserCostSince(userId, month))) {
+            reject(ContentTypes.QUOTA_EXCEEDED);
+        }
+        if (agencyId != null && overCost(properties.getAgencyMonthlyCostMicroUsd(), store.sumAgencyCostSince(agencyId, month))) {
+            reject(ContentTypes.QUOTA_EXCEEDED);
+        }
+        if (overCost(properties.getGlobalMonthlyCostMicroUsd(), store.sumGlobalCostSince(month))) {
+            reject(ContentTypes.QUOTA_EXCEEDED);
+        }
+        if (overCount(properties.getGlobalMonthlyBilledCharacters(), store.sumGlobalBilledCharactersSince(month))) {
+            reject(ContentTypes.QUOTA_EXCEEDED);
+        }
+    }
+
+    private static Instant monthStart(Instant now) {
+        return YearMonth.from(now.atZone(ZoneOffset.UTC)).atDay(1).atStartOfDay().toInstant(ZoneOffset.UTC);
+    }
+
+    private static boolean overCount(long cap, long used) {
+        return cap > 0 && used >= cap;
     }
 
     private static boolean overCost(long cap, long used) {

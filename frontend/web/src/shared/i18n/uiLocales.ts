@@ -16,6 +16,46 @@ function readUiLocales(primary: readonly string[]): readonly ['ko', 'en', 'mn'] 
 export const UI_LOCALES = readUiLocales(localesMeta.primary)
 export type UiLocale = (typeof UI_LOCALES)[number]
 
+function readSelector(values: readonly string[] | undefined, fallback: UiLocale): readonly UiLocale[] {
+  const selected = (values ?? []).filter(isUiLocale)
+  return selected.length > 0 ? selected : [fallback]
+}
+
+/** 1차 공개 서비스에서 고를 수 있는 UI 언어. 카탈로그 자체는 ko/en/mn 을 유지한다. */
+export const PUBLIC_SELECTOR = readSelector(localesMeta.publicSelector, 'en')
+
+export const AGENCY_UI_LOCALE: UiLocale = isUiLocale(localesMeta.agencyUiLocale)
+  ? localesMeta.agencyUiLocale
+  : 'ko'
+
+const AGENCY_CONSOLE_PREFIXES = [
+  '/dashboard',
+  '/my/dashboard',
+  '/my/auditions',
+  '/my/applicants',
+  '/my/stats',
+  '/auditions/create',
+]
+
+/** 기획사 운영 화면. 공개 오디션 상세·지원은 포함하지 않는다. */
+export function isAgencyConsolePath(pathname: string | null | undefined): boolean {
+  const path = pathname && pathname.length > 0 ? pathname : '/'
+  return AGENCY_CONSOLE_PREFIXES.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))
+}
+
+/**
+ * 기획사 운영 화면은 카탈로그 로케일을 한국어로 고정한다.
+ * 경로에 로케일이 있을 때만 바꾸고, 그 외 공개 화면은 그대로 둔다.
+ */
+export function redirectPathForAgencyConsole(pathname: string): string | null {
+  const segments = pathname.split('/').filter((segment) => segment.length > 0)
+  const head = (segments[0] ?? '').toLowerCase()
+  if (!isUiLocale(head) || head === AGENCY_UI_LOCALE) return null
+  const rest = `/${segments.slice(1).join('/')}`
+  if (!isAgencyConsolePath(rest)) return null
+  return `/${AGENCY_UI_LOCALE}${rest}`
+}
+
 /** supported에는 있으나 공식 UI가 아닌 로케일. 옛 URL 호환용으로만 인식한다. */
 export const RETIRED_UI_LOCALES = localesMeta.supported.filter(
   (locale) => !(localesMeta.primary as readonly string[]).includes(locale),

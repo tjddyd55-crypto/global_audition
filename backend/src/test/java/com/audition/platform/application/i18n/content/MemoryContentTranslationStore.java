@@ -216,6 +216,14 @@ public class MemoryContentTranslationStore implements ContentTranslationStore {
                 .sum();
     }
 
+    @Override
+    public synchronized long sumGlobalBilledCharactersSince(Instant since) {
+        return attempts.stream()
+                .filter(row -> !row.startedAt.isBefore(since) && row.usage != null && row.usage.billedCharacters() != null)
+                .mapToLong(row -> row.usage.billedCharacters())
+                .sum();
+    }
+
     public synchronized List<StoredTranslation> translations() {
         return new ArrayList<>(translations);
     }

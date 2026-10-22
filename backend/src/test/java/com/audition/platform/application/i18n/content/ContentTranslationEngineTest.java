@@ -2,6 +2,7 @@ package com.audition.platform.application.i18n.content;
 
 import com.audition.platform.application.i18n.LocaleRegistry;
 import com.audition.platform.application.i18n.TranslationAttemptRecorder;
+import com.audition.platform.application.i18n.content.ContentTranslationRows.AttemptFinish;
 import com.audition.platform.application.i18n.content.ContentTranslationRows.ContentSnapshot;
 import com.audition.platform.application.i18n.content.ContentTranslationRows.NewAttempt;
 import com.audition.platform.application.i18n.translation.ProviderUsage;
@@ -57,6 +58,10 @@ class ContentTranslationEngineTest {
         properties.setUserDailyCostMicroUsd(0);
         properties.setAgencyDailyCostMicroUsd(0);
         properties.setGlobalDailyCostMicroUsd(0);
+        properties.setUserMonthlyCostMicroUsd(0);
+        properties.setAgencyMonthlyCostMicroUsd(0);
+        properties.setGlobalMonthlyCostMicroUsd(0);
+        properties.setGlobalMonthlyBilledCharacters(0);
         properties.setInputMicroUsdPerMillion(1_000_000L);
         properties.setOutputMicroUsdPerMillion(1_000_000L);
         TranslationAttemptRecorder recorder = mock(TranslationAttemptRecorder.class);
@@ -77,9 +82,14 @@ class ContentTranslationEngineTest {
     void mockProviderKeepsFieldShapeForPrimaryPairs() {
         assertPair("ko", "en", "보컬 연습생 모집");
         assertPair("en", "ko", "Global audition for trainees");
-        assertPair("ko", "mn", "대한민국 서울 오디션");
         assertPair("mn", "ko", "Дуучин сургагч");
         assertPair("mn", "en", "Улаанбаатар сонгон шалгаруулалт");
+        source.snapshot = snapshot("ko", "대한민국 서울 오디션");
+        UUID inactive = UUID.randomUUID();
+        ContentTranslationView mongolian = service.read(ContentTypes.APPLICATION_INTRO, inactive, "mn", false, viewer);
+        assertTrue(mongolian.showingOriginal());
+        assertEquals(ContentTypes.TARGET_INACTIVE, mongolian.errorCode());
+        assertTrue(store.findLatestJob(ContentTypes.APPLICATION_INTRO, inactive, "mn").isEmpty());
     }
 
     @Test
@@ -199,6 +209,67 @@ class ContentTranslationEngineTest {
         assertEquals(14L, attempt.estimatedCostMicroUsd());
     }
 
+    @Test
+    void repeatedReadsDoNotCallTheProvider() {
+        service.read(ContentTypes.APPLICATION_INTRO, contentId, "en", false, viewer);
+        assertEquals(1, worker.drain());
+        int calls = provider.calls;
+        service.read(ContentTypes.APPLICATION_INTRO, contentId, "en", false, viewer);
+        service.read(ContentTypes.APPLICATION_INTRO, contentId, "en", false, viewer);
+        assertEquals(0, worker.drain());
+        assertEquals(calls, provider.calls);
+    }
+
+    @Test
+    void monthlyBudgetKeepsOriginalAndDoesNotEnqueue() {
+        properties.setGlobalMonthlyCostMicroUsd(50);
+        UUID attemptId = store.insertAttempt(new NewAttempt(
+                UUID.randomUUID(), ContentTypes.APPLICATION_INTRO, contentId, "en", null, viewer, null, "MOCK"));
+        store.finishAttempt(new AttemptFinish(
+                attemptId, AuditionTranslation.STATUS_COMPLETED, null, null, new ProviderUsage(1, 1, 1, 100), 50L));
+        ContentTranslationView view = service.read(ContentTypes.APPLICATION_INTRO, contentId, "en", false, viewer);
+        assertTrue(view.showingOriginal());
+        assertEquals("연습생 오디션", view.fields().get("introText"));
+        assertTrue(store.findLatestJob(ContentTypes.APPLICATION_INTRO, contentId, "en").isEmpty());
+    }
+
+    @Test
+    void publishRequestsEnglishFirstAndSkipsTheSourceLocale() {
+        source.type = ContentTypes.AUDITION_POSTING;
+        source.snapshot = snapshot("ko", "보컬 모집");
+        service.requestActiveTargets(ContentTypes.AUDITION_POSTING, contentId, viewer);
+        assertTrue(store.findActiveJob(ContentTypes.AUDITION_POSTING, contentId, "en").isPresent());
+        assertTrue(store.findLatestJob(ContentTypes.AUDITION_POSTING, contentId, "ko").isEmpty());
+        assertTrue(store.findLatestJob(ContentTypes.AUDITION_POSTING, contentId, "mn").isEmpty());
+
+        UUID englishPosting = UUID.randomUUID();
+        source.snapshot = snapshot("en", "Open call");
+        service.requestActiveTargets(ContentTypes.AUDITION_POSTING, englishPosting, viewer);
+        assertTrue(store.findLatestJob(ContentTypes.AUDITION_POSTING, englishPosting, "en").isEmpty());
+        assertTrue(store.findActiveJob(ContentTypes.AUDITION_POSTING, englishPosting, "ko").isPresent());
+    }
+
+    @Test
+    void explicitRetryOfAnInactiveLocaleIsRejected() {
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> service.retry(ContentTypes.APPLICATION_INTRO, contentId, "mn", false, viewer));
+        assertEquals(400, ex.getStatusCode().value());
+        assertEquals(ContentTypes.TARGET_INACTIVE, ex.getReason());
+    }
+
+    @Test
+    void prosePayloadDropsContactLinesAndKeepsFreeText() {
+        var fields = ContentTexts.proseFields(
+                "introText", "나는 보컬이다",
+                "message", "user@example.com",
+                "bio", "활동 https://example.com 소개\n010-1234-5678\nKR\n100 USD");
+        assertEquals("나는 보컬이다", fields.get("introText"));
+        assertFalse(fields.containsKey("message"));
+        assertEquals("활동 소개", fields.get("bio"));
+        assertFalse(fields.get("bio").contains("@"));
+        assertFalse(fields.get("bio").contains("http"));
+    }
+
     private void assertPair(String sourceLocale, String target, String text) {
         source.snapshot = snapshot(sourceLocale, text);
         UUID id = UUID.randomUUID();
@@ -229,6 +300,7 @@ class ContentTranslationEngineTest {
     private static final class StructProvider implements TranslationProvider {
         private boolean configured = true;
         private boolean fail;
+        private int calls;
 
         @Override
         public String providerId() {
@@ -247,6 +319,7 @@ class ContentTranslationEngineTest {
 
         @Override
         public TranslationDocumentDraft translateDocument(String sourceLocale, Map<String, String> fields, String targetLocale) {
+            calls++;
             if (!configured) {
                 throw new TranslationProviderException(AuditionTranslation.ERROR_NOT_CONFIGURED, "not configured");
             }
@@ -260,13 +333,14 @@ class ContentTranslationEngineTest {
     }
 
     private static final class MutableSource implements ContentTranslationSource {
+        private String type = ContentTypes.APPLICATION_INTRO;
         private ContentSnapshot snapshot;
         private boolean readable = true;
         private boolean writable = true;
 
         @Override
         public String type() {
-            return ContentTypes.APPLICATION_INTRO;
+            return type;
         }
 
         @Override

@@ -11,7 +11,7 @@ import { EmptyState } from '../../src/ui/EmptyState'
 import { Screen } from '../../src/ui/Screen'
 import { TextField } from '../../src/ui/TextField'
 import { persistLocale } from '../../src/i18n/LocaleProvider'
-import { PRIMARY_LOCALES } from '../../src/i18n/runtime'
+import { PUBLIC_SELECTOR } from '../../src/i18n/runtime'
 import { colors, radius } from '../../src/theme/tokens'
 import { useTranslation } from 'react-i18next'
 
@@ -50,7 +50,7 @@ export default function ProfileScreen() {
       <View style={styles.langRow}>
         <Text style={styles.meta}>{t('profile.language')}</Text>
         <View style={styles.langBtns}>
-          {PRIMARY_LOCALES.map((code) => (
+          {PUBLIC_SELECTOR.map((code) => (
             <Button
               key={code}
               label={t(`locale.${code}`)}
