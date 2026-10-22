@@ -259,10 +259,10 @@ class GoogleCloudTranslationProviderTest {
 
     private void assertStatus(int status, String code, boolean refresh) {
         transport.clear();
-        transport.respond(200, token("ya29.token-a"));
+        transport.respond(200, token("ya29.token-a", 1));
         transport.respond(status, "{\"error\":\"secret-body-marker\"}");
         if (refresh) {
-            transport.respond(200, token("ya29.token-b"));
+            transport.respond(200, token("ya29.token-b", 1));
             transport.respond(status, "{\"error\":\"secret-body-marker\"}");
         }
         TranslationProviderException ex = assertThrows(

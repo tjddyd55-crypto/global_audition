@@ -29,7 +29,7 @@ class JdkTranslationHttpTransportTest {
 
     @Test
     void httpErrorIsReturnedSoTheAdapterCanMapTheStatus() throws Exception {
-        String raw = "HTTP/1.1 500 Error\r\nContent-Length: 18\r\n\r\nsk-live-secret-body";
+        String raw = "HTTP/1.1 500 Error\r\nContent-Length: 19\r\n\r\nsk-live-secret-body";
 
         TranslationHttpResult result = JdkTranslationHttpTransport.readHttpResponse(
                 new ByteArrayInputStream(raw.getBytes(StandardCharsets.ISO_8859_1)));
