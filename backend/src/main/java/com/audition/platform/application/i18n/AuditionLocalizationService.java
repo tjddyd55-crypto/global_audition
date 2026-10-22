@@ -40,45 +40,80 @@ public class AuditionLocalizationService {
     }
 
     public void apply(Audition audition, AuditionResponse response, String requestedRaw) {
-        String original = ContentLocales.normalize(audition.getDefaultLocale());
-        String requested = ContentLocales.normalize(requestedRaw);
+        applyOverlay(audition, response, requestedRaw, false);
+    }
+
+    public void applyPreview(Audition audition, AuditionResponse response, String requestedRaw) {
+        applyOverlay(audition, response, requestedRaw, true);
+        response.setPreview(true);
+    }
+
+    /**
+     * 원문 해시가 바뀌면 번역 행을 지우지 않고 stale 로만 표시한다.
+     * 해시가 아직 없으면 이번 저장을 기준선으로 삼고, 번역 가능 필드가 포함된 저장이면 stale 로 표시한다.
+     */
+    @Transactional
+    public void onSourceWritten(Audition audition, boolean translatableFieldsPresent) {
+        String hash = AuditionSourceFingerprint.hash(audition);
+        String previous = audition.getContentSourceHash();
+        if (previous == null) {
+            audition.setContentSourceHash(hash);
+            if (audition.getContentRevision() < 1) {
+                audition.setContentRevision(1);
+            }
+            if (translatableFieldsPresent) {
+                markRowsStale(audition.getId());
+            }
+            return;
+        }
+        if (hash.equals(previous)) {
+            return;
+        }
+        audition.setContentSourceHash(hash);
+        audition.setContentRevision(audition.getContentRevision() + 1);
+        markRowsStale(audition.getId());
+    }
+
+    private void applyOverlay(Audition audition, AuditionResponse response, String requestedRaw, boolean preview) {
+        String original = authoringLocale(audition);
+        String requested = viewingLocale(requestedRaw, original);
         response.setDefaultLocale(original);
         response.setContentLocale(original);
         response.setContentLocaleFallback(false);
+        response.setShowingOriginal(false);
+        response.setPreview(preview);
         response.setApplyBlockedCode(response.getApplyBlockedMessage() == null
                 ? null
                 : AuditionSeriesPresentation.APPLY_BLOCKED_PREV_ROUND_NOT_ACCEPTED_CODE);
 
-        if (!requested.equals(original)) {
-            AuditionTranslation row = translationRepository
-                    .findByAuditionIdAndLocale(audition.getId(), requested)
-                    .orElse(null);
-            if (row != null
-                    && AuditionTranslation.STATUS_COMPLETED.equals(row.getStatus())
-                    && row.getTitle() != null
-                    && !row.getTitle().isBlank()) {
-                overlay(response, row);
-                response.setContentLocale(requested);
-            } else {
-                response.setContentLocaleFallback(true);
-            }
+        if (requested.equals(original)) {
+            response.setShowingOriginal(true);
+            finishLabels(audition, response);
+            return;
         }
 
-        response.setDisplayTitle(AuditionSeriesPresentation.displayTitle(
-                response.getTitle(), audition.getSeriesRound(), response.getContentLocale()));
-        response.setRecruitmentRoundLabel(AuditionSeriesPresentation.recruitmentRoundLabel(
-                audition.getStatus(), audition.getSeriesRound(), response.getContentLocale()));
-        if (response.getApplyBlockedMessage() != null) {
-            response.setApplyBlockedMessage(
-                    AuditionSeriesPresentation.applyBlockedMessage(response.getContentLocale()));
+        AuditionTranslation row = translationRepository
+                .findByAuditionIdAndLocale(audition.getId(), requested)
+                .orElse(null);
+        if (canOverlay(row, preview)) {
+            overlay(response, row);
+            response.setContentLocale(requested);
+            describeRow(audition, response, row);
+        } else {
+            response.setContentLocaleFallback(true);
+            response.setShowingOriginal(true);
+            if (row != null) {
+                describeRow(audition, response, row);
+            }
         }
+        finishLabels(audition, response);
     }
 
     @Transactional(readOnly = true)
     public List<AuditionTranslationView> list(UUID auditionId) {
         requireOwnerOrAdmin(auditionId);
         return translationRepository.findByAuditionIdOrderByLocaleAsc(auditionId).stream()
-                .map(AuditionLocalizationService::toView)
+                .map(AuditionTranslationMapper::toView)
                 .toList();
     }
 
@@ -92,6 +127,8 @@ public class AuditionLocalizationService {
         if (body.getTitle() == null || body.getTitle().isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "번역 제목은 필수입니다.");
         }
+        Audition audition = auditionRepository.findById(auditionId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Audition not found"));
         Instant now = Instant.now();
         AuditionTranslation row = translationRepository
                 .findById(new AuditionTranslationId(auditionId, locale))
@@ -113,8 +150,15 @@ public class AuditionLocalizationService {
         row.setBenefits(toArray(body.getBenefits()));
         row.setStatus(AuditionTranslation.STATUS_COMPLETED);
         row.setProvider(AuditionTranslation.PROVIDER_MANUAL);
+        row.setOrigin(AuditionTranslation.ORIGIN_MANUAL);
+        row.setManuallyEdited(true);
+        row.setStale(false);
+        row.setErrorCode(null);
+        row.setErrorMessage(null);
+        row.setSourceHash(AuditionSourceFingerprint.hash(audition));
+        row.setSourceRevision(audition.getContentRevision());
         row.setUpdatedAt(now);
-        return toView(translationRepository.save(row));
+        return AuditionTranslationMapper.toView(translationRepository.save(row));
     }
 
     private void requireOwnerOrAdmin(UUID auditionId) {
@@ -145,22 +189,61 @@ public class AuditionLocalizationService {
         return raw == null ? "" : raw;
     }
 
-    private static AuditionTranslationView toView(AuditionTranslation row) {
-        AuditionTranslationView view = new AuditionTranslationView();
-        view.setAuditionId(row.getAuditionId());
-        view.setLocale(row.getLocale());
-        view.setTitle(row.getTitle());
-        view.setDescription(row.getDescription());
-        view.setLocation(row.getLocation());
-        view.setAgencyName(row.getAgencyName());
-        view.setRecruitFields(row.getRecruitFields());
-        view.setQualifications(row.getQualifications());
-        view.setSchedules(row.getSchedules());
-        view.setBenefits(row.getBenefits());
-        view.setStatus(row.getStatus());
-        view.setProvider(row.getProvider());
-        view.setUpdatedAt(row.getUpdatedAt());
-        return view;
+    private void markRowsStale(UUID auditionId) {
+        Instant now = Instant.now();
+        List<AuditionTranslation> rows = translationRepository.findByAuditionIdOrderByLocaleAsc(auditionId);
+        for (AuditionTranslation row : rows) {
+            row.setStale(true);
+            row.setUpdatedAt(now);
+        }
+        if (!rows.isEmpty()) {
+            translationRepository.saveAll(rows);
+        }
+    }
+
+    private static boolean canOverlay(AuditionTranslation row, boolean preview) {
+        if (row == null || row.getTitle() == null || row.getTitle().isBlank()) {
+            return false;
+        }
+        if (preview) {
+            return true;
+        }
+        return AuditionTranslation.STATUS_COMPLETED.equals(row.getStatus());
+    }
+
+    private static void describeRow(Audition audition, AuditionResponse response, AuditionTranslation row) {
+        response.setTranslationStatus(row.getStatus());
+        response.setTranslationErrorCode(row.getErrorCode());
+        response.setTranslationOrigin(row.getOrigin());
+        boolean hashMismatch = row.getSourceHash() != null && !AuditionSourceFingerprint.matches(audition, row.getSourceHash());
+        response.setTranslationStale(row.isStale() || hashMismatch);
+    }
+
+    private static void finishLabels(Audition audition, AuditionResponse response) {
+        response.setDisplayTitle(AuditionSeriesPresentation.displayTitle(
+                response.getTitle(), audition.getSeriesRound(), response.getContentLocale()));
+        response.setRecruitmentRoundLabel(AuditionSeriesPresentation.recruitmentRoundLabel(
+                audition.getStatus(), audition.getSeriesRound(), response.getContentLocale()));
+        if (response.getApplyBlockedMessage() != null) {
+            response.setApplyBlockedMessage(
+                    AuditionSeriesPresentation.applyBlockedMessage(response.getContentLocale()));
+        }
+    }
+
+    private static String authoringLocale(Audition audition) {
+        String tag = ContentLocales.canonicalTag(audition.getDefaultLocale());
+        return tag.isEmpty() ? ContentLocales.DEFAULT : tag;
+    }
+
+    private static String viewingLocale(String requestedRaw, String original) {
+        String requestedTag = ContentLocales.canonicalTag(requestedRaw);
+        if (!requestedTag.isEmpty() && requestedTag.equals(original)) {
+            return original;
+        }
+        if (ContentLocales.isSupported(requestedRaw)) {
+            return ContentLocales.normalize(requestedRaw);
+        }
+        return requestedTag.isEmpty() ? ContentLocales.DEFAULT : requestedTag;
     }
 
     private static String nullToEmpty(String raw) {

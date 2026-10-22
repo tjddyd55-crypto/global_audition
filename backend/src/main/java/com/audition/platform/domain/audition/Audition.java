@@ -129,8 +129,14 @@ public class Audition {
     private int seriesRound = 1;
 
     /** 원문 로케일. 번역 테이블 fallback 기준. */
-    @Column(name = "default_locale", nullable = false, length = 8)
+    @Column(name = "default_locale", nullable = false, length = 16)
     private String defaultLocale = "ko";
+
+    @Column(name = "content_revision", nullable = false)
+    private long contentRevision = 1;
+
+    @Column(name = "content_source_hash", length = 64)
+    private String contentSourceHash;
 
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
@@ -201,4 +207,8 @@ public class Audition {
     public void setSeriesRound(int seriesRound) { this.seriesRound = seriesRound; }
     public String getDefaultLocale() { return defaultLocale; }
     public void setDefaultLocale(String defaultLocale) { this.defaultLocale = defaultLocale; }
+    public long getContentRevision() { return contentRevision; }
+    public void setContentRevision(long contentRevision) { this.contentRevision = contentRevision; }
+    public String getContentSourceHash() { return contentSourceHash; }
+    public void setContentSourceHash(String contentSourceHash) { this.contentSourceHash = contentSourceHash; }
 }

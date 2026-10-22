@@ -24,11 +24,33 @@ export type CreditPolicyPublic = {
   active: boolean
   applicationPaymentMode?: 'FREE' | 'CREDIT' | string
   applicationFeeCredits?: number
+  /** 서버 전역 지원비. 정수 USD. */
+  applicationFeeUsd?: number
+}
+
+export function wholeUsd(value: unknown): number | null {
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < 0) return null
+  return value
+}
+
+/** 클라이언트가 금액을 만들지 않는다. 서버 USD가 있으면 그 정수만 쓴다. */
+export function resolveApplicationFeeUsd(snapshot?: {
+  applicationFeeUsd?: number
+  applicationFeeCredits?: number
+  cost?: number
+} | null): number {
+  const usd = wholeUsd(snapshot?.applicationFeeUsd)
+  if (usd != null) return usd
+  const credits = wholeUsd(snapshot?.applicationFeeCredits)
+  if (credits != null) return credits
+  const cost = wholeUsd(snapshot?.cost)
+  return cost ?? 0
 }
 
 export type CreditRuntimePublic = {
   applicationPaymentMode: 'FREE' | 'CREDIT' | string
   applicationFeeCredits: number
+  applicationFeeUsd: number
   signupCreditEnabled: boolean
   signupCreditAmount: number
 }

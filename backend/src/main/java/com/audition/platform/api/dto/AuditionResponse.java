@@ -93,6 +93,24 @@ public class AuditionResponse {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String applyBlockedCode;
 
+    /** 소유자 미리보기 응답. 공개 조회는 false. */
+    private boolean preview;
+
+    /** 원문을 그대로 보여주는 중. */
+    private boolean showingOriginal;
+
+    /** PENDING / COMPLETED / FAILED. 원문 응답이면 null. */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String translationStatus;
+
+    private boolean translationStale;
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String translationErrorCode;
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String translationOrigin;
+
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
     public UUID getOwnerId() { return ownerId; }
@@ -274,4 +292,17 @@ public class AuditionResponse {
     }
     public String getApplyBlockedCode() { return applyBlockedCode; }
     public void setApplyBlockedCode(String applyBlockedCode) { this.applyBlockedCode = applyBlockedCode; }
+
+    public boolean isPreview() { return preview; }
+    public void setPreview(boolean preview) { this.preview = preview; }
+    public boolean isShowingOriginal() { return showingOriginal; }
+    public void setShowingOriginal(boolean showingOriginal) { this.showingOriginal = showingOriginal; }
+    public String getTranslationStatus() { return translationStatus; }
+    public void setTranslationStatus(String translationStatus) { this.translationStatus = translationStatus; }
+    public boolean isTranslationStale() { return translationStale; }
+    public void setTranslationStale(boolean translationStale) { this.translationStale = translationStale; }
+    public String getTranslationErrorCode() { return translationErrorCode; }
+    public void setTranslationErrorCode(String translationErrorCode) { this.translationErrorCode = translationErrorCode; }
+    public String getTranslationOrigin() { return translationOrigin; }
+    public void setTranslationOrigin(String translationOrigin) { this.translationOrigin = translationOrigin; }
 }

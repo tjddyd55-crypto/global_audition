@@ -77,6 +77,11 @@ export default function AuditionDetailScreen() {
               </Text>
             ) : null}
             <Text style={styles.desc}>{audition.description}</Text>
+            {audition.contentLocaleFallback ? <Text style={styles.warn}>{t('auditionDetail.contentFallback')}</Text> : null}
+            {audition.translationStale ? <Text style={styles.warn}>{t('auditionDetail.translationStale')}</Text> : null}
+            {audition.translationStatus && audition.translationStatus !== 'COMPLETED' ? (
+              <Text style={styles.meta}>{audition.translationStatus}</Text>
+            ) : null}
             <Info label={t('auditionDetail.recruitFields')} items={audition.recruitFields} />
             <Info label={t('auditionDetail.qualifications')} items={audition.qualifications} />
             <Info label={t('auditionDetail.schedules')} items={audition.schedules} />

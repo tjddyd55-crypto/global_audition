@@ -4,6 +4,7 @@ import { Link } from '@/i18n.config'
 import { MultiRoundSubmitCta } from '@/components/application/MultiRoundSubmitCta'
 import { useTranslations } from 'next-intl'
 import { applyBlockedDisplayMessage } from '@/shared/audition/applyBlockedCopy'
+import { resolveApplicationFeeUsd } from '@/shared/api/credits'
 
 type PcAuditionDetailApplyBarProps = {
   auditionId: string
@@ -32,6 +33,8 @@ type PcAuditionDetailApplyBarProps = {
   creditGateReady: boolean
   hasEnoughCredits: boolean
   applyPolicyError: boolean
+  /** 게시 미리보기. 지원·충전 이동을 막는다. */
+  interactionsDisabled?: boolean
 }
 
 const mainCtaClass =
@@ -63,9 +66,19 @@ export default function PcAuditionDetailApplyBar({
   creditGateReady,
   hasEnoughCredits,
   applyPolicyError,
+  interactionsDisabled = false,
 }: PcAuditionDetailApplyBarProps) {
   const tDetail = useTranslations('auditionDetail')
   const tApply = useTranslations('apply')
+  if (interactionsDisabled) {
+    return (
+      <div className="sticky bottom-0 z-20 border-t bg-white/95 p-4 backdrop-blur">
+        <button type="button" disabled className={`${mainCtaClass} cursor-not-allowed`}>
+          {tApply('previewApplyDisabled')}
+        </button>
+      </div>
+    )
+  }
   const blockedFallback = applyBlockedDisplayMessage(
     applyBlockedCode,
     tApply('prevRoundBlocked'),
@@ -177,7 +190,7 @@ export default function PcAuditionDetailApplyBar({
             {needCreditsForApply && hasEnoughCredits ? (
               <p className="text-center text-neutral-500">
                 {tDetail('creditCostHold', {
-                  fee: applyPolicySnapshot?.applicationFeeCredits ?? applyPolicySnapshot?.cost,
+                  fee: resolveApplicationFeeUsd(applyPolicySnapshot),
                   balance: creditBalanceAmount,
                 })}
               </p>

@@ -83,6 +83,15 @@ export type AuditionDto = {
   canApply?: boolean
   applyBlockedMessage?: string
   applyBlockedCode?: string
+  defaultLocale?: string
+  contentLocale?: string
+  contentLocaleFallback?: boolean
+  preview?: boolean
+  showingOriginal?: boolean
+  translationStatus?: string | null
+  translationStale?: boolean
+  translationErrorCode?: string | null
+  translationOrigin?: string | null
 }
 
 export type MyApplicationListItem = {
@@ -254,6 +263,7 @@ export type NotificationDeliveryStatus = 'PENDING' | 'SENT' | 'FAILED'
 export type CreditRuntimePublic = {
   applicationPaymentMode: 'FREE' | 'CREDIT' | string
   applicationFeeCredits: number
+  applicationFeeUsd: number
   signupCreditEnabled: boolean
   signupCreditAmount: number
 }

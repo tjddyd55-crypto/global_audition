@@ -17,4 +17,15 @@ class ContentLocalesTest {
         assertTrue(ContentLocales.PRIMARY.contains("mn"));
         assertFalse(ContentLocales.isSupported("xx"));
     }
+
+    @Test
+    void authoringTagKeepsLocalesOutsideTheEight() {
+        assertEquals("ja", ContentLocales.requireAuthoringLocale("JA"));
+        assertEquals("pt-br", ContentLocales.requireAuthoringLocale("pt-BR"));
+        assertEquals("zh-hans", ContentLocales.canonicalTag("zh-Hans"));
+        assertEquals("", ContentLocales.canonicalTag("not a locale"));
+        org.junit.jupiter.api.Assertions.assertThrows(
+                IllegalArgumentException.class,
+                () -> ContentLocales.requireAuthoringLocale("!!!"));
+    }
 }

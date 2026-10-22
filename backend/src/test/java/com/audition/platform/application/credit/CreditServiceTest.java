@@ -1,6 +1,7 @@
 package com.audition.platform.application.credit;
 
 import com.audition.platform.api.dto.CreditPolicyPublicDto;
+import com.audition.platform.application.fee.GlobalApplicationFeeService;
 import com.audition.platform.domain.credit.CreditPolicy;
 import com.audition.platform.domain.credit.CreditPolicyRepository;
 import com.audition.platform.domain.credit.CreditTransactionRepository;
@@ -31,20 +32,24 @@ class CreditServiceTest {
     private UserCreditRepository walletRepository;
     private CreditTransactionRepository txRepository;
     private CreditService creditService;
+    private GlobalApplicationFeeService applicationFeeService;
 
     @BeforeEach
     void setUp() {
         policyRepository = mock(CreditPolicyRepository.class);
         walletRepository = mock(UserCreditRepository.class);
         txRepository = mock(CreditTransactionRepository.class);
+        applicationFeeService = mock(GlobalApplicationFeeService.class);
         CreditPolicyPublicSnapshotCache cache = new CreditPolicyPublicSnapshotCache();
-        creditService = new CreditService(policyRepository, walletRepository, txRepository, cache);
+        creditService = new CreditService(
+                policyRepository, walletRepository, txRepository, cache, applicationFeeService);
     }
 
     @Test
-    void inactivePolicyIsFreeAndSkipsDeduct() {
+    void zeroGlobalFeeSkipsDeductEvenIfLegacyPolicyHasCost() {
         UUID userId = UUID.randomUUID();
-        when(policyRepository.findById(CreditPolicyKey.AUDITION_APPLY)).thenReturn(Optional.of(policy(false, 5)));
+        when(policyRepository.findById(CreditPolicyKey.AUDITION_APPLY)).thenReturn(Optional.of(policy(true, 9)));
+        when(applicationFeeService.currentAmountUsd()).thenReturn(0L);
 
         creditService.useCredits(userId, CreditPolicyKey.AUDITION_APPLY, "aud-1");
 
@@ -53,19 +58,10 @@ class CreditServiceTest {
     }
 
     @Test
-    void zeroCostIsFreeAndSkipsDeduct() {
+    void applyDebitsGlobalFeeNotLegacyPolicyCost() {
         UUID userId = UUID.randomUUID();
-        when(policyRepository.findById(CreditPolicyKey.AUDITION_APPLY)).thenReturn(Optional.of(policy(true, 0)));
-
-        creditService.useCredits(userId, CreditPolicyKey.AUDITION_APPLY, "aud-1");
-
-        verify(txRepository, never()).save(any());
-    }
-
-    @Test
-    void creditModeDeductsAndWritesLedger() {
-        UUID userId = UUID.randomUUID();
-        when(policyRepository.findById(CreditPolicyKey.AUDITION_APPLY)).thenReturn(Optional.of(policy(true, 3)));
+        when(policyRepository.findById(CreditPolicyKey.AUDITION_APPLY)).thenReturn(Optional.of(policy(false, 9)));
+        when(applicationFeeService.currentAmountUsd()).thenReturn(3L);
         UserCredit wallet = wallet(userId, 10);
         when(walletRepository.findByUserIdForUpdate(userId)).thenReturn(Optional.of(wallet));
 
@@ -78,7 +74,7 @@ class CreditServiceTest {
     @Test
     void insufficientCreditsExposesStructuredShortfall() {
         UUID userId = UUID.randomUUID();
-        when(policyRepository.findById(CreditPolicyKey.AUDITION_APPLY)).thenReturn(Optional.of(policy(true, 5)));
+        when(applicationFeeService.currentAmountUsd()).thenReturn(5L);
         when(walletRepository.findByUserIdForUpdate(userId)).thenReturn(Optional.of(wallet(userId, 2)));
 
         InsufficientCreditsException ex = assertThrows(
@@ -115,12 +111,27 @@ class CreditServiceTest {
     }
 
     @Test
-    void publicSnapshotExposesFreeMode() {
-        when(policyRepository.findById(CreditPolicyKey.AUDITION_APPLY)).thenReturn(Optional.of(policy(false, 1)));
-        CreditPolicyPublicDto dto = creditService.getPolicyPublicSnapshot(CreditPolicyKey.AUDITION_APPLY);
-        assertEquals("FREE", dto.getApplicationPaymentMode());
-        assertEquals(1, dto.getApplicationFeeCredits());
-        assertFalse(dto.isActive());
+    void publicSnapshotUsesGlobalFee() {
+        when(policyRepository.findById(CreditPolicyKey.AUDITION_APPLY)).thenReturn(Optional.of(policy(false, 9)));
+        when(applicationFeeService.currentAmountUsd()).thenReturn(0L);
+        CreditPolicyPublicDto free = creditService.getPolicyPublicSnapshot(CreditPolicyKey.AUDITION_APPLY);
+        assertEquals("FREE", free.getApplicationPaymentMode());
+        assertEquals(0, free.getApplicationFeeCredits());
+        assertEquals(0, free.getApplicationFeeUsd());
+        assertFalse(free.isActive());
+
+        when(applicationFeeService.currentAmountUsd()).thenReturn(2L);
+        creditService = new CreditService(
+                policyRepository,
+                walletRepository,
+                txRepository,
+                new CreditPolicyPublicSnapshotCache(),
+                applicationFeeService);
+        CreditPolicyPublicDto paid = creditService.getPolicyPublicSnapshot(CreditPolicyKey.AUDITION_APPLY);
+        assertEquals("CREDIT", paid.getApplicationPaymentMode());
+        assertEquals(2, paid.getApplicationFeeUsd());
+        assertEquals(2, paid.getApplicationFeeCredits());
+        assertTrue(paid.isActive());
     }
 
     @Test

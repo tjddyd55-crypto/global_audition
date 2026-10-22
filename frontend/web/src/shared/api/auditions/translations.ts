@@ -13,6 +13,13 @@ export type AuditionTranslationView = {
   benefits: string[]
   status: 'PENDING' | 'COMPLETED' | 'FAILED' | string
   provider: string
+  errorCode?: string | null
+  errorMessage?: string | null
+  sourceHash?: string | null
+  sourceRevision?: number | null
+  origin?: 'MANUAL' | 'AUTO' | string
+  manuallyEdited?: boolean
+  stale?: boolean
   updatedAt?: string | null
 }
 
@@ -46,8 +53,41 @@ function parseView(raw: Record<string, unknown>): AuditionTranslationView {
     benefits: asStringArray(raw.benefits),
     status: String(raw.status ?? 'PENDING'),
     provider: String(raw.provider ?? 'MANUAL'),
+    errorCode: raw.errorCode != null ? String(raw.errorCode) : null,
+    errorMessage: raw.errorMessage != null ? String(raw.errorMessage) : null,
+    sourceHash: raw.sourceHash != null ? String(raw.sourceHash) : null,
+    sourceRevision: typeof raw.sourceRevision === 'number' ? raw.sourceRevision : null,
+    origin: raw.origin != null ? String(raw.origin) : 'MANUAL',
+    manuallyEdited: raw.manuallyEdited === true,
+    stale: raw.stale === true,
     updatedAt: raw.updatedAt != null ? String(raw.updatedAt) : null,
   }
+}
+
+export type TranslationProviderStatus = {
+  provider: string
+  state: 'CONFIGURED' | 'NOT_CONFIGURED' | string
+}
+
+export async function getTranslationProviderStatus(auditionId: string): Promise<TranslationProviderStatus> {
+  const { data } = await apiClient.get<TranslationProviderStatus>(
+    `/auditions/${encodeURIComponent(auditionId)}/translation-provider`,
+  )
+  return {
+    provider: String(data?.provider ?? ''),
+    state: String(data?.state ?? 'NOT_CONFIGURED'),
+  }
+}
+
+export async function runTranslationJob(
+  auditionId: string,
+  body: { locale?: string; force?: boolean },
+): Promise<AuditionTranslationView[]> {
+  const { data } = await apiClient.post<Record<string, unknown>[]>(
+    `/auditions/${encodeURIComponent(auditionId)}/translation-jobs`,
+    body,
+  )
+  return (data ?? []).map((row) => parseView(row))
 }
 
 export async function listAuditionTranslations(auditionId: string): Promise<AuditionTranslationView[]> {

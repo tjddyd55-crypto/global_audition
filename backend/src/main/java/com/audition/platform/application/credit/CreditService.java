@@ -1,5 +1,6 @@
 package com.audition.platform.application.credit;
 
+import com.audition.platform.application.fee.GlobalApplicationFeeService;
 import com.audition.platform.domain.credit.CreditPolicy;
 import com.audition.platform.domain.credit.CreditPolicyRepository;
 import com.audition.platform.api.dto.CreditPolicyPublicDto;
@@ -39,16 +40,19 @@ public class CreditService {
     private final UserCreditRepository userCreditRepository;
     private final CreditTransactionRepository creditTransactionRepository;
     private final CreditPolicyPublicSnapshotCache creditPolicyPublicSnapshotCache;
+    private final GlobalApplicationFeeService globalApplicationFeeService;
 
     public CreditService(
             CreditPolicyRepository creditPolicyRepository,
             UserCreditRepository userCreditRepository,
             CreditTransactionRepository creditTransactionRepository,
-            CreditPolicyPublicSnapshotCache creditPolicyPublicSnapshotCache) {
+            CreditPolicyPublicSnapshotCache creditPolicyPublicSnapshotCache,
+            GlobalApplicationFeeService globalApplicationFeeService) {
         this.creditPolicyRepository = creditPolicyRepository;
         this.userCreditRepository = userCreditRepository;
         this.creditTransactionRepository = creditTransactionRepository;
         this.creditPolicyPublicSnapshotCache = creditPolicyPublicSnapshotCache;
+        this.globalApplicationFeeService = globalApplicationFeeService;
     }
 
     @Transactional(readOnly = true)
@@ -65,6 +69,10 @@ public class CreditService {
     }
 
     private CreditPolicyPublicDto loadPolicyPublicFromDb(String policyKey) {
+        if (CreditPolicyKey.AUDITION_APPLY.equals(policyKey)) {
+            long fee = globalApplicationFeeService.currentAmountUsd();
+            return new CreditPolicyPublicDto(policyKey, fee, fee > 0);
+        }
         CreditPolicy policy = creditPolicyRepository.findById(policyKey)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "크레딧 정책을 찾을 수 없습니다."));
         return new CreditPolicyPublicDto(policyKey, policy.getCost(), policy.isActive());
@@ -134,14 +142,27 @@ public class CreditService {
         return after;
     }
 
-    @Transactional
-    public void useCredits(UUID userId, String policyKey, String referenceId) {
+    /**
+     * AUDITION_APPLY 금액은 전역 USD 지원비다. 다른 정책은 기존 cost/active 를 유지한다.
+     */
+    private long resolveCost(String policyKey) {
+        if (CreditPolicyKey.AUDITION_APPLY.equals(policyKey)) {
+            return globalApplicationFeeService.currentAmountUsd();
+        }
         CreditPolicy policy = creditPolicyRepository.findById(policyKey)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "크레딧 정책을 찾을 수 없습니다."));
         if (!policy.isActive() || policy.getCost() <= 0) {
+            return 0;
+        }
+        return policy.getCost();
+    }
+
+    @Transactional
+    public void useCredits(UUID userId, String policyKey, String referenceId) {
+        long cost = resolveCost(policyKey);
+        if (cost <= 0) {
             return;
         }
-        long cost = policy.getCost();
 
         userCreditRepository.ensureWalletRow(userId);
         UserCredit wallet = userCreditRepository.findByUserIdForUpdate(userId)

@@ -277,7 +277,7 @@ public class AuditionService {
         a.setDeadlineAt(deadlineParsed != null ? deadlineParsed : end);
         a.setCountryCode(normalizeCountryCode(req.getCountryCode()));
         if (req.getDefaultLocale() != null && !req.getDefaultLocale().isBlank()) {
-            a.setDefaultLocale(ContentLocales.normalize(req.getDefaultLocale()));
+            a.setDefaultLocale(requireAuthoringLocale(req.getDefaultLocale()));
         }
         a.setRemainingDays(computeRemainingDays(end));
         a.setApplicantsCount(0);
@@ -331,6 +331,7 @@ public class AuditionService {
         a.setOwnerId(ownerId);
         a.setUpdatedAt(Instant.now());
         applyCreateBody(a, req);
+        auditionLocalizationService.onSourceWritten(a, true);
         a = auditionRepository.save(a);
         applyAuditionTagsInput(a.getId(), req);
         if (AuditionProcessModes.isMultiRound(a.getProcessMode())) {
@@ -432,6 +433,20 @@ public class AuditionService {
         return r;
     }
 
+    /**
+     * 소유자 미리보기. 공개 상세와 같은 DTO에 번역 상태를 얹고, 저장·지원·결제·투표는 하지 않는다.
+     * 쓰기 트랜잭션을 열지 않는다.
+     */
+    public AuditionResponse preview(UUID id, String localeRaw) {
+        Audition audition = auditionRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Not found"));
+        requireOwnerOrAdmin(audition);
+        AuditionResponse response = toResponse(audition);
+        auditionLocalizationService.applyPreview(audition, response, localeRaw);
+        response.setPreview(true);
+        return response;
+    }
+
     @Transactional
     public AuditionResponse update(UUID id, UpdateAuditionRequest request) {
         UUID userId = SecurityUtils.getCurrentUserId();
@@ -457,7 +472,7 @@ public class AuditionService {
             audition.setCountryCode(normalizeCountryCode(request.getCountryCode()));
         }
         if (request.getDefaultLocale() != null && !request.getDefaultLocale().isBlank()) {
-            audition.setDefaultLocale(ContentLocales.normalize(request.getDefaultLocale()));
+            audition.setDefaultLocale(requireAuthoringLocale(request.getDefaultLocale()));
         }
         boolean patchNewTags = request.getTagIds() != null || request.getCustomTagNames() != null;
         if (patchNewTags) {
@@ -533,6 +548,7 @@ public class AuditionService {
             audition.setRemainingDays(computeRemainingDays(audition.getEndDate()));
         }
         audition.setUpdatedAt(Instant.now());
+        auditionLocalizationService.onSourceWritten(audition, translatableFieldsPresent(request));
         return toResponse(auditionRepository.save(audition));
     }
 
@@ -612,6 +628,7 @@ public class AuditionService {
             n.setSelectionStatus(null);
         }
         n.setUpdatedAt(Instant.now());
+        auditionLocalizationService.onSourceWritten(n, true);
         n = auditionRepository.save(n);
 
         List<AuditionTagRefDto> refs = auditionTagService.listRefs(source.getId());
@@ -633,5 +650,36 @@ public class AuditionService {
             auditionRoundService.bootstrapFirstRound(n.getId(), false);
         }
         return toResponse(n);
+    }
+
+    private void requireOwnerOrAdmin(Audition audition) {
+        UUID userId = SecurityUtils.getCurrentUserId();
+        if (userId == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+        }
+        if (!SecurityUtils.hasRole("ADMIN") && !SecurityUtils.hasRole("SUPER_ADMIN")
+                && !audition.getOwnerId().equals(userId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only owner or ADMIN can preview this audition");
+        }
+    }
+
+    private static String requireAuthoringLocale(String raw) {
+        try {
+            return ContentLocales.requireAuthoringLocale(raw);
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "원문 언어 코드가 올바르지 않습니다.");
+        }
+    }
+
+    private static boolean translatableFieldsPresent(UpdateAuditionRequest request) {
+        return request.getTitle() != null
+                || request.getDescription() != null
+                || request.getLocation() != null
+                || request.getAgencyName() != null
+                || request.getRecruitFields() != null
+                || request.getQualifications() != null
+                || request.getSchedules() != null
+                || request.getBenefits() != null
+                || (request.getDefaultLocale() != null && !request.getDefaultLocale().isBlank());
     }
 }

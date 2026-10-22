@@ -101,6 +101,39 @@ export const superAdminApi = {
     return data
   },
 
+  getApplicationFee: async (): Promise<{ amountUsd: number; updatedAt?: string; updatedBy?: string | null }> => {
+    const { data } = await apiClient.get('/admin/application-fee')
+    return data
+  },
+
+  patchApplicationFee: async (amountUsd: number) => {
+    const { data } = await apiClient.patch('/admin/application-fee', { amountUsd })
+    return data as { amountUsd: number }
+  },
+
+  listApplicationFeeHistory: async () => {
+    const { data } = await apiClient.get<
+      { id: string; oldAmountUsd: number; newAmountUsd: number; changedBy?: string | null; changedAt: string; source: string }[]
+    >('/admin/application-fee/history')
+    return data
+  },
+
+  getTranslationSettings: async () => {
+    const { data } = await apiClient.get<{
+      provider: string
+      endpointUrl?: string | null
+      model?: string | null
+      apiKeyConfigured: boolean
+      state: string
+    }>('/admin/translation-settings')
+    return data
+  },
+
+  patchTranslationSettings: async (body: { endpointUrl?: string; model?: string; apiKey?: string }) => {
+    const { data } = await apiClient.patch('/admin/translation-settings', body)
+    return data as { state: string; apiKeyConfigured: boolean }
+  },
+
   listCreditPackages: async (): Promise<CreditPackageRow[]> => {
     const { data } = await apiClient.get<CreditPackageRow[]>('/admin/credit-packages')
     return data

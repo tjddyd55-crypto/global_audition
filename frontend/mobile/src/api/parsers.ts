@@ -99,6 +99,15 @@ export function parseAuditionDto(raw: unknown): AuditionDto {
     canApply: typeof row.canApply === 'boolean' ? row.canApply : undefined,
     applyBlockedMessage: row.applyBlockedMessage != null ? asString(row.applyBlockedMessage) : undefined,
     applyBlockedCode: row.applyBlockedCode != null ? asString(row.applyBlockedCode) : undefined,
+    defaultLocale: row.defaultLocale != null ? asString(row.defaultLocale) : undefined,
+    contentLocale: row.contentLocale != null ? asString(row.contentLocale) : undefined,
+    contentLocaleFallback: row.contentLocaleFallback === true,
+    preview: row.preview === true,
+    showingOriginal: row.showingOriginal === true,
+    translationStatus: row.translationStatus != null ? asString(row.translationStatus) : null,
+    translationStale: row.translationStale === true,
+    translationErrorCode: row.translationErrorCode != null ? asString(row.translationErrorCode) : null,
+    translationOrigin: row.translationOrigin != null ? asString(row.translationOrigin) : null,
   }
 }
 
@@ -304,7 +313,8 @@ export function parseCreditRuntime(raw: unknown): CreditRuntimePublic {
   const mode = asString(row.applicationPaymentMode, 'FREE')
   return {
     applicationPaymentMode: mode === 'CREDIT' ? 'CREDIT' : 'FREE',
-    applicationFeeCredits: Math.max(0, asNumber(row.applicationFeeCredits)),
+    applicationFeeCredits: Math.max(0, Math.trunc(asNumber(row.applicationFeeUsd ?? row.applicationFeeCredits))),
+    applicationFeeUsd: Math.max(0, Math.trunc(asNumber(row.applicationFeeUsd ?? row.applicationFeeCredits))),
     signupCreditEnabled: Boolean(row.signupCreditEnabled),
     signupCreditAmount: Math.max(0, asNumber(row.signupCreditAmount)),
   }

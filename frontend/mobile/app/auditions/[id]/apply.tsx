@@ -63,7 +63,7 @@ export default function ApplyScreen() {
 
   const age = useMemo(() => (birthDate ? calculateAge(birthDate) : null), [birthDate])
   const runtime = runtimeQuery.data
-  const fee = runtime?.applicationFeeCredits ?? 0
+  const fee = runtime?.applicationFeeUsd ?? runtime?.applicationFeeCredits ?? 0
   const creditMode = runtime?.applicationPaymentMode === 'CREDIT' && fee > 0
   const balance = balanceQuery.data?.balance ?? 0
   const insufficient = creditMode && balance < fee

@@ -17,6 +17,13 @@ public class AuditionTranslationView {
     private String[] benefits;
     private String status;
     private String provider;
+    private String errorCode;
+    private String errorMessage;
+    private String sourceHash;
+    private Long sourceRevision;
+    private String origin;
+    private boolean manuallyEdited;
+    private boolean stale;
     private Instant updatedAt;
 
     public UUID getAuditionId() { return auditionId; }
@@ -43,6 +50,20 @@ public class AuditionTranslationView {
     public void setStatus(String status) { this.status = status; }
     public String getProvider() { return provider; }
     public void setProvider(String provider) { this.provider = provider; }
+    public String getErrorCode() { return errorCode; }
+    public void setErrorCode(String errorCode) { this.errorCode = errorCode; }
+    public String getErrorMessage() { return errorMessage; }
+    public void setErrorMessage(String errorMessage) { this.errorMessage = errorMessage; }
+    public String getSourceHash() { return sourceHash; }
+    public void setSourceHash(String sourceHash) { this.sourceHash = sourceHash; }
+    public Long getSourceRevision() { return sourceRevision; }
+    public void setSourceRevision(Long sourceRevision) { this.sourceRevision = sourceRevision; }
+    public String getOrigin() { return origin; }
+    public void setOrigin(String origin) { this.origin = origin; }
+    public boolean isManuallyEdited() { return manuallyEdited; }
+    public void setManuallyEdited(boolean manuallyEdited) { this.manuallyEdited = manuallyEdited; }
+    public boolean isStale() { return stale; }
+    public void setStale(boolean stale) { this.stale = stale; }
     public Instant getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
 }

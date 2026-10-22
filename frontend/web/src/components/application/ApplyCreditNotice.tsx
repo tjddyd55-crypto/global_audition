@@ -2,6 +2,7 @@
 
 import { Link } from '@/i18n.config'
 import { formatCreditsCount } from '@/shared/money/creditsDisplay'
+import { resolveApplicationFeeUsd } from '@/shared/api/credits'
 import { useTranslations } from 'next-intl'
 
 type ApplyCreditNoticeProps = {
@@ -10,6 +11,7 @@ type ApplyCreditNoticeProps = {
     cost: number
     applicationPaymentMode?: string
     applicationFeeCredits?: number
+    applicationFeeUsd?: number
   } | null
   applyPolicyError: boolean
   creditBalanceAmount: number
@@ -31,7 +33,7 @@ export default function ApplyCreditNotice({
   const mode =
     applyPolicySnapshot?.applicationPaymentMode ??
     (!applyPolicySnapshot || !applyPolicySnapshot.active || applyPolicySnapshot.cost <= 0 ? 'FREE' : 'CREDIT')
-  const fee = applyPolicySnapshot?.applicationFeeCredits ?? applyPolicySnapshot?.cost ?? 0
+  const fee = resolveApplicationFeeUsd(applyPolicySnapshot)
 
   return (
     <>
