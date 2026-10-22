@@ -110,6 +110,12 @@ export type AuditionDto = {
   defaultLocale?: string
   contentLocale?: string
   contentLocaleFallback?: boolean
+  preview?: boolean
+  showingOriginal?: boolean
+  translationStatus?: string | null
+  translationStale?: boolean
+  translationErrorCode?: string | null
+  translationOrigin?: string | null
 }
 
 export function auditionHeadlineTitle(a: Pick<AuditionDto, 'displayTitle' | 'title'>): string {

@@ -7,7 +7,8 @@ import { toast } from 'sonner'
 import { auditionApi } from '@/shared/api/auditions'
 import { bindCatalogTranslator, mapDisplayError } from '@/shared/i18n/mapDisplayError'
 import type { AuditionTranslationView } from '@/shared/api/auditions/translations'
-import { CONTENT_LOCALES, type ContentLocale } from '@/shared/audition/audience'
+import { CONTENT_AUTHORING_LOCALES } from '@/shared/audition/audience'
+import { translationTabLabel } from '@/shared/audition/translationTabLabel'
 import { AUDITION_DETAIL, HERO, SIGNUP } from '@/shared/design-tokens'
 
 type Draft = {
@@ -32,6 +33,12 @@ const EMPTY_DRAFT: Draft = {
   benefits: '',
 }
 
+const KNOWN_LOCALE_LABELS = new Set(['ko', 'en', 'mn', 'ja', 'zh', 'es', 'fr', 'de'])
+
+function localeLabel(code: string, translate: (code: string) => string): string {
+  return KNOWN_LOCALE_LABELS.has(code) ? translate(code) : code
+}
+
 function linesToList(raw: string): string[] {
   return raw
     .split('\n')
@@ -41,10 +48,6 @@ function linesToList(raw: string): string[] {
 
 function listToLines(values?: string[] | null): string {
   return (values ?? []).join('\n')
-}
-
-function isComplete(row: AuditionTranslationView | undefined): boolean {
-  return row?.status === 'COMPLETED' && Boolean(row.title?.trim())
 }
 
 function fromView(row?: AuditionTranslationView): Draft {
@@ -73,14 +76,18 @@ export function AuditionTranslationPanel({ auditionId, defaultLocale }: Props) {
   const tErrors = useTranslations('errors')
   const translateError = bindCatalogTranslator({ uploader: tUploader, errors: tErrors })
   const queryClient = useQueryClient()
-  const [active, setActive] = useState<ContentLocale>(() =>
-    CONTENT_LOCALES.includes(defaultLocale as ContentLocale) ? (defaultLocale as ContentLocale) : 'en',
-  )
+  const [active, setActive] = useState(() => (defaultLocale === 'en' ? 'ko' : 'en'))
+  const [force, setForce] = useState(false)
   const [draft, setDraft] = useState<Draft>(EMPTY_DRAFT)
 
   const query = useQuery({
     queryKey: ['audition-translations', auditionId],
     queryFn: () => auditionApi.listTranslations(auditionId),
+    enabled: Boolean(auditionId),
+  })
+  const providerQuery = useQuery({
+    queryKey: ['audition-translation-provider', auditionId],
+    queryFn: () => auditionApi.translationProvider(auditionId),
     enabled: Boolean(auditionId),
   })
 
@@ -117,6 +124,25 @@ export function AuditionTranslationPanel({ auditionId, defaultLocale }: Props) {
     },
   })
 
+  const autoMut = useMutation({
+    mutationFn: (locale?: string) =>
+      auditionApi.runTranslationJob(auditionId, { locale, force }),
+    onSuccess: async (rows) => {
+      const failed = rows.find((row) => row.attemptStatus === 'FAILED' || row.status === 'FAILED')
+      if (failed?.attemptErrorCode === 'NOT_CONFIGURED' || failed?.errorCode === 'NOT_CONFIGURED') {
+        toast.error(t('translationNotConfigured'))
+      } else if (failed) {
+        toast.error(failed.attemptErrorMessage || failed.errorMessage || t('translationFailed'))
+      } else {
+        toast.success(t('translationJobDone'))
+      }
+      await queryClient.invalidateQueries({ queryKey: ['audition-translations', auditionId] })
+    },
+    onError: (err) => {
+      toast.error(mapDisplayError(err, translateError, t('translationJobFailed')))
+    },
+  })
+
   const setField = (key: keyof Draft, value: string) => {
     setDraft((prev) => ({ ...prev, [key]: value }))
   }
@@ -129,14 +155,27 @@ export function AuditionTranslationPanel({ auditionId, defaultLocale }: Props) {
       <div className="mb-3">
         <h2 className="text-lg font-bold">{t('translationTitle')}</h2>
         <p className="mt-1 text-sm text-gray-600">
-          {t('translationHint', { locale: tLocale(defaultLocale as 'ko') })}
+          {t('translationHint', { locale: localeLabel(defaultLocale, (code) => tLocale(code as 'ko')) })}
+        </p>
+        <p className="mt-1 text-sm text-gray-600">
+          {providerQuery.data?.state === 'CONFIGURED' ? t('translationProviderReady') : t('translationNotConfigured')}
         </p>
       </div>
 
       <div className="mb-4 flex flex-wrap gap-2">
-        {CONTENT_LOCALES.map((code) => {
-          const complete = isComplete(byLocale.get(code))
+        {CONTENT_AUTHORING_LOCALES.map((code) => {
+          const state = translationTabLabel(byLocale.get(code))
           const selected = active === code
+          const labelKey =
+            state === 'complete'
+              ? 'translationComplete'
+              : state === 'pending'
+                ? 'translationPending'
+                : state === 'failed'
+                  ? 'translationFailed'
+                  : state === 'stale'
+                    ? 'translationStale'
+                    : 'translationMissing'
           return (
             <button
               key={code}
@@ -151,7 +190,7 @@ export function AuditionTranslationPanel({ auditionId, defaultLocale }: Props) {
                   : undefined
               }
             >
-              {tLocale(code)} · {complete ? t('translationComplete') : t('translationMissing')}
+              {tLocale(code)} · {t(labelKey)}
             </button>
           )
         })}
@@ -205,6 +244,43 @@ export function AuditionTranslationPanel({ auditionId, defaultLocale }: Props) {
         <Field label={`${t('benefits')} (${t('onePerLine')})`}>
           <textarea value={draft.benefits} onChange={(e) => setField('benefits', e.target.value)} rows={3} className="w-full rounded-lg border px-3 py-2" />
         </Field>
+      </div>
+
+      {byLocale.get(active) ? (
+        <p className="mt-3 text-xs text-gray-600">
+          {t('translationMeta', {
+            status: byLocale.get(active)?.status ?? '-',
+            origin: byLocale.get(active)?.origin ?? '-',
+            provider: byLocale.get(active)?.provider ?? '-',
+          })}
+          {byLocale.get(active)?.attemptStatus === 'FAILED'
+            ? ` · ${byLocale.get(active)?.attemptErrorCode ?? ''} ${byLocale.get(active)?.attemptErrorMessage ?? ''}`
+            : ''}
+          {byLocale.get(active)?.errorMessage ? ` · ${byLocale.get(active)?.errorMessage}` : ''}
+        </p>
+      ) : null}
+
+      <label className="mt-3 flex items-center gap-2 text-sm">
+        <input type="checkbox" checked={force} onChange={(e) => setForce(e.target.checked)} />
+        {t('translationForce')}
+      </label>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button
+          type="button"
+          disabled={autoMut.isPending || active === defaultLocale}
+          onClick={() => autoMut.mutate(active)}
+          className="min-h-11 rounded-lg border px-4 text-sm font-semibold disabled:bg-gray-100"
+        >
+          {t('autoTranslate')}
+        </button>
+        <button
+          type="button"
+          disabled={autoMut.isPending}
+          onClick={() => autoMut.mutate(undefined)}
+          className="min-h-11 rounded-lg border px-4 text-sm font-semibold disabled:bg-gray-100"
+        >
+          {t('autoTranslateAll')}
+        </button>
       </div>
 
       <button

@@ -25,11 +25,12 @@ import { normalizeCustomTagNamesForPayload } from '@/shared/audition/auditionTag
 import { AuditionTranslationPanel } from '@/components/audition/AuditionTranslationPanel'
 import {
   AUDITION_TARGET_COUNTRIES,
-  CONTENT_LOCALES,
+  CONTENT_AUTHORING_LOCALES,
+  authoringLocaleOrFallback,
   normalizeTargetCountry,
-  type ContentLocale,
 } from '@/shared/audition/audience'
 import { useTranslations } from 'next-intl'
+import { Link } from '@/i18n.config'
 
 function trimNonEmpty(lines: string[] | undefined): string[] {
   return (lines ?? []).map((s) => (s ?? '').trim()).filter((s) => s.length > 0)
@@ -160,9 +161,7 @@ function applyInitial(a: AuditionDto) {
     startDate: isoToDatetimeLocalValue(a.startDate ?? ''),
     endDate: isoToDatetimeLocalValue(a.endDate ?? ''),
     countryCode: normalizeTargetCountry(a.countryCode),
-    defaultLocale: (CONTENT_LOCALES.includes((a.defaultLocale ?? 'ko') as ContentLocale)
-      ? a.defaultLocale
-      : 'ko') as ContentLocale,
+    defaultLocale: authoringLocaleOrFallback(a.defaultLocale),
   }
 }
 
@@ -221,7 +220,8 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [countryCode, setCountryCode] = useState('')
-  const [defaultLocale, setDefaultLocale] = useState<ContentLocale>('ko')
+  const [defaultLocale, setDefaultLocale] = useState('ko')
+  const [publishReviewed, setPublishReviewed] = useState(false)
 
   const effectiveId = mode === 'edit' ? auditionId : draftId
 
@@ -373,6 +373,10 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
     const err = validate(intent)
     if (err) {
       setError(err)
+      return
+    }
+    if (intent === 'publish' && !publishReviewed) {
+      setError(tEditor('publishConfirmRequired'))
       return
     }
     setError(null)
@@ -554,14 +558,17 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
             <span className="mb-1 block text-sm font-semibold">{tEditor('contentLanguage')}</span>
             <select
               value={defaultLocale}
-              onChange={(e) => setDefaultLocale(e.target.value as ContentLocale)}
+              onChange={(e) => setDefaultLocale(e.target.value)}
               style={inputStyle}
             >
-              {CONTENT_LOCALES.map((code) => (
+              {CONTENT_AUTHORING_LOCALES.map((code) => (
                 <option key={code} value={code}>
                   {tLocale(code)}
                 </option>
               ))}
+              {CONTENT_AUTHORING_LOCALES.includes(defaultLocale as (typeof CONTENT_AUTHORING_LOCALES)[number]) ? null : (
+                <option value={defaultLocale}>{defaultLocale}</option>
+              )}
             </select>
             <span className="mt-1 block text-xs text-gray-500">{tEditor('contentLanguageHint')}</span>
           </label>
@@ -833,6 +840,21 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
         <h2 style={sectionTitle}>{tEditor('sectionBenefits')}</h2>
         <StringListEditor label={tEditor('benefits')} values={benefits} onChange={setBenefits} />
 
+        <label className="mt-4 flex items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={publishReviewed}
+            onChange={(e) => setPublishReviewed(e.target.checked)}
+          />
+          <span>{tEditor('publishConfirm')}</span>
+        </label>
+        {effectiveId ? (
+          <div className="mt-3">
+            <Link href={`/auditions/${effectiveId}/preview`} className="text-sm font-semibold text-violet-700">
+              {tEditor('openPreview')}
+            </Link>
+          </div>
+        ) : null}
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap" style={{ marginTop: AUDITION_DETAIL.mainGridGapPx }}>
           <button
             type="button"

@@ -7,6 +7,7 @@ public class CreditRuntimePublicDto {
 
     private String applicationPaymentMode;
     private long applicationFeeCredits;
+    private long applicationFeeUsd;
     private boolean signupCreditEnabled;
     private long signupCreditAmount;
 
@@ -16,10 +17,12 @@ public class CreditRuntimePublicDto {
     public CreditRuntimePublicDto(
             String applicationPaymentMode,
             long applicationFeeCredits,
+            long applicationFeeUsd,
             boolean signupCreditEnabled,
             long signupCreditAmount) {
         this.applicationPaymentMode = applicationPaymentMode;
         this.applicationFeeCredits = applicationFeeCredits;
+        this.applicationFeeUsd = applicationFeeUsd;
         this.signupCreditEnabled = signupCreditEnabled;
         this.signupCreditAmount = signupCreditAmount;
     }
@@ -38,6 +41,14 @@ public class CreditRuntimePublicDto {
 
     public void setApplicationFeeCredits(long applicationFeeCredits) {
         this.applicationFeeCredits = applicationFeeCredits;
+    }
+
+    public long getApplicationFeeUsd() {
+        return applicationFeeUsd;
+    }
+
+    public void setApplicationFeeUsd(long applicationFeeUsd) {
+        this.applicationFeeUsd = applicationFeeUsd;
     }
 
     public boolean isSignupCreditEnabled() {

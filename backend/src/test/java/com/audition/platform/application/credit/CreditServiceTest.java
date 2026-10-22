@@ -1,13 +1,17 @@
 package com.audition.platform.application.credit;
 
 import com.audition.platform.api.dto.CreditPolicyPublicDto;
+import com.audition.platform.application.fee.GlobalApplicationFeeService;
+import com.audition.platform.domain.credit.CreditTransaction;
 import com.audition.platform.domain.credit.CreditPolicy;
 import com.audition.platform.domain.credit.CreditPolicyRepository;
 import com.audition.platform.domain.credit.CreditTransactionRepository;
 import com.audition.platform.domain.credit.UserCredit;
 import com.audition.platform.domain.credit.UserCreditRepository;
+import com.audition.platform.domain.payment.PaymentOrder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
@@ -15,6 +19,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -31,20 +36,24 @@ class CreditServiceTest {
     private UserCreditRepository walletRepository;
     private CreditTransactionRepository txRepository;
     private CreditService creditService;
+    private GlobalApplicationFeeService applicationFeeService;
 
     @BeforeEach
     void setUp() {
         policyRepository = mock(CreditPolicyRepository.class);
         walletRepository = mock(UserCreditRepository.class);
         txRepository = mock(CreditTransactionRepository.class);
+        applicationFeeService = mock(GlobalApplicationFeeService.class);
         CreditPolicyPublicSnapshotCache cache = new CreditPolicyPublicSnapshotCache();
-        creditService = new CreditService(policyRepository, walletRepository, txRepository, cache);
+        creditService = new CreditService(
+                policyRepository, walletRepository, txRepository, cache, applicationFeeService);
     }
 
     @Test
-    void inactivePolicyIsFreeAndSkipsDeduct() {
+    void zeroGlobalFeeSkipsDeductEvenIfLegacyPolicyHasCost() {
         UUID userId = UUID.randomUUID();
-        when(policyRepository.findById(CreditPolicyKey.AUDITION_APPLY)).thenReturn(Optional.of(policy(false, 5)));
+        when(policyRepository.findById(CreditPolicyKey.AUDITION_APPLY)).thenReturn(Optional.of(policy(true, 9)));
+        when(applicationFeeService.currentAmountUsd()).thenReturn(0L);
 
         creditService.useCredits(userId, CreditPolicyKey.AUDITION_APPLY, "aud-1");
 
@@ -53,32 +62,47 @@ class CreditServiceTest {
     }
 
     @Test
-    void zeroCostIsFreeAndSkipsDeduct() {
+    void applyDebitsGlobalFeeNotLegacyPolicyCost() {
         UUID userId = UUID.randomUUID();
-        when(policyRepository.findById(CreditPolicyKey.AUDITION_APPLY)).thenReturn(Optional.of(policy(true, 0)));
-
-        creditService.useCredits(userId, CreditPolicyKey.AUDITION_APPLY, "aud-1");
-
-        verify(txRepository, never()).save(any());
-    }
-
-    @Test
-    void creditModeDeductsAndWritesLedger() {
-        UUID userId = UUID.randomUUID();
-        when(policyRepository.findById(CreditPolicyKey.AUDITION_APPLY)).thenReturn(Optional.of(policy(true, 3)));
+        when(policyRepository.findById(CreditPolicyKey.AUDITION_APPLY)).thenReturn(Optional.of(policy(false, 9)));
+        when(applicationFeeService.currentAmountUsd()).thenReturn(3L);
         UserCredit wallet = wallet(userId, 10);
         when(walletRepository.findByUserIdForUpdate(userId)).thenReturn(Optional.of(wallet));
 
         creditService.useCredits(userId, CreditPolicyKey.AUDITION_APPLY, "aud-1");
 
         assertEquals(7, wallet.getBalance());
+        CreditTransaction tx = savedTransaction();
+        assertEquals(-3, tx.getAmount());
+        assertEquals(3L, tx.getAppliedFeeUsd());
+        assertEquals(3L, tx.getAppliedCreditQuantity());
         verify(txRepository, times(1)).save(any());
+    }
+
+    @Test
+    void oneTwoAndThreeUsdDeductTheSameCreditQuantity() {
+        UUID userId = UUID.randomUUID();
+        for (long usd : new long[] {1L, 2L, 3L}) {
+            when(applicationFeeService.currentAmountUsd()).thenReturn(usd);
+            UserCredit wallet = wallet(userId, 10);
+            when(walletRepository.findByUserIdForUpdate(userId)).thenReturn(Optional.of(wallet));
+
+            creditService.useCredits(userId, CreditPolicyKey.AUDITION_APPLY, "aud-" + usd);
+
+            assertEquals(10 - usd, wallet.getBalance());
+        }
+        ArgumentCaptor<CreditTransaction> captor = ArgumentCaptor.forClass(CreditTransaction.class);
+        verify(txRepository, times(3)).save(captor.capture());
+        assertEquals(1L, captor.getAllValues().get(0).getAppliedFeeUsd());
+        assertEquals(1L, captor.getAllValues().get(0).getAppliedCreditQuantity());
+        assertEquals(2L, captor.getAllValues().get(1).getAppliedFeeUsd());
+        assertEquals(3L, captor.getAllValues().get(2).getAppliedCreditQuantity());
     }
 
     @Test
     void insufficientCreditsExposesStructuredShortfall() {
         UUID userId = UUID.randomUUID();
-        when(policyRepository.findById(CreditPolicyKey.AUDITION_APPLY)).thenReturn(Optional.of(policy(true, 5)));
+        when(applicationFeeService.currentAmountUsd()).thenReturn(5L);
         when(walletRepository.findByUserIdForUpdate(userId)).thenReturn(Optional.of(wallet(userId, 2)));
 
         InsufficientCreditsException ex = assertThrows(
@@ -115,12 +139,48 @@ class CreditServiceTest {
     }
 
     @Test
-    void publicSnapshotExposesFreeMode() {
-        when(policyRepository.findById(CreditPolicyKey.AUDITION_APPLY)).thenReturn(Optional.of(policy(false, 1)));
-        CreditPolicyPublicDto dto = creditService.getPolicyPublicSnapshot(CreditPolicyKey.AUDITION_APPLY);
-        assertEquals("FREE", dto.getApplicationPaymentMode());
-        assertEquals(1, dto.getApplicationFeeCredits());
-        assertFalse(dto.isActive());
+    void publicSnapshotUsesGlobalFee() {
+        when(policyRepository.findById(CreditPolicyKey.AUDITION_APPLY)).thenReturn(Optional.of(policy(false, 9)));
+        when(applicationFeeService.currentAmountUsd()).thenReturn(0L);
+        CreditPolicyPublicDto free = creditService.getPolicyPublicSnapshot(CreditPolicyKey.AUDITION_APPLY);
+        assertEquals("FREE", free.getApplicationPaymentMode());
+        assertEquals(0, free.getApplicationFeeCredits());
+        assertEquals(0, free.getApplicationFeeUsd());
+        assertFalse(free.isActive());
+
+        when(applicationFeeService.currentAmountUsd()).thenReturn(2L);
+        creditService = new CreditService(
+                policyRepository,
+                walletRepository,
+                txRepository,
+                new CreditPolicyPublicSnapshotCache(),
+                applicationFeeService);
+        CreditPolicyPublicDto paid = creditService.getPolicyPublicSnapshot(CreditPolicyKey.AUDITION_APPLY);
+        assertEquals("CREDIT", paid.getApplicationPaymentMode());
+        assertEquals(2, paid.getApplicationFeeUsd());
+        assertEquals(UsdCreditParity.creditsForUsd(2), paid.getApplicationFeeCredits());
+        assertTrue(paid.isActive());
+    }
+
+    @Test
+    void packageRefundDoesNotRewriteApplyFeeSnapshot() {
+        UUID userId = UUID.randomUUID();
+        PaymentOrder order = mock(PaymentOrder.class);
+        when(order.getUserId()).thenReturn(userId);
+        when(order.getOrderNo()).thenReturn("order-7");
+        when(order.getCredits()).thenReturn(5L);
+        when(order.getBonusCredits()).thenReturn(0L);
+        when(txRepository.existsByUserIdAndTypeAndReferenceId(userId, CreditTransactionType.REFUND, "order-7"))
+                .thenReturn(false);
+        when(walletRepository.findByUserIdForUpdate(userId)).thenReturn(Optional.of(wallet(userId, 10)));
+
+        creditService.refundChargeFromPaymentOrder(order, "keep");
+
+        CreditTransaction tx = savedTransaction();
+        assertEquals(-5, tx.getAmount());
+        assertEquals(CreditTransactionType.REFUND, tx.getType());
+        assertNull(tx.getAppliedFeeUsd());
+        assertNull(tx.getAppliedCreditQuantity());
     }
 
     @Test
@@ -146,6 +206,12 @@ class CreditServiceTest {
         p.setActive(active);
         p.setCost(cost);
         return p;
+    }
+
+    private CreditTransaction savedTransaction() {
+        ArgumentCaptor<CreditTransaction> captor = ArgumentCaptor.forClass(CreditTransaction.class);
+        verify(txRepository).save(captor.capture());
+        return captor.getValue();
     }
 
     private static UserCredit wallet(UUID userId, long balance) {

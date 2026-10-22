@@ -71,7 +71,20 @@ describe('parsers', () => {
     })
     expect(credit.applicationPaymentMode).toBe('CREDIT')
     expect(credit.applicationFeeCredits).toBe(3)
+    expect(credit.applicationFeeUsd).toBe(3)
     expect(credit.signupCreditAmount).toBe(10)
+  })
+
+  it('전역 지원비 USD가 있으면 그 정수를 지원 금액으로 읽는다', () => {
+    const credit = parseCreditRuntime({
+      applicationPaymentMode: 'CREDIT',
+      applicationFeeCredits: 9,
+      applicationFeeUsd: 2,
+      signupCreditEnabled: false,
+      signupCreditAmount: 0,
+    })
+    expect(credit.applicationFeeUsd).toBe(2)
+    expect(credit.applicationFeeCredits).toBe(9)
   })
 
   it('INSUFFICIENT_CREDITS 본문을 파싱한다', () => {

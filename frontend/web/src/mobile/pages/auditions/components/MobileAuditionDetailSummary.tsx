@@ -22,6 +22,8 @@ type MobileAuditionDetailSummaryProps = {
   isOpen: boolean
   alreadyApplied: boolean
   applyBlocked: boolean
+  /** 미리보기. 외부 링크를 열지 않는다. */
+  readOnly?: boolean
 }
 
 function fmtDate(iso: string, locale: string): string {
@@ -71,6 +73,7 @@ export default function MobileAuditionDetailSummary({
   isOpen,
   alreadyApplied,
   applyBlocked,
+  readOnly = false,
 }: MobileAuditionDetailSummaryProps) {
   const t = useTranslations('auditionDetail')
   const tApply = useTranslations('apply')
@@ -144,7 +147,7 @@ export default function MobileAuditionDetailSummary({
   return (
     <div className="mx-auto max-w-3xl px-4 py-5">
       <div className="overflow-hidden rounded-2xl bg-gray-100">
-        {posterLinkHref.length > 0 ? (
+        {posterLinkHref.length > 0 && !readOnly ? (
           <a href={posterLinkHref} target="_blank" rel="noopener noreferrer" className="block w-full">
             {PosterInner}
           </a>
@@ -211,7 +214,7 @@ export default function MobileAuditionDetailSummary({
             />
           </div>
         </section>
-      ) : videoHref.length > 0 ? (
+      ) : videoHref.length > 0 && !readOnly ? (
         <section className="mt-8 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
           <h2 className="mb-2 text-lg font-semibold text-gray-900">{t('introVideoTitle')}</h2>
           <a

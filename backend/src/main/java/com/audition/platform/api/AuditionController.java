@@ -5,8 +5,11 @@ import com.audition.platform.api.dto.AuditionResponse;
 import com.audition.platform.api.dto.AuditionTranslationUpsertRequest;
 import com.audition.platform.api.dto.AuditionTranslationView;
 import com.audition.platform.api.dto.CreateAuditionRequest;
+import com.audition.platform.api.dto.TranslationJobRequest;
+import com.audition.platform.api.dto.TranslationProviderStatusView;
 import com.audition.platform.api.dto.UpdateAuditionRequest;
 import com.audition.platform.application.AuditionService;
+import com.audition.platform.application.i18n.AuditionAutoTranslationService;
 import com.audition.platform.application.i18n.AuditionLocalizationService;
 import com.audition.platform.infra.SecurityUtils;
 import jakarta.validation.Valid;
@@ -28,12 +31,15 @@ public class AuditionController {
 
     private final AuditionService auditionService;
     private final AuditionLocalizationService auditionLocalizationService;
+    private final AuditionAutoTranslationService auditionAutoTranslationService;
 
     public AuditionController(
             AuditionService auditionService,
-            AuditionLocalizationService auditionLocalizationService) {
+            AuditionLocalizationService auditionLocalizationService,
+            AuditionAutoTranslationService auditionAutoTranslationService) {
         this.auditionService = auditionService;
         this.auditionLocalizationService = auditionLocalizationService;
+        this.auditionAutoTranslationService = auditionAutoTranslationService;
     }
 
     @PostMapping
@@ -91,6 +97,29 @@ public class AuditionController {
     @PostMapping("/{id}/series/next-round")
     public AuditionResponse createNextSeriesRound(@PathVariable UUID id) {
         return auditionService.createNextSeriesRound(id);
+    }
+
+    @GetMapping("/{id}/preview")
+    public AuditionResponse preview(
+            @PathVariable UUID id,
+            @RequestParam(value = "locale", required = false) String locale) {
+        return auditionService.preview(id, locale);
+    }
+
+    @GetMapping("/{id}/translation-provider")
+    public TranslationProviderStatusView translationProvider(@PathVariable UUID id) {
+        return auditionAutoTranslationService.providerStatus(id);
+    }
+
+    @PostMapping("/{id}/translation-jobs")
+    public List<AuditionTranslationView> translationJobs(
+            @PathVariable UUID id,
+            @RequestBody(required = false) TranslationJobRequest request) {
+        TranslationJobRequest body = request == null ? new TranslationJobRequest() : request;
+        if (body.getLocale() == null || body.getLocale().isBlank()) {
+            return auditionAutoTranslationService.translateAll(id, body.isForce());
+        }
+        return List.of(auditionAutoTranslationService.translateLocale(id, body.getLocale(), body.isForce()));
     }
 
     @GetMapping("/{id}/translations")

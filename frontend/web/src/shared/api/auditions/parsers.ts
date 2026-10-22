@@ -122,5 +122,11 @@ export function parseAuditionDto(raw: Record<string, unknown>): AuditionDto {
     defaultLocale: raw.defaultLocale != null ? String(raw.defaultLocale) : undefined,
     contentLocale: raw.contentLocale != null ? String(raw.contentLocale) : undefined,
     contentLocaleFallback: raw.contentLocaleFallback === true,
+    preview: raw.preview === true,
+    showingOriginal: raw.showingOriginal === true,
+    translationStatus: raw.translationStatus != null ? String(raw.translationStatus) : null,
+    translationStale: raw.translationStale === true,
+    translationErrorCode: raw.translationErrorCode != null ? String(raw.translationErrorCode) : null,
+    translationOrigin: raw.translationOrigin != null ? String(raw.translationOrigin) : null,
   }
 }

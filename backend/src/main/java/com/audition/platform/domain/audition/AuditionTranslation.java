@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -16,8 +17,21 @@ import java.util.UUID;
 @IdClass(AuditionTranslationId.class)
 public class AuditionTranslation {
 
+    public static final String STATUS_PENDING = "PENDING";
     public static final String STATUS_COMPLETED = "COMPLETED";
+    public static final String STATUS_FAILED = "FAILED";
     public static final String PROVIDER_MANUAL = "MANUAL";
+    public static final String ORIGIN_MANUAL = "MANUAL";
+    public static final String ORIGIN_AUTO = "AUTO";
+    public static final String ERROR_NOT_CONFIGURED = "NOT_CONFIGURED";
+    public static final String ERROR_PROVIDER = "PROVIDER_ERROR";
+    public static final String ERROR_MISSING_FIELD = "MISSING_FIELD";
+    public static final String ERROR_ARRAY_LENGTH_MISMATCH = "ARRAY_LENGTH_MISMATCH";
+    public static final String ERROR_MALFORMED_JSON = "MALFORMED_JSON";
+    public static final String ERROR_HTTP = "HTTP_ERROR";
+    public static final String ERROR_TIMEOUT = "TIMEOUT";
+    public static final String ERROR_ENDPOINT_REJECTED = "ENDPOINT_REJECTED";
+    public static final String ERROR_CONCURRENT_EDIT = "CONCURRENT_EDIT";
 
     @Id
     @Column(name = "audition_id", nullable = false)
@@ -61,6 +75,31 @@ public class AuditionTranslation {
     @Column(nullable = false)
     private String provider = PROVIDER_MANUAL;
 
+    @Column(name = "error_code")
+    private String errorCode;
+
+    @Column(name = "error_message", columnDefinition = "TEXT")
+    private String errorMessage;
+
+    @Column(name = "source_hash", length = 64)
+    private String sourceHash;
+
+    @Column(name = "source_revision")
+    private Long sourceRevision;
+
+    @Column(nullable = false, length = 16)
+    private String origin = ORIGIN_MANUAL;
+
+    @Column(name = "manually_edited", nullable = false)
+    private boolean manuallyEdited;
+
+    @Column(nullable = false)
+    private boolean stale;
+
+    @Version
+    @Column(name = "row_version", nullable = false)
+    private Long rowVersion;
+
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt = Instant.now();
 
@@ -91,6 +130,22 @@ public class AuditionTranslation {
     public void setStatus(String status) { this.status = status; }
     public String getProvider() { return provider; }
     public void setProvider(String provider) { this.provider = provider; }
+    public String getErrorCode() { return errorCode; }
+    public void setErrorCode(String errorCode) { this.errorCode = errorCode; }
+    public String getErrorMessage() { return errorMessage; }
+    public void setErrorMessage(String errorMessage) { this.errorMessage = errorMessage; }
+    public String getSourceHash() { return sourceHash; }
+    public void setSourceHash(String sourceHash) { this.sourceHash = sourceHash; }
+    public Long getSourceRevision() { return sourceRevision; }
+    public void setSourceRevision(Long sourceRevision) { this.sourceRevision = sourceRevision; }
+    public String getOrigin() { return origin; }
+    public void setOrigin(String origin) { this.origin = origin; }
+    public boolean isManuallyEdited() { return manuallyEdited; }
+    public void setManuallyEdited(boolean manuallyEdited) { this.manuallyEdited = manuallyEdited; }
+    public boolean isStale() { return stale; }
+    public void setStale(boolean stale) { this.stale = stale; }
+    public Long getRowVersion() { return rowVersion; }
+    public void setRowVersion(Long rowVersion) { this.rowVersion = rowVersion; }
     public Instant getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
     public Instant getCreatedAt() { return createdAt; }

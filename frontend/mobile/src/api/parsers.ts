@@ -99,6 +99,15 @@ export function parseAuditionDto(raw: unknown): AuditionDto {
     canApply: typeof row.canApply === 'boolean' ? row.canApply : undefined,
     applyBlockedMessage: row.applyBlockedMessage != null ? asString(row.applyBlockedMessage) : undefined,
     applyBlockedCode: row.applyBlockedCode != null ? asString(row.applyBlockedCode) : undefined,
+    defaultLocale: row.defaultLocale != null ? asString(row.defaultLocale) : undefined,
+    contentLocale: row.contentLocale != null ? asString(row.contentLocale) : undefined,
+    contentLocaleFallback: row.contentLocaleFallback === true,
+    preview: row.preview === true,
+    showingOriginal: row.showingOriginal === true,
+    translationStatus: row.translationStatus != null ? asString(row.translationStatus) : null,
+    translationStale: row.translationStale === true,
+    translationErrorCode: row.translationErrorCode != null ? asString(row.translationErrorCode) : null,
+    translationOrigin: row.translationOrigin != null ? asString(row.translationOrigin) : null,
   }
 }
 
@@ -299,12 +308,19 @@ export function parseApplicantDashboard(raw: unknown): ApplicantDashboard {
   }
 }
 
+function feeField(primary: unknown, fallback: unknown): number {
+  if (primary != null && primary !== '') return Math.max(0, Math.trunc(asNumber(primary)))
+  if (fallback != null && fallback !== '') return Math.max(0, Math.trunc(asNumber(fallback)))
+  return 0
+}
+
 export function parseCreditRuntime(raw: unknown): CreditRuntimePublic {
   const row = asRecord(raw)
   const mode = asString(row.applicationPaymentMode, 'FREE')
   return {
     applicationPaymentMode: mode === 'CREDIT' ? 'CREDIT' : 'FREE',
-    applicationFeeCredits: Math.max(0, asNumber(row.applicationFeeCredits)),
+    applicationFeeCredits: feeField(row.applicationFeeCredits, row.applicationFeeUsd),
+    applicationFeeUsd: feeField(row.applicationFeeUsd, row.applicationFeeCredits),
     signupCreditEnabled: Boolean(row.signupCreditEnabled),
     signupCreditAmount: Math.max(0, asNumber(row.signupCreditAmount)),
   }

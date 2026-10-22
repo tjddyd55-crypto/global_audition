@@ -17,8 +17,21 @@ export type AuditionTargetCountry = (typeof AUDITION_TARGET_COUNTRIES)[number]
 export const CONTENT_LOCALES = ['ko', 'en', 'mn'] as const
 export type ContentLocale = (typeof CONTENT_LOCALES)[number]
 
+/** 콘텐츠 번역 대상 8개. UI 카탈로그(ko/en/mn)와 따로 관리한다. */
+export const CONTENT_AUTHORING_LOCALES = ['ko', 'en', 'mn', 'ja', 'zh', 'es', 'fr', 'de'] as const
+export type AuthoringLocale = (typeof CONTENT_AUTHORING_LOCALES)[number]
+
+const AUTHORING_TAG = /^[a-z]{2,3}(?:-[a-z0-9]{2,8})?$/
+
 export function isContentLocale(value: string): value is ContentLocale {
   return (CONTENT_LOCALES as readonly string[]).includes(value)
+}
+
+/** 작성 언어. 8개 밖이어도 태그를 유지하고, 형식이 아니면 ko. */
+export function authoringLocaleOrFallback(raw?: string | null): string {
+  const tag = (raw ?? '').trim().toLowerCase().replaceAll('_', '-')
+  if (tag.length > 0 && tag.length <= 16 && AUTHORING_TAG.test(tag)) return tag
+  return 'ko'
 }
 
 export function normalizeTargetCountry(raw?: string | null): AuditionTargetCountry | '' {

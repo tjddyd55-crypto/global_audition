@@ -4,6 +4,7 @@ import com.audition.platform.api.dto.AuditionResponse;
 import com.audition.platform.domain.audition.Audition;
 import com.audition.platform.domain.audition.AuditionRepository;
 import com.audition.platform.domain.audition.AuditionTranslation;
+import com.audition.platform.domain.audition.AuditionTranslationAttemptRepository;
 import com.audition.platform.domain.audition.AuditionTranslationRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,7 +30,8 @@ class AuditionLocalizationServiceTest {
         service = new AuditionLocalizationService(
                 translationRepository,
                 auditionRepository,
-                new ContentLocaleResolver());
+                new ContentLocaleResolver(),
+                mock(AuditionTranslationAttemptRepository.class));
     }
 
     @Test
@@ -86,6 +88,59 @@ class AuditionLocalizationServiceTest {
         assertEquals("원문 제목", response.getTitle());
         assertTrue(response.isContentLocaleFallback());
         assertEquals("ko", response.getContentLocale());
+    }
+
+    @Test
+    void previewShowsPendingTextAndLabelsIt() {
+        Audition audition = baseAudition("ko");
+        AuditionResponse response = baseResponse(audition);
+        AuditionTranslation row = new AuditionTranslation();
+        row.setLocale("en");
+        row.setTitle("Pending title");
+        row.setStatus(AuditionTranslation.STATUS_PENDING);
+        row.setErrorCode(null);
+        when(translationRepository.findByAuditionIdAndLocale(audition.getId(), "en"))
+                .thenReturn(Optional.of(row));
+
+        service.applyPreview(audition, response, "en");
+
+        assertEquals("Pending title", response.getTitle());
+        assertEquals("PENDING", response.getTranslationStatus());
+        assertTrue(response.isPreview());
+        assertFalse(response.isContentLocaleFallback());
+    }
+
+    @Test
+    void publicRequestDoesNotOverlayPendingText() {
+        Audition audition = baseAudition("ko");
+        AuditionResponse response = baseResponse(audition);
+        AuditionTranslation row = new AuditionTranslation();
+        row.setLocale("en");
+        row.setTitle("Pending title");
+        row.setStatus(AuditionTranslation.STATUS_PENDING);
+        when(translationRepository.findByAuditionIdAndLocale(audition.getId(), "en"))
+                .thenReturn(Optional.of(row));
+
+        service.apply(audition, response, "en");
+
+        assertEquals("원문 제목", response.getTitle());
+        assertEquals("PENDING", response.getTranslationStatus());
+        assertTrue(response.isContentLocaleFallback());
+        assertFalse(response.isPreview());
+    }
+
+    @Test
+    void authoringLocaleOutsideCatalogStaysOriginal() {
+        Audition audition = baseAudition("pt-br");
+        AuditionResponse response = baseResponse(audition);
+
+        service.apply(audition, response, "pt-BR");
+
+        assertEquals("pt-br", response.getDefaultLocale());
+        assertEquals("pt-br", response.getContentLocale());
+        assertEquals("원문 제목", response.getTitle());
+        assertFalse(response.isContentLocaleFallback());
+        assertTrue(response.isShowingOriginal());
     }
 
     private static Audition baseAudition(String locale) {

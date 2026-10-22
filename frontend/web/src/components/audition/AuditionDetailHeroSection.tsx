@@ -26,6 +26,8 @@ type AuditionDetailHeroSectionProps = {
   subtitle?: string | null
   /** 모집 중이며 남은 일수가 3일 이하일 때 마감 임박 표시 */
   deadlineUrgent?: boolean
+  /** 미리보기. 공유·투표·외부 이동을 막는다. */
+  interactionsDisabled?: boolean
 }
 
 function statusBadgeCopy(status: string, t: (key: 'statusOpenBadge' | 'statusClosedBadge' | 'statusDraftBadge') => string): string {
@@ -55,6 +57,7 @@ export function AuditionDetailHeroSection({
   location,
   subtitle,
   deadlineUrgent = false,
+  interactionsDisabled = false,
 }: AuditionDetailHeroSectionProps) {
   const t = useTranslations('auditionDetail')
   const cover = safeStr(heroImageMediumUrl)
@@ -106,7 +109,7 @@ export function AuditionDetailHeroSection({
       <div className="relative mx-auto w-full lg:max-w-[1280px]">
         <div className="relative w-full overflow-hidden bg-neutral-200 lg:rounded-lg">
           {hasCover ? (
-            openOriginalHref.length > 0 ? (
+            !interactionsDisabled && openOriginalHref.length > 0 ? (
               <a
                 href={openOriginalHref}
                 target="_blank"
@@ -161,19 +164,26 @@ export function AuditionDetailHeroSection({
           <div className="mt-3 flex flex-wrap gap-2">
             <button
               type="button"
-              onClick={onShare}
+              onClick={interactionsDisabled ? undefined : onShare}
+              disabled={interactionsDisabled}
               className={contrast.action}
               style={{ borderRadius: HERO.buttonRadiusPx }}
             >
               {shareHint === 'ok' ? t('copied') : shareHint === 'err' ? t('shareFailed') : t('share')}
             </button>
-            <Link
-              href={`/auditions/${auditionId}/vote`}
-              className={contrast.link}
-              style={{ borderRadius: HERO.buttonRadiusPx }}
-            >
-              {t('vote')}
-            </Link>
+            {interactionsDisabled ? (
+              <button type="button" disabled className={contrast.link} style={{ borderRadius: HERO.buttonRadiusPx }}>
+                {t('vote')}
+              </button>
+            ) : (
+              <Link
+                href={`/auditions/${auditionId}/vote`}
+                className={contrast.link}
+                style={{ borderRadius: HERO.buttonRadiusPx }}
+              >
+                {t('vote')}
+              </Link>
+            )}
           </div>
         </div>
       </div>

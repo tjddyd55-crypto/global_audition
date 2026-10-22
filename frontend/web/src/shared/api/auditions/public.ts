@@ -13,6 +13,13 @@ export const listOpenAuditions = async (
   return (data ?? []).map((row) => parseAuditionDto(row))
 }
 
+export const getAuditionPreview = async (id: string, locale: string): Promise<AuditionDto> => {
+  const { data } = await apiClient.get<Record<string, unknown>>(`/auditions/${encodeURIComponent(id)}/preview`, {
+    params: { locale },
+  })
+  return parseAuditionDto(data ?? {})
+}
+
 export const getAuditionById = async (id: string, locale?: string): Promise<AuditionDto> => {
   const { data } = await apiClient.get<Record<string, unknown>>(`/auditions/${id}`, {
     params: { locale },

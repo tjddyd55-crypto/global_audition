@@ -11,6 +11,8 @@ public class CreditPolicyPublicDto {
     /** FREE | CREDIT. active=false 또는 cost=0 이면 FREE. */
     private String applicationPaymentMode;
     private long applicationFeeCredits;
+    /** AUDITION_APPLY 의 서버 가격. 정수 USD major unit. */
+    private long applicationFeeUsd;
 
     public CreditPolicyPublicDto() {
     }
@@ -21,6 +23,7 @@ public class CreditPolicyPublicDto {
         this.active = active;
         this.applicationPaymentMode = (!active || cost <= 0) ? "FREE" : "CREDIT";
         this.applicationFeeCredits = Math.max(0, cost);
+        this.applicationFeeUsd = this.applicationFeeCredits;
     }
 
     public String getPolicyKey() {
@@ -61,5 +64,13 @@ public class CreditPolicyPublicDto {
 
     public void setApplicationFeeCredits(long applicationFeeCredits) {
         this.applicationFeeCredits = applicationFeeCredits;
+    }
+
+    public long getApplicationFeeUsd() {
+        return applicationFeeUsd;
+    }
+
+    public void setApplicationFeeUsd(long applicationFeeUsd) {
+        this.applicationFeeUsd = applicationFeeUsd;
     }
 }

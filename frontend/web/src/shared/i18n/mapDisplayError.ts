@@ -18,6 +18,9 @@ const CODE_TO_CATALOG: Record<string, string> = {
   FORBIDDEN: 'errors.FORBIDDEN',
   LOGIN_REQUIRED: 'errors.UNAUTHORIZED',
   ACCESS_DENIED: 'errors.FORBIDDEN',
+  NOT_CONFIGURED: 'errors.NOT_CONFIGURED',
+  TRANSLATION_PROTECTED: 'errors.TRANSLATION_PROTECTED',
+  PROVIDER_ERROR: 'errors.PROVIDER_ERROR',
 }
 
 const STATUS_TO_CODE: Record<number, string> = {

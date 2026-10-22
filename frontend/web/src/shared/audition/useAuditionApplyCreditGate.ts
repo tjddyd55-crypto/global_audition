@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { CREDIT_POLICY_AUDITION_APPLY, creditsApi } from '@/shared/api/credits'
+import { CREDIT_POLICY_AUDITION_APPLY, creditsApi, resolveApplicationFeeCredits } from '@/shared/api/credits'
 
 type UseAuditionApplyCreditGateParams = {
   auditionId: string
@@ -34,7 +34,7 @@ export function useAuditionApplyCreditGate({
   const applicationPaymentMode =
     applyPolicySnapshot?.applicationPaymentMode ??
     (!applyPolicySnapshot || !applyPolicySnapshot.active || applyPolicySnapshot.cost <= 0 ? 'FREE' : 'CREDIT')
-  const applicationFeeCredits = applyPolicySnapshot?.applicationFeeCredits ?? applyPolicySnapshot?.cost ?? 0
+  const applicationFeeCredits = resolveApplicationFeeCredits(applyPolicySnapshot)
   const needCreditsForApply = applicationPaymentMode === 'CREDIT' && applicationFeeCredits > 0
   const creditGateReady = !needCreditsForApply || !balanceLoading
   const hasEnoughCredits = !needCreditsForApply || creditBalanceAmount >= applicationFeeCredits
