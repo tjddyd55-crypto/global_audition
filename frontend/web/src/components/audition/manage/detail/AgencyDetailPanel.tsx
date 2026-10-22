@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { format } from 'date-fns'
-import { enUS, ko as koDate, mn } from 'date-fns/locale'
+import { dateFnsLocale } from '@/shared/datetime/dateFnsLocale'
 import { useLocale, useTranslations } from 'next-intl'
 import type { AgencyBoardStatus, ApplicationAgencyDetail } from '@/shared/api/auditions'
 import { resolveVideoThumbnailUrl } from '@/shared/audition/videoThumbnail'
@@ -39,7 +39,7 @@ export default function AgencyDetailPanel({
 }: AgencyDetailPanelProps) {
   const tAgency = useTranslations('agency')
   const locale = useLocale()
-  const dateLocale = locale.startsWith('ko') ? koDate : locale.startsWith('mn') ? mn : enUS
+  const dateLocale = dateFnsLocale(locale)
   const [confirmStatus, setConfirmStatus] = useState<AgencyBoardStatus | null>(null)
   const patching = patchingId === applicationId
 

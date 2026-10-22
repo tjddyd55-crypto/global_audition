@@ -13,9 +13,10 @@ import { getRuntimeLocale } from '../../src/i18n/runtime'
 export default function AuditionsScreen() {
   const { t } = useTranslation()
   const router = useRouter()
-  const country = audienceCountryFromLocale(getRuntimeLocale())
+  const locale = getRuntimeLocale()
+  const country = audienceCountryFromLocale(locale)
   const query = useQuery({
-    queryKey: queryKeys.auditionsOpen(country),
+    queryKey: queryKeys.auditionsOpen(country, locale),
     queryFn: () => auditionApi.listOpen(country),
   })
 

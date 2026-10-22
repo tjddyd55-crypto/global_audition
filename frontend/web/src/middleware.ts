@@ -1,6 +1,7 @@
 import createIntlMiddleware from 'next-intl/middleware'
-import type { NextRequest } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
 import { routing } from './i18n.config'
+import { redirectPathForRetiredLocale } from './shared/i18n/uiLocales'
 
 /**
  * 디바이스 타입 쿠키/헤더 이름.
@@ -29,6 +30,13 @@ function resolveDevice(req: NextRequest): Device {
 const intlMiddleware = createIntlMiddleware(routing)
 
 export default function middleware(req: NextRequest) {
+  const retired = redirectPathForRetiredLocale(req.nextUrl.pathname)
+  if (retired) {
+    const url = req.nextUrl.clone()
+    url.pathname = retired
+    return NextResponse.redirect(url, 307)
+  }
+
   const res = intlMiddleware(req)
   const device = resolveDevice(req)
 

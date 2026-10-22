@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from '../../i18n.config'
 import { format } from 'date-fns'
-import { enUS, ko as koDate, mn } from 'date-fns/locale'
+import { dateFnsLocale } from '@/shared/datetime/dateFnsLocale'
 import {
   auditionHeadlineTitle,
   auditionListImageUrl,
@@ -28,7 +28,7 @@ export default function AuditionCard({ audition }: AuditionCardProps) {
   const tStatus = useTranslations('status')
   const tFallback = useTranslations('fallback')
   const locale = useLocale()
-  const dateLocale = locale.startsWith('ko') ? koDate : locale.startsWith('mn') ? mn : enUS
+  const dateLocale = dateFnsLocale(locale)
   const statusLabels: Record<string, string> = {
     DRAFT: tStatus('draft'),
     OPEN: tStatus('open'),

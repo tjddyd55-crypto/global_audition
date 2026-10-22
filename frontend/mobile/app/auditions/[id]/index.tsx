@@ -14,13 +14,20 @@ import { StatusPill, toneForApplicationStatus } from '../../../src/ui/StatusPill
 import { StickyCta } from '../../../src/ui/StickyCta'
 import { colors } from '../../../src/theme/tokens'
 import { useTranslation } from 'react-i18next'
+import { applyBlockedDisplayMessage } from '../../../src/domain/applyBlocked'
+import { getRuntimeLocale } from '../../../src/i18n/runtime'
 
 export default function AuditionDetailScreen() {
   const { t } = useTranslation()
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()
   const { isAuthenticated } = useAuth()
-  const query = useQuery({ queryKey: queryKeys.audition(id), queryFn: () => auditionApi.getById(id), enabled: Boolean(id) })
+  const locale = getRuntimeLocale()
+  const query = useQuery({
+    queryKey: queryKeys.audition(id, locale),
+    queryFn: () => auditionApi.getById(id),
+    enabled: Boolean(id),
+  })
   const audition = query.data
 
   const applyBlocked = audition?.canApply === false
@@ -64,7 +71,11 @@ export default function AuditionDetailScreen() {
             />
             <Text style={styles.title}>{auditionHeadlineTitle(audition)}</Text>
             <Text style={styles.meta}>{audition.agencyName}</Text>
-            {audition.applyBlockedMessage ? <Text style={styles.warn}>{audition.applyBlockedMessage}</Text> : null}
+            {audition.canApply === false ? (
+              <Text style={styles.warn}>
+                {applyBlockedDisplayMessage(audition.applyBlockedCode, t('apply.prevRoundBlocked'), t('apply.failed'))}
+              </Text>
+            ) : null}
             <Text style={styles.desc}>{audition.description}</Text>
             <Info label={t('auditionDetail.recruitFields')} items={audition.recruitFields} />
             <Info label={t('auditionDetail.qualifications')} items={audition.qualifications} />

@@ -3,17 +3,15 @@
 import { useLocale, useTranslations } from 'next-intl'
 import { usePathname, useRouter } from '../../i18n.config'
 import { useState } from 'react'
+import { localeSwitchTarget, UI_LOCALES, type UiLocale } from '@/shared/i18n/uiLocales'
 
-const LANGUAGE_OPTIONS = [
-  { code: 'ko', flag: '🇰🇷' },
-  { code: 'en', flag: '🇺🇸' },
-  { code: 'mn', flag: '🇲🇳' },
-  { code: 'ja', flag: '🇯🇵' },
-  { code: 'zh', flag: '🇨🇳' },
-  { code: 'es', flag: '🇪🇸' },
-  { code: 'fr', flag: '🇫🇷' },
-  { code: 'de', flag: '🇩🇪' },
-] as const
+const FLAGS: Record<UiLocale, string> = {
+  ko: '🇰🇷',
+  en: '🇺🇸',
+  mn: '🇲🇳',
+}
+
+const LANGUAGE_OPTIONS = UI_LOCALES.map((code) => ({ code, flag: FLAGS[code] }))
 
 export default function LanguageSwitcher() {
   const locale = useLocale()
@@ -23,15 +21,10 @@ export default function LanguageSwitcher() {
   const [isOpen, setIsOpen] = useState(false)
 
   const changeLanguage = (newLocale: string) => {
-    // 현재 경로에서 언어 코드를 새 언어로 교체
-    const segments = pathname.split('/')
-    if (segments[1] && LANGUAGE_OPTIONS.some((lang) => lang.code === segments[1])) {
-      segments[1] = newLocale
-    } else {
-      segments.splice(1, 0, newLocale)
+    const target = localeSwitchTarget(pathname, newLocale)
+    if (target.locale !== locale) {
+      router.push(target.href, { locale: target.locale })
     }
-    const newPath = segments.join('/')
-    router.push(newPath)
     setIsOpen(false)
   }
 

@@ -98,6 +98,7 @@ export function parseAuditionDto(raw: unknown): AuditionDto {
     recruitmentRoundLabel: asString(row.recruitmentRoundLabel).trim() || undefined,
     canApply: typeof row.canApply === 'boolean' ? row.canApply : undefined,
     applyBlockedMessage: row.applyBlockedMessage != null ? asString(row.applyBlockedMessage) : undefined,
+    applyBlockedCode: row.applyBlockedCode != null ? asString(row.applyBlockedCode) : undefined,
   }
 }
 

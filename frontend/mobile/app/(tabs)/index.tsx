@@ -18,9 +18,10 @@ export default function HomeScreen() {
   const { t } = useTranslation()
   const router = useRouter()
   const { isAuthenticated, session } = useAuth()
-  const country = audienceCountryFromLocale(getRuntimeLocale())
+  const locale = getRuntimeLocale()
+  const country = audienceCountryFromLocale(locale)
   const auditionsQuery = useQuery({
-    queryKey: queryKeys.auditionsOpen(country),
+    queryKey: queryKeys.auditionsOpen(country, locale),
     queryFn: () => auditionApi.listOpen(country),
   })
   const dashQuery = useQuery({

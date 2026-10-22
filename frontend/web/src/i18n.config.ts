@@ -1,9 +1,10 @@
 import { defineRouting } from 'next-intl/routing'
 import { createNavigation } from 'next-intl/navigation'
+import { UI_LOCALES } from './shared/i18n/uiLocales'
 
 export const routing = defineRouting({
-  // 지원하는 모든 언어
-  locales: ['ko', 'en', 'mn', 'ja', 'zh', 'es', 'fr', 'de'],
+  // 공식 UI는 ko/en/mn. 나머지 로케일 URL은 미들웨어가 지원 로케일로 보낸다.
+  locales: [...UI_LOCALES],
 
   // 기본 언어
   defaultLocale: 'ko',

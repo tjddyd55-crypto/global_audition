@@ -14,7 +14,8 @@ import {
   type AuditionDto,
 } from '@/shared/types/audition'
 import { useLocale, useTranslations } from 'next-intl'
-import { enUS, ko as koDate, mn } from 'date-fns/locale'
+import { dateFnsLocale } from '@/shared/datetime/dateFnsLocale'
+import { applyBlockedDisplayMessage } from '@/shared/audition/applyBlockedCopy'
 
 type MobileAuditionDetailSummaryProps = {
   audition: AuditionDto
@@ -23,15 +24,9 @@ type MobileAuditionDetailSummaryProps = {
   applyBlocked: boolean
 }
 
-function dateLocale(locale: string) {
-  if (locale.startsWith('ko')) return koDate
-  if (locale.startsWith('mn')) return mn
-  return enUS
-}
-
 function fmtDate(iso: string, locale: string): string {
   try {
-    return format(new Date(iso), 'yyyy.MM.dd', { locale: dateLocale(locale) })
+    return format(new Date(iso), 'yyyy.MM.dd', { locale: dateFnsLocale(locale) })
   } catch {
     return '-'
   }
@@ -276,7 +271,9 @@ export default function MobileAuditionDetailSummary({
           {t('alreadyAppliedMyPage')}
         </p>
       ) : applyBlocked ? (
-        <p className="mt-8 text-sm text-amber-800">{audition.applyBlockedMessage ?? tApply('prevRoundBlocked')}</p>
+        <p className="mt-8 text-sm text-amber-800">
+          {applyBlockedDisplayMessage(audition.applyBlockedCode, tApply('prevRoundBlocked'), tApply('failed'))}
+        </p>
       ) : null}
     </div>
   )

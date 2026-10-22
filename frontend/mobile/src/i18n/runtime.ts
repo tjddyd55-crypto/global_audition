@@ -15,10 +15,11 @@ export function getRuntimeLocale(): string {
   return currentLocale
 }
 
+/** 네이티브 UI는 1급 로케일만 유지한다. ja 등 부분 카탈로그는 en으로 내린다. */
 export function normalizeLocale(raw?: string | null): string {
   if (!raw) return DEVICE_FALLBACK
   const language = raw.trim().toLowerCase().replace('_', '-').split('-')[0]
-  if (SUPPORTED_LOCALES.includes(language)) return language
+  if (PRIMARY_LOCALES.includes(language)) return language
   return DEVICE_FALLBACK
 }
 

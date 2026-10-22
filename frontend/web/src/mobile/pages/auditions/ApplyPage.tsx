@@ -6,7 +6,10 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import { applicationApi } from '@/shared/api/applications'
 import { AuditionApplyForm } from '@/components/application/AuditionApplyForm'
-import { auditionHeadlineTitle, PREV_ROUND_APPLY_BLOCKED_MSG } from '@/shared/types/audition'
+import { auditionHeadlineTitle } from '@/shared/types/audition'
+import { applyBlockedDisplayMessage } from '@/shared/audition/applyBlockedCopy'
+import { mapApplySubmitError } from '@/shared/audition/mapApplySubmitError'
+import { bindCatalogTranslator } from '@/shared/i18n/mapDisplayError'
 import { useAuditionApplyPageState } from '@/shared/audition/useAuditionApplyPageState'
 import { useAuditionApplySubmitGate } from '@/shared/audition/useAuditionApplySubmitGate'
 import ApplyPageShell from '@/components/application/ApplyPageShell'
@@ -21,6 +24,12 @@ export default function MobileAuditionApplyPage() {
   const t = useTranslations('common')
   const tApply = useTranslations('apply')
   const tDetail = useTranslations('auditionDetail')
+  const tErr = useTranslations('errors')
+  const tUploader = useTranslations('uploader')
+  const translateError = bindCatalogTranslator({
+    errors: (key) => tErr(key),
+    uploader: (key) => tUploader(key),
+  })
   const auditionId = params.id as string
 
   const {
@@ -96,7 +105,11 @@ export default function MobileAuditionApplyPage() {
 
   const seriesRound = audition.round ?? 1
   if (seriesRound >= 2 && audition.canApply === false) {
-    const msg = audition.applyBlockedMessage ?? PREV_ROUND_APPLY_BLOCKED_MSG
+    const msg = applyBlockedDisplayMessage(
+      audition.applyBlockedCode,
+      tApply('prevRoundBlocked'),
+      tApply('failed'),
+    )
     return (
       <ApplyPageGuardState
         message={msg}
@@ -133,15 +146,12 @@ export default function MobileAuditionApplyPage() {
           try {
             await applicationApi.submit(payload)
           } catch (err: unknown) {
-            const ax = err as { response?: { status?: number; data?: { message?: string } } }
-            const serverMsg = ax.response?.data?.message
-            if (ax.response?.status === 409) {
-              throw new Error(serverMsg || tApply('alreadyDone'))
-            }
-            if (ax.response?.status === 403) {
-              throw new Error(serverMsg || PREV_ROUND_APPLY_BLOCKED_MSG)
-            }
-            throw new Error(serverMsg || (err instanceof Error ? err.message : tApply('failed')))
+            throw new Error(
+              mapApplySubmitError(err, translateError, {
+                alreadyDone: tApply('alreadyDone'),
+                failed: tApply('failed'),
+              }),
+            )
           }
           queryClient.invalidateQueries({ queryKey: ['audition', auditionId] })
           queryClient.invalidateQueries({ queryKey: ['credits', 'balance'] })

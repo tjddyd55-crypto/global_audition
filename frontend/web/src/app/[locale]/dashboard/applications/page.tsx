@@ -3,16 +3,10 @@
 import { useQuery } from '@tanstack/react-query'
 import { applicationApi } from '@/shared/api/applications'
 import { format } from 'date-fns'
-import { enUS, ko as koDate, mn } from 'date-fns/locale'
 import { Link } from '../../../../i18n.config'
 import { useLocale, useTranslations } from 'next-intl'
 import { applicationStatusMessageKey } from '@/shared/i18n/applicationStatusKey'
-
-function dateLocale(locale: string) {
-  if (locale.startsWith('ko')) return koDate
-  if (locale.startsWith('mn')) return mn
-  return enUS
-}
+import { dateFnsLocale } from '@/shared/datetime/dateFnsLocale'
 
 export default function DashboardApplicationsPage() {
   const t = useTranslations('common')
@@ -65,7 +59,7 @@ export default function DashboardApplicationsPage() {
                     <p className="font-medium">{app.auditionTitle ?? app.auditionId}</p>
                     <p className="text-sm text-gray-500">
                       {tMy('appliedOn', {
-                        date: format(new Date(app.createdAt), 'yyyy.MM.dd HH:mm', { locale: dateLocale(locale) }),
+                        date: format(new Date(app.createdAt), 'yyyy.MM.dd HH:mm', { locale: dateFnsLocale(locale) }),
                       })}
                     </p>
                     <span
