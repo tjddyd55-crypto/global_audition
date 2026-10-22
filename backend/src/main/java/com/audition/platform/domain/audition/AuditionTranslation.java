@@ -32,6 +32,10 @@ public class AuditionTranslation {
     public static final String ERROR_TIMEOUT = "TIMEOUT";
     public static final String ERROR_ENDPOINT_REJECTED = "ENDPOINT_REJECTED";
     public static final String ERROR_CONCURRENT_EDIT = "CONCURRENT_EDIT";
+    public static final String ERROR_AUTH_FAILED = "AUTH_FAILED";
+    public static final String ERROR_FORBIDDEN = "FORBIDDEN";
+    public static final String ERROR_PROVIDER_RATE_LIMITED = "PROVIDER_RATE_LIMITED";
+    public static final String ERROR_INVALID_CREDENTIALS = "INVALID_CREDENTIALS";
 
     @Id
     @Column(name = "audition_id", nullable = false)

@@ -32,9 +32,14 @@ app:
     public-read-acl: false
     public-base-url: ${AWS_S3_PUBLIC_BASE_URL:}
     endpoint: ${AWS_S3_ENDPOINT:}
-  # 번역 공급자 허용 호스트. 쉼표로 구분. 로직의 기본값은 이 설정뿐이며 호출은 저장된 모델을 쓴다.
+  # 번역 공급자 허용 호스트. 쉼표로 구분. 루프백과 메타데이터 주소는 거부한다.
   translation:
-    allowed-hosts: ${APP_TRANSLATION_ALLOWED_HOSTS:api.openai.com}
+    allowed-hosts: ${APP_TRANSLATION_ALLOWED_HOSTS:api.openai.com,translate.googleapis.com,oauth2.googleapis.com}
+    google:
+      # 추정 단가. 청구서가 아니다. 공식 NMT 문자 단가(2026-10-22 조회):
+      # https://cloud.google.com/translate/pricing
+      # 월 500,000자는 Google 청구 크레딧이며 이 단가에서 빼지 않는다.
+      micro-usd-per-million-characters: ${APP_TRANSLATION_GOOGLE_MICRO_PER_MILLION_CHARS:20000000}
     queue:
       enabled: ${APP_TRANSLATION_QUEUE_ENABLED:true}
       poll-ms: ${APP_TRANSLATION_QUEUE_POLL_MS:5000}
