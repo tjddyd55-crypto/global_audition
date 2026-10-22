@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'r
 import { Link } from '@/i18n.config'
 import { VideoListItem } from '@/components/video/VideoListItem'
 import { DEFAULT_IMAGES } from '@/shared/constants/fallbacks'
+import { TranslationNotice, translatedText, useContentTranslation } from '@/components/i18n/TranslatedField'
 import { resolveThumbnailDisplayUrl } from '@/shared/audition/videoThumbnail'
 import { getVideoEmbedSrc } from '@/shared/utils/videoEmbed'
 import { useAuthStore } from '@/shared/auth/authStore'
@@ -96,12 +97,16 @@ export function ChannelVideoDetailClient({ videoId, initialDetail }: Props) {
   const [shareHint, setShareHint] = useState(false)
   const [savedLocal, setSavedLocal] = useState(false)
 
+  const copy = useContentTranslation('CHANNEL_VIDEO', videoId)
+  const titleText = translatedText(detail?.title, copy.view, 'title', copy.showOriginal)
+  const descriptionText = translatedText(detail?.description, copy.view, 'description', copy.showOriginal)
+
   const embedSrc = useMemo(() => {
     const url = detail?.videoUrl ?? ''
     return getVideoEmbedSrc(url)
   }, [detail?.videoUrl])
 
-  const descParts = useMemo(() => splitDescription(detail?.description ?? ''), [detail?.description])
+  const descParts = useMemo(() => splitDescription(descriptionText), [descriptionText])
 
   const loadComments = useCallback(async () => {
     if (!videoId) return
@@ -315,7 +320,7 @@ export function ChannelVideoDetailClient({ videoId, initialDetail }: Props) {
           <div className="w-full bg-black aspect-video">
             {embedSrc ? (
               <iframe
-                title={detail.title}
+                title={titleText}
                 src={embedSrc}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
@@ -337,7 +342,8 @@ export function ChannelVideoDetailClient({ videoId, initialDetail }: Props) {
           ) : null}
 
           <div className="px-4 py-3">
-            <h1 className="text-base font-semibold leading-snug">{detail.title}</h1>
+            <h1 className="text-base font-semibold leading-snug">{titleText}</h1>
+            <TranslationNotice view={copy.view} showOriginal={copy.showOriginal} onToggle={copy.setShowOriginal} />
             <div className="mt-1 text-sm text-neutral-500">
               {tVideo('viewsCount', { n: detail.viewCount.toLocaleString(numberLocale) })} · {formatRelative(detail.publishedAt, tRelative)}
             </div>

@@ -2,6 +2,7 @@ import { Tabs } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import { Text } from 'react-native'
 import { colors } from '../../src/theme/tokens'
+import { LanguageMenu } from '../../src/i18n/LanguageMenu'
 
 function TabIcon({ label, focused }: { label: string; focused: boolean }) {
   return (
@@ -26,7 +27,10 @@ export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerShown: false,
+        headerShown: true,
+        headerTitle: '',
+        headerRight: () => <LanguageMenu />,
+        headerShadowVisible: false,
         tabBarActiveTintColor: colors.purple,
         tabBarInactiveTintColor: colors.faint,
         tabBarStyle: { minHeight: 72, paddingTop: 6, paddingBottom: 8 },

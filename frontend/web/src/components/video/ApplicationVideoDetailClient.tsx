@@ -9,6 +9,7 @@ import { getVideoEmbedSrc } from '@/shared/utils/videoEmbed'
 import { useAuthStore } from '@/shared/auth/authStore'
 import { auditionApi } from '@/shared/api/auditions'
 import { formatRelative } from '@/shared/i18n/formatRelative'
+import { TranslationNotice, translatedText, useContentTranslation } from '@/components/i18n/TranslatedField'
 import { useLocale, useTranslations } from 'next-intl'
 import {
   bumpApplicationViewPublic,
@@ -93,6 +94,9 @@ export function ApplicationVideoDetailClient() {
   const [recommendations, setRecommendations] = useState<ApplicationRecommendItem[]>([])
   const [shareHint, setShareHint] = useState(false)
   const [savedLocal, setSavedLocal] = useState(false)
+
+  const copy = useContentTranslation('APPLICATION_VIDEO', detail?.videoId)
+  const titleText = translatedText(detail?.title, copy.view, 'title', copy.showOriginal)
 
   const embedSrc = useMemo(() => {
     const url = detail?.videoUrl ?? ''
@@ -276,7 +280,7 @@ export function ApplicationVideoDetailClient() {
           <div className="aspect-video w-full bg-black">
             {embedSrc ? (
               <iframe
-                title={detail.title}
+                title={titleText}
                 src={embedSrc}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
@@ -298,7 +302,8 @@ export function ApplicationVideoDetailClient() {
           ) : null}
 
           <div className="px-4 py-3">
-            <h1 className="text-base font-semibold leading-snug">{detail.title}</h1>
+            <h1 className="text-base font-semibold leading-snug">{titleText}</h1>
+            <TranslationNotice view={copy.view} showOriginal={copy.showOriginal} onToggle={copy.setShowOriginal} />
             <div className="mt-1 text-sm text-neutral-500">
               {tVideo('viewsCount', { n: detail.viewCount.toLocaleString(numberLocale) })} · {formatRelative(detail.publishedAt, tRelative)}
             </div>

@@ -43,6 +43,9 @@ public class AuditionRound {
     @Column(name = "submission_guide", nullable = false, columnDefinition = "TEXT")
     private String submissionGuide = "";
 
+    @Column(name = "notice_source_locale", length = 35)
+    private String noticeSourceLocale;
+
     @Column(name = "required_submission_type", nullable = false, columnDefinition = "TEXT")
     private String requiredSubmissionType = "VIDEO";
 
@@ -92,6 +95,8 @@ public class AuditionRound {
     public void setSubmissionLabel(String submissionLabel) { this.submissionLabel = submissionLabel; }
     public String getSubmissionGuide() { return submissionGuide; }
     public void setSubmissionGuide(String submissionGuide) { this.submissionGuide = submissionGuide; }
+    public String getNoticeSourceLocale() { return noticeSourceLocale; }
+    public void setNoticeSourceLocale(String noticeSourceLocale) { this.noticeSourceLocale = noticeSourceLocale; }
     public String getRequiredSubmissionType() { return requiredSubmissionType; }
     public void setRequiredSubmissionType(String requiredSubmissionType) { this.requiredSubmissionType = requiredSubmissionType; }
     public Instant getStartAt() { return startAt; }

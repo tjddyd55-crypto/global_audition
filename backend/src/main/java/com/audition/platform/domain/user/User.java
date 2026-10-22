@@ -69,6 +69,10 @@ public class User {
     @Column(name = "intro_text", columnDefinition = "TEXT")
     private String introText;
 
+    /** 프로필 본문 원문 언어. 비어 있으면 미상이다. */
+    @Column(name = "text_source_locale", length = 35)
+    private String textSourceLocale;
+
     /** ACTIVE | SUSPENDED | DELETED */
     @Column(name = "account_status", nullable = false, length = 32)
     private String accountStatus = "ACTIVE";
@@ -176,6 +180,14 @@ public class User {
 
     public void setIntroText(String introText) {
         this.introText = introText;
+    }
+
+    public String getTextSourceLocale() {
+        return textSourceLocale;
+    }
+
+    public void setTextSourceLocale(String textSourceLocale) {
+        this.textSourceLocale = textSourceLocale;
     }
 
     public String getAccountStatus() {

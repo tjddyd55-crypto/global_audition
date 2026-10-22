@@ -22,6 +22,10 @@ public interface ApplicationRepository extends JpaRepository<Application, UUID> 
 
     List<Application> findByApplicantIdOrderByCreatedAtDesc(UUID applicantId);
 
+    @Query("SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END FROM Application a, Audition au "
+            + "WHERE a.auditionId = au.id AND a.applicantId = :applicantId AND au.ownerId = :agencyId")
+    boolean existsForApplicantAndAgency(@Param("applicantId") UUID applicantId, @Param("agencyId") UUID agencyId);
+
     long countByApplicantId(UUID applicantId);
 
     long countByApplicantIdAndStatus(UUID applicantId, String status);

@@ -1387,5 +1387,12 @@
     "channelName": "Нэргүй суваг",
     "description": "Тайлбар алга",
     "date": "Огноо алга"
+  },
+  "translation": {
+    "showingOriginal": "Эх бичвэрийг харуулж байна.",
+    "viewOriginal": "Эх бичвэр харах",
+    "viewTranslation": "Орчуулга харах",
+    "stale": "Эх бичвэр өөрчлөгдсөн тул орчуулга хуучирсан байж болно.",
+    "sourceLocale": "Эх хэл: {locale}"
   }
 }

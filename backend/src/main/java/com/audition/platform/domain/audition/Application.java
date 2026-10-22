@@ -61,6 +61,10 @@ public class Application {
     @Column(name = "intro_text", columnDefinition = "TEXT")
     private String introText;
 
+    /** 명시된 원문 언어. 비어 있으면 미상이다. */
+    @Column(name = "intro_source_locale", length = 35)
+    private String introSourceLocale;
+
     @Column(name = "updated_at")
     private Instant updatedAt = Instant.now();
 
@@ -111,6 +115,8 @@ public class Application {
     public void setVideoUrl(String videoUrl) { this.videoUrl = videoUrl; }
     public String getIntroText() { return introText; }
     public void setIntroText(String introText) { this.introText = introText; }
+    public String getIntroSourceLocale() { return introSourceLocale; }
+    public void setIntroSourceLocale(String introSourceLocale) { this.introSourceLocale = introSourceLocale; }
     public Instant getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
     public Instant getCreatedAt() { return createdAt; }

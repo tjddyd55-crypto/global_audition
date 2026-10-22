@@ -11,6 +11,7 @@ public class ApplicationPublicVideoDto {
 
     private String applicationId;
     private String auditionId;
+    private String videoId;
     private String title;
     private String videoUrl;
     private String thumbnailUrl;
@@ -41,6 +42,14 @@ public class ApplicationPublicVideoDto {
 
     public void setAuditionId(String auditionId) {
         this.auditionId = auditionId;
+    }
+
+    public String getVideoId() {
+        return videoId;
+    }
+
+    public void setVideoId(String videoId) {
+        this.videoId = videoId;
     }
 
     public String getTitle() {

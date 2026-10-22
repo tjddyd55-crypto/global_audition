@@ -83,7 +83,7 @@ export default function AgencyDetailPanel({
               />
               <ApplicantDetailBasicInfo detail={detail} birthLabel={birth} />
               <ApplicantDetailSnsSection snsLinks={detail.snsLinks} />
-              <ApplicantDetailIntroSection introText={detail.introText} />
+              <ApplicantDetailIntroSection applicationId={applicationId} introText={detail.introText} />
             </div>
           )}
         </div>
