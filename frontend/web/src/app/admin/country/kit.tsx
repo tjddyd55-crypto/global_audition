@@ -640,7 +640,8 @@ export function SettlementScreen() {
 export function ContractScreen() {
   const { code, staff, locale } = useCountrySession()
   const contracts = useQuery({ queryKey: ['org', 'contracts', code], queryFn: () => orgAdminApi.contracts(code), enabled: code.length === 2 && !staff })
-  const current = (contracts.data ?? [])[0]
+  const rows = contracts.data ?? []
+  const current = rows.find((row) => row.status === 'ACTIVE') ?? rows[0]
   const versions = useQuery({
     queryKey: ['org', 'versions', current?.id],
     queryFn: () => orgAdminApi.contractVersions(current!.id),
@@ -657,6 +658,17 @@ export function ContractScreen() {
             상대 {current.counterpartyName} · 국가 {current.countryCode} · 상태 {current.status} · 기간 {current.startDate} ~ {current.endDate ?? '진행'} · 요율 {current.revenueShareBps ?? '미정'} bps · 기준 {current.settlementBasis ?? '미정'}
           </p>
           <p className="mt-2 text-sm text-gray-600">전자서명은 없습니다. 서명본은 본사가 비공개 저장소에 첨부합니다.</p>
+        </Panel>
+      ) : null}
+      {rows.length > 1 ? (
+        <Panel title="계약 이력">
+          <ul className="text-sm">
+            {rows.map((row) => (
+              <li key={row.id}>
+                {row.contractNumber} · {row.status} · {row.startDate} ~ {row.endDate ?? '진행'}
+              </li>
+            ))}
+          </ul>
         </Panel>
       ) : null}
       {(versions.data ?? []).length > 0 ? (

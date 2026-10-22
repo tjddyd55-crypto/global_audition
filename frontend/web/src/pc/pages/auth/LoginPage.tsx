@@ -84,7 +84,7 @@ export default function PcLoginPage() {
 
       // 전체 문서 로드로 이동 → 메모리 내 옛 JWT/역할(Zustand 등)과 localStorage 불일치로 인한 403 방지
       if (typeof window !== 'undefined') {
-        window.location.assign(`/${locale}${path}`)
+        window.location.assign(path.startsWith('/admin') ? path : `/${locale}${path}`)
       } else {
         router.push(path)
       }
