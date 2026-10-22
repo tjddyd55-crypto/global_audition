@@ -2,23 +2,19 @@
 
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { useLocale, useTranslations } from 'next-intl'
-import { auditionApi } from '@/shared/api/auditions'
+import { useTranslations } from 'next-intl'
 import HeroSection from '../../components/home/HeroSection'
 import HomeAuditionSection from '../../components/home/HomeAuditionSection'
 import HomeVideoSection from '../../components/home/HomeVideoSection'
 import { listBrowsePublicVideos } from '@/shared/api/channelVideoPublic'
 import { channelVideoKeys } from '@/shared/query/channelVideoQuery'
+import { useAudienceCountrySelection } from '@/shared/audition/useAudienceCountrySelection'
+import { useAuditionsListQuery } from '@/components/audition/useAuditionsListQuery'
 
 export default function HomePage() {
   const t = useTranslations('home')
-  const locale = useLocale()
-
-  const { data: auditions = [], isLoading: auditionsLoading } = useQuery({
-    queryKey: ['auditions', locale],
-    queryFn: () => auditionApi.listOpen(locale),
-    retry: 1,
-  })
+  const { country, selectCountry } = useAudienceCountrySelection()
+  const { data: auditions = [], isLoading: auditionsLoading } = useAuditionsListQuery(country)
   const { data: browseVideosList = [], isLoading: videosLoading, isError: videosError } = useQuery({
     queryKey: channelVideoKeys.browse(null),
     queryFn: () => listBrowsePublicVideos(),
@@ -43,7 +39,12 @@ export default function HomePage() {
         startLabel={t('getStarted')}
       />
 
-      <HomeAuditionSection auditions={auditions} isLoading={auditionsLoading} />
+      <HomeAuditionSection
+        auditions={auditions}
+        isLoading={auditionsLoading}
+        country={country}
+        onCountryChange={selectCountry}
+      />
       <HomeVideoSection videos={latestVideos} isLoading={videosLoading} isError={videosError} />
     </div>
   )

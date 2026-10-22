@@ -1,3 +1,4 @@
+import { normalizeAudienceCountry } from '../domain/audience'
 import { unwrapData } from './unwrap'
 import { apiRequest } from './http'
 import {
@@ -66,7 +67,9 @@ export const authApi = {
 
 export const auditionApi = {
   listOpen: async (country?: string): Promise<AuditionDto[]> => {
-    const data = await apiRequest<unknown>('/auditions', { query: { status: 'OPEN', country } })
+    const data = await apiRequest<unknown>('/auditions', {
+      query: { status: 'OPEN', country: normalizeAudienceCountry(country) },
+    })
     const rows = Array.isArray(data) ? data : []
     return rows.map((row) => parseAuditionDto(row))
   },

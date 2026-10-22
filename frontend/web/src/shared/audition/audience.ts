@@ -1,7 +1,10 @@
 /** 기존 auditions.country_code 재사용. 새 컬럼을 만들지 않는다. */
 export const AUDITION_TARGET_COUNTRIES = ['KR', 'MN', 'GLOBAL', 'JP', 'OTHER'] as const
 
-/** UI 로케일 → 발견 필터 country. MN은 MN+GLOBAL, KR은 KR+GLOBAL. */
+/**
+ * 로케일을 국가 코드로 가리키는 힌트.
+ * 목록·홈의 기본 범위는 쓰지 않는다. 기본은 normalizeAudienceCountry 의 ALL 이다.
+ */
 export function audienceCountryFromLocale(locale?: string | null): string {
   const language = (locale ?? '').trim().toLowerCase().replace('_', '-').split('-')[0]
   if (language === 'mn') return 'MN'

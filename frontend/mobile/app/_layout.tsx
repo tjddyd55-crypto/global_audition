@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { AuthProvider } from '../src/auth/AuthProvider'
 import { LocaleProvider } from '../src/i18n/LocaleProvider'
+import { AudienceCountryProvider } from '../src/domain/AudienceCountryProvider'
 import { OtaUpdatePrompt } from '../src/components/OtaUpdatePrompt'
 import { useOtaWatcher } from '../src/services/updates'
 import { colors } from '../src/theme/tokens'
@@ -30,8 +31,10 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <LocaleProvider>
-            <LocalizedStack />
-            <OtaUpdatePrompt />
+            <AudienceCountryProvider>
+              <LocalizedStack />
+              <OtaUpdatePrompt />
+            </AudienceCountryProvider>
           </LocaleProvider>
         </AuthProvider>
       </QueryClientProvider>

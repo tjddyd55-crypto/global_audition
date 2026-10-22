@@ -254,7 +254,7 @@
     "listDescription": "Apply to auditions from agencies around the world",
     "filterRegion": "My region",
     "filterAll": "All",
-    "filterHint": "The Mongolian locale shows Mongolia + Global postings together.",
+    "filterHint": "Every open audition is shown until you choose a country. That choice stays when you change language, and a country also includes global postings.",
     "emptyList": "No auditions yet"
   },
   "auditionDetail": {

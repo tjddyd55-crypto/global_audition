@@ -1,6 +1,6 @@
 import { apiClient } from '../client'
 import type { AuditionDto } from '@/shared/types/audition'
-import { audienceCountryFromLocale } from '@/shared/audition/audience'
+import { openAuditionListParams } from '@/shared/audition/audienceSelection'
 import { parseAuditionDto } from './parsers'
 
 export const listOpenAuditions = async (
@@ -8,11 +8,7 @@ export const listOpenAuditions = async (
   country?: string,
 ): Promise<AuditionDto[]> => {
   const { data } = await apiClient.get<Record<string, unknown>[]>('/auditions', {
-    params: {
-      status: 'OPEN',
-      locale,
-      country: country ?? audienceCountryFromLocale(locale),
-    },
+    params: openAuditionListParams(locale, country),
   })
   return (data ?? []).map((row) => parseAuditionDto(row))
 }

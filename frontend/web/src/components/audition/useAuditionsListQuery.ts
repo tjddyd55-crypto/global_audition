@@ -3,15 +3,14 @@
 import { useQuery } from '@tanstack/react-query'
 import { useLocale } from 'next-intl'
 import { auditionApi } from '@/shared/api/auditions'
-import { audienceCountryFromLocale } from '@/shared/audition/audience'
+import { normalizeAudienceCountry } from '@/shared/audition/audienceSelection'
 
-export type AudienceScope = 'region' | 'all'
-
-export function useAuditionsListQuery(scope: AudienceScope = 'region') {
+export function useAuditionsListQuery(country: string) {
   const locale = useLocale()
-  const country = scope === 'all' ? 'ALL' : audienceCountryFromLocale(locale)
+  const scope = normalizeAudienceCountry(country)
   return useQuery({
-    queryKey: ['auditions', locale, country],
-    queryFn: () => auditionApi.listOpen(locale, country),
+    queryKey: ['auditions', locale, scope],
+    queryFn: () => auditionApi.listOpen(locale, scope),
+    retry: 1,
   })
 }
