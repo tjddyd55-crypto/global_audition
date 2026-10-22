@@ -1,7 +1,7 @@
 {
   "supported": ["ko", "en", "mn", "ja", "zh", "es", "fr", "de"],
   "primary": ["ko", "en", "mn"],
-  "defaultLocale": "ko",
+  "defaultLocale": "en",
   "deviceFallback": "en",
   "settlementCurrency": "USD"
 }

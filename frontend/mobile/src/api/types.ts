@@ -82,6 +82,7 @@ export type AuditionDto = {
   recruitmentRoundLabel?: string
   canApply?: boolean
   applyBlockedMessage?: string
+  applyBlockedCode?: string
 }
 
 export type MyApplicationListItem = {

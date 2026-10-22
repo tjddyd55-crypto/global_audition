@@ -1,30 +1,25 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
-import { audienceCountryFromLocale } from '@/shared/audition/audience'
-
-type AudienceScope = 'region' | 'all'
+import { AUDIENCE_FILTER_OPTIONS, type AudienceFilterOption } from '@/shared/audition/audienceSelection'
 
 type Props = {
-  locale: string
-  scope: AudienceScope
-  onChange: (scope: AudienceScope) => void
+  country: AudienceFilterOption
+  onChange: (country: AudienceFilterOption) => void
 }
 
-export function AuditionAudienceFilter({ locale, scope, onChange }: Props) {
+export function AuditionAudienceFilter({ country, onChange }: Props) {
   const t = useTranslations('auditions')
   const tCountry = useTranslations('country')
-  const region = audienceCountryFromLocale(locale)
 
   return (
     <div className="mb-4 min-w-0">
       <div className="flex flex-wrap gap-2">
-        <FilterChip active={scope === 'region'} onClick={() => onChange('region')}>
-          {t('filterRegion')} · {tCountry(region as 'MN')}
-        </FilterChip>
-        <FilterChip active={scope === 'all'} onClick={() => onChange('all')}>
-          {t('filterAll')}
-        </FilterChip>
+        {AUDIENCE_FILTER_OPTIONS.map((option) => (
+          <FilterChip key={option} active={country === option} onClick={() => onChange(option)}>
+            {option === 'ALL' ? t('filterAll') : tCountry(option)}
+          </FilterChip>
+        ))}
       </div>
       <p className="mt-2 max-w-xl whitespace-normal break-words text-sm text-neutral-500">{t('filterHint')}</p>
     </div>

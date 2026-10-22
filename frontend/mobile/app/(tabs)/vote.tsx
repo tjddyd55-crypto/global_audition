@@ -8,15 +8,16 @@ import { EmptyState, ErrorState } from '../../src/ui/EmptyState'
 import { Screen } from '../../src/ui/Screen'
 import { colors } from '../../src/theme/tokens'
 import { useTranslation } from 'react-i18next'
-import { audienceCountryFromLocale } from '../../src/domain/audience'
+import { useAudienceCountry } from '../../src/domain/AudienceCountryProvider'
 import { getRuntimeLocale } from '../../src/i18n/runtime'
 
 export default function VoteHubScreen() {
   const { t } = useTranslation()
   const router = useRouter()
-  const country = audienceCountryFromLocale(getRuntimeLocale())
+  const locale = getRuntimeLocale()
+  const { country } = useAudienceCountry()
   const query = useQuery({
-    queryKey: queryKeys.auditionsOpen(country),
+    queryKey: queryKeys.auditionsOpen(country, locale),
     queryFn: () => auditionApi.listOpen(country),
   })
 

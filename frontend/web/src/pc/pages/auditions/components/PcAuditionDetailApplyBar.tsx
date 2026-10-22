@@ -3,6 +3,7 @@
 import { Link } from '@/i18n.config'
 import { MultiRoundSubmitCta } from '@/components/application/MultiRoundSubmitCta'
 import { useTranslations } from 'next-intl'
+import { applyBlockedDisplayMessage } from '@/shared/audition/applyBlockedCopy'
 
 type PcAuditionDetailApplyBarProps = {
   auditionId: string
@@ -13,7 +14,7 @@ type PcAuditionDetailApplyBarProps = {
   showApplyDisabledCta: boolean
   applyNavDisabledCombined: boolean
   applyNavBlockedBySeries: boolean
-  applyBlockedMessage?: string | null
+  applyBlockedCode?: string | null
   applyPolicyLoading: boolean
   balanceLoading: boolean
   isMultiRoundAudition: boolean
@@ -49,7 +50,7 @@ export default function PcAuditionDetailApplyBar({
   showApplyDisabledCta,
   applyNavDisabledCombined,
   applyNavBlockedBySeries,
-  applyBlockedMessage,
+  applyBlockedCode,
   applyPolicyLoading,
   balanceLoading,
   isMultiRoundAudition,
@@ -65,7 +66,11 @@ export default function PcAuditionDetailApplyBar({
 }: PcAuditionDetailApplyBarProps) {
   const tDetail = useTranslations('auditionDetail')
   const tApply = useTranslations('apply')
-  const blockedFallback = applyBlockedMessage ?? tApply('prevRoundBlocked')
+  const blockedFallback = applyBlockedDisplayMessage(
+    applyBlockedCode,
+    tApply('prevRoundBlocked'),
+    tApply('failed'),
+  )
   return (
     <div
       id="audition-detail-apply"

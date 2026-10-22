@@ -7,6 +7,7 @@ import { queryKeys } from '../../../src/api/queryKeys'
 import { RequireAuth } from '../../../src/auth/RequireAuth'
 import { useAuth } from '../../../src/auth/AuthProvider'
 import { ApiError } from '../../../src/api/http'
+import { mapApiError } from '../../../src/api/errorMessage'
 import { parseInsufficientCredits } from '../../../src/api/parsers'
 import { calculateAge } from '../../../src/domain/age'
 import { ALLOWED_NATIONALITIES, ALLOWED_SNS_PLATFORMS, nationalityLabel, snsPlatformLabel } from '../../../src/domain/statusLabels'
@@ -97,8 +98,12 @@ export default function ApplyScreen() {
               shortfall: short.shortfallCredits,
             }),
           )
+        } else if (err.status === 403) {
+          setError(t('uploader.forbidden'))
+        } else if (err.status === 409) {
+          setError(t('apply.alreadyDone'))
         } else {
-          setError(err.message)
+          setError(mapApiError(err.body, t('apply.failed')))
         }
       } else {
         setError(t('apply.failed'))

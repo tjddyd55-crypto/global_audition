@@ -7,6 +7,8 @@ import EmptyState from '../ui/EmptyState'
 import { LAYOUT } from '@/shared/design-tokens'
 import { useTranslations } from 'next-intl'
 import type { AuditionDto } from '@/shared/types/audition'
+import { AuditionAudienceFilter } from '@/components/audition/AuditionAudienceFilter'
+import type { AudienceFilterOption } from '@/shared/audition/audienceSelection'
 
 const containerStyle: React.CSSProperties = {
   maxWidth: LAYOUT.containerMaxWidth,
@@ -22,9 +24,16 @@ const sectionStyle: React.CSSProperties = {
 type HomeAuditionSectionProps = {
   auditions: AuditionDto[]
   isLoading: boolean
+  country: AudienceFilterOption
+  onCountryChange: (country: AudienceFilterOption) => void
 }
 
-export default function HomeAuditionSection({ auditions, isLoading }: HomeAuditionSectionProps) {
+export default function HomeAuditionSection({
+  auditions,
+  isLoading,
+  country,
+  onCountryChange,
+}: HomeAuditionSectionProps) {
   const t = useTranslations('home')
   const tAud = useTranslations('auditions')
   const displayAuditions = auditions.slice(0, 3)
@@ -37,6 +46,7 @@ export default function HomeAuditionSection({ auditions, isLoading }: HomeAuditi
           <h2 style={{ fontSize: 24, fontWeight: 700, margin: '0 0 8px 0' }}>{t('openAuditions')}</h2>
           <p style={{ fontSize: 14, color: '#666', margin: 0 }}>{tAud('description')}</p>
         </div>
+        <AuditionAudienceFilter country={country} onChange={onCountryChange} />
       </div>
 
       {isLoading ? (

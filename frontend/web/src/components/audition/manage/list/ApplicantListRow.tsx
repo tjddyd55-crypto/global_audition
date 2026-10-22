@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { format } from 'date-fns'
-import { ko } from 'date-fns/locale'
+import { dateFnsLocale } from '@/shared/datetime/dateFnsLocale'
 import type { ManageApplicantItem } from '@/shared/api/auditions'
 import { BTN_SECONDARY } from '@/shared/ui/specClasses'
 import { resolveVideoThumbnailUrl } from '@/shared/audition/videoThumbnail'
@@ -17,10 +17,10 @@ function formatCount(n: number, locale: string) {
   return new Intl.NumberFormat(locale).format(n)
 }
 
-function formatAppliedDate(createdAt?: string | null) {
+function formatAppliedDate(createdAt: string | null | undefined, locale: string) {
   if (!createdAt) return '—'
   try {
-    return format(new Date(createdAt), 'yyyy.MM.dd', { locale: ko })
+    return format(new Date(createdAt), 'yyyy.MM.dd', { locale: dateFnsLocale(locale) })
   } catch {
     return '—'
   }
@@ -39,7 +39,7 @@ export default function ApplicantListRow({ app, onOpen }: ApplicantListRowProps)
   const tNat = useTranslations('nationality')
   const tVote = useTranslations('vote')
   const listThumb = resolveVideoThumbnailUrl(app.videoUrl, app.thumbnailUrl)
-  const applied = formatAppliedDate(app.createdAt)
+  const applied = formatAppliedDate(app.createdAt, locale)
 
   return (
     <button

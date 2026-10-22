@@ -5,6 +5,7 @@ import { Link } from '@/i18n.config'
 import { AUDITION_DETAIL, HERO } from '@/shared/design-tokens'
 import { safeStr } from '@/shared/utils/safe'
 import { AUDITION_COVER_PLACEHOLDER_SRC } from '@/components/audition/AuditionEditorPreview'
+import { heroContrast } from '@/components/audition/heroContrast'
 import { useTranslations } from 'next-intl'
 
 type AuditionDetailHeroSectionProps = {
@@ -80,6 +81,8 @@ export function AuditionDetailHeroSection({
   ).trim()
 
   const hasCover = cover.length > 0
+  const showingPhoto = hasCover && !imgFailed
+  const contrast = heroContrast(showingPhoto)
   const displaySrc = hasCover && !imgFailed ? cover : hasCover ? AUDITION_COVER_PLACEHOLDER_SRC : ''
   const openOriginalHref =
     hasCover && !imgFailed ? (fullSize || cover).trim() : ''
@@ -122,7 +125,7 @@ export function AuditionDetailHeroSection({
                 background: `linear-gradient(135deg, ${HERO.gradientStart}, ${HERO.gradientEnd})`,
               }}
             >
-              <span className="text-sm font-medium text-white/90">{t('noCover')}</span>
+              <span className={contrast.emptyLabel}>{t('noCover')}</span>
             </div>
           )}
         </div>
@@ -133,33 +136,25 @@ export function AuditionDetailHeroSection({
           {pillLabel}
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0 z-[1] bg-gradient-to-t from-black/70 via-black/40 to-transparent p-4 pt-20 text-white">
-          <h1
-            className="mb-1 text-balance text-xl font-bold leading-snug md:text-2xl"
-            style={{ fontWeight: AUDITION_DETAIL.heroTitleWeight }}
-          >
+        <div className={contrast.overlay}>
+          <h1 className={contrast.title} style={{ fontWeight: AUDITION_DETAIL.heroTitleWeight }}>
             {safeTitle}
           </h1>
           {subtitle != null && String(subtitle).trim().length > 0 ? (
-            <p className="mt-1 text-sm text-white/70">{String(subtitle).trim()}</p>
+            <p className={contrast.subtitle}>{String(subtitle).trim()}</p>
           ) : null}
           {tags.length > 0 ? (
             <div className="mb-2 flex flex-wrap gap-1.5" aria-label={t('tagsAria')}>
               {tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="rounded-full border border-white/35 bg-white/10 px-2 py-0.5 text-[11px] font-medium text-white"
-                >
+                <span key={tag} className={contrast.tag}>
                   #{tag}
                 </span>
               ))}
             </div>
           ) : null}
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            {deadlineUrgent ? (
-              <span className="text-sm font-semibold text-red-500">🔥 {t('deadlineUrgent')}</span>
-            ) : null}
-            <p className="m-0 text-sm text-white/80">
+            {deadlineUrgent ? <span className={contrast.urgent}>🔥 {t('deadlineUrgent')}</span> : null}
+            <p className={contrast.deadline}>
               {t('deadlineLine', { date: endDateFormatted, location: safeStr(location) })}
             </p>
           </div>
@@ -167,14 +162,14 @@ export function AuditionDetailHeroSection({
             <button
               type="button"
               onClick={onShare}
-              className="inline-flex items-center border border-white/40 bg-white/10 px-4 py-2 text-xs font-semibold text-white md:text-sm"
+              className={contrast.action}
               style={{ borderRadius: HERO.buttonRadiusPx }}
             >
               {shareHint === 'ok' ? t('copied') : shareHint === 'err' ? t('shareFailed') : t('share')}
             </button>
             <Link
               href={`/auditions/${auditionId}/vote`}
-              className="inline-flex items-center border border-white/40 px-4 py-2 text-xs font-semibold text-white no-underline md:text-sm"
+              className={contrast.link}
               style={{ borderRadius: HERO.buttonRadiusPx }}
             >
               {t('vote')}

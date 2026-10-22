@@ -10,8 +10,9 @@ import { useAuthStore } from '@/shared/auth/authStore'
 import { getDisplayNickname } from '@/shared/user/getDisplayNickname'
 import { BTN_PRIMARY, DROPDOWN_ITEM } from '@/shared/ui/specClasses'
 import { DeviceToggle } from '@/shared/device/DeviceToggle'
+import { localeSwitchTarget, UI_LOCALES } from '@/shared/i18n/uiLocales'
 
-const locales = ['ko', 'en', 'mn', 'ja', 'zh', 'es', 'fr', 'de'] as const
+const locales = UI_LOCALES
 
 export default function MainHeader() {
   const t = useTranslations('common')
@@ -53,10 +54,10 @@ export default function MainHeader() {
   })
 
   const changeLocale = (nextLocale: string) => {
-    const segments = pathname.split('/')
-    if (segments[1] && locales.includes(segments[1] as (typeof locales)[number])) segments[1] = nextLocale
-    else segments.splice(1, 0, nextLocale)
-    router.push(segments.join('/'))
+    const target = localeSwitchTarget(pathname, nextLocale)
+    if (target.locale !== locale) {
+      router.push(target.href, { locale: target.locale })
+    }
     setIsLanguageOpen(false)
     setIsMobileOpen(false)
   }

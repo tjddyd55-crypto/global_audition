@@ -1,5 +1,6 @@
 ﻿import axios, { InternalAxiosRequestConfig } from 'axios'
 import { useAuthStore } from '@/shared/auth/authStore'
+import { isUiLocale } from '@/shared/i18n/uiLocales'
 import { getStoredAccessToken } from './authToken'
 
 /** 동일 Origin: `/api/*` → Next.js rewrite → 백엔드 */
@@ -52,7 +53,7 @@ apiClient.interceptors.request.use(
     }
     if (typeof window !== 'undefined') {
       const seg = window.location.pathname.split('/')[1]
-      if (seg && ['ko', 'en', 'mn', 'ja', 'zh', 'es', 'fr', 'de'].includes(seg)) {
+      if (seg && isUiLocale(seg)) {
         config.headers['X-Content-Locale'] = seg
       }
     }

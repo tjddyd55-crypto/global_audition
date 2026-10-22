@@ -43,7 +43,7 @@ const nextConfig = {
   
   // 환경 변수 설정 (클라이언트 사이드에서 접근 가능)
   env: {
-    NEXT_PUBLIC_LOCALE: process.env.NEXT_PUBLIC_LOCALE || 'ko',
+    NEXT_PUBLIC_LOCALE: process.env.NEXT_PUBLIC_LOCALE || 'en',
     _next_intl_trailing_slash: 'never',
   },
   

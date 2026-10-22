@@ -11,16 +11,18 @@ import { EmptyState, ErrorState } from '../../src/ui/EmptyState'
 import { Screen } from '../../src/ui/Screen'
 import { colors, radius } from '../../src/theme/tokens'
 import { useTranslation } from 'react-i18next'
-import { audienceCountryFromLocale } from '../../src/domain/audience'
+import { AudienceFilter } from '../../src/ui/AudienceFilter'
+import { useAudienceCountry } from '../../src/domain/AudienceCountryProvider'
 import { getRuntimeLocale } from '../../src/i18n/runtime'
 
 export default function HomeScreen() {
   const { t } = useTranslation()
   const router = useRouter()
   const { isAuthenticated, session } = useAuth()
-  const country = audienceCountryFromLocale(getRuntimeLocale())
+  const locale = getRuntimeLocale()
+  const { country } = useAudienceCountry()
   const auditionsQuery = useQuery({
-    queryKey: queryKeys.auditionsOpen(country),
+    queryKey: queryKeys.auditionsOpen(country, locale),
     queryFn: () => auditionApi.listOpen(country),
   })
   const dashQuery = useQuery({
@@ -48,6 +50,7 @@ export default function HomeScreen() {
       ) : null}
 
       <Text style={styles.section}>{t('home.openAuditions')}</Text>
+      <AudienceFilter />
       {auditionsQuery.isError ? (
         <ErrorState message={t('home.loadFailed')} onRetry={() => void auditionsQuery.refetch()} />
       ) : null}

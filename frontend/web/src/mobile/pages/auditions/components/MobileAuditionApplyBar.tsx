@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import type { AuditionDto } from '@/shared/types/audition'
+import { applyBlockedDisplayMessage } from '@/shared/audition/applyBlockedCopy'
 
 type MobileAuditionApplyBarProps = {
   audition: AuditionDto
@@ -35,7 +36,11 @@ export default function MobileAuditionApplyBar({
           type="button"
           disabled
           className="w-full rounded-lg bg-black py-4 text-lg font-semibold text-white opacity-60"
-          title={audition.applyBlockedMessage ?? tApply('prevRoundBlocked')}
+          title={applyBlockedDisplayMessage(
+            audition.applyBlockedCode,
+            tApply('prevRoundBlocked'),
+            tApply('failed'),
+          )}
         >
           {tDetail('applyNow')}
         </button>

@@ -2,8 +2,8 @@
 
 import { useParams } from 'next/navigation'
 import { format } from 'date-fns'
-import { ko } from 'date-fns/locale'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
+import { dateFnsLocale } from '@/shared/datetime/dateFnsLocale'
 import { AUDITION_DETAIL } from '@/shared/design-tokens'
 import { getVideoEmbedSrc } from '@/shared/utils/videoEmbed'
 import { safeArr, safeNum, safeStr } from '@/shared/utils/safe'
@@ -31,6 +31,7 @@ export default function PcAuditionDetailPage() {
   const params = useParams()
   const t = useTranslations('common')
   const tDetail = useTranslations('auditionDetail')
+  const locale = useLocale()
   const id = params.id as string
 
   const {
@@ -126,7 +127,7 @@ export default function PcAuditionDetailPage() {
 
   const fmt = (iso: string) => {
     try {
-      return format(new Date(iso), 'yyyy.MM.dd', { locale: ko })
+      return format(new Date(iso), 'yyyy.MM.dd', { locale: dateFnsLocale(locale) })
     } catch {
       return '-'
     }
@@ -205,7 +206,7 @@ export default function PcAuditionDetailPage() {
         showApplyDisabledCta={showApplyDisabledCta}
         applyNavDisabledCombined={applyNavDisabledCombined}
         applyNavBlockedBySeries={applyNavBlockedBySeries}
-        applyBlockedMessage={audition.applyBlockedMessage}
+        applyBlockedCode={audition.applyBlockedCode}
         applyPolicyLoading={applyPolicyLoading}
         balanceLoading={balanceLoading}
         isMultiRoundAudition={isMultiRoundAudition}
