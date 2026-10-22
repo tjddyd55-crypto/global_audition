@@ -2,7 +2,6 @@ package com.audition.platform.application.org;
 
 import com.audition.platform.application.org.JdbcContractStore.ContractRow;
 import com.audition.platform.application.org.JdbcContractStore.VersionRow;
-import com.audition.platform.application.org.JdbcSettlementStore.AttributionInsert;
 import com.audition.platform.application.org.JdbcSettlementStore.SettlementRow;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -10,11 +9,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -28,16 +29,19 @@ public class SettlementService {
     private static final Set<String> FROZEN = Set.of("UNDER_REVIEW", "APPROVED", "PAID", "ADJUSTMENT_REQUIRED");
 
     private final JdbcSettlementStore store;
+    private final JdbcCreditLotStore lots;
     private final JdbcContractStore contracts;
     private final JdbcOrgStore org;
     private final OrgAccess access;
 
     public SettlementService(
             JdbcSettlementStore store,
+            JdbcCreditLotStore lots,
             JdbcContractStore contracts,
             JdbcOrgStore org,
             OrgAccess access) {
         this.store = store;
+        this.lots = lots;
         this.contracts = contracts;
         this.org = org;
         this.access = access;
@@ -60,6 +64,7 @@ public class SettlementService {
         if (existing != null && FROZEN.contains(existing.status())) {
             return view(existing);
         }
+        lots.rebuild();
         SettlementRow computed = compute(existing == null ? UUID.randomUUID() : existing.id(), contract, month);
         if (existing == null) {
             try {
@@ -116,6 +121,11 @@ public class SettlementService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "PAYOUT_NOTE_REQUIRED");
         }
         SettlementRow row = require(id);
+        JdbcSettlementStore.FxRow fx = store.findFx(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "FX_NOT_FINALIZED"));
+        if (!"FX_RECORDED".equals(fx.status()) || fx.actualPaidAmount() == null) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "FX_NOT_FINALIZED");
+        }
         store.recordPayoutNote(id, note.trim());
         if (store.updateStatus(id, "APPROVED", "PAID", actor.id(), "payout") != 1) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "SETTLEMENT_TRANSITION_DENIED");
@@ -146,6 +156,43 @@ public class SettlementService {
         return view(after);
     }
 
+    @Transactional
+    public FxView recordFx(UUID id, FxDraft draft) {
+        OrgAccess.Actor actor = access.requireHq();
+        SettlementRow row = require(id);
+        if (!Set.of("APPROVED", "PAID").contains(row.status()) || row.compensationFigure() == null) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "USD_SETTLEMENT_NOT_FINAL");
+        }
+        if (draft.payoutCurrency() == null || !draft.payoutCurrency().equals(row.payoutCurrency())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "PAYOUT_CURRENCY_MISMATCH");
+        }
+        boolean complete = draft.fxRate() != null && draft.fxRate().signum() > 0
+                && draft.rateDate() != null
+                && draft.rateSource() != null && !draft.rateSource().isBlank()
+                && draft.remittanceFee() != null
+                && draft.actualPaidAmount() != null
+                && draft.paidDate() != null;
+        if ("USD".equals(draft.payoutCurrency()) && complete && draft.fxRate().compareTo(BigDecimal.ONE) != 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "USD_RATE_MUST_BE_ONE");
+        }
+        JdbcSettlementStore.FxRow existing = store.findFx(id).orElse(null);
+        JdbcSettlementStore.FxRow saved = new JdbcSettlementStore.FxRow(
+                existing == null ? UUID.randomUUID() : existing.id(),
+                id,
+                draft.payoutCurrency(),
+                draft.fxRate(),
+                draft.rateDate(),
+                draft.rateSource() == null ? null : draft.rateSource().trim(),
+                draft.remittanceFee(),
+                complete ? draft.actualPaidAmount() : null,
+                draft.paidDate(),
+                actor.id(),
+                complete ? "FX_RECORDED" : "FX_INCOMPLETE");
+        store.upsertFx(saved);
+        org.audit(UUID.randomUUID(), "PAYOUT_FX_RECORDED", actor.id(), row.countryCode(), "SETTLEMENT", id.toString(), saved.status());
+        return fxView(store.findFx(id).orElseThrow());
+    }
+
     public List<SettlementView> list(String country, String period, String status) {
         if (country == null || country.isBlank()) {
             access.requireHq();
@@ -173,41 +220,90 @@ public class SettlementService {
                         row.start(), row.end()), periodEnd))
                 .max(java.util.Comparator.comparingInt(VersionRow::versionNo))
                 .orElse(null);
-        Instant from = month.atDay(1).atStartOfDay().toInstant(ZoneOffset.UTC);
-        Instant to = month.plusMonths(1).atDay(1).atStartOfDay().toInstant(ZoneOffset.UTC);
-        List<AttributionInsert> rows = store.attributionsForContract(contract.id(), from, to);
-        boolean sales = rows.stream().anyMatch(row -> AttributionPlanner.SALES.equals(row.recognition()));
-        List<AttributionInsert> cash = rows.stream()
-                .filter(row -> AttributionPlanner.ACCOUNTING.equals(row.recognition()))
-                .filter(row -> AttributionPlanner.ATTRIBUTED.equals(row.confirmationState()))
-                .toList();
         if (version == null) {
             return draft(id, contract, month, null, "NO_CONTRACT_VERSION");
         }
-        boolean mixed = cash.stream().anyMatch(row -> !version.id().equals(row.contractVersionId()));
+        Instant from = month.atDay(1).atStartOfDay().toInstant(ZoneOffset.UTC);
+        Instant to = month.plusMonths(1).atDay(1).atStartOfDay().toInstant(ZoneOffset.UTC);
+        List<JdbcCreditLotStore.UsageRow> usages = lots.usages(contract.id(), from, to);
+        boolean mixed = usages.stream().anyMatch(row -> row.versionId() != null && !version.id().equals(row.versionId()));
         if (mixed) {
             return draft(id, contract, month, version, "MIXED_CONTRACT_VERSIONS");
         }
-        if (sales && cash.isEmpty()) {
-            return draft(id, contract, month, version, "CASH_MAPPING_UNDECIDED");
+        SettlementMath.Terms terms = new SettlementMath.Terms(
+                version.rateBps(), version.basis(), version.roundingPolicy(),
+                version.refundDeductionBasis(), version.paymentFeeDeductionBasis(), version.paymentFeeUsd(),
+                version.extraDeductionBasis(), version.extraDeductionUsd());
+        SettlementMath.Result missing = SettlementMath.compute(terms, BigDecimal.ZERO, BigDecimal.ZERO);
+        if (!SettlementMath.CALCULATED.equals(missing.status()) && !"NEGATIVE_BASE".equals(missing.note())) {
+            return draft(id, contract, month, version, missing.note());
         }
-        long target = cash.stream().filter(row -> "REVENUE".equals(row.lineKind())).mapToLong(row -> row.collectedUsd() == null ? 0 : row.collectedUsd()).sum();
-        long refunds = cash.stream().filter(row -> "REFUND".equals(row.lineKind())).mapToLong(row -> row.collectedUsd() == null ? 0 : row.collectedUsd()).sum();
-        SettlementMath.Result math = SettlementMath.compute(
-                target, refunds, version.paymentFeeUsd(), version.extraDeductionUsd(),
-                version.rateBps(), version.basis(), version.roundingPolicy());
-        String note = math.note();
-        if (sales) {
-            note = note + ";SALES_EXCLUDED_CASH_MAPPING_UNDECIDED";
+        long pending = usages.stream().filter(row -> CreditAllocation.PENDING.equals(row.allocationStatus())).count();
+        long payable = usages.stream()
+                .filter(row -> CreditAllocation.ALLOCATED.equals(row.allocationStatus()))
+                .mapToLong(row -> row.payableUsd() == null ? 0 : row.payableUsd())
+                .sum();
+        if (pending > 0 && payable == 0) {
+            return held(id, contract, month, version, SettlementMath.ALLOCATION_POLICY_PENDING, "ALLOCATION_POLICY_PENDING");
+        }
+        RefundDecision refunds = SettlementMath.DEDUCTION_NONE.equals(version.refundDeductionBasis())
+                ? new RefundDecision(false, 0)
+                : refunds(contract.id(), from, to);
+        if (refunds.block()) {
+            return held(id, contract, month, version, SettlementMath.REFUND_ALLOCATION_PENDING, "REFUND_ALLOCATION_PENDING");
+        }
+        SettlementMath.Result math = SettlementMath.compute(terms, BigDecimal.valueOf(payable), BigDecimal.valueOf(refunds.deductibleUsd()));
+        if (!SettlementMath.CALCULATED.equals(math.status())) {
+            return draft(id, contract, month, version, math.note());
+        }
+        String note = math.note()
+                + ";PAYABLE_USAGE_NOT_CASH_COLLECTION"
+                + ";EXPERT_REVIEW_REVENUE_RECOGNITION"
+                + ";EXPERT_REVIEW_BREAKAGE";
+        if (pending > 0) {
+            note = note + ";HELD_USAGES_EXCLUDED";
         }
         return new SettlementRow(
                 id, contract.countryCode(), contract.id(), month.toString(), math.status(),
-                math.baseUsd() == null ? null : target,
-                math.baseUsd() == null ? null : refunds,
-                math.baseUsd() == null ? null : version.paymentFeeUsd(),
-                math.baseUsd() == null ? null : version.extraDeductionUsd(),
-                math.baseUsd(), math.compensationUsd(), math.hqShareUsd(),
-                version.rateBps(), version.basis(), version.roundingPolicy(), note, null);
+                payable,
+                refunds.deductibleUsd(),
+                version.paymentFeeUsd(),
+                version.extraDeductionUsd(),
+                SettlementMath.wholeDollars(math.base().settled()),
+                SettlementMath.wholeDollars(math.compensation().settled()),
+                SettlementMath.wholeDollars(math.hq().settled()),
+                version.rateBps(), version.basis(), version.roundingPolicy(), note, null,
+                version.currency(), math.base(), math.compensation(), math.hq());
+    }
+
+    private RefundDecision refunds(UUID contractId, Instant from, Instant to) {
+        long deductible = 0;
+        boolean block = false;
+        for (JdbcCreditLotStore.RefundLink refund : lots.refunds(from, to)) {
+            List<JdbcCreditLotStore.PaidUse> uses = lots.paidUses(refund.paymentOrderId());
+            boolean touches = uses.stream().anyMatch(use -> contractId.equals(use.contractId()));
+            if (!touches) {
+                continue;
+            }
+            long remaining = lots.paidRemaining(refund.paymentOrderId());
+            Set<UUID> contracts = new HashSet<>();
+            boolean unresolved = remaining > 0;
+            for (JdbcCreditLotStore.PaidUse use : uses) {
+                if (use.contractId() == null || CreditAllocation.PENDING.equals(use.status())) {
+                    unresolved = true;
+                }
+                if (use.contractId() != null) {
+                    contracts.add(use.contractId());
+                }
+            }
+            if (unresolved || contracts.size() != 1) {
+                block = true;
+                continue;
+            }
+            long payable = uses.stream().mapToLong(use -> use.payableUsd() == null ? 0 : use.payableUsd()).sum();
+            deductible += Math.min(refund.amountUsd(), payable);
+        }
+        return new RefundDecision(block, deductible);
     }
 
     private List<UUID> lineIds(SettlementRow row, UUID contractId, YearMonth month) {
@@ -217,23 +313,28 @@ public class SettlementService {
         Instant from = month.atDay(1).atStartOfDay().toInstant(ZoneOffset.UTC);
         Instant to = month.plusMonths(1).atDay(1).atStartOfDay().toInstant(ZoneOffset.UTC);
         List<UUID> ids = new ArrayList<>();
-        for (AttributionInsert attribution : store.attributionsForContract(contractId, from, to)) {
-            if (AttributionPlanner.ACCOUNTING.equals(attribution.recognition())
-                    && AttributionPlanner.ATTRIBUTED.equals(attribution.confirmationState())) {
-                ids.add(attribution.id());
+        for (JdbcCreditLotStore.UsageRow usage : lots.usages(contractId, from, to)) {
+            if (CreditAllocation.ALLOCATED.equals(usage.allocationStatus()) && usage.payableUsd() != null && usage.payableUsd() > 0) {
+                ids.add(usage.attributionId());
             }
         }
         return ids;
     }
 
     private static SettlementRow draft(UUID id, ContractRow contract, YearMonth month, VersionRow version, String note) {
+        return held(id, contract, month, version, SettlementMath.NEEDS_CONFIRMATION, note);
+    }
+
+    private static SettlementRow held(UUID id, ContractRow contract, YearMonth month, VersionRow version, String status, String note) {
         return new SettlementRow(
-                id, contract.countryCode(), contract.id(), month.toString(), SettlementMath.NEEDS_CONFIRMATION,
+                id, contract.countryCode(), contract.id(), month.toString(), status,
                 null, null, null, null, null, null, null,
                 version == null ? null : version.rateBps(),
                 version == null ? null : version.basis(),
                 version == null ? null : version.roundingPolicy(),
-                note, null);
+                note, null,
+                version == null ? null : version.currency(),
+                null, null, null);
     }
 
     private SettlementRow require(UUID id) {
@@ -246,14 +347,43 @@ public class SettlementService {
                 row.id(), row.countryCode(), row.contractId(), row.periodKey(), row.status(),
                 row.targetRevenueUsd(), row.refundsUsd(), row.paymentFeesUsd(), row.extraDeductionsUsd(),
                 row.settlementBaseUsd(), row.compensationUsd(), row.hqShareUsd(),
-                row.rateBps(), row.settlementBasis(), row.roundingPolicy(), row.note(), row.payoutNote());
+                row.rateBps(), row.settlementBasis(), row.roundingPolicy(), row.note(), row.payoutNote(),
+                row.payoutCurrency(),
+                plain(row.baseFigure(), "raw"), plain(row.baseFigure(), "settled"), plain(row.baseFigure(), "diff"),
+                plain(row.compensationFigure(), "raw"), plain(row.compensationFigure(), "settled"), plain(row.compensationFigure(), "diff"),
+                plain(row.hqFigure(), "raw"), plain(row.hqFigure(), "settled"), plain(row.hqFigure(), "diff"));
+    }
+
+    private static FxView fxView(JdbcSettlementStore.FxRow row) {
+        return new FxView(
+                row.id(), row.settlementId(), row.payoutCurrency(),
+                row.fxRate() == null ? null : row.fxRate().toPlainString(),
+                row.rateDate() == null ? null : row.rateDate().toString(),
+                row.rateSource(),
+                row.remittanceFee() == null ? null : row.remittanceFee().toPlainString(),
+                row.actualPaidAmount() == null ? null : row.actualPaidAmount().toPlainString(),
+                row.paidDate() == null ? null : row.paidDate().toString(),
+                row.status());
+    }
+
+    private static String plain(SettlementMath.Figure figure, String part) {
+        if (figure == null) {
+            return null;
+        }
+        BigDecimal value = switch (part) {
+            case "raw" -> figure.raw();
+            case "diff" -> figure.difference();
+            default -> figure.settled();
+        };
+        return value == null ? null : value.toPlainString();
     }
 
     private static boolean sameMoney(SettlementRow left, SettlementRow right) {
         return eq(left.settlementBaseUsd(), right.settlementBaseUsd())
                 && eq(left.compensationUsd(), right.compensationUsd())
                 && eq(left.hqShareUsd(), right.hqShareUsd())
-                && eq(left.targetRevenueUsd(), right.targetRevenueUsd());
+                && eq(left.targetRevenueUsd(), right.targetRevenueUsd())
+                && java.util.Objects.equals(plain(left.compensationFigure(), "settled"), plain(right.compensationFigure(), "settled"));
     }
 
     private static boolean eq(Long left, Long right) {
@@ -289,6 +419,42 @@ public class SettlementService {
             String settlementBasis,
             String roundingPolicy,
             String note,
-            String payoutNote) {
+            String payoutNote,
+            String payoutCurrency,
+            String settlementBaseRaw,
+            String settlementBaseFinal,
+            String settlementBaseDiff,
+            String compensationRaw,
+            String compensationFinal,
+            String compensationDiff,
+            String hqShareRaw,
+            String hqShareFinal,
+            String hqShareDiff) {
+    }
+
+    public record FxDraft(
+            String payoutCurrency,
+            BigDecimal fxRate,
+            LocalDate rateDate,
+            String rateSource,
+            BigDecimal remittanceFee,
+            BigDecimal actualPaidAmount,
+            LocalDate paidDate) {
+    }
+
+    public record FxView(
+            UUID id,
+            UUID settlementId,
+            String payoutCurrency,
+            String fxRate,
+            String rateDate,
+            String rateSource,
+            String remittanceFee,
+            String actualPaidAmount,
+            String paidDate,
+            String status) {
+    }
+
+    private record RefundDecision(boolean block, long deductibleUsd) {
     }
 }

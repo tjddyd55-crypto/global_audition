@@ -3,28 +3,36 @@ package com.audition.platform.application.org;
 import com.audition.platform.application.org.JdbcContractStore.ContractRow;
 import com.audition.platform.application.org.JdbcContractStore.DocumentRow;
 import com.audition.platform.application.org.JdbcContractStore.VersionRow;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.security.MessageDigest;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.UUID;
 
 @Service
 public class ContractService {
 
+    private static final Logger log = LoggerFactory.getLogger(ContractService.class);
     private static final int MAX_DOCUMENT_BYTES = 5_000_000;
 
     private final JdbcContractStore contracts;
     private final JdbcOrgStore org;
     private final OrgAccess access;
+    private final ContractObjectStorage storage;
 
-    public ContractService(JdbcContractStore contracts, JdbcOrgStore org, OrgAccess access) {
+    public ContractService(JdbcContractStore contracts, JdbcOrgStore org, OrgAccess access, ContractObjectStorage storage) {
         this.contracts = contracts;
         this.org = org;
         this.access = access;
+        this.storage = storage;
     }
 
     @Transactional
@@ -100,15 +108,64 @@ public class ContractService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "DOCUMENT_SIZE_INVALID");
         }
         VersionRow latest = latest(contractId);
-        contracts.insertDocument(
-                UUID.randomUUID(), contractId, latest.id(),
-                filename == null || filename.isBlank() ? "contract" : filename,
-                contentType == null || contentType.isBlank() ? "application/octet-stream" : contentType,
-                body, actor.id());
+        String safeName = filename == null || filename.isBlank() ? "contract" : filename;
+        String mime = contentType == null || contentType.isBlank() ? "application/octet-stream" : contentType;
+        UUID documentId = UUID.randomUUID();
+        contracts.insertDocument(documentId, contractId, latest.id(), safeName, mime, body, actor.id());
+        if (storage.ready()) {
+            try {
+                storeObject(contractId, latest.id(), documentId, safeName, mime, body, actor.id());
+            } catch (RuntimeException ex) {
+                log.warn("contract object storage unavailable; bytea retained: {}", ex.toString());
+            }
+        }
         org.audit(UUID.randomUUID(), "CONTRACT_DOCUMENT_ATTACHED", actor.id(), current.countryCode(), "CONTRACT", contractId.toString(), null);
     }
 
+    @Transactional
+    public MigrateResult migrateLegacyFiles() {
+        access.requireHq();
+        if (!storage.ready()) {
+            return new MigrateResult(0, contracts.countDocuments(), "BLOCKED_STORAGE_UNAVAILABLE");
+        }
+        int migrated = 0;
+        int failed = 0;
+        for (JdbcContractStore.LegacyDocument document : contracts.unmigratedDocuments()) {
+            try {
+                storeObject(
+                        document.contractId(), document.versionId(), document.id(),
+                        document.filename(), document.contentType(), document.body(), document.createdBy());
+                migrated++;
+            } catch (RuntimeException ex) {
+                failed++;
+                log.warn("contract file migration blocked; bytea retained: {}", ex.toString());
+            }
+        }
+        if (migrated == 0) {
+            return new MigrateResult(0, contracts.countDocuments(), "BLOCKED_STORAGE_UNAVAILABLE");
+        }
+        return new MigrateResult(migrated, contracts.countDocuments(), failed == 0 ? "BYTEA_RETAINED" : "PARTIAL_BYTEA_RETAINED");
+    }
+
+    public Presign presign(UUID contractId) {
+        requireReadable(contractId);
+        JdbcContractStore.FileRow file = contracts.latestFile(contractId)
+                .filter(JdbcContractStore.FileRow::integrityVerified)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "STORAGE_UNAVAILABLE"));
+        if (!storage.ready()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "STORAGE_UNAVAILABLE");
+        }
+        String url = storage.presignGet(file.storageKey(), ContractObjectStorage.DOWNLOAD_TTL);
+        return new Presign(file.id(), url, Instant.now().plus(ContractObjectStorage.DOWNLOAD_TTL));
+    }
+
     public DocumentRow download(UUID contractId) {
+        requireReadable(contractId);
+        return contracts.latestDocument(contractId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "DOCUMENT_NOT_FOUND"));
+    }
+
+    private void requireReadable(UUID contractId) {
         ContractRow current = require(contractId);
         if (!"ACTIVE".equals(current.status())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "CONTRACT_ACCESS_REVOKED");
@@ -117,18 +174,40 @@ public class ContractService {
         if (OrgRoles.countryStaff(actor.role()) || OrgRoles.agencyOperator(actor.role())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "CONTRACT_ACCESS_REVOKED");
         }
-        return contracts.latestDocument(contractId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "DOCUMENT_NOT_FOUND"));
+    }
+
+    private void storeObject(
+            UUID contractId, UUID versionId, UUID legacyDocumentId,
+            String filename, String mime, byte[] body, UUID actor) {
+        UUID fileId = UUID.randomUUID();
+        String key = "contracts/" + contractId + "/" + fileId;
+        String hash = sha256(body);
+        storage.put(key, body, mime);
+        byte[] stored = storage.get(key);
+        if (!hash.equals(sha256(stored)) || stored.length != body.length) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "STORAGE_INTEGRITY_FAILED");
+        }
+        contracts.insertFile(new JdbcContractStore.FileRow(
+                fileId, contractId, versionId, legacyDocumentId, key, filename, body.length, mime, hash, actor, true));
+    }
+
+    private static String sha256(byte[] body) {
+        try {
+            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(body));
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "HASH_FAILED");
+        }
     }
 
     private VersionRow version(UUID id, UUID contractId, int versionNo, Draft draft, String currency, UUID approver) {
-        String rounding = draft.roundingPolicy() == null || draft.roundingPolicy().isBlank()
-                ? SettlementMath.ROUNDING_UNDECIDED
-                : draft.roundingPolicy().trim();
+        String rounding = blankToNull(draft.roundingPolicy());
         return new VersionRow(
                 id, contractId, versionNo, draft.startDate(), draft.endDate(),
                 draft.revenueShareBps(), blankToNull(draft.settlementBasis()), rounding, currency,
-                draft.paymentFeeUsd(), draft.extraDeductionUsd(), approver, draft.changeReason());
+                draft.paymentFeeUsd(), draft.extraDeductionUsd(), approver, draft.changeReason(),
+                blankToNull(draft.refundDeductionBasis()),
+                blankToNull(draft.paymentFeeDeductionBasis()),
+                blankToNull(draft.extraDeductionBasis()));
     }
 
     private ContractView view(ContractRow row, boolean redactRates) {
@@ -143,7 +222,11 @@ public class ContractService {
                 redactRates ? null : latest.currency(),
                 redactRates ? null : latest.paymentFeeUsd(),
                 redactRates ? null : latest.extraDeductionUsd(),
-                latest.start(), latest.end(), document);
+                latest.start(), latest.end(), document,
+                redactRates ? null : latest.refundDeductionBasis(),
+                redactRates ? null : latest.paymentFeeDeductionBasis(),
+                redactRates ? null : latest.extraDeductionBasis(),
+                "MONTHLY");
     }
 
     private VersionRow latest(UUID contractId) {
@@ -192,7 +275,10 @@ public class ContractService {
             String payoutCurrency,
             Long paymentFeeUsd,
             Long extraDeductionUsd,
-            String changeReason) {
+            String changeReason,
+            String refundDeductionBasis,
+            String paymentFeeDeductionBasis,
+            String extraDeductionBasis) {
     }
 
     public record ContractView(
@@ -213,6 +299,16 @@ public class ContractService {
             Long extraDeductionUsd,
             LocalDate startDate,
             LocalDate endDate,
-            boolean documentAvailable) {
+            boolean documentAvailable,
+            String refundDeductionBasis,
+            String paymentFeeDeductionBasis,
+            String extraDeductionBasis,
+            String cycle) {
+    }
+
+    public record Presign(UUID fileId, String url, Instant expiresAt) {
+    }
+
+    public record MigrateResult(int migrated, int byteaRetained, String status) {
     }
 }

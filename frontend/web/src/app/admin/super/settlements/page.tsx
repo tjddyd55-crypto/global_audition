@@ -68,9 +68,9 @@ export default function SettlementsPage() {
             <tr key={row.id} className="border-b">
               <td className="py-2">{row.period}</td>
               <td>{row.status}</td>
-              <td>{row.settlementBaseUsd ?? '—'}</td>
-              <td>{row.compensationUsd ?? '미계산'}</td>
-              <td>{row.hqShareUsd ?? '—'}</td>
+              <td>{row.settlementBaseFinal ?? row.settlementBaseUsd ?? '—'}</td>
+              <td>{row.compensationFinal ?? row.compensationUsd ?? '미계산'}</td>
+              <td>{row.hqShareFinal ?? row.hqShareUsd ?? '—'}</td>
               <td>{row.note}</td>
               <td className="space-x-2">
                 <button type="button" className="underline" onClick={() => approve.mutate(row.id)}>

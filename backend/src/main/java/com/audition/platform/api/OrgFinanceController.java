@@ -3,6 +3,7 @@ package com.audition.platform.api;
 import com.audition.platform.application.org.AttributionService;
 import com.audition.platform.application.org.JdbcSettlementStore.AttributionInsert;
 import com.audition.platform.application.org.SettlementService;
+import com.audition.platform.application.org.SettlementService.FxView;
 import com.audition.platform.application.org.SettlementService.SettlementView;
 import com.audition.platform.application.org.StatsService;
 import com.audition.platform.application.org.StatsService.CountryDetail;
@@ -74,6 +75,11 @@ public class OrgFinanceController {
     @PostMapping("/settlements/{id}/approve")
     public SettlementView approve(@PathVariable UUID id) {
         return settlements.approve(id);
+    }
+
+    @PostMapping("/settlements/{id}/fx")
+    public FxView fx(@PathVariable UUID id, @RequestBody SettlementService.FxDraft request) {
+        return settlements.recordFx(id, request);
     }
 
     @PostMapping("/settlements/{id}/payout")

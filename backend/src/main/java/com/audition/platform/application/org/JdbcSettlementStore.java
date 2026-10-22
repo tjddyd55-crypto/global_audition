@@ -65,11 +65,15 @@ public class JdbcSettlementStore {
 
     public Optional<PaidOrder> payment(UUID id) {
         List<PaidOrder> rows = jdbc.query("""
-                SELECT id, amount, currency, status, COALESCE(paid_at, created_at) AS occurred_at
+                SELECT id, user_id, amount, credits, bonus_credits, currency, status,
+                       COALESCE(paid_at, created_at) AS occurred_at
                 FROM payment_orders WHERE id = ?
                 """, (rs, n) -> new PaidOrder(
                 rs.getObject("id", UUID.class),
+                rs.getObject("user_id", UUID.class),
                 rs.getLong("amount"),
+                rs.getLong("credits"),
+                rs.getLong("bonus_credits"),
                 rs.getString("currency"),
                 rs.getString("status"),
                 rs.getTimestamp("occurred_at").toInstant()), id);
@@ -136,13 +140,19 @@ public class JdbcSettlementStore {
                     id, country_code, contract_id, period_key, status,
                     target_revenue_usd, refunds_usd, payment_fees_usd, extra_deductions_usd,
                     settlement_base_usd, compensation_usd, hq_share_usd, rate_bps,
-                    settlement_basis, rounding_policy, note
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    settlement_basis, rounding_policy, note, payout_currency,
+                    settlement_base_raw, settlement_base_final, settlement_base_rounding_diff,
+                    compensation_raw, compensation_final, compensation_rounding_diff,
+                    hq_share_raw, hq_share_final, hq_share_rounding_diff
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 row.id(), row.countryCode(), row.contractId(), row.periodKey(), row.status(),
                 row.targetRevenueUsd(), row.refundsUsd(), row.paymentFeesUsd(), row.extraDeductionsUsd(),
                 row.settlementBaseUsd(), row.compensationUsd(), row.hqShareUsd(), row.rateBps(),
-                row.settlementBasis(), row.roundingPolicy(), row.note());
+                row.settlementBasis(), row.roundingPolicy(), row.note(), row.payoutCurrency(),
+                figureRaw(row.baseFigure()), figureSettled(row.baseFigure()), figureDiff(row.baseFigure()),
+                figureRaw(row.compensationFigure()), figureSettled(row.compensationFigure()), figureDiff(row.compensationFigure()),
+                figureRaw(row.hqFigure()), figureSettled(row.hqFigure()), figureDiff(row.hqFigure()));
     }
 
     public void updateSettlement(SettlementRow row) {
@@ -151,12 +161,22 @@ public class JdbcSettlementStore {
                 SET status = ?, target_revenue_usd = ?, refunds_usd = ?, payment_fees_usd = ?,
                     extra_deductions_usd = ?, settlement_base_usd = ?, compensation_usd = ?,
                     hq_share_usd = ?, rate_bps = ?, settlement_basis = ?, rounding_policy = ?,
-                    note = ?, updated_at = NOW()
-                WHERE id = ? AND status IN ('DRAFT', 'CALCULATED', 'NEEDS_CONFIRMATION')
+                    note = ?, payout_currency = ?,
+                    settlement_base_raw = ?, settlement_base_final = ?, settlement_base_rounding_diff = ?,
+                    compensation_raw = ?, compensation_final = ?, compensation_rounding_diff = ?,
+                    hq_share_raw = ?, hq_share_final = ?, hq_share_rounding_diff = ?,
+                    updated_at = NOW()
+                WHERE id = ? AND status IN (
+                    'DRAFT', 'CALCULATED', 'NEEDS_CONFIRMATION',
+                    'ALLOCATION_POLICY_PENDING', 'REFUND_ALLOCATION_PENDING')
                 """,
                 row.status(), row.targetRevenueUsd(), row.refundsUsd(), row.paymentFeesUsd(),
                 row.extraDeductionsUsd(), row.settlementBaseUsd(), row.compensationUsd(), row.hqShareUsd(),
-                row.rateBps(), row.settlementBasis(), row.roundingPolicy(), row.note(), row.id());
+                row.rateBps(), row.settlementBasis(), row.roundingPolicy(), row.note(), row.payoutCurrency(),
+                figureRaw(row.baseFigure()), figureSettled(row.baseFigure()), figureDiff(row.baseFigure()),
+                figureRaw(row.compensationFigure()), figureSettled(row.compensationFigure()), figureDiff(row.compensationFigure()),
+                figureRaw(row.hqFigure()), figureSettled(row.hqFigure()), figureDiff(row.hqFigure()),
+                row.id());
     }
 
     public void replaceLines(UUID settlementId, List<UUID> attributionIds) {
@@ -274,7 +294,11 @@ public class JdbcSettlementStore {
                 rs.getString("settlement_basis"),
                 rs.getString("rounding_policy"),
                 rs.getString("note"),
-                rs.getString("payout_note"));
+                rs.getString("payout_note"),
+                rs.getString("payout_currency") == null ? null : rs.getString("payout_currency").trim(),
+                figure(rs, "settlement_base"),
+                figure(rs, "compensation"),
+                figure(rs, "hq_share"));
     }
 
     public record ApplyUse(UUID id, UUID userId, String referenceId, Instant createdAt, Long appliedFeeUsd, String applicantCountry) {
@@ -283,7 +307,15 @@ public class JdbcSettlementStore {
     public record AuditionRef(UUID id, UUID ownerId, UUID postingBranchId) {
     }
 
-    public record PaidOrder(UUID id, long amount, String currency, String status, Instant occurredAt) {
+    public record PaidOrder(
+            UUID id,
+            UUID userId,
+            long amount,
+            long credits,
+            long bonusCredits,
+            String currency,
+            String status,
+            Instant occurredAt) {
     }
 
     public record AttributionInsert(
@@ -326,6 +358,137 @@ public class JdbcSettlementStore {
             String settlementBasis,
             String roundingPolicy,
             String note,
-            String payoutNote) {
+            String payoutNote,
+            String payoutCurrency,
+            SettlementMath.Figure baseFigure,
+            SettlementMath.Figure compensationFigure,
+            SettlementMath.Figure hqFigure) {
+    }
+
+    private static SettlementMath.Figure figure(java.sql.ResultSet rs, String prefix) throws java.sql.SQLException {
+        java.math.BigDecimal raw = rs.getBigDecimal(prefix + "_raw");
+        java.math.BigDecimal settled = rs.getBigDecimal(prefix + "_final");
+        java.math.BigDecimal diff = rs.getBigDecimal(prefix + "_rounding_diff");
+        if (raw == null && settled == null && diff == null) {
+            return null;
+        }
+        return new SettlementMath.Figure(raw, settled, diff);
+    }
+
+    private static java.math.BigDecimal figureRaw(SettlementMath.Figure figure) {
+        return figure == null ? null : figure.raw();
+    }
+
+    private static java.math.BigDecimal figureSettled(SettlementMath.Figure figure) {
+        return figure == null ? null : figure.settled();
+    }
+
+    private static java.math.BigDecimal figureDiff(SettlementMath.Figure figure) {
+        return figure == null ? null : figure.difference();
+    }
+
+    public String userCountry(UUID userId) {
+        List<String> rows = jdbc.query(
+                "SELECT country_code FROM users WHERE id = ?",
+                (rs, n) -> rs.getString("country_code"), userId);
+        if (rows.isEmpty() || rows.get(0) == null) {
+            return null;
+        }
+        return rows.get(0).trim();
+    }
+
+    public void upsertFx(FxRow row) {
+        FxRow current = findFx(row.settlementId()).orElse(null);
+        if (current == null) {
+            jdbc.update("""
+                    INSERT INTO payout_fx_records (
+                        id, settlement_id, payout_currency, fx_rate, rate_date, rate_source,
+                        remittance_fee, actual_paid_amount, paid_date, approver_id, status
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    row.id(), row.settlementId(), row.payoutCurrency(), row.fxRate(),
+                    row.rateDate() == null ? null : java.sql.Date.valueOf(row.rateDate()),
+                    row.rateSource(), row.remittanceFee(), row.actualPaidAmount(),
+                    row.paidDate() == null ? null : java.sql.Date.valueOf(row.paidDate()),
+                    row.approverId(), row.status());
+            insertFxAudit(row.id(), row.settlementId(), "CREATE", null, fxState(row), row.approverId());
+            return;
+        }
+        jdbc.update("""
+                UPDATE payout_fx_records
+                SET payout_currency = ?, fx_rate = ?, rate_date = ?, rate_source = ?,
+                    remittance_fee = ?, actual_paid_amount = ?, paid_date = ?, approver_id = ?,
+                    status = ?, updated_at = NOW()
+                WHERE settlement_id = ?
+                """,
+                row.payoutCurrency(), row.fxRate(),
+                row.rateDate() == null ? null : java.sql.Date.valueOf(row.rateDate()),
+                row.rateSource(), row.remittanceFee(), row.actualPaidAmount(),
+                row.paidDate() == null ? null : java.sql.Date.valueOf(row.paidDate()),
+                row.approverId(), row.status(), row.settlementId());
+        insertFxAudit(current.id(), row.settlementId(), "UPDATE", fxState(current), fxState(row), row.approverId());
+    }
+
+    public Optional<FxRow> findFx(UUID settlementId) {
+        List<FxRow> rows = jdbc.query("""
+                SELECT id, settlement_id, payout_currency, fx_rate, rate_date, rate_source,
+                       remittance_fee, actual_paid_amount, paid_date, approver_id, status
+                FROM payout_fx_records WHERE settlement_id = ?
+                """, (rs, n) -> new FxRow(
+                rs.getObject("id", UUID.class),
+                rs.getObject("settlement_id", UUID.class),
+                rs.getString("payout_currency").trim(),
+                rs.getBigDecimal("fx_rate"),
+                rs.getDate("rate_date") == null ? null : rs.getDate("rate_date").toLocalDate(),
+                rs.getString("rate_source"),
+                rs.getBigDecimal("remittance_fee"),
+                rs.getBigDecimal("actual_paid_amount"),
+                rs.getDate("paid_date") == null ? null : rs.getDate("paid_date").toLocalDate(),
+                rs.getObject("approver_id", UUID.class),
+                rs.getString("status")), settlementId);
+        return rows.stream().findFirst();
+    }
+
+    public int fxAuditCount(UUID settlementId) {
+        Integer count = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM payout_fx_audit WHERE settlement_id = ?",
+                Integer.class, settlementId);
+        return count == null ? 0 : count;
+    }
+
+    private void insertFxAudit(UUID fxId, UUID settlementId, String action, String before, String after, UUID actor) {
+        jdbc.update("""
+                INSERT INTO payout_fx_audit (id, fx_record_id, settlement_id, action, before_state, after_state, actor_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """, UUID.randomUUID(), fxId, settlementId, action, before, after, actor);
+    }
+
+    private static String fxState(FxRow row) {
+        return "currency=" + row.payoutCurrency()
+                + ";rate=" + plain(row.fxRate())
+                + ";rateDate=" + row.rateDate()
+                + ";source=" + row.rateSource()
+                + ";fee=" + plain(row.remittanceFee())
+                + ";actual=" + plain(row.actualPaidAmount())
+                + ";paidDate=" + row.paidDate()
+                + ";status=" + row.status();
+    }
+
+    private static String plain(java.math.BigDecimal value) {
+        return value == null ? "" : value.toPlainString();
+    }
+
+    public record FxRow(
+            UUID id,
+            UUID settlementId,
+            String payoutCurrency,
+            java.math.BigDecimal fxRate,
+            java.time.LocalDate rateDate,
+            String rateSource,
+            java.math.BigDecimal remittanceFee,
+            java.math.BigDecimal actualPaidAmount,
+            java.time.LocalDate paidDate,
+            UUID approverId,
+            String status) {
     }
 }

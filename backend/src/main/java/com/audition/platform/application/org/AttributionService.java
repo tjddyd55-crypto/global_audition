@@ -1,7 +1,6 @@
 package com.audition.platform.application.org;
 
 import com.audition.platform.application.org.JdbcContractStore.ContractRow;
-import com.audition.platform.application.org.JdbcContractStore.VersionRow;
 import com.audition.platform.application.org.JdbcSettlementStore.ApplyUse;
 import com.audition.platform.application.org.JdbcSettlementStore.AttributionInsert;
 import com.audition.platform.application.org.JdbcSettlementStore.AuditionRef;
@@ -63,41 +62,46 @@ public class AttributionService {
         }
         ContractRow contract = contracts.find(contractId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "CONTRACT_NOT_FOUND"));
-        LocalDate day = order.occurredAt().atZone(ZoneOffset.UTC).toLocalDate();
-        VersionRow version = covering(contractId, day);
         boolean usd = order.currency() != null && "USD".equalsIgnoreCase(order.currency().trim());
+        String payerCountry = store.userCountry(order.userId());
         AttributionInsert row = new AttributionInsert(
                 UUID.randomUUID(),
                 null,
                 order.id(),
                 "REVENUE",
                 AttributionPlanner.ACCOUNTING,
-                contract.agencyId(),
-                contract.agencyId(),
-                usd && version != null ? contract.countryCode() : null,
+                null,
+                null,
+                usd ? payerCountry : null,
                 null,
                 null,
                 order.occurredAt(),
                 null,
-                usd && version != null ? order.amount() : null,
+                usd ? order.amount() : null,
                 order.status(),
                 null,
-                usd && version != null ? contract.id() : null,
-                usd && version != null ? version.id() : null,
-                usd && version != null ? AttributionPlanner.CASH_MAPPING_COLLECTED : AttributionPlanner.CASH_MAPPING_UNDECIDED,
-                usd && version != null ? AttributionPlanner.ATTRIBUTED : AttributionPlanner.NEEDS_CONFIRMATION,
-                usd ? (version == null ? "NO_CONTRACT_VERSION" : "PAYMENT_AMOUNT_COPIED") : "FX_UNDECIDED");
+                null,
+                null,
+                usd ? AttributionPlanner.CASH_MAPPING_COLLECTED : AttributionPlanner.CASH_MAPPING_UNDECIDED,
+                usd ? AttributionPlanner.ATTRIBUTED : AttributionPlanner.NEEDS_CONFIRMATION,
+                usd ? "CASH_COLLECTION_NOT_BRANCH_REVENUE" : "FX_UNDECIDED");
         try {
             store.insertAttribution(row);
         } catch (DataIntegrityViolationException ex) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "DUPLICATE_ATTRIBUTION");
         }
-        org.audit(UUID.randomUUID(), "CASH_LINKED", actor.id(), contract.countryCode(), "PAYMENT_ORDER", order.id().toString(), row.note());
+        org.audit(UUID.randomUUID(), "CASH_LINKED", actor.id(), payerCountry, "PAYMENT_ORDER", order.id().toString(),
+                row.note() + ";reviewedContract=" + contract.id());
         return row;
     }
 
     @Transactional
     public AttributionInsert recordRefund(UUID paymentOrderId, long amountUsd, String reason) {
+        return recordRefund(paymentOrderId, amountUsd, reason, Instant.now());
+    }
+
+    @Transactional
+    public AttributionInsert recordRefund(UUID paymentOrderId, long amountUsd, String reason, Instant occurredAt) {
         OrgAccess.Actor actor = access.requireHq();
         if (amountUsd < 1) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "REFUND_AMOUNT_INVALID");
@@ -114,11 +118,12 @@ public class AttributionService {
         if (already + amountUsd > revenue.collectedUsd()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "REFUND_EXCEEDS_COLLECTION");
         }
+        Instant when = occurredAt == null ? Instant.now() : occurredAt;
         AttributionInsert row = new AttributionInsert(
                 UUID.randomUUID(), null, paymentOrderId, "REFUND", AttributionPlanner.ACCOUNTING,
-                revenue.agencyId(), revenue.branchId(), revenue.country(), revenue.auditionId(), revenue.applicationId(),
-                revenue.occurredAt(), null, amountUsd, revenue.paymentStatus(), "REFUNDED",
-                revenue.contractId(), revenue.contractVersionId(), AttributionPlanner.CASH_MAPPING_COLLECTED,
+                null, null, revenue.country(), null, null,
+                when, null, amountUsd, revenue.paymentStatus(), "REFUNDED",
+                null, null, AttributionPlanner.CASH_MAPPING_COLLECTED,
                 AttributionPlanner.ATTRIBUTED, reason.trim());
         store.insertAttribution(row);
         org.audit(UUID.randomUUID(), "REFUND_RECORDED", actor.id(), revenue.country(), "PAYMENT_ORDER", paymentOrderId.toString(), reason);
@@ -170,14 +175,6 @@ public class AttributionService {
         } catch (DataIntegrityViolationException ex) {
             return false;
         }
-    }
-
-    private VersionRow covering(UUID contractId, LocalDate day) {
-        return contracts.versions(contractId).stream()
-                .filter(version -> AttributionPlanner.covers(new AttributionPlanner.Window(
-                        contractId, version.id(), version.versionNo(), "", null, version.start(), version.end()), day))
-                .max(java.util.Comparator.comparingInt(VersionRow::versionNo))
-                .orElse(null);
     }
 
     private static UUID parseUuid(String raw) {

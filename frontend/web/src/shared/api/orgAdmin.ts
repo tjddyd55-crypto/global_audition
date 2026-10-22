@@ -42,6 +42,10 @@ export type ContractView = {
   extraDeductionUsd: number | null
   startDate: string
   endDate: string | null
+  refundDeductionBasis?: string | null
+  paymentFeeDeductionBasis?: string | null
+  extraDeductionBasis?: string | null
+  cycle?: string | null
 }
 
 export type SettlementView = {
@@ -55,6 +59,12 @@ export type SettlementView = {
   hqShareUsd: number | null
   note: string | null
   payoutNote: string | null
+  payoutCurrency?: string | null
+  compensationFinal?: string | null
+  compensationRaw?: string | null
+  compensationDiff?: string | null
+  settlementBaseFinal?: string | null
+  hqShareFinal?: string | null
 }
 
 export type CountrySlice = {

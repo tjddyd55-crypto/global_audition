@@ -41,13 +41,15 @@ public class JdbcContractStore {
                 INSERT INTO contract_versions (
                     id, contract_id, version_no, start_date, end_date, revenue_share_bps,
                     settlement_basis, rounding_policy, payout_currency, cycle,
-                    payment_fee_usd, extra_deduction_usd, approved_by, change_reason
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'MONTHLY', ?, ?, ?, ?)
+                    payment_fee_usd, extra_deduction_usd, approved_by, change_reason,
+                    refund_deduction_basis, payment_fee_deduction_basis, extra_deduction_basis
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'MONTHLY', ?, ?, ?, ?, ?, ?, ?)
                 """,
                 row.id(), row.contractId(), row.versionNo(), Date.valueOf(row.start()),
                 row.end() == null ? null : Date.valueOf(row.end()),
                 row.rateBps(), row.basis(), row.roundingPolicy(), row.currency(),
-                row.paymentFeeUsd(), row.extraDeductionUsd(), row.approvedBy(), row.changeReason());
+                row.paymentFeeUsd(), row.extraDeductionUsd(), row.approvedBy(), row.changeReason(),
+                row.refundDeductionBasis(), row.paymentFeeDeductionBasis(), row.extraDeductionBasis());
     }
 
     public int nextVersionNo(UUID contractId) {
@@ -94,7 +96,8 @@ public class JdbcContractStore {
         return jdbc.query("""
                 SELECT id, contract_id, version_no, start_date, end_date, revenue_share_bps,
                        settlement_basis, rounding_policy, payout_currency,
-                       payment_fee_usd, extra_deduction_usd, approved_by, change_reason
+                       payment_fee_usd, extra_deduction_usd, approved_by, change_reason,
+                       refund_deduction_basis, payment_fee_deduction_basis, extra_deduction_basis
                 FROM contract_versions WHERE contract_id = ? ORDER BY version_no
                 """, (rs, n) -> mapVersion(rs), contractId);
     }
@@ -118,6 +121,61 @@ public class JdbcContractStore {
                 INSERT INTO contract_documents (id, contract_id, version_id, filename, content_type, body, created_by)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
                 """, id, contractId, versionId, filename, contentType, body, actor);
+    }
+
+    public void insertFile(FileRow row) {
+        jdbc.update("""
+                INSERT INTO contract_files (
+                    id, contract_id, contract_version_id, legacy_document_id, storage_key,
+                    original_filename, size_bytes, mime, sha256, uploaded_by, integrity_verified, verified_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CASE WHEN ? THEN NOW() ELSE NULL END)
+                """,
+                row.id(), row.contractId(), row.versionId(), row.legacyDocumentId(), row.storageKey(),
+                row.filename(), row.sizeBytes(), row.mime(), row.sha256(), row.uploadedBy(),
+                row.integrityVerified(), row.integrityVerified());
+    }
+
+    public Optional<FileRow> latestFile(UUID contractId) {
+        List<FileRow> rows = jdbc.query("""
+                SELECT id, contract_id, contract_version_id, legacy_document_id, storage_key,
+                       original_filename, size_bytes, mime, sha256, uploaded_by, integrity_verified
+                FROM contract_files WHERE contract_id = ? ORDER BY uploaded_at DESC LIMIT 1
+                """, (rs, n) -> new FileRow(
+                rs.getObject("id", UUID.class),
+                rs.getObject("contract_id", UUID.class),
+                rs.getObject("contract_version_id", UUID.class),
+                rs.getObject("legacy_document_id", UUID.class),
+                rs.getString("storage_key"),
+                rs.getString("original_filename"),
+                rs.getLong("size_bytes"),
+                rs.getString("mime"),
+                rs.getString("sha256"),
+                rs.getObject("uploaded_by", UUID.class),
+                rs.getBoolean("integrity_verified")), contractId);
+        return rows.stream().findFirst();
+    }
+
+    public List<LegacyDocument> unmigratedDocuments() {
+        return jdbc.query("""
+                SELECT d.id, d.contract_id, d.version_id, d.filename, d.content_type, d.body, d.created_by
+                FROM contract_documents d
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM contract_files f WHERE f.legacy_document_id = d.id AND f.integrity_verified
+                )
+                ORDER BY d.created_at
+                """, (rs, n) -> new LegacyDocument(
+                rs.getObject("id", UUID.class),
+                rs.getObject("contract_id", UUID.class),
+                rs.getObject("version_id", UUID.class),
+                rs.getString("filename"),
+                rs.getString("content_type"),
+                rs.getBytes("body"),
+                rs.getObject("created_by", UUID.class)));
+    }
+
+    public int countDocuments() {
+        Integer count = jdbc.queryForObject("SELECT COUNT(*) FROM contract_documents", Integer.class);
+        return count == null ? 0 : count;
     }
 
     public Optional<DocumentRow> latestDocument(UUID contractId) {
@@ -170,7 +228,10 @@ public class JdbcContractStore {
                 (Long) rs.getObject("payment_fee_usd"),
                 (Long) rs.getObject("extra_deduction_usd"),
                 rs.getObject("approved_by", UUID.class),
-                rs.getString("change_reason"));
+                rs.getString("change_reason"),
+                rs.getString("refund_deduction_basis"),
+                rs.getString("payment_fee_deduction_basis"),
+                rs.getString("extra_deduction_basis"));
     }
 
     public record ContractRow(
@@ -197,9 +258,36 @@ public class JdbcContractStore {
             Long paymentFeeUsd,
             Long extraDeductionUsd,
             UUID approvedBy,
-            String changeReason) {
+            String changeReason,
+            String refundDeductionBasis,
+            String paymentFeeDeductionBasis,
+            String extraDeductionBasis) {
     }
 
     public record DocumentRow(UUID id, String filename, String contentType, byte[] body) {
+    }
+
+    public record FileRow(
+            UUID id,
+            UUID contractId,
+            UUID versionId,
+            UUID legacyDocumentId,
+            String storageKey,
+            String filename,
+            long sizeBytes,
+            String mime,
+            String sha256,
+            UUID uploadedBy,
+            boolean integrityVerified) {
+    }
+
+    public record LegacyDocument(
+            UUID id,
+            UUID contractId,
+            UUID versionId,
+            String filename,
+            String contentType,
+            byte[] body,
+            UUID createdBy) {
     }
 }

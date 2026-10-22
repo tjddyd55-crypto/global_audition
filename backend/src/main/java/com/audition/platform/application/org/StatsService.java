@@ -26,12 +26,16 @@ public class StatsService {
     public Policy policy() {
         access.requireUser();
         return new Policy(
-                "UNDECIDED",
-                "UNDECIDED",
+                "UNCONFIRMED",
+                "HALF_UP",
                 "1 USD = 1 Credit",
                 List.of(
-                        "Credit usage is sales performance. Cash collection is accounting revenue. They are not added.",
-                        "Fractional USD is not rounded while roundingPolicy is UNDECIDED.",
+                        "Cash collection and credit usage are stored separately and are not added.",
+                        "Country payout uses paid-credit usage linked to a real payment, attributed to the posting branch.",
+                        "Mixed paid and free usage stays ALLOCATION_POLICY_PENDING while allocation_policy is UNCONFIRMED.",
+                        "Settlement USD is aggregated, then rounded once to 2 decimals HALF_UP. Raw, final, and difference are stored.",
+                        "Accounting revenue recognition and unused-credit breakage require expert review.",
+                        "Non-USD payout stays unfinalized until a super admin records a verified rate.",
                         "Settlement payout is a manual record. No bank transfer is performed."));
     }
 
@@ -54,7 +58,7 @@ public class StatsService {
         long unlinked = countLong("""
                 SELECT COUNT(*) FROM auditions WHERE posting_branch_id IS NULL
                 """);
-        return new GlobalStats(countries, admins, registered, approved, unlinked, slices, "ACCOUNTING_CASH", "SALES_FEE_SNAPSHOT", "UNDECIDED");
+        return new GlobalStats(countries, admins, registered, approved, unlinked, slices, "ACCOUNTING_CASH", "SALES_FEE_SNAPSHOT", "UNCONFIRMED");
     }
 
     public CountryDetail country(
@@ -156,7 +160,7 @@ public class StatsService {
         return new CountryDetail(
                 code, auditions, applications, registered, approved,
                 registered == 0 ? null : approved + "/" + registered,
-                staff, trend, shares, payoutScheduled, payoutDone, "UNDECIDED");
+                staff, trend, shares, payoutScheduled, payoutDone, "UNCONFIRMED");
     }
 
     private List<CountrySlice> slices(String country, String period) {

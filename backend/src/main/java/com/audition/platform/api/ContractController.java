@@ -3,6 +3,8 @@ package com.audition.platform.api;
 import com.audition.platform.application.org.ContractService;
 import com.audition.platform.application.org.ContractService.ContractView;
 import com.audition.platform.application.org.ContractService.Draft;
+import com.audition.platform.application.org.ContractService.MigrateResult;
+import com.audition.platform.application.org.ContractService.Presign;
 import com.audition.platform.application.org.JdbcContractStore.DocumentRow;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -61,6 +63,16 @@ public class ContractController {
             @RequestHeader(value = "Content-Type", required = false) String contentType,
             @RequestBody byte[] body) {
         contracts.attach(id, filename, contentType, body);
+    }
+
+    @PostMapping("/files/migrate")
+    public MigrateResult migrate() {
+        return contracts.migrateLegacyFiles();
+    }
+
+    @GetMapping("/{id}/document-url")
+    public Presign documentUrl(@PathVariable UUID id) {
+        return contracts.presign(id);
     }
 
     @GetMapping("/{id}/document")
