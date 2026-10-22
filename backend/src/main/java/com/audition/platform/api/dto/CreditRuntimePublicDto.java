@@ -17,11 +17,12 @@ public class CreditRuntimePublicDto {
     public CreditRuntimePublicDto(
             String applicationPaymentMode,
             long applicationFeeCredits,
+            long applicationFeeUsd,
             boolean signupCreditEnabled,
             long signupCreditAmount) {
         this.applicationPaymentMode = applicationPaymentMode;
         this.applicationFeeCredits = applicationFeeCredits;
-        this.applicationFeeUsd = applicationFeeCredits;
+        this.applicationFeeUsd = applicationFeeUsd;
         this.signupCreditEnabled = signupCreditEnabled;
         this.signupCreditAmount = signupCreditAmount;
     }

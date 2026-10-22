@@ -47,6 +47,14 @@ public class CreditTransaction {
     @Column(name = "after_balance")
     private Long afterBalance;
 
+    /** 지원 차감 시점의 전역 USD. 기존 행과 지원 이외 거래는 null. */
+    @Column(name = "applied_fee_usd")
+    private Long appliedFeeUsd;
+
+    /** UsdCreditParity 로 계산한 차감 크레딧. applied_fee_usd 와 함께 기록한다. */
+    @Column(name = "applied_credit_quantity")
+    private Long appliedCreditQuantity;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
@@ -128,6 +136,22 @@ public class CreditTransaction {
 
     public void setAfterBalance(Long afterBalance) {
         this.afterBalance = afterBalance;
+    }
+
+    public Long getAppliedFeeUsd() {
+        return appliedFeeUsd;
+    }
+
+    public void setAppliedFeeUsd(Long appliedFeeUsd) {
+        this.appliedFeeUsd = appliedFeeUsd;
+    }
+
+    public Long getAppliedCreditQuantity() {
+        return appliedCreditQuantity;
+    }
+
+    public void setAppliedCreditQuantity(Long appliedCreditQuantity) {
+        this.appliedCreditQuantity = appliedCreditQuantity;
     }
 
     public Instant getCreatedAt() {

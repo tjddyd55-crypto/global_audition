@@ -4,7 +4,7 @@ import { Link } from '@/i18n.config'
 import { MultiRoundSubmitCta } from '@/components/application/MultiRoundSubmitCta'
 import { useTranslations } from 'next-intl'
 import { applyBlockedDisplayMessage } from '@/shared/audition/applyBlockedCopy'
-import { resolveApplicationFeeUsd } from '@/shared/api/credits'
+import { resolveApplicationFeeCredits, resolveApplicationFeeUsd } from '@/shared/api/credits'
 
 type PcAuditionDetailApplyBarProps = {
   auditionId: string
@@ -27,6 +27,7 @@ type PcAuditionDetailApplyBarProps = {
     cost: number
     applicationPaymentMode?: string
     applicationFeeCredits?: number
+    applicationFeeUsd?: number
   } | null
   creditBalanceAmount: number
   needCreditsForApply: boolean
@@ -190,7 +191,8 @@ export default function PcAuditionDetailApplyBar({
             {needCreditsForApply && hasEnoughCredits ? (
               <p className="text-center text-neutral-500">
                 {tDetail('creditCostHold', {
-                  fee: resolveApplicationFeeUsd(applyPolicySnapshot),
+                  usd: resolveApplicationFeeUsd(applyPolicySnapshot),
+                  credits: resolveApplicationFeeCredits(applyPolicySnapshot),
                   balance: creditBalanceAmount,
                 })}
               </p>

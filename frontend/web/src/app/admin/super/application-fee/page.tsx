@@ -49,8 +49,9 @@ export default function ApplicationFeePage() {
     <div>
       <h1 className="mb-2 text-xl font-semibold">전역 지원비</h1>
       <p className="mb-4 text-sm text-gray-600">
-        모든 오디션에 같은 정수 USD를 적용합니다. 지원 화면은 이 서버 값을 읽고, 지원 처리 때도 서버가 이 금액으로
-        검증합니다. 0이면 무료입니다.
+        확정 정책: 1 USD = 1 Credit. 오디션별 가격은 없습니다. 현재{' '}
+        {fee.data ? `$${fee.data.amountUsd} (${fee.data.creditQuantity} credits)` : '-'}. 지원 화면과 차감은 서버가
+        이 전역 USD만 읽습니다. 0이면 무료입니다. 이미 기록된 주문·원장 금액은 바꾸지 않습니다.
       </p>
       {fee.isLoading ? <p>불러오는 중…</p> : null}
       <div className="mb-6 flex items-center gap-2">

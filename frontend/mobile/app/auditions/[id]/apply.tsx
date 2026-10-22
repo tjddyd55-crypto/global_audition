@@ -63,10 +63,11 @@ export default function ApplyScreen() {
 
   const age = useMemo(() => (birthDate ? calculateAge(birthDate) : null), [birthDate])
   const runtime = runtimeQuery.data
-  const fee = runtime?.applicationFeeUsd ?? runtime?.applicationFeeCredits ?? 0
-  const creditMode = runtime?.applicationPaymentMode === 'CREDIT' && fee > 0
+  const usd = runtime?.applicationFeeUsd ?? runtime?.applicationFeeCredits ?? 0
+  const credits = runtime?.applicationFeeCredits ?? runtime?.applicationFeeUsd ?? 0
+  const creditMode = runtime?.applicationPaymentMode === 'CREDIT' && credits > 0
   const balance = balanceQuery.data?.balance ?? 0
-  const insufficient = creditMode && balance < fee
+  const insufficient = creditMode && balance < credits
 
   const submit = async () => {
     setError(null)
@@ -93,6 +94,7 @@ export default function ApplyScreen() {
         if (short) {
           setError(
             t('apply.insufficientDetail', {
+              usd,
               required: short.requiredCredits,
               current: short.currentCredits,
               shortfall: short.shortfallCredits,
@@ -129,7 +131,7 @@ export default function ApplyScreen() {
                 return
               }
               if (insufficient) {
-                setError(t('apply.insufficientDetail', { required: fee, current: balance, shortfall: fee - balance }))
+                setError(t('apply.insufficientDetail', { usd, required: credits, current: balance, shortfall: credits - balance }))
                 return
               }
               if (creditMode) {
@@ -144,7 +146,7 @@ export default function ApplyScreen() {
     >
       <ConfirmDialog
         visible={confirmOpen}
-        message={t('apply.creditConfirm', { fee, balance })}
+        message={t('apply.creditConfirm', { usd, credits, balance })}
         confirmLabel={t('apply.title')}
         loading={loading}
         onCancel={() => setConfirmOpen(false)}
@@ -154,12 +156,12 @@ export default function ApplyScreen() {
         <Text style={styles.lead}>{t('apply.urlOnlyHint')}</Text>
         {runtime && !creditMode ? <Text style={styles.meta}>{t('apply.freeApply')}</Text> : null}
         {creditMode && !insufficient ? (
-          <Text style={styles.meta}>{t('apply.creditMeta', { fee, balance })}</Text>
+          <Text style={styles.meta}>{t('apply.creditMeta', { usd, credits, balance })}</Text>
         ) : null}
         {insufficient ? (
           <View style={styles.warn}>
             <Text style={styles.warnText}>
-              {t('apply.insufficientDetail', { required: fee, current: balance, shortfall: fee - balance })}
+              {t('apply.insufficientDetail', { usd, required: credits, current: balance, shortfall: credits - balance })}
             </Text>
             <Button label={t('apply.charge')} onPress={() => router.push('/credits')} />
           </View>

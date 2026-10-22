@@ -2,7 +2,7 @@
 
 import { Link } from '@/i18n.config'
 import { formatCreditsCount } from '@/shared/money/creditsDisplay'
-import { resolveApplicationFeeUsd } from '@/shared/api/credits'
+import { resolveApplicationFeeCredits, resolveApplicationFeeUsd } from '@/shared/api/credits'
 import { useTranslations } from 'next-intl'
 
 type ApplyCreditNoticeProps = {
@@ -33,7 +33,8 @@ export default function ApplyCreditNotice({
   const mode =
     applyPolicySnapshot?.applicationPaymentMode ??
     (!applyPolicySnapshot || !applyPolicySnapshot.active || applyPolicySnapshot.cost <= 0 ? 'FREE' : 'CREDIT')
-  const fee = resolveApplicationFeeUsd(applyPolicySnapshot)
+  const usd = resolveApplicationFeeUsd(applyPolicySnapshot)
+  const credits = resolveApplicationFeeCredits(applyPolicySnapshot)
 
   return (
     <>
@@ -43,18 +44,23 @@ export default function ApplyCreditNotice({
         </div>
       ) : null}
 
-      {applyPolicySnapshot && mode === 'CREDIT' && fee > 0 && hasEnoughCredits ? (
+      {applyPolicySnapshot && mode === 'CREDIT' && credits > 0 && hasEnoughCredits ? (
         <div className="mb-4 rounded-lg border border-violet-100 bg-violet-50 px-4 py-3 text-sm text-violet-900">
-          {t('creditMeta', { fee: formatCreditsCount(fee), balance: formatCreditsCount(creditBalanceAmount) })}
+          {t('creditMeta', {
+            usd: formatCreditsCount(usd),
+            credits: formatCreditsCount(credits),
+            balance: formatCreditsCount(creditBalanceAmount),
+          })}
         </div>
       ) : null}
 
-      {applyPolicySnapshot && mode === 'CREDIT' && fee > 0 && creditGateReady && !hasEnoughCredits ? (
+      {applyPolicySnapshot && mode === 'CREDIT' && credits > 0 && creditGateReady && !hasEnoughCredits ? (
         <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
           {t('insufficientDetail', {
-            required: formatCreditsCount(fee),
+            usd: formatCreditsCount(usd),
+            required: formatCreditsCount(credits),
             current: formatCreditsCount(creditBalanceAmount),
-            shortfall: formatCreditsCount(Math.max(0, fee - creditBalanceAmount)),
+            shortfall: formatCreditsCount(Math.max(0, credits - creditBalanceAmount)),
           })}
           <div className="mt-2">
             <Link href="/credits/charge" className="font-semibold text-violet-700 underline underline-offset-2">

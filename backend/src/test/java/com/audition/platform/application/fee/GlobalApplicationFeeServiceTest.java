@@ -2,6 +2,7 @@ package com.audition.platform.application.fee;
 
 import com.audition.platform.api.dto.ApplicationFeeView;
 import com.audition.platform.application.credit.CreditPolicyKey;
+import com.audition.platform.application.credit.UsdCreditParity;
 import com.audition.platform.application.credit.CreditPolicyPublicSnapshotCache;
 import com.audition.platform.domain.credit.CreditPolicy;
 import com.audition.platform.domain.credit.CreditPolicyRepository;
@@ -78,6 +79,7 @@ class GlobalApplicationFeeServiceTest {
         ApplicationFeeView view = service.update(new BigDecimal("3"));
 
         assertEquals(3, view.getAmountUsd());
+        assertEquals(UsdCreditParity.creditsForUsd(3), view.getCreditQuantity());
         assertEquals(3, row.getAmountUsd());
         verify(historyRepository).save(any(PlatformApplicationFeeHistory.class));
     }

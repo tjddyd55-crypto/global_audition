@@ -70,8 +70,12 @@ public class CreditService {
 
     private CreditPolicyPublicDto loadPolicyPublicFromDb(String policyKey) {
         if (CreditPolicyKey.AUDITION_APPLY.equals(policyKey)) {
-            long fee = globalApplicationFeeService.currentAmountUsd();
-            return new CreditPolicyPublicDto(policyKey, fee, fee > 0);
+            long feeUsd = globalApplicationFeeService.currentAmountUsd();
+            long credits = UsdCreditParity.creditsForUsd(feeUsd);
+            CreditPolicyPublicDto dto = new CreditPolicyPublicDto(policyKey, credits, feeUsd > 0 && credits > 0);
+            dto.setApplicationFeeUsd(feeUsd);
+            dto.setApplicationFeeCredits(credits);
+            return dto;
         }
         CreditPolicy policy = creditPolicyRepository.findById(policyKey)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "크레딧 정책을 찾을 수 없습니다."));
@@ -100,6 +104,32 @@ public class CreditService {
             String note,
             long beforeBalance,
             long afterBalance) {
+        persistCreditTransaction(
+                userId,
+                amount,
+                type,
+                reason,
+                referenceId,
+                grantedBy,
+                note,
+                beforeBalance,
+                afterBalance,
+                null,
+                null);
+    }
+
+    private void persistCreditTransaction(
+            UUID userId,
+            long amount,
+            String type,
+            String reason,
+            String referenceId,
+            UUID grantedBy,
+            String note,
+            long beforeBalance,
+            long afterBalance,
+            Long appliedFeeUsd,
+            Long appliedCreditQuantity) {
         CreditTransaction tx = new CreditTransaction();
         tx.setUserId(userId);
         tx.setAmount(amount);
@@ -110,6 +140,8 @@ public class CreditService {
         tx.setNote(note);
         tx.setBeforeBalance(beforeBalance);
         tx.setAfterBalance(afterBalance);
+        tx.setAppliedFeeUsd(appliedFeeUsd);
+        tx.setAppliedCreditQuantity(appliedCreditQuantity);
         creditTransactionRepository.save(tx);
     }
 
@@ -147,7 +179,7 @@ public class CreditService {
      */
     private long resolveCost(String policyKey) {
         if (CreditPolicyKey.AUDITION_APPLY.equals(policyKey)) {
-            return globalApplicationFeeService.currentAmountUsd();
+            return UsdCreditParity.creditsForUsd(globalApplicationFeeService.currentAmountUsd());
         }
         CreditPolicy policy = creditPolicyRepository.findById(policyKey)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "크레딧 정책을 찾을 수 없습니다."));
@@ -159,7 +191,17 @@ public class CreditService {
 
     @Transactional
     public void useCredits(UUID userId, String policyKey, String referenceId) {
-        long cost = resolveCost(policyKey);
+        Long appliedFeeUsd = null;
+        long cost;
+        if (CreditPolicyKey.AUDITION_APPLY.equals(policyKey)) {
+            long feeUsd = globalApplicationFeeService.currentAmountUsd();
+            cost = UsdCreditParity.creditsForUsd(feeUsd);
+            if (cost > 0) {
+                appliedFeeUsd = feeUsd;
+            }
+        } else {
+            cost = resolveCost(policyKey);
+        }
         if (cost <= 0) {
             return;
         }
@@ -184,7 +226,9 @@ public class CreditService {
                 null,
                 "policy_use ref=" + referenceId,
                 before,
-                after);
+                after,
+                appliedFeeUsd,
+                appliedFeeUsd == null ? null : cost);
     }
 
     /**
@@ -403,6 +447,7 @@ public class CreditService {
         return new CreditRuntimePublicDto(
                 apply.getApplicationPaymentMode(),
                 apply.getApplicationFeeCredits(),
+                apply.getApplicationFeeUsd(),
                 signupEnabled,
                 signupAmount);
     }

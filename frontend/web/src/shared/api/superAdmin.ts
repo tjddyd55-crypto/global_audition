@@ -101,7 +101,7 @@ export const superAdminApi = {
     return data
   },
 
-  getApplicationFee: async (): Promise<{ amountUsd: number; updatedAt?: string; updatedBy?: string | null }> => {
+  getApplicationFee: async (): Promise<{ amountUsd: number; creditQuantity: number; updatedAt?: string; updatedBy?: string | null }> => {
     const { data } = await apiClient.get('/admin/application-fee')
     return data
   },

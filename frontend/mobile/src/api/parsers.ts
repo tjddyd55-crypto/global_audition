@@ -308,13 +308,19 @@ export function parseApplicantDashboard(raw: unknown): ApplicantDashboard {
   }
 }
 
+function feeField(primary: unknown, fallback: unknown): number {
+  if (primary != null && primary !== '') return Math.max(0, Math.trunc(asNumber(primary)))
+  if (fallback != null && fallback !== '') return Math.max(0, Math.trunc(asNumber(fallback)))
+  return 0
+}
+
 export function parseCreditRuntime(raw: unknown): CreditRuntimePublic {
   const row = asRecord(raw)
   const mode = asString(row.applicationPaymentMode, 'FREE')
   return {
     applicationPaymentMode: mode === 'CREDIT' ? 'CREDIT' : 'FREE',
-    applicationFeeCredits: Math.max(0, Math.trunc(asNumber(row.applicationFeeUsd ?? row.applicationFeeCredits))),
-    applicationFeeUsd: Math.max(0, Math.trunc(asNumber(row.applicationFeeUsd ?? row.applicationFeeCredits))),
+    applicationFeeCredits: feeField(row.applicationFeeCredits, row.applicationFeeUsd),
+    applicationFeeUsd: feeField(row.applicationFeeUsd, row.applicationFeeCredits),
     signupCreditEnabled: Boolean(row.signupCreditEnabled),
     signupCreditAmount: Math.max(0, asNumber(row.signupCreditAmount)),
   }

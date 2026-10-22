@@ -20,6 +20,8 @@ public final class CreditTransactionMapper {
         d.setNote(t.getNote());
         d.setBeforeBalance(t.getBeforeBalance());
         d.setAfterBalance(t.getAfterBalance());
+        d.setAppliedFeeUsd(t.getAppliedFeeUsd());
+        d.setAppliedCreditQuantity(t.getAppliedCreditQuantity());
         d.setCreatedAt(t.getCreatedAt());
         return d;
     }

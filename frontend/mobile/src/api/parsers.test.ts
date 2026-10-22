@@ -84,7 +84,7 @@ describe('parsers', () => {
       signupCreditAmount: 0,
     })
     expect(credit.applicationFeeUsd).toBe(2)
-    expect(credit.applicationFeeCredits).toBe(2)
+    expect(credit.applicationFeeCredits).toBe(9)
   })
 
   it('INSUFFICIENT_CREDITS 본문을 파싱한다', () => {

@@ -3,6 +3,7 @@ package com.audition.platform.application.fee;
 import com.audition.platform.api.dto.ApplicationFeeHistoryView;
 import com.audition.platform.api.dto.ApplicationFeeView;
 import com.audition.platform.application.credit.CreditPolicyKey;
+import com.audition.platform.application.credit.UsdCreditParity;
 import com.audition.platform.application.credit.CreditPolicyPublicSnapshotCache;
 import com.audition.platform.application.credit.SuperAdminAuthHelper;
 import com.audition.platform.domain.credit.CreditPolicy;
@@ -126,7 +127,7 @@ public class GlobalApplicationFeeService {
             created.setPolicyKey(CreditPolicyKey.AUDITION_APPLY);
             return created;
         });
-        policy.setCost(amountUsd);
+        policy.setCost(UsdCreditParity.creditsForUsd(amountUsd));
         policy.setActive(amountUsd > 0);
         policy.setUpdatedAt(Instant.now());
         creditPolicyRepository.save(policy);
@@ -165,6 +166,7 @@ public class GlobalApplicationFeeService {
     private static ApplicationFeeView toView(PlatformApplicationFee row) {
         ApplicationFeeView view = new ApplicationFeeView();
         view.setAmountUsd(row.getAmountUsd());
+        view.setCreditQuantity(UsdCreditParity.creditsForUsd(row.getAmountUsd()));
         view.setUpdatedAt(row.getUpdatedAt());
         view.setUpdatedBy(row.getUpdatedBy());
         return view;
