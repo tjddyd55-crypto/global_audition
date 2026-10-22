@@ -55,6 +55,10 @@ app:
       user-daily-cost-micro-usd: 5000000
       agency-daily-cost-micro-usd: 20000000
       global-daily-cost-micro-usd: 100000000
+      user-monthly-cost-micro-usd: 50000000
+      agency-monthly-cost-micro-usd: 200000000
+      global-monthly-cost-micro-usd: 1000000000
+      global-monthly-billed-characters: 2000000
       # 0이면 추정 비용은 0. 실사용 단가는 환경 변수로만 넣는다.
       input-micro-usd-per-million: ${APP_TRANSLATION_INPUT_MICRO_PER_MILLION:0}
       output-micro-usd-per-million: ${APP_TRANSLATION_OUTPUT_MICRO_PER_MILLION:0}

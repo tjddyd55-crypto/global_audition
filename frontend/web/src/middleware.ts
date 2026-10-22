@@ -1,7 +1,12 @@
 import createIntlMiddleware from 'next-intl/middleware'
 import { NextResponse, type NextRequest } from 'next/server'
 import { routing } from './i18n.config'
-import { redirectPathForRetiredLocale, redirectPathForSavedLocale, SAVED_LOCALE_COOKIE } from './shared/i18n/uiLocales'
+import {
+  redirectPathForAgencyConsole,
+  redirectPathForRetiredLocale,
+  redirectPathForSavedLocale,
+  SAVED_LOCALE_COOKIE,
+} from './shared/i18n/uiLocales'
 
 /**
  * 디바이스 타입 쿠키/헤더 이름.
@@ -34,6 +39,13 @@ export default function middleware(req: NextRequest) {
   if (retired) {
     const url = req.nextUrl.clone()
     url.pathname = retired
+    return NextResponse.redirect(url, 307)
+  }
+
+  const agency = redirectPathForAgencyConsole(req.nextUrl.pathname)
+  if (agency) {
+    const url = req.nextUrl.clone()
+    url.pathname = agency
     return NextResponse.redirect(url, 307)
   }
 

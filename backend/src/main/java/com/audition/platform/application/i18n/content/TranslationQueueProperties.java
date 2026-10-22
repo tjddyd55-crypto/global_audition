@@ -23,6 +23,10 @@ public class TranslationQueueProperties {
     private long userDailyCostMicroUsd = 5_000_000L;
     private long agencyDailyCostMicroUsd = 20_000_000L;
     private long globalDailyCostMicroUsd = 100_000_000L;
+    private long userMonthlyCostMicroUsd = 50_000_000L;
+    private long agencyMonthlyCostMicroUsd = 200_000_000L;
+    private long globalMonthlyCostMicroUsd = 1_000_000_000L;
+    private long globalMonthlyBilledCharacters = 2_000_000L;
     private long inputMicroUsdPerMillion = 0L;
     private long outputMicroUsdPerMillion = 0L;
 
@@ -54,6 +58,14 @@ public class TranslationQueueProperties {
     public void setAgencyDailyCostMicroUsd(long agencyDailyCostMicroUsd) { this.agencyDailyCostMicroUsd = agencyDailyCostMicroUsd; }
     public long getGlobalDailyCostMicroUsd() { return globalDailyCostMicroUsd; }
     public void setGlobalDailyCostMicroUsd(long globalDailyCostMicroUsd) { this.globalDailyCostMicroUsd = globalDailyCostMicroUsd; }
+    public long getUserMonthlyCostMicroUsd() { return userMonthlyCostMicroUsd; }
+    public void setUserMonthlyCostMicroUsd(long userMonthlyCostMicroUsd) { this.userMonthlyCostMicroUsd = userMonthlyCostMicroUsd; }
+    public long getAgencyMonthlyCostMicroUsd() { return agencyMonthlyCostMicroUsd; }
+    public void setAgencyMonthlyCostMicroUsd(long agencyMonthlyCostMicroUsd) { this.agencyMonthlyCostMicroUsd = agencyMonthlyCostMicroUsd; }
+    public long getGlobalMonthlyCostMicroUsd() { return globalMonthlyCostMicroUsd; }
+    public void setGlobalMonthlyCostMicroUsd(long globalMonthlyCostMicroUsd) { this.globalMonthlyCostMicroUsd = globalMonthlyCostMicroUsd; }
+    public long getGlobalMonthlyBilledCharacters() { return globalMonthlyBilledCharacters; }
+    public void setGlobalMonthlyBilledCharacters(long globalMonthlyBilledCharacters) { this.globalMonthlyBilledCharacters = globalMonthlyBilledCharacters; }
     public long getInputMicroUsdPerMillion() { return inputMicroUsdPerMillion; }
     public void setInputMicroUsdPerMillion(long inputMicroUsdPerMillion) { this.inputMicroUsdPerMillion = inputMicroUsdPerMillion; }
     public long getOutputMicroUsdPerMillion() { return outputMicroUsdPerMillion; }

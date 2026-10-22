@@ -4,6 +4,8 @@ export const SUPPORTED_LOCALES = localesMeta.supported as readonly string[]
 export const PRIMARY_LOCALES = localesMeta.primary as readonly string[]
 export const DEFAULT_LOCALE = localesMeta.defaultLocale
 export const DEVICE_FALLBACK = localesMeta.deviceFallback
+/** 1차 공개 선택. primary 카탈로그는 유지하고 메뉴만 좁힌다. */
+export const PUBLIC_SELECTOR = (localesMeta.publicSelector?.length ? localesMeta.publicSelector : [DEFAULT_LOCALE]) as readonly string[]
 
 let currentLocale = DEFAULT_LOCALE
 

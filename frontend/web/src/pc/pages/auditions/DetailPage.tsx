@@ -8,6 +8,8 @@ import { AUDITION_DETAIL } from '@/shared/design-tokens'
 import { getVideoEmbedSrc } from '@/shared/utils/videoEmbed'
 import { safeArr, safeNum, safeStr } from '@/shared/utils/safe'
 import { AuditionDetailHeroSection } from '@/components/audition/AuditionDetailHeroSection'
+import { TranslationNotice, useContentTranslation } from '@/components/i18n/TranslatedField'
+import { overlayPosting } from '@/shared/i18n/postingTranslation'
 import { AuditionDetailMediaSection } from '@/components/audition/AuditionDetailMedia'
 import PageSurface from '@/components/layout/PageSurface'
 import DetailContentShell from '@/components/layout/DetailContentShell'
@@ -63,6 +65,7 @@ export default function PcAuditionDetailPage() {
     showApplySubmitCta,
     alreadyApplied,
   })
+  const posting = useContentTranslation('AUDITION_POSTING', id)
 
   if (isLoading) {
     return (
@@ -80,8 +83,9 @@ export default function PcAuditionDetailPage() {
     )
   }
 
-  const embed = getVideoEmbedSrc(safeStr(audition.videoUrl))
-  const galleryRaw = safeArr(audition.galleryImages)
+  const shown = overlayPosting(audition, posting.view)
+  const embed = getVideoEmbedSrc(safeStr(shown.videoUrl))
+  const galleryRaw = safeArr(shown.galleryImages)
   const imgs = normalizeAuditionImages(audition.images)
   const heroMedium = safeStr(auditionDetailMediumUrl(imgs))
   const heroOriginal = safeStr(auditionDetailOriginalUrl(imgs))
@@ -93,13 +97,13 @@ export default function PcAuditionDetailPage() {
     .map((src) => safeStr(src))
     .filter((s) => s.length > 0 && !coverDedupUrls.has(s))
     .slice(0, 24)
-  const recruitList = safeArr(audition.recruitFields)
-  const qualifications = safeArr(audition.qualifications)
-  const schedules = safeArr(audition.schedules)
-  const benefits = safeArr(audition.benefits)
+  const recruitList = safeArr(shown.recruitFields)
+  const qualifications = safeArr(shown.qualifications)
+  const schedules = safeArr(shown.schedules)
+  const benefits = safeArr(shown.benefits)
   const auditionTags = safeArr(audition.tags)
-  const headlineTitle = auditionHeadlineTitle(audition)
-  const descriptionText = safeStr(audition.description)
+  const headlineTitle = auditionHeadlineTitle(shown)
+  const descriptionText = safeStr(shown.description)
   const heroSubtitle =
     descriptionText
       .split(/\n/)
@@ -148,6 +152,9 @@ export default function PcAuditionDetailPage() {
         subtitle={heroSubtitle}
         deadlineUrgent={deadlineUrgent}
       />
+      <div className="mx-auto mt-2 max-w-5xl px-4" data-testid="posting-translation-notice">
+        <TranslationNotice view={posting.view} showOriginal={posting.showOriginal} onToggle={posting.setShowOriginal} />
+      </div>
 
       {embed ? (
         <section className="mt-4 w-full">

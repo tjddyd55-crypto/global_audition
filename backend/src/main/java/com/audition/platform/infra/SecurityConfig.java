@@ -76,6 +76,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/content-translations/CHANNEL_VIDEO/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/content-translations/APPLICATION_VIDEO/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/content-translations/AUDITION_ROUND/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/content-translations/AUDITION_POSTING/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/applications").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/applications/*/public").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/comments").permitAll()

@@ -34,7 +34,9 @@ public class ApplicationIntroSource implements ContentTranslationSource {
                     type(),
                     application.getId(),
                     ContentTexts.locale(application.getIntroSourceLocale()),
-                    ContentTexts.fields("introText", application.getIntroText()),
+                    ContentTexts.proseFields(
+                            "introText", application.getIntroText(),
+                            "message", application.getMessage()),
                     application.getApplicantId(),
                     agencyId);
         });

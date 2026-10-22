@@ -23,6 +23,14 @@ export default function TranslationSettingsPage() {
     queryKey: ['superAdmin', 'translation-usage'],
     queryFn: () => superAdminApi.translationUsage(),
   })
+  const policy = useQuery({
+    queryKey: ['superAdmin', 'translation-policy'],
+    queryFn: () => superAdminApi.translationPolicy(),
+  })
+  const errors = useQuery({
+    queryKey: ['superAdmin', 'translation-errors'],
+    queryFn: () => superAdminApi.translationErrors(),
+  })
   const [activeProvider, setActiveProvider] = useState('GOOGLE_CLOUD_TRANSLATION')
   const [endpointUrl, setEndpointUrl] = useState('')
   const [model, setModel] = useState('')
@@ -190,6 +198,21 @@ export default function TranslationSettingsPage() {
           onChange={(e) => setApiKey(e.target.value)}
         />
       </label>
+      <h2 className="mb-2 mt-6 text-base font-semibold">운영 언어와 예산</h2>
+      <p className="mb-4 text-sm text-gray-600" data-testid="translation-policy">
+        {policy.data
+          ? `공개 UI ${policy.data.viewingDefault} (${policy.data.publicSelector.join(', ')}), 기획사 ${policy.data.agencyUiLocale}, 슈퍼관리자 ${policy.data.superAdminUiLocale}. 번역 대상 ${policy.data.activeTranslationTargets.join(', ')}. 월 예산 ${policy.data.globalMonthlyCostMicroUsd} micro-USD / ${policy.data.globalMonthlyBilledCharacters}자.`
+          : '정책을 불러오는 중'}
+      </p>
+      <h2 className="mb-2 text-base font-semibold">오류</h2>
+      <ul className="mb-4 text-sm text-gray-700" data-testid="translation-errors">
+        {(errors.data ?? []).length === 0 ? <li>실패한 시도가 없습니다.</li> : null}
+        {(errors.data ?? []).map((row) => (
+          <li key={`${row.contentType}-${row.locale}-${row.startedAt ?? row.status}`}>
+            {row.contentType} / {row.locale} / {row.status} / {row.errorCode ?? '-'}
+          </li>
+        ))}
+      </ul>
       <h2 className="mb-2 mt-6 text-base font-semibold">이번 달 시도</h2>
       <p className="mb-4 text-sm text-gray-600">
         {usage.data

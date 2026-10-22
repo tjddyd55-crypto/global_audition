@@ -30,7 +30,10 @@ public class UserIntroSource implements ContentTranslationSource {
                 type(),
                 user.getId(),
                 ContentTexts.locale(user.getTextSourceLocale()),
-                ContentTexts.fields("introText", user.getIntroText()),
+                ContentTexts.proseFields(
+                        "introText", user.getIntroText(),
+                        "shortBio", user.getShortBio(),
+                        "bio", user.getBio()),
                 user.getId(),
                 null));
     }

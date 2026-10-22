@@ -59,6 +59,9 @@ public class ContentTranslationService {
         if (!locales.providerSupports(requested)) {
             return original(loaded.snapshot(), requested, true, null, ContentTypes.LOCALE_UNSUPPORTED);
         }
+        if (!locales.activeTarget(requested)) {
+            return original(loaded.snapshot(), requested, true, null, ContentTypes.TARGET_INACTIVE);
+        }
         String hash = ContentSourceFingerprint.hash(loaded.snapshot().sourceLocale(), loaded.snapshot().fields());
         store.markStaleWhereHashDiffers(type, id, hash);
         StoredTranslation row = store.findTranslation(type, id, requested).orElse(null);
@@ -84,7 +87,7 @@ public class ContentTranslationService {
         if (force && !loaded.source().canWrite(loaded.snapshot(), viewer)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "TRANSLATION_FORBIDDEN");
         }
-        String requested = requireSupported(rawLocale);
+        String requested = requireActive(rawLocale);
         if (sameLocale(loaded.snapshot(), requested)) {
             return original(loaded.snapshot(), requested, false, null, null);
         }
@@ -122,6 +125,39 @@ public class ContentTranslationService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, ContentTypes.CONCURRENT_EDIT);
         }
         return translated(loaded.snapshot(), requested, store.findTranslation(type, id, requested).orElse(row), null);
+    }
+
+    /**
+     * 게시처럼 화면 조회가 아닌 시점에 활성 대상만 큐에 넣는다. 영어가 설정 순서상 먼저다.
+     * 원문과 같은 로케일은 넣지 않는다. 공급자는 호출하지 않는다.
+     */
+    public void requestActiveTargets(String type, UUID id, UUID actor) {
+        ContentTranslationSource source = sources.stream()
+                .filter(item -> item.type().equals(type))
+                .findFirst()
+                .orElse(null);
+        if (source == null) {
+            return;
+        }
+        ContentSnapshot snapshot = source.load(id).orElse(null);
+        if (snapshot == null) {
+            return;
+        }
+        if (!source.canRead(snapshot, actor) && !source.canWrite(snapshot, actor)) {
+            return;
+        }
+        if (!hasProse(snapshot)) {
+            return;
+        }
+        String hash = ContentSourceFingerprint.hash(snapshot.sourceLocale(), snapshot.fields());
+        store.markStaleWhereHashDiffers(type, id, hash);
+        Loaded loaded = new Loaded(source, snapshot);
+        for (String target : locales.activeTargets()) {
+            if (sameLocale(snapshot, target) || !locales.providerSupports(target)) {
+                continue;
+            }
+            enqueue(loaded, target, hash, false, false, actor);
+        }
     }
 
     private Optional<UUID> enqueue(Loaded loaded, String locale, String hash, boolean explicit, boolean force, UUID viewer) {
@@ -180,6 +216,18 @@ public class ContentTranslationService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ContentTypes.LOCALE_UNSUPPORTED);
         }
         return tag;
+    }
+
+    private String requireActive(String rawLocale) {
+        String tag = requireSupported(rawLocale);
+        if (!locales.activeTarget(tag)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ContentTypes.TARGET_INACTIVE);
+        }
+        return tag;
+    }
+
+    private static boolean hasProse(ContentSnapshot snapshot) {
+        return snapshot.fields().values().stream().anyMatch(value -> value != null && !value.isBlank());
     }
 
     private String canonicalOrDefault(String rawLocale) {

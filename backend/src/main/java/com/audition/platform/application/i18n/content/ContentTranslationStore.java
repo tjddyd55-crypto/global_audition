@@ -55,4 +55,6 @@ public interface ContentTranslationStore {
     long sumAgencyCostSince(UUID agencyId, Instant since);
 
     long sumGlobalCostSince(Instant since);
+
+    long sumGlobalBilledCharactersSince(Instant since);
 }

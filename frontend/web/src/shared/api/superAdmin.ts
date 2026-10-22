@@ -175,6 +175,28 @@ export const superAdminApi = {
     return data
   },
 
+  translationPolicy: async () => {
+    const { data } = await apiClient.get<{
+      viewingDefault: string
+      agencyUiLocale: string
+      superAdminUiLocale: string
+      publicSelector: string[]
+      uiLocales: string[]
+      activeTranslationTargets: string[]
+      globalDailyCostMicroUsd: number
+      globalMonthlyCostMicroUsd: number
+      globalMonthlyBilledCharacters: number
+    }>('/admin/translation-settings/policy')
+    return data
+  },
+
+  translationErrors: async () => {
+    const { data } = await apiClient.get<
+      { contentType: string; locale: string; status: string; errorCode?: string | null; startedAt?: string | null }[]
+    >('/admin/translation-settings/errors')
+    return data
+  },
+
   translationUsage: async (month?: string) => {
     const { data } = await apiClient.get<{
       month: string

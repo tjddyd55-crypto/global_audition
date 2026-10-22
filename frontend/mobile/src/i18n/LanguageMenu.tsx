@@ -1,16 +1,16 @@
 import { Pressable, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { persistLocale } from './LocaleProvider'
-import { PRIMARY_LOCALES, getRuntimeLocale } from './runtime'
+import { PUBLIC_SELECTOR, getRuntimeLocale } from './runtime'
 import { colors } from '../theme/tokens'
 
 export function LanguageMenu() {
   const { t, i18n } = useTranslation()
-  const active = PRIMARY_LOCALES.includes(i18n.language) ? i18n.language : getRuntimeLocale()
+  const active = PUBLIC_SELECTOR.includes(i18n.language) ? i18n.language : getRuntimeLocale()
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 8, paddingHorizontal: 12, paddingVertical: 8 }}>
       <Text style={{ fontSize: 12, color: colors.faint }}>{t('profile.language')}</Text>
-      {PRIMARY_LOCALES.map((code) => {
+      {PUBLIC_SELECTOR.map((code) => {
         const selected = active === code
         return (
           <Pressable

@@ -1,8 +1,11 @@
 import { routing } from '../../../i18n.config'
 import localesMeta from '../../../../messages/locales.json'
 import {
+  AGENCY_UI_LOCALE,
   fallbackUiLocale,
   localeSwitchTarget,
+  PUBLIC_SELECTOR,
+  redirectPathForAgencyConsole,
   redirectPathForRetiredLocale,
   redirectPathForSavedLocale,
   RETIRED_UI_LOCALES,
@@ -53,6 +56,25 @@ describe('official UI locales', () => {
 
   it('refuses a retired locale and falls back to en', () => {
     expect(localeSwitchTarget('/auditions', 'ja').locale).toBe('en')
+  })
+
+  it('keeps ko/en/mn catalogs and narrows the public selector to English', () => {
+    expect([...UI_LOCALES]).toEqual(['ko', 'en', 'mn'])
+    expect([...PUBLIC_SELECTOR]).toEqual(['en'])
+    expect(AGENCY_UI_LOCALE).toBe('ko')
+    expect(localesMeta.superAdminUiLocale).toBe('ko')
+    expect(localesMeta.activeTranslationTargets).toEqual(['en', 'ko'])
+  })
+
+  it('sends agency management screens to Korean and leaves public auditions alone', () => {
+    expect(redirectPathForAgencyConsole('/en/dashboard/auditions/create')).toBe('/ko/dashboard/auditions/create')
+    expect(redirectPathForAgencyConsole('/en/my/applicants')).toBe('/ko/my/applicants')
+    expect(redirectPathForAgencyConsole('/mn/my/auditions/42/round-review')).toBe(
+      '/ko/my/auditions/42/round-review',
+    )
+    expect(redirectPathForAgencyConsole('/ko/dashboard')).toBeNull()
+    expect(redirectPathForAgencyConsole('/en/auditions/42')).toBeNull()
+    expect(redirectPathForAgencyConsole('/en/login')).toBeNull()
   })
 
   it('defaults first visits to English and does not let Accept-Language replace a saved choice', () => {
