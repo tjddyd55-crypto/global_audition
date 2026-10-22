@@ -1,7 +1,19 @@
 import localesMeta from '../../../messages/locales.json'
 
+const OFFICIAL_UI_LOCALES = ['ko', 'en', 'mn'] as const
+
+function readUiLocales(primary: readonly string[]): readonly ['ko', 'en', 'mn'] {
+  const matches =
+    primary.length === OFFICIAL_UI_LOCALES.length &&
+    primary.every((locale, index) => locale === OFFICIAL_UI_LOCALES[index])
+  if (!matches) {
+    throw new Error('messages/locales.json primary must stay ko, en, mn')
+  }
+  return OFFICIAL_UI_LOCALES
+}
+
 /** 공식 UI 로케일. 카탈로그 primary(ko/en/mn)가 SSOT다. */
-export const UI_LOCALES = localesMeta.primary as readonly ['ko', 'en', 'mn']
+export const UI_LOCALES = readUiLocales(localesMeta.primary)
 export type UiLocale = (typeof UI_LOCALES)[number]
 
 /** supported에는 있으나 공식 UI가 아닌 로케일. 옛 URL 호환용으로만 인식한다. */
