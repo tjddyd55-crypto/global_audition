@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from 'next-intl'
 import { Link } from '@/i18n.config'
 import { auditionApi, type RankingItem } from '@/shared/api/auditions'
 import { PAGE_CONTAINER, TEXT_SUB } from '@/shared/ui/specClasses'
+import { formatCount } from '@/shared/money/currency'
 
 type Props = {
   auditionId: string
@@ -78,7 +79,7 @@ export function AuditionRankingBoard({ auditionId, auditionTitleFallback }: Prop
                     <td className="px-4 py-3 font-semibold text-violet-700">{row.rank}</td>
                     <td className="px-4 py-3 font-medium text-gray-900">{row.userName || '—'}</td>
                     <td className="px-4 py-3 text-gray-800">{row.score.toFixed(1)}</td>
-                    <td className="px-4 py-3 text-gray-700">{row.voteCount.toLocaleString(locale)}</td>
+                    <td className="px-4 py-3 text-gray-700">{formatCount(row.voteCount, locale)}</td>
                     <td className="px-4 py-3">
                       {row.recommended ? (
                         <span className="rounded-full bg-pink-100 px-2 py-0.5 text-xs font-semibold text-pink-800">TOP3</span>

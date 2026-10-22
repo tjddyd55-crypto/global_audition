@@ -2,6 +2,8 @@
 
 import { Link } from '@/i18n.config'
 import { formatCreditsCount } from '@/shared/money/creditsDisplay'
+import { formatUsdAmount } from '@/shared/money/currency'
+import { useLocale } from 'next-intl'
 import { resolveApplicationFeeCredits, resolveApplicationFeeUsd } from '@/shared/api/credits'
 import { useTranslations } from 'next-intl'
 
@@ -30,6 +32,7 @@ export default function ApplyCreditNotice({
 }: ApplyCreditNoticeProps) {
   const t = useTranslations('apply')
   const tCredits = useTranslations('credits')
+  const locale = useLocale()
   const mode =
     applyPolicySnapshot?.applicationPaymentMode ??
     (!applyPolicySnapshot || !applyPolicySnapshot.active || applyPolicySnapshot.cost <= 0 ? 'FREE' : 'CREDIT')
@@ -47,9 +50,9 @@ export default function ApplyCreditNotice({
       {applyPolicySnapshot && mode === 'CREDIT' && credits > 0 && hasEnoughCredits ? (
         <div className="mb-4 rounded-lg border border-violet-100 bg-violet-50 px-4 py-3 text-sm text-violet-900">
           {t('creditMeta', {
-            usd: formatCreditsCount(usd),
-            credits: formatCreditsCount(credits),
-            balance: formatCreditsCount(creditBalanceAmount),
+            usd: formatUsdAmount(usd, locale),
+            credits: formatCreditsCount(credits, locale),
+            balance: formatCreditsCount(creditBalanceAmount, locale),
           })}
         </div>
       ) : null}
@@ -57,10 +60,10 @@ export default function ApplyCreditNotice({
       {applyPolicySnapshot && mode === 'CREDIT' && credits > 0 && creditGateReady && !hasEnoughCredits ? (
         <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
           {t('insufficientDetail', {
-            usd: formatCreditsCount(usd),
-            required: formatCreditsCount(credits),
-            current: formatCreditsCount(creditBalanceAmount),
-            shortfall: formatCreditsCount(Math.max(0, credits - creditBalanceAmount)),
+            usd: formatUsdAmount(usd, locale),
+            required: formatCreditsCount(credits, locale),
+            current: formatCreditsCount(creditBalanceAmount, locale),
+            shortfall: formatCreditsCount(Math.max(0, credits - creditBalanceAmount), locale),
           })}
           <div className="mt-2">
             <Link href="/credits/charge" className="font-semibold text-violet-700 underline underline-offset-2">

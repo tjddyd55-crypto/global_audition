@@ -27,6 +27,8 @@ npm run dev
 
 브라우저에서 [http://localhost:3000](http://localhost:3000) 열기
 
+로컬 브라우저 주소는 `http://localhost:<포트>` 하나만 쓴다. 로그인 세션은 `Domain` 없는 HttpOnly 쿠키 `accessToken`(`SameSite=Lax`, HTTP에서는 `Secure` 없음)과 `localStorage`에 같이 남는다. 둘 다 호스트 전용이라 `127.0.0.1`과 쿠키를 공유하지 않는다. `next dev`는 요청 URL을 `localhost`로 두고, 미들웨어가 `Location`을 `127.0.0.1`로 바꿔도 Next가 다시 `localhost`로 되돌린다. `127.0.0.1`로 열면 기획사 화면 리다이렉트에서 세션이 끊긴다.
+
 ### 빌드
 
 ```bash
