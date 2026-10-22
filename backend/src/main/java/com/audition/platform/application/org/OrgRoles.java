@@ -1,8 +1,8 @@
 package com.audition.platform.application.org;
 
 /**
- * 기존 역할과 공존한다. SUPER_ADMIN 은 본사 권한을 유지하고 GLOBAL_SUPER_ADMIN 과 같은 범위다.
- * AGENCY 는 AGENCY_ADMIN 과 같은 자기 기획사 범위다. 국가별 로그인 체계는 만들지 않는다.
+ * SUPER_ADMIN 이 본사 최고 관리자다. GLOBAL_SUPER_ADMIN 은 같은 권한의 옛 별칭이며 새 계정을 만들지 않는다.
+ * AGENCY_ADMIN 은 AGENCY 와 같은 자기 기획사 범위의 별칭이다. 국가별 로그인 체계는 만들지 않는다.
  */
 public final class OrgRoles {
 

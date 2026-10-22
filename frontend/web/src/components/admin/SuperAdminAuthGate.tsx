@@ -98,7 +98,7 @@ export function SuperAdminAuthGate({ children }: SuperAdminAuthGateProps) {
       <div className="mx-auto max-w-lg px-4 py-16">
         <AdminNotice title="접근 거부">
           <p className="mb-4 text-gray-600">
-            본사 관리자(SUPER_ADMIN, GLOBAL_SUPER_ADMIN)만 이 영역에 접근할 수 있습니다. 현재 역할:{' '}
+            본사 최고 관리자(SUPER_ADMIN)만 이 영역에 접근할 수 있습니다. 현재 역할:{' '}
             <strong>{me.role}</strong>
           </p>
           {jwtRoleHint && jwtRoleHint !== me.role && (

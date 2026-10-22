@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { adminKo } from '@/app/admin/org/copy'
 import { orgAdminApi, orgErrorMessage } from '@/shared/api/orgAdmin'
+import { formatCount } from '@/shared/money/currency'
 
 export default function ContractsPage() {
   const qc = useQueryClient()
@@ -93,8 +94,8 @@ export default function ContractsPage() {
               <td className="py-2">{row.contractNumber}</td>
               <td>{row.counterpartyName}</td>
               <td>{row.status}</td>
-              <td>{row.versionNo}</td>
-              <td>{row.revenueShareBps ?? '미정'}</td>
+              <td>{formatCount(row.versionNo)}</td>
+              <td>{row.revenueShareBps == null ? '미정' : formatCount(row.revenueShareBps)}</td>
               <td>{row.settlementBasis ?? '미정'}</td>
               <td>{row.roundingPolicy ?? '미정'}</td>
               <td>{row.cycle ?? 'MONTHLY'}</td>

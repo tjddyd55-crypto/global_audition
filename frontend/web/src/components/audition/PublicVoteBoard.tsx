@@ -13,10 +13,7 @@ import { Link, useRouter } from '@/i18n.config'
 import { HERO } from '@/shared/design-tokens'
 import { CARD_BASE, PAGE_CONTAINER, TEXT_SUB } from '@/shared/ui/specClasses'
 import { isAllCategoryName } from '@/shared/audition/allCategorySentinel'
-
-function formatCount(n: number, locale: string) {
-  return new Intl.NumberFormat(locale).format(n)
-}
+import { formatCount } from '@/shared/money/currency'
 
 type Props = {
   auditionId: string

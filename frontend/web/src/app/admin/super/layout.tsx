@@ -41,7 +41,7 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
         </header>
         <div className="flex min-h-0 flex-1">
           <aside className="w-64 shrink-0 border-r border-gray-200 bg-white p-4">
-            <h2 className="mb-6 text-lg font-semibold">슈퍼 관리자</h2>
+            <h2 className="mb-6 text-lg font-semibold">본사 관리자</h2>
             <nav className="space-y-2">
               {MENU.map((item) => {
                 const isActive = pathname.startsWith(item.path)

@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { isAxiosError } from 'axios'
 import { superAdminApi } from '@/shared/api/superAdmin'
+import { formatCount, formatUsdAmount } from '@/shared/money/currency'
 
 function errorMessage(err: unknown): string {
   if (isAxiosError(err)) {
@@ -50,7 +51,7 @@ export default function ApplicationFeePage() {
       <h1 className="mb-2 text-xl font-semibold">전역 지원비</h1>
       <p className="mb-4 text-sm text-gray-600">
         확정 정책: 1 USD = 1 Credit. 오디션별 가격은 없습니다. 현재{' '}
-        {fee.data ? `$${fee.data.amountUsd} (${fee.data.creditQuantity} credits)` : '-'}. 지원 화면과 차감은 서버가
+        {fee.data ? `${formatUsdAmount(fee.data.amountUsd)} (${formatCount(fee.data.creditQuantity)} credits)` : '-'}. 지원 화면과 차감은 서버가
         이 전역 USD만 읽습니다. 0이면 무료입니다. 이미 기록된 주문·원장 금액은 바꾸지 않습니다.
       </p>
       {fee.isLoading ? <p>불러오는 중…</p> : null}
@@ -87,8 +88,8 @@ export default function ApplicationFeePage() {
         <tbody>
           {(history.data ?? []).map((row) => (
             <tr key={row.id} className="border-b">
-              <td className="py-2">{row.oldAmountUsd}</td>
-              <td>{row.newAmountUsd}</td>
+              <td className="py-2">{formatUsdAmount(row.oldAmountUsd)}</td>
+              <td>{formatUsdAmount(row.newAmountUsd)}</td>
               <td>{row.changedBy ?? '-'}</td>
               <td>{row.changedAt}</td>
               <td>{row.source}</td>

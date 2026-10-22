@@ -11,17 +11,14 @@ import { channelVideoKeys } from '@/shared/query/channelVideoQuery'
 import { ChannelPublicVideoList } from '@/components/channel/ChannelPublicVideoList'
 import { getVideoEmbedSrc } from '@/shared/utils/videoEmbed'
 import { formatNationalityLabel, knownNationalityCode } from '@/shared/channel/nationalityDisplay'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
+import { formatCount } from '@/shared/money/currency'
 import { userApi } from '@/shared/api/user'
 import { authApi } from '@/shared/api/auth'
 import { DEFAULT_IMAGES } from '@/shared/constants/fallbacks'
 import { TranslationNotice, translatedText, useContentTranslation } from '@/components/i18n/TranslatedField'
 
 type TabId = 'videos' | 'info'
-
-function formatCount(n: number): string {
-  return new Intl.NumberFormat('ko-KR').format(n)
-}
 
 async function shareOrCopyChannelPage(url: string, title: string): Promise<'shared' | 'copied' | 'noop'> {
   if (typeof window === 'undefined') return 'noop'
@@ -45,6 +42,7 @@ async function shareOrCopyChannelPage(url: string, title: string): Promise<'shar
 export default function ChannelByUserIdPage() {
   const t = useTranslations('channel')
   const tNat = useTranslations('nationality')
+  const locale = useLocale()
   const params = useParams()
   const userId = typeof params.userId === 'string' ? params.userId : ''
   const [tab, setTab] = useState<TabId>('videos')
@@ -199,7 +197,7 @@ export default function ChannelByUserIdPage() {
                 <div className="mt-1 text-sm text-gray-700">{categories.join(' · ')}</div>
               ) : null}
               <div className="mt-2 text-sm text-gray-500">
-                {t('subscribersVideos', { subs: formatCount(stats.subs), videos: formatCount(stats.videos) })}
+                {t('subscribersVideos', { subs: formatCount(stats.subs, locale), videos: formatCount(stats.videos, locale) })}
               </div>
             </div>
             <div className="ml-3 flex shrink-0 gap-2">

@@ -7,15 +7,12 @@ import type { ManageApplicantItem } from '@/shared/api/auditions'
 import { BTN_SECONDARY } from '@/shared/ui/specClasses'
 import { resolveVideoThumbnailUrl } from '@/shared/audition/videoThumbnail'
 import { useLocale, useTranslations } from 'next-intl'
+import { formatCount } from '@/shared/money/currency'
 import {
   applicantStatusBadgeClass,
   applicantStatusMessageKey,
   nationalityCatalogKey,
 } from '../detail/applicantDetailLabels'
-
-function formatCount(n: number, locale: string) {
-  return new Intl.NumberFormat(locale).format(n)
-}
 
 function formatAppliedDate(createdAt: string | null | undefined, locale: string) {
   if (!createdAt) return '—'

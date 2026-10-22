@@ -25,8 +25,12 @@ describe('USD settlement display', () => {
   it('groups screen counts and USD with Intl separators', () => {
     expect(formatCount(1234, 'en')).toBe('1,234')
     expect(formatCount(1234, 'ko')).toBe('1,234')
+    expect(formatCount(2000, 'en')).toBe('2,000')
+    expect(formatCount(12500, 'ko')).toBe('12,500')
     expect(formatUsdAmount(1234, 'en')).toBe('1,234 USD')
+    expect(formatUsdAmount(2000, 'en')).toBe('2,000 USD')
     expect(formatUsdAmount(1234.56, 'en')).toBe('1,234.56 USD')
+    expect(formatUsdAmount(12500.5, 'en')).toBe('12,500.50 USD')
     expect(formatUsdAmount('0.20', 'en')).toBe('0.20 USD')
     expect(formatUsdAmount(1234.56, 'ko')).toContain('1,234')
   })

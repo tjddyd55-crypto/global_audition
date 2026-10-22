@@ -702,7 +702,7 @@ export function ContractScreen() {
       {current ? (
         <Panel title={current.contractNumber}>
           <p className="text-sm">
-            상대 {current.counterpartyName} · 국가 {current.countryCode} · 상태 {current.status} · 기간 {current.startDate} ~ {current.endDate ?? '진행'} · 요율 {current.revenueShareBps ?? '미정'} bps · 기준 {current.settlementBasis ?? '미정'}
+            상대 {current.counterpartyName} · 국가 {current.countryCode} · 상태 {current.status} · 기간 {current.startDate} ~ {current.endDate ?? '진행'} · 요율 {current.revenueShareBps == null ? '미정' : count(current.revenueShareBps, locale)} bps · 기준 {current.settlementBasis ?? '미정'}
           </p>
           <p className="mt-2 text-sm text-gray-600">전자서명은 없습니다. 서명본은 본사가 비공개 저장소에 첨부합니다.</p>
         </Panel>

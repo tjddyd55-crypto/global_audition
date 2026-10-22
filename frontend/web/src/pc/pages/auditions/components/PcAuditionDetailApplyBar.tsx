@@ -2,9 +2,11 @@
 
 import { Link } from '@/i18n.config'
 import { MultiRoundSubmitCta } from '@/components/application/MultiRoundSubmitCta'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { applyBlockedDisplayMessage } from '@/shared/audition/applyBlockedCopy'
 import { resolveApplicationFeeCredits, resolveApplicationFeeUsd } from '@/shared/api/credits'
+import { formatCreditsCount } from '@/shared/money/creditsDisplay'
+import { formatUsdAmount } from '@/shared/money/currency'
 
 type PcAuditionDetailApplyBarProps = {
   auditionId: string
@@ -71,6 +73,7 @@ export default function PcAuditionDetailApplyBar({
 }: PcAuditionDetailApplyBarProps) {
   const tDetail = useTranslations('auditionDetail')
   const tApply = useTranslations('apply')
+  const locale = useLocale()
   if (interactionsDisabled) {
     return (
       <div className="sticky bottom-0 z-20 border-t bg-white/95 p-4 backdrop-blur">
@@ -191,9 +194,9 @@ export default function PcAuditionDetailApplyBar({
             {needCreditsForApply && hasEnoughCredits ? (
               <p className="text-center text-neutral-500">
                 {tDetail('creditCostHold', {
-                  usd: resolveApplicationFeeUsd(applyPolicySnapshot),
-                  credits: resolveApplicationFeeCredits(applyPolicySnapshot),
-                  balance: creditBalanceAmount,
+                  usd: formatUsdAmount(resolveApplicationFeeUsd(applyPolicySnapshot), locale),
+                  credits: formatCreditsCount(resolveApplicationFeeCredits(applyPolicySnapshot), locale),
+                  balance: formatCreditsCount(creditBalanceAmount, locale),
                 })}
               </p>
             ) : null}
