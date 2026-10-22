@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { adminKo } from '@/app/admin/org/copy'
 import { orgAdminApi } from '@/shared/api/orgAdmin'
+import { formatCount, formatUsdAmount } from '@/shared/money/currency'
 
 export default function RevenuePage() {
   const [country, setCountry] = useState('')
@@ -31,8 +32,8 @@ export default function RevenuePage() {
       {stats.isLoading ? <p>불러오는 중…</p> : null}
       {stats.data ? (
         <p className="mb-4 text-sm text-gray-700">
-          국가 {stats.data.countries} · 활성 국가관리자 {stats.data.activeCountryAdmins} · 기획사 {stats.data.agenciesRegistered} / 승인{' '}
-          {stats.data.agenciesApproved} · 지점 미연결 오디션 {stats.data.auditionsUnlinked}
+          국가 {formatCount(stats.data.countries)} · 활성 국가관리자 {formatCount(stats.data.activeCountryAdmins)} · 기획사 {formatCount(stats.data.agenciesRegistered)} / 승인{' '}
+          {formatCount(stats.data.agenciesApproved)} · 지점 미연결 오디션 {formatCount(stats.data.auditionsUnlinked)}
         </p>
       ) : null}
       <table className="w-full text-sm">
@@ -55,17 +56,17 @@ export default function RevenuePage() {
           {(stats.data?.slices ?? []).map((row) => (
             <tr key={row.country} className="border-b">
               <td className="py-2">{row.country}</td>
-              <td>{row.auditions}</td>
-              <td>{row.applications}</td>
-              <td>{row.accountingRevenueUsd}</td>
-              <td>{row.refundsUsd}</td>
-              <td>{row.salesFeeSnapshotUsd}</td>
-              <td>{row.salesCashUsd === null ? '미정' : row.salesCashUsd}</td>
-              <td>{row.settlementBaseUsd}</td>
-              <td>{row.compensationUsd}</td>
-              <td>{row.hqShareUsd}</td>
+              <td>{formatCount(row.auditions)}</td>
+              <td>{formatCount(row.applications)}</td>
+              <td>{formatUsdAmount(row.accountingRevenueUsd)}</td>
+              <td>{formatUsdAmount(row.refundsUsd)}</td>
+              <td>{formatUsdAmount(row.salesFeeSnapshotUsd)}</td>
+              <td>{row.salesCashUsd === null ? '미정' : formatUsdAmount(row.salesCashUsd)}</td>
+              <td>{formatUsdAmount(row.settlementBaseUsd)}</td>
+              <td>{formatUsdAmount(row.compensationUsd)}</td>
+              <td>{formatUsdAmount(row.hqShareUsd)}</td>
               <td>
-                {row.settledCount}/{row.unsettledCount}
+                {formatCount(row.settledCount)}/{formatCount(row.unsettledCount)}
               </td>
             </tr>
           ))}

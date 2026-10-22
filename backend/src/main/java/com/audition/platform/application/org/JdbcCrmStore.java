@@ -82,6 +82,34 @@ public class JdbcCrmStore {
                 """, id, agencyId, country, actor, kind, body, followUpOn == null ? null : Date.valueOf(followUpOn));
     }
 
+    public Optional<ActivityRow> findActivity(UUID id) {
+        List<ActivityRow> rows = jdbc.query("""
+                SELECT id, crm_agency_id, actor_id, kind, body, follow_up_on, created_at
+                FROM crm_activities
+                WHERE id = ?
+                """, (rs, n) -> new ActivityRow(
+                rs.getObject("id", UUID.class),
+                rs.getObject("crm_agency_id", UUID.class),
+                rs.getObject("actor_id", UUID.class),
+                rs.getString("kind"),
+                rs.getString("body"),
+                rs.getDate("follow_up_on") == null ? null : rs.getDate("follow_up_on").toLocalDate(),
+                rs.getTimestamp("created_at").toInstant()), id);
+        return rows.stream().findFirst();
+    }
+
+    public int updateConsult(UUID id, String country, UUID actorId, String body, LocalDate followUpOn) {
+        String sql = """
+                UPDATE crm_activities
+                SET body = ?, follow_up_on = ?
+                WHERE id = ? AND country_code = ? AND kind = 'CONSULT'
+                """;
+        if (actorId == null) {
+            return jdbc.update(sql, body, followUpOn == null ? null : Date.valueOf(followUpOn), id, country);
+        }
+        return jdbc.update(sql + " AND actor_id = ?", body, followUpOn == null ? null : Date.valueOf(followUpOn), id, country, actorId);
+    }
+
     public List<ActivityRow> activities(String countryCode, UUID actorId, UUID agencyId) {
         String sql = """
                 SELECT id, crm_agency_id, actor_id, kind, body, follow_up_on, created_at

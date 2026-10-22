@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { adminKo } from '@/app/admin/org/copy'
 import { orgAdminApi, orgErrorMessage } from '@/shared/api/orgAdmin'
+import { formatUsdAmount } from '@/shared/money/currency'
 
 export default function SettlementsPage() {
   const qc = useQueryClient()
@@ -68,9 +69,9 @@ export default function SettlementsPage() {
             <tr key={row.id} className="border-b">
               <td className="py-2">{row.period}</td>
               <td>{row.status}</td>
-              <td>{row.settlementBaseFinal ?? row.settlementBaseUsd ?? '—'}</td>
-              <td>{row.compensationFinal ?? row.compensationUsd ?? '미계산'}</td>
-              <td>{row.hqShareFinal ?? row.hqShareUsd ?? '—'}</td>
+              <td>{formatUsdAmount(row.settlementBaseFinal ?? row.settlementBaseUsd)}</td>
+              <td>{row.compensationFinal == null && row.compensationUsd == null ? '미계산' : formatUsdAmount(row.compensationFinal ?? row.compensationUsd)}</td>
+              <td>{formatUsdAmount(row.hqShareFinal ?? row.hqShareUsd)}</td>
               <td>{row.note}</td>
               <td className="space-x-2">
                 <button type="button" className="underline" onClick={() => approve.mutate(row.id)}>

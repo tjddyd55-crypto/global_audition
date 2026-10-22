@@ -4,6 +4,7 @@ import com.audition.platform.application.org.CrmService;
 import com.audition.platform.application.org.CrmService.AgencyDraft;
 import com.audition.platform.application.org.JdbcCrmStore.AgencyRow;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -70,6 +71,12 @@ public class CrmController {
     @PostMapping("/{id}/consultations")
     public void consult(@PathVariable UUID id, @RequestBody NoteRequest request) {
         crm.logConsult(id, request.body(), request.followUpOn());
+    }
+
+    @PatchMapping("/activity-log/{activityId}")
+    public com.audition.platform.application.org.JdbcCrmStore.ActivityRow editConsult(
+            @PathVariable UUID activityId, @RequestBody NoteRequest request) {
+        return crm.editConsult(activityId, request.body(), request.followUpOn());
     }
 
     public record StageRequest(String stage, String reason) {

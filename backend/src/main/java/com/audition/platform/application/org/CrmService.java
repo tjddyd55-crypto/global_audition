@@ -125,6 +125,28 @@ public class CrmService {
     }
 
     @Transactional
+    public JdbcCrmStore.ActivityRow editConsult(UUID activityId, String body, LocalDate followUpOn) {
+        JdbcCrmStore.ActivityRow current = crm.findActivity(activityId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "CONSULT_NOT_FOUND"));
+        if (!"CONSULT".equals(current.kind())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "CONSULT_ONLY");
+        }
+        AgencyRow agency = requireVisible(current.agencyId());
+        OrgAccess.Actor actor = access.requireCountry(agency.countryCode());
+        access.requireStaffPermission(actor, agency.countryCode(), OrgRoles.PERM_CONSULT_LOG);
+        access.requireAssignedAgency(actor, agency.countryCode(), agency.id());
+        if (body == null || body.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "NOTE_REQUIRED");
+        }
+        UUID onlyStaff = OrgRoles.countryStaff(actor.role()) ? actor.id() : null;
+        if (crm.updateConsult(activityId, agency.countryCode(), onlyStaff, body.trim(), followUpOn) != 1) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "CONSULT_NOT_OWNED");
+        }
+        org.audit(UUID.randomUUID(), "CRM_CONSULT_EDITED", actor.id(), agency.countryCode(), "CRM_ACTIVITY", activityId.toString(), null);
+        return crm.findActivity(activityId).orElseThrow();
+    }
+
+    @Transactional
     public void linkAudition(UUID agencyId, UUID auditionId) {
         AgencyRow agency = requireVisible(agencyId);
         OrgAccess.Actor actor = access.requireCountry(agency.countryCode());

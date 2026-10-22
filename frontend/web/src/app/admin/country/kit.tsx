@@ -16,6 +16,7 @@ import {
 } from '@/shared/api/orgAdmin'
 import { apiClient } from '@/shared/api/client'
 import { userApi } from '@/shared/api/user'
+import { formatCount, formatUsdAmount } from '@/shared/money/currency'
 
 type Locale = 'ko' | 'ja' | 'en'
 type SortDir = 'asc' | 'desc'
@@ -35,11 +36,18 @@ export function label(locale: Locale, key: keyof typeof orgCopy.ko): string {
   return localized[key] ?? orgCopy.ko[key]
 }
 
-export function usd(value: number | string | null | undefined): string {
+export function usd(value: number | string | null | undefined, locale = 'en'): string {
+  return formatUsdAmount(value, locale)
+}
+
+export function count(value: number | string | null | undefined, locale = 'en'): string {
+  return formatCount(value, locale)
+}
+
+function formatCell(value: unknown): string {
+  if (typeof value === 'number') return formatCount(value, 'en')
   if (value === null || value === undefined || value === '') return '—'
-  const amount = typeof value === 'number' ? value : Number(value)
-  if (Number.isNaN(amount)) return `${value} USD`
-  return `${amount.toLocaleString('en-US', { minimumFractionDigits: Number.isInteger(amount) ? 0 : 2, maximumFractionDigits: 2 })} USD`
+  return String(value)
 }
 
 export function Panel({ title, children }: { title: string; children: React.ReactNode }) {
@@ -126,7 +134,7 @@ export function DataTable<T>({
               <tr key={index} className="border-b align-top">
                 {columns.map((column) => (
                   <td key={column.key} className="py-2 pr-3">
-                    {column.render ? column.render(row) : String(column.value(row) ?? '—')}
+                    {column.render ? column.render(row) : formatCell(column.value(row))}
                   </td>
                 ))}
               </tr>
@@ -151,7 +159,7 @@ export function DataTable<T>({
 
 export function DashboardScreen() {
   const { code, staff, locale, country, me } = useCountrySession()
-  const period = new Date().toISOString().slice(0, 7)
+  const [period, setPeriod] = useState(new Date().toISOString().slice(0, 7))
   const metrics = useQuery({
     queryKey: ['org', 'metrics', code, period],
     queryFn: () => orgAdminApi.metrics(code, period),
@@ -169,6 +177,10 @@ export function DashboardScreen() {
       <p className="mb-4 text-sm text-gray-600">
         {country?.name ?? '국가 없음'} ({code || '—'}) · 담당 {data?.representativeName ?? '미지정'} · 로그인 {me.data?.displayName ?? me.data?.email}
       </p>
+      <label className="mb-4 block text-sm">
+        조회 기간 (UTC)
+        <input className="ml-2 rounded border px-3 py-2" aria-label="대시보드 기간" value={period} onChange={(e) => setPeriod(e.target.value)} />
+      </label>
       <StateLine loading={metrics.isLoading} error={metrics.error} empty={!metrics.isLoading && !data} />
       {data ? <MetricGrid metrics={data} staff={staff} locale={locale} /> : null}
       <Panel title="최근 영업 활동">
@@ -188,23 +200,26 @@ export function DashboardScreen() {
 
 function MetricGrid({ metrics, staff, locale }: { metrics: CountryMetrics; staff: boolean; locale: Locale }) {
   const cards: { label: string; value: string }[] = [
-    { label: '등록 기획사', value: String(metrics.agenciesRegistered) },
-    { label: '승인 기획사', value: String(metrics.agenciesApproved) },
-    { label: '진행 오디션', value: String(metrics.liveAuditions) },
-    { label: '이번 달 지원', value: String(metrics.monthlyApplications) },
-    { label: '이번 달 수수료 실적', value: usd(metrics.feePerformanceUsd) },
-    { label: '무료 사용', value: String(metrics.freeUsageCredits) },
-    { label: '유료 사용', value: String(metrics.paidUsageCredits) },
-    { label: '검토 필요', value: String(metrics.reviewCredits) },
-    { label: '승인 대기', value: String(metrics.pendingApprovals) },
+    { label: '등록 기획사', value: count(metrics.agenciesRegistered, locale) },
+    { label: '승인 기획사', value: count(metrics.agenciesApproved, locale) },
+    { label: '진행 오디션', value: count(metrics.liveAuditions, locale) },
+    { label: '이번 달 지원', value: count(metrics.monthlyApplications, locale) },
+    { label: '이번 달 수수료 실적', value: usd(metrics.feePerformanceUsd, locale) },
+    { label: '무료 사용', value: count(metrics.freeUsageCredits, locale) },
+    { label: '유료 사용', value: count(metrics.paidUsageCredits, locale) },
+    { label: '검토 필요', value: count(metrics.reviewCredits, locale) },
+    { label: '승인 대기', value: count(metrics.pendingApprovals, locale) },
   ]
   if (!staff) {
+    const lastMonth = metrics.lastMonthPeriod ?? '지난 달'
+    const selected = metrics.period ?? '선택 월'
     cards.push(
-      { label: '환불', value: usd(metrics.refundsUsd) },
-      { label: '정산 베이스', value: usd(metrics.settlementBaseUsd) },
-      { label: '현재 요율(bps)', value: metrics.rateBps == null ? '미정' : String(metrics.rateBps) },
-      { label: label(locale, 'expected'), value: metrics.expectedCompensation == null ? '미계산' : usd(metrics.expectedCompensation) },
-      { label: label(locale, 'confirmed'), value: metrics.lastMonthConfirmedCompensation == null ? '없음' : usd(metrics.lastMonthConfirmedCompensation) },
+      { label: '환불', value: usd(metrics.refundsUsd, locale) },
+      { label: '정산 베이스', value: usd(metrics.settlementBaseUsd, locale) },
+      { label: '현재 요율(bps)', value: metrics.rateBps == null ? '미정' : count(metrics.rateBps, locale) },
+      { label: `${label(locale, 'expected')} · ${selected}`, value: metrics.expectedCompensation == null ? '미계산' : usd(metrics.expectedCompensation, locale) },
+      { label: `확정 · ${selected}`, value: metrics.confirmedCompensation == null ? '없음' : usd(metrics.confirmedCompensation, locale) },
+      { label: `확정 · ${lastMonth}`, value: metrics.lastMonthConfirmedCompensation == null ? '없음' : usd(metrics.lastMonthConfirmedCompensation, locale) },
     )
   }
   return (
@@ -284,7 +299,7 @@ function AgencyDetail({ row }: { row: AgencyRow }) {
       <ul className="text-sm">
         {mine.map((item) => (
           <li key={item.id}>
-            {item.title} · {item.status} · 지원 {item.applicants} · 수수료 {usd(item.feeUsd)}
+            {item.title} · {item.status} · 지원 {count(item.applicants)} · 수수료 {usd(item.feeUsd)}
           </li>
         ))}
       </ul>
@@ -330,10 +345,22 @@ export function CrmScreen() {
     },
     onError: (err) => setError(orgErrorMessage(err)),
   })
+  const [editId, setEditId] = useState('')
   const consult = useMutation({
     mutationFn: () => orgAdminApi.consult(agencyId, note, followUp || undefined),
     onSuccess: async () => {
       setError(null)
+      setNote('')
+      await refresh()
+    },
+    onError: (err) => setError(orgErrorMessage(err)),
+  })
+  const editConsult = useMutation({
+    mutationFn: () => orgAdminApi.updateConsult(editId, note, followUp || undefined),
+    onSuccess: async () => {
+      setError(null)
+      setEditId('')
+      setNote('')
       await refresh()
     },
     onError: (err) => setError(orgErrorMessage(err)),
@@ -366,7 +393,11 @@ export function CrmScreen() {
           <button type="button" className="w-fit rounded border px-3 py-2" onClick={() => move.mutate()}>단계 변경</button>
           <textarea className="rounded border px-3 py-2" aria-label="상담 내용" placeholder="상담 내용" value={note} onChange={(e) => setNote(e.target.value)} />
           <input className="rounded border px-3 py-2" aria-label="다음 상담일" type="date" value={followUp} onChange={(e) => setFollowUp(e.target.value)} />
-          <button type="button" className="w-fit rounded border px-3 py-2" onClick={() => consult.mutate()}>상담 기록</button>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" className="w-fit rounded border px-3 py-2" onClick={() => consult.mutate()}>상담 기록</button>
+            <button type="button" className="w-fit rounded border px-3 py-2" disabled={!editId} onClick={() => editConsult.mutate()}>상담 수정</button>
+          </div>
+          {editId ? <p className="text-xs text-gray-500">수정 중인 상담 {editId}</p> : null}
         </div>
       </Panel>
       <Panel title="다음 상담">
@@ -374,18 +405,31 @@ export function CrmScreen() {
       </Panel>
       <Panel title="상담 로그">
         <StateLine loading={log.isLoading} error={log.error} empty={(log.data ?? []).length === 0} />
-        <FollowList rows={log.data ?? []} />
+        <FollowList
+          rows={log.data ?? []}
+          onEdit={(row) => {
+            setEditId(row.id)
+            setAgencyId(row.agencyId)
+            setNote(row.body)
+            setFollowUp(row.followUpOn ?? '')
+          }}
+        />
       </Panel>
     </div>
   )
 }
 
-function FollowList({ rows }: { rows: ActivityRow[] }) {
+function FollowList({ rows, onEdit }: { rows: ActivityRow[]; onEdit?: (row: ActivityRow) => void }) {
   if (rows.length === 0) return null
   return (
     <ul className="space-y-2 text-sm">
       {rows.map((row) => (
-        <li key={row.id}>{row.followUpOn ?? row.createdAt?.slice(0, 10)} · {row.body}</li>
+        <li key={row.id} className="flex flex-wrap items-center gap-2">
+          <span>{row.followUpOn ?? row.createdAt?.slice(0, 10)} · {row.body}</span>
+          {onEdit && row.kind === 'CONSULT' ? (
+            <button type="button" className="underline" onClick={() => onEdit(row)}>수정</button>
+          ) : null}
+        </li>
       ))}
     </ul>
   )
@@ -573,6 +617,7 @@ export function SettlementScreen() {
   const contracts = useQuery({ queryKey: ['org', 'contracts', code], queryFn: () => orgAdminApi.contracts(code), enabled: code.length === 2 && !staff })
   const stored = useQuery({ queryKey: ['org', 'settlements', code], queryFn: () => orgAdminApi.settlements(code), enabled: code.length === 2 && !staff })
   const active = (contracts.data ?? []).find((row) => row.status === 'ACTIVE')
+  const monthRows = (stored.data ?? []).filter((row) => row.period === period)
   const preview = useQuery({
     queryKey: ['org', 'preview', code, active?.id, period],
     queryFn: () => orgAdminApi.previewSettlement(code, active!.id, period),
@@ -596,15 +641,17 @@ export function SettlementScreen() {
         ) : null}
       </Panel>
       <Panel title="월 정산 원장">
-        <StateLine loading={stored.isLoading} error={stored.error} empty={(stored.data ?? []).length === 0} />
-        {(stored.data ?? []).length > 0 ? (
+        <StateLine loading={stored.isLoading} error={stored.error} empty={false} />
+        {stored.isLoading || stored.error ? null : monthRows.length === 0 ? (
+          <p className="text-sm text-gray-500">{period} 확정 정산이 없습니다. 예상 보상과 확정·지급 상태는 다른 값입니다.</p>
+        ) : (
           <DataTable
-            rows={stored.data ?? []}
+            rows={monthRows}
             columns={[
               { key: 'period', header: '기간', value: (row) => row.period },
               { key: 'status', header: '상태', value: (row) => row.status },
               { key: 'kind', header: '구분', value: () => 'STORED' },
-              { key: 'comp', header: '확정 보상', value: (row) => row.compensationFinal ?? row.compensationUsd },
+              { key: 'comp', header: '확정 보상', value: (row) => row.compensationFinal ?? row.compensationUsd, render: (row) => usd(row.compensationFinal ?? row.compensationUsd) },
               { key: 'payout', header: '지급 기록', value: (row) => row.payoutNote },
               {
                 key: 'csv',

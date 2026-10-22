@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { orgAdminApi, orgErrorMessage } from '@/shared/api/orgAdmin'
+import { formatCount, formatUsdAmount } from '@/shared/money/currency'
 
 export default function CountryOpsPage() {
   const [period, setPeriod] = useState(new Date().toISOString().slice(0, 7))
@@ -33,6 +34,7 @@ export default function CountryOpsPage() {
               <th>유료</th>
               <th>베이스</th>
               <th>예상</th>
+              <th>선택 월 확정</th>
               <th>지난 달 확정</th>
             </tr>
           </thead>
@@ -41,17 +43,18 @@ export default function CountryOpsPage() {
               <tr key={row.countryCode} className="border-b">
                 <td className="py-2">{row.countryName} {row.countryCode}</td>
                 <td>{row.representativeName ?? '—'}</td>
-                <td>{row.agenciesApproved}/{row.agenciesRegistered}</td>
-                <td>{row.pendingApprovals}</td>
-                <td>{row.liveAuditions}</td>
-                <td>{row.monthlyApplications}</td>
-                <td>{row.feePerformanceUsd}</td>
-                <td>{row.refundsUsd ?? '—'}</td>
-                <td>{row.freeUsageCredits}</td>
-                <td>{row.paidUsageCredits}</td>
-                <td>{row.settlementBaseUsd ?? '—'}</td>
-                <td>{row.expectedCompensation ?? '—'}</td>
-                <td>{row.lastMonthConfirmedCompensation ?? '—'}</td>
+                <td>{formatCount(row.agenciesApproved)}/{formatCount(row.agenciesRegistered)}</td>
+                <td>{formatCount(row.pendingApprovals)}</td>
+                <td>{formatCount(row.liveAuditions)}</td>
+                <td>{formatCount(row.monthlyApplications)}</td>
+                <td>{formatUsdAmount(row.feePerformanceUsd)}</td>
+                <td>{formatUsdAmount(row.refundsUsd)}</td>
+                <td>{formatCount(row.freeUsageCredits)}</td>
+                <td>{formatCount(row.paidUsageCredits)}</td>
+                <td>{formatUsdAmount(row.settlementBaseUsd)}</td>
+                <td>{row.expectedCompensation == null ? '—' : formatUsdAmount(row.expectedCompensation)}</td>
+                <td>{row.confirmedCompensation == null ? '—' : formatUsdAmount(row.confirmedCompensation)}</td>
+                <td>{row.lastMonthConfirmedCompensation == null ? '—' : formatUsdAmount(row.lastMonthConfirmedCompensation)}</td>
               </tr>
             ))}
           </tbody>

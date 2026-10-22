@@ -192,14 +192,16 @@ public class CountryWorkspaceService {
         Integer rate = null;
         String expected = null;
         String expectedStatus = null;
-        String confirmed = null;
+        String lastMonthConfirmed = null;
+        String selectedConfirmed = null;
         Long base = null;
         if (!staff) {
             rate = currentRate(code);
             ExpectedRollup rollup = expected(code, period);
             expected = rollup.compensation();
             expectedStatus = rollup.status();
-            confirmed = confirmed(code, previous(period));
+            lastMonthConfirmed = confirmed(code, previous(period));
+            selectedConfirmed = confirmed(code, period);
             base = usage.payableUsd();
             refunds = sumRefunds(code, period);
         }
@@ -221,11 +223,14 @@ public class CountryWorkspaceService {
                 rate,
                 expected,
                 expectedStatus,
-                confirmed,
+                lastMonthConfirmed,
                 pending,
                 usage.freeCredits(),
                 usage.paidCredits(),
-                usage.reviewCredits());
+                usage.reviewCredits(),
+                period,
+                previous(period),
+                selectedConfirmed);
     }
 
     private ExpectedRollup expected(String code, String period) {
@@ -459,7 +464,10 @@ public class CountryWorkspaceService {
             long pendingApprovals,
             long freeUsageCredits,
             long paidUsageCredits,
-            long reviewCredits) {
+            long reviewCredits,
+            String period,
+            String lastMonthPeriod,
+            String confirmedCompensation) {
     }
 
     public record AuditionOps(

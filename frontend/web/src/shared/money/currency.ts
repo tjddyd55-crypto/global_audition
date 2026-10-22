@@ -20,6 +20,37 @@ export function intlLocaleFor(appLocale?: string): string {
   return INTL_BY_APP_LOCALE[appLocale] ?? 'en-US'
 }
 
+/**
+ * 화면의 건수. `Intl.NumberFormat` 천 단위 구분.
+ * CSV·원장 원값은 이 함수를 거치지 않는다.
+ */
+export function formatCount(value: number | string | null | undefined, appLocale = 'en'): string {
+  if (value === null || value === undefined || value === '') return '—'
+  const amount = typeof value === 'number' ? value : Number(value)
+  if (!Number.isFinite(amount)) return String(value)
+  return new Intl.NumberFormat(intlLocaleFor(appLocale), {
+    useGrouping: true,
+    maximumFractionDigits: 0,
+  }).format(amount)
+}
+
+/**
+ * 화면의 USD. 정수는 `1,234 USD`, 소수는 소수 둘째 자리 `1,234.56 USD`.
+ * 결제 입력용 `$10` 정수 표기({@link formatWholeUsd})와는 따로 둔다.
+ */
+export function formatUsdAmount(value: number | string | null | undefined, appLocale = 'en'): string {
+  if (value === null || value === undefined || value === '') return '—'
+  const amount = typeof value === 'number' ? value : Number(value)
+  if (!Number.isFinite(amount)) return `${value} USD`
+  const fractionDigits = Number.isInteger(amount) ? 0 : 2
+  const formatted = new Intl.NumberFormat(intlLocaleFor(appLocale), {
+    useGrouping: true,
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: 2,
+  }).format(amount)
+  return `${formatted} USD`
+}
+
 /** 사용자 표시: `$10` 정수 달러만. `$10.00` / 센트 / float 금지. */
 export function formatWholeUsd(amount: number): string {
   const n = Number.isFinite(amount) ? Math.round(amount) : 0

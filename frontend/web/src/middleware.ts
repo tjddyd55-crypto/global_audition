@@ -35,6 +35,24 @@ function resolveDevice(req: NextRequest): Device {
 const intlMiddleware = createIntlMiddleware(routing)
 
 export default function middleware(req: NextRequest) {
+  // next-intl rewrites /en/... onto itself with X-NEXT-INTL-LOCALE.
+  // Next.js 14 runs middleware again on that rewrite and loops until the socket drops.
+  const markedLocale = req.headers.get('x-next-intl-locale')
+  const pathLocale = (req.nextUrl.pathname.split('/')[1] ?? '').toLowerCase()
+  if (markedLocale && pathLocale === markedLocale.toLowerCase()) {
+    const device = resolveDevice(req)
+    const requestHeaders = new Headers(req.headers)
+    requestHeaders.set(DEVICE_HEADER, device)
+    const res = NextResponse.next({ request: { headers: requestHeaders } })
+    if (!req.cookies.get(DEVICE_COOKIE)) {
+      res.cookies.set(DEVICE_COOKIE, device, {
+        path: '/',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 180,
+      })
+    }
+    return res
+  }
   const retired = redirectPathForRetiredLocale(req.nextUrl.pathname)
   if (retired) {
     const url = req.nextUrl.clone()

@@ -8,6 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useQueryClient } from '@tanstack/react-query'
 import { authApi } from '@/shared/api/auth'
+import { isAdminConsolePath, pathAfterLogin } from '@/shared/auth/roleHome'
 import { useLocale, useTranslations } from 'next-intl'
 import { Link } from '@/i18n.config'
 import AuthCardLayout from '@/components/auth/AuthCardLayout'
@@ -71,20 +72,16 @@ export default function PcLoginPage() {
       await new Promise(resolve => setTimeout(resolve, 300))
 
       const nextRaw = searchParams.get('next')
-      let path: string
-      if (nextRaw && isSafeInternalNextPath(nextRaw)) {
-        path = nextRaw.startsWith('/') ? nextRaw : `/${nextRaw}`
-      } else if (userRole === 'BUSINESS' || userRole === 'AGENCY' || userRole === 'ADMIN') {
-        path = '/my/dashboard'
-      } else if (userRole === 'APPLICANT') {
-        path = '/my/applications'
-      } else {
-        path = '/'
-      }
+      const path =
+        nextRaw && isSafeInternalNextPath(nextRaw)
+          ? nextRaw.startsWith('/')
+            ? nextRaw
+            : `/${nextRaw}`
+          : pathAfterLogin(userRole)
 
       // 전체 문서 로드로 이동 → 메모리 내 옛 JWT/역할(Zustand 등)과 localStorage 불일치로 인한 403 방지
       if (typeof window !== 'undefined') {
-        window.location.assign(path.startsWith('/admin') ? path : `/${locale}${path}`)
+        window.location.assign(isAdminConsolePath(path) ? path : `/${locale}${path}`)
       } else {
         router.push(path)
       }

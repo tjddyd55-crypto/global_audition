@@ -125,7 +125,11 @@ public class AttributionService {
                 when, null, amountUsd, revenue.paymentStatus(), "REFUNDED",
                 null, null, AttributionPlanner.CASH_MAPPING_COLLECTED,
                 AttributionPlanner.ATTRIBUTED, reason.trim());
-        store.insertAttribution(row);
+        try {
+            store.insertAttribution(row);
+        } catch (DataIntegrityViolationException ex) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "DUPLICATE_REFUND");
+        }
         org.audit(UUID.randomUUID(), "REFUND_RECORDED", actor.id(), revenue.country(), "PAYMENT_ORDER", paymentOrderId.toString(), reason);
         return row;
     }

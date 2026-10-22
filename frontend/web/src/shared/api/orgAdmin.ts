@@ -131,6 +131,13 @@ export const orgAdminApi = {
       followUpOn: followUpOn || null,
     })
   },
+  async updateConsult(activityId: string, body: string, followUpOn?: string) {
+    const { data } = await apiClient.patch<ActivityRow>(`/admin/org/crm/agencies/activity-log/${activityId}`, {
+      body,
+      followUpOn: followUpOn || null,
+    })
+    return data
+  },
   async contracts(country: string) {
     const { data } = await apiClient.get<ContractView[]>('/admin/org/contracts', { params: { country } })
     return data
@@ -260,6 +267,9 @@ export type CountryMetrics = {
   freeUsageCredits: number
   paidUsageCredits: number
   reviewCredits: number
+  period?: string | null
+  lastMonthPeriod?: string | null
+  confirmedCompensation?: string | null
 }
 
 export type AuditionOps = {

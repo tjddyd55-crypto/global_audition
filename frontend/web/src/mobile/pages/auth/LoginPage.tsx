@@ -8,6 +8,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { z } from 'zod'
 import { useTranslations } from 'next-intl'
 import { authApi } from '@/shared/api/auth'
+import { isAdminConsolePath, pathAfterLogin } from '@/shared/auth/roleHome'
 
 function createMobileLoginSchema(emailInvalid: string, passwordRequired: string) {
   return z.object({
@@ -62,7 +63,10 @@ export default function MobileLoginPage() {
 
       await new Promise((resolve) => setTimeout(resolve, 300))
 
-      if (userRole === 'BUSINESS' || userRole === 'AGENCY') {
+      const home = pathAfterLogin(userRole)
+      if (isAdminConsolePath(home)) {
+        window.location.assign(home)
+      } else if (userRole === 'BUSINESS' || userRole === 'AGENCY') {
         router.push('/my/dashboard')
       } else if (userRole === 'APPLICANT' || userRole === 'USER') {
         router.push('/')
