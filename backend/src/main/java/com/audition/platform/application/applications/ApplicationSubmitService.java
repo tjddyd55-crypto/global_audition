@@ -140,7 +140,7 @@ public class ApplicationSubmitService {
         app.setUpdatedAt(Instant.now());
 
         try {
-            app = applicationRepository.save(app);
+            app = applicationRepository.saveAndFlush(app);
         } catch (DataIntegrityViolationException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 지원 완료입니다.");
         }

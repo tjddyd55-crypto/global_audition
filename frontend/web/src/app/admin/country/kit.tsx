@@ -678,7 +678,7 @@ export function SettlementScreen() {
               },
             ]}
           />
-        ) : null}
+        )}
       </Panel>
     </div>
   )

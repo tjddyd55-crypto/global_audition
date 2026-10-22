@@ -281,12 +281,28 @@ class CreditSettlementExceptionIT {
         assertEquals("ADJUSTMENT_REQUIRED", adjusted.status());
         assertEquals("0.60", adjusted.compensationFinal());
         assertEquals(1, count("SELECT COUNT(*) FROM settlement_adjustments WHERE settlement_id = '" + stored.id() + "'"));
-        ResponseStatusException duplicate = assertThrows(ResponseStatusException.class,
-                () -> attributions.recordRefund(paymentId, 3, "duplicate refund",
+        ResponseStatusException duplicateFull = assertThrows(ResponseStatusException.class,
+                () -> attributions.recordRefund(paymentId, 3, "duplicate full refund",
                         OffsetDateTime.parse("2026-10-21T00:00:00Z").toInstant()));
-        assertEquals(409, duplicate.getStatusCode().value());
-        assertEquals("DUPLICATE_REFUND", duplicate.getReason());
+        assertEquals(409, duplicateFull.getStatusCode().value());
+        assertEquals("REFUND_EXCEEDS_COLLECTION", duplicateFull.getReason());
         assertEquals(1, count("SELECT COUNT(*) FROM revenue_attributions WHERE payment_order_id = '" + paymentId + "' AND line_kind = 'REFUND'"));
+        UUID secondPayment = UUID.randomUUID();
+        jdbc.update("""
+                INSERT INTO payment_orders (
+                    id, order_no, user_id, package_id, provider, amount, currency, status, credits, bonus_credits, paid_at
+                ) VALUES (?, ?, ?, ?, 'TEST', 3, 'USD', 'PAID', 3, 0, ?)
+                """, secondPayment, "QA-EX-" + secondPayment, applicant, packageId,
+                Timestamp.from(OffsetDateTime.parse("2026-10-05T00:00:00Z").toInstant()));
+        attributions.linkCash(secondPayment, contract.id());
+        attributions.recordRefund(secondPayment, 1, "partial refund",
+                OffsetDateTime.parse("2026-10-21T01:00:00Z").toInstant());
+        ResponseStatusException duplicatePartial = assertThrows(ResponseStatusException.class,
+                () -> attributions.recordRefund(secondPayment, 1, "duplicate partial refund",
+                        OffsetDateTime.parse("2026-10-21T02:00:00Z").toInstant()));
+        assertEquals(409, duplicatePartial.getStatusCode().value());
+        assertEquals("DUPLICATE_REFUND", duplicatePartial.getReason());
+        assertEquals(1, count("SELECT COUNT(*) FROM revenue_attributions WHERE payment_order_id = '" + secondPayment + "' AND line_kind = 'REFUND'"));
     }
 
     @Test
