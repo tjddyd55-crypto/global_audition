@@ -1480,6 +1480,7 @@
     "legacyPublic": "선택을 저장하기 전에는 공개 읽기 API가 기존에 보여 주던 프로필 항목을 유지합니다.",
     "views": "조회수",
     "subscribers": "구독자",
+    "unreadCount": "미읽음 {count}",
     "markRead": "읽음으로 표시",
     "read": "읽음",
     "ledgerClosing": "원장에 기록된 마지막 잔액",

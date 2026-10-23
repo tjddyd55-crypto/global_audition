@@ -1480,6 +1480,7 @@
     "legacyPublic": "Until you save a selection, the public read API keeps the profile fields it already showed.",
     "views": "Views",
     "subscribers": "Subscribers",
+    "unreadCount": "Unread {count}",
     "markRead": "Mark as read",
     "read": "Read",
     "ledgerClosing": "Latest ledger balance",

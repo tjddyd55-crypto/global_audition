@@ -312,6 +312,8 @@ export function CrmScreen() {
   const { code, locale } = useCountrySession()
   const qc = useQueryClient()
   const [name, setName] = useState('')
+  const [legalName, setLegalName] = useState('')
+  const [linkedUserId, setLinkedUserId] = useState('')
   const [staffId, setStaffId] = useState('')
   const [agencyId, setAgencyId] = useState('')
   const [stage, setStage] = useState('CONTACTED')
@@ -328,12 +330,16 @@ export function CrmScreen() {
     mutationFn: () => orgAdminApi.registerAgency({
       countryCode: code,
       displayName: name,
+      legalName: legalName.trim() || null,
+      linkedUserId: linkedUserId.trim() || null,
       assignedStaffUserId: staffId || null,
       notes: '국가 화면에서 등록',
     }),
     onSuccess: async () => {
       setError(null)
       setName('')
+      setLegalName('')
+      setLinkedUserId('')
       await refresh()
     },
     onError: (err) => setError(orgErrorMessage(err)),
@@ -374,7 +380,10 @@ export function CrmScreen() {
       <Panel title="리드 등록">
         <div className="flex flex-wrap gap-2">
           <input className="rounded border px-3 py-2" aria-label="리드 이름" placeholder="기획사 이름" value={name} onChange={(e) => setName(e.target.value)} />
+          <input className="rounded border px-3 py-2" aria-label="계약 법인" placeholder="계약 법인명" value={legalName} onChange={(e) => setLegalName(e.target.value)} />
+          <input className="rounded border px-3 py-2" aria-label="연결 사용자" placeholder="연결 사용자 ID" value={linkedUserId} onChange={(e) => setLinkedUserId(e.target.value)} />
           <input className="rounded border px-3 py-2" aria-label="담당 직원" placeholder="담당 직원 ID" value={staffId} onChange={(e) => setStaffId(e.target.value)} />
+          <p className="w-full text-xs text-gray-500">소속 국가는 이 국가 관리자 국가({code || '—'})입니다. 오디션 개최 국가와 다릅니다.</p>
           <button type="button" className="rounded bg-black px-3 py-2 text-white" onClick={() => register.mutate()}>등록</button>
         </div>
       </Panel>

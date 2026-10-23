@@ -6,6 +6,8 @@ import com.audition.platform.api.dto.AuditionRoundSummaryDto;
 import com.audition.platform.api.dto.CreateAuditionRequest;
 import com.audition.platform.api.dto.UpdateAuditionRequest;
 import com.audition.platform.application.audition.AuditionSeriesEligibilityService;
+import com.audition.platform.application.org.AgencyApproval;
+import com.audition.platform.application.org.JdbcCrmStore;
 import com.audition.platform.application.publicview.PublicAuditionBrowse;
 import com.audition.platform.application.audition.AuditionSeriesPresentation;
 import com.audition.platform.application.i18n.AuditionLocalizationService;
@@ -55,6 +57,7 @@ public class AuditionService {
     private final AuditionSeriesEligibilityService auditionSeriesEligibilityService;
     private final AuditionLocalizationService auditionLocalizationService;
     private final ContentTranslationService contentTranslations;
+    private final JdbcCrmStore crm;
 
     public AuditionService(AuditionRepository auditionRepository,
                            UserRepository userRepository,
@@ -63,7 +66,8 @@ public class AuditionService {
                            AuditionTagService auditionTagService,
                            AuditionSeriesEligibilityService auditionSeriesEligibilityService,
                            AuditionLocalizationService auditionLocalizationService,
-                           ContentTranslationService contentTranslations) {
+                           ContentTranslationService contentTranslations,
+                           JdbcCrmStore crm) {
         this.auditionRepository = auditionRepository;
         this.userRepository = userRepository;
         this.applicationRepository = applicationRepository;
@@ -72,6 +76,23 @@ public class AuditionService {
         this.auditionSeriesEligibilityService = auditionSeriesEligibilityService;
         this.auditionLocalizationService = auditionLocalizationService;
         this.contentTranslations = contentTranslations;
+        this.crm = crm;
+    }
+
+    /** 연결된 기획사 심사가 끝나기 전에는 게시·마감을 막는다. 심사 행이 없으면 기존 권한을 유지한다. */
+    private void requireApprovedAgencyForPublish(UUID ownerId, String status) {
+        if (crm == null || ownerId == null) {
+            return;
+        }
+        String st = status != null ? status : "DRAFT";
+        if (!"OPEN".equals(st) && !"CLOSED".equals(st)) {
+            return;
+        }
+        boolean pending = crm.findByLinkedUser(ownerId).stream()
+                .anyMatch(row -> !AgencyApproval.APPROVED.equals(row.approvalState()));
+        if (pending) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "AGENCY_NOT_APPROVED");
+        }
     }
 
     private static Instant parseInstantRequired(String value, String field) {
@@ -338,6 +359,7 @@ public class AuditionService {
         if (!SecurityUtils.hasRole("AGENCY") && !SecurityUtils.hasRole("ADMIN")) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only AGENCY or ADMIN can create auditions");
         }
+        requireApprovedAgencyForPublish(ownerId, req.getStatus());
         if (!userRepository.existsById(ownerId)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User not found");
         }
@@ -534,6 +556,7 @@ public class AuditionService {
             audition.setDescription(request.getDescription().trim());
         }
         if (request.getStatus() != null) {
+            requireApprovedAgencyForPublish(audition.getOwnerId(), request.getStatus());
             audition.setStatus(request.getStatus());
         }
         if (request.getCountryCode() != null) {

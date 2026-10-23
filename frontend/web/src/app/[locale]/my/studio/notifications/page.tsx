@@ -21,6 +21,9 @@ export default function StudioNotificationsPage() {
   return (
     <div className="flex flex-col gap-4">
       <h2 className={TITLE_PAGE}>{t('notifications')}</h2>
+      <p className={TEXT_SUB} data-testid="unread-count">
+        {t('unreadCount', { count: (query.data ?? []).filter((item) => !item.readAt).length })}
+      </p>
       <p className={TEXT_SUB}>{t('notificationsHint')}</p>
       {query.isLoading ? <p className={TEXT_SUB}>{t('loginRequired')}</p> : null}
       {query.isError ? <p className="text-sm text-red-600">{tNotice('loadFailed')}</p> : null}

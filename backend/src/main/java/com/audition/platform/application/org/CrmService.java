@@ -95,13 +95,14 @@ public class CrmService {
         } else if (AgencyApproval.SUSPENDED.equals(next)) {
             stage = "STOPPED";
         }
-        crm.updateState(id, stage, next, linkedUserId);
+        UUID link = linkedUserId != null ? linkedUserId : current.linkedUserId();
+        crm.updateState(id, stage, next, link);
         crm.approvalEvent(UUID.randomUUID(), id, current.approvalState(), next, action, actor.id(), reason);
         if (!stage.equals(current.stage())) {
             crm.stageEvent(UUID.randomUUID(), id, current.stage(), stage, actor.id(), reason);
         }
-        if (AgencyApproval.APPROVED.equals(next) && linkedUserId != null && !OrgRoles.hq(org.roleOf(linkedUserId))) {
-            org.setRoleIfNotHq(linkedUserId, OrgRoles.AGENCY);
+        if (AgencyApproval.APPROVED.equals(next) && link != null && !OrgRoles.hq(org.roleOf(link))) {
+            org.setRoleIfNotHq(link, OrgRoles.AGENCY);
         }
         org.audit(UUID.randomUUID(), "CRM_APPROVAL_" + action, actor.id(), current.countryCode(), "CRM_AGENCY", id.toString(), reason);
         return crm.find(id).orElseThrow();
