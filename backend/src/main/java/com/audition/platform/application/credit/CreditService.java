@@ -438,6 +438,45 @@ public class CreditService {
         return after;
     }
 
+    /**
+     * 부분 환불. referenceId 가 같으면 다시 차감하지 않는다.
+     */
+    @Transactional
+    public long refundLinkedCredits(UUID userId, long credits, String referenceId, String note) {
+        if (credits < 1) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "REFUND_CREDITS_INVALID");
+        }
+        if (referenceId == null || referenceId.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "REFUND_REFERENCE_REQUIRED");
+        }
+        String ref = referenceId.trim();
+        if (creditTransactionRepository.existsByUserIdAndTypeAndReferenceId(userId, CreditTransactionType.REFUND, ref)) {
+            return getBalance(userId);
+        }
+        userCreditRepository.ensureWalletRow(userId);
+        UserCredit wallet = userCreditRepository.findByUserIdForUpdate(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "크레딧 지갑을 준비할 수 없습니다."));
+        if (wallet.getBalance() < credits) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 사용한 크레딧이 있어 환불할 수 없습니다.");
+        }
+        long before = wallet.getBalance();
+        long after = before - credits;
+        wallet.setBalance(after);
+        wallet.setUpdatedAt(Instant.now());
+        userCreditRepository.save(wallet);
+        persistCreditTransaction(
+                userId,
+                -credits,
+                CreditTransactionType.REFUND,
+                REASON_PACKAGE_PURCHASE,
+                ref,
+                null,
+                note != null && !note.isBlank() ? note.trim() : "payment_partial_refund",
+                before,
+                after);
+        return after;
+    }
+
     @Transactional(readOnly = true)
     public CreditRuntimePublicDto getRuntimePublic() {
         CreditPolicyPublicDto apply = getPolicyPublicSnapshot(CreditPolicyKey.AUDITION_APPLY);

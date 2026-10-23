@@ -40,6 +40,7 @@ public class PaymentOrderService {
     private final CreditService creditService;
     private final PaymentSettingsService paymentSettingsService;
     private final TossPaymentsClient tossPaymentsClient;
+    private final PaymentEnvironmentGuard paymentEnvironmentGuard;
     private final Map<String, PaymentProvider> providersByCode;
 
     public PaymentOrderService(
@@ -48,12 +49,14 @@ public class PaymentOrderService {
             CreditService creditService,
             PaymentSettingsService paymentSettingsService,
             TossPaymentsClient tossPaymentsClient,
-            List<PaymentProvider> providers) {
+            List<PaymentProvider> providers,
+            PaymentEnvironmentGuard paymentEnvironmentGuard) {
         this.paymentOrderRepository = paymentOrderRepository;
         this.creditPackageRepository = creditPackageRepository;
         this.creditService = creditService;
         this.paymentSettingsService = paymentSettingsService;
         this.tossPaymentsClient = tossPaymentsClient;
+        this.paymentEnvironmentGuard = paymentEnvironmentGuard;
         Map<String, PaymentProvider> map = providers.stream()
                 .collect(Collectors.toMap(p -> p.getCode().toUpperCase(Locale.ROOT), Function.identity(), (a, b) -> a));
         PaymentProvider toss = map.get(TossPaymentProvider.CODE);
@@ -82,6 +85,9 @@ public class PaymentOrderService {
         PaymentProvider provider = providersByCode.get(code);
         if (provider == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "지원하지 않는 결제 provider입니다.");
+        }
+        if (MockPaymentProvider.CODE.equals(code) && !paymentEnvironmentGuard.mockAllowed()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "MOCK_DISABLED");
         }
         CreditPackage pkg = creditPackageRepository.findById(packageId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "패키지를 찾을 수 없습니다."));
@@ -321,6 +327,9 @@ public class PaymentOrderService {
         }
         if (isToss(order.getProvider())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "토스 주문은 /api/payments/toss/confirm 을 사용하세요.");
+        }
+        if (MockPaymentProvider.CODE.equalsIgnoreCase(order.getProvider()) && !paymentEnvironmentGuard.mockAllowed()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "MOCK_DISABLED");
         }
         if (order.getStatus() == PaymentOrderStatus.PAID) {
             return;

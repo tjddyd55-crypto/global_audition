@@ -410,6 +410,42 @@ export const superAdminApi = {
     return data
   },
 
+  listPaymentProviders: async (): Promise<PaymentProviderAdmin[]> => {
+    const { data } = await apiClient.get<PaymentProviderAdmin[]>('/admin/payment-providers')
+    return data
+  },
+
+  testProviderConnection: async (id: string): Promise<{ providerId: string; result: string }> => {
+    const { data } = await apiClient.post<{ providerId: string; result: string }>(
+      `/admin/payment-providers/${encodeURIComponent(id)}/connection-test`
+    )
+    return data
+  },
+
+  listFxRates: async (currency: string): Promise<PaymentFxAdmin[]> => {
+    const { data } = await apiClient.get<PaymentFxAdmin[]>('/admin/payment-providers/fx', { params: { currency } })
+    return data
+  },
+
+  addFxRate: async (body: {
+    chargeCurrency: string
+    rate: string
+    basis: string
+    roundingMode: string
+    effectiveFrom: string
+  }): Promise<{ id: string }> => {
+    const { data } = await apiClient.post<{ id: string }>('/admin/payment-providers/fx', {
+      ...body,
+      rate: body.rate,
+    })
+    return data
+  },
+
+  listPaymentCountryMethods: async (): Promise<PaymentCountryMethodAdmin[]> => {
+    const { data } = await apiClient.get<PaymentCountryMethodAdmin[]>('/admin/payment-providers/methods')
+    return data
+  },
+
   testPaymentConnection: async (): Promise<{ result: string; environment: string; connected: boolean }> => {
     const { data } = await apiClient.post<{ result: string; environment: string; connected: boolean }>(
       '/admin/payment-settings/connection-test'
@@ -421,6 +457,42 @@ export const superAdminApi = {
     const { data } = await apiClient.post(`/payments/${encodeURIComponent(orderNo)}/cancel`, { reason })
     return data
   },
+}
+
+export type PaymentProviderAdmin = {
+  id: string
+  adapterCode: string
+  name: string
+  environment: string
+  countries: string
+  currencies: string
+  methods: string
+  contractStatus: string
+  enabled: boolean
+  implemented: boolean
+  connectionStatus: string
+  operable: boolean
+  updatedAt: string
+}
+
+export type PaymentFxAdmin = {
+  id: string
+  baseCurrency: string
+  chargeCurrency: string
+  rate: string
+  basis: string
+  roundingMode: string
+  effectiveFrom: string
+}
+
+export type PaymentCountryMethodAdmin = {
+  id: string
+  paymentCountry: string
+  merchantCountry: string
+  providerId: string
+  methodCode: string
+  currency: string
+  enabled: boolean
 }
 
 export type PaymentSettingsAdmin = {

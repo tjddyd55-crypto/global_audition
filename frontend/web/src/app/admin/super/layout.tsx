@@ -13,6 +13,7 @@ const MENU = [
   { name: '유저 관리', path: '/admin/super/users' },
   { name: '거래 내역', path: '/admin/super/transactions' },
   { name: '결제 설정', path: '/admin/super/payments/settings' },
+  { name: '결제 공급자', path: '/admin/super/payments/providers' },
   { name: '결제 주문', path: '/admin/super/payment-orders' },
   { name: '로그', path: '/admin/super/logs' },
   { name: '복구 요청', path: '/admin/super/recovery' },

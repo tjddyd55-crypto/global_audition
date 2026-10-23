@@ -39,6 +39,26 @@ public class JdbcSettlementStore {
                 rs.getString("country_code")));
     }
 
+    public Optional<ApplyUse> unattributedApplyUse(UUID creditTransactionId) {
+        List<ApplyUse> rows = jdbc.query("""
+                SELECT ct.id, ct.user_id, ct.reference_id, ct.created_at, ct.applied_fee_usd, u.country_code
+                FROM credit_transactions ct
+                JOIN users u ON u.id = ct.user_id
+                WHERE ct.id = ? AND ct.type = 'USE' AND ct.reason = 'AUDITION_APPLY'
+                  AND NOT EXISTS (
+                    SELECT 1 FROM revenue_attributions ra
+                    WHERE ra.credit_transaction_id = ct.id AND ra.line_kind = 'REVENUE'
+                  )
+                """, (rs, n) -> new ApplyUse(
+                rs.getObject("id", UUID.class),
+                rs.getObject("user_id", UUID.class),
+                rs.getString("reference_id"),
+                rs.getTimestamp("created_at").toInstant(),
+                (Long) rs.getObject("applied_fee_usd"),
+                rs.getString("country_code")), creditTransactionId);
+        return rows.stream().findFirst();
+    }
+
     public Optional<AuditionRef> audition(UUID id) {
         List<AuditionRef> rows = jdbc.query("""
                 SELECT id, owner_id, posting_branch_id FROM auditions WHERE id = ?

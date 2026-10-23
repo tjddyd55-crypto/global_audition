@@ -40,6 +40,12 @@ public class AttributionService {
     }
 
     @Transactional
+    public boolean attributeCreditUse(UUID creditTransactionId) {
+        access.requireHq();
+        return store.unattributedApplyUse(creditTransactionId).map(this::insertUse).orElse(false);
+    }
+
+    @Transactional
     public int reconcileApplyUses() {
         OrgAccess.Actor actor = access.requireHq();
         int inserted = 0;

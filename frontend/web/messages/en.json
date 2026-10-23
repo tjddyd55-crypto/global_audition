@@ -640,7 +640,17 @@
     "mockPay": "Continue (mock pay)",
     "pgHint": "A live PG would open the provider screen here.",
     "orderCreated": "Order created.",
-    "packageNotFound": "Package not found or not for sale."
+    "packageNotFound": "Package not found or not for sale.",
+    "paymentCountry": "Payment country",
+    "selectMethod": "Payment method",
+    "chargeAmount": "Amount charged",
+    "creditsToIssue": "Credits to issue",
+    "noMethod": "No payment method is available for this payment country.",
+    "topUp": "Top up",
+    "history": "Top-up history",
+    "merchantCountry": "Merchant country",
+    "environmentLabel": "Environment",
+    "iapNotice": "Credit packs are digital goods. This app does not open Toss, PayPal, or any other external checkout. Purchases belong in the store in-app purchase flow, which is not enabled in this build."
   },
   "status": {
     "submitted": "Submitted",

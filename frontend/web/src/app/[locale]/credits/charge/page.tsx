@@ -124,6 +124,9 @@ export default function CreditsChargePage() {
           >
             {tPay('checkout')}
           </button>
+          <Link href="/credits/topup" className={BTN_SECONDARY}>
+            {tPay('topUp')}
+          </Link>
         </div>
       </div>
     </div>
