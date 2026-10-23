@@ -1,5 +1,7 @@
 package com.audition.platform.infra;
 
+import com.audition.platform.domain.user.User;
+import com.audition.platform.domain.user.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,9 +23,11 @@ import java.util.UUID;
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
+    private final UserRepository userRepository;
 
-    public JwtAuthFilter(JwtService jwtService) {
+    public JwtAuthFilter(JwtService jwtService, UserRepository userRepository) {
         this.jwtService = jwtService;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -40,20 +44,21 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
+        UUID userId;
         try {
-            io.jsonwebtoken.Claims claims = jwtService.parseToken(token);
-            UUID userId = UUID.fromString(claims.getSubject());
-            String role = claims.get("role", String.class);
-            if (role != null && !role.isBlank()) {
-                List<SimpleGrantedAuthority> authorities = Collections.singletonList(
-                        new SimpleGrantedAuthority("ROLE_" + role));
-                var auth = new UsernamePasswordAuthenticationToken(
-                        userId, null, authorities);
-                auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(auth);
-            }
+            userId = UUID.fromString(jwtService.parseToken(token).getSubject());
         } catch (Exception ignored) {
-            // invalid token — leave context empty
+            filterChain.doFilter(request, response);
+            return;
+        }
+        User user = userRepository.findById(userId).orElse(null);
+        String role = user == null || user.getRole() == null ? "" : user.getRole().trim();
+        if (user != null && "ACTIVE".equals(user.getAccountStatus()) && !role.isEmpty()) {
+            List<SimpleGrantedAuthority> authorities = Collections.singletonList(
+                    new SimpleGrantedAuthority("ROLE_" + role));
+            var auth = new UsernamePasswordAuthenticationToken(userId, null, authorities);
+            auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(auth);
         }
         filterChain.doFilter(request, response);
     }

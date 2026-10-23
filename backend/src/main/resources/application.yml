@@ -33,7 +33,8 @@ app:
     public-base-url: ${AWS_S3_PUBLIC_BASE_URL:}
     endpoint: ${AWS_S3_ENDPOINT:}
   jwt:
-    secret: "${JWT_SECRET:change-me-in-production-min-32-chars}"
+    # JWT_SECRET 필수. 비어 있거나 32바이트 미만이거나 퇴역된 코드 기본값이면 기동 실패.
+    secret: "${JWT_SECRET:}"
     expiration-ms: 86400000  # 24h
   # 로그인 응답 Set-Cookie(accessToken). Next 동일 Origin /api 프록시에서 Bearer 없이도 인증.
   auth:
@@ -49,9 +50,9 @@ app:
     # 시간당·일당 0 이하이면 해당 창 제한 비활성화
     rate-limit-per-user-per-hour: ${APP_UPLOAD_RATE_PER_HOUR:120}
     rate-limit-per-user-per-day: ${APP_UPLOAD_RATE_PER_DAY:800}
-  # 운영: false 권장 — 크레딧 충전은 payment_orders(PAID) 경로만 사용
+  # 기본 false. true 일 때만 결제 주문 없이 POST /api/credits/charge 가 지갑을 늘린다.
   credits:
-    allow-legacy-self-charge: ${APP_ALLOW_LEGACY_CREDIT_CHARGE:true}
+    allow-legacy-self-charge: ${APP_ALLOW_LEGACY_CREDIT_CHARGE:false}
 
 spring:
   application:

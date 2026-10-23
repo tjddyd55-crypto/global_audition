@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { authApi } from '@/shared/api/auth'
 import { Link } from '@/i18n.config'
-import RoleSelectCard from '@/components/auth/RoleSelectCard'
+import RoleSelectCard, { AGENCY_SIGNUP_PREPARING_MESSAGE } from '@/components/auth/RoleSelectCard'
 import AuthCardLayout from '@/components/auth/AuthCardLayout'
 import { SIGNUP } from '@/shared/design-tokens'
 import { nicknameZodField } from '@/shared/user/nicknameZod'
@@ -56,21 +56,26 @@ export default function PcRegisterPage() {
   })
 
   const onSubmit = async (data: RegisterFormData) => {
+    if (role !== 'APPLICANT') {
+      setError(AGENCY_SIGNUP_PREPARING_MESSAGE)
+      return
+    }
     setIsLoading(true)
     setError(null)
     try {
       await authApi.signup({
         email: data.email,
         password: data.password,
-        role,
+        role: 'APPLICANT',
         nickname: data.nickname.trim(),
         name: data.legalName?.trim() ? data.legalName.trim() : undefined,
       })
-      if (role === 'AGENCY') router.push('/my/dashboard')
-      else router.push('/auditions')
+      router.push('/auditions')
     } catch (err: any) {
       if (!err.response) setError('서버 연결 실패')
       else if (err.response.status === 400) setError('필수값을 입력하세요')
+      else if (String(err.response?.data?.message ?? '').startsWith('AGENCY_SIGNUP_NOT_AVAILABLE'))
+        setError(AGENCY_SIGNUP_PREPARING_MESSAGE)
       else if (err.response.status === 409) setError('이미 가입된 이메일입니다.')
       else setError(err.response?.data?.message || '회원가입에 실패했습니다.')
     } finally {

@@ -18,6 +18,17 @@ public class AdminUserPatchRequest {
 
     private String countryCode;
 
+    /** 슈퍼관리자 전용. APPLICANT 또는 AGENCY 만 허용. */
+    private String role;
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
     public String getNickname() {
         return nickname;
     }

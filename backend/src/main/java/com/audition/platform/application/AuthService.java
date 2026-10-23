@@ -24,6 +24,9 @@ import java.util.UUID;
 @Service
 public class AuthService {
     private static final Set<String> ALLOWED_ROLES = Set.of("APPLICANT", "AGENCY");
+    static final String PUBLIC_SIGNUP_ROLE = "APPLICANT";
+    public static final String AGENCY_SIGNUP_NOT_AVAILABLE =
+            "AGENCY_SIGNUP_NOT_AVAILABLE: 기획사 가입은 본사 승인 절차 준비 중입니다.";
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -47,13 +50,17 @@ public class AuthService {
         if (!ALLOWED_ROLES.contains(role)) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Role must be APPLICANT or AGENCY");
         }
+        // 공개 가입은 APPLICANT 만 만든다. AGENCY 는 슈퍼관리자 승인(PATCH /api/admin/users/{id} role)으로만 부여한다.
+        if (!PUBLIC_SIGNUP_ROLE.equals(role)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, AGENCY_SIGNUP_NOT_AVAILABLE);
+        }
         if (userRepository.existsByEmail(email)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already registered");
         }
         User user = new User();
         user.setEmail(email);
         user.setPasswordHash(passwordEncoder.encode(req.getPassword()));
-        user.setRole(role);
+        user.setRole(PUBLIC_SIGNUP_ROLE);
         user.setUpdatedAt(Instant.now());
         String local = extractLocalPart(email);
         user.setUsername(uniqueUsername(local));
@@ -71,6 +78,9 @@ public class AuthService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password"));
         if (!passwordEncoder.matches(req.getPassword(), user.getPasswordHash())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password");
+        }
+        if (!"ACTIVE".equals(user.getAccountStatus())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "계정이 활성 상태가 아닙니다.");
         }
         String token = jwtService.createToken(user.getId(), user.getEmail(), user.getRole());
         return authResponse(token, user);
