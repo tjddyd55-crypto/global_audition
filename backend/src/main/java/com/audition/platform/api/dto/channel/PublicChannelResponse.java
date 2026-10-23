@@ -41,6 +41,11 @@ public class PublicChannelResponse {
     private long viewCount;
     private List<MyChannelVideoDto> videos = new ArrayList<>();
     private List<MeUserSnsLinkDto> snsLinks = new ArrayList<>();
+    private String careerText;
+    private List<String> activityFields = new ArrayList<>();
+    /** 이 응답에 적용된 프로필 공개 키. */
+    private List<String> shownFields = new ArrayList<>();
+    private boolean selectionCustomized;
 
     public String getUserId() {
         return userId;
@@ -221,5 +226,37 @@ public class PublicChannelResponse {
 
     public void setSnsLinks(List<MeUserSnsLinkDto> snsLinks) {
         this.snsLinks = snsLinks != null ? snsLinks : new ArrayList<>();
+    }
+
+    public String getCareerText() {
+        return careerText;
+    }
+
+    public void setCareerText(String careerText) {
+        this.careerText = careerText;
+    }
+
+    public List<String> getActivityFields() {
+        return activityFields;
+    }
+
+    public void setActivityFields(List<String> activityFields) {
+        this.activityFields = activityFields != null ? activityFields : new ArrayList<>();
+    }
+
+    public List<String> getShownFields() {
+        return shownFields;
+    }
+
+    public void setShownFields(List<String> shownFields) {
+        this.shownFields = shownFields != null ? shownFields : new ArrayList<>();
+    }
+
+    public boolean isSelectionCustomized() {
+        return selectionCustomized;
+    }
+
+    public void setSelectionCustomized(boolean selectionCustomized) {
+        this.selectionCustomized = selectionCustomized;
     }
 }

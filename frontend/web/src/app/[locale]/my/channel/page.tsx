@@ -19,8 +19,8 @@ import {
   TITLE_PAGE,
 } from '@/shared/ui/specClasses'
 import { ChannelSettingsPanel } from '@/components/channel/ChannelSettingsPanel'
-import { ChannelMeStudioForm } from '@/components/channel/ChannelMeStudioForm'
 import { invalidateAfterChannelVideoMutation } from '@/shared/query/channelVideoQuery'
+import { Link } from '@/i18n.config'
 import { ChannelMyVideoList } from '@/components/channel/ChannelMyVideoList'
 
 const BTN_PRIMARY =
@@ -45,6 +45,7 @@ export default function MyChannelStudioPage() {
   const nextRouter = useNextRouter()
   const t = useTranslations('common')
   const tCh = useTranslations('myChannel')
+  const tStudio = useTranslations('studio')
   const tEditor = useTranslations('editor')
   const queryClient = useQueryClient()
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
@@ -179,7 +180,11 @@ export default function MyChannelStudioPage() {
       <div className={`w-full px-3 py-3 ${SECTION_GAP}`}>
         <h1 className={TITLE_PAGE}>{tCh('title')}</h1>
 
-        <ChannelMeStudioForm />
+        <p className={TEXT_SUB}>
+          <Link href="/my/studio/profile" className="underline">
+            {tStudio('profileHint')}
+          </Link>
+        </p>
 
         <div className={SECTION_DIVIDER} aria-hidden />
 

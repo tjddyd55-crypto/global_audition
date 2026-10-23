@@ -23,6 +23,9 @@ export default function ProfileScreen() {
   const [name, setName] = useState('')
   const [nickname, setNickname] = useState('')
   const [intro, setIntro] = useState('')
+  const [career, setCareer] = useState('')
+  const [activity, setActivity] = useState('')
+  const [specialties, setSpecialties] = useState('')
   const [saving, setSaving] = useState(false)
   const [recoveryNote, setRecoveryNote] = useState<string | null>(null)
   const [issuedCode, setIssuedCode] = useState<string | null>(null)
@@ -32,6 +35,9 @@ export default function ProfileScreen() {
     setName(query.data.name ?? '')
     setNickname(query.data.nickname ?? '')
     setIntro(query.data.introText ?? '')
+    setCareer(query.data.careerText ?? '')
+    setActivity((query.data.activityFields ?? []).join('\n'))
+    setSpecialties((query.data.categories ?? []).join('\n'))
   }, [query.data])
 
   if (ready && !isAuthenticated) {
@@ -67,13 +73,30 @@ export default function ProfileScreen() {
         <TextField label={t('profile.name')} value={name} onChangeText={setName} autoCapitalize="words" />
         <TextField label={t('profile.nickname')} value={nickname} onChangeText={setNickname} />
         <TextField label={t('profile.intro')} value={intro} onChangeText={setIntro} multiline />
+        <TextField label={t('studio.career')} value={career} onChangeText={setCareer} multiline />
+        <TextField label={t('studio.specialties')} value={specialties} onChangeText={setSpecialties} multiline />
+        <TextField label={t('studio.activity')} value={activity} onChangeText={setActivity} multiline />
         <Button
           label={t('profile.save')}
           loading={saving}
           onPress={async () => {
             setSaving(true)
             try {
-              await profileApi.patch({ name, nickname, introText: intro })
+              await profileApi.patch({
+                name,
+                nickname,
+                introText: intro,
+                careerText: career,
+                categories: specialties
+                  .split('\n')
+                  .map((line) => line.trim())
+                  .filter((line) => line.length > 0)
+                  .slice(0, 3),
+                activityFields: activity
+                  .split('\n')
+                  .map((line) => line.trim())
+                  .filter((line) => line.length > 0),
+              })
               await query.refetch()
             } finally {
               setSaving(false)
@@ -104,6 +127,7 @@ export default function ProfileScreen() {
           }}
         />
         <Button label={t('profile.findAccount')} variant="secondary" onPress={() => router.push('/(auth)/recover')} />
+        <Button label={t('studio.channel')} variant="secondary" onPress={() => router.push('/studio/channel')} />
         <Button label={t('nav.credits')} variant="secondary" onPress={() => router.push('/credits')} />
         <Button label={t('profile.notifications')} variant="secondary" onPress={() => router.push('/notifications')} />
         {isAgencyRole(session?.role) ? (

@@ -1,5 +1,7 @@
 import { getRuntimeLocale } from './runtime'
 
+export { formatCount, formatUsdAmount } from '../../../web/src/shared/money/currency'
+
 export const SETTLEMENT_CURRENCY = 'USD'
 
 /** 사용자 표시: `$10` 정수 달러만. `$10.00` / 센트 / float 금지. */

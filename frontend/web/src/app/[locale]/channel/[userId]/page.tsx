@@ -196,6 +196,10 @@ export default function ChannelByUserIdPage() {
               {categories.length > 0 ? (
                 <div className="mt-1 text-sm text-gray-700">{categories.join(' · ')}</div>
               ) : null}
+              {data.careerText?.trim() ? <div className="mt-1 text-sm text-gray-700">{data.careerText}</div> : null}
+              {(data.activityFields ?? []).length > 0 ? (
+                <div className="mt-1 text-sm text-gray-700">{data.activityFields?.join(' · ')}</div>
+              ) : null}
               <div className="mt-2 text-sm text-gray-500">
                 {t('subscribersVideos', { subs: formatCount(stats.subs, locale), videos: formatCount(stats.videos, locale) })}
               </div>
@@ -205,7 +209,7 @@ export default function ChannelByUserIdPage() {
                 <button
                   type="button"
                   className="rounded-full border border-neutral-900 bg-black px-3 py-1 text-sm text-white"
-                  onClick={() => router.push('/my/channel')}
+                  onClick={() => router.push('/my/studio')}
                 >
                   {t('manage')}
                 </button>
