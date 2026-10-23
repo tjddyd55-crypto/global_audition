@@ -67,9 +67,10 @@ class SecurityCreditFlowIT {
                 WHERE version IS NOT NULL AND version <> '0'
                 ORDER BY installed_rank DESC LIMIT 1
                 """, String.class);
-        assertEquals(37, versions);
-        assertEquals(37, scripts);
-        assertEquals("37", maxVersion);
+        // develop 통합: V1..V60 (main V37 + PR #66 V38..V60)
+        assertEquals(60, versions);
+        assertEquals(60, scripts);
+        assertEquals("60", maxVersion);
 
         String applicantEmail = "fan-" + UUID.randomUUID() + "@local.test";
         String otherEmail = "other-" + UUID.randomUUID() + "@local.test";

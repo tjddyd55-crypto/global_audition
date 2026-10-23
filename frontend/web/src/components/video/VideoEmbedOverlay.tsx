@@ -1,6 +1,8 @@
 ﻿'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import Image from 'next/image'
+import { useTranslations } from 'next-intl'
 import { resolveVideoThumbnailUrl } from '@/shared/audition/videoThumbnail'
 import { getVideoEmbedSrc, isYoutubeShortsLikeUrl } from '@/shared/utils/videoEmbed'
 
@@ -72,6 +74,8 @@ function trapTab(e: React.KeyboardEvent<HTMLDivElement>, root: HTMLElement | nul
  * (종료 시 자동 닫기는 YouTube postMessage/API 단계에서 선택 적용)
  */
 export function VideoEmbedOverlay({ videoUrl, play, onClose }: VideoEmbedOverlayProps) {
+  const tVideo = useTranslations('video')
+  const tCommon = useTranslations('common')
   const resolved = resolvePlay(play, videoUrl)
   const openUrl = resolved?.url ?? null
   const isShorts = openUrl ? isYoutubeShortsLikeUrl(openUrl) : false
@@ -87,8 +91,8 @@ export function VideoEmbedOverlay({ videoUrl, play, onClose }: VideoEmbedOverlay
   prevNavRef.current = resolved?.prev
   nextNavRef.current = resolved?.next
 
-  const dialogLabel = resolved?.title?.trim() || '영상 재생'
-  const iframeTitle = resolved?.title?.trim() || '영상'
+  const dialogLabel = resolved?.title?.trim() || tVideo('playAria')
+  const iframeTitle = resolved?.title?.trim() || tVideo('titleFallback')
 
   useEffect(() => {
     setIframeLoaded(false)
@@ -176,11 +180,11 @@ export function VideoEmbedOverlay({ videoUrl, play, onClose }: VideoEmbedOverlay
             type="button"
             onClick={onClose}
             className="absolute right-3 top-3 text-2xl leading-none text-gray-500 hover:text-gray-800"
-            aria-label="닫기"
+            aria-label={tCommon('close')}
           >
             ✕
           </button>
-          <p className="mb-4 pr-8 text-sm text-gray-700">이 URL은 여기에서 임베드할 수 없습니다.</p>
+          <p className="mb-4 pr-8 text-sm text-gray-700">{tVideo('cannotEmbed')}</p>
           <div className="flex flex-wrap gap-2">
             <a
               href={resolved.url}
@@ -188,14 +192,14 @@ export function VideoEmbedOverlay({ videoUrl, play, onClose }: VideoEmbedOverlay
               rel="noreferrer"
               className="inline-flex rounded-lg bg-[#3B82F6] px-4 py-2 text-sm font-semibold text-white no-underline"
             >
-              새 창에서 열기
+              {tVideo('openInNewWindow')}
             </a>
             <button
               type="button"
               onClick={onClose}
               className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold"
             >
-              닫기
+              {tCommon('close')}
             </button>
           </div>
         </div>
@@ -227,7 +231,7 @@ export function VideoEmbedOverlay({ videoUrl, play, onClose }: VideoEmbedOverlay
           <button
             type="button"
             className="absolute left-0 top-1/2 z-[4] hidden -translate-x-1 -translate-y-1/2 rounded-full bg-black/55 px-2 py-3 text-lg text-white hover:bg-black/75 sm:block"
-            aria-label="이전 영상"
+            aria-label={tVideo('previousAria')}
             onClick={(e) => {
               e.stopPropagation()
               resolved.prev?.()
@@ -240,7 +244,7 @@ export function VideoEmbedOverlay({ videoUrl, play, onClose }: VideoEmbedOverlay
           <button
             type="button"
             className="absolute right-0 top-1/2 z-[4] hidden translate-x-1 -translate-y-1/2 rounded-full bg-black/55 px-2 py-3 text-lg text-white hover:bg-black/75 sm:block"
-            aria-label="다음 영상"
+            aria-label={tVideo('nextAria')}
             onClick={(e) => {
               e.stopPropagation()
               resolved.next?.()
@@ -254,18 +258,19 @@ export function VideoEmbedOverlay({ videoUrl, play, onClose }: VideoEmbedOverlay
           className={`relative w-full max-sm:max-h-[min(100dvh,100vh)] overflow-hidden bg-black ${aspectClass}`}
         >
           {showThumb && thumb ? (
-            <img
+            <Image
               src={thumb}
               alt=""
-              className="absolute inset-0 z-0 h-full w-full scale-105 object-cover blur-sm"
-              decoding="async"
+              fill
+              unoptimized
+              className="z-0 scale-105 object-cover blur-sm"
             />
           ) : null}
           <button
             type="button"
             onClick={onClose}
             className="absolute right-4 top-4 z-[4] text-2xl leading-none text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] hover:text-gray-200"
-            aria-label="닫기"
+            aria-label={tCommon('close')}
           >
             ✕
           </button>
@@ -279,7 +284,7 @@ export function VideoEmbedOverlay({ videoUrl, play, onClose }: VideoEmbedOverlay
                 className="h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent"
                 aria-hidden
               />
-              <p className="text-sm opacity-80">영상 준비 중...</p>
+              <p className="text-sm opacity-80">{tVideo('preparing')}</p>
             </div>
           ) : null}
           <iframe
@@ -303,7 +308,7 @@ export function VideoEmbedOverlay({ videoUrl, play, onClose }: VideoEmbedOverlay
                   resolved.prev?.()
                 }}
               >
-                이전
+                {tCommon('previous')}
               </button>
             ) : null}
             {hasNext ? (
@@ -315,7 +320,7 @@ export function VideoEmbedOverlay({ videoUrl, play, onClose }: VideoEmbedOverlay
                   resolved.next?.()
                 }}
               >
-                다음
+                {tCommon('next')}
               </button>
             ) : null}
           </div>

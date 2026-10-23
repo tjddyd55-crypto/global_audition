@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from '../../../../i18n.config'
 import { useForm } from 'react-hook-form'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { userApi } from '@/shared/api/user'
 import { authApi } from '@/shared/api/auth'
 import { useTranslations } from 'next-intl'
@@ -24,6 +24,9 @@ interface BusinessProfileForm {
 export default function BusinessProfilePage() {
   const router = useRouter()
   const t = useTranslations('common')
+  const tProfile = useTranslations('myProfile')
+  const tValidation = useTranslations('validation')
+  const tEditor = useTranslations('editor')
   const queryClient = useQueryClient()
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
   const [userType, setUserType] = useState<'APPLICANT' | 'BUSINESS' | null>(null)
@@ -53,9 +56,10 @@ export default function BusinessProfilePage() {
         setUserType('BUSINESS')
         // TODO: 기획사 프로필 정보 로드 및 폼 초기화
         // reset({ ...userProfile })
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Auth check failed:', err)
-        if (err.response?.status === 401) {
+        const ax = err as { response?: { status?: number } }
+        if (ax.response?.status === 401) {
           router.push('/login')
         }
       } finally {
@@ -74,7 +78,7 @@ export default function BusinessProfilePage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['currentUser'] })
-      alert('프로필이 업데이트되었습니다')
+      alert(tProfile('updated'))
     },
   })
 
@@ -102,16 +106,16 @@ export default function BusinessProfilePage() {
     <AgencyDashboardShell>
       <div className="min-h-screen p-4 md:p-8">
         <div className="mx-auto max-w-4xl border border-gray-200 bg-white p-8">
-        <h1 className="text-3xl font-bold mb-8">내 정보 관리</h1>
+        <h1 className="text-3xl font-bold mb-8">{tProfile('title')}</h1>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium mb-2">기업명 *</label>
+            <label className="block text-sm font-medium mb-2">{tProfile('companyName')}</label>
             <input
               type="text"
-              {...register('companyName', { required: '기업명을 입력해주세요' })}
+              {...register('companyName', { required: tProfile('companyRequired') })}
               className="w-full px-4 py-2 border rounded-lg"
-              placeholder="기업명"
+              placeholder={tProfile('companyPlaceholder')}
             />
             {errors.companyName && (
               <p className="text-red-500 text-sm mt-1">{errors.companyName.message}</p>
@@ -119,12 +123,12 @@ export default function BusinessProfilePage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">대표자명 *</label>
+            <label className="block text-sm font-medium mb-2">{tProfile('representative')}</label>
             <input
               type="text"
-              {...register('name', { required: '대표자명을 입력해주세요' })}
+              {...register('name', { required: tProfile('representativeRequired') })}
               className="w-full px-4 py-2 border rounded-lg"
-              placeholder="대표자명"
+              placeholder={tProfile('representativePlaceholder')}
             />
             {errors.name && (
               <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
@@ -132,14 +136,14 @@ export default function BusinessProfilePage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">이메일 *</label>
+            <label className="block text-sm font-medium mb-2">{tProfile('emailRequired')}</label>
             <input
               type="email"
               {...register('email', {
-                required: '이메일을 입력해주세요',
+                required: tProfile('emailRequiredMsg'),
                 pattern: {
                   value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                  message: '유효한 이메일을 입력해주세요',
+                  message: tValidation('emailInvalid'),
                 },
               })}
               className="w-full px-4 py-2 border rounded-lg"
@@ -152,7 +156,7 @@ export default function BusinessProfilePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-2">국가</label>
+              <label className="block text-sm font-medium mb-2">{tProfile('country')}</label>
               <input
                 type="text"
                 {...register('country')}
@@ -163,28 +167,28 @@ export default function BusinessProfilePage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">도시</label>
+              <label className="block text-sm font-medium mb-2">{tProfile('city')}</label>
               <input
                 type="text"
                 {...register('city')}
                 className="w-full px-4 py-2 border rounded-lg"
-                placeholder="서울"
+                placeholder={tProfile('cityPlaceholder')}
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">주소</label>
+            <label className="block text-sm font-medium mb-2">{tProfile('address')}</label>
             <input
               type="text"
               {...register('address')}
               className="w-full px-4 py-2 border rounded-lg"
-              placeholder="주소"
+              placeholder={tProfile('address')}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">웹사이트</label>
+            <label className="block text-sm font-medium mb-2">{tProfile('website')}</label>
             <input
               type="url"
               {...register('website')}
@@ -194,7 +198,7 @@ export default function BusinessProfilePage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">연락 이메일</label>
+            <label className="block text-sm font-medium mb-2">{tProfile('contactEmail')}</label>
             <input
               type="email"
               {...register('contactEmail')}
@@ -204,7 +208,7 @@ export default function BusinessProfilePage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">연락처</label>
+            <label className="block text-sm font-medium mb-2">{tProfile('contactPhone')}</label>
             <input
               type="tel"
               {...register('contactPhone')}
@@ -219,14 +223,14 @@ export default function BusinessProfilePage() {
               disabled={updateMutation.isPending}
               className="flex-1 px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50"
             >
-              {updateMutation.isPending ? '저장 중...' : '저장'}
+              {updateMutation.isPending ? tEditor('saving') : t('save')}
             </button>
             <button
               type="button"
               onClick={() => router.back()}
               className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50"
             >
-              취소
+              {t('cancel')}
             </button>
           </div>
         </form>

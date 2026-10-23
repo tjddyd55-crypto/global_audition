@@ -72,6 +72,16 @@ export default function CreditPoliciesPage() {
           API: GET/PATCH <code className="rounded bg-gray-100 px-1">/api/admin/credit-policies</code> · Bearer +{' '}
           <code className="rounded bg-gray-100 px-1">withCredentials</code> (axios 클라이언트 사용)
         </p>
+        <ul className="mb-3 list-disc space-y-1 pl-5 text-xs text-gray-600">
+          <li>
+            <code>AUDITION_APPLY</code> 의 숫자 가격은 전역 지원비(정수 USD)가 기준입니다. 여기 저장해도 같은 금액으로
+            맞추며, 비활성 또는 0은 FREE 입니다. 전용 화면은 전역 지원비 메뉴입니다. 이미 기록된 주문·원장 금액은
+            바꾸지 않습니다.
+          </li>
+          <li>
+            <code>SIGNUP_CREDIT</code>: 활성+cost&gt;0 이면 가입 1회 지급. 원장 reason은 <code>SIGNUP_REWARD</code>.
+          </li>
+        </ul>
 
         {isLoading && <p className="text-sm text-gray-600">불러오는 중…</p>}
         {error && (

@@ -2,6 +2,7 @@ package com.audition.platform.application.credit;
 
 import com.audition.platform.application.audit.AdminAuditAction;
 import com.audition.platform.application.audit.AdminAuditLogService;
+import com.audition.platform.application.fee.GlobalApplicationFeeService;
 import com.audition.platform.api.dto.CreditPolicyPatchRequest;
 import com.audition.platform.api.dto.CreditPolicyResponse;
 import com.audition.platform.domain.credit.CreditPolicy;
@@ -26,14 +27,17 @@ public class AdminCreditPolicyService {
     private final CreditPolicyRepository creditPolicyRepository;
     private final AdminAuditLogService adminAuditLogService;
     private final CreditPolicyPublicSnapshotCache creditPolicyPublicSnapshotCache;
+    private final GlobalApplicationFeeService globalApplicationFeeService;
 
     public AdminCreditPolicyService(
             CreditPolicyRepository creditPolicyRepository,
             AdminAuditLogService adminAuditLogService,
-            CreditPolicyPublicSnapshotCache creditPolicyPublicSnapshotCache) {
+            CreditPolicyPublicSnapshotCache creditPolicyPublicSnapshotCache,
+            GlobalApplicationFeeService globalApplicationFeeService) {
         this.creditPolicyRepository = creditPolicyRepository;
         this.adminAuditLogService = adminAuditLogService;
         this.creditPolicyPublicSnapshotCache = creditPolicyPublicSnapshotCache;
+        this.globalApplicationFeeService = globalApplicationFeeService;
     }
 
     private static void assertSuperAdmin() {
@@ -66,15 +70,22 @@ public class AdminCreditPolicyService {
         CreditPolicy policy = creditPolicyRepository.findById(policyKey)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "크레딧 정책을 찾을 수 없습니다."));
         Map<String, Object> before = policySnapshot(policyKey, policy);
-        if (body.getCost() != null) {
-            policy.setCost(body.getCost());
+        if (CreditPolicyKey.AUDITION_APPLY.equals(policyKey)) {
+            long cost = body.getCost() != null ? body.getCost() : policy.getCost();
+            boolean active = body.getActive() != null ? body.getActive() : policy.isActive();
+            globalApplicationFeeService.replaceFromCreditPolicy(cost, active, SecurityUtils.getCurrentUserId());
+            policy = creditPolicyRepository.findById(policyKey).orElse(policy);
+        } else {
+            if (body.getCost() != null) {
+                policy.setCost(body.getCost());
+            }
+            if (body.getActive() != null) {
+                policy.setActive(body.getActive());
+            }
+            policy.setUpdatedAt(Instant.now());
+            creditPolicyRepository.save(policy);
+            creditPolicyPublicSnapshotCache.invalidate(policyKey);
         }
-        if (body.getActive() != null) {
-            policy.setActive(body.getActive());
-        }
-        policy.setUpdatedAt(Instant.now());
-        creditPolicyRepository.save(policy);
-        creditPolicyPublicSnapshotCache.invalidate(policyKey);
         Map<String, Object> after = policySnapshot(policyKey, policy);
         UUID adminId = SecurityUtils.getCurrentUserId();
         if (adminId != null) {

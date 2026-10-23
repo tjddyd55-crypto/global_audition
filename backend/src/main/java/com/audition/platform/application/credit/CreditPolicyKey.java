@@ -6,6 +6,7 @@ package com.audition.platform.application.credit;
 public final class CreditPolicyKey {
 
     public static final String AUDITION_APPLY = "AUDITION_APPLY";
+    public static final String SIGNUP_CREDIT = "SIGNUP_CREDIT";
 
     private CreditPolicyKey() {
     }

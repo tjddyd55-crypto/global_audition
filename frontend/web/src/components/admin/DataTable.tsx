@@ -1,6 +1,7 @@
 ﻿'use client'
 
 import type { ReactNode } from 'react'
+import { useTranslations } from 'next-intl'
 import { AUDITION_DETAIL } from '@/shared/design-tokens'
 
 export type DataTableColumn<T> = {
@@ -17,10 +18,11 @@ type DataTableProps<T> = {
   getRowKey: (row: T) => string
 }
 
-/**
- * 관리자 리스트용 테이블. 카드 내부에서 사용 — 가로 스크롤만 허용.
- */
-export function DataTable<T>({ columns, rows, emptyMessage = '데이터가 없습니다.', getRowKey }: DataTableProps<T>) {
+/** Admin list table. Horizontal scroll only; used inside a card. */
+export function DataTable<T>({ columns, rows, emptyMessage, getRowKey }: DataTableProps<T>) {
+  const t = useTranslations('common')
+  const resolvedEmptyMessage = emptyMessage ?? t('noData')
+
   return (
     <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
       <table
@@ -53,7 +55,7 @@ export function DataTable<T>({ columns, rows, emptyMessage = '데이터가 없�
           {rows.length === 0 ? (
             <tr>
               <td colSpan={columns.length} style={{ padding: '24px 12px', textAlign: 'center', color: '#888' }}>
-                {emptyMessage}
+                {resolvedEmptyMessage}
               </td>
             </tr>
           ) : (

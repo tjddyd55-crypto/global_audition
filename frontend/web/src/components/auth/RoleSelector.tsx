@@ -1,5 +1,7 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
+
 type Role = 'APPLICANT' | 'AGENCY'
 
 interface RoleSelectorProps {
@@ -8,9 +10,11 @@ interface RoleSelectorProps {
 }
 
 export default function RoleSelector({ role, onChange }: RoleSelectorProps) {
+  const t = useTranslations('auth')
+
   return (
     <div>
-      <label className="block text-sm font-medium mb-3">회원 유형</label>
+      <label className="block text-sm font-medium mb-3">{t('userType')}</label>
       <div className="grid grid-cols-2 gap-3">
         <button
           type="button"
@@ -21,7 +25,7 @@ export default function RoleSelector({ role, onChange }: RoleSelectorProps) {
               : 'border-gray-300 text-gray-700 hover:border-gray-400'
           }`}
         >
-          지망생
+          {t('applicant')}
         </button>
         <button
           type="button"
@@ -32,7 +36,7 @@ export default function RoleSelector({ role, onChange }: RoleSelectorProps) {
               : 'border-gray-300 text-gray-700 hover:border-gray-400'
           }`}
         >
-          기획사
+          {t('business')}
         </button>
       </div>
     </div>

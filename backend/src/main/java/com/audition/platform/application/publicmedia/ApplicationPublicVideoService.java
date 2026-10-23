@@ -79,6 +79,7 @@ public class ApplicationPublicVideoService {
         ApplicationPublicVideoDto dto = new ApplicationPublicVideoDto();
         dto.setApplicationId(app.getId().toString());
         dto.setAuditionId(app.getAuditionId().toString());
+        dto.setVideoId(video.getId().toString());
         dto.setTitle(video.getTitle() != null ? video.getTitle() : "");
         dto.setVideoUrl(video.getVideoUrl() != null ? video.getVideoUrl() : "");
         dto.setThumbnailUrl(thumb);

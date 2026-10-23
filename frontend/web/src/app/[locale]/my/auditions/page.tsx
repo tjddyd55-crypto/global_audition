@@ -15,6 +15,9 @@ import { PAGE_CONTAINER, TEXT_SUB } from '@/shared/ui/specClasses'
 export default function MyAuditionsPage() {
   const router = useRouter()
   const t = useTranslations('common')
+  const tMine = useTranslations('myAuditions')
+  const tAgency = useTranslations('agency')
+  const tStatus = useTranslations('status')
   const queryClient = useQueryClient()
   const accessToken = useAuthStore((s) => s.accessToken)
   const role = useAuthStore((s) => s.role)
@@ -54,13 +57,13 @@ export default function MyAuditionsPage() {
     mutationFn: ({ id, status }: { id: string; status: AuditionStatus }) => auditionApi.update(id, { status }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['myAuditions'] })
-      toast.success('상태가 변경되었습니다.')
+      toast.success(tAgency('statusChanged'))
     },
-    onError: () => toast.error('상태 변경에 실패했습니다.'),
+    onError: () => toast.error(tAgency('statusFailed')),
   })
 
   const handleDelete = async (id: string) => {
-    if (!confirm('정말 삭제하시겠습니까?')) return
+    if (!confirm(tMine('confirmDelete'))) return
     try {
       await deleteMutation.mutateAsync(id)
     } catch (e: unknown) {
@@ -68,22 +71,19 @@ export default function MyAuditionsPage() {
         e && typeof e === 'object' && 'response' in e
           ? (e as { response?: { data?: { message?: string } } }).response?.data?.message
           : undefined
-      alert(msg ?? '삭제는 현재 지원되지 않습니다.')
+      alert(msg ?? tMine('deleteUnsupported'))
     }
   }
 
-  const getStatusText = useCallback((status: string) => {
-    switch (status) {
-      case 'OPEN':
-        return '모집 중'
-      case 'CLOSED':
-        return '마감'
-      case 'DRAFT':
-        return '작성 중'
-      default:
-        return status
-    }
-  }, [])
+  const getStatusText = useCallback(
+    (status: string) => {
+      if (status === 'OPEN') return tStatus('open')
+      if (status === 'CLOSED') return tStatus('closed')
+      if (status === 'DRAFT') return tMine('statusWriting')
+      return status
+    },
+    [tMine, tStatus],
+  )
 
   if (!gateReady || role === null) {
     return (
@@ -102,14 +102,14 @@ export default function MyAuditionsPage() {
       <div className={`${PAGE_CONTAINER} py-6`}>
         <div className="flex flex-col gap-3 border-b border-gray-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-xl font-semibold text-gray-900">오디션 관리</h1>
-            <p className={`${TEXT_SUB} mt-1 text-sm`}>공고 목록 · 지원자 처리는 지원자 관리 메뉴에서 합니다.</p>
+            <h1 className="text-xl font-semibold text-gray-900">{tMine('title')}</h1>
+            <p className={`${TEXT_SUB} mt-1 text-sm`}>{tMine('hint')}</p>
           </div>
           <Link
             href="/dashboard/auditions/create"
             className="inline-flex shrink-0 items-center justify-center rounded-md bg-violet-600 px-4 py-2 text-sm font-semibold text-white no-underline hover:bg-violet-700"
           >
-            + 오디션 등록
+            {tMine('create')}
           </Link>
         </div>
 
@@ -118,9 +118,9 @@ export default function MyAuditionsPage() {
         ) : auditions && auditions.content.length > 0 ? (
           <>
             <div className="mt-4 hidden border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-600 md:grid md:grid-cols-12 md:gap-2">
-              <div className="col-span-4">제목</div>
-              <div className="col-span-2">상태</div>
-              <div className="col-span-6 text-right">관리</div>
+              <div className="col-span-4">{tMine('colTitle')}</div>
+              <div className="col-span-2">{tMine('colStatus')}</div>
+              <div className="col-span-6 text-right">{tMine('colManage')}</div>
             </div>
             <ul className="divide-y divide-gray-200 border border-t-0 border-gray-200 bg-white">
               {auditions.content.map((audition: AuditionResponse) => (
@@ -140,31 +140,31 @@ export default function MyAuditionsPage() {
                         className="rounded border border-gray-300 bg-white px-2 py-1 text-xs font-medium text-gray-800 hover:bg-gray-50 disabled:opacity-50"
                         onClick={() => {
                           const next: AuditionStatus = audition.status === 'OPEN' ? 'CLOSED' : 'OPEN'
-                          if (confirm(next === 'OPEN' ? '공고를 모집 중(OPEN)으로 바꿀까요?' : '공고를 마감(CLOSED) 처리할까요?')) {
+                          if (confirm(next === 'OPEN' ? tMine('confirmOpen') : tMine('confirmClose'))) {
                             statusMutation.mutate({ id: audition.id, status: next })
                           }
                         }}
                       >
-                        {audition.status === 'OPEN' ? '마감 처리' : '다시 모집(OPEN)'}
+                        {audition.status === 'OPEN' ? tMine('closeAction') : tMine('reopenAction')}
                       </button>
                     ) : null}
                     <Link
                       href={`/my/applicants?auditionId=${encodeURIComponent(audition.id)}`}
                       className="rounded bg-gray-900 px-2 py-1 text-xs font-semibold text-white no-underline hover:bg-gray-800"
                     >
-                      지원자 관리
+                      {tAgency('navApplicants')}
                     </Link>
                     <Link
                       href={`/auditions/${audition.id}/edit`}
                       className="rounded border border-gray-300 bg-white px-2 py-1 text-xs font-medium text-gray-800 no-underline hover:bg-gray-50"
                     >
-                      수정
+                      {t('edit')}
                     </Link>
                     <Link
                       href={`/auditions/${audition.id}`}
                       className="rounded border border-gray-200 px-2 py-1 text-xs font-medium text-violet-700 no-underline hover:bg-violet-50"
                     >
-                      공개 상세
+                      {tMine('publicDetail')}
                     </Link>
                     <button
                       type="button"
@@ -172,7 +172,7 @@ export default function MyAuditionsPage() {
                       disabled={deleteMutation.isPending}
                       onClick={() => handleDelete(audition.id)}
                     >
-                      삭제
+                      {t('delete')}
                     </button>
                   </div>
                 </li>
@@ -187,7 +187,7 @@ export default function MyAuditionsPage() {
                   disabled={page === 0}
                   className="rounded border px-3 py-1 text-sm disabled:opacity-50"
                 >
-                  이전
+                  {t('previous')}
                 </button>
                 <span className="px-3 py-1 text-sm">
                   {page + 1} / {auditions.totalPages}
@@ -198,19 +198,19 @@ export default function MyAuditionsPage() {
                   disabled={page >= auditions.totalPages - 1}
                   className="rounded border px-3 py-1 text-sm disabled:opacity-50"
                 >
-                  다음
+                  {t('next')}
                 </button>
               </div>
             )}
           </>
         ) : (
           <div className="mt-8 border border-dashed border-gray-300 py-12 text-center">
-            <p className="text-gray-600">등록된 오디션이 없습니다.</p>
+            <p className="text-gray-600">{tMine('empty')}</p>
             <Link
               href="/dashboard/auditions/create"
               className="mt-4 inline-block text-sm font-semibold text-violet-700 no-underline"
             >
-              첫 오디션 등록하기 →
+              {tMine('createFirst')}
             </Link>
           </div>
         )}

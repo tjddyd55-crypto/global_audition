@@ -2,6 +2,8 @@ package com.audition.platform.api;
 
 import com.audition.platform.api.dto.ApiFailResponse;
 import com.audition.platform.api.dto.ErrorResponse;
+import com.audition.platform.api.dto.InsufficientCreditsResponse;
+import com.audition.platform.application.credit.InsufficientCreditsException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +27,15 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    @ExceptionHandler(InsufficientCreditsException.class)
+    public ResponseEntity<InsufficientCreditsResponse> handleInsufficientCredits(InsufficientCreditsException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new InsufficientCreditsResponse(
+                ex.getMessage(),
+                ex.getRequiredCredits(),
+                ex.getCurrentCredits(),
+                ex.getShortfallCredits()));
+    }
 
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<?> handleResponseStatus(ResponseStatusException ex, HttpServletRequest request) {

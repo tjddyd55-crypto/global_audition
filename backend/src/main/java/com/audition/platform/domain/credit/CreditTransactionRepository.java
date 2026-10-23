@@ -13,4 +13,8 @@ public interface CreditTransactionRepository extends JpaRepository<CreditTransac
     Page<CreditTransaction> findByUserIdOrderByCreatedAtDesc(UUID userId, Pageable pageable);
 
     boolean existsByUserIdAndTypeAndReferenceId(UUID userId, String type, String referenceId);
+
+    boolean existsByUserIdAndTypeAndReason(UUID userId, String type, String reason);
+
+    boolean existsByUserIdAndTypeAndCreatedAtAfter(UUID userId, String type, java.time.Instant createdAt);
 }

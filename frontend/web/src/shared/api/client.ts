@@ -1,5 +1,6 @@
 ﻿import axios, { InternalAxiosRequestConfig } from 'axios'
 import { useAuthStore } from '@/shared/auth/authStore'
+import { isUiLocale } from '@/shared/i18n/uiLocales'
 import { getStoredAccessToken } from './authToken'
 
 /** 동일 Origin: `/api/*` → Next.js rewrite → 백엔드 */
@@ -49,6 +50,12 @@ apiClient.interceptors.request.use(
       config.url.includes('/auth/me')
     ) {
       console.warn('[API Client] /auth/me 요청인데 localStorage에 토큰 없음 → Authorization 미설정')
+    }
+    if (typeof window !== 'undefined') {
+      const seg = window.location.pathname.split('/')[1]
+      if (seg && isUiLocale(seg)) {
+        config.headers['X-Content-Locale'] = seg
+      }
     }
 
     if (typeof FormData !== 'undefined' && config.data instanceof FormData) {

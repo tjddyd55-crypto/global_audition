@@ -118,5 +118,15 @@ export function parseAuditionDto(raw: Record<string, unknown>): AuditionDto {
     canApply: raw.canApply === true ? true : raw.canApply === false ? false : undefined,
     applyBlockedMessage:
       raw.applyBlockedMessage != null ? String(raw.applyBlockedMessage) : undefined,
+    applyBlockedCode: raw.applyBlockedCode != null ? String(raw.applyBlockedCode) : undefined,
+    defaultLocale: raw.defaultLocale != null ? String(raw.defaultLocale) : undefined,
+    contentLocale: raw.contentLocale != null ? String(raw.contentLocale) : undefined,
+    contentLocaleFallback: raw.contentLocaleFallback === true,
+    preview: raw.preview === true,
+    showingOriginal: raw.showingOriginal === true,
+    translationStatus: raw.translationStatus != null ? String(raw.translationStatus) : null,
+    translationStale: raw.translationStale === true,
+    translationErrorCode: raw.translationErrorCode != null ? String(raw.translationErrorCode) : null,
+    translationOrigin: raw.translationOrigin != null ? String(raw.translationOrigin) : null,
   }
 }

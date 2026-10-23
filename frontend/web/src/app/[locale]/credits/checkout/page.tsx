@@ -21,10 +21,13 @@ import {
   TEXT_SUB,
   TITLE_PAGE,
 } from '@/shared/ui/specClasses'
-import { formatCurrency } from '@/shared/money/currency'
+import { formatWholeUsd } from '@/shared/money/currency'
 import { formatCreditsCount } from '@/shared/money/creditsDisplay'
+import { useTranslations } from 'next-intl'
 
 function CheckoutContent() {
+  const t = useTranslations('payments')
+  const tCommon = useTranslations('common')
   const router = useRouter()
   const searchParams = useSearchParams()
   const packageId = searchParams.get('packageId')?.trim() ?? ''
@@ -71,7 +74,7 @@ function CheckoutContent() {
       } catch {
         if (!cancelled) {
           setSelectedPackage(null)
-          setLoadError('패키지를 찾을 수 없거나 판매 중이 아닙니다.')
+          setLoadError(t('packageNotFound'))
         }
       } finally {
         if (!cancelled) setIsLoading(false)
@@ -81,18 +84,29 @@ function CheckoutContent() {
     return () => {
       cancelled = true
     }
-  }, [router, packageId, orderNoParam])
+  }, [router, packageId, orderNoParam, t])
 
   const onCreateOrder = async () => {
     if (!packageId) return
     setIsPreparing(true)
     setActionError(null)
     try {
-      const res = await creditsApi.preparePayment(packageId, 'MOCK')
+      let provider = 'MOCK'
+      try {
+        const hints = await creditsApi.getCheckoutHints()
+        if (hints.enabled) provider = 'TOSS_PAYMENTS'
+      } catch {
+        provider = 'MOCK'
+      }
+      const res = await creditsApi.preparePayment(packageId, provider)
       setPrepareResult(res)
+      if (res.provider === 'TOSS_PAYMENTS') {
+        router.replace(`/credits/toss-checkout?packageId=${encodeURIComponent(packageId)}&orderNo=${encodeURIComponent(res.orderNo)}`)
+        return
+      }
       router.replace(`/credits/checkout?packageId=${encodeURIComponent(packageId)}&orderNo=${encodeURIComponent(res.orderNo)}`)
     } catch (e: unknown) {
-      let msg = '주문 생성에 실패했습니다.'
+      let msg = t('createOrderFailed')
       if (axios.isAxiosError(e)) {
         const data = e.response?.data as { message?: string } | undefined
         if (data?.message && typeof data.message === 'string') msg = data.message
@@ -123,22 +137,22 @@ function CheckoutContent() {
     <div className="min-h-screen bg-gray-50">
       <div className={`${PAGE_CONTAINER} py-6 ${SECTION_GAP}`}>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <h1 className={TITLE_PAGE}>결제 확인</h1>
+          <h1 className={TITLE_PAGE}>{t('confirmTitle')}</h1>
           <Link href="/credits/charge" className={`${BTN_SECONDARY} text-center text-sm`}>
-            상품 다시 선택
+            {t('reselectPackage')}
           </Link>
         </div>
 
         {!packageId && (
           <div className={CARD_BASE}>
-            <p className="text-sm text-red-600">packageId가 없습니다. 충전 페이지에서 상품을 선택해 주세요.</p>
+            <p className="text-sm text-red-600">{t('missingPackage')}</p>
             <Link href="/credits/charge" className={`${BTN_PRIMARY} mt-4 inline-block`}>
-              충전 상품 선택
+              {t('selectPackageCta')}
             </Link>
           </div>
         )}
 
-        {packageId && isLoading && <p className={TEXT_SUB}>불러오는 중…</p>}
+        {packageId && isLoading && <p className={TEXT_SUB}>{tCommon('loading')}</p>}
 
         {packageId && !isLoading && !selectedPackage && loadError && (
           <div className={CARD_BASE}>
@@ -148,35 +162,34 @@ function CheckoutContent() {
 
         {selectedPackage && (
           <div className={CARD_BASE}>
-            <h2 className={`${TITLE_PAGE} mb-4`}>주문 요약</h2>
+            <h2 className={`${TITLE_PAGE} mb-4`}>{t('orderSummary')}</h2>
             <ul className={`flex flex-col gap-2 ${TEXT_SUB}`}>
               {displayOrderNo && (
                 <li>
-                  <span className="font-medium text-gray-800">주문번호</span> {displayOrderNo}
+                  <span className="font-medium text-gray-800">{t('orderNo')}</span> {displayOrderNo}
                 </li>
               )}
               <li>
-                <span className="font-medium text-gray-800">패키지</span> {displayName}
+                <span className="font-medium text-gray-800">{t('packageName')}</span> {displayName}
               </li>
               <li>
-                <span className="font-medium text-gray-800">결제 금액</span> {formatCurrency(displayAmount ?? 0)}
+                <span className="font-medium text-gray-800">{t('payAmount')}</span> {formatWholeUsd(displayAmount ?? 0)}
               </li>
               <li>
-                <span className="font-medium text-gray-800">지급 크레딧</span> {formatCreditsCount(displayCredits ?? 0)}
+                <span className="font-medium text-gray-800">{t('grantCredits')}</span> {formatCreditsCount(displayCredits ?? 0)}
               </li>
               {(displayBonus ?? 0) > 0 && (
-                <li className="font-medium text-green-600">보너스 +{formatCreditsCount(displayBonus ?? 0)}</li>
+                <li className="font-medium text-green-600">{t('bonus', { n: formatCreditsCount(displayBonus ?? 0) })}</li>
               )}
               <li>
-                <span className="font-medium text-gray-800">총 지급 예정</span>{' '}
-                {(displayCredits ?? 0) + (displayBonus ?? 0)} 크레딧
+                <span className="font-medium text-gray-800">{t('totalGrant', { n: (displayCredits ?? 0) + (displayBonus ?? 0) })}</span>
               </li>
               <li>
-                <span className="font-medium text-gray-800">Provider</span> {displayProvider}
+                <span className="font-medium text-gray-800">{t('provider')}</span> {displayProvider}
               </li>
               {orderSummary && (
                 <li>
-                  <span className="font-medium text-gray-800">상태</span> {orderSummary.status}
+                  <span className="font-medium text-gray-800">{t('status')}</span> {orderSummary.status}
                 </li>
               )}
             </ul>
@@ -188,26 +201,26 @@ function CheckoutContent() {
                 onClick={onCreateOrder}
                 className={`${BTN_PRIMARY} mt-6`}
               >
-                {isPreparing ? '주문 생성 중…' : '주문 생성하기'}
+                {isPreparing ? t('creatingOrder') : t('createOrder')}
               </button>
             )}
 
             {(orderNoParam || orderSummary) && isMockPaymentUiEnabled() && (
               <button type="button" onClick={goToPayment} className={`${BTN_PRIMARY} mt-4 block`}>
-                결제 진행 (목)
+                {t('mockPay')}
               </button>
             )}
 
             {(orderNoParam || orderSummary) && !isMockPaymentUiEnabled() && (
               <p className={`${TEXT_SUB} mt-4`}>
-                실제 PG 연동 시 이 단계에서 결제사 화면으로 이동합니다. (목 결제 비활성화됨)
+                {t('pgHint')}
               </p>
             )}
 
             {actionError && <p className="mt-3 text-sm text-red-600">{actionError}</p>}
 
             {prepareResult && !orderNoParam && (
-              <p className={`${TEXT_SUB} mt-4`}>주문이 생성되었습니다. URL이 갱신되면 결제 진행을 눌러 주세요.</p>
+              <p className={`${TEXT_SUB} mt-4`}>{t('orderCreated')}</p>
             )}
           </div>
         )}
@@ -220,7 +233,7 @@ export default function CreditsCheckoutPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-gray-50 text-gray-500">불러오는 중…</div>
+        <div className="flex min-h-screen items-center justify-center bg-gray-50 text-gray-500">…</div>
       }
     >
       <CheckoutContent />

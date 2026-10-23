@@ -19,6 +19,8 @@ export type MeProfileResponse = {
   categories?: string[]
   featuredVideoId?: string | null
   introText?: string | null
+  careerText?: string | null
+  activityFields?: string[]
   snsLinks?: Array<{ platform: string; url: string }>
 }
 
@@ -42,6 +44,8 @@ export type PatchMeProfilePayload = {
   bio?: string | null
   categories?: string[]
   featuredVideoId?: string | null
+  careerText?: string | null
+  activityFields?: string[]
 }
 
 export const meProfileApi = {

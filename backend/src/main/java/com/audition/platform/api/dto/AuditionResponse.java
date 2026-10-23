@@ -17,6 +17,7 @@ public class AuditionResponse {
     private String status;
     private Instant updatedAt;
     private String countryCode;
+    private String hostCountry;
     private Instant deadlineAt;
     private String[] tags;
     private Instant createdAt;
@@ -80,6 +81,37 @@ public class AuditionResponse {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String applyBlockedMessage;
 
+    /** 원문 로케일 (auditions.default_locale). */
+    private String defaultLocale;
+
+    /** 응답에 실제로 쓰인 콘텐츠 로케일. */
+    private String contentLocale;
+
+    /** 요청 로케일 번역이 없어 원문으로 내려간 경우. */
+    private boolean contentLocaleFallback;
+
+    /** 지원 차단 사유 코드. 클라이언트가 UI 카탈로그로 번역할 수 있다. */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String applyBlockedCode;
+
+    /** 소유자 미리보기 응답. 공개 조회는 false. */
+    private boolean preview;
+
+    /** 원문을 그대로 보여주는 중. */
+    private boolean showingOriginal;
+
+    /** PENDING / COMPLETED / FAILED. 원문 응답이면 null. */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String translationStatus;
+
+    private boolean translationStale;
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String translationErrorCode;
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String translationOrigin;
+
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
     public UUID getOwnerId() { return ownerId; }
@@ -94,6 +126,8 @@ public class AuditionResponse {
     public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
     public String getCountryCode() { return countryCode; }
     public void setCountryCode(String countryCode) { this.countryCode = countryCode; }
+    public String getHostCountry() { return hostCountry; }
+    public void setHostCountry(String hostCountry) { this.hostCountry = hostCountry; }
     public Instant getDeadlineAt() { return deadlineAt; }
     public void setDeadlineAt(Instant deadlineAt) { this.deadlineAt = deadlineAt; }
     public String[] getTags() { return tags; }
@@ -250,4 +284,28 @@ public class AuditionResponse {
     public void setApplyBlockedMessage(String applyBlockedMessage) {
         this.applyBlockedMessage = applyBlockedMessage;
     }
+
+    public String getDefaultLocale() { return defaultLocale; }
+    public void setDefaultLocale(String defaultLocale) { this.defaultLocale = defaultLocale; }
+    public String getContentLocale() { return contentLocale; }
+    public void setContentLocale(String contentLocale) { this.contentLocale = contentLocale; }
+    public boolean isContentLocaleFallback() { return contentLocaleFallback; }
+    public void setContentLocaleFallback(boolean contentLocaleFallback) {
+        this.contentLocaleFallback = contentLocaleFallback;
+    }
+    public String getApplyBlockedCode() { return applyBlockedCode; }
+    public void setApplyBlockedCode(String applyBlockedCode) { this.applyBlockedCode = applyBlockedCode; }
+
+    public boolean isPreview() { return preview; }
+    public void setPreview(boolean preview) { this.preview = preview; }
+    public boolean isShowingOriginal() { return showingOriginal; }
+    public void setShowingOriginal(boolean showingOriginal) { this.showingOriginal = showingOriginal; }
+    public String getTranslationStatus() { return translationStatus; }
+    public void setTranslationStatus(String translationStatus) { this.translationStatus = translationStatus; }
+    public boolean isTranslationStale() { return translationStale; }
+    public void setTranslationStale(boolean translationStale) { this.translationStale = translationStale; }
+    public String getTranslationErrorCode() { return translationErrorCode; }
+    public void setTranslationErrorCode(String translationErrorCode) { this.translationErrorCode = translationErrorCode; }
+    public String getTranslationOrigin() { return translationOrigin; }
+    public void setTranslationOrigin(String translationOrigin) { this.translationOrigin = translationOrigin; }
 }

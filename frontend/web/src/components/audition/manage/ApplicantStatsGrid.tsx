@@ -1,5 +1,6 @@
 ﻿'use client'
 
+import { useTranslations } from 'next-intl'
 import { CARD_BASE, TEXT_SUB } from '@/shared/ui/specClasses'
 
 type ApplicantStatsGridProps = {
@@ -13,13 +14,15 @@ type ApplicantStatsGridProps = {
 }
 
 export default function ApplicantStatsGrid({ stats }: ApplicantStatsGridProps) {
+  const tAgency = useTranslations('agency')
+  const tStatus = useTranslations('status')
   return (
     <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-      <ApplicantStatCard label="전체" value={stats.total} tone="violet" />
-      <ApplicantStatCard label="대기(미심사)" value={stats.submitted} tone="neutral" />
-      <ApplicantStatCard label="검토중" value={stats.reviewing} tone="blue" />
-      <ApplicantStatCard label="합격" value={stats.accepted} tone="green" />
-      <ApplicantStatCard label="불합격" value={stats.rejected} tone="red" />
+      <ApplicantStatCard label={tAgency('all')} value={stats.total} tone="violet" />
+      <ApplicantStatCard label={tAgency('waitingUnreviewed')} value={stats.submitted} tone="neutral" />
+      <ApplicantStatCard label={tStatus('underReview')} value={stats.reviewing} tone="blue" />
+      <ApplicantStatCard label={tStatus('accepted')} value={stats.accepted} tone="green" />
+      <ApplicantStatCard label={tStatus('rejected')} value={stats.rejected} tone="red" />
     </div>
   )
 }
@@ -46,7 +49,7 @@ function ApplicantStatCard({
   return (
     <div className={`${CARD_BASE} text-center`}>
       <div className={`text-2xl font-bold ${color}`}>{value}</div>
-      <div className={TEXT_SUB}>{label}</div>
+      <div className={`${TEXT_SUB} whitespace-normal break-words`}>{label}</div>
     </div>
   )
 }

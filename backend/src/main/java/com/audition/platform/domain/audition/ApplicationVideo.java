@@ -46,6 +46,9 @@ public class ApplicationVideo {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String title = "Audition Video";
 
+    @Column(name = "text_source_locale", length = 35)
+    private String textSourceLocale;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
@@ -70,6 +73,8 @@ public class ApplicationVideo {
     public void setLikeCount(long likeCount) { this.likeCount = likeCount; }
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
+    public String getTextSourceLocale() { return textSourceLocale; }
+    public void setTextSourceLocale(String textSourceLocale) { this.textSourceLocale = textSourceLocale; }
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }

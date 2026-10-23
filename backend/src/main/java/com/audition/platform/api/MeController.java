@@ -5,14 +5,23 @@ import com.audition.platform.api.dto.me.*;
 import com.audition.platform.application.me.MeApplicationRoundService;
 import com.audition.platform.application.me.MeApplicationService;
 import com.audition.platform.application.me.MeDashboardService;
+import com.audition.platform.application.me.MeNotificationService;
 import com.audition.platform.application.me.MeProfileService;
 import com.audition.platform.application.me.MeVaultService;
+import com.audition.platform.api.dto.recovery.RecoveryCodeIssueResponse;
 import com.audition.platform.application.me.MyChannelService;
+import com.audition.platform.application.recovery.AuthRecoveryService;
+import com.audition.platform.domain.user.User;
+import com.audition.platform.domain.user.UserRepository;
+import com.audition.platform.infra.SecurityUtils;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -25,19 +34,28 @@ public class MeController {
     private final MyChannelService myChannelService;
     private final MeVaultService meVaultService;
     private final MeApplicationRoundService meApplicationRoundService;
+    private final AuthRecoveryService authRecoveryService;
+    private final UserRepository userRepository;
+    private final MeNotificationService meNotificationService;
 
     public MeController(MeProfileService meProfileService,
                         MeDashboardService meDashboardService,
                         MeApplicationService meApplicationService,
                         MyChannelService myChannelService,
                         MeVaultService meVaultService,
-                        MeApplicationRoundService meApplicationRoundService) {
+                        MeApplicationRoundService meApplicationRoundService,
+                        AuthRecoveryService authRecoveryService,
+                        UserRepository userRepository,
+                        MeNotificationService meNotificationService) {
         this.meProfileService = meProfileService;
         this.meDashboardService = meDashboardService;
         this.meApplicationService = meApplicationService;
         this.myChannelService = myChannelService;
         this.meVaultService = meVaultService;
         this.meApplicationRoundService = meApplicationRoundService;
+        this.authRecoveryService = authRecoveryService;
+        this.userRepository = userRepository;
+        this.meNotificationService = meNotificationService;
     }
 
     /** 내 정보 관리 SSOT (프로필 + SNS 등) */
@@ -57,6 +75,22 @@ public class MeController {
         return ApiEnvelope.ok(true);
     }
 
+    /** 복구 코드가 없는 기존 계정만 1회 발급. 이미 있으면 재발급하지 않는다. */
+    @PostMapping("/recovery-code")
+    public ApiEnvelope<RecoveryCodeIssueResponse> issueRecoveryCodeIfMissing() {
+        UUID userId = SecurityUtils.getCurrentUserId();
+        if (userId == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
+        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "사용자를 찾을 수 없습니다."));
+        if (user.getRecoveryCodeHash() != null && !user.getRecoveryCodeHash().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 복구 코드가 발급되어 있습니다. 분실 시 관리자에게 요청하세요.");
+        }
+        String code = authRecoveryService.issueNewCode(user);
+        return ApiEnvelope.ok(new RecoveryCodeIssueResponse(code, user.getEmail()));
+    }
+
     @GetMapping("/profile")
     public ApiEnvelope<MeProfileResponse> profile() {
         return ApiEnvelope.ok(meProfileService.getProfile());
@@ -70,6 +104,16 @@ public class MeController {
     @GetMapping("/dashboard")
     public ApiEnvelope<MeDashboardResponse> dashboard() {
         return ApiEnvelope.ok(meDashboardService.getDashboard());
+    }
+
+    @GetMapping("/notifications")
+    public ApiEnvelope<List<MeNotificationItemResponse>> notifications() {
+        return ApiEnvelope.ok(meNotificationService.listMine());
+    }
+
+    @PostMapping("/notifications/{notificationId}/read")
+    public ApiEnvelope<MeNotificationItemResponse> markNotificationRead(@PathVariable UUID notificationId) {
+        return ApiEnvelope.ok(meNotificationService.markRead(notificationId));
     }
 
     @GetMapping("/applications")

@@ -17,6 +17,7 @@ export default function AuditionEditPage() {
   const params = useParams()
   const router = useRouter()
   const t = useTranslations('common')
+  const tEditor = useTranslations('editor')
   const id = params.id as string
   const [gateReady, setGateReady] = useState(false)
 
@@ -107,14 +108,14 @@ export default function AuditionEditPage() {
         }}
       >
         <h1 className="text-lg md:text-2xl" style={{ margin: 0, fontWeight: 700 }}>
-          공고 수정
+          {tEditor('editPosting')}
         </h1>
         <Link
           href={`/auditions/${id}`}
           className="w-full text-sm md:w-auto md:text-base"
           style={{ fontSize: AUDITION_DETAIL.bodyFontPx, color: HERO.primaryGradientStart }}
         >
-          상세로 돌아가기
+          {tEditor('backToPublicDetail')}
         </Link>
       </div>
 
@@ -123,7 +124,7 @@ export default function AuditionEditPage() {
         auditionId={id}
         initialAudition={audition}
         onSuccess={() => {
-          toast.success('공고가 반영되었습니다. 상세 화면으로 이동합니다.', { duration: 3500 })
+          toast.success(tEditor('savedRedirect'), { duration: 3500 })
           router.push(`/auditions/${id}`)
         }}
       />

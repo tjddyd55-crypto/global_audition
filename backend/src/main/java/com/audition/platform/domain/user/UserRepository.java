@@ -3,6 +3,10 @@ package com.audition.platform.domain.user;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -19,4 +23,8 @@ public interface UserRepository extends JpaRepository<User, UUID>, JpaSpecificat
     boolean existsByNicknameIgnoreCase(String nickname);
 
     boolean existsByNicknameIgnoreCaseAndIdNot(String nickname, UUID id);
+
+    java.util.Optional<User> findByRecoveryCodeLookup(String recoveryCodeLookup);
+
+    List<User> findByChannelPublicTrueAndRoleIn(Collection<String> roles);
 }

@@ -14,7 +14,17 @@ public interface PaymentOrderRepository extends JpaRepository<PaymentOrder, UUID
 
     Optional<PaymentOrder> findByOrderNo(String orderNo);
 
+    Optional<PaymentOrder> findByUserIdAndIdempotencyKey(UUID userId, String idempotencyKey);
+
+    java.util.List<PaymentOrder> findByUserIdOrderByCreatedAtDesc(UUID userId);
+
+    Optional<PaymentOrder> findByPaymentKey(String paymentKey);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT p FROM PaymentOrder p WHERE p.orderNo = :orderNo")
     Optional<PaymentOrder> findByOrderNoForUpdate(@Param("orderNo") String orderNo);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT p FROM PaymentOrder p WHERE p.paymentKey = :paymentKey")
+    Optional<PaymentOrder> findByPaymentKeyForUpdate(@Param("paymentKey") String paymentKey);
 }

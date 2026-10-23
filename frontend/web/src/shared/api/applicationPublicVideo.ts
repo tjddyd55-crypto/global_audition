@@ -4,6 +4,7 @@ import { unwrapData } from './unwrap'
 export type ApplicationPublicDetail = {
   applicationId: string
   auditionId: string
+  videoId: string
   title: string
   videoUrl: string
   thumbnailUrl: string | null
@@ -56,6 +57,7 @@ function parsePublicDetail(raw: Record<string, unknown>): ApplicationPublicDetai
   return {
     applicationId: String(raw.applicationId ?? ''),
     auditionId: String(raw.auditionId ?? ''),
+    videoId: String(raw.videoId ?? ''),
     title: String(raw.title ?? ''),
     videoUrl: String(raw.videoUrl ?? ''),
     thumbnailUrl: raw.thumbnailUrl != null ? String(raw.thumbnailUrl) : null,

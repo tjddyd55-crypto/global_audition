@@ -1,9 +1,10 @@
 import { getRequestConfig } from 'next-intl/server'
+import type { AbstractIntlMessages } from 'next-intl'
 import { notFound } from 'next/navigation'
 import { routing } from './i18n.config'
+import { deepMergeMessages } from './shared/i18n/mergeMessages'
 
-// 번역 파일 캐시 (메모리 캐싱)
-const messageCache = new Map<string, any>()
+const messageCache = new Map<string, AbstractIntlMessages>()
 
 export default getRequestConfig(async ({ requestLocale }) => {
   const locale = await requestLocale
@@ -19,12 +20,16 @@ export default getRequestConfig(async ({ requestLocale }) => {
     }
   }
 
-  let messages
+  const english = (await import('../messages/en.json')).default as AbstractIntlMessages
+  let override: AbstractIntlMessages
   try {
-    messages = (await import(`../messages/${locale}.json`)).default
+    override = (await import(`../messages/${locale}.json`)).default as AbstractIntlMessages
   } catch {
-    messages = (await import(`../messages/${routing.defaultLocale}.json`)).default
+    override = (await import(`../messages/${routing.defaultLocale}.json`)).default as AbstractIntlMessages
   }
+  const messages = (locale === 'en'
+    ? english
+    : deepMergeMessages(english as Record<string, unknown>, override as Record<string, unknown>)) as AbstractIntlMessages
   messageCache.set(locale, messages)
 
   return {

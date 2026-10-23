@@ -32,15 +32,15 @@ export const HEADER = {
 } as const
 
 export const HERO = {
-  paddingTopPx: 120,
-  paddingBottomPx: 100,
-  titleFontSizePx: 40,
+  paddingTopPx: 36,
+  paddingBottomPx: 16,
+  titleFontSizePx: 28,
   titleFontWeight: 700,
   titleLineHeight: 1.3,
-  subMarginTopPx: 12,
+  subMarginTopPx: 8,
   subFontSizePx: 16,
   subColor: '#666666',
-  buttonsMarginTopPx: 24,
+  buttonsMarginTopPx: 12,
   buttonsGapPx: 12,
   buttonHeightPx: 44,
   buttonPaddingPx: 20,

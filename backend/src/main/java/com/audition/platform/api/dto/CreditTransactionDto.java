@@ -14,6 +14,8 @@ public class CreditTransactionDto {
     private String note;
     private Long beforeBalance;
     private Long afterBalance;
+    private Long appliedFeeUsd;
+    private Long appliedCreditQuantity;
     private Instant createdAt;
 
     public String getId() {
@@ -94,6 +96,22 @@ public class CreditTransactionDto {
 
     public void setAfterBalance(Long afterBalance) {
         this.afterBalance = afterBalance;
+    }
+
+    public Long getAppliedFeeUsd() {
+        return appliedFeeUsd;
+    }
+
+    public void setAppliedFeeUsd(Long appliedFeeUsd) {
+        this.appliedFeeUsd = appliedFeeUsd;
+    }
+
+    public Long getAppliedCreditQuantity() {
+        return appliedCreditQuantity;
+    }
+
+    public void setAppliedCreditQuantity(Long appliedCreditQuantity) {
+        this.appliedCreditQuantity = appliedCreditQuantity;
     }
 
     public Instant getCreatedAt() {

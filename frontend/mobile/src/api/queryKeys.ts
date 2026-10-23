@@ -1,0 +1,22 @@
+export const queryKeys = {
+  me: ['auth', 'me'] as const,
+  profile: ['me', 'profile'] as const,
+  dashboard: ['me', 'dashboard'] as const,
+  auditionsOpen: (country: string, locale: string) => ['auditions', 'open', country, locale] as const,
+  audition: (id: string, locale: string) => ['auditions', id, locale] as const,
+  myAuditions: ['auditions', 'mine'] as const,
+  myApplications: ['me', 'applications'] as const,
+  myApplication: (id: string) => ['me', 'applications', id] as const,
+  votes: (auditionId: string) => ['auditions', auditionId, 'votes'] as const,
+  ranking: (auditionId: string) => ['auditions', auditionId, 'ranking'] as const,
+  manage: (auditionId: string, status?: string) => ['agency', 'manage', auditionId, status ?? 'all'] as const,
+  agencyDetail: (id: string) => ['agency', 'application', id] as const,
+  roundEligibility: (applicationId: string, roundId: string) =>
+    ['me', 'applications', applicationId, 'rounds', roundId, 'eligibility'] as const,
+  creditRuntime: ['credits', 'runtime'] as const,
+  creditBalance: ['credits', 'balance'] as const,
+  creditPackages: ['credits', 'packages'] as const,
+  creditLedger: ['credits', 'ledger'] as const,
+  notifications: ['me', 'notifications'] as const,
+  channel: ['me', 'channel'] as const,
+}

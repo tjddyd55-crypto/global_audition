@@ -14,6 +14,7 @@ import { useAuthStore } from '@/shared/auth/authStore'
 
 function MyApplicantsInner() {
   const t = useTranslations('common')
+  const tAgency = useTranslations('agency')
   const router = useRouter()
   const searchParams = useSearchParams()
   const accessToken = useAuthStore((s) => s.accessToken)
@@ -36,13 +37,13 @@ function MyApplicantsInner() {
     }
   }, [accessToken, gateReady, role, router])
 
-  const { data: auditionsPayload } = useQuery({
+  const { data: auditionsPayload, isLoading: auditionsLoading, isError: auditionsError } = useQuery({
     queryKey: ['myAuditions', 0],
     queryFn: () => auditionApi.getMyAuditions({ page: 0, size: 100 }),
     enabled: gateReady && (role === 'AGENCY' || role === 'ADMIN'),
   })
 
-  const list = auditionsPayload?.content ?? []
+  const list = useMemo(() => auditionsPayload?.content ?? [], [auditionsPayload])
   const auditionIdFromUrl = searchParams.get('auditionId')?.trim() ?? ''
 
   const effectiveAuditionId = useMemo(() => {
@@ -78,6 +79,22 @@ function MyApplicantsInner() {
     return null
   }
 
+  if (auditionsLoading) {
+    return (
+      <AgencyDashboardShell>
+        <p className="text-sm text-gray-600">{t('loading')}</p>
+      </AgencyDashboardShell>
+    )
+  }
+
+  if (auditionsError) {
+    return (
+      <AgencyDashboardShell>
+        <p className="text-sm text-red-600">{tAgency('loadFailed')}</p>
+      </AgencyDashboardShell>
+    )
+  }
+
   if (!effectiveAuditionId || !selectedAudition) {
     return (
       <AgencyDashboardShell>
@@ -99,22 +116,25 @@ function MyApplicantsInner() {
         auditionId={effectiveAuditionId}
         auditionTitle={selectedAudition.title}
         backHref="/my/auditions"
-        backLabel="← 오디션 관리"
+        backLabel={`← ${tAgency('navAuditions')}`}
         queryKeyPrefix="my-applicants-hub"
       />
     </AgencyDashboardShell>
   )
 }
 
+function MyApplicantsFallback() {
+  const t = useTranslations('common')
+  return (
+    <AgencyDashboardShell>
+      <div className="flex min-h-[40vh] items-center justify-center text-sm text-gray-600">{t('loading')}</div>
+    </AgencyDashboardShell>
+  )
+}
+
 export default function MyApplicantsPage() {
   return (
-    <Suspense
-      fallback={
-        <AgencyDashboardShell>
-          <div className="flex min-h-[40vh] items-center justify-center text-sm text-gray-600">로딩 중…</div>
-        </AgencyDashboardShell>
-      }
-    >
+    <Suspense fallback={<MyApplicantsFallback />}>
       <MyApplicantsInner />
     </Suspense>
   )

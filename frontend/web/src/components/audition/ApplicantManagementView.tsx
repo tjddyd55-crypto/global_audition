@@ -23,13 +23,17 @@ import {
 import AgencyDetailPanel from '@/components/audition/manage/detail/AgencyDetailPanel'
 import { useApplicantManageFilters } from '@/components/audition/manage/hooks/useApplicantManageFilters'
 import { ApplicantListRow } from '@/components/audition/manage/list'
+import { useTranslations } from 'next-intl'
 
-function toastMessageForPatchSuccess(status: AgencyBoardStatus) {
-  if (status === 'APPROVED') return '합격 처리되었습니다.'
-  if (status === 'REJECTED') return '불합격 처리되었습니다.'
-  if (status === 'REVIEWING') return '검토중으로 변경되었습니다.'
-  if (status === 'PENDING') return '대기 상태로 변경되었습니다.'
-  return '저장되었습니다.'
+function toastMessageForPatchSuccess(
+  status: AgencyBoardStatus,
+  t: (key: 'passDone' | 'rejectDone' | 'reviewDone' | 'pendingDone' | 'saved') => string,
+) {
+  if (status === 'APPROVED') return t('passDone')
+  if (status === 'REJECTED') return t('rejectDone')
+  if (status === 'REVIEWING') return t('reviewDone')
+  if (status === 'PENDING') return t('pendingDone')
+  return t('saved')
 }
 
 function subtitleFromDescription(description: string) {
@@ -59,6 +63,7 @@ export function ApplicantManagementView({
   backLabel,
   queryKeyPrefix = 'audition-manage',
 }: Props) {
+  const t = useTranslations('agency')
   const queryClient = useQueryClient()
   const {
     categoryFilter,
@@ -140,10 +145,10 @@ export function ApplicantManagementView({
       if (context?.previousDetail !== undefined) {
         queryClient.setQueryData(detailQueryKey(vars.id), context.previousDetail)
       }
-      toast.error('상태 변경에 실패했습니다.')
+      toast.error(t('statusFailed'))
     },
     onSuccess: (_data, variables) => {
-      toast.success(toastMessageForPatchSuccess(variables.status))
+      toast.success(toastMessageForPatchSuccess(variables.status, t))
     },
     onSettled: () => {
       setPatchingId(null)
@@ -171,11 +176,11 @@ export function ApplicantManagementView({
   }, [panelAppId])
 
   if (isLoading) {
-    return <ApplicantManagementPageState message="로딩 중…" />
+    return <ApplicantManagementPageState message={t('loading')} />
   }
 
   if (error) {
-    return <ApplicantManagementPageState message="데이터를 불러오지 못했습니다." tone="danger" />
+    return <ApplicantManagementPageState message={t('loadDataFailed')} tone="danger" />
   }
 
   return (

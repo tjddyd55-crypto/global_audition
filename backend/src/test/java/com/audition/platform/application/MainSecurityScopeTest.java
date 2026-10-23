@@ -2,6 +2,9 @@ package com.audition.platform.application;
 
 import com.audition.platform.api.dto.LoginRequest;
 import com.audition.platform.api.dto.SignupRequest;
+import com.audition.platform.application.credit.CreditService;
+import com.audition.platform.application.org.AgencySignupService;
+import com.audition.platform.application.recovery.AuthRecoveryService;
 import com.audition.platform.application.user.UserNicknameService;
 import com.audition.platform.domain.user.User;
 import com.audition.platform.domain.user.UserRepository;
@@ -28,12 +31,14 @@ class MainSecurityScopeTest {
     private UserRepository users;
     private AuthService auth;
     private BCryptPasswordEncoder encoder;
+    private AgencySignupService agencySignup;
 
     @BeforeEach
     void setUp() {
         users = mock(UserRepository.class);
         UserNicknameService nicknames = mock(UserNicknameService.class);
         encoder = new BCryptPasswordEncoder();
+        agencySignup = mock(AgencySignupService.class);
         when(nicknames.prepareNicknameOrThrow(any(), any())).thenReturn("hotfan");
         when(users.existsByEmail(any())).thenReturn(false);
         when(users.existsByUsername(any())).thenReturn(false);
@@ -44,20 +49,28 @@ class MainSecurityScopeTest {
             }
             return user;
         });
-        auth = new AuthService(users, encoder, new JwtService(TestJwtSecrets.ACCEPTABLE, 60_000L), nicknames);
+        auth = new AuthService(users, encoder, new JwtService(TestJwtSecrets.ACCEPTABLE, 60_000L), nicknames,
+                mock(AuthRecoveryService.class), mock(CreditService.class), agencySignup);
     }
 
+    /**
+     * develop 통합(PR #66 승인 흐름): 기획사 신청은 거절 대신 신청서를 열지만,
+     * 공개 가입이 AGENCY 역할을 주지 않는 불변식은 PR #67과 동일하게 유지한다.
+     */
     @Test
-    void publicAgencySignupIsRejectedAndNothingIsSaved() {
+    void publicAgencySignupNeverGrantsAgencyRole() {
         SignupRequest request = new SignupRequest();
         request.setEmail("agency@local.test");
         request.setPassword("Localtest1!");
         request.setRole("AGENCY");
         request.setNickname("hotfan");
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> auth.signup(request));
-        assertEquals(403, ex.getStatusCode().value());
-        assertEquals(AuthService.AGENCY_SIGNUP_NOT_AVAILABLE, ex.getReason());
-        org.mockito.Mockito.verify(users, org.mockito.Mockito.never()).save(any(User.class));
+        request.setCountryCode("KR");
+        com.audition.platform.api.dto.AuthResponse res = auth.signup(request);
+        assertEquals("APPLICANT", res.getRole());
+        org.mockito.Mockito.verify(users).save(org.mockito.ArgumentMatchers.argThat(user ->
+                "APPLICANT".equals(user.getRole()) && "AGENCY".equals(user.getSignupIntent())));
+        org.mockito.Mockito.verify(agencySignup).openApplication(any(User.class), org.mockito.ArgumentMatchers.eq("AGENCY"),
+                org.mockito.ArgumentMatchers.eq("KR"), any());
     }
 
     @Test
@@ -87,17 +100,16 @@ class MainSecurityScopeTest {
         assertEquals(401, ex.getStatusCode().value());
     }
 
+    /** main 전용 가드였던 테스트를 develop 기준으로 전환: 승인 흐름 코드가 존재해야 한다. */
     @Test
-    void mainHasNoCountryScopeOrAgencyApprovalFeature() throws Exception {
+    void developContainsCountryScopeAndAgencyApprovalFeature() throws Exception {
         Path root = Path.of("src/main/java");
         try (Stream<Path> files = Files.walk(root)) {
             boolean found = files.filter(path -> path.toString().endsWith(".java"))
                     .map(MainSecurityScopeTest::readQuiet)
-                    .anyMatch(text -> text.contains("COUNTRY_ADMIN")
-                            || text.contains("AGENCY_NOT_APPROVED")
-                            || text.contains("signup_intent"));
-            if (found) {
-                throw new AssertionError("main unexpectedly contains country scope or agency approval");
+                    .anyMatch(text -> text.contains("COUNTRY_ADMIN"));
+            if (!found) {
+                throw new AssertionError("develop is missing country scope / agency approval");
             }
         }
     }

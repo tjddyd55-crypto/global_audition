@@ -1,30 +1,23 @@
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { useTranslation } from 'react-i18next'
 
 type Props = {
   onRetry: () => void
 }
 
-/**
- * 네트워크 단절 혹은 WebView 로드 실패 시 표시하는 폴백 화면.
- *
- * 결정
- * - 네이티브에서 선제적으로 그려 "빈 WebView"가 보이는 UX를 방지한다.
- * - 재시도는 WebView.reload()를 부모에서 호출하도록 콜백으로 노출.
- */
 export function OfflineScreen({ onRetry }: Props) {
+  const { t } = useTranslation()
   return (
     <View style={styles.wrap}>
-      <Text style={styles.title}>연결할 수 없어요</Text>
-      <Text style={styles.desc}>
-        네트워크 연결을 확인한 뒤 다시 시도해 주세요.
-      </Text>
+      <Text style={styles.title}>{t('native.offlineTitle')}</Text>
+      <Text style={styles.desc}>{t('native.offlineBody')}</Text>
       <TouchableOpacity
         onPress={onRetry}
         style={styles.button}
         accessibilityRole="button"
-        accessibilityLabel="다시 시도"
+        accessibilityLabel={t('native.offlineRetry')}
       >
-        <Text style={styles.buttonText}>다시 시도</Text>
+        <Text style={styles.buttonText}>{t('native.offlineRetry')}</Text>
       </TouchableOpacity>
     </View>
   )

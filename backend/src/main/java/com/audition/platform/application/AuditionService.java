@@ -6,7 +6,14 @@ import com.audition.platform.api.dto.AuditionRoundSummaryDto;
 import com.audition.platform.api.dto.CreateAuditionRequest;
 import com.audition.platform.api.dto.UpdateAuditionRequest;
 import com.audition.platform.application.audition.AuditionSeriesEligibilityService;
+import com.audition.platform.application.org.AgencyApproval;
+import com.audition.platform.application.org.JdbcCrmStore;
+import com.audition.platform.application.publicview.PublicAuditionBrowse;
 import com.audition.platform.application.audition.AuditionSeriesPresentation;
+import com.audition.platform.application.i18n.AuditionLocalizationService;
+import com.audition.platform.application.i18n.ContentLocales;
+import com.audition.platform.application.i18n.content.ContentTranslationService;
+import com.audition.platform.application.i18n.content.ContentTypes;
 import com.audition.platform.api.dto.AuditionTagRefDto;
 import com.audition.platform.application.round.AuditionProcessModes;
 import com.audition.platform.application.round.AuditionRoundService;
@@ -48,19 +55,44 @@ public class AuditionService {
     private final AuditionRoundService auditionRoundService;
     private final AuditionTagService auditionTagService;
     private final AuditionSeriesEligibilityService auditionSeriesEligibilityService;
+    private final AuditionLocalizationService auditionLocalizationService;
+    private final ContentTranslationService contentTranslations;
+    private final JdbcCrmStore crm;
 
     public AuditionService(AuditionRepository auditionRepository,
                            UserRepository userRepository,
                            ApplicationRepository applicationRepository,
                            AuditionRoundService auditionRoundService,
                            AuditionTagService auditionTagService,
-                           AuditionSeriesEligibilityService auditionSeriesEligibilityService) {
+                           AuditionSeriesEligibilityService auditionSeriesEligibilityService,
+                           AuditionLocalizationService auditionLocalizationService,
+                           ContentTranslationService contentTranslations,
+                           JdbcCrmStore crm) {
         this.auditionRepository = auditionRepository;
         this.userRepository = userRepository;
         this.applicationRepository = applicationRepository;
         this.auditionRoundService = auditionRoundService;
         this.auditionTagService = auditionTagService;
         this.auditionSeriesEligibilityService = auditionSeriesEligibilityService;
+        this.auditionLocalizationService = auditionLocalizationService;
+        this.contentTranslations = contentTranslations;
+        this.crm = crm;
+    }
+
+    /** 연결된 기획사 심사가 끝나기 전에는 게시·마감을 막는다. 심사 행이 없으면 기존 권한을 유지한다. */
+    private void requireApprovedAgencyForPublish(UUID ownerId, String status) {
+        if (crm == null || ownerId == null) {
+            return;
+        }
+        String st = status != null ? status : "DRAFT";
+        if (!"OPEN".equals(st) && !"CLOSED".equals(st)) {
+            return;
+        }
+        boolean pending = crm.findByLinkedUser(ownerId).stream()
+                .anyMatch(row -> !AgencyApproval.APPROVED.equals(row.approvalState()));
+        if (pending) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "AGENCY_NOT_APPROVED");
+        }
     }
 
     private static Instant parseInstantRequired(String value, String field) {
@@ -111,6 +143,36 @@ public class AuditionService {
         a.setQualifications(a.getQualifications());
         a.setSchedules(a.getSchedules());
         a.setBenefits(a.getBenefits());
+    }
+
+    /**
+     * 모집 대상은 {@code country_code} (KR, MN, GLOBAL, JP, OTHER).
+     * 개최 국가는 {@code host_country}. 매출 귀속은 기획사 지점 국가이며 여기 넣지 않는다.
+     */
+    private static String normalizeCountryCode(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        String code = raw.trim().toUpperCase();
+        return switch (code) {
+            case "KR", "MN", "GLOBAL", "JP", "OTHER" -> code;
+            case "KOREA", "KOR" -> "KR";
+            case "MONGOLIA", "MNG" -> "MN";
+            case "WORLD", "ALL", "WW" -> "GLOBAL";
+            default -> code.length() <= 16 ? code : code.substring(0, 16);
+        };
+    }
+
+    /** 개최 국가. 2글자 ISO 만 받는다. 기획사 소속 국가로 채우지 않는다. */
+    private static String normalizeHostCountry(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        String code = raw.trim().toUpperCase(java.util.Locale.ROOT);
+        if (!code.matches("[A-Z]{2}")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "HOST_COUNTRY_INVALID");
+        }
+        return code;
     }
 
     private static String trimOrNull(String s) {
@@ -178,6 +240,7 @@ public class AuditionService {
         r.setStatus(a.getStatus());
         r.setUpdatedAt(a.getUpdatedAt());
         r.setCountryCode(a.getCountryCode());
+        r.setHostCountry(a.getHostCountry());
         r.setDeadlineAt(a.getDeadlineAt());
         try {
             r.setTags(auditionTagService.resolveMergedDisplayNames(a.getId()).toArray(new String[0]));
@@ -217,6 +280,7 @@ public class AuditionService {
         r.setDisplayTitle(AuditionSeriesPresentation.displayTitle(a.getTitle(), a.getSeriesRound()));
         r.setRecruitmentRoundLabel(
                 AuditionSeriesPresentation.recruitmentRoundLabel(statusForLabel, a.getSeriesRound()));
+        auditionLocalizationService.apply(a, r);
         return r;
     }
 
@@ -251,7 +315,11 @@ public class AuditionService {
         a.setEndDate(end);
         Instant deadlineParsed = parseInstantOrNull(req.getDeadlineAt());
         a.setDeadlineAt(deadlineParsed != null ? deadlineParsed : end);
-        a.setCountryCode(req.getCountryCode());
+        a.setCountryCode(normalizeCountryCode(req.getCountryCode()));
+        a.setHostCountry(normalizeHostCountry(req.getHostCountry()));
+        if (req.getDefaultLocale() != null && !req.getDefaultLocale().isBlank()) {
+            a.setDefaultLocale(requireAuthoringLocale(req.getDefaultLocale()));
+        }
         a.setRemainingDays(computeRemainingDays(end));
         a.setApplicantsCount(0);
         if (req.getProcessMode() != null && AuditionProcessModes.isMultiRound(req.getProcessMode())) {
@@ -288,6 +356,7 @@ public class AuditionService {
         if (ownerId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
         }
+        requireApprovedAgencyForPublish(ownerId, req.getStatus());
         if (!SecurityUtils.hasRole("AGENCY") && !SecurityUtils.hasRole("ADMIN")) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only AGENCY or ADMIN can create auditions");
         }
@@ -304,6 +373,7 @@ public class AuditionService {
         a.setOwnerId(ownerId);
         a.setUpdatedAt(Instant.now());
         applyCreateBody(a, req);
+        auditionLocalizationService.onSourceWritten(a, true);
         a = auditionRepository.save(a);
         applyAuditionTagsInput(a.getId(), req);
         if (AuditionProcessModes.isMultiRound(a.getProcessMode())) {
@@ -313,11 +383,80 @@ public class AuditionService {
             a = auditionRepository.save(a);
             auditionRoundService.bootstrapFirstRound(a.getId(), "OPEN".equals(a.getStatus()));
         }
+        enqueuePostingTranslation(a);
         return toResponse(a);
     }
 
     public List<AuditionResponse> listOpen() {
+        return listOpen(null);
+    }
+
+    public List<AuditionResponse> listOpen(String country) {
         return auditionRepository.findByStatusOrderByCreatedAtDesc("OPEN").stream()
+                .filter(a -> matchesPublicCountry(a.getCountryCode(), a.getHostCountry(), country))
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 기존 country_code 재사용. MN 요청은 MN+GLOBAL(+미지정), KR은 KR+GLOBAL.
+     * GLOBAL/빈 값은 전체 OPEN.
+     */
+    public static boolean matchesAudience(String stored, String requestedRaw) {
+        if (requestedRaw == null || requestedRaw.isBlank()) {
+            return true;
+        }
+        String requested = requestedRaw.trim().toUpperCase();
+        if ("GLOBAL".equals(requested) || "ALL".equals(requested)) {
+            return true;
+        }
+        String code = stored == null || stored.isBlank() ? "GLOBAL" : stored.trim().toUpperCase();
+        return requested.equals(code) || "GLOBAL".equals(code);
+    }
+
+    /**
+     * 요청 국가는 모집 대상이거나 개최 국가일 때 맞는다.
+     * 기획사 소속·계약 국가는 공개 필터에 넣지 않는다.
+     */
+    public static boolean matchesHost(String storedHost, String requestedRaw) {
+        if (requestedRaw == null || requestedRaw.isBlank() || storedHost == null || storedHost.isBlank()) {
+            return false;
+        }
+        String requested = requestedRaw.trim().toUpperCase(java.util.Locale.ROOT);
+        if ("GLOBAL".equals(requested) || "ALL".equals(requested)) {
+            return false;
+        }
+        return requested.equals(storedHost.trim().toUpperCase(java.util.Locale.ROOT));
+    }
+
+    public static boolean matchesPublicCountry(String audience, String host, String requested) {
+        return matchesAudience(audience, requested) || matchesHost(host, requested);
+    }
+
+    public List<AuditionResponse> browsePublic(PublicAuditionBrowse.Query query) {
+        String recruitment = query.recruitment() == null ? "" : query.recruitment().trim().toUpperCase(java.util.Locale.ROOT);
+        List<Audition> rows = new ArrayList<>();
+        if ("CLOSED".equals(recruitment) || "ENDED".equals(recruitment)) {
+            rows.addAll(auditionRepository.findByStatusOrderByCreatedAtDesc("CLOSED"));
+        } else if ("ALL".equals(recruitment)) {
+            rows.addAll(auditionRepository.findByStatusOrderByCreatedAtDesc("OPEN"));
+            rows.addAll(auditionRepository.findByStatusOrderByCreatedAtDesc("CLOSED"));
+        } else {
+            rows.addAll(auditionRepository.findByStatusOrderByCreatedAtDesc("OPEN"));
+        }
+        return rows.stream()
+                .filter(audition -> PublicAuditionBrowse.matches(
+                        audition.getStatus(),
+                        audition.getCountryCode(),
+                        audition.getHostCountry(),
+                        audition.getTitle(),
+                        audition.getAgencyName(),
+                        audition.getRecruitFields(),
+                        auditionTagService.resolveMergedDisplayNames(audition.getId()),
+                        audition.getStartDate(),
+                        audition.getEndDate(),
+                        audition.getDeadlineAt(),
+                        query))
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
@@ -380,7 +519,22 @@ public class AuditionService {
                 r.setRoundSummaries(new ArrayList<>());
             }
         }
+        auditionLocalizationService.apply(a, r);
         return r;
+    }
+
+    /**
+     * 소유자 미리보기. 공개 상세와 같은 DTO에 번역 상태를 얹고, 저장·지원·결제·투표는 하지 않는다.
+     * 쓰기 트랜잭션을 열지 않는다.
+     */
+    public AuditionResponse preview(UUID id, String localeRaw) {
+        Audition audition = auditionRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Not found"));
+        requireOwnerOrAdmin(audition);
+        AuditionResponse response = toResponse(audition);
+        auditionLocalizationService.applyPreview(audition, response, localeRaw);
+        response.setPreview(true);
+        return response;
     }
 
     @Transactional
@@ -402,10 +556,17 @@ public class AuditionService {
             audition.setDescription(request.getDescription().trim());
         }
         if (request.getStatus() != null) {
+            requireApprovedAgencyForPublish(audition.getOwnerId(), request.getStatus());
             audition.setStatus(request.getStatus());
         }
         if (request.getCountryCode() != null) {
-            audition.setCountryCode(request.getCountryCode());
+            audition.setCountryCode(normalizeCountryCode(request.getCountryCode()));
+        }
+        if (request.getHostCountry() != null) {
+            audition.setHostCountry(normalizeHostCountry(request.getHostCountry()));
+        }
+        if (request.getDefaultLocale() != null && !request.getDefaultLocale().isBlank()) {
+            audition.setDefaultLocale(requireAuthoringLocale(request.getDefaultLocale()));
         }
         boolean patchNewTags = request.getTagIds() != null || request.getCustomTagNames() != null;
         if (patchNewTags) {
@@ -481,7 +642,22 @@ public class AuditionService {
             audition.setRemainingDays(computeRemainingDays(audition.getEndDate()));
         }
         audition.setUpdatedAt(Instant.now());
-        return toResponse(auditionRepository.save(audition));
+        auditionLocalizationService.onSourceWritten(audition, translatableFieldsPresent(request));
+        Audition saved = auditionRepository.save(audition);
+        enqueuePostingTranslation(saved);
+        return toResponse(saved);
+    }
+
+    /** 게시된 공고만 활성 대상(영어 우선)을 큐에 넣는다. 실패해도 공고 저장은 유지한다. */
+    private void enqueuePostingTranslation(Audition audition) {
+        if (audition == null || audition.getId() == null || !"OPEN".equals(audition.getStatus())) {
+            return;
+        }
+        try {
+            contentTranslations.requestActiveTargets(ContentTypes.AUDITION_POSTING, audition.getId(), audition.getOwnerId());
+        } catch (RuntimeException ex) {
+            log.warn("posting translation enqueue skipped type={}", ex.getClass().getSimpleName());
+        }
     }
 
     public void delete(UUID id) {
@@ -526,6 +702,8 @@ public class AuditionService {
         n.setDescription(source.getDescription());
         n.setStatus("DRAFT");
         n.setCountryCode(source.getCountryCode());
+        n.setHostCountry(source.getHostCountry());
+        n.setDefaultLocale(source.getDefaultLocale());
         n.setDeadlineAt(source.getDeadlineAt());
         n.setCoverImage(source.getCoverImage());
         n.setImageOriginalUrl(source.getImageOriginalUrl());
@@ -559,6 +737,7 @@ public class AuditionService {
             n.setSelectionStatus(null);
         }
         n.setUpdatedAt(Instant.now());
+        auditionLocalizationService.onSourceWritten(n, true);
         n = auditionRepository.save(n);
 
         List<AuditionTagRefDto> refs = auditionTagService.listRefs(source.getId());
@@ -580,5 +759,36 @@ public class AuditionService {
             auditionRoundService.bootstrapFirstRound(n.getId(), false);
         }
         return toResponse(n);
+    }
+
+    private void requireOwnerOrAdmin(Audition audition) {
+        UUID userId = SecurityUtils.getCurrentUserId();
+        if (userId == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+        }
+        if (!SecurityUtils.hasRole("ADMIN") && !SecurityUtils.hasRole("SUPER_ADMIN")
+                && !audition.getOwnerId().equals(userId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only owner or ADMIN can preview this audition");
+        }
+    }
+
+    private static String requireAuthoringLocale(String raw) {
+        try {
+            return ContentLocales.requireAuthoringLocale(raw);
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "원문 언어 코드가 올바르지 않습니다.");
+        }
+    }
+
+    private static boolean translatableFieldsPresent(UpdateAuditionRequest request) {
+        return request.getTitle() != null
+                || request.getDescription() != null
+                || request.getLocation() != null
+                || request.getAgencyName() != null
+                || request.getRecruitFields() != null
+                || request.getQualifications() != null
+                || request.getSchedules() != null
+                || request.getBenefits() != null
+                || (request.getDefaultLocale() != null && !request.getDefaultLocale().isBlank());
     }
 }

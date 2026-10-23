@@ -54,4 +54,11 @@ public class AuthController {
     public ApiEnvelope<AuthMeDataDto> me() {
         return ApiEnvelope.ok(authService.meData());
     }
+
+    @PostMapping("/session")
+    public AuthResponse session(HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
+        AuthResponse res = authService.refreshSession();
+        authSessionCookieWriter.addAccessTokenCookie(httpRequest, httpResponse, res.getToken());
+        return res;
+    }
 }

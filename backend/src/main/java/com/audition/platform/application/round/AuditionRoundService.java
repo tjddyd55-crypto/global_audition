@@ -1,5 +1,6 @@
 package com.audition.platform.application.round;
 
+import com.audition.platform.application.i18n.Bcp47Tags;
 import com.audition.platform.domain.audition.ApplicationRoundSubmissionRepository;
 import com.audition.platform.domain.audition.Audition;
 import com.audition.platform.domain.audition.AuditionRepository;
@@ -133,6 +134,40 @@ public class AuditionRoundService {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "제출 레코드가 있는 라운드는 제출 유형을 변경할 수 없습니다.");
             }
             round.setRequiredSubmissionType(requiredSubmissionType);
+        }
+        return roundRepository.save(round);
+    }
+
+    /**
+     * 공지 문구만 바꾼다. 라운드 진행, 활성 여부, 일정, 심사 방식, 제출 유형, 오디션 상태는 건드리지 않는다.
+     */
+    @Transactional
+    public AuditionRound updateNotices(
+            UUID auditionId,
+            UUID roundId,
+            String announcementTitle,
+            String announcementBody,
+            String submissionLabel,
+            String submissionGuide,
+            String sourceLocale) {
+        AuditionRound round = requireRoundBelongsToAudition(auditionId, roundId);
+        if (announcementTitle != null) {
+            round.setAnnouncementTitle(announcementTitle);
+        }
+        if (announcementBody != null) {
+            round.setAnnouncementBody(announcementBody);
+        }
+        if (submissionLabel != null) {
+            round.setSubmissionLabel(submissionLabel);
+        }
+        if (submissionGuide != null) {
+            round.setSubmissionGuide(submissionGuide);
+        }
+        if (sourceLocale != null && !sourceLocale.isBlank()) {
+            String tag = Bcp47Tags.canonicalize(sourceLocale);
+            if (!tag.isEmpty()) {
+                round.setNoticeSourceLocale(tag);
+            }
         }
         return roundRepository.save(round);
     }

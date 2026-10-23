@@ -1,5 +1,6 @@
 ﻿'use client'
 
+import { useTranslations } from 'next-intl'
 import { getVideoEmbedSrc } from '@/shared/utils/videoEmbed'
 
 interface YouTubePlayerProps {
@@ -20,12 +21,13 @@ export default function YouTubePlayer({
   height = 400,
   className = '',
 }: YouTubePlayerProps) {
+  const tVideo = useTranslations('video')
   const finalEmbedUrl = embedUrl?.trim() || getVideoEmbedSrc(videoUrl) || ''
 
   if (!finalEmbedUrl) {
     return (
       <div className={`flex items-center justify-center bg-gray-100 ${className}`} style={{ width, height }}>
-        <p className="text-gray-500">유효한 YouTube URL이 아닙니다</p>
+        <p className="text-gray-500">{tVideo('invalidYoutubeUrl')}</p>
       </div>
     )
   }

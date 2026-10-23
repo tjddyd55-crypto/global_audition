@@ -1,39 +1,41 @@
 'use client'
 
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { usePathname, useRouter } from '../../i18n.config'
 import { useState } from 'react'
+import {
+  AGENCY_UI_LOCALE,
+  isAgencyConsolePath,
+  localeSwitchTarget,
+  PUBLIC_SELECTOR,
+  type UiLocale,
+} from '@/shared/i18n/uiLocales'
 
-const languages = [
-  { code: 'ko', name: '한국어', flag: '🇰🇷' },
-  { code: 'en', name: 'English', flag: '🇺🇸' },
-  { code: 'ja', name: '日本語', flag: '🇯🇵' },
-  { code: 'zh', name: '中文', flag: '🇨🇳' },
-  { code: 'es', name: 'Español', flag: '🇪🇸' },
-  { code: 'fr', name: 'Français', flag: '🇫🇷' },
-  { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
-]
+const FLAGS: Record<UiLocale, string> = {
+  ko: '🇰🇷',
+  en: '🇺🇸',
+  mn: '🇲🇳',
+}
+
+const LANGUAGE_OPTIONS = PUBLIC_SELECTOR.map((code) => ({ code, flag: FLAGS[code] }))
 
 export default function LanguageSwitcher() {
   const locale = useLocale()
+  const tLang = useTranslations('languages')
   const router = useRouter()
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
 
   const changeLanguage = (newLocale: string) => {
-    // 현재 경로에서 언어 코드를 새 언어로 교체
-    const segments = pathname.split('/')
-    if (segments[1] && languages.some((lang) => lang.code === segments[1])) {
-      segments[1] = newLocale
-    } else {
-      segments.splice(1, 0, newLocale)
+    const target = localeSwitchTarget(pathname, newLocale)
+    if (target.locale !== locale) {
+      router.push(target.href, { locale: target.locale })
     }
-    const newPath = segments.join('/')
-    router.push(newPath)
     setIsOpen(false)
   }
 
-  const currentLanguage = languages.find((lang) => lang.code === locale) || languages[0]
+  const options = isAgencyConsolePath(pathname) ? [{ code: AGENCY_UI_LOCALE, flag: FLAGS[AGENCY_UI_LOCALE] }] : LANGUAGE_OPTIONS
+  const currentLanguage = options.find((lang) => lang.code === locale) || options[0]
 
   return (
     <div className="relative">
@@ -43,7 +45,7 @@ export default function LanguageSwitcher() {
         aria-label="Change language"
       >
         <span className="text-xl">{currentLanguage.flag}</span>
-        <span className="hidden sm:inline text-sm font-medium">{currentLanguage.name}</span>
+        <span className="hidden sm:inline text-sm font-medium">{tLang(currentLanguage.code)}</span>
         <svg
           className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
           fill="none"
@@ -62,7 +64,7 @@ export default function LanguageSwitcher() {
           />
           <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border z-20">
             <div className="py-1">
-              {languages.map((lang) => (
+              {options.map((lang) => (
                 <button
                   key={lang.code}
                   onClick={() => changeLanguage(lang.code)}
@@ -71,7 +73,7 @@ export default function LanguageSwitcher() {
                   }`}
                 >
                   <span className="text-xl">{lang.flag}</span>
-                  <span className="text-sm">{lang.name}</span>
+                  <span className="text-sm">{tLang(lang.code)}</span>
                   {locale === lang.code && (
                     <span className="ml-auto text-primary-600">✓</span>
                   )}

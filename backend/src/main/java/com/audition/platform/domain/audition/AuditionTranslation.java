@@ -1,0 +1,157 @@
+package com.audition.platform.domain.audition;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
+import jakarta.persistence.Table;
+import jakarta.persistence.Version;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
+import java.time.Instant;
+import java.util.UUID;
+
+@Entity
+@Table(name = "audition_translations")
+@IdClass(AuditionTranslationId.class)
+public class AuditionTranslation {
+
+    public static final String STATUS_PENDING = "PENDING";
+    public static final String STATUS_COMPLETED = "COMPLETED";
+    public static final String STATUS_FAILED = "FAILED";
+    public static final String PROVIDER_MANUAL = "MANUAL";
+    public static final String ORIGIN_MANUAL = "MANUAL";
+    public static final String ORIGIN_AUTO = "AUTO";
+    public static final String ERROR_NOT_CONFIGURED = "NOT_CONFIGURED";
+    public static final String ERROR_PROVIDER = "PROVIDER_ERROR";
+    public static final String ERROR_MISSING_FIELD = "MISSING_FIELD";
+    public static final String ERROR_ARRAY_LENGTH_MISMATCH = "ARRAY_LENGTH_MISMATCH";
+    public static final String ERROR_MALFORMED_JSON = "MALFORMED_JSON";
+    public static final String ERROR_HTTP = "HTTP_ERROR";
+    public static final String ERROR_TIMEOUT = "TIMEOUT";
+    public static final String ERROR_ENDPOINT_REJECTED = "ENDPOINT_REJECTED";
+    public static final String ERROR_CONCURRENT_EDIT = "CONCURRENT_EDIT";
+    public static final String ERROR_AUTH_FAILED = "AUTH_FAILED";
+    public static final String ERROR_FORBIDDEN = "FORBIDDEN";
+    public static final String ERROR_PROVIDER_RATE_LIMITED = "PROVIDER_RATE_LIMITED";
+    public static final String ERROR_INVALID_CREDENTIALS = "INVALID_CREDENTIALS";
+
+    @Id
+    @Column(name = "audition_id", nullable = false)
+    private UUID auditionId;
+
+    @Id
+    @Column(nullable = false, length = 8)
+    private String locale;
+
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String title = "";
+
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String description = "";
+
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String location = "";
+
+    @Column(name = "agency_name", nullable = false, columnDefinition = "TEXT")
+    private String agencyName = "";
+
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "recruit_fields", columnDefinition = "text[]")
+    private String[] recruitFields = new String[0];
+
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(columnDefinition = "text[]")
+    private String[] qualifications = new String[0];
+
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(columnDefinition = "text[]")
+    private String[] schedules = new String[0];
+
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(columnDefinition = "text[]")
+    private String[] benefits = new String[0];
+
+    @Column(nullable = false)
+    private String status = STATUS_COMPLETED;
+
+    @Column(nullable = false)
+    private String provider = PROVIDER_MANUAL;
+
+    @Column(name = "error_code")
+    private String errorCode;
+
+    @Column(name = "error_message", columnDefinition = "TEXT")
+    private String errorMessage;
+
+    @Column(name = "source_hash", length = 64)
+    private String sourceHash;
+
+    @Column(name = "source_revision")
+    private Long sourceRevision;
+
+    @Column(nullable = false, length = 16)
+    private String origin = ORIGIN_MANUAL;
+
+    @Column(name = "manually_edited", nullable = false)
+    private boolean manuallyEdited;
+
+    @Column(nullable = false)
+    private boolean stale;
+
+    @Version
+    @Column(name = "row_version", nullable = false)
+    private Long rowVersion;
+
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt = Instant.now();
+
+    @Column(name = "created_at", nullable = false)
+    private Instant createdAt = Instant.now();
+
+    public UUID getAuditionId() { return auditionId; }
+    public void setAuditionId(UUID auditionId) { this.auditionId = auditionId; }
+    public String getLocale() { return locale; }
+    public void setLocale(String locale) { this.locale = locale; }
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+    public String getLocation() { return location; }
+    public void setLocation(String location) { this.location = location; }
+    public String getAgencyName() { return agencyName; }
+    public void setAgencyName(String agencyName) { this.agencyName = agencyName; }
+    public String[] getRecruitFields() { return recruitFields != null ? recruitFields : new String[0]; }
+    public void setRecruitFields(String[] recruitFields) { this.recruitFields = recruitFields != null ? recruitFields : new String[0]; }
+    public String[] getQualifications() { return qualifications != null ? qualifications : new String[0]; }
+    public void setQualifications(String[] qualifications) { this.qualifications = qualifications != null ? qualifications : new String[0]; }
+    public String[] getSchedules() { return schedules != null ? schedules : new String[0]; }
+    public void setSchedules(String[] schedules) { this.schedules = schedules != null ? schedules : new String[0]; }
+    public String[] getBenefits() { return benefits != null ? benefits : new String[0]; }
+    public void setBenefits(String[] benefits) { this.benefits = benefits != null ? benefits : new String[0]; }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+    public String getProvider() { return provider; }
+    public void setProvider(String provider) { this.provider = provider; }
+    public String getErrorCode() { return errorCode; }
+    public void setErrorCode(String errorCode) { this.errorCode = errorCode; }
+    public String getErrorMessage() { return errorMessage; }
+    public void setErrorMessage(String errorMessage) { this.errorMessage = errorMessage; }
+    public String getSourceHash() { return sourceHash; }
+    public void setSourceHash(String sourceHash) { this.sourceHash = sourceHash; }
+    public Long getSourceRevision() { return sourceRevision; }
+    public void setSourceRevision(Long sourceRevision) { this.sourceRevision = sourceRevision; }
+    public String getOrigin() { return origin; }
+    public void setOrigin(String origin) { this.origin = origin; }
+    public boolean isManuallyEdited() { return manuallyEdited; }
+    public void setManuallyEdited(boolean manuallyEdited) { this.manuallyEdited = manuallyEdited; }
+    public boolean isStale() { return stale; }
+    public void setStale(boolean stale) { this.stale = stale; }
+    public Long getRowVersion() { return rowVersion; }
+    public void setRowVersion(Long rowVersion) { this.rowVersion = rowVersion; }
+    public Instant getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
+    public Instant getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
+}

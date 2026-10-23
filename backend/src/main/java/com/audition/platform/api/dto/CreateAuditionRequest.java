@@ -66,6 +66,10 @@ public class CreateAuditionRequest {
     private List<String> benefits;
 
     private String countryCode;
+    /** 개최 국가 ISO2. 모집 대상 countryCode 와 별개. 비우면 저장하지 않는다. */
+    private String hostCountry;
+    /** 원문 언어. ko/en/mn 등 ContentLocales. */
+    private String defaultLocale;
     private String deadlineAt;
 
     /** SINGLE(기본) | MULTI_ROUND — 다단계 오디션 시 라운드 1 자동 생성 */
@@ -110,6 +114,10 @@ public class CreateAuditionRequest {
     public void setBenefits(List<String> benefits) { this.benefits = benefits; }
     public String getCountryCode() { return countryCode; }
     public void setCountryCode(String countryCode) { this.countryCode = countryCode; }
+    public String getHostCountry() { return hostCountry; }
+    public void setHostCountry(String hostCountry) { this.hostCountry = hostCountry; }
+    public String getDefaultLocale() { return defaultLocale; }
+    public void setDefaultLocale(String defaultLocale) { this.defaultLocale = defaultLocale; }
     public String getDeadlineAt() { return deadlineAt; }
     public void setDeadlineAt(String deadlineAt) { this.deadlineAt = deadlineAt; }
     public String getProcessMode() { return processMode; }

@@ -3,6 +3,8 @@ package com.audition.platform.api.dto.channel;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.List;
+
 /**
  * GET /api/channels/public — 디스커버리 리스트 한 행.
  */
@@ -16,6 +18,8 @@ public class PublicChannelListItemResponse {
     private String introText;
     private long subscriberCount;
     private long videoCount;
+    private String nationality;
+    private List<String> categories;
 
     public String getUserId() {
         return userId;
@@ -63,5 +67,21 @@ public class PublicChannelListItemResponse {
 
     public void setVideoCount(long videoCount) {
         this.videoCount = videoCount;
+    }
+
+    public String getNationality() {
+        return nationality;
+    }
+
+    public void setNationality(String nationality) {
+        this.nationality = nationality;
+    }
+
+    public List<String> getCategories() {
+        return categories;
+    }
+
+    public void setCategories(List<String> categories) {
+        this.categories = categories;
     }
 }

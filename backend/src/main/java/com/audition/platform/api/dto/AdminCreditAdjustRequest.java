@@ -1,5 +1,6 @@
 package com.audition.platform.api.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 import java.util.UUID;
@@ -13,7 +14,8 @@ public class AdminCreditAdjustRequest {
     @NotNull
     private Long amount;
 
-    /** 선택: 감사 로그·크레딧 거래 note */
+    /** 지급/차감 사유. 감사 로그·원장 note 필수. */
+    @NotBlank(message = "조정 사유가 필요합니다.")
     private String note;
 
     public UUID getUserId() {

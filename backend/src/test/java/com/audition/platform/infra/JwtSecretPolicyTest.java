@@ -154,7 +154,7 @@ class JwtSecretPolicyTest {
         return false;
     }
 
-    private static String historicalDefault() throws Exception {
+    static String historicalDefault() throws Exception {
         Path dir = Path.of("").toAbsolutePath();
         while (dir != null && !Files.exists(dir.resolve(".git"))) {
             dir = dir.getParent();

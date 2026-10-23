@@ -1,5 +1,6 @@
 ﻿'use client'
 
+import { useTranslations } from 'next-intl'
 import { AUDITION_DETAIL, HERO } from '@/shared/design-tokens'
 import { safeArr, safeStr } from '@/shared/utils/safe'
 
@@ -12,6 +13,7 @@ function SectionBlock({
   title: string
   items: string[]
 }) {
+  const t = useTranslations('auditionDetail')
   const list = safeArr(items)
     .map((s) => safeStr(s))
     .filter((s) => s.length > 0)
@@ -75,7 +77,7 @@ function SectionBlock({
             lineHeight: AUDITION_DETAIL.listItemLineHeight,
           }}
         >
-          정보 없음
+          {t('noInfo')}
         </p>
       )}
     </div>
@@ -95,6 +97,7 @@ export default function PcAuditionDetailInfo({
   qualifications,
   schedules,
 }: PcAuditionDetailInfoProps) {
+  const t = useTranslations('auditionDetail')
   return (
     <div>
       {descriptionText.length > 0 ? (
@@ -106,7 +109,7 @@ export default function PcAuditionDetailInfo({
               fontWeight: AUDITION_DETAIL.sectionTitleWeight,
             }}
           >
-            상세 설명
+            {t('description')}
           </h2>
           <p
             className="whitespace-pre-line"
@@ -120,7 +123,7 @@ export default function PcAuditionDetailInfo({
             {descriptionText}
           </p>
           <div className="mt-6 text-sm text-gray-600">
-            지원 방법: 영상 업로드 후 간단 정보 입력
+            {t('applyHow')}
           </div>
         </section>
       ) : null}
@@ -132,16 +135,16 @@ export default function PcAuditionDetailInfo({
             fontWeight: AUDITION_DETAIL.sectionTitleWeight,
           }}
         >
-          상세 안내
+          {t('detailGuide')}
         </h2>
         {descriptionText.length === 0 ? (
           <div className="mb-6 text-sm text-gray-600">
-            지원 방법: 영상 업로드 후 간단 정보 입력
+            {t('applyHow')}
           </div>
         ) : null}
-        <SectionBlock iconLabel="R" title="모집 분야" items={recruitList} />
-        <SectionBlock iconLabel="Q" title="지원 자격" items={qualifications} />
-        <SectionBlock iconLabel="S" title="일정" items={schedules} />
+        <SectionBlock iconLabel="R" title={t('recruitFields')} items={recruitList} />
+        <SectionBlock iconLabel="Q" title={t('qualificationsTitle')} items={qualifications} />
+        <SectionBlock iconLabel="S" title={t('schedules')} items={schedules} />
       </section>
     </div>
   )

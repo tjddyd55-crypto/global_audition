@@ -1,6 +1,8 @@
 ﻿'use client'
 
+import { useTranslations } from 'next-intl'
 import { TEXT_SUB } from '@/shared/ui/specClasses'
+import { isAllCategoryName } from '@/shared/audition/allCategorySentinel'
 
 type ApplicantCategoryItem = {
   name: string
@@ -18,30 +20,30 @@ export default function ApplicantCategoryFilterChips({
   selectedCategory,
   onChange,
 }: ApplicantCategoryFilterChipsProps) {
+  const t = useTranslations('agency')
   if (categories.length === 0) return null
 
   return (
     <div>
-      <p className={`${TEXT_SUB} mb-2 flex items-center gap-2 font-medium text-gray-900`}>
-        분야(영상 카테고리)
+      <p className={`${TEXT_SUB} mb-2 flex items-center gap-2 whitespace-normal break-words font-medium text-gray-900`}>
+        {t('categoryField')}
       </p>
       <div className="flex flex-wrap gap-2">
         {categories.map((c) => {
-          const active =
-            (c.name === '전체' && selectedCategory === null) ||
-            (c.name !== '전체' && selectedCategory === c.name)
+          const isAll = isAllCategoryName(c.name)
+          const active = (isAll && selectedCategory === null) || (!isAll && selectedCategory === c.name)
           return (
             <button
               key={c.name}
               type="button"
-              onClick={() => onChange(c.name === '전체' ? null : c.name)}
+              onClick={() => onChange(isAll ? null : c.name)}
               className={
                 active
-                  ? 'rounded-full bg-violet-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm'
-                  : 'rounded-full border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50'
+                  ? 'min-h-11 whitespace-normal break-words rounded-full bg-violet-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm'
+                  : 'min-h-11 whitespace-normal break-words rounded-full border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50'
               }
             >
-              {`${c.name}${c.name === '전체' ? '' : ` (${c.count})`}`}
+              {isAll ? t('all') : `${c.name} (${c.count})`}
             </button>
           )
         })}

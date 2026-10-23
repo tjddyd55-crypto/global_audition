@@ -1,12 +1,14 @@
-﻿import { CARD_BASE, TEXT_SUB, TITLE_PAGE } from '@/shared/ui/specClasses'
+﻿'use client'
 
-const SNS_PLATFORM_LABEL: Record<string, string> = {
+import { useTranslations } from 'next-intl'
+import { CARD_BASE, TEXT_SUB, TITLE_PAGE } from '@/shared/ui/specClasses'
+
+const SNS_PLATFORM_FALLBACK: Record<string, string> = {
   instagram: 'Instagram',
   tiktok: 'TikTok',
   youtube: 'YouTube',
   twitter: 'X',
   facebook: 'Facebook',
-  other: '기타',
 }
 
 export type SnsLinkRow = { platform: string; url: string }
@@ -16,19 +18,22 @@ export type SnsSectionProps = {
 }
 
 export function SnsSection({ snsLinks }: SnsSectionProps) {
+  const tApply = useTranslations('apply')
+  const tMy = useTranslations('myApplications')
   const items = snsLinks.filter((l) => l.url?.trim() && l.platform?.trim())
 
   return (
     <section className={CARD_BASE}>
-      <h2 className={`${TITLE_PAGE} mb-4`}>SNS</h2>
+      <h2 className={`${TITLE_PAGE} mb-4`}>{tApply('sns')}</h2>
       {items.length === 0 ? (
-        <p className={`${TEXT_SUB}`}>등록된 SNS 없음</p>
+        <p className={`${TEXT_SUB}`}>{tMy('noSns')}</p>
       ) : (
         <ul className="flex flex-col gap-2">
           {items.map((row, idx) => {
             const key = `${row.platform}-${idx}`
+            const platform = row.platform.trim().toLowerCase()
             const label =
-              SNS_PLATFORM_LABEL[row.platform.trim().toLowerCase()] ?? row.platform.trim()
+              platform === 'other' ? tApply('snsOther') : SNS_PLATFORM_FALLBACK[platform] ?? row.platform.trim()
             return (
               <li key={key} className="flex flex-col gap-0.5 rounded-lg border border-neutral-100 bg-neutral-50/80 px-3 py-2 sm:flex-row sm:items-center sm:gap-3">
                 <span className="shrink-0 text-sm font-medium text-neutral-800">{label}</span>

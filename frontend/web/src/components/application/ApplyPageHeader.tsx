@@ -1,5 +1,6 @@
 ﻿'use client'
 
+import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n.config'
 
 type ApplyPageHeaderProps = {
@@ -13,12 +14,14 @@ export default function ApplyPageHeader({
   auditionId,
   title,
   description,
-  backLabel = '← 오디션 상세',
+  backLabel,
 }: ApplyPageHeaderProps) {
+  const t = useTranslations('apply')
+  const resolvedBack = backLabel ?? `← ${t('backToDetailShort')}`
   return (
     <div className="mb-6">
       <Link href={`/auditions/${auditionId}`} className="text-sm font-medium text-violet-700 hover:underline">
-        {backLabel}
+        {resolvedBack}
       </Link>
       <h1 className="mt-3 text-2xl font-bold text-neutral-900">{title}</h1>
       {description ? <p className="mt-1 text-sm text-neutral-500">{description}</p> : null}

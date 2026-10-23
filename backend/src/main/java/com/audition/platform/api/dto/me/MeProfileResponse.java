@@ -22,6 +22,8 @@ public class MeProfileResponse {
     private String introText;
     private List<String> categories = new ArrayList<>();
     private String featuredVideoId;
+    private String careerText;
+    private List<String> activityFields = new ArrayList<>();
     private List<MeUserSnsLinkDto> snsLinks = new ArrayList<>();
 
     public String getId() {
@@ -147,6 +149,22 @@ public class MeProfileResponse {
 
     public void setIntroText(String introText) {
         this.introText = introText;
+    }
+
+    public String getCareerText() {
+        return careerText;
+    }
+
+    public void setCareerText(String careerText) {
+        this.careerText = careerText;
+    }
+
+    public List<String> getActivityFields() {
+        return activityFields;
+    }
+
+    public void setActivityFields(List<String> activityFields) {
+        this.activityFields = activityFields != null ? activityFields : new ArrayList<>();
     }
 
     public List<MeUserSnsLinkDto> getSnsLinks() {

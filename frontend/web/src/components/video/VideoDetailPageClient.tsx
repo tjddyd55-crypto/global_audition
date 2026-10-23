@@ -3,6 +3,7 @@
 import axios from 'axios'
 import { useParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { fetchApplicationPublic } from '@/shared/api/applicationPublicVideo'
 import { fetchChannelVideoPublic, type ChannelVideoPublicDetail } from '@/shared/api/channelVideoPublic'
 import { ApplicationVideoDetailClient } from './ApplicationVideoDetailClient'
@@ -20,6 +21,7 @@ type RouteState =
 
 export function VideoDetailPageClient() {
   const params = useParams()
+  const tVideo = useTranslations('video')
   const id = typeof params?.applicationId === 'string' ? params.applicationId : ''
   const [route, setRoute] = useState<RouteState>({ kind: 'loading' })
 
@@ -64,7 +66,7 @@ export function VideoDetailPageClient() {
   if (!id || route.kind === 'none') {
     return (
       <div className={outerClass}>
-        <p className="px-4 py-3">영상을 찾을 수 없습니다.</p>
+        <p className="px-4 py-3">{tVideo('notFound')}</p>
       </div>
     )
   }
@@ -72,7 +74,7 @@ export function VideoDetailPageClient() {
   if (route.kind === 'loading') {
     return (
       <div className={outerClass}>
-        <p className="px-4 py-3">불러오는 중…</p>
+        <p className="px-4 py-3">{tVideo('loading')}</p>
       </div>
     )
   }

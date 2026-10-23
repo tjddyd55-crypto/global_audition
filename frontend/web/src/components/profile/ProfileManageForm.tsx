@@ -5,49 +5,44 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslations } from 'next-intl'
 import { meProfileApi, type MeProfileResponse } from '@/shared/api/meProfile'
 import { calculateAge } from '@/shared/audition/calculateAge'
+import { nationalityOptionValues } from '@/shared/i18n/nationalityOptions'
 import { CARD_BASE, BTN_PRIMARY, TEXT_SUB } from '@/shared/ui/specClasses'
 
-/** 백엔드 NicknamePolicy.ALLOWED 과 동일 */
-const NICKNAME_ALLOWED = /^[a-zA-Z0-9가-힣._]+$/
+const SNS_PLATFORM_VALUES = ['instagram', 'tiktok', 'youtube', 'twitter', 'facebook', 'other'] as const
 
-const NATIONALITIES = [
-  { value: '', label: '선택 안 함' },
-  { value: 'KR', label: '대한민국' },
-  { value: 'MN', label: '몽골' },
-  { value: 'JP', label: '일본' },
-  { value: 'OTHER', label: '기타' },
-] as const
+const SNS_PLATFORM_LABELS: Record<(typeof SNS_PLATFORM_VALUES)[number], string> = {
+  instagram: 'Instagram',
+  tiktok: 'TikTok',
+  youtube: 'YouTube',
+  twitter: 'X (Twitter)',
+  facebook: 'Facebook',
+  other: 'other',
+}
 
-const SNS_PLATFORMS = [
-  { value: 'instagram', label: 'Instagram' },
-  { value: 'tiktok', label: 'TikTok' },
-  { value: 'youtube', label: 'YouTube' },
-  { value: 'twitter', label: 'X (Twitter)' },
-  { value: 'facebook', label: 'Facebook' },
-  { value: 'other', label: '기타' },
-] as const
+function createProfileSchema(nicknameMin: string, birthFormat: string) {
+  return z
+    .object({
+      name: z.string().max(120),
+      nickname: z.string().min(2, nicknameMin).max(20),
+      birthDate: z.string(),
+      nationality: z.enum(['', 'KR', 'MN', 'JP', 'OTHER']),
+      introText: z.string().max(8000),
+    })
+    .superRefine((data, ctx) => {
+      if (data.birthDate !== '' && !/^\d{4}-\d{2}-\d{2}$/.test(data.birthDate)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: birthFormat,
+          path: ['birthDate'],
+        })
+      }
+    })
+}
 
-const profileSchema = z
-  .object({
-    name: z.string().max(120),
-    nickname: z.string().min(2, '닉네임은 2자 이상 입력해 주세요.').max(20),
-    birthDate: z.string(),
-    nationality: z.enum(['', 'KR', 'MN', 'JP', 'OTHER']),
-    introText: z.string().max(8000),
-  })
-  .superRefine((data, ctx) => {
-    if (data.birthDate !== '' && !/^\d{4}-\d{2}-\d{2}$/.test(data.birthDate)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: '생년월일 형식이 올바르지 않습니다.',
-        path: ['birthDate'],
-      })
-    }
-  })
-
-type ProfileFormValues = z.infer<typeof profileSchema>
+type ProfileFormValues = z.infer<ReturnType<typeof createProfileSchema>>
 
 type SnsRow = { platform: string; url: string }
 
@@ -96,6 +91,16 @@ const labelClass = 'text-sm font-medium text-neutral-700'
 
 export function ProfileManageForm() {
   const queryClient = useQueryClient()
+  const tProfile = useTranslations('profile')
+  const tChannel = useTranslations('channel')
+  const tApply = useTranslations('apply')
+  const tAuth = useTranslations('auth')
+  const tCommon = useTranslations('common')
+  const tNat = useTranslations('nationality')
+  const profileSchema = useMemo(
+    () => createProfileSchema(tProfile('nicknameMin'), tProfile('birthFormat')),
+    [tProfile],
+  )
   const [snsRows, setSnsRows] = useState<SnsRow[]>([])
   const [formError, setFormError] = useState<string | null>(null)
   const [saveOk, setSaveOk] = useState<string | null>(null)
@@ -148,7 +153,7 @@ export function ProfileManageForm() {
     mutationFn: meProfileApi.patch,
     onSuccess: async () => {
       setFormError(null)
-      setSaveOk('저장되었습니다.')
+      setSaveOk(tChannel('saved'))
       await queryClient.invalidateQueries({ queryKey: ['me-profile-manage'] })
       await queryClient.invalidateQueries({ queryKey: ['me-profile', 'apply-prefill'] })
       await queryClient.invalidateQueries({ queryKey: ['currentUser'] })
@@ -157,7 +162,7 @@ export function ProfileManageForm() {
     onError: (e: unknown) => {
       const ax = e as { response?: { data?: { message?: string } } }
       const msg = ax.response?.data?.message
-      setFormError(typeof msg === 'string' ? msg : e instanceof Error ? e.message : '저장에 실패했습니다.')
+      setFormError(typeof msg === 'string' ? msg : e instanceof Error ? e.message : tChannel('saveFailed'))
       setSaveOk(null)
     },
   })
@@ -178,7 +183,7 @@ export function ProfileManageForm() {
       const u = row.url.trim()
       if (!p && !u) continue
       if (!p || !u) {
-        setFormError('SNS는 플랫폼과 URL을 함께 입력하거나, 해당 행을 삭제해 주세요.')
+        setFormError(tProfile('snsPairRequired'))
         return
       }
       normalizedSns.push({ platform: p, url: u })
@@ -198,7 +203,7 @@ export function ProfileManageForm() {
   if (isLoading) {
     return (
       <div className={CARD_BASE}>
-        <p className={TEXT_SUB}>프로필을 불러오는 중…</p>
+        <p className={TEXT_SUB}>{tChannel('loadingProfile')}</p>
       </div>
     )
   }
@@ -207,10 +212,10 @@ export function ProfileManageForm() {
     return (
       <div className={CARD_BASE}>
         <p className="text-sm text-red-600">
-          {error instanceof Error ? error.message : '프로필을 불러오지 못했습니다.'}
+          {error instanceof Error ? error.message : tProfile('loadFailed')}
         </p>
         <button type="button" className={`${BTN_PRIMARY} mt-3`} onClick={() => refetch()}>
-          다시 시도
+          {tCommon('retry')}
         </button>
       </div>
     )
@@ -221,7 +226,7 @@ export function ProfileManageForm() {
 
   return (
     <form onSubmit={onSubmit} className={`${CARD_BASE} flex flex-col gap-6`}>
-      <h2 className="text-lg font-bold text-neutral-900">내 정보 관리</h2>
+      <h2 className="text-lg font-bold text-neutral-900">{tProfile('manageTitle')}</h2>
 
       {saveOk ? (
         <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">{saveOk}</div>
@@ -231,31 +236,31 @@ export function ProfileManageForm() {
       ) : null}
 
       <section className="flex flex-col gap-4">
-        <h3 className="text-base font-semibold text-neutral-800">기본 정보</h3>
+        <h3 className="text-base font-semibold text-neutral-800">{tApply('sectionBasic')}</h3>
 
         <label className={`flex flex-col gap-1 ${labelClass}`}>
-          이름
-          <input {...form.register('name')} disabled={blocked} className={inputClass} placeholder="이름" autoComplete="name" />
+          {tProfile('name')}
+          <input {...form.register('name')} disabled={blocked} className={inputClass} placeholder={tProfile('name')} autoComplete="name" />
           {form.formState.errors.name ? (
             <span className="text-xs text-red-600">{form.formState.errors.name.message}</span>
           ) : null}
         </label>
 
         <label className={`flex flex-col gap-1 ${labelClass}`}>
-          닉네임
-          <input {...form.register('nickname')} disabled={blocked} className={inputClass} placeholder="2~20자" />
+          {tProfile('nickname')}
+          <input {...form.register('nickname')} disabled={blocked} className={inputClass} placeholder={tProfile('nicknamePlaceholder')} />
           {form.formState.errors.nickname ? (
             <span className="text-xs text-red-600">{form.formState.errors.nickname.message}</span>
           ) : null}
         </label>
 
         <label className={`flex flex-col gap-1 ${labelClass}`}>
-          이메일
+          {tAuth('email')}
           <input type="email" readOnly disabled value={me.email ?? ''} className={`${inputClass} bg-neutral-100 text-neutral-600`} />
         </label>
 
         <label className={`flex flex-col gap-1 ${labelClass}`}>
-          생년월일
+          {tApply('birthDate')}
           <input type="date" {...form.register('birthDate')} disabled={blocked} className={inputClass} />
           {form.formState.errors.birthDate ? (
             <span className="text-xs text-red-600">{form.formState.errors.birthDate.message}</span>
@@ -263,20 +268,20 @@ export function ProfileManageForm() {
         </label>
 
         <div className="flex flex-col gap-1">
-          <span className={labelClass}>나이</span>
+          <span className={labelClass}>{tApply('age')}</span>
           <div className={`${inputClass} bg-neutral-50 text-neutral-800`}>
             {watched.birthDate?.trim() && profileAge != null
-              ? `${profileAge}세 (생년월일 기준 자동 계산)`
-              : '생년월일을 입력하면 나이가 표시됩니다.'}
+              ? tProfile('ageAuto', { age: profileAge })
+              : tApply('ageHint')}
           </div>
         </div>
 
         <label className={`flex flex-col gap-1 ${labelClass}`}>
-          국적
+          {tApply('nationality')}
           <select {...form.register('nationality')} disabled={blocked} className={`${inputClass} bg-white`}>
-            {NATIONALITIES.map((n) => (
-              <option key={n.value === '' ? '_empty' : n.value} value={n.value}>
-                {n.label}
+            {nationalityOptionValues().map((code) => (
+              <option key={code === '' ? '_empty' : code} value={code}>
+                {code === '' ? tNat('unspecified') : tNat(code)}
               </option>
             ))}
           </select>
@@ -285,35 +290,35 @@ export function ProfileManageForm() {
 
       <section className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h3 className="text-base font-semibold text-neutral-800">SNS</h3>
+          <h3 className="text-base font-semibold text-neutral-800">{tChannel('sns')}</h3>
           <button
             type="button"
             onClick={addSnsRow}
             disabled={blocked}
             className="shrink-0 rounded-lg border border-violet-300 bg-violet-50 px-3 py-1.5 text-sm font-semibold text-violet-800 disabled:opacity-50"
           >
-            + SNS 추가
+            {tChannel('addSns')}
           </button>
         </div>
-        <p className={`${TEXT_SUB} text-xs`}>플랫폼과 URL을 함께 입력해 주세요. 저장 시 목록 전체가 교체됩니다.</p>
+        <p className={`${TEXT_SUB} text-xs`}>{tProfile('snsHint')}</p>
         <div className="flex flex-col gap-3">
-          {snsRows.length === 0 ? <p className={`${TEXT_SUB} text-sm`}>등록된 SNS가 없습니다.</p> : null}
+          {snsRows.length === 0 ? <p className={`${TEXT_SUB} text-sm`}>{tProfile('snsEmpty')}</p> : null}
           {snsRows.map((row, index) => (
             <div
               key={index}
               className="flex flex-col gap-2 rounded-lg border border-neutral-100 bg-neutral-50 p-3 min-[480px]:flex-row min-[480px]:items-end"
             >
               <label className="flex min-w-0 flex-1 flex-col gap-1 text-xs font-medium text-neutral-600">
-                플랫폼
+                {tApply('snsPlatform')}
                 <select
                   value={row.platform}
                   onChange={(e) => updateSnsRow(index, { platform: e.target.value })}
                   disabled={blocked}
                   className={`${inputClass} py-2 text-sm`}
                 >
-                  {SNS_PLATFORMS.map((p) => (
-                    <option key={p.value} value={p.value}>
-                      {p.label}
+                  {SNS_PLATFORM_VALUES.map((value) => (
+                    <option key={value} value={value}>
+                      {value === 'other' ? tChannel('snsOther') : SNS_PLATFORM_LABELS[value]}
                     </option>
                   ))}
                 </select>
@@ -335,7 +340,7 @@ export function ProfileManageForm() {
                 disabled={blocked}
                 className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm font-medium text-red-600"
               >
-                삭제
+                {tCommon('delete')}
               </button>
             </div>
           ))}
@@ -343,13 +348,13 @@ export function ProfileManageForm() {
       </section>
 
       <section className="flex flex-col gap-1">
-        <label className={labelClass}>자기소개</label>
+        <label className={labelClass}>{tApply('intro')}</label>
         <textarea
           {...form.register('introText')}
           disabled={blocked}
           rows={8}
           className={`${inputClass} resize-y`}
-          placeholder="자기소개를 입력해 주세요."
+          placeholder={tProfile('introPlaceholder')}
         />
         <div className="flex justify-between text-xs text-neutral-500">
           <span>{form.formState.errors.introText?.message}</span>
@@ -362,7 +367,7 @@ export function ProfileManageForm() {
         disabled={!canSave}
         className={`${BTN_PRIMARY} h-11 w-full sm:w-auto sm:min-w-[140px] disabled:cursor-not-allowed disabled:opacity-50`}
       >
-        {blocked ? '저장 중…' : '저장하기'}
+        {blocked ? tChannel('saving') : tChannel('save')}
       </button>
     </form>
   )

@@ -15,6 +15,13 @@ async function assertPaymentCallbackOk(res: Response): Promise<void> {
 
 export type CreditBalance = {
   balance: number
+  freeRemaining?: number
+  paidRemaining?: number
+  unclassifiedRemaining?: number
+  allocationPolicy?: string
+  ledgerClosingBalance?: number | null
+  ledgerAmountSum?: number
+  ledgerMatchesWallet?: boolean
 }
 
 /** GET /api/credits/public/policies/{key} — 비로그인 허용 */
@@ -22,6 +29,51 @@ export type CreditPolicyPublic = {
   policyKey: string
   cost: number
   active: boolean
+  applicationPaymentMode?: 'FREE' | 'CREDIT' | string
+  applicationFeeCredits?: number
+  /** 서버 전역 지원비. 정수 USD. */
+  applicationFeeUsd?: number
+}
+
+export function wholeUsd(value: unknown): number | null {
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < 0) return null
+  return value
+}
+
+/** 클라이언트가 금액을 만들지 않는다. 서버 USD가 있으면 그 정수만 쓴다. */
+export function resolveApplicationFeeUsd(snapshot?: {
+  applicationFeeUsd?: number
+  applicationFeeCredits?: number
+  cost?: number
+} | null): number {
+  const usd = wholeUsd(snapshot?.applicationFeeUsd)
+  if (usd != null) return usd
+  const credits = wholeUsd(snapshot?.applicationFeeCredits)
+  if (credits != null) return credits
+  const cost = wholeUsd(snapshot?.cost)
+  return cost ?? 0
+}
+
+/** 차감 비교는 서버가 내려준 크레딧 수량이다. 없는 응답에서만 USD/cost 로 대체한다. */
+export function resolveApplicationFeeCredits(snapshot?: {
+  applicationFeeUsd?: number
+  applicationFeeCredits?: number
+  cost?: number
+} | null): number {
+  const credits = wholeUsd(snapshot?.applicationFeeCredits)
+  if (credits != null) return credits
+  const usd = wholeUsd(snapshot?.applicationFeeUsd)
+  if (usd != null) return usd
+  const cost = wholeUsd(snapshot?.cost)
+  return cost ?? 0
+}
+
+export type CreditRuntimePublic = {
+  applicationPaymentMode: 'FREE' | 'CREDIT' | string
+  applicationFeeCredits: number
+  applicationFeeUsd: number
+  signupCreditEnabled: boolean
+  signupCreditAmount: number
 }
 
 /** 공개 조회 허용 정책 키 (백엔드와 동일) */
@@ -74,6 +126,14 @@ export type PreparePaymentResult = {
   message: string
   redirectUrl?: string
   provider?: string
+  clientKey?: string
+  tossAmount?: number
+  orderName?: string
+  successUrl?: string
+  failUrl?: string
+  variantKey?: string
+  tossMethod?: string
+  foreignEasyPayProvider?: string
 }
 
 export type CreditOrderSummary = {
@@ -107,6 +167,18 @@ export const creditsApi = {
     return data
   },
 
+  getPublicRuntime: async (): Promise<CreditRuntimePublic> => {
+    const { data } = await apiClient.get<CreditRuntimePublic>('/credits/public/runtime')
+    return data
+  },
+
+  getCheckoutHints: async (): Promise<{ enabled: boolean; environment: string; currency: string }> => {
+    const { data } = await apiClient.get<{ enabled: boolean; environment: string; currency: string }>(
+      '/payments/public/checkout-hints'
+    )
+    return data
+  },
+
   getBalance: async (): Promise<CreditBalance> => {
     const { data } = await apiClient.get<CreditBalance>('/credits/balance')
     return data
@@ -130,6 +202,13 @@ export const creditsApi = {
 
   getPackage: async (id: string): Promise<CreditPackageCatalogItem> => {
     const { data } = await apiClient.get<CreditPackageCatalogItem>(`/credit-packages/${encodeURIComponent(id)}`)
+    return data
+  },
+
+  getCheckoutSession: async (orderNo: string): Promise<PreparePaymentResult> => {
+    const { data } = await apiClient.get<PreparePaymentResult>(
+      `/credits/orders/${encodeURIComponent(orderNo)}/checkout`
+    )
     return data
   },
 
@@ -182,4 +261,106 @@ export const creditsApi = {
     })
     await assertPaymentCallbackOk(res)
   },
+
+  confirmToss: async (body: {
+    paymentKey: string
+    orderId: string
+    amount: number
+  }): Promise<CreditOrderSummary> => {
+    const { data } = await apiClient.post<CreditOrderSummary>('/payments/toss/confirm', body)
+    return data
+  },
+
+  listPaymentMethods: async (paymentCountry: string): Promise<PaymentMethodOffer[]> => {
+    const { data } = await apiClient.get<PaymentMethodOffer[]>('/payments/methods', { params: { paymentCountry } })
+    return data
+  },
+
+  quotePayment: async (body: {
+    packageId: string
+    paymentCountry: string
+    providerId: string
+    methodCode: string
+  }): Promise<PaymentQuote> => {
+    const { data } = await apiClient.post<PaymentQuote>('/payments/quote', body)
+    return data
+  },
+
+  createPaymentOrder: async (body: {
+    packageId: string
+    paymentCountry: string
+    providerId: string
+    methodCode: string
+    idempotencyKey: string
+  }): Promise<PaymentOrderView> => {
+    const { data } = await apiClient.post<PaymentOrderView>('/payments/orders', body)
+    return data
+  },
+
+  confirmPaymentOrder: async (
+    orderNo: string,
+    body: { scenario?: string; chargeAmountMinor: number; paymentKey?: string }
+  ): Promise<PaymentOrderView> => {
+    const { data } = await apiClient.post<PaymentOrderView>(`/payments/orders/${encodeURIComponent(orderNo)}/confirm`, body)
+    return data
+  },
+
+  cancelPaymentOrder: async (orderNo: string): Promise<PaymentOrderView> => {
+    const { data } = await apiClient.post<PaymentOrderView>(`/payments/orders/${encodeURIComponent(orderNo)}/cancel`)
+    return data
+  },
+
+  myPaymentOrders: async (): Promise<PaymentOrderView[]> => {
+    const { data } = await apiClient.get<PaymentOrderView[]>('/payments/orders/mine')
+    return data
+  },
+
+  getPaymentOrder: async (orderNo: string): Promise<PaymentOrderView> => {
+    const { data } = await apiClient.get<PaymentOrderView>(`/payments/orders/${encodeURIComponent(orderNo)}`)
+    return data
+  },
+}
+
+export type PaymentMethodOffer = {
+  id: string
+  providerId: string
+  providerName: string
+  methodCode: string
+  paymentCountry: string
+  merchantCountry: string
+  currency: string
+  environment: string
+}
+
+export type PaymentQuote = {
+  credits: number
+  chargeCurrency: string
+  chargeAmountMinor: number
+  scale: number
+  fxRate: string
+  providerId: string
+  methodCode: string
+  paymentCountry: string
+  merchantCountry: string
+  environment: string
+}
+
+export type PaymentOrderView = {
+  orderNo: string
+  status: string
+  providerId: string | null
+  provider: string
+  methodCode: string | null
+  environment: string | null
+  paymentCountry: string | null
+  credits: number
+  chargeCurrency: string | null
+  chargeAmountMinor: number | null
+  scale: number | null
+  fxRate: string | null
+  refundedMinor: number
+  refundedCredits: number
+  failReason: string | null
+  clientKey?: string | null
+  redirectPath?: string | null
 }

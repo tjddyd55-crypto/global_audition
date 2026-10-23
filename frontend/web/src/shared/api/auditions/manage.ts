@@ -9,6 +9,7 @@ import type {
   ManageApplicationsPayload,
   ManageListFilters,
 } from './types'
+import { isAllCategoryName } from '@/shared/audition/allCategorySentinel'
 
 export const createAudition = async (body: CreateAuditionPayload): Promise<AuditionDto> => {
   const { data } = await apiClient.post<Record<string, unknown>>('/auditions', body)
@@ -45,7 +46,7 @@ export const listManageApplications = async (
       ? { category: typeof filters === 'string' ? filters : null }
       : filters
   const params: Record<string, string | number | boolean> = {}
-  if (f.category && f.category !== '전체') params.category = f.category
+  if (f.category && !isAllCategoryName(f.category)) params.category = f.category
   if (f.minAge != null) params.minAge = Number(f.minAge)
   if (f.maxAge != null) params.maxAge = Number(f.maxAge)
   if (f.nationality && f.nationality !== '') params.nationality = f.nationality

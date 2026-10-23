@@ -21,6 +21,8 @@ public class MyChannelResponse {
 
     /** 화면 표시용 닉네임(채널 이름과 동기화) */
     private String nickname;
+    /** 프로필 실명. 채널 화면의 참조 표시용이며 채널 패치로 바꾸지 않는다. */
+    private String name;
     private String introText;
     private String nationality;
     private String shortBio;
@@ -28,6 +30,12 @@ public class MyChannelResponse {
     private List<String> categories = new ArrayList<>();
     private String featuredVideoId;
     private List<MeUserSnsLinkDto> snsLinks = new ArrayList<>();
+    /** 프로필 원본을 읽기만 한다. 채널 저장으로 바꾸지 않는다. */
+    private String careerText;
+    private List<String> activityFields = new ArrayList<>();
+    /** 저장된 공개 키. 아직 저장하지 않았으면 빈 목록이고 {@link #selectionCustomized} 는 false. */
+    private List<String> shownFields = new ArrayList<>();
+    private boolean selectionCustomized;
 
     public String getChannelId() {
         return channelId;
@@ -111,6 +119,14 @@ public class MyChannelResponse {
         this.nickname = nickname;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public String getIntroText() {
         return introText;
     }
@@ -170,6 +186,38 @@ public class MyChannelResponse {
 
     public void setSnsLinks(List<MeUserSnsLinkDto> snsLinks) {
         this.snsLinks = snsLinks != null ? snsLinks : new ArrayList<>();
+    }
+
+    public String getCareerText() {
+        return careerText;
+    }
+
+    public void setCareerText(String careerText) {
+        this.careerText = careerText;
+    }
+
+    public List<String> getActivityFields() {
+        return activityFields;
+    }
+
+    public void setActivityFields(List<String> activityFields) {
+        this.activityFields = activityFields != null ? activityFields : new ArrayList<>();
+    }
+
+    public List<String> getShownFields() {
+        return shownFields;
+    }
+
+    public void setShownFields(List<String> shownFields) {
+        this.shownFields = shownFields != null ? shownFields : new ArrayList<>();
+    }
+
+    public boolean isSelectionCustomized() {
+        return selectionCustomized;
+    }
+
+    public void setSelectionCustomized(boolean selectionCustomized) {
+        this.selectionCustomized = selectionCustomized;
     }
 
     /** API 필드명 {@code profileImage} — {@link #profileImageUrl}과 동일 값 */

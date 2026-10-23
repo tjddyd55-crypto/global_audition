@@ -2,6 +2,7 @@ import { apiClient } from '../client'
 import { unwrapData } from '../unwrap'
 import type { PublicVotesPagePayload } from './types'
 import { parsePublicVoteItem } from './parsers'
+import { isAllCategoryName } from '@/shared/audition/allCategorySentinel'
 
 /** 공개 투표 목록 (비로그인 조회 가능) */
 export const listAuditionVotes = async (
@@ -9,7 +10,7 @@ export const listAuditionVotes = async (
   category?: string | null
 ): Promise<PublicVotesPagePayload> => {
   const { data } = await apiClient.get<unknown>(`/auditions/${auditionId}/votes`, {
-    params: category && category !== '전체' ? { category } : {},
+    params: category && !isAllCategoryName(category) ? { category } : {},
   })
   const body = unwrapData<Record<string, unknown>>(data)
   const auditionRaw = (body.audition ?? {}) as Record<string, unknown>

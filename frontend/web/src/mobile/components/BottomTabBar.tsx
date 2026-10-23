@@ -1,6 +1,7 @@
 'use client'
 
 import { Link, usePathname } from '@/i18n.config'
+import { useTranslations } from 'next-intl'
 import { useMemo } from 'react'
 
 type TabItem = {
@@ -20,12 +21,13 @@ type TabItem = {
  */
 export function BottomTabBar() {
   const pathname = usePathname() || '/'
+  const t = useTranslations('nav')
 
   const tabs: TabItem[] = useMemo(
     () => [
       {
         key: 'home',
-        label: '홈',
+        label: t('home'),
         href: '/',
         matchPrefix: '/',
         icon: (
@@ -37,7 +39,7 @@ export function BottomTabBar() {
       },
       {
         key: 'auditions',
-        label: '오디션',
+        label: t('auditions'),
         href: '/auditions',
         matchPrefix: '/auditions',
         icon: (
@@ -49,7 +51,7 @@ export function BottomTabBar() {
       },
       {
         key: 'my',
-        label: '마이',
+        label: t('applications'),
         href: '/my/applications',
         matchPrefix: '/my',
         icon: (
@@ -60,7 +62,7 @@ export function BottomTabBar() {
       },
       {
         key: 'profile',
-        label: '프로필',
+        label: t('profile'),
         href: '/profile',
         matchPrefix: '/profile',
         icon: (
@@ -71,7 +73,7 @@ export function BottomTabBar() {
         ),
       },
     ],
-    [],
+    [t],
   )
 
   return (
@@ -87,10 +89,10 @@ export function BottomTabBar() {
             <li key={tab.key}>
               <Link
                 href={tab.href}
-                className={`flex flex-col items-center gap-0.5 py-2 text-[11px] ${active ? 'text-neutral-900' : 'text-neutral-500'} no-underline`}
+                className={`flex min-h-[64px] flex-col items-center justify-center gap-0.5 px-1 py-2 text-xs leading-tight ${active ? 'text-neutral-900' : 'text-neutral-500'} no-underline`}
               >
                 <span aria-hidden>{tab.icon}</span>
-                <span>{tab.label}</span>
+                <span className="max-w-[72px] whitespace-normal break-words text-center">{tab.label}</span>
               </Link>
             </li>
           )

@@ -15,12 +15,17 @@ export function normalizeAuditionImageMime(file: File): AuditionAllowedImageMime
   return null
 }
 
+export const AUDITION_IMAGE_ERROR = {
+  TOO_LARGE: 'IMAGE_FILE_TOO_LARGE',
+  INVALID_TYPE: 'IMAGE_FILE_INVALID_TYPE',
+} as const
+
 export function assertAuditionImageFile(file: File): void {
   if (file.size > AUDITION_IMAGE_MAX_BYTES) {
-    throw new Error('파일 크기는 10MB 이하여야 합니다.')
+    throw new Error(AUDITION_IMAGE_ERROR.TOO_LARGE)
   }
   if (!normalizeAuditionImageMime(file)) {
-    throw new Error('JPG, PNG, WebP만 업로드할 수 있습니다.')
+    throw new Error(AUDITION_IMAGE_ERROR.INVALID_TYPE)
   }
 }
 

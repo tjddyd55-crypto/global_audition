@@ -1,6 +1,7 @@
 ﻿'use client'
 
 import { useQuery } from '@tanstack/react-query'
+import { useLocale } from 'next-intl'
 import { auditionApi } from '@/shared/api/auditions'
 import { useAuthStore } from '@/shared/auth/authStore'
 import { safeStr } from '@/shared/utils/safe'
@@ -28,11 +29,12 @@ export function useAuditionDetailState(auditionId: string): AuditionDetailState 
   const accessToken = useAuthStore((s) => s.accessToken)
   const myUserId = useAuthStore((s) => s.userId)
   const role = useAuthStore((s) => s.role)
+  const locale = useLocale()
 
   const { data: audition, isLoading, error } = useQuery({
     /** 로그인 전후 hasApplied 등 뷰어 전용 필드 반영 */
-    queryKey: ['audition', auditionId, myUserId ?? 'anon'],
-    queryFn: () => auditionApi.getById(auditionId),
+    queryKey: ['audition', auditionId, myUserId ?? 'anon', locale],
+    queryFn: () => auditionApi.getById(auditionId, locale),
     enabled: !!auditionId,
   })
 

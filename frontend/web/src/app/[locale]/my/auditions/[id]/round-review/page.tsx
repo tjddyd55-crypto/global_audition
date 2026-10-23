@@ -15,6 +15,7 @@ import { useAuthStore } from '@/shared/auth/authStore'
 export default function MyAuditionRoundReviewPage() {
   const params = useParams()
   const t = useTranslations('common')
+  const tReview = useTranslations('roundReview')
   const router = useRouter()
   const auditionId = params.id as string
   const accessToken = useAuthStore((s) => s.accessToken)
@@ -75,13 +76,13 @@ export default function MyAuditionRoundReviewPage() {
     return (
       <AgencyDashboardShell>
         <div className={`${PAGE_CONTAINER} py-16`}>
-          <h1 className="text-xl font-semibold text-gray-900">다단계 라운드 심사</h1>
-          <p className={`${TEXT_SUB} mt-2`}>이 오디션은 단일(SINGLE) 모드입니다. 지원자 관리에서 처리할 수 있습니다.</p>
+          <h1 className="text-xl font-semibold text-gray-900">{tReview('title')}</h1>
+          <p className={`${TEXT_SUB} mt-2`}>{tReview('singleModeHint')}</p>
           <Link
             href={`/my/applicants?auditionId=${encodeURIComponent(auditionId)}`}
             className="mt-4 inline-block text-sm font-medium text-violet-700 no-underline"
           >
-            ← 지원자 관리
+            ← {tReview('backToApplicants')}
           </Link>
         </div>
       </AgencyDashboardShell>

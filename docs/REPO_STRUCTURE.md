@@ -6,7 +6,8 @@
 /
 ├── backend/                 # Single Spring Boot app (Railway root = backend)
 ├── frontend/
-│   └── web/                 # Next.js app (Railway root = frontend/web)
+│   ├── web/                 # Next.js app (Railway root = frontend/web)
+│   └── mobile/              # Expo native client (not a Railway web root)
 ├── docs/                    # All documentation and reference
 │   ├── _archived_legacy/    # Archive placeholder (legacy code already removed)
 │   ├── dev_task/            # Task/scope docs (reference)
@@ -19,12 +20,13 @@
 └── README_DEPLOY.md
 ```
 
-No other top-level folders. No `mobile/`, no `docker-compose.yml`, no `.vscode/` in repo.
+No other top-level folders. Native app lives under `frontend/mobile` (not a new top-level `mobile/`). No `docker-compose.yml` at repo root.
 
 ## Why only backend / frontend/web / docs are SSOT
 
 - **backend/** — Single deployable; one JAR, Flyway SSOT, Postgres. Railway backend service uses this as root.
 - **frontend/web/** — Single Next.js app. Railway frontend service uses this as root.
+- **frontend/mobile/** — Expo applicant-first native client. Reuses the same backend API; not a Railway web root.
 - **docs/** — All non-code: runbooks, architecture, archived/reference material, scripts. Keeps root minimal and avoids confusion with legacy or experimental folders.
 
 ## Rule

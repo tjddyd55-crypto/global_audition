@@ -85,6 +85,9 @@ public class SuperAdminCreditAdministrationService {
         if (actor == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
         }
+        if (request.getNote() == null || request.getNote().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "조정 사유가 필요합니다.");
+        }
         long balanceAfter = creditService.applyAdminBalanceDelta(targetId, request.getAmount(), actor, request.getNote());
         long balanceBefore = balanceAfter - request.getAmount();
         Map<String, Object> before = new LinkedHashMap<>();

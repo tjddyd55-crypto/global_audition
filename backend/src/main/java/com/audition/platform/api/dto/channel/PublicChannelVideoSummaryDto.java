@@ -9,6 +9,7 @@ public class PublicChannelVideoSummaryDto {
     private String videoUrl;
     private String thumbnailUrl;
     private String category;
+    private String channelOwnerId;
     private String channelDisplayName;
     private String channelProfileImageUrl;
     private long viewCount;
@@ -53,6 +54,14 @@ public class PublicChannelVideoSummaryDto {
 
     public void setCategory(String category) {
         this.category = category;
+    }
+
+    public String getChannelOwnerId() {
+        return channelOwnerId;
+    }
+
+    public void setChannelOwnerId(String channelOwnerId) {
+        this.channelOwnerId = channelOwnerId;
     }
 
     public String getChannelDisplayName() {

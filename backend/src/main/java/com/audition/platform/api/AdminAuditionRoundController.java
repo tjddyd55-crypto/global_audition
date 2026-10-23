@@ -2,6 +2,7 @@ package com.audition.platform.api;
 
 import com.audition.platform.api.dto.admin.AdminAuditionRoundResponse;
 import com.audition.platform.api.dto.admin.AdminCreateAuditionRoundRequest;
+import com.audition.platform.api.dto.admin.AdminPatchAuditionRoundNoticesRequest;
 import com.audition.platform.api.dto.admin.AdminPatchAuditionRoundRequest;
 import com.audition.platform.api.dto.admin.AdminRoundApplicationRowDto;
 import com.audition.platform.application.round.AuditionManageAccess;
@@ -92,6 +93,23 @@ public class AdminAuditionRoundController {
         return toResponse(r);
     }
 
+    @PatchMapping("/{roundId}/notices")
+    public AdminAuditionRoundResponse patchNotices(
+            @PathVariable UUID auditionId,
+            @PathVariable UUID roundId,
+            @RequestBody AdminPatchAuditionRoundNoticesRequest body) {
+        manageAccess.requireManagedAudition(auditionId);
+        AuditionRound r = roundService.updateNotices(
+                auditionId,
+                roundId,
+                body.getAnnouncementTitle(),
+                body.getAnnouncementBody(),
+                body.getSubmissionLabel(),
+                body.getSubmissionGuide(),
+                body.getSourceLocale());
+        return toResponse(r);
+    }
+
     @PostMapping("/{roundId}/open")
     public AdminAuditionRoundResponse open(@PathVariable UUID auditionId, @PathVariable UUID roundId) {
         manageAccess.requireManagedAudition(auditionId);
@@ -142,6 +160,11 @@ public class AdminAuditionRoundController {
         dto.setStartAt(r.getStartAt());
         dto.setEndAt(r.getEndAt());
         dto.setActive(r.isActive());
+        dto.setAnnouncementTitle(r.getAnnouncementTitle());
+        dto.setAnnouncementBody(r.getAnnouncementBody());
+        dto.setSubmissionLabel(r.getSubmissionLabel());
+        dto.setSubmissionGuide(r.getSubmissionGuide());
+        dto.setNoticeSourceLocale(r.getNoticeSourceLocale());
         dto.setSubmissionCount(submissionRepository.countByRoundId(r.getId()));
         dto.setPassedCount(submissionRepository.countByRoundIdAndSubmissionStatus(r.getId(), "PASSED"));
         return dto;

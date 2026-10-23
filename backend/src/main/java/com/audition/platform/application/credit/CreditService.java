@@ -1,8 +1,10 @@
 package com.audition.platform.application.credit;
 
+import com.audition.platform.application.fee.GlobalApplicationFeeService;
 import com.audition.platform.domain.credit.CreditPolicy;
 import com.audition.platform.domain.credit.CreditPolicyRepository;
 import com.audition.platform.api.dto.CreditPolicyPublicDto;
+import com.audition.platform.api.dto.CreditRuntimePublicDto;
 import com.audition.platform.api.dto.CreditTransactionDto;
 import com.audition.platform.domain.credit.CreditTransaction;
 import com.audition.platform.domain.credit.CreditTransactionRepository;
@@ -28,22 +30,29 @@ public class CreditService {
     public static final String REASON_ADMIN_GRANT = "ADMIN_GRANT";
     public static final String REASON_ADMIN_DEDUCT = "ADMIN_DEDUCT";
     /** 결제 완료 후 패키지 충전 */
+    /** 기존 원장 reason. 제품 용어 CREDIT_PURCHASE 와 동일 의미. */
     public static final String REASON_PACKAGE_PURCHASE = "PACKAGE_PURCHASE";
+    public static final String REASON_SIGNUP_REWARD = "SIGNUP_REWARD";
+    public static final String MODE_FREE = "FREE";
+    public static final String MODE_CREDIT = "CREDIT";
 
     private final CreditPolicyRepository creditPolicyRepository;
     private final UserCreditRepository userCreditRepository;
     private final CreditTransactionRepository creditTransactionRepository;
     private final CreditPolicyPublicSnapshotCache creditPolicyPublicSnapshotCache;
+    private final GlobalApplicationFeeService globalApplicationFeeService;
 
     public CreditService(
             CreditPolicyRepository creditPolicyRepository,
             UserCreditRepository userCreditRepository,
             CreditTransactionRepository creditTransactionRepository,
-            CreditPolicyPublicSnapshotCache creditPolicyPublicSnapshotCache) {
+            CreditPolicyPublicSnapshotCache creditPolicyPublicSnapshotCache,
+            GlobalApplicationFeeService globalApplicationFeeService) {
         this.creditPolicyRepository = creditPolicyRepository;
         this.userCreditRepository = userCreditRepository;
         this.creditTransactionRepository = creditTransactionRepository;
         this.creditPolicyPublicSnapshotCache = creditPolicyPublicSnapshotCache;
+        this.globalApplicationFeeService = globalApplicationFeeService;
     }
 
     @Transactional(readOnly = true)
@@ -60,6 +69,14 @@ public class CreditService {
     }
 
     private CreditPolicyPublicDto loadPolicyPublicFromDb(String policyKey) {
+        if (CreditPolicyKey.AUDITION_APPLY.equals(policyKey)) {
+            long feeUsd = globalApplicationFeeService.currentAmountUsd();
+            long credits = UsdCreditParity.creditsForUsd(feeUsd);
+            CreditPolicyPublicDto dto = new CreditPolicyPublicDto(policyKey, credits, feeUsd > 0 && credits > 0);
+            dto.setApplicationFeeUsd(feeUsd);
+            dto.setApplicationFeeCredits(credits);
+            return dto;
+        }
         CreditPolicy policy = creditPolicyRepository.findById(policyKey)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "크레딧 정책을 찾을 수 없습니다."));
         return new CreditPolicyPublicDto(policyKey, policy.getCost(), policy.isActive());
@@ -87,6 +104,32 @@ public class CreditService {
             String note,
             long beforeBalance,
             long afterBalance) {
+        persistCreditTransaction(
+                userId,
+                amount,
+                type,
+                reason,
+                referenceId,
+                grantedBy,
+                note,
+                beforeBalance,
+                afterBalance,
+                null,
+                null);
+    }
+
+    private void persistCreditTransaction(
+            UUID userId,
+            long amount,
+            String type,
+            String reason,
+            String referenceId,
+            UUID grantedBy,
+            String note,
+            long beforeBalance,
+            long afterBalance,
+            Long appliedFeeUsd,
+            Long appliedCreditQuantity) {
         CreditTransaction tx = new CreditTransaction();
         tx.setUserId(userId);
         tx.setAmount(amount);
@@ -97,6 +140,8 @@ public class CreditService {
         tx.setNote(note);
         tx.setBeforeBalance(beforeBalance);
         tx.setAfterBalance(afterBalance);
+        tx.setAppliedFeeUsd(appliedFeeUsd);
+        tx.setAppliedCreditQuantity(appliedCreditQuantity);
         creditTransactionRepository.save(tx);
     }
 
@@ -129,18 +174,35 @@ public class CreditService {
         return after;
     }
 
-    @Transactional
-    public void useCredits(UUID userId, String policyKey, String referenceId) {
+    /**
+     * AUDITION_APPLY 금액은 전역 USD 지원비다. 다른 정책은 기존 cost/active 를 유지한다.
+     */
+    private long resolveCost(String policyKey) {
+        if (CreditPolicyKey.AUDITION_APPLY.equals(policyKey)) {
+            return UsdCreditParity.creditsForUsd(globalApplicationFeeService.currentAmountUsd());
+        }
         CreditPolicy policy = creditPolicyRepository.findById(policyKey)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "크레딧 정책을 찾을 수 없습니다."));
-        if (!policy.isActive()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "비활성화된 크레딧 정책입니다.");
+        if (!policy.isActive() || policy.getCost() <= 0) {
+            return 0;
         }
-        long cost = policy.getCost();
-        if (cost < 0) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "잘못된 정책 비용입니다.");
+        return policy.getCost();
+    }
+
+    @Transactional
+    public void useCredits(UUID userId, String policyKey, String referenceId) {
+        Long appliedFeeUsd = null;
+        long cost;
+        if (CreditPolicyKey.AUDITION_APPLY.equals(policyKey)) {
+            long feeUsd = globalApplicationFeeService.currentAmountUsd();
+            cost = UsdCreditParity.creditsForUsd(feeUsd);
+            if (cost > 0) {
+                appliedFeeUsd = feeUsd;
+            }
+        } else {
+            cost = resolveCost(policyKey);
         }
-        if (cost == 0) {
+        if (cost <= 0) {
             return;
         }
 
@@ -148,7 +210,7 @@ public class CreditService {
         UserCredit wallet = userCreditRepository.findByUserIdForUpdate(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "크레딧 지갑을 준비할 수 없습니다."));
         if (wallet.getBalance() < cost) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "크레딧이 부족합니다.");
+            throw new InsufficientCreditsException(cost, wallet.getBalance());
         }
         long before = wallet.getBalance();
         long after = before - cost;
@@ -164,7 +226,9 @@ public class CreditService {
                 null,
                 "policy_use ref=" + referenceId,
                 before,
-                after);
+                after,
+                appliedFeeUsd,
+                appliedFeeUsd == null ? null : cost);
     }
 
     /**
@@ -285,5 +349,145 @@ public class CreditService {
                 before,
                 after);
         return after;
+    }
+
+    public static String applyPaymentMode(CreditPolicy policy) {
+        if (policy == null || !policy.isActive() || policy.getCost() <= 0) {
+            return MODE_FREE;
+        }
+        return MODE_CREDIT;
+    }
+
+    @Transactional
+    public long grantSignupRewardIfEnabled(UUID userId) {
+        CreditPolicy policy = creditPolicyRepository.findById(CreditPolicyKey.SIGNUP_CREDIT).orElse(null);
+        if (policy == null || !policy.isActive() || policy.getCost() <= 0) {
+            return getBalance(userId);
+        }
+        if (creditTransactionRepository.existsByUserIdAndTypeAndReason(
+                userId, CreditTransactionType.GRANT, REASON_SIGNUP_REWARD)) {
+            return getBalance(userId);
+        }
+        userCreditRepository.ensureWalletRow(userId);
+        UserCredit wallet = userCreditRepository.findByUserIdForUpdate(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "크레딧 지갑을 준비할 수 없습니다."));
+        if (creditTransactionRepository.existsByUserIdAndTypeAndReason(
+                userId, CreditTransactionType.GRANT, REASON_SIGNUP_REWARD)) {
+            return wallet.getBalance();
+        }
+        long amount = policy.getCost();
+        long before = wallet.getBalance();
+        long after = before + amount;
+        wallet.setBalance(after);
+        wallet.setUpdatedAt(Instant.now());
+        userCreditRepository.save(wallet);
+        persistCreditTransaction(
+                userId,
+                amount,
+                CreditTransactionType.GRANT,
+                REASON_SIGNUP_REWARD,
+                userId.toString(),
+                null,
+                "signup_reward",
+                before,
+                after);
+        return after;
+    }
+
+    public boolean hasSpentCreditsSince(UUID userId, Instant since) {
+        return creditTransactionRepository.existsByUserIdAndTypeAndCreatedAtAfter(
+                userId, CreditTransactionType.USE, since);
+    }
+
+    /**
+     * PAID 주문의 충전분을 환불. 이미 REFUND 가 있으면 멱등.
+     * 잔액이 지급액보다 작으면 호출하지 말 것(이미 소비된 크레딧).
+     */
+    @Transactional
+    public long refundChargeFromPaymentOrder(PaymentOrder order, String note) {
+        UUID userId = order.getUserId();
+        String ref = order.getOrderNo();
+        if (creditTransactionRepository.existsByUserIdAndTypeAndReferenceId(userId, CreditTransactionType.REFUND, ref)) {
+            return getBalance(userId);
+        }
+        long total = order.getCredits() + order.getBonusCredits();
+        if (total <= 0) {
+            return getBalance(userId);
+        }
+        userCreditRepository.ensureWalletRow(userId);
+        UserCredit wallet = userCreditRepository.findByUserIdForUpdate(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "크레딧 지갑을 준비할 수 없습니다."));
+        if (wallet.getBalance() < total) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 사용한 크레딧이 있어 환불할 수 없습니다.");
+        }
+        long before = wallet.getBalance();
+        long after = before - total;
+        wallet.setBalance(after);
+        wallet.setUpdatedAt(Instant.now());
+        userCreditRepository.save(wallet);
+        persistCreditTransaction(
+                userId,
+                -total,
+                CreditTransactionType.REFUND,
+                REASON_PACKAGE_PURCHASE,
+                ref,
+                null,
+                note != null && !note.isBlank() ? note.trim() : "payment_refund",
+                before,
+                after);
+        return after;
+    }
+
+    /**
+     * 부분 환불. referenceId 가 같으면 다시 차감하지 않는다.
+     */
+    @Transactional
+    public long refundLinkedCredits(UUID userId, long credits, String referenceId, String note) {
+        if (credits < 1) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "REFUND_CREDITS_INVALID");
+        }
+        if (referenceId == null || referenceId.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "REFUND_REFERENCE_REQUIRED");
+        }
+        String ref = referenceId.trim();
+        if (creditTransactionRepository.existsByUserIdAndTypeAndReferenceId(userId, CreditTransactionType.REFUND, ref)) {
+            return getBalance(userId);
+        }
+        userCreditRepository.ensureWalletRow(userId);
+        UserCredit wallet = userCreditRepository.findByUserIdForUpdate(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "크레딧 지갑을 준비할 수 없습니다."));
+        if (wallet.getBalance() < credits) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 사용한 크레딧이 있어 환불할 수 없습니다.");
+        }
+        long before = wallet.getBalance();
+        long after = before - credits;
+        wallet.setBalance(after);
+        wallet.setUpdatedAt(Instant.now());
+        userCreditRepository.save(wallet);
+        persistCreditTransaction(
+                userId,
+                -credits,
+                CreditTransactionType.REFUND,
+                REASON_PACKAGE_PURCHASE,
+                ref,
+                null,
+                note != null && !note.isBlank() ? note.trim() : "payment_partial_refund",
+                before,
+                after);
+        return after;
+    }
+
+    @Transactional(readOnly = true)
+    public CreditRuntimePublicDto getRuntimePublic() {
+        CreditPolicyPublicDto apply = getPolicyPublicSnapshot(CreditPolicyKey.AUDITION_APPLY);
+        CreditPolicy signup = creditPolicyRepository.findById(CreditPolicyKey.SIGNUP_CREDIT).orElse(null);
+        boolean signupEnabled = signup != null && signup.isActive() && signup.getCost() > 0;
+        long signupAmount = signupEnabled ? signup.getCost() : 0;
+        return new CreditRuntimePublicDto(
+                apply.getApplicationPaymentMode(),
+                apply.getApplicationFeeCredits(),
+                apply.getApplicationFeeUsd(),
+                signupEnabled,
+                signupAmount);
     }
 }

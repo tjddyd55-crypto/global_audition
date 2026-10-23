@@ -1,6 +1,7 @@
 ﻿'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { applyGalleryImageOnError } from '@/components/gallery/galleryFallback'
 import { stripImageUrlResizeParams } from '@/shared/utils/imageDisplayUrl'
 
@@ -25,6 +26,7 @@ function normalizeGalleryUrls(images: string[]): string[] {
  * 클릭 시 라이트박스 `.fullscreen-image` contain.
  */
 export default function AuditionGallery({ images }: AuditionGalleryProps) {
+  const tGallery = useTranslations('gallery')
   const allImages = useMemo(() => normalizeGalleryUrls(images), [images])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [viewerOpen, setViewerOpen] = useState(false)
@@ -164,7 +166,7 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
   )
 
   if (n === 0) {
-    return <p className="m-0 py-2 text-center text-sm text-gray-500">등록된 추가 이미지가 없습니다.</p>
+    return <p className="m-0 py-2 text-center text-sm text-gray-500">{tGallery('empty')}</p>
   }
 
   return (
@@ -174,7 +176,7 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
           <div
             ref={mobileTrackRef}
             role="region"
-            aria-label="이미지 슬라이드"
+            aria-label={tGallery('slideAria')}
             onScroll={onMobileScroll}
             className="scrollbar-hide flex snap-x snap-mandatory overflow-x-auto scroll-smooth [-webkit-overflow-scrolling:touch]"
           >
@@ -210,7 +212,7 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
             <button
               type="button"
               className="absolute left-1 top-1/2 z-10 -translate-y-1/2 rounded-full border-0 bg-black/50 px-2 py-3 text-2xl leading-none text-white hover:bg-black/70"
-              aria-label="이전 이미지"
+              aria-label={tGallery('previousAria')}
               onClick={() => scrollGalleryToIndex(currentIndex - 1)}
             >
               ‹
@@ -218,7 +220,7 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
             <button
               type="button"
               className="absolute right-1 top-1/2 z-10 -translate-y-1/2 rounded-full border-0 bg-black/50 px-2 py-3 text-2xl leading-none text-white hover:bg-black/70"
-              aria-label="다음 이미지"
+              aria-label={tGallery('nextAria')}
               onClick={() => scrollGalleryToIndex(currentIndex + 1)}
             >
               ›
@@ -229,7 +231,7 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
           <div
             ref={desktopTrackRef}
             role="region"
-            aria-label="이미지 슬라이드"
+            aria-label={tGallery('slideAria')}
             onScroll={onDesktopScroll}
             className="scrollbar-hide flex min-h-0 min-w-0 w-full snap-x snap-mandatory overflow-x-auto scroll-smooth overscroll-x-contain [-webkit-overflow-scrolling:touch]"
           >
@@ -260,14 +262,14 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
       </div>
 
       {n > 1 ? (
-        <div className="mt-2 flex justify-center gap-1" role="tablist" aria-label="이미지 위치">
+        <div className="mt-2 flex justify-center gap-1" role="tablist" aria-label={tGallery('dotsAria')}>
           {allImages.map((_, i) => (
             <button
               key={i}
               type="button"
               role="tab"
               aria-selected={i === currentIndex}
-              aria-label={`이미지 ${i + 1}로 이동`}
+              aria-label={tGallery('goTo', { n: i + 1 })}
               className={`h-2 w-2 shrink-0 rounded-full border-0 p-0 ${i === currentIndex ? 'bg-black' : 'bg-gray-300'}`}
               onClick={() => scrollGalleryToIndex(i)}
             />
@@ -281,7 +283,7 @@ export default function AuditionGallery({ images }: AuditionGalleryProps) {
             type="button"
             className="absolute right-4 top-4 z-50 border-0 bg-transparent text-xl text-white"
             onClick={closeLightbox}
-            aria-label="전체화면 닫기"
+            aria-label={tGallery('closeFullscreen')}
           >
             ✕
           </button>

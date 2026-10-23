@@ -383,6 +383,7 @@ public class ChannelVideoPublicService {
         dto.setVideoUrl(v.getVideoUrl());
         dto.setThumbnailUrl(v.getThumbnailUrl());
         dto.setCategory(v.getCategory());
+        dto.setChannelOwnerId(v.getOwnerId() != null ? v.getOwnerId().toString() : null);
         dto.setChannelDisplayName(displayName != null ? displayName : "");
         dto.setChannelProfileImageUrl(profileImageUrl);
         dto.setViewCount(v.getViewCount());

@@ -1,0 +1,13 @@
+{
+  "supported": ["ko", "en", "mn", "ja", "zh", "es", "fr", "de"],
+  "primary": ["ko", "en", "mn"],
+  "defaultLocale": "en",
+  "deviceFallback": "en",
+  "publicSelector": ["en"],
+  "agencyUiLocale": "ko",
+  "superAdminUiLocale": "ko",
+  "activeTranslationTargets": ["en", "ko"],
+  "settlementCurrency": "USD",
+  "contentLocales": ["ko", "en", "mn", "ja", "zh", "es", "fr", "de"],
+  "providerLocales": ["ko", "en", "mn", "ja", "zh", "es", "fr", "de"]
+}

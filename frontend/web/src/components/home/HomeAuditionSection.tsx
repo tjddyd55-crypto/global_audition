@@ -5,7 +5,10 @@ import AuditionCard from '../cards/AuditionCard'
 import { SkeletonAuditionCard } from '../ui/SkeletonCard'
 import EmptyState from '../ui/EmptyState'
 import { LAYOUT } from '@/shared/design-tokens'
+import { useTranslations } from 'next-intl'
 import type { AuditionDto } from '@/shared/types/audition'
+import { AuditionAudienceFilter } from '@/components/audition/AuditionAudienceFilter'
+import type { AudienceFilterOption } from '@/shared/audition/audienceSelection'
 
 const containerStyle: React.CSSProperties = {
   maxWidth: LAYOUT.containerMaxWidth,
@@ -21,19 +24,35 @@ const sectionStyle: React.CSSProperties = {
 type HomeAuditionSectionProps = {
   auditions: AuditionDto[]
   isLoading: boolean
+  country: AudienceFilterOption
+  onCountryChange: (country: AudienceFilterOption) => void
+  heading?: string
+  showFilter?: boolean
+  compact?: boolean
 }
 
-export default function HomeAuditionSection({ auditions, isLoading }: HomeAuditionSectionProps) {
+export default function HomeAuditionSection({
+  auditions,
+  isLoading,
+  country,
+  onCountryChange,
+  heading,
+  showFilter = true,
+  compact = false,
+}: HomeAuditionSectionProps) {
+  const t = useTranslations('home')
+  const tAud = useTranslations('auditions')
   const displayAuditions = auditions.slice(0, 3)
   const isEmpty = !isLoading && displayAuditions.length === 0
 
   return (
-    <section style={sectionStyle}>
+    <section style={compact ? { paddingTop: 8, paddingBottom: 24 } : sectionStyle}>
       <div style={containerStyle}>
-        <div style={{ marginBottom: 24, textAlign: 'center' }}>
-          <h2 style={{ fontSize: 24, fontWeight: 700, margin: '0 0 8px 0' }}>진행 중인 오디션</h2>
-          <p style={{ fontSize: 14, color: '#666', margin: 0 }}>지금 바로 지원 가능한 오디션을 확인하세요</p>
+        <div style={{ marginBottom: compact ? 12 : 24, textAlign: 'center' }}>
+          <h2 style={{ fontSize: 24, fontWeight: 700, margin: compact ? 0 : '0 0 8px 0' }}>{heading ?? t('openAuditions')}</h2>
+          {compact ? null : <p style={{ fontSize: 14, color: '#666', margin: 0 }}>{tAud('description')}</p>}
         </div>
+        {showFilter ? <AuditionAudienceFilter country={country} onChange={onCountryChange} /> : null}
       </div>
 
       {isLoading ? (
@@ -44,10 +63,10 @@ export default function HomeAuditionSection({ auditions, isLoading }: HomeAuditi
         </div>
       ) : isEmpty ? (
         <div style={containerStyle}>
-          <EmptyState message="등록된 오디션이 없습니다" />
+          <EmptyState message={tAud('emptyList')} />
         </div>
       ) : (
-        <div className="flex w-full flex-col">
+        <div className={compact ? 'grid grid-cols-1 gap-3 px-4 sm:grid-cols-2 lg:grid-cols-3' : 'flex w-full flex-col'}>
           {displayAuditions.map((audition, i) => (
             <AuditionCard key={audition?.id ?? `audition-${i}`} audition={audition} />
           ))}
@@ -73,7 +92,7 @@ export default function HomeAuditionSection({ auditions, isLoading }: HomeAuditi
               textDecoration: 'none',
             }}
           >
-            모든 오디션 보기
+            {t('seeAllAuditions')}
           </Link>
         </div>
       </div>

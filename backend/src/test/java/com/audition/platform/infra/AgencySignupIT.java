@@ -24,6 +24,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * 공개 가입으로 AGENCY/관리자 역할을 얻을 수 없고, 슈퍼관리자 PATCH 로만 AGENCY 를 부여함을 검증한다.
+ *
+ * <p>develop 통합(PR #66 승인 흐름): 기획사 선택은 이제 거절(403) 대신 "신청"으로 처리된다.
+ * 계정은 APPLICANT + signup_intent=AGENCY 로 저장되고, 본사 최종 승인 전에는 기획사 API에 접근할 수 없다.
+ * 위조 역할(SUPER_ADMIN 등)은 여전히 계정을 만들지 않는다.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -64,8 +68,8 @@ class AgencySignupIT {
     }
 
     @Test
-    void agencySelectionAndTamperedRolesCreateNoAccount() throws Exception {
-        for (String role : new String[]{"AGENCY", "agency", "SUPER_ADMIN", "ADMIN", "COUNTRY_ADMIN", "USER"}) {
+    void tamperedRolesCreateNoAccountAndAgencySelectionOnlyOpensApplication() throws Exception {
+        for (String role : new String[]{"agency", "SUPER_ADMIN", "ADMIN", "COUNTRY_ADMIN", "USER"}) {
             String nick = nick();
             int code = mvc.perform(signup(nick, role)).andReturn().getResponse().getStatus();
             if (code != 403 && code != 422) {
@@ -74,9 +78,32 @@ class AgencySignupIT {
             assertEquals(0, jdbc.queryForObject(
                     "SELECT COUNT(*) FROM users WHERE email = ?", Integer.class, nick + "@local.test"));
         }
-        mvc.perform(signup(nick(), "AGENCY"))
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.startsWith("AGENCY_SIGNUP_NOT_AVAILABLE")));
+        // 국가 없이 기획사 신청 → 계정 미생성.
+        String noCountry = nick();
+        int code = mvc.perform(signup(noCountry, "AGENCY")).andReturn().getResponse().getStatus();
+        if (code < 400 || code >= 500) {
+            throw new AssertionError("AGENCY without country returned " + code);
+        }
+        assertEquals(0, jdbc.queryForObject(
+                "SELECT COUNT(*) FROM users WHERE email = ?", Integer.class, noCountry + "@local.test"));
+
+        jdbc.update("INSERT INTO countries (code, name, status, default_currency) VALUES ('ZQ', 'Test ZQ', 'ACTIVE', 'USD') "
+                + "ON CONFLICT (code) DO NOTHING");
+        for (String role : new String[]{"AGENCY"}) {
+            String nick = nick();
+            String body = mvc.perform(post("/api/auth/signup").contentType(APPLICATION_JSON)
+                            .content("{\"email\":\"" + nick + "@local.test\",\"password\":\"Localtest1!\",\"role\":\"" + role
+                                    + "\",\"nickname\":\"" + nick + "\",\"countryCode\":\"ZQ\"}"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.role").value("APPLICANT"))
+                    .andExpect(jsonPath("$.signupIntent").value("AGENCY"))
+                    .andReturn().getResponse().getContentAsString();
+            UUID id = UUID.fromString(json.readTree(body).get("userId").asText());
+            assertEquals("APPLICANT", dbRole(id));
+            assertEquals("AGENCY", jdbc.queryForObject("SELECT signup_intent FROM users WHERE id = ?", String.class, id));
+            mvc.perform(get(AGENCY_API).header("Authorization", "Bearer " + jwt.createToken(id, "x@local.test", "AGENCY")))
+                    .andExpect(status().isForbidden());
+        }
     }
 
     @Test

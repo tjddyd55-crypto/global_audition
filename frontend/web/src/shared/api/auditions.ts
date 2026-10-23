@@ -1,5 +1,5 @@
 ﻿import { parseAuditionDto } from './auditions/parsers'
-import { listOpenAuditions, getAuditionById } from './auditions/public'
+import { listOpenAuditions, getAuditionById, getAuditionPreview } from './auditions/public'
 import {
   listAuditionVotes,
   voteAudition,
@@ -17,6 +17,12 @@ import {
   getApplicationAgencyDetail,
   updateApplicationStatus,
 } from './auditions/manage'
+import {
+  listAuditionTranslations,
+  upsertAuditionTranslation,
+  getTranslationProviderStatus,
+  runTranslationJob,
+} from './auditions/translations'
 import type { ManageListFilters } from './auditions/types'
 
 /** @deprecated 레거시 import 호환 — AuditionDto와 동일 */
@@ -40,6 +46,7 @@ export { parseAuditionDto }
 export const auditionApi = {
   listOpen: listOpenAuditions,
   getById: getAuditionById,
+  getPreview: getAuditionPreview,
   create: createAudition,
   update: updateAudition,
   deleteAudition,
@@ -57,6 +64,10 @@ export const auditionApi = {
   listManageApplications,
   getApplicationAgencyDetail,
   updateApplicationStatus,
+  listTranslations: listAuditionTranslations,
+  upsertTranslation: upsertAuditionTranslation,
+  translationProvider: getTranslationProviderStatus,
+  runTranslationJob,
 }
 
 /** 스펙 문서용 별칭 — {@link auditionApi.listManageApplications} 와 동일 */

@@ -4,11 +4,15 @@ import com.audition.platform.api.dto.CreditBalanceResponse;
 import com.audition.platform.api.dto.CreditChargeRequest;
 import com.audition.platform.api.dto.CreditOrderSummaryResponse;
 import com.audition.platform.api.dto.CreditPolicyPublicDto;
+import com.audition.platform.api.dto.CreditRuntimePublicDto;
 import com.audition.platform.api.dto.CreditTransactionDto;
 import com.audition.platform.api.dto.PreparePaymentRequest;
 import com.audition.platform.api.dto.PreparePaymentResponse;
+import com.audition.platform.application.credit.CreditLedgerConsistency;
+import com.audition.platform.application.credit.CreditLotRemainingQuery;
 import com.audition.platform.application.credit.CreditPolicyKey;
 import com.audition.platform.application.credit.CreditService;
+import com.audition.platform.application.org.CreditAllocation;
 import com.audition.platform.application.payment.PaymentOrderService;
 import com.audition.platform.infra.SecurityUtils;
 import jakarta.validation.Valid;
@@ -34,14 +38,17 @@ public class CreditController {
 
     private final CreditService creditService;
     private final PaymentOrderService paymentOrderService;
+    private final CreditLotRemainingQuery creditLotRemainingQuery;
     private final boolean allowLegacySelfChargeApi;
 
     public CreditController(
             CreditService creditService,
             PaymentOrderService paymentOrderService,
+            CreditLotRemainingQuery creditLotRemainingQuery,
             @Value("${app.credits.allow-legacy-self-charge:false}") boolean allowLegacySelfChargeApi) {
         this.creditService = creditService;
         this.paymentOrderService = paymentOrderService;
+        this.creditLotRemainingQuery = creditLotRemainingQuery;
         this.allowLegacySelfChargeApi = allowLegacySelfChargeApi;
     }
 
@@ -57,10 +64,26 @@ public class CreditController {
         return creditService.getPolicyPublicSnapshot(key);
     }
 
+    @GetMapping("/public/runtime")
+    public CreditRuntimePublicDto getPublicRuntime() {
+        return creditService.getRuntimePublic();
+    }
+
     @GetMapping("/balance")
     public CreditBalanceResponse getBalance() {
         UUID userId = requireUserId();
-        return new CreditBalanceResponse(creditService.getBalance(userId));
+        CreditBalanceResponse response = new CreditBalanceResponse(creditService.getBalance(userId));
+        CreditLotRemainingQuery.Split split = creditLotRemainingQuery.forUser(userId);
+        response.setFreeRemaining(split.freeRemaining());
+        response.setPaidRemaining(split.paidRemaining());
+        response.setUnclassifiedRemaining(split.unclassifiedRemaining());
+        response.setAllocationPolicy(CreditAllocation.POLICY_FREE_FIRST);
+        CreditLotRemainingQuery.LedgerView ledger = creditLotRemainingQuery.ledgerForUser(userId);
+        response.setLedgerClosingBalance(ledger.closingBalance());
+        response.setLedgerAmountSum(ledger.amountSum());
+        response.setLedgerMatchesWallet(
+                CreditLedgerConsistency.walletMatchesClosing(response.getBalance(), ledger.closingBalance()));
+        return response;
     }
 
     @GetMapping("/transactions")
@@ -97,6 +120,12 @@ public class CreditController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "유효하지 않은 packageId입니다.");
         }
         return paymentOrderService.preparePayment(userId, packageId, request.getProvider());
+    }
+
+    @GetMapping("/orders/{orderNo}/checkout")
+    public PreparePaymentResponse checkoutSession(@PathVariable String orderNo) {
+        UUID userId = requireUserId();
+        return paymentOrderService.checkoutSessionForUser(orderNo.trim(), userId);
     }
 
     @GetMapping("/orders/{orderNo}")

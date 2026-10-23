@@ -2,6 +2,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { videoApi, type VideoContent } from '@/shared/api/videos'
 import { invalidateAfterChannelVideoMutation } from '@/shared/query/channelVideoQuery'
 
@@ -12,17 +13,19 @@ function MiniToggle({
   checked,
   disabled,
   onChange,
+  ariaLabel,
 }: {
   checked: boolean
   disabled?: boolean
   onChange: (next: boolean) => void
+  ariaLabel: string
 }) {
   return (
     <button
       type="button"
       role="switch"
       aria-checked={checked}
-      aria-label={checked ? '영상 공개' : '영상 비공개'}
+      aria-label={ariaLabel}
       disabled={disabled}
       onClick={() => onChange(!checked)}
       className={`${SWITCH_TRACK} ${checked ? 'bg-emerald-500' : 'bg-neutral-300'}`}
@@ -39,6 +42,7 @@ function MiniToggle({
 export function VideoVisibilitySwitch({ video }: { video: VideoContent }) {
   const queryClient = useQueryClient()
   const router = useRouter()
+  const t = useTranslations('channel')
   const vis = video.visibility ?? (video.status === 'PUBLISHED' ? 'PUBLIC' : 'PRIVATE')
   const isPublic = vis === 'PUBLIC'
 
@@ -53,11 +57,12 @@ export function VideoVisibilitySwitch({ video }: { video: VideoContent }) {
   return (
     <div className="flex items-center justify-between gap-2 rounded-lg border border-neutral-100 bg-neutral-50 px-3 py-2">
       <span className={`text-xs font-medium ${isPublic ? 'text-emerald-700' : 'text-neutral-500'}`}>
-        영상 {isPublic ? '공개' : '비공개'}
+        {isPublic ? t('videoPublicState') : t('videoPrivateState')}
       </span>
       <MiniToggle
         checked={isPublic}
         disabled={mut.isPending}
+        ariaLabel={isPublic ? t('videoPublicAria') : t('videoPrivateAria')}
         onChange={(on) => mut.mutate(on ? 'PUBLIC' : 'PRIVATE')}
       />
     </div>

@@ -2,6 +2,9 @@
 import { assertAuditionImageFile } from '@/shared/audition/auditionImageRules'
 import { apiClient } from '@/shared/api/client'
 import { ApiFetchError } from '@/shared/api/apiFetch'
+import { UPLOAD_ERROR } from '@/shared/api/uploadErrorCodes'
+
+export { UPLOAD_ERROR } from '@/shared/api/uploadErrorCodes'
 
 /**
  * 업로드 API `dir` 화이트리스트 — 백엔드 `ImageUploadDirectory`와 동일해야 함.
@@ -49,15 +52,15 @@ async function postAuditionImage(file: File, dir: AuditionUploadDir): Promise<Im
     const url = data?.url != null ? String(data.url).trim() : ''
     if (!url) {
       if (process.env.NODE_ENV === 'development') {
-        console.error('[postAuditionImage] 응답에 url 없음:', data)
+        console.error('[postAuditionImage] response missing url:', data)
       }
-      throw new Error('업로드 응답에 URL이 없습니다.')
+      throw new Error(UPLOAD_ERROR.NO_URL)
     }
     return data
   } catch (e) {
     if (axios.isAxiosError(e)) {
       if (e.code === 'ECONNABORTED') {
-        throw new Error('이미지 업로드 시간이 초과되었습니다.')
+        throw new Error(UPLOAD_ERROR.TIMEOUT)
       }
       const raw = e.response?.data
       let detail = ''
@@ -68,9 +71,9 @@ async function postAuditionImage(file: File, dir: AuditionUploadDir): Promise<Im
         if (typeof m === 'string' && m.trim()) detail = m.trim()
       }
       if (process.env.NODE_ENV === 'development') {
-        console.error('[postAuditionImage] 업로드 실패:', e.response?.status, raw)
+        console.error('[postAuditionImage] upload failed:', e.response?.status, raw)
       }
-      throw new Error(detail || e.message || `이미지 업로드 실패 (${e.response?.status ?? '?'})`)
+      throw new Error(detail || e.message || UPLOAD_ERROR.FAILED)
     }
     throw e
   }
@@ -116,19 +119,19 @@ export function apiUploadErrorMessage(e: unknown): string {
     const body = messageFromUploadErrorBody(parsed)
     const status = e.status
     if (status === 401) {
-      return body || '업로드 실패: 로그인이 필요합니다. (JWT)'
+      return body || UPLOAD_ERROR.LOGIN_REQUIRED
     }
     if (status === 403) {
-      return body || '업로드 실패: 권한이 없습니다. AGENCY/ADMIN 역할 또는 백엔드·스토리지 설정을 확인하세요.'
+      return body || UPLOAD_ERROR.FORBIDDEN
     }
     if (status === 503) {
-      return body || '이미지 업로드 실패'
+      return body || UPLOAD_ERROR.FAILED
     }
     if (status === 429) {
-      return body || '업로드 요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.'
+      return body || UPLOAD_ERROR.RATE_LIMITED
     }
     if (status === 413) {
-      return body || '파일 크기가 허용 한도를 초과했습니다.'
+      return body || UPLOAD_ERROR.TOO_LARGE
     }
     if (status === 500) {
       if (body) return body
@@ -140,19 +143,19 @@ export function apiUploadErrorMessage(e: unknown): string {
     const status = e.response?.status
     const body = messageFromUploadErrorBody(e.response?.data)
     if (status === 401) {
-      return body || '업로드 실패: 로그인이 필요합니다. (JWT)'
+      return body || UPLOAD_ERROR.LOGIN_REQUIRED
     }
     if (status === 403) {
-      return body || '업로드 실패: 권한이 없습니다. AGENCY/ADMIN 역할 또는 백엔드·스토리지 설정을 확인하세요.'
+      return body || UPLOAD_ERROR.FORBIDDEN
     }
     if (status === 503) {
-      return body || '이미지 업로드 실패'
+      return body || UPLOAD_ERROR.FAILED
     }
     if (status === 429) {
-      return body || '업로드 요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.'
+      return body || UPLOAD_ERROR.RATE_LIMITED
     }
     if (status === 413) {
-      return body || '파일 크기가 허용 한도를 초과했습니다.'
+      return body || UPLOAD_ERROR.TOO_LARGE
     }
     if (status === 500) {
       const m = messageFromUploadErrorBody(e.response?.data)
@@ -174,17 +177,17 @@ export function apiErrorMessage(e: unknown): string {
       return d.message
     }
     if (e.status === 503) {
-      return messageFromUploadErrorBody(parsed) || '이미지 업로드 실패'
+      return messageFromUploadErrorBody(parsed) || UPLOAD_ERROR.FAILED
     }
     if (e.status === 500) {
       const m = messageFromUploadErrorBody(parsed)
       if (m) return m
     }
     if (e.status === 401) {
-      return '로그인이 필요합니다.'
+      return 'UNAUTHORIZED'
     }
     if (e.status === 403) {
-      return '접근 권한이 없습니다.'
+      return 'FORBIDDEN'
     }
     return e.message
   }
@@ -195,17 +198,17 @@ export function apiErrorMessage(e: unknown): string {
     }
     if (e.response?.status === 503) {
       const m = messageFromUploadErrorBody(e.response?.data)
-      return m || '이미지 업로드 실패'
+      return m || UPLOAD_ERROR.FAILED
     }
     if (e.response?.status === 500) {
       const m = messageFromUploadErrorBody(e.response?.data)
       if (m) return m
     }
     if (e.response?.status === 401) {
-      return '로그인이 필요합니다.'
+      return 'UNAUTHORIZED'
     }
     if (e.response?.status === 403) {
-      return '접근 권한이 없습니다.'
+      return 'FORBIDDEN'
     }
   }
   if (e instanceof Error && e.message) {

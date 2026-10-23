@@ -106,10 +106,17 @@ export type AuditionDto = {
   canApply?: boolean
   /** canApply=false 인데 2차 이상일 때 */
   applyBlockedMessage?: string
+  applyBlockedCode?: string
+  defaultLocale?: string
+  contentLocale?: string
+  contentLocaleFallback?: boolean
+  preview?: boolean
+  showingOriginal?: boolean
+  translationStatus?: string | null
+  translationStale?: boolean
+  translationErrorCode?: string | null
+  translationOrigin?: string | null
 }
-
-/** 시리즈(1·2차 공고) 지원 제한 안내 — API·기획과 동일 문구 */
-export const PREV_ROUND_APPLY_BLOCKED_MSG = '이전 라운드 합격자만 지원 가능합니다'
 
 export function auditionHeadlineTitle(a: Pick<AuditionDto, 'displayTitle' | 'title'>): string {
   const d = a.displayTitle?.trim()
@@ -141,6 +148,7 @@ export type CreateAuditionPayload = {
   endDate: string
   benefits: string[]
   countryCode?: string
+  defaultLocale?: string
   deadlineAt?: string
 }
 

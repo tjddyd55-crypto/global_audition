@@ -1,5 +1,6 @@
 ﻿'use client'
 
+import { useTranslations } from 'next-intl'
 import { PAGE_CONTAINER } from '@/shared/ui/specClasses'
 
 type MyApplicantsAuditionSelectorItem = {
@@ -19,10 +20,12 @@ export default function MyApplicantsAuditionSelector({
   value,
   onChange,
 }: MyApplicantsAuditionSelectorProps) {
+  const t = useTranslations('common')
+
   return (
     <div className={`${PAGE_CONTAINER} border-b border-gray-200 bg-white py-4`}>
       <label className="block text-xs font-semibold text-gray-500" htmlFor="agency-audition-filter">
-        오디션
+        {t('auditions')}
       </label>
       <select
         id="agency-audition-filter"

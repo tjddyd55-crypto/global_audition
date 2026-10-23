@@ -18,6 +18,10 @@ Next.js **서버**에서만 사용. 클라이언트 번들에 포함되지 않�
 - Railway(프론트) Variables 예: `BACKEND_PROXY_ORIGIN=https://backend-production-b968.up.railway.app`
 - 미설정 시: 개발은 `http://127.0.0.1:8081`, 프로덕션은 위 프로덕션 백엔드 기본값.
 
+## 로컬 브라우저 주소
+
+공식 주소는 `http://localhost:<포트>`다. `accessToken` 쿠키는 `Domain`을 두지 않아 `127.0.0.1`과 공유하지 않는다. 로컬 HTTP에서는 `SameSite=Lax`, `Secure` 없음. `next dev`의 절대 리다이렉트 `Location`은 `localhost`로 고정된다.
+
 ## 동작 요약
 
 - 브라우저·axios·fetch: **`/api/...` 만 호출** (동일 Origin → 프리플라이트/CORS 없음).

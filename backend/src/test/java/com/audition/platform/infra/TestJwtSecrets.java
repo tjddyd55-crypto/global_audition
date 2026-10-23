@@ -10,4 +10,13 @@ public final class TestJwtSecrets {
 
     private TestJwtSecrets() {
     }
+
+    /** 퇴역된 공개 기본키. 코드에 원문을 두지 않고 git 이력(3aaf471)에서 읽는다. */
+    public static String retiredDefault() {
+        try {
+            return JwtSecretPolicyTest.historicalDefault();
+        } catch (Exception ex) {
+            throw new IllegalStateException("historical jwt config could not be read", ex);
+        }
+    }
 }

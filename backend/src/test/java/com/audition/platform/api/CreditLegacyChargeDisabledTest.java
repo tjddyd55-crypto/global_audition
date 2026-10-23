@@ -1,6 +1,7 @@
 package com.audition.platform.api;
 
 import com.audition.platform.api.dto.CreditChargeRequest;
+import com.audition.platform.application.credit.CreditLotRemainingQuery;
 import com.audition.platform.application.credit.CreditService;
 import com.audition.platform.application.payment.PaymentOrderService;
 import org.junit.jupiter.api.Test;
@@ -19,7 +20,11 @@ class CreditLegacyChargeDisabledTest {
     @Test
     void defaultOffRejectsChargeWithoutTouchingTheLedger() {
         CreditService credits = mock(CreditService.class);
-        CreditController controller = new CreditController(credits, mock(PaymentOrderService.class), false);
+        CreditController controller = new CreditController(
+                credits,
+                mock(PaymentOrderService.class),
+                mock(CreditLotRemainingQuery.class),
+                false);
         CreditChargeRequest request = new CreditChargeRequest();
         request.setAmount(1L);
 

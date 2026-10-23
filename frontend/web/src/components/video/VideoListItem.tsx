@@ -2,6 +2,7 @@
 
 import type { ReactNode } from 'react'
 import Image from 'next/image'
+import { useLocale, useTranslations } from 'next-intl'
 import { Link } from '@/i18n.config'
 import { DEFAULT_IMAGES } from '@/shared/constants/fallbacks'
 
@@ -15,8 +16,12 @@ export type VideoListItemProps = {
   /** 표시용 날짜·상대시간 등 (부모에서 포맷) */
   dateLabel: string
   categoryBadge?: string | null
+  channelHref?: string | null
+  freshLabel?: string | null
   /** 썸네일·텍스트 아래 (관리 버튼 등) */
   footer?: ReactNode
+  /** 홈처럼 여러 장을 한 화면에 둘 때 썸네일 높이만 제한한다. */
+  compact?: boolean
 }
 
 export function VideoListItem({
@@ -28,15 +33,24 @@ export function VideoListItem({
   viewCount,
   dateLabel,
   categoryBadge,
+  channelHref,
+  freshLabel,
   footer,
+  compact = false,
 }: VideoListItemProps) {
-  const viewsFormatted = Number(viewCount ?? 0).toLocaleString('ko-KR')
-  const meta = `${channelName || '채널'} · 조회수 ${viewsFormatted} · ${dateLabel}`
+  const locale = useLocale()
+  const tVideo = useTranslations('video')
+  const tChannel = useTranslations('channel')
+  const tProfile = useTranslations('profile')
+  const numberLocale = locale.startsWith('ko') ? 'ko-KR' : locale.startsWith('mn') ? 'mn-MN' : 'en-US'
+  const channelLabel = channelName || tChannel('title')
+  const viewsFormatted = Number(viewCount ?? 0).toLocaleString(numberLocale)
+  const meta = `${channelLabel} · ${tVideo('viewsCount', { n: viewsFormatted })} · ${dateLabel}`
 
   return (
     <article className="w-full">
       <Link href={href} className="block w-full">
-        <div className="relative aspect-[16/9] w-full overflow-hidden bg-neutral-900">
+        <div className={`relative aspect-[16/9] w-full overflow-hidden bg-neutral-900 ${compact ? 'max-h-36 sm:max-h-40' : ''}`}>
           {thumbnailSrc ? (
             <Image
               src={thumbnailSrc}
@@ -48,9 +62,14 @@ export function VideoListItem({
             />
           ) : (
             <div className="flex h-full min-h-[10rem] w-full items-center justify-center text-sm text-neutral-400">
-              썸네일 없음
+              {tProfile('noThumbnail')}
             </div>
           )}
+          {freshLabel ? (
+            <span className="absolute left-1.5 top-1.5 bg-white px-1.5 py-0.5 text-[11px] font-semibold text-neutral-900">
+              {freshLabel}
+            </span>
+          ) : null}
           {categoryBadge ? (
             <span className="absolute right-1.5 top-1.5 bg-black/75 px-1.5 py-0.5 text-[11px] font-medium text-white">
               {categoryBadge}
@@ -61,9 +80,9 @@ export function VideoListItem({
 
       <div className="flex gap-2.5 px-3 py-2">
         <Link
-          href={href}
+          href={channelHref || href}
           className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full bg-neutral-200"
-          aria-label={`${channelName || '채널'} 프로필`}
+          aria-label={tVideo('profileAria', { name: channelLabel })}
         >
           <Image
             src={channelImageSrc || DEFAULT_IMAGES.avatar}

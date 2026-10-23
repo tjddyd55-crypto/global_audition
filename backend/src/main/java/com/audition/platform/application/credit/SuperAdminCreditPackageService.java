@@ -2,6 +2,7 @@ package com.audition.platform.application.credit;
 
 import com.audition.platform.application.audit.AdminAuditAction;
 import com.audition.platform.application.audit.AdminAuditLogService;
+import com.audition.platform.application.payment.SettlementCurrency;
 import com.audition.platform.api.dto.CreditPackageResponse;
 import com.audition.platform.api.dto.CreditPackageUpsertRequest;
 import com.audition.platform.domain.credit.CreditPackage;
@@ -12,7 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -106,7 +106,7 @@ public class SuperAdminCreditPackageService {
 
     private static void applyBody(CreditPackage p, CreditPackageUpsertRequest body) {
         p.setName(body.getName().trim());
-        p.setPrice(body.getPrice().setScale(2, RoundingMode.HALF_UP));
+        p.setPrice(SettlementCurrency.requireWholeUsd(body.getPrice()));
         p.setCredits(body.getCredits());
         p.setBonusCredits(body.getBonusCredits());
         p.setActive(Boolean.TRUE.equals(body.getActive()));

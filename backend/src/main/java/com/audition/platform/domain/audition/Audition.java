@@ -41,8 +41,13 @@ public class Audition {
     @Column(name = "updated_at")
     private Instant updatedAt = Instant.now();
 
+    /** 모집 대상 국가/권역. 개최 국가와 매출 귀속 국가가 아니다. */
     @Column(name = "country_code", columnDefinition = "TEXT")
     private String countryCode;
+
+    /** 개최 국가 ISO2. 비어 있으면 공개 필터는 모집 대상만 본다. */
+    @Column(name = "host_country", columnDefinition = "TEXT")
+    private String hostCountry;
 
     @Column(name = "deadline_at")
     private Instant deadlineAt;
@@ -128,6 +133,16 @@ public class Audition {
     @Column(name = "series_round", nullable = false)
     private int seriesRound = 1;
 
+    /** 원문 로케일. 번역 테이블 fallback 기준. */
+    @Column(name = "default_locale", nullable = false, length = 16)
+    private String defaultLocale = "ko";
+
+    @Column(name = "content_revision", nullable = false)
+    private long contentRevision = 1;
+
+    @Column(name = "content_source_hash", length = 64)
+    private String contentSourceHash;
+
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
     public UUID getOwnerId() { return ownerId; }
@@ -144,6 +159,8 @@ public class Audition {
     public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
     public String getCountryCode() { return countryCode; }
     public void setCountryCode(String countryCode) { this.countryCode = countryCode; }
+    public String getHostCountry() { return hostCountry; }
+    public void setHostCountry(String hostCountry) { this.hostCountry = hostCountry; }
     public Instant getDeadlineAt() { return deadlineAt; }
     public void setDeadlineAt(Instant deadlineAt) { this.deadlineAt = deadlineAt; }
     public Instant getCreatedAt() { return createdAt; }
@@ -195,4 +212,10 @@ public class Audition {
     public void setGroupId(UUID groupId) { this.groupId = groupId; }
     public int getSeriesRound() { return seriesRound; }
     public void setSeriesRound(int seriesRound) { this.seriesRound = seriesRound; }
+    public String getDefaultLocale() { return defaultLocale; }
+    public void setDefaultLocale(String defaultLocale) { this.defaultLocale = defaultLocale; }
+    public long getContentRevision() { return contentRevision; }
+    public void setContentRevision(long contentRevision) { this.contentRevision = contentRevision; }
+    public String getContentSourceHash() { return contentSourceHash; }
+    public void setContentSourceHash(String contentSourceHash) { this.contentSourceHash = contentSourceHash; }
 }

@@ -13,6 +13,11 @@ public class AdminAuditionRoundResponse {
     private Instant startAt;
     private Instant endAt;
     private boolean active;
+    private String announcementTitle;
+    private String announcementBody;
+    private String submissionLabel;
+    private String submissionGuide;
+    private String noticeSourceLocale;
     private long submissionCount;
     private long passedCount;
 
@@ -79,6 +84,17 @@ public class AdminAuditionRoundResponse {
     public void setActive(boolean active) {
         this.active = active;
     }
+
+    public String getAnnouncementTitle() { return announcementTitle; }
+    public void setAnnouncementTitle(String announcementTitle) { this.announcementTitle = announcementTitle; }
+    public String getAnnouncementBody() { return announcementBody; }
+    public void setAnnouncementBody(String announcementBody) { this.announcementBody = announcementBody; }
+    public String getSubmissionLabel() { return submissionLabel; }
+    public void setSubmissionLabel(String submissionLabel) { this.submissionLabel = submissionLabel; }
+    public String getSubmissionGuide() { return submissionGuide; }
+    public void setSubmissionGuide(String submissionGuide) { this.submissionGuide = submissionGuide; }
+    public String getNoticeSourceLocale() { return noticeSourceLocale; }
+    public void setNoticeSourceLocale(String noticeSourceLocale) { this.noticeSourceLocale = noticeSourceLocale; }
 
     public long getSubmissionCount() {
         return submissionCount;

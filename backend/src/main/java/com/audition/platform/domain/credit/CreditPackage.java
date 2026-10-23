@@ -22,8 +22,8 @@ public class CreditPackage {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String name;
 
-    /** 패키지 판매가 (USD, 달러 단위). */
-    @Column(nullable = false, precision = 14, scale = 2)
+    /** 패키지 판매가 (정수 USD 달러). */
+    @Column(nullable = false)
     private BigDecimal price;
 
     @Column(nullable = false)

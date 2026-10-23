@@ -57,9 +57,13 @@ public class PatchMyChannelRequest {
     @Size(max = 2048)
     private String featuredVideoId;
 
-    /** null 이면 SNS 미변경, 빈 배열이면 전체 삭제 */
+    /** null 이면 SNS 미변경, 빈 배열이면 전체 삭제. 채널 저장은 이 값을 프로필에 쓰지 않는다. */
     @Valid
     private List<MeUserSnsLinkDto> snsLinks;
+
+    /** 전송 시 공개 프로필 키를 이 목록으로 바꾼다. 빈 배열은 프로필 항목 비공개. */
+    @Size(max = 9)
+    private List<@Size(max = 32) String> shownFields;
 
     public String getChannelName() {
         return channelName;
@@ -186,6 +190,14 @@ public class PatchMyChannelRequest {
 
     public void setSnsLinks(List<MeUserSnsLinkDto> snsLinks) {
         this.snsLinks = snsLinks;
+    }
+
+    public List<String> getShownFields() {
+        return shownFields;
+    }
+
+    public void setShownFields(List<String> shownFields) {
+        this.shownFields = shownFields;
     }
 
     /** {@code is_channel_public} 우선, 없으면 레거시 {@code isPublic} */

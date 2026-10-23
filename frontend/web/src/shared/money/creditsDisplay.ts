@@ -1,7 +1,8 @@
-﻿/**
- * 크레딧(포인트) 수량 표시 — 통화가 아님. 천 단위만 en-US 로 통일.
+﻿import { formatCount } from './currency'
+
+/**
+ * 크레딧(포인트) 수량 표시 — 통화가 아님. 천 단위는 {@link formatCount} 와 같다.
  */
-export function formatCreditsCount(n: number): string {
-  const v = Number.isFinite(n) ? n : 0
-  return new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(v)
+export function formatCreditsCount(n: number, locale = 'en'): string {
+  return formatCount(Number.isFinite(n) ? n : 0, locale)
 }

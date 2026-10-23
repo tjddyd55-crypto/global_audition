@@ -7,12 +7,28 @@ import { SuperAdminAuthGate } from '@/components/admin/SuperAdminAuthGate'
 const MENU = [
   { name: '오디션 태그', path: '/admin/super/tags' },
   { name: '크레딧 정책', path: '/admin/super/credit-policies' },
+  { name: '전역 지원비', path: '/admin/super/application-fee' },
+  { name: '번역 공급자', path: '/admin/super/translation-settings' },
   { name: '크레딧 패키지', path: '/admin/super/credit-packages' },
   { name: '유저 관리', path: '/admin/super/users' },
   { name: '거래 내역', path: '/admin/super/transactions' },
+  { name: '결제 설정', path: '/admin/super/payments/settings' },
+  { name: '결제 공급자', path: '/admin/super/payments/providers' },
+  { name: '결제 거래', path: '/admin/super/payments/transactions' },
+  { name: '환불 관리', path: '/admin/super/payments/refunds' },
+  { name: '웹훅', path: '/admin/super/payments/webhooks' },
+  { name: '결제 오류', path: '/admin/super/payments/errors' },
+  { name: '결제 테스트', path: '/admin/super/payments/test' },
   { name: '결제 주문', path: '/admin/super/payment-orders' },
   { name: '로그', path: '/admin/super/logs' },
+  { name: '복구 요청', path: '/admin/super/recovery' },
   { name: '대량 지급', path: '/admin/super/bulk-grant' },
+  { name: '국가 조직', path: '/admin/super/countries' },
+  { name: '글로벌 기획사', path: '/admin/super/agencies' },
+  { name: '계약', path: '/admin/super/contracts' },
+  { name: '매출 통계', path: '/admin/super/revenue' },
+  { name: '월 정산', path: '/admin/super/settlements' },
+  { name: '국가 실적', path: '/admin/super/country-ops' },
 ] as const
 
 export default function SuperAdminLayout({ children }: { children: React.ReactNode }) {
@@ -31,7 +47,7 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
         </header>
         <div className="flex min-h-0 flex-1">
           <aside className="w-64 shrink-0 border-r border-gray-200 bg-white p-4">
-            <h2 className="mb-6 text-lg font-semibold">슈퍼 관리자</h2>
+            <h2 className="mb-6 text-lg font-semibold">본사 관리자</h2>
             <nav className="space-y-2">
               {MENU.map((item) => {
                 const isActive = pathname.startsWith(item.path)

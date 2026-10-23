@@ -8,7 +8,7 @@ import AuditionsPageHeader from '@/components/audition/AuditionsPageHeader'
  */
 export default async function PcAuditionsListPage({ locale }: { locale: string }) {
   setRequestLocale(locale)
-  const t = await getTranslations('common')
+  const t = await getTranslations('auditions')
 
   const pageStyle = {
     width: '100%' as const,
@@ -19,8 +19,8 @@ export default async function PcAuditionsListPage({ locale }: { locale: string }
   return (
     <div style={pageStyle}>
       <AuditionsPageHeader
-        title={t('auditions')}
-        description="전 세계 기획사의 오디션에 지원해보세요"
+        title={t('listTitle')}
+        description={t('listDescription')}
         className="w-full"
         style={{ marginBottom: 24 }}
         titleStyle={{ fontSize: 28, fontWeight: 700, margin: '0 0 8px 0' }}

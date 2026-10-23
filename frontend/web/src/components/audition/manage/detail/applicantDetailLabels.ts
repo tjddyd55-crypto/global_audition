@@ -1,26 +1,31 @@
 ﻿import type { AgencyBoardStatus } from '@/shared/api/auditions'
 
-export const APPLICANT_NATIONALITY_LABEL: Record<string, string> = {
-  KR: '대한민국',
-  MN: '몽골',
-  JP: '일본',
-  OTHER: '기타',
+const STATUS_KEYS: Record<AgencyBoardStatus, 'underReview' | 'accepted' | 'rejected' | 'pending'> = {
+  REVIEWING: 'underReview',
+  APPROVED: 'accepted',
+  REJECTED: 'rejected',
+  PENDING: 'pending',
 }
 
-export const APPLICANT_SNS_PLATFORM_LABEL: Record<string, string> = {
-  instagram: 'Instagram',
-  tiktok: 'TikTok',
-  youtube: 'YouTube',
-  twitter: 'X',
-  facebook: 'Facebook',
-  other: '기타',
+export function nationalityCatalogKey(code?: string | null): 'KR' | 'MN' | 'JP' | 'OTHER' | 'unspecified' {
+  if (code === 'KR' || code === 'MN' || code === 'JP' || code === 'OTHER') return code
+  return 'unspecified'
 }
 
-export function applicantStatusLabel(status: AgencyBoardStatus) {
-  if (status === 'REVIEWING') return '검토중'
-  if (status === 'APPROVED') return '합격'
-  if (status === 'REJECTED') return '불합격'
-  return '대기'
+export function snsPlatformLabel(platform: string, otherLabel: string): string {
+  const map: Record<string, string> = {
+    instagram: 'Instagram',
+    tiktok: 'TikTok',
+    youtube: 'YouTube',
+    twitter: 'X',
+    facebook: 'Facebook',
+    other: otherLabel,
+  }
+  return map[platform] ?? platform
+}
+
+export function applicantStatusMessageKey(status: AgencyBoardStatus) {
+  return STATUS_KEYS[status] ?? 'pending'
 }
 
 export function applicantCurrentStatusEmphasisClass(status: AgencyBoardStatus) {

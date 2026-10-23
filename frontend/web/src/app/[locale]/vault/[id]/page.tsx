@@ -2,15 +2,17 @@
 
 import { useParams as useNextParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
-import { vaultApi, type CreativeAsset } from '@/shared/api/vault'
+import { vaultApi } from '@/shared/api/vault'
 import { feedbackApi, type ExpertFeedback } from '@/shared/api/feedback'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { Link } from '../../../../i18n.config'
 import { CARD_BASE, PAGE_CONTAINER, SECTION_GAP, TEXT_SUB, TITLE_PAGE } from '@/shared/ui/specClasses'
 
 export default function AssetDetailPage() {
   const params = useNextParams()
   const t = useTranslations('common')
+  const tVault = useTranslations('vault')
+  const locale = useLocale()
   const assetId = String(params.id ?? '')
   const legacyNumericAssetId = /^\d+$/.test(assetId) ? Number(assetId) : null
 
@@ -37,7 +39,7 @@ export default function AssetDetailPage() {
   if (!asset) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="text-lg font-semibold text-gray-900">창작물을 찾을 수 없습니다.</div>
+        <div className="text-lg font-semibold text-gray-900">{tVault('notFound')}</div>
       </div>
     )
   }
@@ -46,7 +48,7 @@ export default function AssetDetailPage() {
     <div className="min-h-screen bg-gray-50">
       <div className={`${PAGE_CONTAINER} py-6 ${SECTION_GAP}`}>
         <Link href="/vault" className="text-sm font-medium text-[#3B82F6] no-underline">
-          ← 목록으로
+          ← {tVault('backToList')}
         </Link>
 
         <div className={CARD_BASE}>
@@ -64,7 +66,11 @@ export default function AssetDetailPage() {
                     : 'rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-700'
               }
             >
-              {asset.accessControl === 'PUBLIC' ? '공개' : asset.accessControl === 'AUDITION_ONLY' ? '오디션만' : '비공개'}
+              {asset.accessControl === 'PUBLIC'
+                ? tVault('public')
+                : asset.accessControl === 'AUDITION_ONLY'
+                  ? tVault('auditionOnly')
+                  : tVault('private')}
             </span>
           </div>
 
@@ -72,23 +78,23 @@ export default function AssetDetailPage() {
 
           <div className="mb-4 grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
             <div>
-              <span className={TEXT_SUB}>등록일:</span>
-              <span className="ml-2 text-sm text-gray-900">{new Date(asset.registeredAt).toLocaleDateString('ko-KR')}</span>
+              <span className={TEXT_SUB}>{tVault('registeredAtLabel')}:</span>
+              <span className="ml-2 text-sm text-gray-900">{new Date(asset.registeredAt).toLocaleDateString(locale)}</span>
             </div>
             {asset.declaredCreationType ? (
               <div>
-                <span className={TEXT_SUB}>창작 방식:</span>
+                <span className={TEXT_SUB}>{tVault('creationType')}:</span>
                 <span className="ml-2 text-sm text-gray-900">{asset.declaredCreationType}</span>
               </div>
             ) : null}
             {asset.fileSize ? (
               <div>
-                <span className={TEXT_SUB}>파일 크기:</span>
+                <span className={TEXT_SUB}>{tVault('fileSize')}:</span>
                 <span className="ml-2 text-sm text-gray-900">{(asset.fileSize / 1024 / 1024).toFixed(2)} MB</span>
               </div>
             ) : null}
             <div>
-              <span className={TEXT_SUB}>해시:</span>
+              <span className={TEXT_SUB}>{tVault('hash')}:</span>
               <span className="ml-2 font-mono text-sm text-gray-900">{asset.contentHash.substring(0, 16)}...</span>
             </div>
           </div>
@@ -96,21 +102,21 @@ export default function AssetDetailPage() {
           {asset.fileUrl ? (
             <div className="mb-4">
               <a href={asset.fileUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-[#3B82F6]">
-                파일 보기/다운로드 →
+                {tVault('viewFile')} →
               </a>
             </div>
           ) : null}
 
           {asset.textContent ? (
             <div className="rounded-xl border border-[#E5E7EB] bg-gray-50 p-4">
-              <h3 className="mb-2 text-sm font-semibold text-gray-900">텍스트 내용</h3>
+              <h3 className="mb-2 text-sm font-semibold text-gray-900">{tVault('textContent')}</h3>
               <pre className="whitespace-pre-wrap text-sm text-gray-700">{asset.textContent}</pre>
             </div>
           ) : null}
         </div>
 
         <div className={CARD_BASE}>
-          <h2 className={`${TITLE_PAGE} mb-4`}>전문가 평가</h2>
+          <h2 className={`${TITLE_PAGE} mb-4`}>{tVault('expertReview')}</h2>
           {feedbacksLoading ? (
             <div className="py-8 text-center text-sm text-gray-600">{t('loading')}</div>
           ) : feedbacks?.content && feedbacks.content.length > 0 ? (
@@ -120,7 +126,7 @@ export default function AssetDetailPage() {
               ))}
             </div>
           ) : (
-            <div className="py-8 text-center text-sm text-gray-600">아직 평가가 없습니다.</div>
+            <div className="py-8 text-center text-sm text-gray-600">{tVault('noReviews')}</div>
           )}
         </div>
       </div>
@@ -129,13 +135,15 @@ export default function AssetDetailPage() {
 }
 
 function FeedbackCard({ feedback }: { feedback: ExpertFeedback }) {
+  const tVault = useTranslations('vault')
+  const locale = useLocale()
   return (
     <div className="rounded-xl border border-[#E5E7EB] p-4">
       <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <span className="text-sm font-semibold text-gray-900">{feedback.evaluatorName || '평가자'}</span>
+          <span className="text-sm font-semibold text-gray-900">{feedback.evaluatorName || tVault('evaluator')}</span>
           <span className="ml-2 text-sm text-gray-600">
-            ({feedback.evaluatorType === 'AGENCY' ? '기획사' : '인증 평가자'})
+            ({feedback.evaluatorType === 'AGENCY' ? tVault('agency') : tVault('certifiedEvaluator')})
           </span>
         </div>
         {feedback.rating ? (
@@ -148,12 +156,12 @@ function FeedbackCard({ feedback }: { feedback: ExpertFeedback }) {
       {feedback.comment ? <p className="mb-2 text-sm text-gray-700">{feedback.comment}</p> : null}
       {feedback.evidenceLink ? (
         <a href={feedback.evidenceLink} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-[#3B82F6]">
-          증거 패키지 보기 →
+          {tVault('evidence')} →
         </a>
       ) : null}
       <div className={`mt-2 ${TEXT_SUB}`}>
-        {new Date(feedback.createdAt).toLocaleString('ko-KR')}
-        {!feedback.isPublic ? <span className="ml-2">(비공개)</span> : null}
+        {new Date(feedback.createdAt).toLocaleString(locale)}
+        {!feedback.isPublic ? <span className="ml-2">{tVault('privateMark')}</span> : null}
       </div>
     </div>
   )

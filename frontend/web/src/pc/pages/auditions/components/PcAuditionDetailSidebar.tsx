@@ -1,6 +1,7 @@
 ﻿'use client'
 
 import Image from 'next/image'
+import { useTranslations } from 'next-intl'
 import { AUDITION_DETAIL } from '@/shared/design-tokens'
 import { safeStr } from '@/shared/utils/safe'
 
@@ -23,6 +24,8 @@ export default function PcAuditionDetailSidebar({
   endDateFormatted,
   location,
 }: PcAuditionDetailSidebarProps) {
+  const t = useTranslations('auditionDetail')
+
   return (
     <aside className="flex flex-col">
       <div className="border-t border-neutral-200 px-0 py-4">
@@ -44,7 +47,7 @@ export default function PcAuditionDetailSidebar({
           </div>
           <div>
             <div style={{ fontSize: AUDITION_DETAIL.sectionTitlePx, fontWeight: 600 }}>
-              {safeStr(agencyName) || '기획사'}
+              {safeStr(agencyName) || t('agencyFallback')}
             </div>
             <span
               style={{
@@ -72,7 +75,7 @@ export default function PcAuditionDetailSidebar({
             fontWeight: AUDITION_DETAIL.sectionTitleWeight,
           }}
         >
-          통계
+          {t('stats')}
         </h3>
         <div
           style={{
@@ -83,7 +86,7 @@ export default function PcAuditionDetailSidebar({
             gap: AUDITION_DETAIL.galleryGapPx,
           }}
         >
-          <div>남은 기간 D-{remainingDays}</div>
+          <div>{t('daysLeftPeriod', { n: remainingDays })}</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: AUDITION_DETAIL.galleryGapPx, marginTop: AUDITION_DETAIL.galleryGapPx }}>
             {recruitList.map((tag, idx) => (
               <span
@@ -111,14 +114,14 @@ export default function PcAuditionDetailSidebar({
             fontWeight: AUDITION_DETAIL.sectionTitleWeight,
           }}
         >
-          빠른 정보
+          {t('quickInfo')}
         </h3>
         <dl style={{ margin: 0, fontSize: AUDITION_DETAIL.metaMutedPx, color: AUDITION_DETAIL.metaMutedColor }}>
-          <dt style={{ marginTop: AUDITION_DETAIL.galleryGapPx, fontWeight: 600, color: '#333' }}>등록일</dt>
+          <dt style={{ marginTop: AUDITION_DETAIL.galleryGapPx, fontWeight: 600, color: '#333' }}>{t('registeredAt')}</dt>
           <dd style={{ margin: '4px 0 0 0' }}>{createdAtFormatted}</dd>
-          <dt style={{ marginTop: AUDITION_DETAIL.benefitGridGapPx, fontWeight: 600, color: '#333' }}>마감일</dt>
+          <dt style={{ marginTop: AUDITION_DETAIL.benefitGridGapPx, fontWeight: 600, color: '#333' }}>{t('endDate')}</dt>
           <dd style={{ margin: '4px 0 0 0' }}>{endDateFormatted}</dd>
-          <dt style={{ marginTop: AUDITION_DETAIL.benefitGridGapPx, fontWeight: 600, color: '#333' }}>위치</dt>
+          <dt style={{ marginTop: AUDITION_DETAIL.benefitGridGapPx, fontWeight: 600, color: '#333' }}>{t('location')}</dt>
           <dd style={{ margin: '4px 0 0 0' }}>{location}</dd>
         </dl>
       </div>
