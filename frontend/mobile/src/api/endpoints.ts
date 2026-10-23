@@ -148,6 +148,8 @@ export const notificationApi = {
     const rows = unwrapData(await apiRequest<unknown>('/me/notifications'))
     return Array.isArray(rows) ? (rows as MeNotificationItem[]) : []
   },
+  markRead: async (id: string): Promise<MeNotificationItem> =>
+    unwrapData(await apiRequest<unknown>(`/me/notifications/${id}/read`, { method: 'POST' })) as MeNotificationItem,
 }
 
 export const dashboardApi = {

@@ -9,6 +9,11 @@ public class CreditBalanceResponse {
     private long unclassifiedRemaining;
     /** 표시용 소비 정책 이름. 원장 계산은 바꾸지 않는다. */
     private String allocationPolicy;
+    /** 원장에 마지막으로 기록된 잔액. 거래가 없으면 null. */
+    private Long ledgerClosingBalance;
+    /** 기록된 거래 금액의 합. 시작 행이 없으면 지갑 잔액과 다를 수 있다. */
+    private long ledgerAmountSum;
+    private boolean ledgerMatchesWallet;
 
     public CreditBalanceResponse() {
     }
@@ -55,5 +60,29 @@ public class CreditBalanceResponse {
 
     public void setAllocationPolicy(String allocationPolicy) {
         this.allocationPolicy = allocationPolicy;
+    }
+
+    public Long getLedgerClosingBalance() {
+        return ledgerClosingBalance;
+    }
+
+    public void setLedgerClosingBalance(Long ledgerClosingBalance) {
+        this.ledgerClosingBalance = ledgerClosingBalance;
+    }
+
+    public long getLedgerAmountSum() {
+        return ledgerAmountSum;
+    }
+
+    public void setLedgerAmountSum(long ledgerAmountSum) {
+        this.ledgerAmountSum = ledgerAmountSum;
+    }
+
+    public boolean isLedgerMatchesWallet() {
+        return ledgerMatchesWallet;
+    }
+
+    public void setLedgerMatchesWallet(boolean ledgerMatchesWallet) {
+        this.ledgerMatchesWallet = ledgerMatchesWallet;
     }
 }

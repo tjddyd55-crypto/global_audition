@@ -8,6 +8,7 @@ import com.audition.platform.api.dto.CreditRuntimePublicDto;
 import com.audition.platform.api.dto.CreditTransactionDto;
 import com.audition.platform.api.dto.PreparePaymentRequest;
 import com.audition.platform.api.dto.PreparePaymentResponse;
+import com.audition.platform.application.credit.CreditLedgerConsistency;
 import com.audition.platform.application.credit.CreditLotRemainingQuery;
 import com.audition.platform.application.credit.CreditPolicyKey;
 import com.audition.platform.application.credit.CreditService;
@@ -77,6 +78,11 @@ public class CreditController {
         response.setPaidRemaining(split.paidRemaining());
         response.setUnclassifiedRemaining(split.unclassifiedRemaining());
         response.setAllocationPolicy(CreditAllocation.POLICY_FREE_FIRST);
+        CreditLotRemainingQuery.LedgerView ledger = creditLotRemainingQuery.ledgerForUser(userId);
+        response.setLedgerClosingBalance(ledger.closingBalance());
+        response.setLedgerAmountSum(ledger.amountSum());
+        response.setLedgerMatchesWallet(
+                CreditLedgerConsistency.walletMatchesClosing(response.getBalance(), ledger.closingBalance()));
         return response;
     }
 

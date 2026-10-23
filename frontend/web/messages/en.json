@@ -1437,7 +1437,17 @@
     "snsHint": "One link per line: PLATFORM URL.",
     "legacyPublic": "Until you save a selection, the public read API keeps the profile fields it already showed.",
     "views": "Views",
-    "subscribers": "Subscribers"
+    "subscribers": "Subscribers",
+    "markRead": "Mark as read",
+    "read": "Read",
+    "ledgerClosing": "Latest ledger balance",
+    "ledgerSum": "Sum of recorded entries",
+    "ledgerMatch": "Spendable balance matches the latest ledger balance.",
+    "ledgerDiffer": "Spendable balance and the latest ledger balance differ. Recorded rows were not rewritten.",
+    "editVideo": "Edit title",
+    "deleteVideo": "Delete",
+    "play": "Play",
+    "privateVideo": "Private. It is not on the public feed and the public video API does not return it."
   },
   "languages": {
     "ko": "한국어",

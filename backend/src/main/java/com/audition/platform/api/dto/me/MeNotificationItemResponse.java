@@ -10,6 +10,7 @@ public class MeNotificationItemResponse {
     private String title;
     private String body;
     private Instant createdAt;
+    private Instant readAt;
     private String auditionId;
     private String applicationId;
     private String channel;
@@ -60,6 +61,14 @@ public class MeNotificationItemResponse {
 
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Instant getReadAt() {
+        return readAt;
+    }
+
+    public void setReadAt(Instant readAt) {
+        this.readAt = readAt;
     }
 
     public String getAuditionId() {

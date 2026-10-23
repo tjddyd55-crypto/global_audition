@@ -3,6 +3,7 @@ package com.audition.platform.application.credit;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -13,6 +14,9 @@ import java.util.UUID;
 public class CreditLotRemainingQuery {
 
     public record Split(long freeRemaining, long paidRemaining, long unclassifiedRemaining) {
+    }
+
+    public record LedgerView(Long closingBalance, long amountSum) {
     }
 
     private final JdbcTemplate jdbcTemplate;
@@ -34,5 +38,23 @@ public class CreditLotRemainingQuery {
                 (rs, rowNum) -> new Split(rs.getLong(1), rs.getLong(2), rs.getLong(3)),
                 userId);
         return split != null ? split : new Split(0, 0, 0);
+    }
+
+    /** 원장 행은 수정하지 않는다. 마지막 after_balance 와 금액 합을 읽기만 한다. */
+    public LedgerView ledgerForUser(UUID userId) {
+        Long amountSum = jdbcTemplate.queryForObject(
+                "SELECT COALESCE(SUM(amount), 0) FROM credit_transactions WHERE user_id = ?",
+                Long.class,
+                userId);
+        List<Long> closing = jdbcTemplate.query(
+                """
+                SELECT after_balance FROM credit_transactions
+                WHERE user_id = ?
+                ORDER BY created_at DESC
+                LIMIT 1
+                """,
+                (rs, rowNum) -> rs.getLong(1),
+                userId);
+        return new LedgerView(closing.isEmpty() ? null : closing.get(0), amountSum == null ? 0L : amountSum);
     }
 }

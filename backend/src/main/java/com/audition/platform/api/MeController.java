@@ -111,6 +111,11 @@ public class MeController {
         return ApiEnvelope.ok(meNotificationService.listMine());
     }
 
+    @PostMapping("/notifications/{notificationId}/read")
+    public ApiEnvelope<MeNotificationItemResponse> markNotificationRead(@PathVariable UUID notificationId) {
+        return ApiEnvelope.ok(meNotificationService.markRead(notificationId));
+    }
+
     @GetMapping("/applications")
     public ApiEnvelope<MyApplicationsPageDto> applications() {
         return ApiEnvelope.ok(meApplicationService.listApplications());

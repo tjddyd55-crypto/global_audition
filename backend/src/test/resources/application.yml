@@ -1,3 +1,10 @@
+# 로컬에 API 프로세스가 여러 개일 때 통합 테스트가 기본 풀 10개로 연결을 소진하지 않게 한다.
+spring:
+  datasource:
+    hikari:
+      maximum-pool-size: 2
+      minimum-idle: 0
+
 # 단위 테스트: R2 플레이스홀더(실 연결 없음). r2S3Client는 엔드포인트 등 비어 있으면 미등록.
 app:
   r2:

@@ -1,5 +1,6 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { StyleSheet, Text, View } from 'react-native'
+import { Button } from '../src/ui/Button'
 import { useTranslation } from 'react-i18next'
 import { notificationApi } from '../src/api/endpoints'
 import { queryKeys } from '../src/api/queryKeys'
@@ -8,7 +9,14 @@ import { colors, radius } from '../src/theme/tokens'
 
 export default function NotificationsScreen() {
   const { t } = useTranslation()
+  const queryClient = useQueryClient()
   const query = useQuery({ queryKey: queryKeys.notifications, queryFn: notificationApi.list })
+  const markRead = useMutation({
+    mutationFn: (id: string) => notificationApi.markRead(id),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.notifications })
+    },
+  })
   return (
     <Screen loading={query.isLoading} onRefresh={() => query.refetch()}>
       <Text style={styles.title}>{t('notifications.title')}</Text>
@@ -21,7 +29,11 @@ export default function NotificationsScreen() {
           {item.body ? <Text style={styles.body}>{item.body}</Text> : null}
           <Text style={styles.meta}>
             {item.type} · {item.status}
+            {item.readAt ? ` · ${t('studio.read')}` : ''}
           </Text>
+          {!item.readAt ? (
+            <Button label={t('studio.markRead')} variant="secondary" onPress={() => markRead.mutate(item.id)} />
+          ) : null}
         </View>
       ))}
     </Screen>

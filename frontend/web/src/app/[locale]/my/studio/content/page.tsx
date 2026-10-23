@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useLocale, useTranslations } from 'next-intl'
+import { Link } from '@/i18n.config'
 import { videoApi } from '@/shared/api/videos'
 import { formatCount } from '@/shared/money/currency'
 import { INPUT_BASE, TEXT_SUB, TITLE_PAGE } from '@/shared/ui/specClasses'
@@ -17,6 +18,26 @@ export default function StudioContentPage() {
   const [videoUrl, setVideoUrl] = useState('')
   const [visibility, setVisibility] = useState('PRIVATE')
   const [message, setMessage] = useState<string | null>(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editTitle, setEditTitle] = useState('')
+
+  const update = useMutation({
+    mutationFn: () => videoApi.updateVideo(editingId ?? '', { title: editTitle.trim() }),
+    onSuccess: async () => {
+      setEditingId(null)
+      setMessage(t('saved'))
+      await queryClient.invalidateQueries({ queryKey: ['studio', 'videos'] })
+    },
+    onError: () => setMessage(t('saveFailed')),
+  })
+  const remove = useMutation({
+    mutationFn: (id: string) => videoApi.deleteVideo(id),
+    onSuccess: async () => {
+      setMessage(t('saved'))
+      await queryClient.invalidateQueries({ queryKey: ['studio', 'videos'] })
+    },
+    onError: () => setMessage(t('saveFailed')),
+  })
 
   const create = useMutation({
     mutationFn: () => videoApi.createVideo({ title: title.trim(), videoUrl: videoUrl.trim(), status: visibility }),
@@ -71,6 +92,41 @@ export default function StudioContentPage() {
             <div className={TEXT_SUB}>
               {video.status} · {t('views')} {formatCount(video.viewCount, locale)}
             </div>
+            {video.status === 'PUBLISHED' ? (
+              <Link href={`/videos/${video.id}`} className="text-sm underline">
+                {t('play')}
+              </Link>
+            ) : (
+              <p className={TEXT_SUB}>{t('privateVideo')}</p>
+            )}
+            {editingId === video.id ? (
+              <form
+                className="mt-2 flex gap-2"
+                onSubmit={(event) => {
+                  event.preventDefault()
+                  update.mutate()
+                }}
+              >
+                <input className={INPUT_BASE} value={editTitle} onChange={(e) => setEditTitle(e.target.value)} required />
+                <button type="submit" className="text-sm underline">
+                  {tCommon('save')}
+                </button>
+              </form>
+            ) : (
+              <button
+                type="button"
+                className="text-sm underline"
+                onClick={() => {
+                  setEditingId(video.id)
+                  setEditTitle(video.title)
+                }}
+              >
+                {t('editVideo')}
+              </button>
+            )}
+            <button type="button" className="ml-3 text-sm text-red-700 underline" onClick={() => remove.mutate(video.id)}>
+              {t('deleteVideo')}
+            </button>
           </li>
         ))}
       </ul>

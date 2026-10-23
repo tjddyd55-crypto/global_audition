@@ -47,6 +47,7 @@ public class MeNotificationService {
                        n.status,
                        n.channel,
                        n.created_at,
+                       n.read_at,
                        n.payload_json::text AS payload
                 FROM audition_round_notifications n
                 LEFT JOIN applications a ON a.id = n.application_id
@@ -70,6 +71,46 @@ public class MeNotificationService {
                 userId, email, userId);
     }
 
+    public MeNotificationItemResponse markRead(UUID notificationId) {
+        UUID userId = SecurityUtils.getCurrentUserId();
+        if (userId == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
+        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "사용자를 찾을 수 없습니다."));
+        String email = user.getEmail() != null ? user.getEmail() : "";
+        int updated = jdbcTemplate.update(
+                """
+                UPDATE audition_round_notifications n
+                SET read_at = COALESCE(n.read_at, NOW())
+                WHERE n.id = ?
+                  AND n.channel = 'IN_APP'
+                  AND (
+                    EXISTS (
+                      SELECT 1 FROM applications a
+                      WHERE a.id = n.application_id AND a.applicant_id = ?
+                    )
+                    OR (n.target_email IS NOT NULL AND lower(n.target_email) = lower(?))
+                    OR (
+                      n.application_id IS NULL
+                      AND n.notification_type = 'ROUND_OPEN'
+                      AND EXISTS (
+                        SELECT 1 FROM applications ax
+                        WHERE ax.applicant_id = ? AND ax.audition_id = n.audition_id
+                      )
+                    )
+                  )
+                """,
+                notificationId, userId, email, userId);
+        if (updated == 0) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "알림을 찾을 수 없습니다.");
+        }
+        return listMine().stream()
+                .filter(item -> notificationId.toString().equals(item.getId()))
+                .findFirst()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "알림을 찾을 수 없습니다."));
+    }
+
     private static MeNotificationItemResponse mapRow(ResultSet rs) throws SQLException {
         MeNotificationItemResponse item = new MeNotificationItemResponse();
         item.setId(rs.getString("id"));
@@ -80,6 +121,8 @@ public class MeNotificationService {
         item.setChannel(rs.getString("channel"));
         Timestamp created = rs.getTimestamp("created_at");
         item.setCreatedAt(created != null ? created.toInstant() : null);
+        Timestamp readAt = rs.getTimestamp("read_at");
+        item.setReadAt(readAt != null ? readAt.toInstant() : null);
         String payload = rs.getString("payload");
         item.setTitle(NotificationPayloadText.text(payload, "title"));
         item.setBody(NotificationPayloadText.text(payload, "body"));

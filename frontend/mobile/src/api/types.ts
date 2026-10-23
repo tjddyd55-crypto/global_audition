@@ -288,6 +288,7 @@ export type MeNotificationItem = {
   title: string
   body: string
   createdAt?: string | null
+  readAt?: string | null
   auditionId?: string | null
   applicationId?: string | null
 }

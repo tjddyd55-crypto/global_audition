@@ -1,6 +1,6 @@
 'use client'
 
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useLocale, useTranslations } from 'next-intl'
 import { studioApi } from '@/shared/api/studio'
 import { TEXT_SUB, TITLE_PAGE } from '@/shared/ui/specClasses'
@@ -9,7 +9,14 @@ export default function StudioNotificationsPage() {
   const t = useTranslations('studio')
   const tNotice = useTranslations('notifications')
   const locale = useLocale()
+  const queryClient = useQueryClient()
   const query = useQuery({ queryKey: ['studio', 'notifications'], queryFn: studioApi.notifications })
+  const markRead = useMutation({
+    mutationFn: (id: string) => studioApi.markRead(id),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['studio', 'notifications'] })
+    },
+  })
 
   return (
     <div className="flex flex-col gap-4">
@@ -25,8 +32,18 @@ export default function StudioNotificationsPage() {
             <p className={`mt-1 ${TEXT_SUB}`}>{item.body}</p>
             <div className={`mt-2 ${TEXT_SUB}`}>
               {item.type} · {item.status}
+              {item.readAt ? ` · ${t('read')}` : ''}
               {item.createdAt ? ` · ${new Date(item.createdAt).toLocaleString(locale)}` : ''}
             </div>
+            {!item.readAt ? (
+              <button
+                type="button"
+                className="mt-2 text-sm font-medium underline"
+                onClick={() => markRead.mutate(item.id)}
+              >
+                {t('markRead')}
+              </button>
+            ) : null}
           </li>
         ))}
       </ul>

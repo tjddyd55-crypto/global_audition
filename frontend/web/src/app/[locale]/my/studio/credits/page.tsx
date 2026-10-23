@@ -41,6 +41,13 @@ export default function StudioCreditsPage() {
         </dl>
       ) : null}
       <p className={TEXT_SUB}>{query.data?.allocationPolicy === 'FREE_FIRST' ? t('policyFreeFirst') : t('policy')}</p>
+      {query.data ? (
+        <p className={TEXT_SUB}>
+          {t('ledgerClosing')} {formatCount(query.data.ledgerClosingBalance ?? 0, locale)} · {t('ledgerSum')}{' '}
+          {formatCount(query.data.ledgerAmountSum ?? 0, locale)} ·{' '}
+          {query.data.ledgerMatchesWallet ? t('ledgerMatch') : t('ledgerDiffer')}
+        </p>
+      ) : null}
       <Link href="/credits" className="text-sm font-medium text-neutral-900 underline">
         {t('buyCredits')}
       </Link>
