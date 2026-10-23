@@ -1,11 +1,12 @@
 package com.audition.platform.application.payment;
 
 import com.audition.platform.infra.TestJwtSecrets;
-
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SettingsSecretCryptoTest {
@@ -17,6 +18,16 @@ class SettingsSecretCryptoTest {
         String cipher = crypto.encrypt(raw);
         assertTrue(cipher != null && !cipher.contains(raw));
         assertEquals(raw, crypto.decrypt(cipher));
+    }
+
+    @Test
+    void ciphertextFromAnotherKeyDoesNotDecrypt() {
+        SettingsSecretCrypto previous = new SettingsSecretCrypto(TestJwtSecrets.ACCEPTABLE + "-previous-key");
+        SettingsSecretCrypto current = new SettingsSecretCrypto(TestJwtSecrets.ACCEPTABLE);
+        String cipher = previous.encrypt("provider-secret-marker");
+        IllegalStateException ex = assertThrows(IllegalStateException.class, () -> current.decrypt(cipher));
+        assertFalse(ex.getMessage().contains(TestJwtSecrets.ACCEPTABLE));
+        assertFalse(ex.getMessage().contains("provider-secret-marker"));
     }
 
     @Test

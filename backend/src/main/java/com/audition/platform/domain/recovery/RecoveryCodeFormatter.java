@@ -4,11 +4,11 @@ import java.security.SecureRandom;
 
 /**
  * 사람이 읽을 수 있는 고엔트로피 복구 코드.
- * 혼동 문자(0/O, 1/I/L)를 제외한 32자 알파벳, 12자리 ≈ 60bit.
+ * 혼동 문자(0/O, 1/I/L)를 제외한 31자 알파벳, 12자리 ≈ 60bit.
  */
 public final class RecoveryCodeFormatter {
 
-    public static final String ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    public static final String ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
     public static final int RAW_LENGTH = 12;
     private static final SecureRandom RANDOM = new SecureRandom();
 
