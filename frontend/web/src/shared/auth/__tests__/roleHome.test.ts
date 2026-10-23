@@ -8,7 +8,7 @@ describe('pathAfterLogin', () => {
     expect(pathAfterLogin('COUNTRY_STAFF')).toBe('/admin/country')
     expect(pathAfterLogin('AGENCY')).toBe('/my/dashboard')
     expect(pathAfterLogin('AGENCY_ADMIN')).toBe('/my/dashboard')
-    expect(pathAfterLogin('APPLICANT')).toBe('/my/applications')
+    expect(pathAfterLogin('APPLICANT')).toBe('/my/studio')
     expect(pathAfterLogin('USER')).toBe('/')
     expect(isAdminConsolePath('/admin/super')).toBe(true)
     expect(isAdminConsolePath('/en/admin')).toBe(false)

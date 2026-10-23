@@ -8,7 +8,7 @@ import { Button } from '../../src/ui/Button'
 import { EmptyState } from '../../src/ui/EmptyState'
 import { Screen } from '../../src/ui/Screen'
 import { useTranslation } from 'react-i18next'
-import { formatUsd } from '../../src/i18n/format'
+import { formatCount, formatUsd } from '../../src/i18n/format'
 import { colors, radius } from '../../src/theme/tokens'
 
 function ledgerSign(amount: number, type: string, reason: string): string {
@@ -27,7 +27,7 @@ function ledgerLabel(t: (key: string) => string, type: string, reason: string): 
 }
 
 export default function CreditStoreScreen() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const router = useRouter()
   const balance = useQuery({ queryKey: queryKeys.creditBalance, queryFn: creditApi.balance })
   const packages = useQuery({ queryKey: queryKeys.creditPackages, queryFn: creditApi.packages })
@@ -43,8 +43,13 @@ export default function CreditStoreScreen() {
       >
         <Text style={styles.heading}>{t('credits.title')}</Text>
         <View style={styles.balanceCard}>
-          <Text style={styles.muted}>{t('credits.balance')}</Text>
-          <Text style={styles.balance}>{balance.data?.balance ?? 0}</Text>
+          <Text style={styles.muted}>{t('studio.balance')}</Text>
+          <Text style={styles.balance}>{formatCount(balance.data?.balance ?? 0, i18n.language)}</Text>
+          <Text style={styles.muted}>
+            {t('studio.freeRemaining')} {formatCount(balance.data?.freeRemaining ?? 0, i18n.language)} · {t('studio.paidRemaining')}{' '}
+            {formatCount(balance.data?.paidRemaining ?? 0, i18n.language)}
+          </Text>
+          <Text style={styles.muted}>{t('studio.policyFreeFirst')}</Text>
         </View>
 
         <Text style={styles.section}>{t('credits.packages')}</Text>

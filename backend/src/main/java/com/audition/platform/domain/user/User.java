@@ -88,6 +88,23 @@ public class User {
     @Column(name = "featured_video_id")
     private UUID featuredVideoId;
 
+    /** 프로필 경력. 채널은 이 값을 다시 받지 않고 공개 여부만 고른다. */
+    @Column(name = "career_text", columnDefinition = "TEXT")
+    private String careerText;
+
+    /** 프로필 활동 분야. 전문 분야는 {@link #channelCategories}. */
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "activity_fields", columnDefinition = "text[]", nullable = false)
+    private String[] activityFields = new String[0];
+
+    /**
+     * 공개 채널에 실을 프로필 키. null 이면 예전 공개 항목(경력·활동 제외)을 유지한다.
+     * 빈 배열은 프로필 항목을 공개하지 않겠다는 저장값이다.
+     */
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "channel_shown_fields", columnDefinition = "text[]")
+    private String[] channelShownFields;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
@@ -220,6 +237,30 @@ public class User {
 
     public void setFeaturedVideoId(UUID featuredVideoId) {
         this.featuredVideoId = featuredVideoId;
+    }
+
+    public String getCareerText() {
+        return careerText;
+    }
+
+    public void setCareerText(String careerText) {
+        this.careerText = careerText;
+    }
+
+    public String[] getActivityFields() {
+        return activityFields != null ? activityFields : new String[0];
+    }
+
+    public void setActivityFields(String[] activityFields) {
+        this.activityFields = activityFields != null ? activityFields : new String[0];
+    }
+
+    public String[] getChannelShownFields() {
+        return channelShownFields;
+    }
+
+    public void setChannelShownFields(String[] channelShownFields) {
+        this.channelShownFields = channelShownFields;
     }
 
     public Instant getCreatedAt() { return createdAt; }

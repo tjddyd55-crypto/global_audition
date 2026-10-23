@@ -128,6 +128,20 @@ public class MeProfileService {
         if (req.getSnsLinks() != null) {
             userSnsLinkReplacementService.replaceAll(userId, req.getSnsLinks());
         }
+        if (req.getCareerText() != null) {
+            String career = req.getCareerText().trim();
+            if (career.length() > 4000) {
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "경력은 4000자 이하여야 합니다.");
+            }
+            user.setCareerText(career.isEmpty() ? null : career);
+        }
+        if (req.getActivityFields() != null) {
+            try {
+                user.setActivityFields(ProfileActivityFields.normalize(req.getActivityFields()));
+            } catch (IllegalArgumentException ex) {
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "활동 분야는 8개, 각 40자까지입니다.");
+            }
+        }
 
         user.setUpdatedAt(Instant.now());
         return toResponse(userRepository.save(user));
@@ -167,6 +181,9 @@ public class MeProfileService {
         String[] cats = user.getChannelCategories();
         r.setCategories(cats != null && cats.length > 0 ? Arrays.asList(cats) : List.of());
         r.setFeaturedVideoId(user.getFeaturedVideoId() != null ? user.getFeaturedVideoId().toString() : null);
+        r.setCareerText(trimToNull(user.getCareerText()));
+        String[] activity = user.getActivityFields();
+        r.setActivityFields(activity != null && activity.length > 0 ? Arrays.asList(activity) : List.of());
         List<UserSnsLink> links = userSnsLinkRepository.findByUserIdOrderByCreatedAtAsc(user.getId());
         r.setSnsLinks(links.stream().map(l -> {
             MeUserSnsLinkDto d = new MeUserSnsLinkDto();
@@ -175,5 +192,12 @@ public class MeProfileService {
             return d;
         }).collect(Collectors.toList()));
         return r;
+    }
+
+    private static String trimToNull(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return value.trim();
     }
 }

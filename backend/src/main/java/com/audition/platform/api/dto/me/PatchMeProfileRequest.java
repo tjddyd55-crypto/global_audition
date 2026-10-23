@@ -25,6 +25,12 @@ public class PatchMeProfileRequest {
     @Size(max = 8000)
     private String bio;
 
+    @Size(max = 4000)
+    private String careerText;
+
+    @Size(max = 8)
+    private List<@Size(max = 40) String> activityFields;
+
     /** ISO-8601 날짜(yyyy-MM-dd). 빈 문자열이면 삭제. */
     @Size(max = 32)
     private String birthDate;
@@ -95,6 +101,22 @@ public class PatchMeProfileRequest {
 
     public void setBio(String bio) {
         this.bio = bio;
+    }
+
+    public String getCareerText() {
+        return careerText;
+    }
+
+    public void setCareerText(String careerText) {
+        this.careerText = careerText;
+    }
+
+    public List<String> getActivityFields() {
+        return activityFields;
+    }
+
+    public void setActivityFields(List<String> activityFields) {
+        this.activityFields = activityFields;
     }
 
     public String getBirthDate() {

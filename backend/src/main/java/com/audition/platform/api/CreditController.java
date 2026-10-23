@@ -8,8 +8,10 @@ import com.audition.platform.api.dto.CreditRuntimePublicDto;
 import com.audition.platform.api.dto.CreditTransactionDto;
 import com.audition.platform.api.dto.PreparePaymentRequest;
 import com.audition.platform.api.dto.PreparePaymentResponse;
+import com.audition.platform.application.credit.CreditLotRemainingQuery;
 import com.audition.platform.application.credit.CreditPolicyKey;
 import com.audition.platform.application.credit.CreditService;
+import com.audition.platform.application.org.CreditAllocation;
 import com.audition.platform.application.payment.PaymentOrderService;
 import com.audition.platform.infra.SecurityUtils;
 import jakarta.validation.Valid;
@@ -35,14 +37,17 @@ public class CreditController {
 
     private final CreditService creditService;
     private final PaymentOrderService paymentOrderService;
+    private final CreditLotRemainingQuery creditLotRemainingQuery;
     private final boolean allowLegacySelfChargeApi;
 
     public CreditController(
             CreditService creditService,
             PaymentOrderService paymentOrderService,
+            CreditLotRemainingQuery creditLotRemainingQuery,
             @Value("${app.credits.allow-legacy-self-charge:true}") boolean allowLegacySelfChargeApi) {
         this.creditService = creditService;
         this.paymentOrderService = paymentOrderService;
+        this.creditLotRemainingQuery = creditLotRemainingQuery;
         this.allowLegacySelfChargeApi = allowLegacySelfChargeApi;
     }
 
@@ -66,7 +71,13 @@ public class CreditController {
     @GetMapping("/balance")
     public CreditBalanceResponse getBalance() {
         UUID userId = requireUserId();
-        return new CreditBalanceResponse(creditService.getBalance(userId));
+        CreditBalanceResponse response = new CreditBalanceResponse(creditService.getBalance(userId));
+        CreditLotRemainingQuery.Split split = creditLotRemainingQuery.forUser(userId);
+        response.setFreeRemaining(split.freeRemaining());
+        response.setPaidRemaining(split.paidRemaining());
+        response.setUnclassifiedRemaining(split.unclassifiedRemaining());
+        response.setAllocationPolicy(CreditAllocation.POLICY_FREE_FIRST);
+        return response;
     }
 
     @GetMapping("/transactions")

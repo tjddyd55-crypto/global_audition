@@ -32,7 +32,9 @@ import type {
   CreateApplicationPayload,
   PreparePaymentResult,
   ManageApplicationsPayload,
+  MeNotificationItem,
   MeProfile,
+  MyChannelMine,
   MeRoundEligibility,
   MyApplicationListItem,
   PublicVotesPage,
@@ -130,6 +132,24 @@ export const profileApi = {
     unwrapData(await apiRequest<unknown>('/me', { method: 'PATCH', body })) as MeProfile,
 }
 
+export const channelApi = {
+  mine: async (): Promise<MyChannelMine> => unwrapData(await apiRequest<unknown>('/me/channel')) as MyChannelMine,
+  patch: async (body: {
+    channelDescription?: string
+    bannerImageUrl?: string | null
+    isChannelPublic?: boolean
+    shownFields?: string[]
+    featuredVideoId?: string
+  }): Promise<MyChannelMine> => unwrapData(await apiRequest<unknown>('/me/channel', { method: 'PATCH', body })) as MyChannelMine,
+}
+
+export const notificationApi = {
+  list: async (): Promise<MeNotificationItem[]> => {
+    const rows = unwrapData(await apiRequest<unknown>('/me/notifications'))
+    return Array.isArray(rows) ? (rows as MeNotificationItem[]) : []
+  },
+}
+
 export const dashboardApi = {
   applicant: async (): Promise<ApplicantDashboard> =>
     parseApplicantDashboard(unwrapData(await apiRequest<unknown>('/me/dashboard'))),
@@ -146,8 +166,14 @@ export const creditApi = {
   runtime: async (): Promise<CreditRuntimePublic> =>
     parseCreditRuntime(await apiRequest<unknown>('/credits/public/runtime', { auth: false })),
   balance: async (): Promise<CreditBalance> => {
-    const data = await apiRequest<{ balance?: number }>('/credits/balance')
-    return { balance: Number(data.balance ?? 0) }
+    const data = await apiRequest<CreditBalance>('/credits/balance')
+    return {
+      balance: Number(data.balance ?? 0),
+      freeRemaining: Number(data.freeRemaining ?? 0),
+      paidRemaining: Number(data.paidRemaining ?? 0),
+      unclassifiedRemaining: Number(data.unclassifiedRemaining ?? 0),
+      allocationPolicy: data.allocationPolicy,
+    }
   },
   packages: async (): Promise<CreditPackageItem[]> =>
     parseCreditPackages(await apiRequest<unknown>('/credit-packages')),

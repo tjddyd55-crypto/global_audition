@@ -5,6 +5,7 @@ import com.audition.platform.api.dto.me.*;
 import com.audition.platform.application.me.MeApplicationRoundService;
 import com.audition.platform.application.me.MeApplicationService;
 import com.audition.platform.application.me.MeDashboardService;
+import com.audition.platform.application.me.MeNotificationService;
 import com.audition.platform.application.me.MeProfileService;
 import com.audition.platform.application.me.MeVaultService;
 import com.audition.platform.api.dto.recovery.RecoveryCodeIssueResponse;
@@ -20,6 +21,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -34,6 +36,7 @@ public class MeController {
     private final MeApplicationRoundService meApplicationRoundService;
     private final AuthRecoveryService authRecoveryService;
     private final UserRepository userRepository;
+    private final MeNotificationService meNotificationService;
 
     public MeController(MeProfileService meProfileService,
                         MeDashboardService meDashboardService,
@@ -42,7 +45,8 @@ public class MeController {
                         MeVaultService meVaultService,
                         MeApplicationRoundService meApplicationRoundService,
                         AuthRecoveryService authRecoveryService,
-                        UserRepository userRepository) {
+                        UserRepository userRepository,
+                        MeNotificationService meNotificationService) {
         this.meProfileService = meProfileService;
         this.meDashboardService = meDashboardService;
         this.meApplicationService = meApplicationService;
@@ -51,6 +55,7 @@ public class MeController {
         this.meApplicationRoundService = meApplicationRoundService;
         this.authRecoveryService = authRecoveryService;
         this.userRepository = userRepository;
+        this.meNotificationService = meNotificationService;
     }
 
     /** 내 정보 관리 SSOT (프로필 + SNS 등) */
@@ -99,6 +104,11 @@ public class MeController {
     @GetMapping("/dashboard")
     public ApiEnvelope<MeDashboardResponse> dashboard() {
         return ApiEnvelope.ok(meDashboardService.getDashboard());
+    }
+
+    @GetMapping("/notifications")
+    public ApiEnvelope<List<MeNotificationItemResponse>> notifications() {
+        return ApiEnvelope.ok(meNotificationService.listMine());
     }
 
     @GetMapping("/applications")

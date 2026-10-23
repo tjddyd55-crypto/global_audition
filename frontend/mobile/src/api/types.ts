@@ -230,6 +230,11 @@ export type MeProfile = {
   birthDate?: string | null
   nationality?: string | null
   introText?: string | null
+  shortBio?: string | null
+  bio?: string | null
+  careerText?: string | null
+  categories?: string[]
+  activityFields?: string[]
   snsLinks?: { platform: string; url: string }[]
 }
 
@@ -270,6 +275,43 @@ export type CreditRuntimePublic = {
 
 export type CreditBalance = {
   balance: number
+  freeRemaining?: number
+  paidRemaining?: number
+  unclassifiedRemaining?: number
+  allocationPolicy?: string
+}
+
+export type MeNotificationItem = {
+  id: string
+  type: string
+  status: string
+  title: string
+  body: string
+  createdAt?: string | null
+  auditionId?: string | null
+  applicationId?: string | null
+}
+
+export type MyChannelMine = {
+  channelDescription?: string | null
+  bannerImageUrl?: string | null
+  channelPublic?: boolean
+  isPublic?: boolean
+  name?: string | null
+  nickname?: string | null
+  introText?: string | null
+  nationality?: string | null
+  shortBio?: string | null
+  bio?: string | null
+  categories?: string[]
+  careerText?: string | null
+  activityFields?: string[]
+  snsLinks?: { platform: string; url: string }[]
+  shownFields?: string[]
+  selectionCustomized?: boolean
+  videoCount?: number
+  subscriberCount?: number
+  viewCount?: number
 }
 
 export type CreditPackageItem = {

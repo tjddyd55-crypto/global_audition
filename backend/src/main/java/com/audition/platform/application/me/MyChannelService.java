@@ -9,8 +9,6 @@ import com.audition.platform.domain.channel.ChannelSubscriptionRepository;
 import com.audition.platform.domain.channel.ChannelVideo;
 import com.audition.platform.domain.channel.ChannelVideoRepository;
 import com.audition.platform.domain.channel.ChannelVideoVisibility;
-import com.audition.platform.application.user.UserNicknameService;
-import com.audition.platform.application.user.UserSnsLinkReplacementService;
 import com.audition.platform.domain.user.User;
 import com.audition.platform.domain.user.UserRepository;
 import com.audition.platform.domain.user.UserSnsLink;
@@ -38,23 +36,17 @@ public class MyChannelService {
     private final ChannelVideoRepository channelVideoRepository;
     private final UserRepository userRepository;
     private final UserSnsLinkRepository userSnsLinkRepository;
-    private final UserNicknameService userNicknameService;
-    private final UserSnsLinkReplacementService userSnsLinkReplacementService;
     private final ChannelSubscriptionRepository channelSubscriptionRepository;
 
     public MyChannelService(ChannelRepository channelRepository,
                             ChannelVideoRepository channelVideoRepository,
                             UserRepository userRepository,
                             UserSnsLinkRepository userSnsLinkRepository,
-                            UserNicknameService userNicknameService,
-                            UserSnsLinkReplacementService userSnsLinkReplacementService,
                             ChannelSubscriptionRepository channelSubscriptionRepository) {
         this.channelRepository = channelRepository;
         this.channelVideoRepository = channelVideoRepository;
         this.userRepository = userRepository;
         this.userSnsLinkRepository = userSnsLinkRepository;
-        this.userNicknameService = userNicknameService;
-        this.userSnsLinkReplacementService = userSnsLinkReplacementService;
         this.channelSubscriptionRepository = channelSubscriptionRepository;
     }
 
@@ -103,6 +95,7 @@ public class MyChannelService {
         r.setViewCount(viewSum);
         r.setChannelPublic(user.isChannelPublic());
         r.setNickname(user.getNickname());
+        r.setName(user.getName());
         r.setIntroText(user.getIntroText());
         r.setNationality(user.getNationality());
         r.setShortBio(trimToNull(user.getShortBio()));
@@ -119,6 +112,12 @@ public class MyChannelService {
             d.setUrl(l.getUrl());
             return d;
         }).collect(Collectors.toList()));
+        r.setCareerText(trimToNull(user.getCareerText()));
+        String[] activity = user.getActivityFields();
+        r.setActivityFields(activity != null && activity.length > 0 ? Arrays.asList(activity) : List.of());
+        String[] shown = user.getChannelShownFields();
+        r.setSelectionCustomized(shown != null);
+        r.setShownFields(shown == null ? List.of() : Arrays.asList(shown));
         return r;
     }
 
@@ -156,7 +155,9 @@ public class MyChannelService {
             row.setUserId(ownerId.toString());
             row.setNickname(u.getNickname());
             row.setProfileImage(profile);
-            row.setIntroText(trimToNull(u.getIntroText()));
+            row.setIntroText(ChannelShownFields.visible(u.getChannelShownFields(), ChannelShownFields.INTRO)
+                    ? trimToNull(u.getIntroText())
+                    : null);
             row.setSubscriberCount(sub);
             row.setVideoCount(pubCount);
             rows.add(row);
@@ -229,6 +230,8 @@ public class MyChannelService {
             out.setSubscriberCount(0);
         });
 
+        PublicChannelProfileFilter.apply(out, user);
+
         UUID viewerId = SecurityUtils.getCurrentUserId();
         boolean sub = false;
         if (viewerId != null && !viewerId.equals(userId)) {
@@ -275,27 +278,9 @@ public class MyChannelService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "사용자를 찾을 수 없습니다."));
         Channel ch = getOrCreateChannel(ownerId);
 
-        if (req.getNickname() != null) {
-            String rawNick = req.getNickname().trim();
-            if (rawNick.isEmpty()) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "닉네임이 필요합니다.");
-            }
-            String next = userNicknameService.prepareNicknameOrThrow(rawNick, ownerId);
-            user.setNickname(next);
-            ch.setName(next);
-        } else if (req.getChannelName() != null) {
-            ch.setName(req.getChannelName().trim());
-        }
+        // 닉네임·소개·국적·분야·SNS·프로필 이미지는 프로필 API 원본이다. 채널 패치는 무시한다.
         if (req.getChannelDescription() != null) {
             ch.setDescription(req.getChannelDescription().trim());
-        }
-        if (req.getIntroText() != null) {
-            user.setIntroText(req.getIntroText().trim().isEmpty() ? null : req.getIntroText().trim());
-        }
-        if (req.getProfileImageUrl() != null) {
-            String p = req.getProfileImageUrl().trim().isEmpty() ? null : req.getProfileImageUrl().trim();
-            user.setProfileImageUrl(p);
-            ch.setProfileImageUrl(p);
         }
         if (req.getBannerImageUrl() != null) {
             ch.setBannerImageUrl(req.getBannerImageUrl().trim().isEmpty() ? null : req.getBannerImageUrl().trim());
@@ -304,19 +289,13 @@ public class MyChannelService {
         if (pub != null) {
             user.setChannelPublic(Boolean.TRUE.equals(pub));
         }
-        if (req.getSnsLinks() != null) {
-            userSnsLinkReplacementService.replaceAll(ownerId, req.getSnsLinks());
+        if (req.getShownFields() != null) {
+            try {
+                user.setChannelShownFields(ChannelShownFields.normalize(req.getShownFields()));
+            } catch (IllegalArgumentException ex) {
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "공개할 프로필 항목이 올바르지 않습니다.");
+            }
         }
-        if (req.resolveNationalityInput() != null) {
-            UserChannelProfilePatchSupport.applyNationality(user, req.resolveNationalityInput());
-        }
-        if (req.getShortBio() != null) {
-            UserChannelProfilePatchSupport.applyShortBio(user, req.getShortBio());
-        }
-        if (req.getBio() != null) {
-            UserChannelProfilePatchSupport.applyChannelLongBio(user, req.getBio());
-        }
-        UserChannelProfilePatchSupport.applyCategories(user, req.getCategories());
         UserChannelProfilePatchSupport.applyFeaturedVideo(user, ownerId, channelVideoRepository, req.getFeaturedVideoId());
 
         ch.setUpdatedAt(Instant.now());

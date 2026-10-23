@@ -6,7 +6,7 @@ export function pathAfterLogin(role: string | null | undefined): string {
   if (role === 'SUPER_ADMIN' || role === 'GLOBAL_SUPER_ADMIN') return '/admin/super'
   if (role === 'COUNTRY_ADMIN' || role === 'COUNTRY_STAFF') return '/admin/country'
   if (role === 'BUSINESS' || role === 'AGENCY' || role === 'AGENCY_ADMIN' || role === 'ADMIN') return '/my/dashboard'
-  if (role === 'APPLICANT') return '/my/applications'
+  if (role === 'APPLICANT') return '/my/studio'
   return '/'
 }
 

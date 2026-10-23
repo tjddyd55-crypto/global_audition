@@ -36,6 +36,11 @@ export type MyChannelSummary = {
   categories?: string[]
   featuredVideoId?: string | null
   snsLinks?: SnsLinkRow[]
+  name?: string | null
+  careerText?: string | null
+  activityFields?: string[]
+  shownFields?: string[]
+  selectionCustomized?: boolean
 }
 
 export type PatchMyChannelBody = {
@@ -58,6 +63,7 @@ export type PatchMyChannelBody = {
   bio?: string | null
   categories?: string[]
   featuredVideoId?: string | null
+  shownFields?: string[]
 }
 
 /**
@@ -143,6 +149,9 @@ export function sanitizePatchMyChannelBody(body: PatchMyChannelBody): Record<str
   if (body.featuredVideoId !== undefined) {
     out.featuredVideoId = body.featuredVideoId === null ? null : String(body.featuredVideoId).trim()
   }
+  if (body.shownFields !== undefined) {
+    out.shownFields = body.shownFields
+  }
 
   return out
 }
@@ -193,6 +202,14 @@ function normalizeChannel(raw: Record<string, unknown>): MyChannelSummary {
         ? String(raw.featuredVideoId)
         : undefined,
     snsLinks,
+    name: raw.name != null ? String(raw.name) : null,
+    shortBio: raw.shortBio != null ? String(raw.shortBio) : null,
+    careerText: raw.careerText != null ? String(raw.careerText) : null,
+    activityFields: Array.isArray(raw.activityFields)
+      ? (raw.activityFields as unknown[]).map((item) => String(item ?? '').trim()).filter((item) => item.length > 0)
+      : [],
+    shownFields: Array.isArray(raw.shownFields) ? (raw.shownFields as unknown[]).map((item) => String(item)) : [],
+    selectionCustomized: raw.selectionCustomized === true,
   }
 }
 
@@ -218,6 +235,8 @@ export type PublicChannelResponse = {
   country?: string | null
   shortBio?: string | null
   bio?: string | null
+  careerText?: string | null
+  activityFields?: string[]
   categories?: string[]
   featuredVideoId?: string | null
   featuredVideo?: PublicChannelVideo | null
@@ -296,6 +315,10 @@ export const channelApi = {
       country: raw.country != null ? String(raw.country) : null,
       shortBio: raw.shortBio != null ? String(raw.shortBio) : null,
       bio: raw.bio != null ? String(raw.bio) : null,
+      careerText: raw.careerText != null ? String(raw.careerText) : null,
+      activityFields: Array.isArray(raw.activityFields)
+        ? (raw.activityFields as unknown[]).map((item) => String(item ?? '').trim()).filter((item) => item.length > 0)
+        : [],
       categories,
       featuredVideoId: raw.featuredVideoId != null ? String(raw.featuredVideoId) : null,
       featuredVideo,

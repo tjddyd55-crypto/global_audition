@@ -15,6 +15,10 @@ async function assertPaymentCallbackOk(res: Response): Promise<void> {
 
 export type CreditBalance = {
   balance: number
+  freeRemaining?: number
+  paidRemaining?: number
+  unclassifiedRemaining?: number
+  allocationPolicy?: string
 }
 
 /** GET /api/credits/public/policies/{key} — 비로그인 허용 */
