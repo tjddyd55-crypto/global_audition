@@ -1,5 +1,6 @@
 package com.audition.platform.application.payment;
 
+import com.audition.platform.infra.JwtSecretPolicy;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -27,7 +28,8 @@ public class SettingsSecretCrypto {
 
     public SettingsSecretCrypto(@Value("${app.jwt.secret}") String jwtSecret) {
         try {
-            this.key = MessageDigest.getInstance("SHA-256").digest(jwtSecret.getBytes(StandardCharsets.UTF_8));
+            String accepted = JwtSecretPolicy.requireAcceptable(jwtSecret);
+            this.key = MessageDigest.getInstance("SHA-256").digest(accepted.getBytes(StandardCharsets.UTF_8));
         } catch (GeneralSecurityException e) {
             throw new IllegalStateException("결제 시크릿 키를 준비할 수 없습니다.", e);
         }

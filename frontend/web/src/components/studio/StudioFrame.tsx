@@ -15,6 +15,7 @@ const LINKS = [
   { href: '/my/studio/applications', key: 'applications' },
   { href: '/my/studio/credits', key: 'credits' },
   { href: '/my/studio/notifications', key: 'notifications' },
+  { href: '/my/studio/agency-application', key: 'agencyApplication' },
   { href: '/my/studio/settings', key: 'settings' },
 ] as const
 

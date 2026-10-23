@@ -5,6 +5,7 @@ import com.audition.platform.application.org.ContractService.ContractView;
 import com.audition.platform.application.org.ContractService.Draft;
 import com.audition.platform.application.org.ContractService.MigrateResult;
 import com.audition.platform.application.org.ContractService.Presign;
+import com.audition.platform.application.org.JdbcContractStore.DocumentMeta;
 import com.audition.platform.application.org.JdbcContractStore.DocumentRow;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -65,14 +66,21 @@ public class ContractController {
     public void attach(
             @PathVariable UUID id,
             @RequestHeader(value = "X-Filename", required = false) String filename,
+            @RequestHeader(value = "X-Document-Type", required = false) String documentType,
             @RequestHeader(value = "Content-Type", required = false) String contentType,
             @RequestBody byte[] body) {
-        contracts.attach(id, filename, contentType, body);
+        String mime = documentType != null && !documentType.isBlank() ? documentType : contentType;
+        contracts.attach(id, filename, mime, body);
     }
 
     @PostMapping("/files/migrate")
     public MigrateResult migrate() {
         return contracts.migrateLegacyFiles();
+    }
+
+    @GetMapping("/{id}/documents")
+    public List<DocumentMeta> documents(@PathVariable UUID id) {
+        return contracts.documents(id);
     }
 
     @GetMapping("/{id}/document-url")

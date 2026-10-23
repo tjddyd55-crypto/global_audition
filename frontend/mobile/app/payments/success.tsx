@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { StyleSheet, Text } from 'react-native'
 import { useQueryClient } from '@tanstack/react-query'
 import { creditApi } from '../../src/api/endpoints'
@@ -21,6 +21,7 @@ export default function PaymentSuccessScreen() {
   }>()
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
+  const confirmed = useRef(false)
 
   useEffect(() => {
     const key = paymentKey?.trim() ?? ''
@@ -30,6 +31,8 @@ export default function PaymentSuccessScreen() {
       setError(t('payments.successParamsInvalid'))
       return
     }
+    if (confirmed.current) return
+    confirmed.current = true
     let cancelled = false
     ;(async () => {
       try {
@@ -44,7 +47,7 @@ export default function PaymentSuccessScreen() {
     return () => {
       cancelled = true
     }
-  }, [amount, orderId, paymentKey, queryClient])
+  }, [amount, orderId, paymentKey, queryClient, t])
 
   return (
     <Screen>

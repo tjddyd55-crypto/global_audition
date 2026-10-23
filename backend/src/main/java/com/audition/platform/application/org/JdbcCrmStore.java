@@ -175,6 +175,15 @@ public class JdbcCrmStore {
                 rs.getLong("total")), args);
     }
 
+    public String latestReason(UUID agencyId, String action) {
+        List<String> rows = jdbc.query("""
+                SELECT reason FROM crm_approval_events
+                WHERE crm_agency_id = ? AND action = ? AND reason IS NOT NULL AND reason <> ''
+                ORDER BY created_at DESC LIMIT 1
+                """, (rs, n) -> rs.getString("reason"), agencyId, action);
+        return rows.isEmpty() ? null : rows.get(0);
+    }
+
     public int countEvents(UUID agencyId) {
         Integer count = jdbc.queryForObject(
                 "SELECT COUNT(*) FROM crm_approval_events WHERE crm_agency_id = ?", Integer.class, agencyId);

@@ -91,15 +91,17 @@ export default function AuditionCard({ audition }: AuditionCardProps) {
   return (
     <Link href={`/auditions/${id}`} className="block w-full text-inherit no-underline">
       <article className="relative w-full overflow-hidden bg-neutral-900">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={imgSrc}
-          alt={title}
-          className="block h-auto w-full max-w-full object-cover"
-          loading="lazy"
-          decoding="async"
-          onError={onCoverError}
-        />
+        <div className="relative aspect-[16/9] max-h-52 w-full overflow-hidden sm:max-h-56">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={imgSrc}
+            alt={title}
+            className="absolute inset-0 h-full w-full object-cover"
+            loading="lazy"
+            decoding="async"
+            onError={onCoverError}
+          />
+        </div>
 
         <div
           className={`absolute left-3 top-3 z-[2] rounded-full px-2 py-1 text-xs font-semibold ${statusBadgeClass(status)}`}

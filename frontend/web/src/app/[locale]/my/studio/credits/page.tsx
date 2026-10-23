@@ -16,8 +16,8 @@ export default function StudioCreditsPage() {
     <div className="flex max-w-2xl flex-col gap-4">
       <h2 className={TITLE_PAGE}>{t('credits')}</h2>
       <p className={TEXT_SUB}>{t('creditsHint')}</p>
-      {query.isLoading ? <p className={TEXT_SUB}>{t('loginRequired')}</p> : null}
-      {query.isError ? <p className="text-sm text-red-600">{t('saveFailed')}</p> : null}
+      {query.isLoading ? <p className={TEXT_SUB}>{t('loading')}</p> : null}
+      {query.isError ? <p className="text-sm text-red-600">{t('loadFailed')}</p> : null}
       {query.data ? (
         <dl className="grid gap-3 sm:grid-cols-2">
           <div className="rounded-lg border border-neutral-200 p-3">

@@ -190,15 +190,16 @@ export default function MobileRegisterPage() {
         role: submitData.userType === 'BUSINESS' ? 'AGENCY' : 'APPLICANT',
         nickname: submitData.nickname.trim(),
         name: submitData.name?.trim() ? submitData.name.trim() : undefined,
+        countryCode: submitData.userType === 'BUSINESS' ? submitData.businessCountry : undefined,
       })
       queryClient.invalidateQueries({ queryKey: ['currentUser'] })
       if (response.recoveryCode) {
-        setIssuedRole(response.role)
+        setIssuedRole(response.signupIntent ?? 'APPLICANT')
         setIssuedCode(response.recoveryCode)
         return
       }
-      if (response.role === 'AGENCY') {
-        window.location.href = '/my/dashboard'
+      if (response.signupIntent === 'AGENCY') {
+        window.location.href = '/en/my/studio/agency-application'
       } else {
         window.location.href = '/'
       }
@@ -245,7 +246,7 @@ export default function MobileRegisterPage() {
           <RecoveryCodeNotice
             recoveryCode={issuedCode}
             onAcknowledged={() => {
-              if (issuedRole === 'AGENCY') window.location.href = '/my/dashboard'
+              if (issuedRole === 'AGENCY') window.location.href = '/en/my/studio/agency-application'
               else window.location.href = '/'
             }}
           />

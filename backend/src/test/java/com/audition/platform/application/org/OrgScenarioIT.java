@@ -35,7 +35,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
         "audition.voting-db-verify=false",
         "app.translation.queue.enabled=false",
         "app.super-admin.bootstrap-enabled=false",
-        "app.jwt.secret=change-me-in-production-min-32-chars"
 })
 class OrgScenarioIT {
 
@@ -190,6 +189,8 @@ class OrgScenarioIT {
         assertEquals(firstRep, contractStore.find(money.id()).orElseThrow().representativeUserId());
         contracts.attach(money.id(), "terms.txt", "text/plain", "terms".getBytes());
         assertEquals("terms", new String(contracts.download(money.id()).body()));
+        assertEquals("terms.txt", contracts.documents(money.id()).get(0).filename());
+        assertEquals("text/plain", contracts.documents(money.id()).get(0).contentType());
         assertEquals(1, count("SELECT COUNT(*) FROM contract_documents WHERE contract_id = '" + money.id() + "'"));
         ResponseStatusException noStorage = assertThrows(ResponseStatusException.class, () -> contracts.presign(money.id()));
         assertEquals("STORAGE_UNAVAILABLE", noStorage.getReason());

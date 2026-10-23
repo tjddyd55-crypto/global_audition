@@ -23,7 +23,7 @@ export function formatMinorGrouped(
   return `${negative ? '-' : ''}${shown} ${currency}`
 }
 
-/** Integer minor-unit display. Does not use binary floating point. */
+/** Integer minor-unit display with a thousands separator. Does not use binary floating point. */
 export function formatMinorAmount(amountMinor: number, scale: number, currency: string): string {
   if (!Number.isInteger(amountMinor) || !Number.isInteger(scale) || scale < 0 || scale > 8) {
     return ''
@@ -32,6 +32,7 @@ export function formatMinorAmount(amountMinor: number, scale: number, currency: 
   const digits = Math.abs(amountMinor).toString().padStart(scale + 1, '0')
   const whole = scale === 0 ? digits : digits.slice(0, -scale)
   const fraction = scale === 0 ? '' : digits.slice(-scale)
-  const shown = scale === 0 ? whole : `${whole}.${fraction}`
+  const grouped = formatCount(Number(whole), 'en')
+  const shown = scale === 0 ? grouped : `${grouped}.${fraction}`
   return `${negative ? '-' : ''}${shown} ${currency}`
 }

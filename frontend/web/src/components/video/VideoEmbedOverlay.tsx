@@ -1,6 +1,7 @@
 ﻿'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import Image from 'next/image'
 import { useTranslations } from 'next-intl'
 import { resolveVideoThumbnailUrl } from '@/shared/audition/videoThumbnail'
 import { getVideoEmbedSrc, isYoutubeShortsLikeUrl } from '@/shared/utils/videoEmbed'
@@ -257,11 +258,12 @@ export function VideoEmbedOverlay({ videoUrl, play, onClose }: VideoEmbedOverlay
           className={`relative w-full max-sm:max-h-[min(100dvh,100vh)] overflow-hidden bg-black ${aspectClass}`}
         >
           {showThumb && thumb ? (
-            <img
+            <Image
               src={thumb}
               alt=""
-              className="absolute inset-0 z-0 h-full w-full scale-105 object-cover blur-sm"
-              decoding="async"
+              fill
+              unoptimized
+              className="z-0 scale-105 object-cover blur-sm"
             />
           ) : null}
           <button

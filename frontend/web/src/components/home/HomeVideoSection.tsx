@@ -48,10 +48,11 @@ export default function HomeVideoSection({ videos, isLoading, isError }: HomeVid
         ) : isEmpty ? (
           <EmptyState message={tChannel('emptyVideos')} />
         ) : (
-          <div className="w-full">
-            {videos.map((v, i) => (
-              <div key={v.videoId} className={i > 0 ? 'mt-4' : ''}>
+          <div className="grid grid-cols-1 gap-3 px-4 sm:grid-cols-2 lg:grid-cols-3">
+            {videos.map((v) => (
+              <div key={v.videoId} className="min-w-0">
                 <VideoListItem
+                  compact
                   href={`/videos/${v.videoId}`}
                   title={v.title}
                   thumbnailSrc={resolveVideoThumbnailUrl(v.videoUrl, v.thumbnailUrl)}

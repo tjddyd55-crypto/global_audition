@@ -20,3 +20,6 @@ app:
     region: ap-northeast-2
   translation:
     allowed-hosts: api.openai.com,translate.googleapis.com,oauth2.googleapis.com
+  jwt:
+    secret: test-only-jwt-secret-not-for-production-use-32b
+    expiration-ms: 86400000

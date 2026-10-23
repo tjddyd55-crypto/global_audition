@@ -64,7 +64,9 @@ export default function PcRegisterPage() {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [role, setRole] = useState<RegisterRole>('APPLICANT')
+  const [countryCode, setCountryCode] = useState('')
   const [issuedCode, setIssuedCode] = useState<string | null>(null)
+  const [issuedIntent, setIssuedIntent] = useState<string | null>(null)
   const registerSchema = useMemo(() => createRegisterSchema(tAuth, tReg), [tAuth, tReg])
 
   const { register, handleSubmit, formState: { errors } } = useForm<RegisterFormData>({
@@ -74,6 +76,12 @@ export default function PcRegisterPage() {
   const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true)
     setError(null)
+    const agencyCountry = countryCode.trim().toUpperCase()
+    if (role === 'AGENCY' && !/^[A-Z]{2}$/.test(agencyCountry)) {
+      setError(tAuth('agencyCountry'))
+      setIsLoading(false)
+      return
+    }
     try {
       const res = await authApi.signup({
         email: data.email,
@@ -81,12 +89,14 @@ export default function PcRegisterPage() {
         role,
         nickname: data.nickname.trim(),
         name: data.legalName?.trim() ? data.legalName.trim() : undefined,
+        countryCode: role === 'AGENCY' ? agencyCountry : undefined,
       })
       if (res.recoveryCode) {
+        setIssuedIntent(res.signupIntent ?? role)
         setIssuedCode(res.recoveryCode)
         return
       }
-      if (role === 'AGENCY') router.push('/my/dashboard')
+      if (res.signupIntent === 'AGENCY') router.push('/my/studio/agency-application')
       else router.push('/auditions')
     } catch (err: unknown) {
       const ax = err as { response?: { status?: number; data?: { message?: string } } }
@@ -105,7 +115,7 @@ export default function PcRegisterPage() {
         <RecoveryCodeNotice
           recoveryCode={issuedCode}
           onAcknowledged={() => {
-            if (role === 'AGENCY') router.push('/my/dashboard')
+            if (issuedIntent === 'AGENCY') router.push('/my/studio/agency-application')
             else router.push('/auditions')
           }}
         />
@@ -123,6 +133,19 @@ export default function PcRegisterPage() {
 
       <form onSubmit={handleSubmit(onSubmit)}>
         <RoleSelectCard value={role} onChange={setRole} />
+        {role === 'AGENCY' ? (
+          <Field id="agency-country" label={tAuth('agencyCountry')}>
+            <input
+              id="agency-country"
+              aria-label={tAuth('agencyCountry')}
+              value={countryCode}
+              onChange={(event) => setCountryCode(event.target.value.toUpperCase())}
+              placeholder="JP"
+              maxLength={2}
+              style={inputStyle}
+            />
+          </Field>
+        ) : null}
         <Field id="email" label={tAuth('email')} error={errors.email?.message}>
           <input id="email" type="email" autoComplete="email" {...register('email')} placeholder="your@email.com" style={inputStyle} />
         </Field>

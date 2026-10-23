@@ -60,6 +60,7 @@ model Audition {
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime? @map("updated_at")
   countryCode     String?  @map("country_code")
+  hostCountry     String?  @map("host_country")
   deadlineAt      DateTime? @map("deadline_at")
   defaultLocale   String    @default("ko") @map("default_locale") @db.VarChar(8)
 

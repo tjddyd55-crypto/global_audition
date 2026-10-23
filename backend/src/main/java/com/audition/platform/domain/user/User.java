@@ -25,8 +25,12 @@ public class User {
     private String passwordHash;
 
     @Column(nullable = false, columnDefinition = "TEXT")
-    /** APPLICANT | AGENCY | ADMIN | SUPER_ADMIN | USER */
+    /** APPLICANT | AGENCY | ADMIN | SUPER_ADMIN | USER. 기획사 운영 권한은 본사 승인 뒤에만 AGENCY. */
     private String role;
+
+    /** 가입 요청 유형. 접근 역할 {@link #role} 과 별도다. */
+    @Column(name = "signup_intent", nullable = false, length = 16)
+    private String signupIntent = "APPLICANT";
 
     /** 실명 등 법적·관리용. UI 비노출 원칙 — 공개 라벨은 {@link #nickname} 우선. */
     @Column(columnDefinition = "TEXT")
@@ -140,6 +144,8 @@ public class User {
     public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
+    public String getSignupIntent() { return signupIntent; }
+    public void setSignupIntent(String signupIntent) { this.signupIntent = signupIntent; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
     public String getNickname() {

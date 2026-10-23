@@ -181,7 +181,7 @@ export default function PcAuditionDetailApplyBar({
           )
         ) : null}
 
-        {isOpen && showApplySubmitCta && !alreadyApplied ? (
+        {isOpen && !alreadyApplied && (showApplySubmitCta || showApplyLoginCta) ? (
           <div className="mt-2 space-y-1 text-xs">
             {applyNavBlockedBySeries ? (
               <p className="text-center text-amber-800">{blockedFallback}</p>
@@ -191,7 +191,15 @@ export default function PcAuditionDetailApplyBar({
               (applyPolicySnapshot.active && applyPolicySnapshot.cost > 0 ? 'CREDIT' : 'FREE')) === 'FREE' ? (
               <p className="text-center text-neutral-500">{tDetail('applyFree')}</p>
             ) : null}
-            {needCreditsForApply && hasEnoughCredits ? (
+            {needCreditsForApply && !showApplySubmitCta ? (
+              <p className="text-center text-neutral-500">
+                {tDetail('applicationFee', {
+                  usd: formatUsdAmount(resolveApplicationFeeUsd(applyPolicySnapshot), locale),
+                  credits: formatCreditsCount(resolveApplicationFeeCredits(applyPolicySnapshot), locale),
+                })}
+              </p>
+            ) : null}
+            {needCreditsForApply && showApplySubmitCta && hasEnoughCredits ? (
               <p className="text-center text-neutral-500">
                 {tDetail('creditCostHold', {
                   usd: formatUsdAmount(resolveApplicationFeeUsd(applyPolicySnapshot), locale),
@@ -200,13 +208,26 @@ export default function PcAuditionDetailApplyBar({
                 })}
               </p>
             ) : null}
-            {needCreditsForApply && creditGateReady && !hasEnoughCredits ? (
-              <Link
-                href="/credits/charge"
-                className="flex min-h-10 items-center justify-center rounded-lg border-2 border-violet-600 bg-white text-sm font-semibold text-violet-700 no-underline hover:bg-violet-50"
-              >
-                {tApply('charge')}
-              </Link>
+            {needCreditsForApply && showApplySubmitCta && creditGateReady && !hasEnoughCredits ? (
+              <>
+                <p className="text-center text-amber-800">
+                  {tApply('insufficientDetail', {
+                    usd: formatUsdAmount(resolveApplicationFeeUsd(applyPolicySnapshot), locale),
+                    required: formatCreditsCount(resolveApplicationFeeCredits(applyPolicySnapshot), locale),
+                    current: formatCreditsCount(creditBalanceAmount, locale),
+                    shortfall: formatCreditsCount(
+                      Math.max(0, resolveApplicationFeeCredits(applyPolicySnapshot) - creditBalanceAmount),
+                      locale,
+                    ),
+                  })}
+                </p>
+                <Link
+                  href="/credits/charge"
+                  className="flex min-h-10 items-center justify-center rounded-lg border-2 border-violet-600 bg-white text-sm font-semibold text-violet-700 no-underline hover:bg-violet-50"
+                >
+                  {tApply('charge')}
+                </Link>
+              </>
             ) : null}
             {applyPolicyError ? (
               <p className="text-center text-red-600">{tApply('policyLoadFailed')}</p>

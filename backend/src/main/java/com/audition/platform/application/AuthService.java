@@ -6,6 +6,7 @@ import com.audition.platform.api.dto.LoginRequest;
 import com.audition.platform.api.dto.SignupRequest;
 import com.audition.platform.application.me.MeApiMapping;
 import com.audition.platform.application.credit.CreditService;
+import com.audition.platform.application.org.AgencySignupService;
 import com.audition.platform.application.recovery.AuthRecoveryService;
 import com.audition.platform.application.user.UserNicknameService;
 import com.audition.platform.domain.user.User;
@@ -33,35 +34,42 @@ public class AuthService {
     private final UserNicknameService userNicknameService;
     private final AuthRecoveryService authRecoveryService;
     private final CreditService creditService;
+    private final AgencySignupService agencySignupService;
 
     public AuthService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
                        JwtService jwtService,
                        UserNicknameService userNicknameService,
                        AuthRecoveryService authRecoveryService,
-                       CreditService creditService) {
+                       CreditService creditService,
+                       AgencySignupService agencySignupService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.userNicknameService = userNicknameService;
         this.authRecoveryService = authRecoveryService;
         this.creditService = creditService;
+        this.agencySignupService = agencySignupService;
     }
 
     @Transactional
     public AuthResponse signup(SignupRequest req) {
         String email = req.getEmail().trim().toLowerCase(Locale.ROOT);
-        String role = req.getRole().trim().toUpperCase(Locale.ROOT);
-        if (!ALLOWED_ROLES.contains(role)) {
+        String requested = req.getRole().trim().toUpperCase(Locale.ROOT);
+        if (!ALLOWED_ROLES.contains(requested)) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Role must be APPLICANT or AGENCY");
         }
+        agencySignupService.requireAgencyCountry(requested, req.getCountryCode());
         if (userRepository.existsByEmail(email)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already registered");
         }
+        // 기획사 신청이어도 본사 승인 전에는 운영 역할을 주지 않는다.
+        String accessRole = "AGENCY".equals(requested) ? "APPLICANT" : requested;
         User user = new User();
         user.setEmail(email);
         user.setPasswordHash(passwordEncoder.encode(req.getPassword()));
-        user.setRole(role);
+        user.setRole(accessRole);
+        user.setSignupIntent(requested);
         user.setUpdatedAt(Instant.now());
         String local = extractLocalPart(email);
         user.setUsername(uniqueUsername(local));
@@ -70,6 +78,7 @@ public class AuthService {
             user.setName(req.getName().trim());
         }
         user = userRepository.save(user);
+        agencySignupService.openApplication(user, requested, req.getCountryCode(), req.getName());
         creditService.grantSignupRewardIfEnabled(user.getId());
         String recoveryCode = authRecoveryService.issueNewCode(user);
         String token = jwtService.createToken(user.getId(), user.getEmail(), user.getRole());
@@ -88,8 +97,21 @@ public class AuthService {
         return authResponse(token, user);
     }
 
+    /** 같은 로그인 세션에서 DB에 반영된 접근 역할로 토큰을 다시 발급한다. */
+    public AuthResponse refreshSession() {
+        UUID userId = SecurityUtils.getCurrentUserId();
+        if (userId == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
+        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "사용자를 찾을 수 없습니다."));
+        String token = jwtService.createToken(user.getId(), user.getEmail(), user.getRole());
+        return authResponse(token, user);
+    }
+
     private static AuthResponse authResponse(String token, User user) {
         AuthResponse res = new AuthResponse(token, user.getRole(), user.getId().toString());
+        res.setSignupIntent(user.getSignupIntent());
         res.setEmail(user.getEmail());
         res.setNickname(user.getNickname());
         res.setProfileImageUrl(user.getProfileImageUrl());

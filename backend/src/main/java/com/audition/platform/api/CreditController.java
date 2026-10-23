@@ -45,7 +45,7 @@ public class CreditController {
             CreditService creditService,
             PaymentOrderService paymentOrderService,
             CreditLotRemainingQuery creditLotRemainingQuery,
-            @Value("${app.credits.allow-legacy-self-charge:true}") boolean allowLegacySelfChargeApi) {
+            @Value("${app.credits.allow-legacy-self-charge:false}") boolean allowLegacySelfChargeApi) {
         this.creditService = creditService;
         this.paymentOrderService = paymentOrderService;
         this.creditLotRemainingQuery = creditLotRemainingQuery;

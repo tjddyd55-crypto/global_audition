@@ -24,7 +24,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
         "audition.voting-db-verify=false",
         "app.translation.queue.enabled=false",
         "app.super-admin.bootstrap-enabled=false",
-        "app.jwt.secret=change-me-in-production-min-32-chars"
 })
 class VoteCastRegressionIT {
 

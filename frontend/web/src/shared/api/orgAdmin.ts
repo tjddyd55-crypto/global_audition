@@ -25,6 +25,21 @@ export type AgencyRow = {
   stage: string
   approvalState: string
   assignedStaffUserId: string | null
+  notes?: string | null
+}
+
+export type ContractDocumentMeta = {
+  id: string
+  filename: string
+  contentType: string
+  createdAt: string
+  versionId: string
+}
+
+export type ContractPresign = {
+  fileId: string
+  url: string
+  expiresAt: string
 }
 
 export type ContractView = {
@@ -242,6 +257,30 @@ export const orgAdminApi = {
   },
   async contractVersions(id: string) {
     const { data } = await apiClient.get<ContractVersion[]>(`/admin/org/contracts/${id}/versions`)
+    return data
+  },
+  async contractDocuments(id: string) {
+    const { data } = await apiClient.get<ContractDocumentMeta[]>(`/admin/org/contracts/${id}/documents`)
+    return data
+  },
+  async uploadContractDocument(id: string, file: File) {
+    const body = await file.arrayBuffer()
+    await apiClient.post(`/admin/org/contracts/${id}/document`, body, {
+      headers: {
+        'Content-Type': 'application/octet-stream',
+        'X-Filename': file.name,
+        'X-Document-Type': file.type || 'application/pdf',
+      },
+    })
+  },
+  async downloadContractDocument(id: string) {
+    const response = await apiClient.get<Blob>(`/admin/org/contracts/${id}/document`, { responseType: 'blob' })
+    const header = String(response.headers['content-disposition'] ?? '')
+    const match = /filename="([^"]+)"/.exec(header)
+    return { blob: response.data, filename: match?.[1] ?? 'contract.pdf' }
+  },
+  async contractDocumentUrl(id: string) {
+    const { data } = await apiClient.get<ContractPresign>(`/admin/org/contracts/${id}/document-url`)
     return data
   },
 }

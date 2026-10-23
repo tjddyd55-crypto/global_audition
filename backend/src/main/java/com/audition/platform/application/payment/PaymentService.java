@@ -739,7 +739,7 @@ public class PaymentService {
 
     private void ensureMockWebhookSecret(ProviderRow provider) {
         SecretRow existing = catalog.secret(provider.id(), "TEST").orElse(null);
-        if (existing != null && existing.webhookSecretCipher() != null) {
+        if (existing != null && decryptQuiet(existing.webhookSecretCipher()) != null) {
             return;
         }
         byte[] bytes = new byte[32];
@@ -751,7 +751,12 @@ public class PaymentService {
         if (cipher == null || cipher.isBlank()) {
             return null;
         }
-        return crypto.decrypt(cipher);
+        try {
+            return crypto.decrypt(cipher);
+        } catch (RuntimeException ex) {
+            // 키가 바뀌면 옛 암호문은 쓸 수 없다. 값과 키는 로그에 남기지 않는다.
+            return null;
+        }
     }
 
     private void audit(String entityId, Map<String, Object> after) {

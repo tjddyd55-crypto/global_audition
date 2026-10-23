@@ -31,7 +31,7 @@ export default function DashboardAuditionCreatePage() {
       setAllowed(true)
     }
     setReady(true)
-  }, [router])
+  }, [router, tAgency])
 
   if (!ready) {
     return (
