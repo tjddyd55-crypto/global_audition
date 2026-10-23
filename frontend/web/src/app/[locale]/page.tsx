@@ -52,7 +52,7 @@ export default function HomePage() {
         startLabel={t('getStarted')}
       />
       <form
-        className="mx-auto flex max-w-3xl flex-col gap-3 px-6 pb-2 sm:flex-row"
+        className="mx-auto flex max-w-3xl flex-col gap-2 px-6 pb-2 sm:flex-row"
         onSubmit={(event) => {
           event.preventDefault()
           const text = query.trim()
@@ -66,14 +66,16 @@ export default function HomePage() {
           placeholder={t('searchPlaceholder')}
           aria-label={t('searchPlaceholder')}
         />
-        <button type="submit" className="h-11 rounded-lg bg-neutral-900 px-4 text-sm font-semibold text-white">
-          {tCommon('search')}
-        </button>
-        <Link href="/register" className="inline-flex h-11 items-center justify-center rounded-lg border border-neutral-300 px-4 text-sm font-medium">
-          {t('signup')}
-        </Link>
+        <div className="flex gap-2 sm:contents">
+          <button type="submit" className="h-11 flex-1 rounded-lg bg-neutral-900 px-4 text-sm font-semibold text-white sm:flex-none">
+            {tCommon('search')}
+          </button>
+          <Link href="/register" className="inline-flex h-11 flex-1 items-center justify-center rounded-lg border border-neutral-300 px-4 text-sm font-medium sm:flex-none">
+            {t('signup')}
+          </Link>
+        </div>
       </form>
-      <div className="mx-auto flex max-w-3xl flex-wrap gap-2 px-6 pb-2">
+      <div className="mx-auto flex max-w-3xl gap-2 overflow-x-auto px-6 pb-2 sm:flex-wrap">
         {CATEGORIES.map((category) => (
           <Link key={category} href={`/auditions?category=${category}`} className="rounded-full border border-neutral-300 px-3 py-1 text-sm">
             {category}
@@ -100,6 +102,7 @@ export default function HomePage() {
       />
       <HomeAuditionSection
         heading={t('latestAuditions')}
+        compact
         auditions={latestAuditions}
         isLoading={auditionsLoading}
         country={country}
