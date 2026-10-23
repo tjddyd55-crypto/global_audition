@@ -223,6 +223,8 @@ export type PublicChannelListItem = {
   introText: string | null
   subscriberCount: number
   videoCount: number
+  nationality?: string | null
+  categories?: string[]
 }
 
 export type PublicChannelResponse = {
@@ -265,12 +267,14 @@ function parsePublicChannelListItem(raw: Record<string, unknown>): PublicChannel
     introText: raw.introText != null ? String(raw.introText) : null,
     subscriberCount: Number(raw.subscriberCount ?? 0) || 0,
     videoCount: Number(raw.videoCount ?? 0) || 0,
+    nationality: raw.nationality != null ? String(raw.nationality) : null,
+    categories: Array.isArray(raw.categories) ? raw.categories.map((item) => String(item)) : [],
   }
 }
 
 export const channelApi = {
-  listPublic: async (): Promise<PublicChannelListItem[]> => {
-    const { data } = await apiClient.get<unknown>('/channels/public')
+  listPublic: async (params?: { q?: string; country?: string; category?: string }): Promise<PublicChannelListItem[]> => {
+    const { data } = await apiClient.get<unknown>('/channels/public', { params })
     const unwrapped = unwrapData(data)
     if (!Array.isArray(unwrapped)) return []
     return unwrapped.map((x) => parsePublicChannelListItem(x as Record<string, unknown>))

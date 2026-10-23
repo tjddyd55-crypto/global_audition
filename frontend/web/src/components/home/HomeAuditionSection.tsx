@@ -26,6 +26,8 @@ type HomeAuditionSectionProps = {
   isLoading: boolean
   country: AudienceFilterOption
   onCountryChange: (country: AudienceFilterOption) => void
+  heading?: string
+  showFilter?: boolean
 }
 
 export default function HomeAuditionSection({
@@ -33,6 +35,8 @@ export default function HomeAuditionSection({
   isLoading,
   country,
   onCountryChange,
+  heading,
+  showFilter = true,
 }: HomeAuditionSectionProps) {
   const t = useTranslations('home')
   const tAud = useTranslations('auditions')
@@ -43,10 +47,10 @@ export default function HomeAuditionSection({
     <section style={sectionStyle}>
       <div style={containerStyle}>
         <div style={{ marginBottom: 24, textAlign: 'center' }}>
-          <h2 style={{ fontSize: 24, fontWeight: 700, margin: '0 0 8px 0' }}>{t('openAuditions')}</h2>
+          <h2 style={{ fontSize: 24, fontWeight: 700, margin: '0 0 8px 0' }}>{heading ?? t('openAuditions')}</h2>
           <p style={{ fontSize: 14, color: '#666', margin: 0 }}>{tAud('description')}</p>
         </div>
-        <AuditionAudienceFilter country={country} onChange={onCountryChange} />
+        {showFilter ? <AuditionAudienceFilter country={country} onChange={onCountryChange} /> : null}
       </div>
 
       {isLoading ? (

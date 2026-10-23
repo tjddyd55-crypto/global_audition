@@ -114,6 +114,9 @@ export default function MainHeader() {
           <Link href="/videos" className={navLinkClass}>
             {t('videos')}
           </Link>
+          <Link href="/agencies" className={navLinkClass}>
+            {t('agencies')}
+          </Link>
         </nav>
 
         <div className="hidden items-center gap-4 lg:flex">
@@ -228,6 +231,9 @@ export default function MainHeader() {
             </Link>
             <Link href="/videos" onClick={() => setIsMobileOpen(false)} className="py-2 text-sm text-gray-900">
               {t('videos')}
+            </Link>
+            <Link href="/agencies" onClick={() => setIsMobileOpen(false)} className="py-2 text-sm text-gray-900">
+              {t('agencies')}
             </Link>
           </div>
           <div className="mt-3 border-t border-gray-200 pt-3">

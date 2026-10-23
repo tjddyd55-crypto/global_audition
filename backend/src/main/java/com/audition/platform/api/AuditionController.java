@@ -9,6 +9,7 @@ import com.audition.platform.api.dto.TranslationJobRequest;
 import com.audition.platform.api.dto.TranslationProviderStatusView;
 import com.audition.platform.api.dto.UpdateAuditionRequest;
 import com.audition.platform.application.AuditionService;
+import com.audition.platform.application.publicview.PublicAuditionBrowse;
 import com.audition.platform.application.i18n.AuditionAutoTranslationService;
 import com.audition.platform.application.i18n.AuditionLocalizationService;
 import com.audition.platform.infra.SecurityUtils;
@@ -20,7 +21,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 
 @RestController
@@ -58,6 +65,23 @@ public class AuditionController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only AGENCY or ADMIN can query non-open auditions");
         }
         return auditionService.listByStatus(status);
+    }
+
+    @GetMapping("/browse")
+    public List<AuditionResponse> browse(
+            @RequestParam(required = false) String recruitment,
+            @RequestParam(required = false) String country,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String agency,
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) String from,
+            @RequestParam(required = false) String to) {
+        String status = recruitment == null ? null : recruitment.trim().toUpperCase(Locale.ROOT);
+        if (status != null && !status.isBlank() && !Set.of("OPEN", "CLOSED", "ENDED", "ALL").contains(status)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "recruitment 값이 올바르지 않습니다.");
+        }
+        return auditionService.browsePublic(new PublicAuditionBrowse.Query(
+                status, country, category, agency, q, startOfDay(from), endOfDay(to)));
     }
 
     @GetMapping("/my")
@@ -133,5 +157,26 @@ public class AuditionController {
             @PathVariable String locale,
             @Valid @RequestBody AuditionTranslationUpsertRequest request) {
         return auditionLocalizationService.upsert(id, locale, request);
+    }
+
+    private static Instant startOfDay(String raw) {
+        LocalDate day = parseDay(raw);
+        return day == null ? null : day.atStartOfDay().toInstant(ZoneOffset.UTC);
+    }
+
+    private static Instant endOfDay(String raw) {
+        LocalDate day = parseDay(raw);
+        return day == null ? null : day.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC).minusMillis(1);
+    }
+
+    private static LocalDate parseDay(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        try {
+            return LocalDate.parse(raw.trim());
+        } catch (DateTimeParseException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "날짜 형식이 올바르지 않습니다.");
+        }
     }
 }
