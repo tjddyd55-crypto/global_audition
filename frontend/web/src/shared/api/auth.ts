@@ -8,6 +8,7 @@ export interface SignupRequest {
   role: 'APPLICANT' | 'AGENCY'
   nickname: string
   name?: string | null
+  countryCode?: string | null
 }
 
 export interface LoginRequest {
@@ -18,6 +19,7 @@ export interface LoginRequest {
 export interface AuthResponse {
   token: string
   role: string
+  signupIntent?: string | null
   userId: string
   email?: string
   nickname?: string
@@ -38,7 +40,7 @@ export interface AuthMeResponse {
 
 /**
  * 로그인/가입 직후 토큰·역할을 localStorage + auth 스토어에 반영.
- * DB에서 role을 바꾼 뒤에는 반드시 재로그인해야 한다(JWT는 발급 시점 claim).
+ * 승인으로 DB 역할이 바뀌면 `refreshSession`이 같은 세션의 토큰을 다시 발급한다.
  * 메인 로그인 UI는 추가로 `window.location.assign`으로 전체 로드해 옛 메모리 상태와 불일치 403을 줄인다.
  */
 function persistAuthToken(response: AuthResponse) {
@@ -61,6 +63,12 @@ export const authApi = {
 
   login: async (data: LoginRequest): Promise<AuthResponse> => {
     const { data: response } = await apiClient.post<AuthResponse>('/auth/login', data)
+    persistAuthToken(response)
+    return response
+  },
+
+  refreshSession: async (): Promise<AuthResponse> => {
+    const { data: response } = await apiClient.post<AuthResponse>('/auth/session')
     persistAuthToken(response)
     return response
   },

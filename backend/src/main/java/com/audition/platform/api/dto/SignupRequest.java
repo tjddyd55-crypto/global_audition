@@ -25,9 +25,13 @@ public class SignupRequest {
     @Pattern(regexp = "^[a-zA-Z0-9가-힣._]+$")
     private String nickname;
 
-    /** 실명 등(선택). */
+    /** 실명 등(선택). 기획사 신청에서는 계약 법인명으로 쓴다. */
     @Size(max = 120)
     private String name;
+
+    /** 기획사 신청의 소속 국가. 일반 지원자는 비운다. */
+    @Size(max = 8)
+    private String countryCode;
 
     public String getEmail() {
         return email;
@@ -67,5 +71,13 @@ public class SignupRequest {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getCountryCode() {
+        return countryCode;
+    }
+
+    public void setCountryCode(String countryCode) {
+        this.countryCode = countryCode;
     }
 }

@@ -25,6 +25,7 @@ export type AgencyRow = {
   stage: string
   approvalState: string
   assignedStaffUserId: string | null
+  notes?: string | null
 }
 
 export type ContractDocumentMeta = {

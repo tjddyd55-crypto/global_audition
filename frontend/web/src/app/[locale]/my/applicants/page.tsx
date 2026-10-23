@@ -37,7 +37,7 @@ function MyApplicantsInner() {
     }
   }, [accessToken, gateReady, role, router])
 
-  const { data: auditionsPayload } = useQuery({
+  const { data: auditionsPayload, isLoading: auditionsLoading, isError: auditionsError } = useQuery({
     queryKey: ['myAuditions', 0],
     queryFn: () => auditionApi.getMyAuditions({ page: 0, size: 100 }),
     enabled: gateReady && (role === 'AGENCY' || role === 'ADMIN'),
@@ -77,6 +77,22 @@ function MyApplicantsInner() {
 
   if (role !== 'AGENCY' && role !== 'ADMIN') {
     return null
+  }
+
+  if (auditionsLoading) {
+    return (
+      <AgencyDashboardShell>
+        <p className="text-sm text-gray-600">{t('loading')}</p>
+      </AgencyDashboardShell>
+    )
+  }
+
+  if (auditionsError) {
+    return (
+      <AgencyDashboardShell>
+        <p className="text-sm text-red-600">{tAgency('loadFailed')}</p>
+      </AgencyDashboardShell>
+    )
   }
 
   if (!effectiveAuditionId || !selectedAudition) {

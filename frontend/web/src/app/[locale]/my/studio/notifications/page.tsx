@@ -25,7 +25,7 @@ export default function StudioNotificationsPage() {
         {t('unreadCount', { count: (query.data ?? []).filter((item) => !item.readAt).length })}
       </p>
       <p className={TEXT_SUB}>{t('notificationsHint')}</p>
-      {query.isLoading ? <p className={TEXT_SUB}>{t('loginRequired')}</p> : null}
+      {query.isLoading ? <p className={TEXT_SUB}>{t('loading')}</p> : null}
       {query.isError ? <p className="text-sm text-red-600">{tNotice('loadFailed')}</p> : null}
       {query.data && query.data.length === 0 ? <p className={TEXT_SUB}>{tNotice('empty')}</p> : null}
       <ul className="flex flex-col gap-2">

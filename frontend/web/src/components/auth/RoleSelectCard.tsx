@@ -26,6 +26,7 @@ export default function RoleSelectCard({ value, onChange }: RoleSelectCardProps)
           <button
             key={option.role}
             type="button"
+            aria-pressed={selected}
             onClick={() => onChange(option.role)}
             className="min-h-11 whitespace-normal break-words text-left"
             style={{

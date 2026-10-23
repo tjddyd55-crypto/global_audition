@@ -186,6 +186,20 @@ public class CrmService {
                 .toList();
     }
 
+    /** 로그인 사용자가 자신의 기획사 신청만 본다. 신청이 없으면 null 이고 오류가 아니다. */
+    public AgencyApplicationView myApplication() {
+        OrgAccess.Actor actor = access.requireUser();
+        List<AgencyRow> rows = crm.findByLinkedUser(actor.id());
+        if (rows.isEmpty()) {
+            return null;
+        }
+        AgencyRow row = rows.get(rows.size() - 1);
+        return new AgencyApplicationView(
+                row.id(), row.countryCode(), row.displayName(), row.legalName(),
+                row.stage(), row.approvalState(), row.notes(),
+                crm.latestReason(row.id(), AgencyApproval.SUPPLEMENT));
+    }
+
     public List<JdbcCrmStore.ActivityCount> activities(String rawCountry) {
         String code = CountryCodes.iso2(rawCountry);
         OrgAccess.Actor actor = access.requireCountry(code);
@@ -204,6 +218,17 @@ public class CrmService {
     }
 
     public record AgencySelf(UUID id, String countryCode, String displayName, String stage, String approvalState) {
+    }
+
+    public record AgencyApplicationView(
+            UUID id,
+            String countryCode,
+            String displayName,
+            String legalName,
+            String stage,
+            String approvalState,
+            String origin,
+            String supplementReason) {
     }
 
     public record AgencyDraft(

@@ -66,7 +66,7 @@ export default function HomeAuditionSection({
           <EmptyState message={tAud('emptyList')} />
         </div>
       ) : (
-        <div className="flex w-full flex-col">
+        <div className={compact ? 'grid grid-cols-1 gap-3 px-4 sm:grid-cols-2 lg:grid-cols-3' : 'flex w-full flex-col'}>
           {displayAuditions.map((audition, i) => (
             <AuditionCard key={audition?.id ?? `audition-${i}`} audition={audition} />
           ))}

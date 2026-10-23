@@ -356,10 +356,10 @@ public class AuditionService {
         if (ownerId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
         }
+        requireApprovedAgencyForPublish(ownerId, req.getStatus());
         if (!SecurityUtils.hasRole("AGENCY") && !SecurityUtils.hasRole("ADMIN")) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only AGENCY or ADMIN can create auditions");
         }
-        requireApprovedAgencyForPublish(ownerId, req.getStatus());
         if (!userRepository.existsById(ownerId)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User not found");
         }

@@ -4,6 +4,8 @@ public class AuthResponse {
 
     private String token;
     private String role;
+    /** 가입 요청 유형. 접근 역할 {@link #role} 과 다를 수 있다. */
+    private String signupIntent;
     private String userId;
     private String email;
     private String nickname;
@@ -23,6 +25,8 @@ public class AuthResponse {
     public void setToken(String token) { this.token = token; }
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
+    public String getSignupIntent() { return signupIntent; }
+    public void setSignupIntent(String signupIntent) { this.signupIntent = signupIntent; }
     public String getUserId() { return userId; }
     public void setUserId(String userId) { this.userId = userId; }
 

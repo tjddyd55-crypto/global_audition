@@ -20,8 +20,8 @@ export default function StudioApplicationsPage() {
       <p className={TEXT_SUB}>
         {t('applicationsHint')} {query.data ? formatCount(query.data.length, locale) : ''}
       </p>
-      {query.isLoading ? <p className={TEXT_SUB}>{t('loginRequired')}</p> : null}
-      {query.isError ? <p className="text-sm text-red-600">{t('saveFailed')}</p> : null}
+      {query.isLoading ? <p className={TEXT_SUB}>{t('loading')}</p> : null}
+      {query.isError ? <p className="text-sm text-red-600">{t('loadFailed')}</p> : null}
       {query.data && query.data.length === 0 ? <p className={TEXT_SUB}>{t('noApplications')}</p> : null}
       <ul className="flex flex-col gap-2">
         {(query.data ?? []).map((item) => {

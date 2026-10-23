@@ -62,6 +62,7 @@ export default function PaymentTransactionsPage() {
       </form>
       {orders.isLoading && <p>불러오는 중…</p>}
       {orders.error && <p className="text-sm text-red-700">{adminError(orders.error)}</p>}
+      {orders.isSuccess && (orders.data ?? []).length === 0 && <p className="text-sm text-gray-600">결제 내역이 없습니다.</p>}
       <div className="overflow-x-auto">
         <table className="min-w-full text-left text-sm">
           <thead>

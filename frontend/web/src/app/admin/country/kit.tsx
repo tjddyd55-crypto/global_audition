@@ -273,7 +273,11 @@ export function AgenciesScreen({ detailId }: { detailId?: string }) {
         <DataTable
           rows={rows}
           columns={[
-            { key: 'name', header: '기획사', value: (row) => row.displayName, render: (row) => <Link className="underline" href={`/admin/country/agencies/${row.id}`}>{row.displayName}</Link> },
+            { key: 'name', header: '기획사', value: (row) => row.displayName, render: (row) => (
+              <Link className="underline" href={`/admin/country/agencies/${row.id}`}>
+                {row.displayName}{row.notes === 'SIGNUP' ? ' · 가입 신청' : ''}
+              </Link>
+            ) },
             { key: 'legal', header: '법인', value: (row) => row.legalName },
             { key: 'staff', header: '담당', value: (row) => row.assignedStaffUserId },
             { key: 'approval', header: '승인', value: (row) => row.approvalState },
