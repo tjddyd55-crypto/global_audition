@@ -31,15 +31,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @TestPropertySource(properties = {
-        "spring.datasource.url=jdbc:postgresql://localhost:5432/audition_hotfix_t49",
-        "spring.datasource.username=postgres",
-        "spring.datasource.password=postgres",
         "app.jwt.secret=" + TestJwtSecrets.ACCEPTABLE,
         "app.credits.allow-legacy-self-charge=false",
         "audition.voting-db-verify=true",
         "app.super-admin.bootstrap-enabled=false"
 })
 class SecurityCreditFlowIT {
+
+    @org.springframework.test.context.DynamicPropertySource
+    static void db(org.springframework.test.context.DynamicPropertyRegistry r) {
+        com.audition.platform.infra.TestDatabase.register(r);
+    }
 
     @Autowired
     private MockMvc mvc;
