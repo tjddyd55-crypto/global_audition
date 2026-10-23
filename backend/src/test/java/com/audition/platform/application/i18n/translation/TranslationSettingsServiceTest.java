@@ -1,5 +1,7 @@
 package com.audition.platform.application.i18n.translation;
 
+import com.audition.platform.infra.TestJwtSecrets;
+
 import com.audition.platform.api.dto.TranslationSettingsPatchRequest;
 import com.audition.platform.api.dto.TranslationSettingsView;
 import com.audition.platform.domain.audition.AuditionTranslation;
@@ -111,7 +113,7 @@ class TranslationSettingsServiceTest {
 
     @Test
     void googleCredentialsAreEncryptedAndOmittedFromTheView() {
-        SettingsSecretCrypto real = new SettingsSecretCrypto("change-me-in-production-min-32-chars");
+        SettingsSecretCrypto real = new SettingsSecretCrypto(TestJwtSecrets.ACCEPTABLE);
         TranslationSettingsService realService = new TranslationSettingsService(
                 repository, real, guard, new GoogleTranslationProperties(), mock(JdbcTemplate.class));
         String json = serviceAccountJson();

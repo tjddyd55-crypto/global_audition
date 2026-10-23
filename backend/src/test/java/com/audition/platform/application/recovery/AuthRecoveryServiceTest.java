@@ -1,5 +1,7 @@
 package com.audition.platform.application.recovery;
 
+import com.audition.platform.infra.TestJwtSecrets;
+
 import com.audition.platform.domain.user.User;
 import com.audition.platform.domain.user.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,7 +29,7 @@ class AuthRecoveryServiceTest {
     @BeforeEach
     void setUp() {
         userRepository = mock(UserRepository.class);
-        crypto = new RecoveryCodeCrypto(new BCryptPasswordEncoder(), "change-me-in-production-min-32-chars!!");
+        crypto = new RecoveryCodeCrypto(new BCryptPasswordEncoder(), TestJwtSecrets.ACCEPTABLE);
         service = new AuthRecoveryService(userRepository, crypto, new BCryptPasswordEncoder());
         when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
         when(userRepository.findByRecoveryCodeLookup(any())).thenReturn(Optional.empty());

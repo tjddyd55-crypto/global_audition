@@ -1,5 +1,7 @@
 package com.audition.platform.application;
 
+import com.audition.platform.infra.TestJwtSecrets;
+
 import com.audition.platform.api.dto.AuthResponse;
 import com.audition.platform.api.dto.LoginRequest;
 import com.audition.platform.api.dto.SignupRequest;
@@ -47,7 +49,7 @@ class AuthServiceTest {
         CreditService creditService = mock(CreditService.class);
         agencySignupService = mock(AgencySignupService.class);
         encoder = new BCryptPasswordEncoder();
-        JwtService jwtService = new JwtService("change-me-in-production-min-32-chars!!", 86_400_000L);
+        JwtService jwtService = new JwtService(TestJwtSecrets.ACCEPTABLE, 86_400_000L);
         authService = new AuthService(
                 userRepository, encoder, jwtService, userNicknameService, authRecoveryService, creditService, agencySignupService);
         when(userRepository.existsByUsername(any())).thenReturn(false);

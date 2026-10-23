@@ -1,6 +1,7 @@
 package com.audition.platform.application.recovery;
 
 import com.audition.platform.domain.recovery.RecoveryCodeFormatter;
+import com.audition.platform.infra.JwtSecretPolicy;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -25,7 +26,7 @@ public class RecoveryCodeCrypto {
             PasswordEncoder passwordEncoder,
             @Value("${app.jwt.secret}") String jwtSecret) {
         this.passwordEncoder = passwordEncoder;
-        this.pepper = jwtSecret.getBytes(StandardCharsets.UTF_8);
+        this.pepper = JwtSecretPolicy.requireAcceptable(jwtSecret).getBytes(StandardCharsets.UTF_8);
     }
 
     public String normalize(String raw) {
