@@ -44,8 +44,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 })
 class PaymentStabilizationIT {
 
-    private static final UUID TOKYO = UUID.fromString("e5533082-7866-4112-9e44-39db846ed14a");
-    private static final UUID JP_CONTRACT = UUID.fromString("a0495a80-800b-4989-823f-fb9123732bf7");
+    private static final UUID TOKYO = JapanPaymentFixture.TOKYO;
+    private static final UUID JP_CONTRACT = JapanPaymentFixture.JP_CONTRACT;
     private static final String SECRET = "unit-test-secret-not-a-provider-key";
     private static final String ROTATED = "unit-test-secret-rotated-marker";
     private static final String LIVE_SECRET = "unit-test-live-slot-marker-zzzz";
@@ -74,9 +74,13 @@ class PaymentStabilizationIT {
     private String paypalConnection;
     private String paypalContract;
     private final List<UUID> auditIds = new ArrayList<>();
+    private long originalFee;
 
     @BeforeEach
     void snapshotSecrets() {
+        JapanPaymentFixture.ensure(jdbc);
+        originalFee = jdbc.queryForObject("SELECT amount_usd FROM platform_application_fee WHERE id = 1", Long.class);
+        jdbc.update("UPDATE platform_application_fee SET amount_usd = 1 WHERE id = 1");
         mockTestExisted = secretExists("TEST");
         mockLiveExisted = secretExists("LIVE");
         mockTest = readSecret("TEST");
@@ -90,6 +94,7 @@ class PaymentStabilizationIT {
     @AfterEach
     void cleanup() {
         SecurityContextHolder.clearContext();
+        jdbc.update("UPDATE platform_application_fee SET amount_usd = ? WHERE id = 1", originalFee);
         restoreSecret("TEST", mockTestExisted, mockTest);
         restoreSecret("LIVE", mockLiveExisted, mockLive);
         jdbc.update(
@@ -134,8 +139,7 @@ class PaymentStabilizationIT {
     @Test
     void secretsStayMaskedSeparatedAndOutOfLogs() {
         UUID hq = hq();
-        UUID applicant = jdbc.queryForObject(
-                "SELECT id FROM users WHERE role = 'APPLICANT' ORDER BY created_at LIMIT 1", UUID.class);
+        UUID applicant = user();
         ListAppender<ILoggingEvent> paymentLog = attach(PaymentService.class);
         ListAppender<ILoggingEvent> cryptoLog = attach(SettingsSecretCrypto.class);
         ListAppender<ILoggingEvent> tossLog = attach(TossPaymentsClient.class);

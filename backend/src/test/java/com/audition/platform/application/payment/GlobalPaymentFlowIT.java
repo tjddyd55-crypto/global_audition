@@ -5,6 +5,7 @@ import com.audition.platform.application.applications.ApplicationSubmitService;
 import com.audition.platform.application.org.AttributionService;
 import com.audition.platform.application.org.JdbcCreditLotStore;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -39,8 +40,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 })
 class GlobalPaymentFlowIT {
 
-    private static final UUID TOKYO = UUID.fromString("e5533082-7866-4112-9e44-39db846ed14a");
-    private static final UUID JP_CONTRACT = UUID.fromString("a0495a80-800b-4989-823f-fb9123732bf7");
+    private static final UUID TOKYO = JapanPaymentFixture.TOKYO;
+    private static final UUID JP_CONTRACT = JapanPaymentFixture.JP_CONTRACT;
 
     @Autowired
     private JdbcTemplate jdbc;
@@ -55,9 +56,19 @@ class GlobalPaymentFlowIT {
     @Autowired
     private JdbcCreditLotStore lots;
 
+    private long originalFee;
+
+    @BeforeEach
+    void seedFixture() {
+        JapanPaymentFixture.ensure(jdbc);
+        originalFee = jdbc.queryForObject("SELECT amount_usd FROM platform_application_fee WHERE id = 1", Long.class);
+        jdbc.update("UPDATE platform_application_fee SET amount_usd = 1 WHERE id = 1");
+    }
+
     @AfterEach
     void cleanup() {
         SecurityContextHolder.clearContext();
+        jdbc.update("UPDATE platform_application_fee SET amount_usd = ? WHERE id = 1", originalFee);
         jdbc.update("""
                 DELETE FROM revenue_attributions
                 WHERE credit_transaction_id IN (
