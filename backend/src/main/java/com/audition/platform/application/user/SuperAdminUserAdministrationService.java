@@ -46,7 +46,8 @@ public class SuperAdminUserAdministrationService {
                         || req.getName() != null
                         || req.getBio() != null
                         || req.getProfileImageUrl() != null
-                        || req.getCountryCode() != null;
+                        || req.getCountryCode() != null
+                        || req.getRole() != null;
         if (!any) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "수정할 필드가 하나 이상 필요합니다.");
         }
@@ -70,6 +71,9 @@ public class SuperAdminUserAdministrationService {
         if (req.getCountryCode() != null) {
             user.setCountryCode(req.getCountryCode().trim().isEmpty() ? null : req.getCountryCode().trim());
         }
+        if (req.getRole() != null) {
+            applyAgencyGrant(user, req.getRole());
+        }
         user.setUpdatedAt(Instant.now());
         userRepository.save(user);
         Map<String, Object> after = userSnapshot(user);
@@ -77,8 +81,25 @@ public class SuperAdminUserAdministrationService {
         return toSummary(user);
     }
 
+    /** 기획사 권한 부여·회수만 허용한다. 관리자 계정이나 관리자 역할은 이 경로로 바꿀 수 없다. */
+    private static void applyAgencyGrant(User user, String requested) {
+        String next = requested.trim().toUpperCase(java.util.Locale.ROOT);
+        if (!GRANTABLE_ROLES.contains(next)) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "role 은 APPLICANT 또는 AGENCY 만 지정할 수 있습니다.");
+        }
+        String current = user.getRole() == null ? "" : user.getRole().trim();
+        if (!CHANGEABLE_ROLES.contains(current)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "관리자 계정의 역할은 이 경로로 변경할 수 없습니다.");
+        }
+        user.setRole(next);
+    }
+
+    private static final java.util.Set<String> GRANTABLE_ROLES = java.util.Set.of("APPLICANT", "AGENCY");
+    private static final java.util.Set<String> CHANGEABLE_ROLES = java.util.Set.of("APPLICANT", "AGENCY", "USER");
+
     private static Map<String, Object> userSnapshot(User u) {
         Map<String, Object> m = new LinkedHashMap<>();
+        m.put("role", u.getRole());
         m.put("id", u.getId().toString());
         m.put("email", u.getEmail());
         m.put("username", u.getUsername());

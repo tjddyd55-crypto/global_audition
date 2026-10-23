@@ -48,14 +48,27 @@ class MainSecurityScopeTest {
     }
 
     @Test
-    void agencySignupStoresAgencyImmediatelyBecauseApprovalGateDoesNotExist() {
+    void publicAgencySignupIsRejectedAndNothingIsSaved() {
         SignupRequest request = new SignupRequest();
         request.setEmail("agency@local.test");
         request.setPassword("Localtest1!");
         request.setRole("AGENCY");
         request.setNickname("hotfan");
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> auth.signup(request));
+        assertEquals(403, ex.getStatusCode().value());
+        assertEquals(AuthService.AGENCY_SIGNUP_NOT_AVAILABLE, ex.getReason());
+        org.mockito.Mockito.verify(users, org.mockito.Mockito.never()).save(any(User.class));
+    }
+
+    @Test
+    void applicantSignupStoresApplicant() {
+        SignupRequest request = new SignupRequest();
+        request.setEmail("fan@local.test");
+        request.setPassword("Localtest1!");
+        request.setRole("applicant");
+        request.setNickname("hotfan");
         auth.signup(request);
-        org.mockito.Mockito.verify(users).save(org.mockito.ArgumentMatchers.argThat(user -> "AGENCY".equals(user.getRole())));
+        org.mockito.Mockito.verify(users).save(org.mockito.ArgumentMatchers.argThat(user -> "APPLICANT".equals(user.getRole())));
     }
 
     @Test

@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useQueryClient } from '@tanstack/react-query'
 import { z } from 'zod'
 import { authApi } from '@/shared/api/auth'
+import { AGENCY_SIGNUP_PREPARING_MESSAGE } from '@/components/auth/RoleSelectCard'
 import { countries, languages, timezones } from '@/shared/utils/countries'
 import { nicknameZodField } from '@/shared/user/nicknameZod'
 
@@ -73,6 +74,10 @@ export default function MobileRegisterPage() {
   const userType = watch('userType')
 
   const onSubmit = async (data: RegisterFormData) => {
+    if (data.userType !== 'APPLICANT') {
+      setError(AGENCY_SIGNUP_PREPARING_MESSAGE)
+      return
+    }
     setIsLoading(true)
     setError(null)
 
@@ -168,17 +173,13 @@ export default function MobileRegisterPage() {
       const response = await authApi.signup({
         email: submitData.email,
         password: submitData.password,
-        role: submitData.userType === 'BUSINESS' ? 'AGENCY' : 'APPLICANT',
+        role: 'APPLICANT',
         nickname: submitData.nickname.trim(),
         name: submitData.name?.trim() ? submitData.name.trim() : undefined,
       })
       if (response.token && response.role) {
         queryClient.invalidateQueries({ queryKey: ['currentUser'] })
-        if (response.role === 'AGENCY') {
-          window.location.href = '/my/dashboard'
-        } else {
-          window.location.href = '/'
-        }
+        window.location.href = '/'
       } else {
         router.push('/login')
       }
@@ -291,7 +292,7 @@ export default function MobileRegisterPage() {
               className="w-full px-4 py-2 border rounded-lg"
             >
               <option value="APPLICANT">지망생</option>
-              <option value="BUSINESS">기획사</option>
+              <option value="BUSINESS" disabled>기획사 (승인 절차 준비 중)</option>
             </select>
           </div>
 
