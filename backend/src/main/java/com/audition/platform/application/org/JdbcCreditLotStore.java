@@ -43,6 +43,12 @@ public class JdbcCreditLotStore {
                     lot.originalCredits(), lot.remainingCredits(), lot.cashUsd(),
                     Timestamp.from(lot.occurredAt()), lot.parityOk());
         }
+        jdbc.update("""
+                UPDATE credit_lots l
+                SET ledger_environment = p.environment
+                FROM payment_orders p
+                WHERE l.payment_order_id = p.id
+                """);
         for (Outcome outcome : replay.outcomes()) {
             jdbc.update("""
                     INSERT INTO credit_lot_allocations (
@@ -53,6 +59,20 @@ public class JdbcCreditLotStore {
                     UUID.randomUUID(), outcome.useId(), outcome.lotId(), outcome.bucket(), outcome.credits(),
                     outcome.payableUsd(), outcome.status(), policy, Timestamp.from(outcome.occurredAt()));
         }
+    }
+
+    public long testPayableUsd(UUID contractId, Instant from, Instant to) {
+        Long value = jdbc.queryForObject("""
+                SELECT COALESCE(SUM(a.payable_usd), 0)
+                FROM revenue_attributions ra
+                JOIN credit_lot_allocations a ON a.usage_credit_transaction_id = ra.credit_transaction_id
+                JOIN credit_lots l ON l.id = a.lot_id
+                WHERE ra.contract_id = ? AND ra.recognition = 'SALES' AND ra.line_kind = 'REVENUE'
+                  AND ra.occurred_at >= ? AND ra.occurred_at < ?
+                  AND a.status = 'ALLOCATED'
+                  AND l.ledger_environment IN ('MOCK', 'TEST')
+                """, Long.class, contractId, Timestamp.from(from), Timestamp.from(to));
+        return value == null ? 0 : value;
     }
 
     public List<UsageRow> usages(UUID contractId, Instant from, Instant to) {
@@ -73,6 +93,10 @@ public class JdbcCreditLotStore {
                        COALESCE(SUM(CASE WHEN a.status = 'ALLOCATED' AND a.bucket = 'PAID' THEN a.credits ELSE 0 END), 0)::bigint AS paid_credits
                 FROM revenue_attributions ra
                 LEFT JOIN credit_lot_allocations a ON a.usage_credit_transaction_id = ra.credit_transaction_id
+                  AND NOT EXISTS (
+                    SELECT 1 FROM credit_lots lx
+                    WHERE lx.id = a.lot_id AND lx.ledger_environment IN ('MOCK', 'TEST')
+                  )
                 WHERE ra.contract_id = ? AND ra.recognition = 'SALES' AND ra.line_kind = 'REVENUE'
                   AND ra.occurred_at >= ? AND ra.occurred_at < ?
                 GROUP BY ra.id, ra.contract_version_id
@@ -95,6 +119,10 @@ public class JdbcCreditLotStore {
                        COALESCE(SUM(CASE WHEN a.status = 'REVIEW_REQUIRED' THEN a.credits ELSE 0 END), 0)::bigint AS review_credits
                 FROM revenue_attributions ra
                 LEFT JOIN credit_lot_allocations a ON a.usage_credit_transaction_id = ra.credit_transaction_id
+                  AND NOT EXISTS (
+                    SELECT 1 FROM credit_lots lx
+                    WHERE lx.id = a.lot_id AND lx.ledger_environment IN ('MOCK', 'TEST')
+                  )
                 LEFT JOIN crm_agencies g ON g.id = ra.crm_agency_id
                 WHERE ra.contract_id = ? AND ra.recognition = 'SALES' AND ra.line_kind = 'REVENUE'
                   AND ra.occurred_at >= ? AND ra.occurred_at < ?

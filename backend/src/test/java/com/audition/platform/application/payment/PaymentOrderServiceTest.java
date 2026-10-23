@@ -44,13 +44,16 @@ class PaymentOrderServiceTest {
         creditService = mock(CreditService.class);
         settingsService = mock(PaymentSettingsService.class);
         tossClient = mock(TossPaymentsClient.class);
+        PaymentEnvironmentGuard guard = mock(PaymentEnvironmentGuard.class);
+        when(guard.mockAllowed()).thenReturn(true);
         service = new PaymentOrderService(
                 orderRepository,
                 packageRepository,
                 creditService,
                 settingsService,
                 tossClient,
-                List.of(new MockPaymentProvider(), new TossPaymentProvider()));
+                List.of(new MockPaymentProvider(), new TossPaymentProvider()),
+                guard);
     }
 
     @Test

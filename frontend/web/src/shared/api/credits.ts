@@ -270,4 +270,97 @@ export const creditsApi = {
     const { data } = await apiClient.post<CreditOrderSummary>('/payments/toss/confirm', body)
     return data
   },
+
+  listPaymentMethods: async (paymentCountry: string): Promise<PaymentMethodOffer[]> => {
+    const { data } = await apiClient.get<PaymentMethodOffer[]>('/payments/methods', { params: { paymentCountry } })
+    return data
+  },
+
+  quotePayment: async (body: {
+    packageId: string
+    paymentCountry: string
+    providerId: string
+    methodCode: string
+  }): Promise<PaymentQuote> => {
+    const { data } = await apiClient.post<PaymentQuote>('/payments/quote', body)
+    return data
+  },
+
+  createPaymentOrder: async (body: {
+    packageId: string
+    paymentCountry: string
+    providerId: string
+    methodCode: string
+    idempotencyKey: string
+  }): Promise<PaymentOrderView> => {
+    const { data } = await apiClient.post<PaymentOrderView>('/payments/orders', body)
+    return data
+  },
+
+  confirmPaymentOrder: async (
+    orderNo: string,
+    body: { scenario?: string; chargeAmountMinor: number; paymentKey?: string }
+  ): Promise<PaymentOrderView> => {
+    const { data } = await apiClient.post<PaymentOrderView>(`/payments/orders/${encodeURIComponent(orderNo)}/confirm`, body)
+    return data
+  },
+
+  cancelPaymentOrder: async (orderNo: string): Promise<PaymentOrderView> => {
+    const { data } = await apiClient.post<PaymentOrderView>(`/payments/orders/${encodeURIComponent(orderNo)}/cancel`)
+    return data
+  },
+
+  myPaymentOrders: async (): Promise<PaymentOrderView[]> => {
+    const { data } = await apiClient.get<PaymentOrderView[]>('/payments/orders/mine')
+    return data
+  },
+
+  getPaymentOrder: async (orderNo: string): Promise<PaymentOrderView> => {
+    const { data } = await apiClient.get<PaymentOrderView>(`/payments/orders/${encodeURIComponent(orderNo)}`)
+    return data
+  },
+}
+
+export type PaymentMethodOffer = {
+  id: string
+  providerId: string
+  providerName: string
+  methodCode: string
+  paymentCountry: string
+  merchantCountry: string
+  currency: string
+  environment: string
+}
+
+export type PaymentQuote = {
+  credits: number
+  chargeCurrency: string
+  chargeAmountMinor: number
+  scale: number
+  fxRate: string
+  providerId: string
+  methodCode: string
+  paymentCountry: string
+  merchantCountry: string
+  environment: string
+}
+
+export type PaymentOrderView = {
+  orderNo: string
+  status: string
+  providerId: string | null
+  provider: string
+  methodCode: string | null
+  environment: string | null
+  paymentCountry: string | null
+  credits: number
+  chargeCurrency: string | null
+  chargeAmountMinor: number | null
+  scale: number | null
+  fxRate: string | null
+  refundedMinor: number
+  refundedCredits: number
+  failReason: string | null
+  clientKey?: string | null
+  redirectPath?: string | null
 }

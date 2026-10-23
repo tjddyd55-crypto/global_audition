@@ -410,6 +410,150 @@ export const superAdminApi = {
     return data
   },
 
+  listPaymentProviders: async (): Promise<PaymentProviderAdmin[]> => {
+    const { data } = await apiClient.get<PaymentProviderAdmin[]>('/admin/payment-providers')
+    return data
+  },
+
+  testProviderConnection: async (id: string): Promise<{ providerId: string; result: string }> => {
+    const { data } = await apiClient.post<{ providerId: string; result: string }>(
+      `/admin/payment-providers/${encodeURIComponent(id)}/connection-test`
+    )
+    return data
+  },
+
+  listFxRates: async (currency: string): Promise<PaymentFxAdmin[]> => {
+    const { data } = await apiClient.get<PaymentFxAdmin[]>('/admin/payment-providers/fx', { params: { currency } })
+    return data
+  },
+
+  addFxRate: async (body: {
+    chargeCurrency: string
+    rate: string
+    basis: string
+    roundingMode: string
+    effectiveFrom: string
+  }): Promise<{ id: string }> => {
+    const { data } = await apiClient.post<{ id: string }>('/admin/payment-providers/fx', {
+      ...body,
+      rate: body.rate,
+    })
+    return data
+  },
+
+  listPaymentCountryMethods: async (): Promise<PaymentCountryMethodAdmin[]> => {
+    const { data } = await apiClient.get<PaymentCountryMethodAdmin[]>('/admin/payment-providers/methods')
+    return data
+  },
+
+  rotatePaymentSecret: async (
+    id: string,
+    body: {
+      environment: 'TEST' | 'LIVE'
+      clientKey?: string
+      clientId?: string
+      secret?: string
+      merchantId?: string
+      webhookSecret?: string
+    }
+  ): Promise<PaymentCredentialView> => {
+    const { data } = await apiClient.post<PaymentCredentialView>(
+      `/admin/payment-providers/${encodeURIComponent(id)}/secrets`,
+      body
+    )
+    return data
+  },
+
+  viewPaymentCredential: async (id: string, environment: 'TEST' | 'LIVE'): Promise<PaymentCredentialView> => {
+    const { data } = await apiClient.get<PaymentCredentialView>(
+      `/admin/payment-providers/${encodeURIComponent(id)}/secrets`,
+      { params: { environment } }
+    )
+    return data
+  },
+
+  searchPaymentOrders: async (params: {
+    q?: string
+    environment?: string
+    status?: string
+    from?: string
+    to?: string
+  }): Promise<PaymentOrderAdmin[]> => {
+    const { data } = await apiClient.get<PaymentOrderAdmin[]>('/admin/payment-providers/orders', { params })
+    return data
+  },
+
+  paymentOrderDetail: async (orderNo: string): Promise<PaymentOrderDetail> => {
+    const { data } = await apiClient.get<PaymentOrderDetail>(
+      `/admin/payment-providers/orders/${encodeURIComponent(orderNo)}`
+    )
+    return data
+  },
+
+  listPaymentRefunds: async (): Promise<PaymentRefundAdmin[]> => {
+    const { data } = await apiClient.get<PaymentRefundAdmin[]>('/admin/payment-providers/refunds')
+    return data
+  },
+
+  refundPaymentOrder: async (
+    orderNo: string,
+    body: { amountMinor: number; idempotencyKey: string }
+  ): Promise<Record<string, unknown>> => {
+    const { data } = await apiClient.post<Record<string, unknown>>(
+      `/admin/payment-providers/orders/${encodeURIComponent(orderNo)}/refund`,
+      body
+    )
+    return data
+  },
+
+  listPaymentWebhooks: async (): Promise<PaymentWebhookAdmin[]> => {
+    const { data } = await apiClient.get<PaymentWebhookAdmin[]>('/admin/payment-providers/webhooks')
+    return data
+  },
+
+  listPaymentErrors: async (): Promise<PaymentErrorAdmin[]> => {
+    const { data } = await apiClient.get<PaymentErrorAdmin[]>('/admin/payment-providers/errors')
+    return data
+  },
+
+  reprocessPaymentError: async (errorId: string, scenario: string): Promise<Record<string, unknown>> => {
+    const { data } = await apiClient.post<Record<string, unknown>>(
+      `/admin/payment-providers/errors/${encodeURIComponent(errorId)}/reprocess`,
+      { scenario }
+    )
+    return data
+  },
+
+  lookupPaymentTestUser: async (email: string): Promise<PaymentTestUser> => {
+    const { data } = await apiClient.get<PaymentTestUser>('/admin/payment-providers/test-user', { params: { email } })
+    return data
+  },
+
+  runPaymentMockTest: async (body: {
+    email: string
+    packageId: string
+    paymentCountry: string
+    scenario: 'SUCCESS' | 'FAIL' | 'CANCEL' | 'NETWORK'
+  }): Promise<PaymentMockTestResult> => {
+    const { data } = await apiClient.post<PaymentMockTestResult>('/admin/payment-providers/mock-test', body)
+    return data
+  },
+
+  listPaymentAudits: async (): Promise<PaymentAuditAdmin[]> => {
+    const { data } = await apiClient.get<PaymentAuditAdmin[]>('/admin/payment-providers/audit')
+    return data
+  },
+
+  previewTestRevenue: async (params: {
+    country: string
+    contractId: string
+    from: string
+    to: string
+  }): Promise<Record<string, unknown>> => {
+    const { data } = await apiClient.get<Record<string, unknown>>('/admin/payment-providers/test-revenue', { params })
+    return data
+  },
+
   testPaymentConnection: async (): Promise<{ result: string; environment: string; connected: boolean }> => {
     const { data } = await apiClient.post<{ result: string; environment: string; connected: boolean }>(
       '/admin/payment-settings/connection-test'
@@ -421,6 +565,157 @@ export const superAdminApi = {
     const { data } = await apiClient.post(`/payments/${encodeURIComponent(orderNo)}/cancel`, { reason })
     return data
   },
+}
+
+export type PaymentProviderAdmin = {
+  id: string
+  adapterCode: string
+  name: string
+  environment: string
+  countries: string
+  currencies: string
+  methods: string
+  contractStatus: string
+  enabled: boolean
+  implemented: boolean
+  connectionStatus: string
+  operable: boolean
+  updatedAt: string
+}
+
+export type PaymentFxAdmin = {
+  id: string
+  baseCurrency: string
+  chargeCurrency: string
+  rate: string
+  basis: string
+  roundingMode: string
+  effectiveFrom: string
+}
+
+export type PaymentCountryMethodAdmin = {
+  id: string
+  paymentCountry: string
+  merchantCountry: string
+  providerId: string
+  methodCode: string
+  currency: string
+  enabled: boolean
+}
+
+export type PaymentCredentialView = {
+  providerId: string
+  environment: string
+  configured: boolean
+  clientKey?: string | null
+  clientId?: string | null
+  merchantId?: string | null
+  secretLast4?: string | null
+  webhookLast4?: string | null
+  updatedAt?: string
+}
+
+export type PaymentOrderAdmin = {
+  orderNo: string
+  providerId: string | null
+  provider: string | null
+  environment: string | null
+  userId: string
+  email: string
+  paymentCountry: string | null
+  chargeCurrency: string | null
+  chargeAmountMinor: number | null
+  creditsIssued: number
+  status: string
+  paidAt: string | null
+  createdAt: string
+  refundState: string
+  refundedMinor: number
+  refundedCredits: number
+  failReason: string | null
+  methodCode: string | null
+}
+
+export type PaymentLedgerLine = {
+  type: string
+  amount: number
+  afterBalance: number
+  referenceId: string | null
+  createdAt: string
+}
+
+export type PaymentOrderDetail = {
+  order: PaymentOrderAdmin
+  ledger: PaymentLedgerLine[]
+  refundableMinor: number
+  liveRefundAllowed: boolean
+}
+
+export type PaymentRefundAdmin = {
+  id: string
+  orderNo: string
+  email: string
+  providerId: string | null
+  environment: string | null
+  chargeCurrency: string | null
+  chargeAmountMinor: number | null
+  refundedMinor: number
+  amountMinor: number
+  credits: number
+  orderStatus: string
+  idempotencyKey: string
+  createdAt: string
+}
+
+export type PaymentWebhookAdmin = {
+  id: string
+  providerId: string
+  environment: string
+  eventId: string
+  eventType: string | null
+  orderNo: string | null
+  signatureValid: boolean
+  duplicate: boolean
+  status: string
+  failureReason: string | null
+  reprocessStatus: string
+  createdAt: string
+}
+
+export type PaymentErrorAdmin = {
+  id: string
+  orderNo: string | null
+  providerId: string | null
+  code: string
+  message: string
+  retryable: boolean
+  processStatus: string
+  createdAt: string
+}
+
+export type PaymentTestUser = {
+  id: string
+  email: string
+  role: string
+}
+
+export type PaymentMockTestResult = {
+  orderNo?: string
+  status?: string
+  environment?: string | null
+  walletBalance?: number
+  ledgerClosing?: number | null
+  chargeCount?: number
+  error?: string
+  failReason?: string | null
+}
+
+export type PaymentAuditAdmin = {
+  id: string
+  action: string
+  targetId: string | null
+  createdAt: string
+  summary: string
 }
 
 export type PaymentSettingsAdmin = {

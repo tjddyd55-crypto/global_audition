@@ -76,6 +76,42 @@ public class PaymentOrder {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt = Instant.now();
 
+    @Column(length = 8)
+    private String environment;
+
+    @Column(name = "payment_country", length = 2)
+    private String paymentCountry;
+
+    @Column(name = "charge_currency", length = 3)
+    private String chargeCurrency;
+
+    @Column(name = "charge_amount_minor")
+    private Long chargeAmountMinor;
+
+    @Column(name = "fx_rate_id")
+    private UUID fxRateId;
+
+    @Column(name = "fx_rate", precision = 24, scale = 8)
+    private BigDecimal fxRate;
+
+    @Column(name = "credits_issued")
+    private Long creditsIssued;
+
+    @Column(name = "refunded_minor", nullable = false)
+    private long refundedMinor;
+
+    @Column(name = "refunded_credits", nullable = false)
+    private long refundedCredits;
+
+    @Column(name = "provider_config_id", length = 64)
+    private String providerConfigId;
+
+    @Column(name = "method_code", length = 40)
+    private String methodCode;
+
+    @Column(name = "idempotency_key", length = 80)
+    private String idempotencyKey;
+
     public UUID getId() {
         return id;
     }
@@ -210,5 +246,101 @@ public class PaymentOrder {
 
     public void setUpdatedAt(Instant updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public String getEnvironment() {
+        return environment;
+    }
+
+    public void setEnvironment(String environment) {
+        this.environment = environment;
+    }
+
+    public String getPaymentCountry() {
+        return paymentCountry;
+    }
+
+    public void setPaymentCountry(String paymentCountry) {
+        this.paymentCountry = paymentCountry;
+    }
+
+    public String getChargeCurrency() {
+        return chargeCurrency;
+    }
+
+    public void setChargeCurrency(String chargeCurrency) {
+        this.chargeCurrency = chargeCurrency;
+    }
+
+    public Long getChargeAmountMinor() {
+        return chargeAmountMinor;
+    }
+
+    public void setChargeAmountMinor(Long chargeAmountMinor) {
+        this.chargeAmountMinor = chargeAmountMinor;
+    }
+
+    public UUID getFxRateId() {
+        return fxRateId;
+    }
+
+    public void setFxRateId(UUID fxRateId) {
+        this.fxRateId = fxRateId;
+    }
+
+    public BigDecimal getFxRate() {
+        return fxRate;
+    }
+
+    public void setFxRate(BigDecimal fxRate) {
+        this.fxRate = fxRate;
+    }
+
+    public Long getCreditsIssued() {
+        return creditsIssued;
+    }
+
+    public void setCreditsIssued(Long creditsIssued) {
+        this.creditsIssued = creditsIssued;
+    }
+
+    public long getRefundedMinor() {
+        return refundedMinor;
+    }
+
+    public void setRefundedMinor(long refundedMinor) {
+        this.refundedMinor = refundedMinor;
+    }
+
+    public long getRefundedCredits() {
+        return refundedCredits;
+    }
+
+    public void setRefundedCredits(long refundedCredits) {
+        this.refundedCredits = refundedCredits;
+    }
+
+    public String getProviderConfigId() {
+        return providerConfigId;
+    }
+
+    public void setProviderConfigId(String providerConfigId) {
+        this.providerConfigId = providerConfigId;
+    }
+
+    public String getMethodCode() {
+        return methodCode;
+    }
+
+    public void setMethodCode(String methodCode) {
+        this.methodCode = methodCode;
+    }
+
+    public String getIdempotencyKey() {
+        return idempotencyKey;
+    }
+
+    public void setIdempotencyKey(String idempotencyKey) {
+        this.idempotencyKey = idempotencyKey;
     }
 }

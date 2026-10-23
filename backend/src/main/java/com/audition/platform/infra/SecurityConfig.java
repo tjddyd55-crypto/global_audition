@@ -54,6 +54,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/credits/public/policies/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/credits/public/runtime").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/payments/public/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/payments/webhooks/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/tags").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/auditions/*/preview").authenticated()
                 .requestMatchers("/api/auditions/*/translations", "/api/auditions/*/translations/**").authenticated()

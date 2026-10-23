@@ -597,6 +597,7 @@
     "createFailed": "Toss захиалга үүсгэж чадсангүй.",
     "scriptFailed": "Toss скрипт ачаалж чадсангүй.",
     "openCheckout": "Toss цонх нээх",
+    "liveCheckoutBlocked": "LIVE төлбөрийг ажиллуулахгүй.",
     "order": "Захиалга",
     "creditsUnit": "кредит",
     "backToPackages": "Багц руу",
@@ -640,7 +641,17 @@
     "mockPay": "Төлбөр үргэлжлүүлэх (mock)",
     "pgHint": "Бодит PG энд нээгдэнэ.",
     "orderCreated": "Захиалга үүслээ.",
-    "packageNotFound": "Багц олдсонгүй эсвэл борлуулагдахгүй байна."
+    "packageNotFound": "Багц олдсонгүй эсвэл борлуулагдахгүй байна.",
+    "paymentCountry": "Төлбөрийн улс",
+    "selectMethod": "Төлбөрийн хэрэгсэл",
+    "chargeAmount": "Нэхэмжлэх дүн",
+    "creditsToIssue": "Олгох кредит",
+    "noMethod": "Энэ төлбөрийн улсад боломжтой хэрэгсэл алга.",
+    "topUp": "Цэнэглэх",
+    "history": "Цэнэглэлтийн түүх",
+    "merchantCountry": "Мерчантын улс",
+    "environmentLabel": "Орчин",
+    "iapNotice": "Кредит нь дижитал бараа. Энэ апп Toss, PayPal зэрэг гаднын төлбөр нээхгүй. Цэнэглэлт нь дэлгүүрийн in-app purchase-д хамаарна. Энэ бүтээцэд IAP бүтээгдэхүүн байхгүй."
   },
   "status": {
     "submitted": "Илгээсэн",
