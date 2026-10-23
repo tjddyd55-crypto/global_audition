@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import Script from 'next/script'
 import { useRouter, Link } from '../../../../i18n.config'
 import { authApi } from '@/shared/api/auth'
-import { creditsApi, type PreparePaymentResult } from '@/shared/api/credits'
+import { creditsApi, type PaymentOrderView, type PreparePaymentResult } from '@/shared/api/credits'
 import { BTN_PRIMARY, BTN_SECONDARY, CARD_BASE, PAGE_CONTAINER, TEXT_SUB, TITLE_PAGE } from '@/shared/ui/specClasses'
 import { useLocale, useTranslations } from 'next-intl'
 
@@ -27,6 +27,7 @@ function TossCheckoutContent() {
   const packageId = searchParams.get('packageId')?.trim() ?? ''
   const orderNoParam = searchParams.get('orderNo')?.trim() ?? ''
   const [prep, setPrep] = useState<PreparePaymentResult | null>(null)
+  const [globalOrder, setGlobalOrder] = useState<PaymentOrderView | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [ready, setReady] = useState(false)
 
@@ -43,6 +44,21 @@ function TossCheckoutContent() {
     ;(async () => {
       try {
         if (orderNoParam) {
+          try {
+            const row = await creditsApi.getPaymentOrder(orderNoParam)
+            if (!cancelled && row.provider === 'TOSS' && row.chargeAmountMinor != null && row.clientKey) {
+              if (row.environment === 'LIVE') {
+                setError(t('liveCheckoutBlocked'))
+                return
+              }
+              if (row.environment === 'TEST') {
+                setGlobalOrder(row)
+                return
+              }
+            }
+          } catch {
+            // Legacy checkout session is the fallback.
+          }
           const session = await creditsApi.getCheckoutSession(orderNoParam)
           if (!cancelled) setPrep(session)
           return
@@ -61,9 +77,38 @@ function TossCheckoutContent() {
     return () => {
       cancelled = true
     }
-  }, [packageId, orderNoParam, router])
+  }, [packageId, orderNoParam, router, t])
 
   const startPay = async () => {
+    if (globalOrder?.clientKey && globalOrder.chargeAmountMinor != null && globalOrder.chargeCurrency) {
+      if (globalOrder.environment === 'LIVE') {
+        setError(t('liveCheckoutBlocked'))
+        return
+      }
+      if (!window.TossPayments) {
+        setError(t('scriptFailed'))
+        return
+      }
+      const origin = window.location.origin
+      const method = globalOrder.methodCode === 'TRANSFER' || globalOrder.methodCode === 'VIRTUAL_ACCOUNT' || globalOrder.methodCode === 'MOBILE_PHONE'
+        ? globalOrder.methodCode
+        : 'CARD'
+      try {
+        const toss = window.TossPayments(globalOrder.clientKey)
+        const payment = toss.payment({ customerKey: globalOrder.orderNo })
+        await payment.requestPayment({
+          method,
+          amount: { currency: globalOrder.chargeCurrency, value: globalOrder.chargeAmountMinor },
+          orderId: globalOrder.orderNo,
+          orderName: `${globalOrder.credits} credits`,
+          successUrl: `${origin}/${locale}/credits/toss/success`,
+          failUrl: `${origin}/${locale}/credits/result/fail`,
+        })
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : t('createFailed'))
+      }
+      return
+    }
     if (!prep?.clientKey || !prep.tossAmount || !prep.orderNo) {
       setError(t('missingPrep'))
       return
@@ -104,7 +149,19 @@ function TossCheckoutContent() {
         <h1 className={TITLE_PAGE}>{t('title')}</h1>
         <p className={`${TEXT_SUB} mt-2`}>{t('amountServerSettled')}</p>
         {error ? <p className="mt-3 text-sm text-red-600">{error}</p> : null}
-        {prep ? (
+        {globalOrder ? (
+          <div className={`${CARD_BASE} mt-4`}>
+            <p>
+              {t('order')} {globalOrder.orderNo}
+            </p>
+            <p>
+              {globalOrder.chargeAmountMinor} {globalOrder.chargeCurrency} · {globalOrder.credits} {t('creditsUnit')} · {globalOrder.environment}
+            </p>
+            <button type="button" disabled={!ready || globalOrder.environment === 'LIVE'} onClick={() => void startPay()} className={`${BTN_PRIMARY} mt-4`}>
+              {t('openCheckout')}
+            </button>
+          </div>
+        ) : prep ? (
           <div className={`${CARD_BASE} mt-4`}>
             <p>
               {t('order')} {prep.orderNo}

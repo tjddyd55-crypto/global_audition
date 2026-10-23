@@ -314,6 +314,11 @@ export const creditsApi = {
     const { data } = await apiClient.get<PaymentOrderView[]>('/payments/orders/mine')
     return data
   },
+
+  getPaymentOrder: async (orderNo: string): Promise<PaymentOrderView> => {
+    const { data } = await apiClient.get<PaymentOrderView>(`/payments/orders/${encodeURIComponent(orderNo)}`)
+    return data
+  },
 }
 
 export type PaymentMethodOffer = {
@@ -356,4 +361,6 @@ export type PaymentOrderView = {
   refundedMinor: number
   refundedCredits: number
   failReason: string | null
+  clientKey?: string | null
+  redirectPath?: string | null
 }

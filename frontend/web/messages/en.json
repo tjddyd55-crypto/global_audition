@@ -597,6 +597,7 @@
     "createFailed": "Could not create a Toss order.",
     "scriptFailed": "Could not load the Toss checkout script.",
     "openCheckout": "Open Toss checkout",
+    "liveCheckoutBlocked": "LIVE checkout cannot run.",
     "order": "Order",
     "creditsUnit": "credits",
     "backToPackages": "Back to packs",

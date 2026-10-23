@@ -597,6 +597,7 @@
     "createFailed": "Toss захиалга үүсгэж чадсангүй.",
     "scriptFailed": "Toss скрипт ачаалж чадсангүй.",
     "openCheckout": "Toss цонх нээх",
+    "liveCheckoutBlocked": "LIVE төлбөрийг ажиллуулахгүй.",
     "order": "Захиалга",
     "creditsUnit": "кредит",
     "backToPackages": "Багц руу",

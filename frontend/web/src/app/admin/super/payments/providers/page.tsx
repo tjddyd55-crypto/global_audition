@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { superAdminApi, type PaymentProviderAdmin } from '@/shared/api/superAdmin'
+import { superAdminApi, type PaymentCredentialView, type PaymentProviderAdmin } from '@/shared/api/superAdmin'
 
 export default function PaymentProvidersPage() {
   const qc = useQueryClient()
@@ -100,7 +100,92 @@ export default function PaymentProvidersPage() {
           <li key={row.id}>{row.chargeCurrency} {row.rate} {row.basis} {row.roundingMode} {row.effectiveFrom}</li>
         ))}
       </ul>
+      <SecretForm providers={providers.data ?? []} />
     </div>
+  )
+}
+
+function SecretForm({ providers }: { providers: PaymentProviderAdmin[] }) {
+  const [providerId, setProviderId] = useState('TOSS_DOMESTIC')
+  const [environment, setEnvironment] = useState<'TEST' | 'LIVE'>('TEST')
+  const [clientKey, setClientKey] = useState('')
+  const [clientId, setClientId] = useState('')
+  const [secret, setSecret] = useState('')
+  const [merchantId, setMerchantId] = useState('')
+  const [webhookSecret, setWebhookSecret] = useState('')
+  const [saved, setSaved] = useState<PaymentCredentialView | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const save = useMutation({
+    mutationFn: () => superAdminApi.rotatePaymentSecret(providerId, {
+      environment,
+      clientKey,
+      clientId,
+      secret,
+      merchantId,
+      webhookSecret,
+    }),
+    onSuccess: (view) => {
+      setSecret('')
+      setWebhookSecret('')
+      setSaved(view)
+      setError(null)
+    },
+    onError: () => setError('키를 저장하지 못했습니다.'),
+  })
+  const load = useMutation({
+    mutationFn: () => superAdminApi.viewPaymentCredential(providerId, environment),
+    onSuccess: (view) => {
+      setSaved(view)
+      setError(null)
+    },
+    onError: () => setError('마스킹 정보를 불러오지 못했습니다.'),
+  })
+
+  return (
+    <section className="flex flex-col gap-2">
+      <h2 className="text-lg font-semibold">키 등록</h2>
+      <p className="text-sm text-gray-600">TEST와 LIVE는 분리 저장됩니다. 저장 후 시크릿은 끝 4자리만 보이며 다시 표시하지 않습니다. LIVE 키를 저장해도 LIVE 결제와 LIVE 환불은 실행되지 않습니다.</p>
+      <form className="flex max-w-xl flex-col gap-2 text-sm" onSubmit={(event) => { event.preventDefault(); save.mutate() }}>
+        <label className="flex flex-col gap-1">공급자
+          <select className="rounded border px-2 py-1" value={providerId} onChange={(event) => setProviderId(event.target.value)}>
+            {providers.map((row) => <option key={row.id} value={row.id}>{row.name}</option>)}
+          </select>
+        </label>
+        <label className="flex flex-col gap-1">키 환경
+          <select className="rounded border px-2 py-1" value={environment} onChange={(event) => setEnvironment(event.target.value as 'TEST' | 'LIVE')}>
+            <option value="TEST">TEST</option>
+            <option value="LIVE">LIVE</option>
+          </select>
+        </label>
+        <label className="flex flex-col gap-1">Client Key
+          <input className="rounded border px-2 py-1" value={clientKey} onChange={(event) => setClientKey(event.target.value)} autoComplete="off" />
+        </label>
+        <label className="flex flex-col gap-1">Client ID
+          <input className="rounded border px-2 py-1" value={clientId} onChange={(event) => setClientId(event.target.value)} autoComplete="off" />
+        </label>
+        <label className="flex flex-col gap-1">Secret
+          <input className="rounded border px-2 py-1" type="password" value={secret} onChange={(event) => setSecret(event.target.value)} autoComplete="new-password" />
+        </label>
+        <label className="flex flex-col gap-1">Merchant ID
+          <input className="rounded border px-2 py-1" value={merchantId} onChange={(event) => setMerchantId(event.target.value)} autoComplete="off" />
+        </label>
+        <label className="flex flex-col gap-1">Webhook Secret
+          <input className="rounded border px-2 py-1" type="password" value={webhookSecret} onChange={(event) => setWebhookSecret(event.target.value)} autoComplete="new-password" />
+        </label>
+        <div className="flex gap-3">
+          <button type="submit" className="underline" disabled={save.isPending}>저장</button>
+          <button type="button" className="underline" onClick={() => load.mutate()}>마스킹 조회</button>
+        </div>
+      </form>
+      {environment === 'LIVE' && <p className="text-sm text-amber-800">LIVE 슬롯입니다. 결제 실행과 환불 실행은 꺼져 있습니다.</p>}
+      {error && <p className="text-sm text-red-700">{error}</p>}
+      {saved && (
+        <p className="text-sm">
+          {saved.environment} · 설정 {saved.configured ? '있음' : '없음'} · secret {saved.secretLast4 || '없음'} · webhook {saved.webhookLast4 || '없음'}
+          {saved.clientKey ? ` · client ${saved.clientKey}` : ''}
+        </p>
+      )}
+    </section>
   )
 }
 

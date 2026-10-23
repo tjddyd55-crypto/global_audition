@@ -24,6 +24,7 @@ import com.audition.platform.domain.payment.PaymentOrder;
 import com.audition.platform.domain.payment.PaymentOrderRepository;
 import com.audition.platform.domain.payment.PaymentOrderStatus;
 import com.audition.platform.infra.SecurityUtils;
+import jakarta.persistence.EntityManager;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -57,6 +58,7 @@ public class PaymentService {
     private final PaymentEnvironmentGuard guard;
     private final AdminAuditLogService audit;
     private final TossPaymentsClient tossPaymentsClient;
+    private final EntityManager entityManager;
     private final SecureRandom random = new SecureRandom();
 
     public PaymentService(
@@ -68,7 +70,8 @@ public class PaymentService {
             SettingsSecretCrypto crypto,
             PaymentEnvironmentGuard guard,
             AdminAuditLogService audit,
-            TossPaymentsClient tossPaymentsClient) {
+            TossPaymentsClient tossPaymentsClient,
+            EntityManager entityManager) {
         this.catalog = catalog;
         this.registry = registry;
         this.orders = orders;
@@ -78,6 +81,7 @@ public class PaymentService {
         this.guard = guard;
         this.audit = audit;
         this.tossPaymentsClient = tossPaymentsClient;
+        this.entityManager = entityManager;
     }
 
     @Transactional(readOnly = true)
@@ -273,6 +277,15 @@ public class PaymentService {
         }
         order.setUpdatedAt(Instant.now());
         orders.save(order);
+        if (superAdmin) {
+            Map<String, Object> after = new LinkedHashMap<>();
+            after.put("refund", true);
+            after.put("amountMinor", refundMinor);
+            after.put("credits", refundCredits);
+            after.put("environment", order.getEnvironment() == null ? "" : order.getEnvironment());
+            after.put("idempotencyKey", idempotencyKey.trim());
+            audit(order.getOrderNo(), after);
+        }
         return orderView(order);
     }
 
@@ -472,6 +485,111 @@ public class PaymentService {
         SuperAdminAuthHelper.requireSuperAdmin();
         catalog.setMethodEnabled(methodId, enabled);
         audit(methodId.toString(), Map.of("methodEnabled", enabled));
+    }
+
+    @Transactional(readOnly = true)
+    public List<PaymentCatalogStore.OrderAdminRow> searchOrders(
+            String query, String environment, String status, Instant from, Instant to) {
+        SuperAdminAuthHelper.requireSuperAdmin();
+        return catalog.searchOrders(query, environment, status, from, to);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> orderDetail(String orderNo) {
+        SuperAdminAuthHelper.requireSuperAdmin();
+        PaymentCatalogStore.OrderAdminRow order = catalog.orderByNo(orderNo)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "ORDER_NOT_FOUND"));
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("order", order);
+        body.put("ledger", catalog.ledgerLines(order.userId(), order.orderNo()));
+        long refundable = order.chargeAmountMinor() == null ? 0 : Math.max(0, order.chargeAmountMinor() - order.refundedMinor());
+        body.put("refundableMinor", refundable);
+        body.put("liveRefundAllowed", false);
+        return body;
+    }
+
+    @Transactional(readOnly = true)
+    public List<PaymentCatalogStore.RefundAdminRow> refunds() {
+        SuperAdminAuthHelper.requireSuperAdmin();
+        return catalog.refunds();
+    }
+
+    @Transactional(noRollbackFor = ResponseStatusException.class)
+    public Map<String, Object> reprocessError(UUID errorId, String scenario) {
+        SuperAdminAuthHelper.requireSuperAdmin();
+        PaymentCatalogStore.ErrorLogRow error = catalog.error(errorId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "ERROR_NOT_FOUND"));
+        if (!error.retryable()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "NOT_RETRYABLE");
+        }
+        PaymentOrder order = orders.findByOrderNo(error.orderNo())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "ORDER_NOT_FOUND"));
+        if ("LIVE".equals(order.getEnvironment())) {
+            catalog.markError(errorId, "BLOCKED");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "LIVE_EXECUTION_DISABLED");
+        }
+        if (!"MOCK".equals(order.getEnvironment())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "REPROCESS_REQUIRES_MOCK_OR_PROVIDER");
+        }
+        if (order.getStatus() != PaymentOrderStatus.READY) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "ORDER_NOT_READY");
+        }
+        if (scenario == null || scenario.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "SCENARIO_REQUIRED");
+        }
+        Map<String, Object> result = confirm(order.getUserId(), order.getOrderNo(), scenario, order.getChargeAmountMinor(), null);
+        catalog.markError(errorId, "REPROCESSED");
+        audit(errorId.toString(), Map.of("reprocess", scenario, "orderNo", order.getOrderNo(), "environment", order.getEnvironment()));
+        return result;
+    }
+
+    @Transactional
+    public Map<String, Object> runAdminMockTest(String email, UUID packageId, String paymentCountry, String scenario) {
+        SuperAdminAuthHelper.requireSuperAdmin();
+        if (!guard.mockAllowed()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "MOCK_DISABLED");
+        }
+        PaymentCatalogStore.UserRef user = catalog.userByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "USER_NOT_FOUND"));
+        String chosen = scenario == null || scenario.isBlank() ? "SUCCESS" : scenario.trim().toUpperCase(Locale.ROOT);
+        Map<String, Object> created = createOrder(
+                user.id(), packageId, paymentCountry, "MOCK", "MOCK_CARD", "admin-mock-" + UUID.randomUUID());
+        String orderNo = String.valueOf(created.get("orderNo"));
+        long minor = ((Number) created.get("chargeAmountMinor")).longValue();
+        Map<String, Object> result;
+        try {
+            result = "CANCEL".equals(chosen)
+                    ? cancel(user.id(), orderNo)
+                    : confirm(user.id(), orderNo, chosen, minor, null);
+        } catch (ResponseStatusException ex) {
+            if (ex.getStatusCode().value() != HttpStatus.BAD_GATEWAY.value()) {
+                throw ex;
+            }
+            result = new LinkedHashMap<>();
+            result.put("orderNo", orderNo);
+            result.put("status", catalog.orderByNo(orderNo).map(PaymentCatalogStore.OrderAdminRow::status).orElse("READY"));
+            result.put("error", ex.getReason() == null ? "BAD_GATEWAY" : ex.getReason());
+        }
+        entityManager.flush();
+        Map<String, Object> body = new LinkedHashMap<>(result);
+        body.put("walletBalance", credits.getBalance(user.id()));
+        body.put("ledgerClosing", catalog.ledgerClosing(user.id()));
+        body.put("chargeCount", catalog.chargeCount(user.id(), orderNo));
+        audit(orderNo, Map.of("mockTest", chosen, "email", user.email(), "environment", "MOCK"));
+        return body;
+    }
+
+    @Transactional(readOnly = true)
+    public PaymentCatalogStore.UserRef testUser(String email) {
+        SuperAdminAuthHelper.requireSuperAdmin();
+        return catalog.userByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "USER_NOT_FOUND"));
+    }
+
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> paymentAdminHistory() {
+        SuperAdminAuthHelper.requireSuperAdmin();
+        return catalog.recentPaymentAudits();
     }
 
     @Transactional(readOnly = true)
@@ -696,6 +814,13 @@ public class PaymentService {
         body.put("failReason", order.getFailReason());
         body.put("amountUsd", order.getAmount());
         body.put("currency", order.getCurrency());
+        if (order.getProviderConfigId() != null && !"LIVE".equals(order.getEnvironment())) {
+            catalog.secret(order.getProviderConfigId(), "TEST").ifPresent(secret -> {
+                if (secret.clientKey() != null && !secret.clientKey().isBlank()) {
+                    body.put("clientKey", secret.clientKey());
+                }
+            });
+        }
         return body;
     }
 

@@ -99,6 +99,13 @@ export default function CreditTopUpPage() {
       })
       setOrder(created)
       setHistory(await creditsApi.myPaymentOrders())
+      if (created.environment === 'LIVE') {
+        setError(t('liveCheckoutBlocked'))
+        return
+      }
+      if (created.provider === 'TOSS' && created.environment === 'TEST' && created.redirectPath) {
+        router.push(created.redirectPath)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'ORDER_FAILED')
     } finally {

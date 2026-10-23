@@ -33,7 +33,15 @@ function TossSuccessContent() {
     let cancelled = false
     ;(async () => {
       try {
-        await creditsApi.confirmToss({ paymentKey, orderId, amount })
+        try {
+          await creditsApi.confirmPaymentOrder(orderId, { paymentKey, chargeAmountMinor: amount })
+        } catch (first: unknown) {
+          const ax = first as { response?: { status?: number; data?: { message?: string } } }
+          const message = ax.response?.data?.message
+          const missing = ax.response?.status === 404 || message === 'ORDER_NOT_FOUND' || message === 'CHARGE_AMOUNT_MISSING'
+          if (!missing) throw first
+          await creditsApi.confirmToss({ paymentKey, orderId, amount })
+        }
         if (!cancelled) {
           router.replace(`/credits/result/success?orderNo=${encodeURIComponent(orderId)}`)
         }

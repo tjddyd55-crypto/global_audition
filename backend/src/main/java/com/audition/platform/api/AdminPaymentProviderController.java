@@ -1,5 +1,6 @@
 package com.audition.platform.api;
 
+import com.audition.platform.application.credit.SuperAdminAuthHelper;
 import com.audition.platform.application.payment.PaymentCatalogStore;
 import com.audition.platform.application.payment.PaymentService;
 import com.audition.platform.application.payment.TestRevenuePreviewService;
@@ -86,6 +87,57 @@ public class AdminPaymentProviderController {
         return paymentService.errors();
     }
 
+    @GetMapping("/audit")
+    public List<Map<String, Object>> audit() {
+        return paymentService.paymentAdminHistory();
+    }
+
+    @GetMapping("/orders")
+    public List<PaymentCatalogStore.OrderAdminRow> orders(
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) String environment,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Instant from,
+            @RequestParam(required = false) Instant to) {
+        return paymentService.searchOrders(q, environment, status, from, to);
+    }
+
+    @GetMapping("/orders/{orderNo}")
+    public Map<String, Object> order(@PathVariable String orderNo) {
+        return paymentService.orderDetail(orderNo);
+    }
+
+    @GetMapping("/refunds")
+    public List<PaymentCatalogStore.RefundAdminRow> refunds() {
+        return paymentService.refunds();
+    }
+
+    @PostMapping("/orders/{orderNo}/refund")
+    public Map<String, Object> refund(@PathVariable String orderNo, @RequestBody RefundBody body) {
+        SuperAdminAuthHelper.requireSuperAdmin();
+        return paymentService.refund(
+                com.audition.platform.infra.SecurityUtils.getCurrentUserId(),
+                orderNo,
+                body.amountMinor(),
+                body.idempotencyKey(),
+                true);
+    }
+
+    @PostMapping("/errors/{errorId}/reprocess")
+    public Map<String, Object> reprocess(@PathVariable UUID errorId, @RequestBody ReprocessBody body) {
+        return paymentService.reprocessError(errorId, body.scenario());
+    }
+
+    @GetMapping("/test-user")
+    public PaymentCatalogStore.UserRef testUser(@RequestParam String email) {
+        return paymentService.testUser(email);
+    }
+
+    @PostMapping("/mock-test")
+    public Map<String, Object> mockTest(@RequestBody MockTestBody body) {
+        return paymentService.runAdminMockTest(body.email(), body.packageId(), body.paymentCountry(), body.scenario());
+    }
+
     @GetMapping("/test-revenue")
     public Map<String, Object> testRevenue(
             @RequestParam String country,
@@ -106,5 +158,14 @@ public class AdminPaymentProviderController {
     }
 
     public record FxBody(String chargeCurrency, BigDecimal rate, String basis, String roundingMode, Instant effectiveFrom) {
+    }
+
+    public record RefundBody(long amountMinor, String idempotencyKey) {
+    }
+
+    public record ReprocessBody(String scenario) {
+    }
+
+    public record MockTestBody(String email, UUID packageId, String paymentCountry, String scenario) {
     }
 }
