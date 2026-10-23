@@ -28,6 +28,7 @@ type HomeAuditionSectionProps = {
   onCountryChange: (country: AudienceFilterOption) => void
   heading?: string
   showFilter?: boolean
+  compact?: boolean
 }
 
 export default function HomeAuditionSection({
@@ -37,6 +38,7 @@ export default function HomeAuditionSection({
   onCountryChange,
   heading,
   showFilter = true,
+  compact = false,
 }: HomeAuditionSectionProps) {
   const t = useTranslations('home')
   const tAud = useTranslations('auditions')
@@ -44,11 +46,11 @@ export default function HomeAuditionSection({
   const isEmpty = !isLoading && displayAuditions.length === 0
 
   return (
-    <section style={sectionStyle}>
+    <section style={compact ? { paddingTop: 8, paddingBottom: 24 } : sectionStyle}>
       <div style={containerStyle}>
-        <div style={{ marginBottom: 24, textAlign: 'center' }}>
-          <h2 style={{ fontSize: 24, fontWeight: 700, margin: '0 0 8px 0' }}>{heading ?? t('openAuditions')}</h2>
-          <p style={{ fontSize: 14, color: '#666', margin: 0 }}>{tAud('description')}</p>
+        <div style={{ marginBottom: compact ? 12 : 24, textAlign: 'center' }}>
+          <h2 style={{ fontSize: 24, fontWeight: 700, margin: compact ? 0 : '0 0 8px 0' }}>{heading ?? t('openAuditions')}</h2>
+          {compact ? null : <p style={{ fontSize: 14, color: '#666', margin: 0 }}>{tAud('description')}</p>}
         </div>
         {showFilter ? <AuditionAudienceFilter country={country} onChange={onCountryChange} /> : null}
       </div>

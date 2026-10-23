@@ -43,7 +43,7 @@ function MyApplicantsInner() {
     enabled: gateReady && (role === 'AGENCY' || role === 'ADMIN'),
   })
 
-  const list = auditionsPayload?.content ?? []
+  const list = useMemo(() => auditionsPayload?.content ?? [], [auditionsPayload])
   const auditionIdFromUrl = searchParams.get('auditionId')?.trim() ?? ''
 
   const effectiveAuditionId = useMemo(() => {

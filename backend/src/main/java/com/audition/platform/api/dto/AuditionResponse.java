@@ -17,6 +17,7 @@ public class AuditionResponse {
     private String status;
     private Instant updatedAt;
     private String countryCode;
+    private String hostCountry;
     private Instant deadlineAt;
     private String[] tags;
     private Instant createdAt;
@@ -125,6 +126,8 @@ public class AuditionResponse {
     public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
     public String getCountryCode() { return countryCode; }
     public void setCountryCode(String countryCode) { this.countryCode = countryCode; }
+    public String getHostCountry() { return hostCountry; }
+    public void setHostCountry(String hostCountry) { this.hostCountry = hostCountry; }
     public Instant getDeadlineAt() { return deadlineAt; }
     public void setDeadlineAt(Instant deadlineAt) { this.deadlineAt = deadlineAt; }
     public String[] getTags() { return tags; }

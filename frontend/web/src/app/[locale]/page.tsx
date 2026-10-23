@@ -73,7 +73,7 @@ export default function HomePage() {
           {t('signup')}
         </Link>
       </form>
-      <div className="mx-auto flex max-w-3xl flex-wrap gap-2 px-6 pb-6">
+      <div className="mx-auto flex max-w-3xl flex-wrap gap-2 px-6 pb-2">
         {CATEGORIES.map((category) => (
           <Link key={category} href={`/auditions?category=${category}`} className="rounded-full border border-neutral-300 px-3 py-1 text-sm">
             {category}
@@ -92,6 +92,7 @@ export default function HomePage() {
 
       <HomeAuditionSection
         heading={t('featuredAuditions')}
+        compact
         auditions={featured}
         isLoading={auditionsLoading}
         country={country}

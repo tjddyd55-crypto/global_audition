@@ -186,6 +186,18 @@ public class JdbcContractStore {
         return count == null ? 0 : count;
     }
 
+    public List<DocumentMeta> listDocumentMeta(UUID contractId) {
+        return jdbc.query("""
+                SELECT id, filename, content_type, created_at, version_id
+                FROM contract_documents WHERE contract_id = ? ORDER BY created_at DESC
+                """, (rs, n) -> new DocumentMeta(
+                rs.getObject("id", UUID.class),
+                rs.getString("filename"),
+                rs.getString("content_type"),
+                rs.getTimestamp("created_at").toInstant(),
+                rs.getObject("version_id", UUID.class)), contractId);
+    }
+
     public Optional<DocumentRow> latestDocument(UUID contractId) {
         List<DocumentRow> rows = jdbc.query("""
                 SELECT id, filename, content_type, body
@@ -273,6 +285,9 @@ public class JdbcContractStore {
     }
 
     public record DocumentRow(UUID id, String filename, String contentType, byte[] body) {
+    }
+
+    public record DocumentMeta(UUID id, String filename, String contentType, java.time.Instant createdAt, UUID versionId) {
     }
 
     public record FileRow(

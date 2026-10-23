@@ -15,6 +15,7 @@ import {
   type UsagePoint,
 } from '@/shared/api/orgAdmin'
 import { apiClient } from '@/shared/api/client'
+import { ContractFiles } from '@/components/admin/ContractFiles'
 import { userApi } from '@/shared/api/user'
 import { formatCount, formatUsdAmount } from '@/shared/money/currency'
 
@@ -704,9 +705,10 @@ export function ContractScreen() {
           <p className="text-sm">
             상대 {current.counterpartyName} · 국가 {current.countryCode} · 상태 {current.status} · 기간 {current.startDate} ~ {current.endDate ?? '진행'} · 요율 {current.revenueShareBps == null ? '미정' : count(current.revenueShareBps, locale)} bps · 기준 {current.settlementBasis ?? '미정'}
           </p>
-          <p className="mt-2 text-sm text-gray-600">전자서명은 없습니다. 서명본은 본사가 비공개 저장소에 첨부합니다.</p>
+          <p className="mt-2 text-sm text-gray-600">전자서명은 없습니다. 서명본 PDF는 본사가 비공개 저장소에 첨부합니다.</p>
         </Panel>
       ) : null}
+      {current ? <ContractFiles contractId={current.id} canUpload={false} /> : null}
       {rows.length > 1 ? (
         <Panel title="계약 이력">
           <ul className="text-sm">

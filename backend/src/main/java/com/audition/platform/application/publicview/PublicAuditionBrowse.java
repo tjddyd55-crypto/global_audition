@@ -27,6 +27,7 @@ public final class PublicAuditionBrowse {
     public static boolean matches(
             String status,
             String countryCode,
+            String hostCountry,
             String title,
             String agencyName,
             String[] recruitFields,
@@ -52,7 +53,7 @@ public final class PublicAuditionBrowse {
         } else if (!"ALL".equals(recruitment)) {
             return false;
         }
-        if (!AuditionService.matchesAudience(countryCode, query.country())) {
+        if (!AuditionService.matchesPublicCountry(countryCode, hostCountry, query.country())) {
             return false;
         }
         if (!contains(agencyName, query.agency())) {

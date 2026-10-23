@@ -53,6 +53,7 @@ public class UpdateAuditionRequest {
     private List<String> benefits;
 
     private String countryCode;
+    private String hostCountry;
 
     private String defaultLocale;
 
@@ -99,6 +100,8 @@ public class UpdateAuditionRequest {
     public void setBenefits(List<String> benefits) { this.benefits = benefits; }
     public String getCountryCode() { return countryCode; }
     public void setCountryCode(String countryCode) { this.countryCode = countryCode; }
+    public String getHostCountry() { return hostCountry; }
+    public void setHostCountry(String hostCountry) { this.hostCountry = hostCountry; }
     public String getDefaultLocale() { return defaultLocale; }
     public void setDefaultLocale(String defaultLocale) { this.defaultLocale = defaultLocale; }
     public String getDeadlineAt() { return deadlineAt; }

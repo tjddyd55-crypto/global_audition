@@ -125,8 +125,8 @@ public class AuditionService {
     }
 
     /**
-     * 기존 {@code auditions.country_code} 재사용. 대상 국가/권역: KR, MN, GLOBAL, JP, OTHER.
-     * 새 컬럼을 만들지 않는다.
+     * 모집 대상은 {@code country_code} (KR, MN, GLOBAL, JP, OTHER).
+     * 개최 국가는 {@code host_country}. 매출 귀속은 기획사 지점 국가이며 여기 넣지 않는다.
      */
     private static String normalizeCountryCode(String raw) {
         if (raw == null || raw.isBlank()) {
@@ -140,6 +140,18 @@ public class AuditionService {
             case "WORLD", "ALL", "WW" -> "GLOBAL";
             default -> code.length() <= 16 ? code : code.substring(0, 16);
         };
+    }
+
+    /** 개최 국가. 2글자 ISO 만 받는다. 기획사 소속 국가로 채우지 않는다. */
+    private static String normalizeHostCountry(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        String code = raw.trim().toUpperCase(java.util.Locale.ROOT);
+        if (!code.matches("[A-Z]{2}")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "HOST_COUNTRY_INVALID");
+        }
+        return code;
     }
 
     private static String trimOrNull(String s) {
@@ -207,6 +219,7 @@ public class AuditionService {
         r.setStatus(a.getStatus());
         r.setUpdatedAt(a.getUpdatedAt());
         r.setCountryCode(a.getCountryCode());
+        r.setHostCountry(a.getHostCountry());
         r.setDeadlineAt(a.getDeadlineAt());
         try {
             r.setTags(auditionTagService.resolveMergedDisplayNames(a.getId()).toArray(new String[0]));
@@ -282,6 +295,7 @@ public class AuditionService {
         Instant deadlineParsed = parseInstantOrNull(req.getDeadlineAt());
         a.setDeadlineAt(deadlineParsed != null ? deadlineParsed : end);
         a.setCountryCode(normalizeCountryCode(req.getCountryCode()));
+        a.setHostCountry(normalizeHostCountry(req.getHostCountry()));
         if (req.getDefaultLocale() != null && !req.getDefaultLocale().isBlank()) {
             a.setDefaultLocale(requireAuthoringLocale(req.getDefaultLocale()));
         }
@@ -357,7 +371,7 @@ public class AuditionService {
 
     public List<AuditionResponse> listOpen(String country) {
         return auditionRepository.findByStatusOrderByCreatedAtDesc("OPEN").stream()
-                .filter(a -> matchesAudience(a.getCountryCode(), country))
+                .filter(a -> matchesPublicCountry(a.getCountryCode(), a.getHostCountry(), country))
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
@@ -378,6 +392,25 @@ public class AuditionService {
         return requested.equals(code) || "GLOBAL".equals(code);
     }
 
+    /**
+     * 요청 국가는 모집 대상이거나 개최 국가일 때 맞는다.
+     * 기획사 소속·계약 국가는 공개 필터에 넣지 않는다.
+     */
+    public static boolean matchesHost(String storedHost, String requestedRaw) {
+        if (requestedRaw == null || requestedRaw.isBlank() || storedHost == null || storedHost.isBlank()) {
+            return false;
+        }
+        String requested = requestedRaw.trim().toUpperCase(java.util.Locale.ROOT);
+        if ("GLOBAL".equals(requested) || "ALL".equals(requested)) {
+            return false;
+        }
+        return requested.equals(storedHost.trim().toUpperCase(java.util.Locale.ROOT));
+    }
+
+    public static boolean matchesPublicCountry(String audience, String host, String requested) {
+        return matchesAudience(audience, requested) || matchesHost(host, requested);
+    }
+
     public List<AuditionResponse> browsePublic(PublicAuditionBrowse.Query query) {
         String recruitment = query.recruitment() == null ? "" : query.recruitment().trim().toUpperCase(java.util.Locale.ROOT);
         List<Audition> rows = new ArrayList<>();
@@ -393,6 +426,7 @@ public class AuditionService {
                 .filter(audition -> PublicAuditionBrowse.matches(
                         audition.getStatus(),
                         audition.getCountryCode(),
+                        audition.getHostCountry(),
                         audition.getTitle(),
                         audition.getAgencyName(),
                         audition.getRecruitFields(),
@@ -504,6 +538,9 @@ public class AuditionService {
         }
         if (request.getCountryCode() != null) {
             audition.setCountryCode(normalizeCountryCode(request.getCountryCode()));
+        }
+        if (request.getHostCountry() != null) {
+            audition.setHostCountry(normalizeHostCountry(request.getHostCountry()));
         }
         if (request.getDefaultLocale() != null && !request.getDefaultLocale().isBlank()) {
             audition.setDefaultLocale(requireAuthoringLocale(request.getDefaultLocale()));
@@ -642,6 +679,7 @@ public class AuditionService {
         n.setDescription(source.getDescription());
         n.setStatus("DRAFT");
         n.setCountryCode(source.getCountryCode());
+        n.setHostCountry(source.getHostCountry());
         n.setDefaultLocale(source.getDefaultLocale());
         n.setDeadlineAt(source.getDeadlineAt());
         n.setCoverImage(source.getCoverImage());

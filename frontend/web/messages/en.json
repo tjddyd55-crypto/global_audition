@@ -210,8 +210,8 @@
   },
   "home": {
     "title": "Audition platform",
-    "heroTitle": "Find the stage for your dreams",
-    "heroSubtitle": "A global audition platform connecting you with agencies worldwide",
+    "heroTitle": "Find your stage",
+    "heroSubtitle": "Auditions from agencies worldwide",
     "subtitle": "Online audition platform connecting agencies and applicants",
     "viewAuditions": "View auditions",
     "getStarted": "Get started",
@@ -313,6 +313,7 @@
     "roundInfoFailed": "Could not load round info. Try again from your application.",
     "applyFree": "This application is free.",
     "creditCostHold": "{usd} ({credits} credits) · balance {balance}",
+    "applicationFee": "{usd} ({credits} credits)",
     "applyHow": "How to apply: add a video URL and a short profile",
     "noInfo": "No info",
     "detailGuide": "Details",

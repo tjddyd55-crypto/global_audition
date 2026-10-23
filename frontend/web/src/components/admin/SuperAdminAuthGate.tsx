@@ -42,8 +42,9 @@ export function SuperAdminAuthGate({ children }: SuperAdminAuthGateProps) {
   })
 
   const jwtRoleHint = useMemo(() => {
-    if (typeof window === 'undefined') return null
-    return localStorage.getItem('userRole')
+    if (!mounted || typeof window === 'undefined') return null
+    const stored = localStorage.getItem('userRole')
+    return stored ?? me?.role ?? null
   }, [mounted, me?.role])
 
   if (!mounted) {

@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { adminKo } from '@/app/admin/org/copy'
 import { orgAdminApi, orgErrorMessage } from '@/shared/api/orgAdmin'
+import { ContractFiles } from '@/components/admin/ContractFiles'
 import { formatCount } from '@/shared/money/currency'
 
 export default function ContractsPage() {
@@ -21,6 +22,7 @@ export default function ContractsPage() {
   const [feeBasis, setFeeBasis] = useState('')
   const [extraBasis, setExtraBasis] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [selectedId, setSelectedId] = useState('')
   const contracts = useQuery({
     queryKey: ['org', 'contracts', country],
     queryFn: () => orgAdminApi.contracts(country),
@@ -74,6 +76,26 @@ export default function ContractsPage() {
         </button>
       </div>
       {error ? <p className="mb-4 text-sm text-red-700">{error}</p> : null}
+      {(contracts.data ?? []).length > 0 ? (
+        <div className="mb-4">
+          <label className="mb-2 block text-sm">
+            파일 대상 계약
+            <select
+              className="ml-2 rounded border px-3 py-2"
+              aria-label="파일 대상 계약"
+              value={selectedId || contracts.data?.[0]?.id || ''}
+              onChange={(event) => setSelectedId(event.target.value)}
+            >
+              {(contracts.data ?? []).map((row) => (
+                <option key={row.id} value={row.id}>
+                  {row.contractNumber}
+                </option>
+              ))}
+            </select>
+          </label>
+          <ContractFiles contractId={selectedId || contracts.data?.[0]?.id || ''} canUpload />
+        </div>
+      ) : null}
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b text-left">

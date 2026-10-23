@@ -41,8 +41,13 @@ public class Audition {
     @Column(name = "updated_at")
     private Instant updatedAt = Instant.now();
 
+    /** 모집 대상 국가/권역. 개최 국가와 매출 귀속 국가가 아니다. */
     @Column(name = "country_code", columnDefinition = "TEXT")
     private String countryCode;
+
+    /** 개최 국가 ISO2. 비어 있으면 공개 필터는 모집 대상만 본다. */
+    @Column(name = "host_country", columnDefinition = "TEXT")
+    private String hostCountry;
 
     @Column(name = "deadline_at")
     private Instant deadlineAt;
@@ -154,6 +159,8 @@ public class Audition {
     public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
     public String getCountryCode() { return countryCode; }
     public void setCountryCode(String countryCode) { this.countryCode = countryCode; }
+    public String getHostCountry() { return hostCountry; }
+    public void setHostCountry(String hostCountry) { this.hostCountry = hostCountry; }
     public Instant getDeadlineAt() { return deadlineAt; }
     public void setDeadlineAt(Instant deadlineAt) { this.deadlineAt = deadlineAt; }
     public Instant getCreatedAt() { return createdAt; }

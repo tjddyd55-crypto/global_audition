@@ -1,4 +1,4 @@
-import i18n from 'i18next'
+import i18n, { use as registerI18nPlugin } from 'i18next'
 import { initReactI18next } from 'react-i18next'
 import ko from '../../../web/messages/ko.json'
 import en from '../../../web/messages/en.json'
@@ -12,7 +12,7 @@ const resources = nativeTranslationResources(
   mn as Record<string, unknown>,
 )
 
-void i18n.use(initReactI18next).init({
+void registerI18nPlugin.call(i18n, initReactI18next).init({
   resources,
   lng: DEFAULT_LOCALE,
   fallbackLng: DEVICE_FALLBACK,

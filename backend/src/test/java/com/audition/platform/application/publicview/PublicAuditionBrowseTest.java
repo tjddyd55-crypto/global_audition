@@ -31,12 +31,36 @@ class PublicAuditionBrowseTest {
         assertTrue(hit("OPEN", query("ALL", null, null, null, "open call", null, null)));
     }
 
+    @Test
+    void japanAudienceAndJapanHostMatchJapanOnly() {
+        assertTrue(row("JP", "JP", query("OPEN", "JP", null, null, null, null, null)));
+        assertFalse(row("JP", "JP", query("OPEN", "PH", null, null, null, null, null)));
+    }
+
+    @Test
+    void philippinesHostWithJapanAudienceStaysSeparateFromAgencyCountry() {
+        assertTrue(row("JP", "PH", query("OPEN", "PH", null, null, null, null, null)));
+        assertTrue(row("JP", "PH", query("OPEN", "JP", null, null, null, null, null)));
+        assertFalse(row("KR", "PH", query("OPEN", "JP", null, null, null, null, null)));
+        assertTrue(row("KR", "PH", query("OPEN", "KR", null, null, null, null, null)));
+    }
+
     private static boolean hit(String status, PublicAuditionBrowse.Query query) {
+        return row(status, "JP", "JP", "Tokyo Stage", query);
+    }
+
+    private static boolean row(String audience, String host, PublicAuditionBrowse.Query query) {
+        return row("OPEN", audience, host, "Tokyo Stage", query);
+    }
+
+    private static boolean row(
+            String status, String audience, String host, String agencyName, PublicAuditionBrowse.Query query) {
         return PublicAuditionBrowse.matches(
                 status,
-                "JP",
+                audience,
+                host,
                 "Tokyo Open Call",
-                "Tokyo Stage",
+                agencyName,
                 new String[] {"Vocal"},
                 List.of("Singer"),
                 START,

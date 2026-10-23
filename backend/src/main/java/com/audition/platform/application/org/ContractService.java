@@ -180,6 +180,11 @@ public class ContractService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "DOCUMENT_NOT_FOUND"));
     }
 
+    public List<JdbcContractStore.DocumentMeta> documents(UUID contractId) {
+        requireReadable(contractId);
+        return contracts.listDocumentMeta(contractId);
+    }
+
     private void requireReadable(UUID contractId) {
         ContractRow current = require(contractId);
         if (!"ACTIVE".equals(current.status())) {
