@@ -72,6 +72,9 @@ public class AuthService {
         if (!passwordEncoder.matches(req.getPassword(), user.getPasswordHash())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password");
         }
+        if (!"ACTIVE".equals(user.getAccountStatus())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "계정이 활성 상태가 아닙니다.");
+        }
         String token = jwtService.createToken(user.getId(), user.getEmail(), user.getRole());
         return authResponse(token, user);
     }
