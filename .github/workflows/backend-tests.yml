@@ -4,7 +4,7 @@ on:
   pull_request:
     paths: ["backend/**", ".github/workflows/backend-tests.yml"]
   push:
-    branches: ["security/**"]
+    branches: ["security/**", "integration/**", "develop"]
     paths: ["backend/**", ".github/workflows/backend-tests.yml"]
 
 permissions:
