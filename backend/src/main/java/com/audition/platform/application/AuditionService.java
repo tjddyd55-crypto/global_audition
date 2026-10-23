@@ -6,6 +6,7 @@ import com.audition.platform.api.dto.AuditionRoundSummaryDto;
 import com.audition.platform.api.dto.CreateAuditionRequest;
 import com.audition.platform.api.dto.UpdateAuditionRequest;
 import com.audition.platform.application.audition.AuditionSeriesEligibilityService;
+import com.audition.platform.application.publicview.PublicAuditionBrowse;
 import com.audition.platform.application.audition.AuditionSeriesPresentation;
 import com.audition.platform.application.i18n.AuditionLocalizationService;
 import com.audition.platform.application.i18n.ContentLocales;
@@ -365,7 +366,7 @@ public class AuditionService {
      * 기존 country_code 재사용. MN 요청은 MN+GLOBAL(+미지정), KR은 KR+GLOBAL.
      * GLOBAL/빈 값은 전체 OPEN.
      */
-    static boolean matchesAudience(String stored, String requestedRaw) {
+    public static boolean matchesAudience(String stored, String requestedRaw) {
         if (requestedRaw == null || requestedRaw.isBlank()) {
             return true;
         }
@@ -375,6 +376,33 @@ public class AuditionService {
         }
         String code = stored == null || stored.isBlank() ? "GLOBAL" : stored.trim().toUpperCase();
         return requested.equals(code) || "GLOBAL".equals(code);
+    }
+
+    public List<AuditionResponse> browsePublic(PublicAuditionBrowse.Query query) {
+        String recruitment = query.recruitment() == null ? "" : query.recruitment().trim().toUpperCase(java.util.Locale.ROOT);
+        List<Audition> rows = new ArrayList<>();
+        if ("CLOSED".equals(recruitment) || "ENDED".equals(recruitment)) {
+            rows.addAll(auditionRepository.findByStatusOrderByCreatedAtDesc("CLOSED"));
+        } else if ("ALL".equals(recruitment)) {
+            rows.addAll(auditionRepository.findByStatusOrderByCreatedAtDesc("OPEN"));
+            rows.addAll(auditionRepository.findByStatusOrderByCreatedAtDesc("CLOSED"));
+        } else {
+            rows.addAll(auditionRepository.findByStatusOrderByCreatedAtDesc("OPEN"));
+        }
+        return rows.stream()
+                .filter(audition -> PublicAuditionBrowse.matches(
+                        audition.getStatus(),
+                        audition.getCountryCode(),
+                        audition.getTitle(),
+                        audition.getAgencyName(),
+                        audition.getRecruitFields(),
+                        auditionTagService.resolveMergedDisplayNames(audition.getId()),
+                        audition.getStartDate(),
+                        audition.getEndDate(),
+                        audition.getDeadlineAt(),
+                        query))
+                .map(this::toResponse)
+                .collect(Collectors.toList());
     }
 
     public List<AuditionResponse> listByStatus(String status) {

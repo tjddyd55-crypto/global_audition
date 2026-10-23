@@ -9,6 +9,7 @@ import { resolveVideoThumbnailUrl } from '@/shared/audition/videoThumbnail'
 import { formatRelative } from '@/shared/i18n/formatRelative'
 import { useTranslations } from 'next-intl'
 import { channelVideoKeys } from '@/shared/query/channelVideoQuery'
+import { isNewUpload } from '@/shared/public/newUpload'
 
 const ALL_CATEGORIES_VALUE = ''
 const CATEGORIES = [ALL_CATEGORIES_VALUE, 'Vocal', 'Dance', 'Rap'] as const
@@ -87,6 +88,8 @@ export function VideosBrowsePageClient() {
                 viewCount={Number(video.viewCount ?? 0)}
                 dateLabel={formatRelative(video.publishedAt ?? '', tRelative)}
                 categoryBadge={video.category?.trim() || null}
+                channelHref={video.channelOwnerId ? `/channel/${video.channelOwnerId}` : null}
+                freshLabel={isNewUpload(video.publishedAt) ? tVideo('newUpload') : null}
               />
             </div>
           ))}

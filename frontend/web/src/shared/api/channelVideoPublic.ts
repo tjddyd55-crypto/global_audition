@@ -52,6 +52,7 @@ export type ChannelVideoBrowseItem = {
   videoUrl: string
   thumbnailUrl: string | null
   category: string
+  channelOwnerId: string
   channelDisplayName: string
   channelProfileImageUrl: string | null
   viewCount: number
@@ -168,6 +169,7 @@ function parseBrowseItem(raw: Record<string, unknown>): ChannelVideoBrowseItem {
     videoUrl: String(raw.videoUrl ?? ''),
     thumbnailUrl: raw.thumbnailUrl != null ? String(raw.thumbnailUrl) : null,
     category: String(raw.category ?? ''),
+    channelOwnerId: String(raw.channelOwnerId ?? ''),
     channelDisplayName: String(raw.channelDisplayName ?? ''),
     channelProfileImageUrl: raw.channelProfileImageUrl != null ? String(raw.channelProfileImageUrl) : null,
     viewCount: Number(raw.viewCount ?? 0) || 0,

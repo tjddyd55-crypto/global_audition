@@ -16,6 +16,8 @@ export type VideoListItemProps = {
   /** 표시용 날짜·상대시간 등 (부모에서 포맷) */
   dateLabel: string
   categoryBadge?: string | null
+  channelHref?: string | null
+  freshLabel?: string | null
   /** 썸네일·텍스트 아래 (관리 버튼 등) */
   footer?: ReactNode
 }
@@ -29,6 +31,8 @@ export function VideoListItem({
   viewCount,
   dateLabel,
   categoryBadge,
+  channelHref,
+  freshLabel,
   footer,
 }: VideoListItemProps) {
   const locale = useLocale()
@@ -58,6 +62,11 @@ export function VideoListItem({
               {tProfile('noThumbnail')}
             </div>
           )}
+          {freshLabel ? (
+            <span className="absolute left-1.5 top-1.5 bg-white px-1.5 py-0.5 text-[11px] font-semibold text-neutral-900">
+              {freshLabel}
+            </span>
+          ) : null}
           {categoryBadge ? (
             <span className="absolute right-1.5 top-1.5 bg-black/75 px-1.5 py-0.5 text-[11px] font-medium text-white">
               {categoryBadge}
@@ -68,7 +77,7 @@ export function VideoListItem({
 
       <div className="flex gap-2.5 px-3 py-2">
         <Link
-          href={href}
+          href={channelHref || href}
           className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full bg-neutral-200"
           aria-label={tVideo('profileAria', { name: channelLabel })}
         >

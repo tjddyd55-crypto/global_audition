@@ -14,6 +14,7 @@
     "ranking": "Ranking",
     "credits": "Credits",
     "channels": "Channels",
+    "agencies": "Agencies",
     "save": "Save",
     "cancel": "Cancel",
     "submit": "Submit",
@@ -235,7 +236,14 @@
     "latestVideosHint": "See the latest uploaded videos",
     "videosLoadFailed": "Could not load videos. Try again shortly.",
     "seeAllVideos": "See all videos",
-    "seeAllAuditions": "See all auditions"
+    "seeAllAuditions": "See all auditions",
+    "featuredAuditions": "Featured auditions",
+    "latestAuditions": "Latest auditions",
+    "searchPlaceholder": "Search auditions or agencies",
+    "signup": "Sign up",
+    "channels": "Public channels",
+    "agencies": "Approved agencies",
+    "seeAllAgencies": "See all agencies"
   },
   "auditions": {
     "title": "Auditions",
@@ -255,7 +263,14 @@
     "filterRegion": "My region",
     "filterAll": "All",
     "filterHint": "Every open audition is shown until you choose a country. That choice stays when you change language, and a country also includes global postings.",
-    "emptyList": "No auditions yet"
+    "emptyList": "No auditions yet",
+    "search": "Title",
+    "category": "Category",
+    "periodFrom": "From",
+    "periodTo": "To",
+    "recruitment": "Recruitment",
+    "apply": "Apply",
+    "applyCta": "Create an account to apply"
   },
   "auditionDetail": {
     "applyNow": "Apply now",
@@ -1143,6 +1158,9 @@
     "listLoading": "Loading channels…",
     "listLoadFailed": "Could not load the channel list.",
     "listEmpty": "No channels yet",
+    "stageName": "Stage name",
+    "country": "Country",
+    "category": "Category",
     "viewCta": "View channel →",
     "manageMine": "Manage my channel",
     "nameFallback": "Untitled channel",
@@ -1318,8 +1336,20 @@
     "sortPopular": "Popular",
     "browseLoading": "Loading videos…",
     "browseEmpty": "No public videos uploaded yet",
+    "newUpload": "New",
     "invalidYoutubeUrl": "This is not a valid YouTube URL",
     "statsLine": "{views} views · {likes} likes"
+  },
+  "agencies": {
+    "title": "Agencies",
+    "hint": "Approved agencies and the auditions they are running.",
+    "loading": "Loading agencies…",
+    "loadFailed": "Could not load agencies.",
+    "empty": "No approved agencies yet.",
+    "openCount": "{count} open auditions",
+    "openAuditions": "Open auditions",
+    "noAuditions": "No open auditions.",
+    "apply": "Apply"
   },
   "gallery": {
     "empty": "No additional images yet.",

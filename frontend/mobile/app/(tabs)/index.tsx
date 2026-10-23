@@ -38,6 +38,9 @@ export default function HomeScreen() {
         <Text style={styles.heroTitle}>{t('home.heroTitle')}</Text>
         <Text style={styles.heroBody}>{t('home.heroBody')}</Text>
         <Button label={t('home.browse')} onPress={() => router.push('/(tabs)/auditions')} />
+        <Button label={t('common.channels')} onPress={() => router.push('/channels')} />
+        <Button label={t('common.videos')} onPress={() => router.push('/videos')} />
+        <Button label={t('common.agencies')} onPress={() => router.push('/agencies')} />
       </LinearGradient>
 
       {isAuthenticated && dashQuery.data ? (

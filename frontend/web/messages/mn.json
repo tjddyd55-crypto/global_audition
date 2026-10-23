@@ -14,6 +14,7 @@
     "ranking": "Чансаа",
     "credits": "Кредит",
     "channels": "Суваг",
+    "agencies": "Агентлаг",
     "save": "Хадгалах",
     "cancel": "Цуцлах",
     "submit": "Илгээх",
@@ -235,7 +236,14 @@
     "latestVideosHint": "Саяхан байршуулсан видеог үзээрэй",
     "videosLoadFailed": "Видео ачаалж чадсангүй. Түр хүлээгээд дахин оролдоно уу.",
     "seeAllVideos": "Бүх видео үзэх",
-    "seeAllAuditions": "Бүх аудишн үзэх"
+    "seeAllAuditions": "Бүх аудишн үзэх",
+    "featuredAuditions": "Онцлох аудишн",
+    "latestAuditions": "Сүүлийн аудишн",
+    "searchPlaceholder": "Аудишн эсвэл агентлаг хайх",
+    "signup": "Бүртгүүлэх",
+    "channels": "Нээлттэй суваг",
+    "agencies": "Батлагдсан агентлаг",
+    "seeAllAgencies": "Бүх агентлаг"
   },
   "auditions": {
     "title": "Аудишн",
@@ -255,7 +263,14 @@
     "filterRegion": "Миний бүс",
     "filterAll": "Бүгд",
     "filterHint": "Улс сонгохоос өмнө нээлттэй бүх аудишн харагдана. Сонголт хэл солиход хадгалагдаж, тухайн улс болон глобал зарууд хамт гарна.",
-    "emptyList": "Аудишн алга"
+    "emptyList": "Аудишн алга",
+    "search": "Гарчиг",
+    "category": "Ангилал",
+    "periodFrom": "Эхлэх",
+    "periodTo": "Дуусах",
+    "recruitment": "Бүртгэл",
+    "apply": "Өргөдөл",
+    "applyCta": "Өргөдөл гаргахын тулд бүртгүүлнэ үү"
   },
   "auditionDetail": {
     "applyNow": "Одоо бүртгүүлэх",
@@ -1143,6 +1158,9 @@
     "listLoading": "Сувгийг ачааллаж байна…",
     "listLoadFailed": "Сувгийн жагсаалтыг ачаалж чадсангүй.",
     "listEmpty": "Бүртгэлтэй суваг алга",
+    "stageName": "Тайзны нэр",
+    "country": "Улс",
+    "category": "Ангилал",
     "viewCta": "Суваг үзэх →",
     "manageMine": "Миний сувгийг удирдах",
     "nameFallback": "Нэргүй суваг",
@@ -1318,8 +1336,20 @@
     "sortPopular": "Алдартай",
     "browseLoading": "Видео ачааллаж байна…",
     "browseEmpty": "Нийтэлсэн нийтийн видео алга",
+    "newUpload": "Шинэ",
     "invalidYoutubeUrl": "Хүчинтэй YouTube URL биш байна",
     "statsLine": "{views} үзэлт · {likes} таалагдсан"
+  },
+  "agencies": {
+    "title": "Агентлаг",
+    "hint": "Батлагдсан агентлаг ба тэдний нээлттэй аудишн.",
+    "loading": "Ачаалж байна…",
+    "loadFailed": "Агентлаг ачаалж чадсангүй.",
+    "empty": "Батлагдсан агентлаг алга.",
+    "openCount": "{count} нээлттэй аудишн",
+    "openAuditions": "Нээлттэй аудишн",
+    "noAuditions": "Нээлттэй аудишн алга.",
+    "apply": "Өргөдөл"
   },
   "gallery": {
     "empty": "Нэмэлт зураг алга.",

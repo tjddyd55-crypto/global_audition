@@ -1,6 +1,7 @@
 ﻿'use client'
 
 import { useTranslations } from 'next-intl'
+import { Link } from '@/i18n.config'
 import type { AuditionDto } from '@/shared/types/audition'
 import AuditionCard from './AuditionCard'
 import { SkeletonAuditionCard } from '../ui/SkeletonCard'
@@ -37,7 +38,16 @@ export default function AuditionListContent({ auditions, isLoading, error }: Aud
   return (
     <div className="flex w-full flex-col lg:gap-3">
       {auditions.map((audition: AuditionDto) => (
-        <AuditionCard key={audition?.id ?? ''} audition={audition} />
+        <div key={audition?.id ?? ''}>
+          <AuditionCard audition={audition} />
+          {audition?.status === 'OPEN' && audition.id ? (
+            <div className="px-4 py-2">
+              <Link href={`/auditions/${audition.id}/apply`} className="text-sm font-medium underline">
+                {t('apply')}
+              </Link>
+            </div>
+          ) : null}
+        </div>
       ))}
     </div>
   )

@@ -76,6 +76,11 @@ export const auditionApi = {
     return rows.map((row) => parseAuditionDto(row))
   },
   getById: async (id: string): Promise<AuditionDto> => parseAuditionDto(await apiRequest<unknown>(`/auditions/${id}`)),
+  browse: async (query: Record<string, string | undefined>): Promise<AuditionDto[]> => {
+    const data = await apiRequest<unknown>('/auditions/browse', { query, auth: false })
+    const rows = Array.isArray(data) ? data : []
+    return rows.map((row) => parseAuditionDto(row))
+  },
   listMine: async (): Promise<AuditionDto[]> => {
     const data = await apiRequest<unknown>('/auditions/my')
     const rows = Array.isArray(data) ? data : []
@@ -187,6 +192,16 @@ export const creditApi = {
     parsePreparePayment(await apiRequest<unknown>(`/credits/orders/${orderNo}/checkout`)),
   confirmToss: async (body: { paymentKey: string; orderId: string; amount: number }) =>
     apiRequest<unknown>('/payments/toss/confirm', { method: 'POST', body }),
+}
+
+export const publicPlatformApi = {
+  channels: async (query?: Record<string, string | undefined>) =>
+    unwrapData(await apiRequest<unknown>('/channels/public', { query, auth: false })),
+  videos: async (category?: string) =>
+    unwrapData(await apiRequest<unknown>('/videos/browse', { query: category ? { category } : undefined, auth: false })),
+  video: async (id: string) => unwrapData(await apiRequest<unknown>(`/videos/${id}/public`, { auth: false })),
+  agencies: async () => unwrapData(await apiRequest<unknown>('/agencies/public', { auth: false })),
+  agency: async (id: string) => unwrapData(await apiRequest<unknown>(`/agencies/public/${id}`, { auth: false })),
 }
 
 export function isAgencyRole(role: UserRole | string | null | undefined): boolean {

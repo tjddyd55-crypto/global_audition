@@ -3,6 +3,7 @@ package com.audition.platform.application.me;
 import com.audition.platform.api.dto.channel.PublicChannelListItemResponse;
 import com.audition.platform.api.dto.channel.PublicChannelResponse;
 import com.audition.platform.api.dto.me.*;
+import com.audition.platform.application.publicview.PublicChannelDirectory;
 import com.audition.platform.domain.channel.Channel;
 import com.audition.platform.domain.channel.ChannelRepository;
 import com.audition.platform.domain.channel.ChannelSubscriptionRepository;
@@ -125,28 +126,25 @@ public class MyChannelService {
      * 공개 채널 페이지. 비공개·미존재는 404(존재 여부 노출 최소화).
      */
     /**
-     * 디스커버리: 채널 공개 ON + 공개 영상 1개 이상인 지원자(·관리자) 채널만.
+     * 디스커버리: 채널 공개 ON 인 지원자·관리자. 비공개 채널은 포함하지 않는다.
      */
     @Transactional(readOnly = true)
     public List<PublicChannelListItemResponse> listPublicChannelsForDiscovery() {
-        List<UUID> ownerIds = channelVideoRepository.findDistinctOwnerIdsForPublicChannelListing(
-                ChannelVideoVisibility.PUBLIC);
-        if (ownerIds.isEmpty()) {
-            return List.of();
-        }
-        Map<UUID, User> users = userRepository.findAllById(ownerIds).stream()
-                .collect(Collectors.toMap(User::getId, u -> u));
+        return listPublicChannelsForDiscovery(null, null, null);
+    }
+
+    @Transactional(readOnly = true)
+    public List<PublicChannelListItemResponse> listPublicChannelsForDiscovery(String stageName, String country, String category) {
+        List<User> owners = userRepository.findByChannelPublicTrueAndRoleIn(List.of("APPLICANT", "ADMIN"));
+        Map<UUID, User> users = owners.stream().collect(Collectors.toMap(User::getId, u -> u));
         List<PublicChannelListItemResponse> rows = new ArrayList<>();
-        for (UUID ownerId : ownerIds) {
-            User u = users.get(ownerId);
-            if (u == null || !u.isChannelPublic()) {
+        for (User u : owners) {
+            UUID ownerId = u.getId();
+            if (!u.isChannelPublic()) {
                 continue;
             }
             long pubCount = channelVideoRepository.countByOwnerIdAndVisibility(ownerId,
                     ChannelVideoVisibility.PUBLIC);
-            if (pubCount <= 0) {
-                continue;
-            }
             var ch = channelRepository.findByOwnerId(ownerId);
             long sub = ch.map(Channel::getSubscriberCount).orElse(0L);
             String profile = firstNonBlankTrimmed(u.getProfileImageUrl(),
@@ -158,6 +156,27 @@ public class MyChannelService {
             row.setIntroText(ChannelShownFields.visible(u.getChannelShownFields(), ChannelShownFields.INTRO)
                     ? trimToNull(u.getIntroText())
                     : null);
+            boolean nationalityPublic = ChannelShownFields.visible(u.getChannelShownFields(), ChannelShownFields.NATIONALITY);
+            boolean categoriesPublic = ChannelShownFields.visible(u.getChannelShownFields(), ChannelShownFields.SPECIALTIES);
+            String[] cats = u.getChannelCategories();
+            List<String> categories = cats != null && cats.length > 0 ? Arrays.asList(cats) : List.of();
+            if (nationalityPublic) {
+                row.setNationality(trimToNull(u.getNationality()));
+            }
+            if (categoriesPublic) {
+                row.setCategories(categories);
+            }
+            if (!PublicChannelDirectory.matches(
+                    u.getNickname(),
+                    u.getNationality(),
+                    nationalityPublic,
+                    categories,
+                    categoriesPublic,
+                    stageName,
+                    country,
+                    category)) {
+                continue;
+            }
             row.setSubscriberCount(sub);
             row.setVideoCount(pubCount);
             rows.add(row);
