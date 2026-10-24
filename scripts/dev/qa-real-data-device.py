@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 import subprocess
 import sys
@@ -20,7 +21,8 @@ QA = {
     "locale_en_x": 392,
     "locale_mn_x": 652,
     "email": "qa-dev-applicant@audition.local",
-    "password": "qa123456",
+    # Never hardcode: export QA_DEV_PASSWORD (development QA seed password) before running.
+    "password": os.environ.get("QA_DEV_PASSWORD", ""),
 }
 
 # Dedicated seed-owned account (scripts/dev/seed-native-qa-develop.sql); never an existing user.
@@ -254,6 +256,8 @@ def require_qa_applicant() -> str:
 
 
 def main() -> int:
+    if not QA["password"]:
+        sys.exit("QA_DEV_PASSWORD is not set (development QA password; never hardcode it)")
     ensure_app_foreground()
     ensure_authenticated()
     ui = dump("post-login")

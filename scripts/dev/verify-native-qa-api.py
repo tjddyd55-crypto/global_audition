@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Verify develop QA seed via public API (development only)."""
 
+import os
 import json
 import sys
 import urllib.error
@@ -32,7 +33,7 @@ def req(method: str, path: str, token: str | None = None, body: dict | None = No
 
 
 def login():
-    res = req("POST", "/auth/login", body={"email": "qa-dev-applicant@audition.local", "password": "qa123456"})
+    res = req("POST", "/auth/login", body={"email": "qa-dev-applicant@audition.local", "password": os.environ["QA_DEV_PASSWORD"]})
     return res["token"]
 
 

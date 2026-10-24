@@ -19,7 +19,7 @@ BEGIN
 END
 $guard$;
 
--- Shared QA password hash (qa123456) — copied from existing develop p0qa account
+-- Shared QA password hash — copied from existing develop p0qa account
 -- DO NOT use in production.
 
 -- ---------------------------------------------------------------------------
