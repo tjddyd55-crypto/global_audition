@@ -4,8 +4,6 @@ import { useLocale, useTranslations } from 'next-intl'
 import { usePathname, useRouter } from '../../i18n.config'
 import { useState } from 'react'
 import {
-  AGENCY_UI_LOCALE,
-  isAgencyConsolePath,
   localeSwitchTarget,
   PUBLIC_SELECTOR,
   type UiLocale,
@@ -34,7 +32,7 @@ export default function LanguageSwitcher() {
     setIsOpen(false)
   }
 
-  const options = isAgencyConsolePath(pathname) ? [{ code: AGENCY_UI_LOCALE, flag: FLAGS[AGENCY_UI_LOCALE] }] : LANGUAGE_OPTIONS
+  const options = LANGUAGE_OPTIONS
   const currentLanguage = options.find((lang) => lang.code === locale) || options[0]
 
   return (

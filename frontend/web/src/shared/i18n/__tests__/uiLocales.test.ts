@@ -5,7 +5,6 @@ import {
   fallbackUiLocale,
   localeSwitchTarget,
   PUBLIC_SELECTOR,
-  redirectPathForAgencyConsole,
   redirectPathForRetiredLocale,
   redirectPathForSavedLocale,
   RETIRED_UI_LOCALES,
@@ -66,15 +65,9 @@ describe('official UI locales', () => {
     expect(localesMeta.activeTranslationTargets).toEqual(['en', 'ko'])
   })
 
-  it('sends agency management screens to Korean and leaves public auditions alone', () => {
-    expect(redirectPathForAgencyConsole('/en/dashboard/auditions/create')).toBe('/ko/dashboard/auditions/create')
-    expect(redirectPathForAgencyConsole('/en/my/applicants')).toBe('/ko/my/applicants')
-    expect(redirectPathForAgencyConsole('/mn/my/auditions/42/round-review')).toBe(
-      '/ko/my/auditions/42/round-review',
-    )
-    expect(redirectPathForAgencyConsole('/ko/dashboard')).toBeNull()
-    expect(redirectPathForAgencyConsole('/en/auditions/42')).toBeNull()
-    expect(redirectPathForAgencyConsole('/en/login')).toBeNull()
+  it('agency management screens follow the selected UI locale (no forced Korean)', () => {
+    const mw = require('fs').readFileSync(require('path').join(__dirname, '../../../middleware.ts'), 'utf8')
+    expect(mw).not.toMatch(/AgencyConsole/)
   })
 
   it('defaults first visits to English and does not let Accept-Language replace a saved choice', () => {

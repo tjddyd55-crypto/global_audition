@@ -43,19 +43,6 @@ export function isAgencyConsolePath(pathname: string | null | undefined): boolea
   return AGENCY_CONSOLE_PREFIXES.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))
 }
 
-/**
- * 기획사 운영 화면은 카탈로그 로케일을 한국어로 고정한다.
- * 경로에 로케일이 있을 때만 바꾸고, 그 외 공개 화면은 그대로 둔다.
- */
-export function redirectPathForAgencyConsole(pathname: string): string | null {
-  const segments = pathname.split('/').filter((segment) => segment.length > 0)
-  const head = (segments[0] ?? '').toLowerCase()
-  if (!isUiLocale(head) || head === AGENCY_UI_LOCALE) return null
-  const rest = `/${segments.slice(1).join('/')}`
-  if (!isAgencyConsolePath(rest)) return null
-  return `/${AGENCY_UI_LOCALE}${rest}`
-}
-
 /** supported에는 있으나 공식 UI가 아닌 로케일. 옛 URL 호환용으로만 인식한다. */
 export const RETIRED_UI_LOCALES = localesMeta.supported.filter(
   (locale) => !(localesMeta.primary as readonly string[]).includes(locale),
