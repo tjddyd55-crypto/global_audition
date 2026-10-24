@@ -1,5 +1,7 @@
 package com.audition.platform.application.publicview;
 
+import com.audition.platform.domain.audition.RecruitFieldCodes;
+
 import java.util.List;
 import java.util.Locale;
 
@@ -34,7 +36,8 @@ public final class PublicChannelDirectory {
             }
             boolean hit = false;
             for (String item : categories) {
-                if (item != null && item.toLowerCase(Locale.ROOT).contains(wantedCategory)) {
+                if (item != null && (item.toLowerCase(Locale.ROOT).contains(wantedCategory)
+                        || RecruitFieldCodes.normalize(item).equalsIgnoreCase(RecruitFieldCodes.normalize(category)))) {
                     hit = true;
                 }
             }

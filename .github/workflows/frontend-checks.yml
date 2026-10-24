@@ -1,0 +1,57 @@
+name: frontend-checks
+
+on:
+  pull_request:
+    paths: ["frontend/**", ".github/workflows/frontend-checks.yml"]
+  push:
+    branches: ["develop"]
+    paths: ["frontend/**", ".github/workflows/frontend-checks.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend/web
+    env:
+      # 빌드 시 rewrite 대상만 필요. 실제 백엔드에는 연결하지 않는다.
+      BACKEND_PROXY_ORIGIN: http://localhost:9
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/web/package-lock.json
+      - run: npm ci
+      - name: tsc
+        run: npx tsc --noEmit
+      - name: lint
+        run: npm run lint
+      - name: jest
+        run: npx jest --ci
+      - name: next build
+        run: npm run build
+
+  mobile:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend/mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/mobile/package-lock.json
+      # 기존 lock 파일에 선택적 peer(react-dom 등)가 빠져 있어 npm ci 가 EUSAGE 로 실패한다. lock 은 건드리지 않고 peer 자동설치만 끈다.
+      - run: npm ci --legacy-peer-deps
+      - name: tsc
+        run: npx tsc --noEmit
+      - name: jest
+        run: npx jest --ci

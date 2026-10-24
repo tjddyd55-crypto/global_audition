@@ -1,12 +1,12 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n.config'
 import EmptyState from '@/components/ui/EmptyState'
 import { channelApi, type PublicChannelListItem } from '@/shared/api/channel'
-import { RECRUIT_FIELD_CODES, toRecruitFieldCode } from '@/shared/audition/recruitFields'
+import { RECRUIT_FIELD_CODES } from '@/shared/audition/recruitFields'
 import { DEFAULT_IMAGES } from '@/shared/constants/fallbacks'
 import {
   M_CARD,
@@ -24,17 +24,12 @@ export default function MobileChannelsListPage() {
   const tChannel = useTranslations('channel')
   const tField = useTranslations('recruitField')
   const [field, setField] = useState('')
+  // 분야는 서버 조건(/channels/public?category=CODE). 서버가 레거시 한글/영문 값도 코드로 정규화해 비교한다.
   const { data, isLoading, isError } = useQuery({
-    queryKey: ['channels-public', '', '', ''],
-    queryFn: () => channelApi.listPublic({}),
+    queryKey: ['channels-public', '', '', field],
+    queryFn: () => channelApi.listPublic(field ? { category: field } : {}),
   })
-  const channels = useMemo(
-    () =>
-      (data ?? []).filter(
-        (c) => !field || (c.categories ?? []).some((v) => toRecruitFieldCode(v) === field),
-      ),
-    [data, field],
-  )
+  const channels = data ?? []
 
   return (
     <div className="w-full min-w-0 overflow-x-hidden pb-6 pt-3" data-testid="mobile-channel-list">

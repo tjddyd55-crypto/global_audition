@@ -457,6 +457,8 @@ public class AuditionService {
                         audition.getEndDate(),
                         audition.getDeadlineAt(),
                         query))
+                .sorted(PublicAuditionBrowse.comparator(
+                        query.sort(), Audition::getCreatedAt, Audition::getEndDate, Audition::getDeadlineAt))
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }

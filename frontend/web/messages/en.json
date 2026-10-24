@@ -284,7 +284,9 @@
     "allFields": "All fields",
     "allStatuses": "All statuses",
     "sortLatest": "Latest",
-    "sortDeadline": "Closing soon"
+    "sortDeadline": "Closing soon",
+    "loadMore": "Load more",
+    "loadingMore": "Loading…"
   },
   "auditionDetail": {
     "applyNow": "Apply now",

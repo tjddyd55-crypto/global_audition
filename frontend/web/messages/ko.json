@@ -284,7 +284,9 @@
     "allFields": "전체 분야",
     "allStatuses": "전체 상태",
     "sortLatest": "최신순",
-    "sortDeadline": "마감임박순"
+    "sortDeadline": "마감임박순",
+    "loadMore": "더 보기",
+    "loadingMore": "불러오는 중…"
   },
   "auditionDetail": {
     "applyNow": "지금 지원하기",

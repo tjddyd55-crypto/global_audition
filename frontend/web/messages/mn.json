@@ -284,7 +284,9 @@
     "allFields": "Бүх чиглэл",
     "allStatuses": "Бүх төлөв",
     "sortLatest": "Шинэ нь эхэндээ",
-    "sortDeadline": "Дуусах дөхсөн"
+    "sortDeadline": "Дуусах дөхсөн",
+    "loadMore": "Цааш үзэх",
+    "loadingMore": "Ачаалж байна…"
   },
   "auditionDetail": {
     "applyNow": "Одоо бүртгүүлэх",
