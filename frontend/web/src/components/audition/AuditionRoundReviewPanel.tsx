@@ -10,6 +10,7 @@ import {
   type AdminAuditionRoundRow,
   type AdminRoundApplicantRow,
 } from '@/shared/api/adminAuditionRounds'
+import { roundDisplayName } from '@/shared/audition/roundDisplayName'
 import { BTN_SECONDARY, CARD_BASE, PAGE_CONTAINER, TEXT_SUB } from '@/shared/ui/specClasses'
 
 type Props = {
@@ -153,12 +154,12 @@ export function AuditionRoundReviewPanel({
                   }`}
                 >
                   <div className="font-semibold text-gray-900">
-                    {t('roundName', { n: r.roundNumber, name: r.roundName })}
+                    {roundDisplayName(r.roundNumber, r.roundName, t)}
                   </div>
-                  <div className={`${TEXT_SUB} text-xs`}>{t('method', { method: r.reviewMethod })}</div>
+                  <div className={`${TEXT_SUB} text-xs`}>{t('method', { method: t.has(`reviewMethods.${r.reviewMethod}`) ? t(`reviewMethods.${r.reviewMethod}`) : r.reviewMethod })}</div>
                   <div className="mt-1 text-xs font-medium text-gray-700">
                     {t('statusLine')}{' '}
-                    <span className={r.active ? 'text-green-700' : 'text-gray-500'}>{r.active ? 'OPEN' : 'CLOSED'}</span>
+                    <span className={r.active ? 'text-green-700' : 'text-gray-500'}>{r.active ? t('roundOpen') : t('roundClosed')}</span>
                   </div>
                 </button>
                 <div className="mt-1 flex gap-2">

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from '@/i18n.config'
 
 /**
@@ -8,6 +9,7 @@ import { useRouter } from '@/i18n.config'
  * 포인트(v1) 지갑 UI는 제거하여 이중 잔액/UX 혼란을 막는다.
  */
 export default function WalletRedirectPage() {
+  const tCommon = useTranslations('common')
   const router = useRouter()
 
   useEffect(() => {
@@ -16,7 +18,7 @@ export default function WalletRedirectPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 text-center text-gray-600">
-      크레딧 화면으로 이동합니다…
+      {tCommon('redirectingCredits')}
     </div>
   )
 }

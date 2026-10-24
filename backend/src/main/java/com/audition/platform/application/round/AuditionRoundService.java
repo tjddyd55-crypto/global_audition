@@ -44,7 +44,7 @@ public class AuditionRoundService {
         AuditionRound r = new AuditionRound();
         r.setAuditionId(auditionId);
         r.setRoundNumber(1);
-        r.setRoundName("1차");
+        r.setRoundName(""); // 기본 이름은 비워 두고 표시 문구는 프런트 i18n(roundReview.roundLabel)으로 만든다
         r.setReviewMethod("INTERNAL_REVIEW");
         r.setRequiredSubmissionType("VIDEO");
         r.setActive(auditionIsOpen);
@@ -84,7 +84,7 @@ public class AuditionRoundService {
         AuditionRound r = new AuditionRound();
         r.setAuditionId(auditionId);
         r.setRoundNumber(nextNum);
-        r.setRoundName(roundName != null && !roundName.isBlank() ? roundName.trim() : nextNum + "차");
+        r.setRoundName(roundName != null && !roundName.isBlank() ? roundName.trim() : "");
         r.setReviewMethod(reviewMethod != null ? reviewMethod : "INTERNAL_REVIEW");
         r.setRequiredSubmissionType(requiredSubmissionType != null ? requiredSubmissionType : "VIDEO");
         r.setStartAt(startAt);

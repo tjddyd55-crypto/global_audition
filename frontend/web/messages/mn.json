@@ -49,7 +49,10 @@
     "notDevelopedTitle": "Энэ хуудас эсвэл функц хараахан бэлэн биш",
     "notDevelopedNamed": "「{name}」 хараахан бэлэн биш",
     "notDevelopedBody": "Энэ хуудас эсвэл функцийг хараахан хийгээгүй байна.",
-    "notDevelopedSoon": "Дараа хэрэгжүүлэхээр төлөвлөсөн."
+    "notDevelopedSoon": "Дараа хэрэгжүүлэхээр төлөвлөсөн.",
+    "redirecting": "Шилжиж байна…",
+    "redirectingCredits": "Кредитийн хэсэг рүү шилжиж байна…",
+    "redirectingRecovery": "Нууц үг сэргээх хэсэг сэргээх кодын дэлгэц рүү шилжлээ…"
   },
   "nav": {
     "home": "Нүүр",
@@ -1291,7 +1294,7 @@
     "applicantsBoard": "Өргөдлийн самбар →",
     "roundList": "Шатууд",
     "roundListHint": "Шатыг сонгож өргөдлийг шалгана.",
-    "roundName": "Шат {n} {name}",
+    "roundName": "{n}-р шат {name}",
     "method": "Арга: {method}",
     "statusLine": "Төлөв:",
     "open": "Нээх",
@@ -1317,7 +1320,14 @@
     "hold": "Хүлээлгэх",
     "emptyRound": "Энэ шатанд өргөдөл алга.",
     "singleModeHint": "Энэ аудишн SINGLE горимтой. Өргөдлийг өргөдөл удирдлагаас шийднэ.",
-    "backToApplicants": "Өргөдөл удирдлага"
+    "backToApplicants": "Өргөдөл удирдлага",
+    "roundLabel": "{n}-р шат",
+    "roundOpen": "Нээлттэй",
+    "roundClosed": "Хаагдсан",
+    "reviewMethods": {
+      "INTERNAL_REVIEW": "Дотоод үнэлгээ",
+      "PUBLIC_VOTE": "Нээлттэй санал хураалт"
+    }
   },
   "relative": {
     "justNow": "Саяхан",
@@ -1553,5 +1563,33 @@
     "ACTING": "Жүжиглэх",
     "MODEL": "Загвар өмсөгч",
     "TEAM": "Баг"
+  },
+  "mockPay": {
+    "orderNo": "Захиалгын дугаар {v}",
+    "status": "Төлөв {v}",
+    "amount": "Дүн",
+    "creditsLine": "Кредит {c} + урамшуулал {b}",
+    "order": "Захиалга",
+    "toCheckoutLocked": "Төлбөр шалгах руу (боловсруулж байх үед боломжгүй)",
+    "loadFail": "Захиалгыг ачаалж чадсангүй.",
+    "successFail": "Амжилтыг боловсруулж чадсангүй.",
+    "payFailAlert": "Төлбөр боловсруулахад алдаа гарлаа. Дахин оролдоно уу.",
+    "failFail": "Амжилтгүй төлөвийг боловсруулж чадсангүй.",
+    "failErrAlert": "Алдааг боловсруулах үед алдаа гарлаа. Дахин оролдоно уу.",
+    "disabledTitle": "Туршилтын төлбөр идэвхгүй",
+    "disabledHint": "NEXT_PUBLIC_CREDIT_MOCK_PAYMENT=true болгоод дахин оролдоно уу.",
+    "creditsHome": "Кредит нүүр",
+    "title": "Туршилтын төлбөр (PG холболтоос өмнө)",
+    "subtitle": "Бодит төлбөргүйгээр зөвхөн амжилт/алдааны callback-ийг туршина.",
+    "processing": "Төлбөр боловсруулж байна…",
+    "processingHint": "Хуудсыг бүү хаагаарай. Сервер дууссаны дараа үр дүн рүү шилжинэ.",
+    "orderNoRequired": "orderNo шаардлагатай.",
+    "backToCharge": "Цэнэглэлт рүү буцах",
+    "loading": "Ачаалж байна…",
+    "successPending": "Амжилтын callback боловсруулж байна…",
+    "successBtn": "Төлбөр амжилттай (туршилт)",
+    "failPending": "Алдааны callback боловсруулж байна…",
+    "failBtn": "Төлбөр амжилтгүй (туршилт)",
+    "toCheckout": "Төлбөр шалгах руу"
   }
 }

@@ -49,7 +49,10 @@
     "notDevelopedTitle": "개발되지 않은 페이지 또는 기능입니다",
     "notDevelopedNamed": "「{name}」 개발되지 않은 페이지 또는 기능입니다",
     "notDevelopedBody": "이 페이지 또는 기능은 아직 개발 또는 페이지 생성이 되지 않았습니다.",
-    "notDevelopedSoon": "차후 구현 예정입니다."
+    "notDevelopedSoon": "차후 구현 예정입니다.",
+    "redirecting": "이동 중…",
+    "redirectingCredits": "크레딧 화면으로 이동합니다…",
+    "redirectingRecovery": "비밀번호 재설정은 복구 보안 코드 화면으로 이동합니다…"
   },
   "nav": {
     "home": "홈",
@@ -1317,7 +1320,14 @@
     "hold": "보류",
     "emptyRound": "이 라운드에 등록된 지원자가 없습니다.",
     "singleModeHint": "이 오디션은 단일(SINGLE) 모드입니다. 지원자 관리에서 처리할 수 있습니다.",
-    "backToApplicants": "지원자 관리"
+    "backToApplicants": "지원자 관리",
+    "roundLabel": "{n}차",
+    "roundOpen": "진행 중",
+    "roundClosed": "종료",
+    "reviewMethods": {
+      "INTERNAL_REVIEW": "내부 심사",
+      "PUBLIC_VOTE": "공개 투표"
+    }
   },
   "relative": {
     "justNow": "방금 전",
@@ -1553,5 +1563,33 @@
     "ACTING": "연기",
     "MODEL": "모델",
     "TEAM": "팀"
+  },
+  "mockPay": {
+    "orderNo": "주문번호 {v}",
+    "status": "상태 {v}",
+    "amount": "금액",
+    "creditsLine": "크레딧 {c} + 보너스 {b}",
+    "order": "주문",
+    "toCheckoutLocked": "결제 확인으로 (처리 중에는 이동할 수 없습니다)",
+    "loadFail": "주문을 불러오지 못했습니다.",
+    "successFail": "성공 처리에 실패했습니다.",
+    "payFailAlert": "결제 처리에 실패했습니다. 잠시 후 다시 시도해 주세요.",
+    "failFail": "실패 처리에 실패했습니다.",
+    "failErrAlert": "결제 실패 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.",
+    "disabledTitle": "목 결제 비활성화",
+    "disabledHint": "NEXT_PUBLIC_CREDIT_MOCK_PAYMENT=true 로 켠 뒤 다시 시도하세요.",
+    "creditsHome": "크레딧 홈",
+    "title": "목 결제 (PG 연동 전)",
+    "subtitle": "실제 과금 없이 성공/실패 콜백만 테스트합니다.",
+    "processing": "결제 처리 중입니다…",
+    "processingHint": "페이지를 닫지 마세요. 서버 반영이 끝나면 결과 화면으로 이동합니다.",
+    "orderNoRequired": "orderNo 가 필요합니다.",
+    "backToCharge": "충전으로 돌아가기",
+    "loading": "불러오는 중…",
+    "successPending": "성공 콜백 처리 중…",
+    "successBtn": "결제 성공 (목)",
+    "failPending": "실패 콜백 처리 중…",
+    "failBtn": "결제 실패 (목)",
+    "toCheckout": "결제 확인으로"
   }
 }

@@ -3,9 +3,11 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { useRouter } from '@/i18n.config'
+import { useTranslations } from 'next-intl'
 import { useAuthStore } from '@/shared/auth/authStore'
 
 export default function AuditionRoundReviewRedirectPage() {
+  const tCommon = useTranslations('common')
   const params = useParams()
   const router = useRouter()
   const role = useAuthStore((s) => s.role)
@@ -28,7 +30,7 @@ export default function AuditionRoundReviewRedirectPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 text-sm text-gray-600">
-      이동 중…
+      {tCommon('redirecting')}
     </div>
   )
 }
