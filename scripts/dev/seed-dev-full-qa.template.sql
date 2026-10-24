@@ -90,7 +90,7 @@ FROM (VALUES
 ON CONFLICT DO NOTHING;
 
 -- ---------------------------------------------------------------------------
--- 25 auditions: KR 10, MN 5, JP 5, other 5 (US 3, TH 2)
+-- 25 auditions: KR 10, MN 5, JP 5, other 5 (country_code OTHER; host US 3, TH 2)
 -- state mix: open (OPEN, started), upcoming (OPEN, start in future), closed (CLOSED, past)
 -- Thumbnails: static dev asset shipped by frontend/web/public (no R2).
 -- ---------------------------------------------------------------------------
@@ -101,7 +101,9 @@ INSERT INTO public.auditions (id, owner_id, posting_branch_id, title, descriptio
 SELECT v.id::uuid, v.owner::uuid, v.branch::uuid,
   '[DEV-QA] ' || v.cc || ' ' || v.kind || ' Audition #' || v.n,
   'Development QA seed audition (' || v.kind || ', ' || v.cc || '). Not real.',
-  CASE v.kind WHEN 'closed' THEN 'CLOSED' ELSE 'OPEN' END, v.cc, v.cc,
+  CASE v.kind WHEN 'closed' THEN 'CLOSED' ELSE 'OPEN' END,
+  -- recruit target uses the app's codes (KR/MN/JP/GLOBAL/OTHER); host_country keeps the ISO code
+  CASE WHEN v.cc IN ('KR','MN','JP') THEN v.cc ELSE 'OTHER' END, v.cc,
   CASE v.kind WHEN 'closed' THEN now() - interval '3 days' WHEN 'upcoming' THEN now() + interval '45 days' ELSE now() + interval '20 days' END,
   CASE v.kind WHEN 'closed' THEN now() - interval '40 days' WHEN 'upcoming' THEN now() + interval '10 days' ELSE now() - interval '2 days' END,
   CASE v.kind WHEN 'closed' THEN now() - interval '3 days' WHEN 'upcoming' THEN now() + interval '45 days' ELSE now() + interval '20 days' END,
