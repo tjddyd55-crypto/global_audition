@@ -1,7 +1,8 @@
 import type { AuditionDto } from '@/shared/types/audition'
 import type { ContentTranslationView } from '@/shared/i18n/contentTranslation'
 
-const LIST_FIELDS = ['recruitFields', 'qualifications', 'schedules', 'benefits'] as const
+// recruitFields 는 카탈로그 코드(VOCAL 등)라 기계번역본을 쓰지 않고 원래 코드를 카탈로그 라벨로 번역한다.
+const LIST_FIELDS = ['qualifications', 'schedules', 'benefits'] as const
 
 type ListField = (typeof LIST_FIELDS)[number]
 
@@ -11,7 +12,16 @@ export function overlayPosting(audition: AuditionDto, view: ContentTranslationVi
   const next: AuditionDto = { ...audition }
   const title = fieldText(view, 'title')
   const description = fieldText(view, 'description')
-  if (title) next.title = title
+  if (title && title !== audition.title) {
+    next.title = title
+    // displayTitle 은 원래 제목 + 회차 접미사다. 접미사는 유지하고 제목 부분만 바꾼다.
+    const display = audition.displayTitle?.trim()
+    if (display && display.startsWith(audition.title)) {
+      next.displayTitle = title + display.slice(audition.title.length)
+    } else {
+      next.displayTitle = undefined
+    }
+  }
   if (description) next.description = description
   for (const field of LIST_FIELDS) {
     const lines = fieldLines(view, field)
