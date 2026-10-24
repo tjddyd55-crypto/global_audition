@@ -184,9 +184,10 @@ export default function ChannelByUserIdPage() {
           <Image src={profileSrc} alt="" fill className="object-cover" sizes="64px" unoptimized />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0 flex-1">
-              <div className="text-lg font-bold text-neutral-900">{nickname}</div>
+          {/* 좁은 화면(<640)에서는 버튼을 이름 아래 줄로 내려 긴 번역 문구가 이름을 가리지 않게 한다. */}
+          <div className="flex flex-wrap items-start justify-between gap-2 sm:flex-nowrap">
+            <div className="min-w-0 flex-1 basis-full sm:basis-0">
+              <div className="break-words text-lg font-bold text-neutral-900">{nickname}</div>
               {natLabel ? <div className="mt-1 text-sm text-gray-500">{natLabel}</div> : null}
               {shortBio ? (
                 <div className="mt-2 truncate text-sm text-gray-700" title={shortBio}>
@@ -204,7 +205,7 @@ export default function ChannelByUserIdPage() {
                 {t('subscribersVideos', { subs: formatCount(stats.subs, locale), videos: formatCount(stats.videos, locale) })}
               </div>
             </div>
-            <div className="ml-3 flex shrink-0 gap-2">
+            <div className="flex shrink-0 flex-wrap gap-2 sm:ml-3">
               {isOwnChannel ? (
                 <button
                   type="button"
