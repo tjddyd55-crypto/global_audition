@@ -9,14 +9,11 @@ import { ALL_OPEN_AUDIENCES, type AudienceFilterOption } from '@/shared/audition
 import EmptyState from '@/components/ui/EmptyState'
 import type { AuditionDto } from '@/shared/types/audition'
 import MobileAuditionRowCard from './components/MobileAuditionRowCard'
+import FlagIcon from '../../components/FlagIcon'
+import { M_CARD_GAP, M_PAGE_X, M_SECTION_HEAD, M_SECTION_TITLE, M_SECTION_TOP } from '../../ui/mobileTokens'
 
 /** 모집 국가 타일. 값은 기존 오디션 국가 필터(AUDIENCE_FILTER_OPTIONS)와 같다. UI 언어와 무관하다. */
-const COUNTRY_TILES: Array<{ code: Exclude<AudienceFilterOption, 'ALL'>; flag: string }> = [
-  { code: 'KR', flag: '🇰🇷' },
-  { code: 'MN', flag: '🇲🇳' },
-  { code: 'JP', flag: '🇯🇵' },
-  { code: 'OTHER', flag: '🌐' },
-]
+const COUNTRY_TILES: Array<Exclude<AudienceFilterOption, 'ALL'>> = ['KR', 'MN', 'JP', 'OTHER']
 
 export default function MobileHomePage() {
   const t = useTranslations('home')
@@ -30,7 +27,7 @@ export default function MobileHomePage() {
 
   return (
     <div className="w-full min-w-0 overflow-x-hidden pb-8" data-testid="mobile-home">
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#2e1065] via-[#7c3aed] to-[#db2777] px-4 pb-6 pt-7 text-white">
+      <section className="relative overflow-hidden bg-gradient-to-br from-[#2e1065] via-[#7c3aed] to-[#db2777] px-4 pb-5 pt-6 text-white">
         {/* DEV/DUMMY 히어로 배경 — 기존 그라디언트가 위에 오버레이됨 */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -64,10 +61,12 @@ export default function MobileHomePage() {
         </div>
       </section>
 
-      <section className="px-4 pt-6">
-        <h2 className="mb-3 text-xl font-bold">{t('recruitCountries')}</h2>
+      <section className={`${M_PAGE_X} ${M_SECTION_TOP}`}>
+        <div className={M_SECTION_HEAD}>
+          <h2 className={M_SECTION_TITLE}>{t('recruitCountries')}</h2>
+        </div>
         <div className="grid grid-cols-4 gap-2" role="group" aria-label={t('recruitCountries')}>
-          {COUNTRY_TILES.map(({ code, flag }) => {
+          {COUNTRY_TILES.map((code) => {
             const active = country === code
             return (
               <button
@@ -76,14 +75,14 @@ export default function MobileHomePage() {
                 data-testid={`country-tile-${code}`}
                 aria-pressed={active}
                 onClick={() => selectCountry(active ? ALL_OPEN_AUDIENCES : code)}
-                className={`flex min-w-0 flex-col items-center justify-center gap-1 rounded-xl border px-1 py-3 ${
+                className={`flex h-[76px] min-w-0 flex-col items-center justify-center gap-1.5 rounded-xl border px-1 ${
                   active ? 'border-violet-500 bg-violet-50' : 'border-neutral-200 bg-white'
                 }`}
               >
-                <span aria-hidden className="text-[32px] leading-none">
-                  {flag}
+                <span className="flex h-8 items-center justify-center">
+                  <FlagIcon code={code} />
                 </span>
-                <span className="w-full break-words text-center text-xs font-medium text-neutral-800">{tCountry(code)}</span>
+                <span className="w-full truncate text-center text-xs font-medium leading-tight text-neutral-800">{tCountry(code)}</span>
               </button>
             )
           })}
@@ -129,23 +128,23 @@ function AuditionRowSection({
   badge?: 'status' | 'recommended'
 }) {
   return (
-    <section className="px-4 pt-7" data-testid={testId}>
-      <div className="mb-3 flex items-center justify-between gap-2">
-        <h2 className="min-w-0 break-words text-xl font-bold">{heading}</h2>
-        <Link href="/auditions" className="shrink-0 text-sm font-medium text-violet-700 no-underline">
+    <section className={`${M_PAGE_X} ${M_SECTION_TOP}`} data-testid={testId}>
+      <div className={M_SECTION_HEAD}>
+        <h2 className={M_SECTION_TITLE}>{heading}</h2>
+        <Link href="/auditions" className="inline-flex shrink-0 items-center text-sm font-medium leading-none text-violet-700 no-underline">
           {seeAll} ›
         </Link>
       </div>
       {isLoading ? (
-        <div className="flex flex-col gap-3">
+        <div className={`flex flex-col ${M_CARD_GAP}`}>
           {[0, 1, 2].map((i) => (
-            <div key={i} className="h-28 animate-pulse rounded-xl bg-neutral-100" />
+            <div key={i} className="h-[124px] animate-pulse rounded-xl bg-neutral-100" />
           ))}
         </div>
       ) : auditions.length === 0 ? (
         <EmptyState message={emptyMessage} />
       ) : (
-        <div className="flex flex-col gap-3">
+        <div className={`flex flex-col ${M_CARD_GAP}`}>
           {auditions.map((audition) => (
             <MobileAuditionRowCard key={audition.id} audition={audition} badge={badge} />
           ))}

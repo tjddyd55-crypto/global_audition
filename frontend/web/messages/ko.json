@@ -278,7 +278,13 @@
     "periodTo": "종료",
     "recruitment": "모집 상태",
     "apply": "지원",
-    "applyCta": "지원하려면 계정을 만드세요"
+    "applyCta": "지원하려면 계정을 만드세요",
+    "country": "모집 국가",
+    "sort": "정렬",
+    "allFields": "전체 분야",
+    "allStatuses": "전체 상태",
+    "sortLatest": "최신순",
+    "sortDeadline": "마감임박순"
   },
   "auditionDetail": {
     "applyNow": "지금 지원하기",
@@ -1189,7 +1195,8 @@
     "viewCta": "채널 보기 →",
     "manageMine": "내 채널 관리",
     "nameFallback": "채널 없음",
-    "descFallback": "설명 없음"
+    "descFallback": "설명 없음",
+    "allCategories": "전체"
   },
   "native": {
     "otaTitle": "새 버전이 준비되었어요",

@@ -278,7 +278,13 @@
     "periodTo": "To",
     "recruitment": "Recruitment",
     "apply": "Apply",
-    "applyCta": "Create an account to apply"
+    "applyCta": "Create an account to apply",
+    "country": "Country",
+    "sort": "Sort",
+    "allFields": "All fields",
+    "allStatuses": "All statuses",
+    "sortLatest": "Latest",
+    "sortDeadline": "Closing soon"
   },
   "auditionDetail": {
     "applyNow": "Apply now",
@@ -1189,7 +1195,8 @@
     "viewCta": "View channel →",
     "manageMine": "Manage my channel",
     "nameFallback": "Untitled channel",
-    "descFallback": "No description"
+    "descFallback": "No description",
+    "allCategories": "All"
   },
   "native": {
     "otaTitle": "A new version is ready",

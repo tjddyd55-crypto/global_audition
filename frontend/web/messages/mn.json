@@ -278,7 +278,13 @@
     "periodTo": "Дуусах",
     "recruitment": "Бүртгэл",
     "apply": "Өргөдөл",
-    "applyCta": "Өргөдөл гаргахын тулд бүртгүүлнэ үү"
+    "applyCta": "Өргөдөл гаргахын тулд бүртгүүлнэ үү",
+    "country": "Улс",
+    "sort": "Эрэмбэ",
+    "allFields": "Бүх чиглэл",
+    "allStatuses": "Бүх төлөв",
+    "sortLatest": "Шинэ нь эхэндээ",
+    "sortDeadline": "Дуусах дөхсөн"
   },
   "auditionDetail": {
     "applyNow": "Одоо бүртгүүлэх",
@@ -1189,7 +1195,8 @@
     "viewCta": "Суваг үзэх →",
     "manageMine": "Миний сувгийг удирдах",
     "nameFallback": "Нэргүй суваг",
-    "descFallback": "Тайлбар алга"
+    "descFallback": "Тайлбар алга",
+    "allCategories": "Бүгд"
   },
   "native": {
     "otaTitle": "Шинэ хувилбар бэлэн",
