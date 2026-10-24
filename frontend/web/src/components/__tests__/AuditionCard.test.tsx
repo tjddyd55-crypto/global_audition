@@ -33,7 +33,7 @@ function renderAuditionCard(audition: AuditionDto) {
     <NextIntlClientProvider
       locale="ko"
       messages={{
-        status: { open: '모집중', closed: '마감', draft: '초안' },
+        status: { open: '모집중', closed: '마감', draft: '초안', roundOpen: '{n}차 모집 중', roundClosed: '{n}차 마감', roundDraft: '{n}차 · 초안' },
         fallback: { videoTitle: '제목 없음', date: '날짜 없음' },
       }}
     >
@@ -50,7 +50,7 @@ describe('AuditionCard', () => {
 
   it('should render status label', () => {
     renderAuditionCard(mockAudition)
-    expect(screen.getByText(/모집중/)).toBeInTheDocument()
+    expect(screen.getByText(/1차 모집 중/)).toBeInTheDocument()
   })
 
   it('should link to audition detail page', () => {

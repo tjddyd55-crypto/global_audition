@@ -8,6 +8,7 @@ import { dateFnsLocale } from '@/shared/datetime/dateFnsLocale'
 import { DEFAULT_IMAGES } from '@/shared/constants/fallbacks'
 import { devAuditionThumbnail } from '../devAssets'
 import { auditionHeadlineTitle, auditionListImageUrl, type AuditionDto } from '@/shared/types/audition'
+import { roundStatusLabel } from '@/shared/audition/roundStatusLabel'
 
 type Props = {
   audition: AuditionDto
@@ -37,11 +38,7 @@ export default function MobileAuditionRowCard({ audition, badge = 'status' }: Pr
   const title = auditionHeadlineTitle(audition).trim() || tFallback('videoTitle')
   const status = String(audition.status ?? '')
   const statusLabel =
-    status === 'OPEN'
-      ? audition.recruitmentRoundLabel?.trim() || tStatus('open')
-      : status === 'CLOSED'
-        ? tStatus('closed')
-        : tStatus('draft')
+roundStatusLabel(status, audition.round, tStatus)
   const badgeLabel = badge === 'recommended' ? tHome('recommendedBadge') : statusLabel
   const badgeClass =
     badge === 'recommended' ? 'bg-violet-600' : status === 'OPEN' ? 'bg-emerald-600' : 'bg-neutral-700'

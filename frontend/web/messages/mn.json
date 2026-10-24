@@ -334,7 +334,8 @@
     "agencyFallback": "Агентлаг",
     "daysLeftPeriod": "Үлдсэн хугацаа D-{n}",
     "quickInfo": "Товч мэдээлэл",
-    "galleryAria": "Галерей"
+    "galleryAria": "Галерей",
+    "imagesHeading": "Зураг"
   },
   "apply": {
     "title": "Бүртгүүлэх",
@@ -674,7 +675,10 @@
     "underReview": "Шалгаж байна",
     "roundPass": "Шат тэнцсэн",
     "roundFail": "Шат тэнцээгүй",
-    "skipped": "Алгассан"
+    "skipped": "Алгассан",
+    "roundOpen": "{n}-р шатны элсэлт",
+    "roundClosed": "{n}-р шат хаагдсан",
+    "roundDraft": "{n}-р шат · ноорог"
   },
   "validation": {
     "required": "Заавал бөглөнө",

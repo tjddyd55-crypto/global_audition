@@ -25,6 +25,7 @@ import {
   auditionHeadlineTitle,
   normalizeAuditionImages,
 } from '@/shared/types/audition'
+import { roundStatusLabel } from '@/shared/audition/roundStatusLabel'
 
 type Layout = 'pc' | 'native'
 
@@ -35,6 +36,7 @@ type Props = {
 export function AuditionPostingPreview({ auditionId }: Props) {
   const t = useTranslations('editor')
   const tDetail = useTranslations('auditionDetail')
+  const tStatus = useTranslations('status')
   const tLocale = useTranslations('locale')
   const uiLocale = useLocale()
   const [locale, setLocale] = useState('en')
@@ -132,7 +134,7 @@ export function AuditionPostingPreview({ auditionId }: Props) {
             heroImageOriginalUrl={safeStr(auditionDetailOriginalUrl(normalizeAuditionImages(audition.images)))}
             title={auditionHeadlineTitle(audition)}
             status={String(audition.status)}
-            statusPillText={audition.recruitmentRoundLabel}
+            statusPillText={roundStatusLabel(audition.status, audition.round, tStatus)}
             tags={safeArr(audition.tags)}
             endDateFormatted={fmt(safeStr(audition.endDate))}
             location={safeStr(audition.location)}
