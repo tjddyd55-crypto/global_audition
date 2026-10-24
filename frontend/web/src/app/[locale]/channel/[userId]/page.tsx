@@ -205,7 +205,7 @@ export default function ChannelByUserIdPage() {
                 {t('subscribersVideos', { subs: formatCount(stats.subs, locale), videos: formatCount(stats.videos, locale) })}
               </div>
             </div>
-            <div className="flex shrink-0 flex-wrap gap-2 sm:ml-3">
+            <div className="flex w-full min-w-0 flex-wrap gap-2 sm:ml-3 sm:w-auto sm:shrink-0">
               {isOwnChannel ? (
                 <button
                   type="button"
@@ -225,7 +225,7 @@ export default function ChannelByUserIdPage() {
                     }
                     subMutation.mutate()
                   }}
-                  className="rounded-full bg-black px-3 py-1 text-sm text-white disabled:opacity-50"
+                  className="max-w-full rounded-full bg-black px-3 py-1 text-sm text-white disabled:opacity-50"
                 >
                   {!me ? t('loginToSubscribe') : data.subscribed ? t('unsubscribe') : t('subscribe')}
                 </button>
