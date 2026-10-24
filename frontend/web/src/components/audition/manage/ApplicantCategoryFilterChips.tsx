@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl'
 import { TEXT_SUB } from '@/shared/ui/specClasses'
+import { recruitFieldLabel } from '@/shared/audition/recruitFields'
 import { isAllCategoryName } from '@/shared/audition/allCategorySentinel'
 
 type ApplicantCategoryItem = {
@@ -21,6 +22,7 @@ export default function ApplicantCategoryFilterChips({
   onChange,
 }: ApplicantCategoryFilterChipsProps) {
   const t = useTranslations('agency')
+  const tField = useTranslations('recruitField')
   if (categories.length === 0) return null
 
   return (
@@ -43,7 +45,7 @@ export default function ApplicantCategoryFilterChips({
                   : 'min-h-11 whitespace-normal break-words rounded-full border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50'
               }
             >
-              {isAll ? t('all') : `${c.name} (${c.count})`}
+              {isAll ? t('all') : `${recruitFieldLabel(c.name, tField)} (${c.count})`}
             </button>
           )
         })}

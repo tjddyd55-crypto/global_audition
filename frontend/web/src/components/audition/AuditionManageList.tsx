@@ -8,6 +8,7 @@ import { toast } from 'sonner'
 import { Link, useRouter } from '@/i18n.config'
 import { auditionApi, getManageList, type ManageApplicantItem } from '@/shared/api/auditions'
 import { ALL_CATEGORY_SENTINEL, isAllCategoryName } from '@/shared/audition/allCategorySentinel'
+import { recruitFieldLabel } from '@/shared/audition/recruitFields'
 import { BTN_SECONDARY, CARD_BASE, PAGE_CONTAINER, TEXT_SUB } from '@/shared/ui/specClasses'
 
 type StatusBtn = 'REVIEWING' | 'APPROVED' | 'REJECTED'
@@ -35,6 +36,7 @@ export function AuditionManageList({
 }: Props) {
   const t = useTranslations('agency')
   const tCommon = useTranslations('common')
+  const tField = useTranslations('recruitField')
   const tStatus = useTranslations('status')
   const resolvedBackHref = backHref ?? `/auditions/${auditionId}`
   const resolvedRoundReviewHref = roundReviewHref ?? `/my/auditions/${auditionId}/round-review`
@@ -161,7 +163,7 @@ export function AuditionManageList({
                       : 'min-h-11 whitespace-normal break-words rounded-full border border-[#E5E7EB] bg-white px-3 py-1.5 text-sm font-medium text-gray-800 hover:bg-gray-50 disabled:opacity-50'
                   }
                 >
-                  {isAll ? t('all') : c.name}
+                  {isAll ? t('all') : recruitFieldLabel(c.name, tField)}
                   {isAll ? '' : ` ${c.count}`}
                 </button>
               )

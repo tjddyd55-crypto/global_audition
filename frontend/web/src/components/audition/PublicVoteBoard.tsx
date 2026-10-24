@@ -13,6 +13,7 @@ import { Link, useRouter } from '@/i18n.config'
 import { HERO } from '@/shared/design-tokens'
 import { CARD_BASE, PAGE_CONTAINER, TEXT_SUB } from '@/shared/ui/specClasses'
 import { isAllCategoryName } from '@/shared/audition/allCategorySentinel'
+import { recruitFieldLabel } from '@/shared/audition/recruitFields'
 import { formatCount } from '@/shared/money/currency'
 
 type Props = {
@@ -22,6 +23,7 @@ type Props = {
 
 export function PublicVoteBoard({ auditionId, auditionTitleFallback }: Props) {
   const t = useTranslations('vote')
+  const tField = useTranslations('recruitField')
   const locale = useLocale()
   const queryClient = useQueryClient()
   const router = useRouter()
@@ -149,7 +151,7 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback }: Props) {
                     : 'min-h-11 whitespace-normal break-words rounded-full border border-[#E5E7EB] bg-white px-3 py-1.5 text-sm font-medium text-gray-800 hover:bg-gray-50 disabled:opacity-50'
                 }
               >
-                {isAllCategoryName(c.name) ? allLabel : c.name}
+                {isAllCategoryName(c.name) ? allLabel : recruitFieldLabel(c.name, tField)}
                 {isAllCategoryName(c.name, allLabel) ? '' : ` ${c.count}`}
               </button>
             ))}
