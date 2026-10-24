@@ -22,3 +22,10 @@ export const M_SELECT_ARROW = {
   backgroundImage:
     "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%23525252' stroke-width='1.6'/%3E%3C/svg%3E\")",
 } as const
+/** 공통 헤더(MainHeader) 모바일 높이 56px. 레이아웃 main 의 pt-14 와 짝을 이룬다. */
+export const M_HEADER_H = 'h-14'
+/** 페이지 첫 블록은 헤더 바로 아래 12px 에서 시작한다. */
+export const M_PAGE_TOP = 'pt-3'
+/** 페이지 제목 블록: 제목 20px + 설명 13px, 간격 2px */
+export const M_PAGE_TITLE = 'text-xl font-bold leading-tight text-neutral-900'
+export const M_PAGE_DESC = 'mt-0.5 text-[13px] leading-snug text-neutral-600'

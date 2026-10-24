@@ -50,6 +50,45 @@ class AuditionLocalizationServiceTest {
     }
 
     @Test
+    void listCardsUseStoredContentTranslationWhenLegacyRowMissing() {
+        Audition audition = baseAudition("ko");
+        AuditionResponse response = baseResponse(audition);
+        when(translationRepository.findByAuditionIdAndLocale(audition.getId(), "mn")).thenReturn(Optional.empty());
+        var store = mock(com.audition.platform.application.i18n.content.ContentTranslationStore.class);
+        when(store.findTranslation("AUDITION_POSTING", audition.getId(), "mn")).thenReturn(Optional.of(
+                new com.audition.platform.application.i18n.content.ContentTranslationRows.StoredTranslation(
+                        "AUDITION_POSTING", audition.getId(), "mn", "ko", "h", 1L,
+                        "{\"title\":\"Монгол гарчиг\",\"description\":\"Тайлбар\"}",
+                        AuditionTranslation.STATUS_COMPLETED, false, "GOOGLE", "AUTO", false, 0L, null, null)));
+        service.setContentTranslationStore(store, new com.fasterxml.jackson.databind.ObjectMapper());
+
+        service.apply(audition, response, "mn");
+
+        assertEquals("Монгол гарчиг", response.getTitle());
+        assertEquals("Тайлбар", response.getDescription());
+        assertEquals("mn", response.getContentLocale());
+        assertFalse(response.isContentLocaleFallback());
+    }
+
+    @Test
+    void pendingContentTranslationKeepsOriginal() {
+        Audition audition = baseAudition("ko");
+        AuditionResponse response = baseResponse(audition);
+        when(translationRepository.findByAuditionIdAndLocale(audition.getId(), "mn")).thenReturn(Optional.empty());
+        var store = mock(com.audition.platform.application.i18n.content.ContentTranslationStore.class);
+        when(store.findTranslation("AUDITION_POSTING", audition.getId(), "mn")).thenReturn(Optional.of(
+                new com.audition.platform.application.i18n.content.ContentTranslationRows.StoredTranslation(
+                        "AUDITION_POSTING", audition.getId(), "mn", "ko", "h", 1L, "{}",
+                        "PENDING", false, null, null, false, 0L, null, null)));
+        service.setContentTranslationStore(store, new com.fasterxml.jackson.databind.ObjectMapper());
+
+        service.apply(audition, response, "mn");
+
+        assertEquals("원문 제목", response.getTitle());
+        assertTrue(response.isContentLocaleFallback());
+    }
+
+    @Test
     void overlaysCompletedMnTranslation() {
         Audition audition = baseAudition("ko");
         AuditionResponse response = baseResponse(audition);

@@ -3,7 +3,7 @@
 import { Suspense, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useSearchParams } from 'next/navigation'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { Link } from '@/i18n.config'
 import { AuditionAudienceFilter } from './AuditionAudienceFilter'
 import { useAudienceCountrySelection } from '@/shared/audition/useAudienceCountrySelection'
@@ -21,6 +21,8 @@ export default function AuditionList() {
 
 function AuditionBrowse() {
   const t = useTranslations('auditions')
+  // 콘텐츠 로케일은 X-Content-Locale 로 서버 번역 오버레이에 쓰인다. 로케일이 바뀌면 다시 조회한다.
+  const locale = useLocale()
   const params = useSearchParams()
   const { country, selectCountry } = useAudienceCountrySelection()
   const [category, setCategory] = useState(params.get('category') ?? '')
@@ -30,7 +32,7 @@ function AuditionBrowse() {
   const [to, setTo] = useState(params.get('to') ?? '')
   const [recruitment, setRecruitment] = useState(params.get('recruitment') ?? 'OPEN')
   const query = useQuery({
-    queryKey: ['public-auditions', country, category, agency, text, from, to, recruitment],
+    queryKey: ['public-auditions', locale, country, category, agency, text, from, to, recruitment],
     queryFn: () =>
       publicPlatformApi.browseAuditions({
         recruitment,

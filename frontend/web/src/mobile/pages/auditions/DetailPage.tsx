@@ -37,8 +37,8 @@ export default function MobileAuditionDetailPage() {
   const shown = overlayPosting(audition, posting.view)
 
   return (
-    <PageSurface style={{ paddingBottom: 'calc(9rem + env(safe-area-inset-bottom, 0px))' }}>
-      <div className="px-4 pt-3" data-testid="posting-translation-notice">
+    <PageSurface style={{ paddingBottom: 'calc(7.5rem + env(safe-area-inset-bottom, 0px))' }}>
+      <div className="px-4 pt-2 empty:hidden" data-testid="posting-translation-notice">
         <TranslationNotice view={posting.view} showOriginal={posting.showOriginal} onToggle={posting.setShowOriginal} />
       </div>
       <MobileAuditionDetailSummary

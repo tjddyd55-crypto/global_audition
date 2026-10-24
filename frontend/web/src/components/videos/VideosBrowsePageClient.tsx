@@ -39,13 +39,13 @@ export function VideosBrowsePageClient() {
   }, [sortBy, videos])
 
   return (
-    <div className="w-full pb-16 pt-20">
-      <div className="px-4 pb-6">
-        <h1 className="text-[28px] font-bold leading-tight">{tVideo('browseTitle')}</h1>
-        <p className="mt-2 text-base text-neutral-600">{tVideo('browseHint')}</p>
+    <div className="w-full pb-16 pt-20 max-lg:pt-4">
+      <div className="px-4 pb-6 max-lg:pb-3">
+        <h1 className="text-[28px] font-bold leading-tight max-lg:text-xl">{tVideo('browseTitle')}</h1>
+        <p className="mt-2 text-base text-neutral-600 max-lg:mt-0.5 max-lg:text-[13px]">{tVideo('browseHint')}</p>
       </div>
 
-      <div className="mb-4 flex flex-wrap gap-2 px-4">
+      <div className="mb-4 flex flex-wrap gap-2 px-4 max-lg:mb-3">
         <select
           value={filterCategory}
           onChange={(e) => setFilterCategory(e.target.value as (typeof CATEGORIES)[number])}
