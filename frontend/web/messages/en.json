@@ -49,7 +49,10 @@
     "notDevelopedTitle": "This page or feature is not available yet",
     "notDevelopedNamed": "“{name}” is not available yet",
     "notDevelopedBody": "This page or feature has not been built yet.",
-    "notDevelopedSoon": "It is planned for a later release."
+    "notDevelopedSoon": "It is planned for a later release.",
+    "redirecting": "Redirecting…",
+    "redirectingCredits": "Taking you to Credits…",
+    "redirectingRecovery": "Password reset has moved to the recovery code screen…"
   },
   "nav": {
     "home": "Home",
@@ -1317,7 +1320,14 @@
     "hold": "Hold",
     "emptyRound": "No applicants in this round.",
     "singleModeHint": "This audition is SINGLE mode. Manage applicants from Applicant management.",
-    "backToApplicants": "Applicant management"
+    "backToApplicants": "Applicant management",
+    "roundLabel": "Round {n}",
+    "roundOpen": "Open",
+    "roundClosed": "Closed",
+    "reviewMethods": {
+      "INTERNAL_REVIEW": "Internal review",
+      "PUBLIC_VOTE": "Public vote"
+    }
   },
   "relative": {
     "justNow": "Just now",
@@ -1553,5 +1563,33 @@
     "ACTING": "Acting",
     "MODEL": "Model",
     "TEAM": "Team"
+  },
+  "mockPay": {
+    "orderNo": "Order no. {v}",
+    "status": "Status {v}",
+    "amount": "Amount",
+    "creditsLine": "Credits {c} + bonus {b}",
+    "order": "Order",
+    "toCheckoutLocked": "To payment review (unavailable while processing)",
+    "loadFail": "Could not load the order.",
+    "successFail": "Failed to process success.",
+    "payFailAlert": "Payment processing failed. Please try again shortly.",
+    "failFail": "Failed to process failure.",
+    "failErrAlert": "An error occurred while processing the failure. Please try again shortly.",
+    "disabledTitle": "Mock payment disabled",
+    "disabledHint": "Enable NEXT_PUBLIC_CREDIT_MOCK_PAYMENT=true and try again.",
+    "creditsHome": "Credits home",
+    "title": "Mock payment (before PG integration)",
+    "subtitle": "Tests success/failure callbacks only, with no real charge.",
+    "processing": "Processing payment…",
+    "processingHint": "Do not close this page. You will be taken to the result once the server finishes.",
+    "orderNoRequired": "orderNo is required.",
+    "backToCharge": "Back to top-up",
+    "loading": "Loading…",
+    "successPending": "Processing success callback…",
+    "successBtn": "Payment success (mock)",
+    "failPending": "Processing failure callback…",
+    "failBtn": "Payment failure (mock)",
+    "toCheckout": "To payment review"
   }
 }

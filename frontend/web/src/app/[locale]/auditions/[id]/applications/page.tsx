@@ -3,12 +3,14 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { useRouter } from '@/i18n.config'
+import { useTranslations } from 'next-intl'
 import { useAuthStore } from '@/shared/auth/authStore'
 
 /**
  * 공개 URL 유지 호환 — 기획사·관리자는 기획사 허브로 보냄.
  */
 export default function AuditionApplicationsRedirectPage() {
+  const tCommon = useTranslations('common')
   const params = useParams()
   const router = useRouter()
   const role = useAuthStore((s) => s.role)
@@ -31,7 +33,7 @@ export default function AuditionApplicationsRedirectPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 text-sm text-gray-600">
-      이동 중…
+      {tCommon('redirecting')}
     </div>
   )
 }

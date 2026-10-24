@@ -2,10 +2,12 @@
 
 import { useEffect } from 'react'
 import { useParams } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { useRouter } from '@/i18n.config'
 
 /** 레거시 URL — /vote 로 통일 */
 export default function AuditionVotesLegacyRedirectPage() {
+  const tCommon = useTranslations('common')
   const params = useParams()
   const router = useRouter()
   const id = params.id as string
@@ -16,7 +18,7 @@ export default function AuditionVotesLegacyRedirectPage() {
 
   return (
     <div className="flex min-h-[40vh] items-center justify-center text-sm text-gray-600">
-      이동 중…
+      {tCommon('redirecting')}
     </div>
   )
 }
