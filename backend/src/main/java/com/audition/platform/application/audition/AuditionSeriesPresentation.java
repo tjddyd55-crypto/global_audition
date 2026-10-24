@@ -29,11 +29,8 @@ public final class AuditionSeriesPresentation {
     }
 
     public static String displayTitle(String title, int seriesRound, String locale) {
-        if (seriesRound <= 1) {
-            return title != null ? title : "";
-        }
-        String base = stripTrailingSeriesRoundSuffix(title != null ? title : "");
-        return base + " " + roundSuffix(seriesRound, locale);
+        // 회차 표시는 프런트가 i18n(status.round*)으로 조합한다. 서버 제목에 언어별 접미사를 붙이지 않는다.
+        return stripTrailingSeriesRoundSuffix(title != null ? title : "");
     }
 
     public static String recruitmentRoundLabel(String status, int seriesRound) {
@@ -71,11 +68,4 @@ public final class AuditionSeriesPresentation {
         };
     }
 
-    private static String roundSuffix(int seriesRound, String locale) {
-        return switch (ContentLocales.normalize(locale)) {
-            case "en" -> "(Round " + seriesRound + ")";
-            case "mn" -> "(" + seriesRound + "-р шат)";
-            default -> "(" + seriesRound + "차)";
-        };
-    }
 }

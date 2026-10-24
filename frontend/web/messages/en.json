@@ -836,7 +836,8 @@
     "publishConfirm": "I reviewed the translations and the preview. Publish this posting.",
     "publishConfirmRequired": "Confirm the review before publishing.",
     "openPreview": "PC and phone preview",
-    "backToEditor": "Back to editor"
+    "backToEditor": "Back to editor",
+    "recruitFieldsOther": "Other roles (free text)"
   },
   "country": {
     "KR": "Korea",
@@ -1543,5 +1544,14 @@
     "viewTranslation": "View translation",
     "stale": "The source text changed, so this translation may be out of date.",
     "sourceLocale": "Source language: {locale}"
+  },
+  "recruitField": {
+    "VOCAL": "Vocal",
+    "DANCE": "Dance",
+    "RAP": "Rap",
+    "PRODUCING": "Producing",
+    "ACTING": "Acting",
+    "MODEL": "Model",
+    "TEAM": "Team"
   }
 }

@@ -3,7 +3,7 @@
   "primary": ["ko", "en", "mn"],
   "defaultLocale": "en",
   "deviceFallback": "en",
-  "publicSelector": ["en"],
+  "publicSelector": ["ko", "en", "mn"],
   "agencyUiLocale": "ko",
   "superAdminUiLocale": "ko",
   "activeTranslationTargets": ["en", "ko"],

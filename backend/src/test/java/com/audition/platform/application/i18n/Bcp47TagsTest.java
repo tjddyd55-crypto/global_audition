@@ -31,7 +31,7 @@ class Bcp47TagsTest {
         assertFalse(registry.providerSupports("pt-BR"));
         assertTrue(registry.uiLocale("mn"));
         assertFalse(registry.uiLocale("ja"));
-        assertEquals(java.util.List.of("en"), registry.publicSelector());
+        assertEquals(java.util.List.of("ko", "en", "mn"), registry.publicSelector());
         assertEquals("ko", registry.agencyUiLocale());
         assertEquals("ko", registry.superAdminUiLocale());
         assertEquals(java.util.List.of("en", "ko"), registry.activeTargets());

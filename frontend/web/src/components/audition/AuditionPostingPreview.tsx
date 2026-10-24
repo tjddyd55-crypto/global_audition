@@ -5,6 +5,7 @@ import axios from 'axios'
 import { useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { useLocale, useTranslations } from 'next-intl'
+import { recruitFieldLabels } from '@/shared/audition/recruitFields'
 import { auditionApi } from '@/shared/api/auditions'
 import { apiClient } from '@/shared/api/client'
 import { TranslationNotice } from '@/components/i18n/TranslatedField'
@@ -37,6 +38,7 @@ export function AuditionPostingPreview({ auditionId }: Props) {
   const t = useTranslations('editor')
   const tDetail = useTranslations('auditionDetail')
   const tStatus = useTranslations('status')
+  const tRecruit = useTranslations('recruitField')
   const tLocale = useTranslations('locale')
   const uiLocale = useLocale()
   const [locale, setLocale] = useState('en')
@@ -144,7 +146,7 @@ export function AuditionPostingPreview({ auditionId }: Props) {
           <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
             <PcAuditionDetailInfo
               descriptionText={safeStr(audition.description)}
-              recruitList={safeArr(audition.recruitFields)}
+              recruitList={recruitFieldLabels(safeArr(audition.recruitFields), tRecruit)}
               qualifications={safeArr(audition.qualifications)}
               schedules={safeArr(audition.schedules)}
             />
@@ -152,7 +154,7 @@ export function AuditionPostingPreview({ auditionId }: Props) {
               agencyLogo={audition.agencyLogo}
               agencyName={audition.agencyName}
               remainingDays={safeNum(audition.remainingDays)}
-              recruitList={safeArr(audition.recruitFields)}
+              recruitList={recruitFieldLabels(safeArr(audition.recruitFields), tRecruit)}
               createdAtFormatted={fmt(safeStr(audition.createdAt))}
               endDateFormatted={fmt(safeStr(audition.endDate))}
               location={safeStr(audition.location)}

@@ -158,7 +158,7 @@ public class AuditionLocalizationService {
         row.setDescription(nullToEmpty(body.getDescription()));
         row.setLocation(nullToEmpty(body.getLocation()));
         row.setAgencyName(nullToEmpty(body.getAgencyName()));
-        row.setRecruitFields(toArray(body.getRecruitFields()));
+        row.setRecruitFields(com.audition.platform.domain.audition.RecruitFieldCodes.normalizeAll(toArray(body.getRecruitFields())));
         row.setQualifications(toArray(body.getQualifications()));
         row.setSchedules(toArray(body.getSchedules()));
         row.setBenefits(toArray(body.getBenefits()));
@@ -193,7 +193,7 @@ public class AuditionLocalizationService {
         response.setDescription(safeText(row.getDescription()));
         response.setLocation(safeText(row.getLocation()));
         response.setAgencyName(safeText(row.getAgencyName()));
-        response.setRecruitFields(row.getRecruitFields() != null ? row.getRecruitFields() : new String[0]);
+        response.setRecruitFields(com.audition.platform.domain.audition.RecruitFieldCodes.normalizeAll(row.getRecruitFields()));
         response.setQualifications(row.getQualifications() != null ? row.getQualifications() : new String[0]);
         response.setSchedules(row.getSchedules() != null ? row.getSchedules() : new String[0]);
         response.setBenefits(row.getBenefits() != null ? row.getBenefits() : new String[0]);

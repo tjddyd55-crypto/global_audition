@@ -14,6 +14,7 @@ import {
   type AuditionDto,
 } from '@/shared/types/audition'
 import { useLocale, useTranslations } from 'next-intl'
+import { recruitFieldLabels } from '@/shared/audition/recruitFields'
 import { dateFnsLocale } from '@/shared/datetime/dateFnsLocale'
 import { applyBlockedDisplayMessage } from '@/shared/audition/applyBlockedCopy'
 import { roundStatusLabel } from '@/shared/audition/roundStatusLabel'
@@ -79,6 +80,7 @@ export default function MobileAuditionDetailSummary({
   const t = useTranslations('auditionDetail')
   const tApply = useTranslations('apply')
   const tStatus = useTranslations('status')
+  const tRecruit = useTranslations('recruitField')
   const locale = useLocale()
   const embed = getVideoEmbedSrc(safeStr(audition.videoUrl))
   const videoHref = safeStr(audition.videoUrl).trim()
@@ -95,7 +97,7 @@ export default function MobileAuditionDetailSummary({
     .filter((s) => s.length > 0 && !coverDedupUrls.has(s))
     .slice(0, 24)
 
-  const recruitList = safeArr(audition.recruitFields).map((s) => safeStr(s)).filter((s) => s.length > 0)
+  const recruitList = recruitFieldLabels(safeArr(audition.recruitFields).map((s) => safeStr(s)), tRecruit)
   const qualificationsList = safeArr(audition.qualifications).map((s) => safeStr(s)).filter((s) => s.length > 0)
   const schedulesList = safeArr(audition.schedules).map((s) => safeStr(s)).filter((s) => s.length > 0)
   const benefitsList = safeArr(audition.benefits).map((s) => safeStr(s)).filter((s) => s.length > 0)
