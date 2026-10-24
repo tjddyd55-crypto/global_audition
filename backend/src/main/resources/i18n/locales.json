@@ -6,7 +6,7 @@
   "publicSelector": ["ko", "en", "mn"],
   "agencyUiLocale": "ko",
   "superAdminUiLocale": "ko",
-  "activeTranslationTargets": ["en", "ko"],
+  "activeTranslationTargets": ["en", "ko", "mn"],
   "settlementCurrency": "USD",
   "contentLocales": ["ko", "en", "mn", "ja", "zh", "es", "fr", "de"],
   "providerLocales": ["ko", "en", "mn", "ja", "zh", "es", "fr", "de"]
