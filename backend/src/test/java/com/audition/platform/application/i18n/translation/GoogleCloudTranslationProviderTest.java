@@ -115,6 +115,17 @@ class GoogleCloudTranslationProviderTest {
     }
 
     @Test
+    void multilineFieldsAreTranslatedLineByLineWithoutNewlineSentinels() throws Exception {
+        transport.respond(200, token("ya29.token-a"));
+        transport.respond(200, "{\"translations\":[{\"translatedText\":\"Дуу\"},{\"translatedText\":\"Бүжиг\"}]}");
+        TranslationDocumentDraft draft = provider.translateDocument("en", java.util.Map.of("recruitFields", "VOCAL\n\nDANCE"), "mn");
+        assertEquals("Дуу\n\nБүжиг", draft.fields().get("recruitFields"));
+        JsonNode body = MAPPER.readTree(transport.calls.get(1).body());
+        assertEquals(2, body.get("contents").size());
+        assertEquals("VOCAL", body.get("contents").get(0).asText());
+    }
+
+    @Test
     void refreshesTheAccessTokenAfterUnauthorizedAndAfterExpiry() {
         transport.respond(200, token("ya29.token-a", 1));
         transport.respond(200, "{\"translations\":[{\"translatedText\":\"one\"}]}");
@@ -182,7 +193,7 @@ class GoogleCloudTranslationProviderTest {
 
         TranslationDocumentDraft draft = provider.translateDocument("ko", fields, "en");
 
-        assertEquals("EN 안녕 {name}\n다음 %s", draft.fields().get("introText"));
+        assertEquals("EN 안녕 {name}\nEN 다음 %s", draft.fields().get("introText"));
         assertTrue(draft.usage().billedCharacters() > 0);
     }
 

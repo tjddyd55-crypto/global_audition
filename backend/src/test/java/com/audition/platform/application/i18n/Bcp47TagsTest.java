@@ -34,9 +34,10 @@ class Bcp47TagsTest {
         assertEquals(java.util.List.of("ko", "en", "mn"), registry.publicSelector());
         assertEquals("ko", registry.agencyUiLocale());
         assertEquals("ko", registry.superAdminUiLocale());
-        assertEquals(java.util.List.of("en", "ko"), registry.activeTargets());
+        assertEquals(java.util.List.of("en", "ko", "mn"), registry.activeTargets());
         assertTrue(registry.activeTarget("en"));
-        assertFalse(registry.activeTarget("mn"));
+        assertTrue(registry.activeTarget("mn"));
+        assertFalse(registry.activeTarget("ja"));
         assertThrows(IllegalArgumentException.class, () -> registry.rejectIncompleteUiActivation("ja"));
         assertThrows(IllegalArgumentException.class, () -> registry.rejectIncompleteUiActivation("th"));
     }

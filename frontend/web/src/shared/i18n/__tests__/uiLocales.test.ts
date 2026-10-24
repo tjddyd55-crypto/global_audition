@@ -62,7 +62,7 @@ describe('official UI locales', () => {
     expect([...PUBLIC_SELECTOR]).toEqual(['ko', 'en', 'mn'])
     expect(AGENCY_UI_LOCALE).toBe('ko')
     expect(localesMeta.superAdminUiLocale).toBe('ko')
-    expect(localesMeta.activeTranslationTargets).toEqual(['en', 'ko'])
+    expect(localesMeta.activeTranslationTargets).toEqual(['en', 'ko', 'mn'])
   })
 
   it('agency management screens follow the selected UI locale (no forced Korean)', () => {

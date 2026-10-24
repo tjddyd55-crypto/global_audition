@@ -25,6 +25,7 @@ import java.util.Map;
 public class GoogleCloudTranslationProvider implements TranslationProvider {
 
     public static final String PROVIDER_ID = "GOOGLE_CLOUD_TRANSLATION";
+    private static final java.util.regex.Pattern LINE_BREAK = java.util.regex.Pattern.compile("\\r\\n|\\n|\\r");
     static final String TRANSLATE_HOST = "https://translate.googleapis.com";
     static final String DEFAULT_MODEL = "general/nmt";
 
@@ -84,18 +85,37 @@ public class GoogleCloudTranslationProvider implements TranslationProvider {
     @Override
     public TranslationDocumentDraft translateDocument(String sourceLocale, Map<String, String> fields, String targetLocale) {
         Map<String, String> source = fields == null ? Map.of() : fields;
-        List<String> keys = new ArrayList<>();
+        // 줄바꿈은 센티넬로 보호하면 Google 이 짧은 줄에서 센티넬을 지워 MISSING_FIELD 가 난다.
+        // 그래서 줄 단위로 나눠 각 줄을 별도 content 로 번역하고 원래 줄바꿈으로 다시 잇는다.
         List<String> contents = new ArrayList<>();
         List<List<String>> masks = new ArrayList<>();
+        Map<String, List<Object>> plans = new LinkedHashMap<>();
         for (Map.Entry<String, String> entry : source.entrySet()) {
             String value = entry.getValue() == null ? "" : entry.getValue();
             if (value.isBlank()) {
                 continue;
             }
-            List<String> captured = new ArrayList<>();
-            keys.add(entry.getKey());
-            contents.add(PlainTextProtector.protect(value, captured));
-            masks.add(captured);
+            List<Object> plan = new ArrayList<>();
+            java.util.regex.Matcher breaks = LINE_BREAK.matcher(value);
+            int last = 0;
+            while (true) {
+                boolean found = breaks.find();
+                String line = value.substring(last, found ? breaks.start() : value.length());
+                if (line.isBlank()) {
+                    plan.add(line);
+                } else {
+                    List<String> captured = new ArrayList<>();
+                    contents.add(PlainTextProtector.protect(line, captured));
+                    masks.add(captured);
+                    plan.add(contents.size() - 1);
+                }
+                if (!found) {
+                    break;
+                }
+                plan.add(breaks.group());
+                last = breaks.end();
+            }
+            plans.put(entry.getKey(), plan);
         }
         Map<String, String> result = new LinkedHashMap<>();
         for (String key : source.keySet()) {
@@ -111,9 +131,16 @@ public class GoogleCloudTranslationProvider implements TranslationProvider {
                     AuditionTranslation.ERROR_ARRAY_LENGTH_MISMATCH,
                     AuditionTranslation.ERROR_ARRAY_LENGTH_MISMATCH);
         }
-        for (int i = 0; i < keys.size(); i++) {
-            String restored = unescape(PlainTextProtector.restore(translated.get(i), masks.get(i)));
-            result.put(keys.get(i), restored);
+        for (Map.Entry<String, List<Object>> plan : plans.entrySet()) {
+            StringBuilder out = new StringBuilder();
+            for (Object part : plan.getValue()) {
+                if (part instanceof Integer index) {
+                    out.append(unescape(PlainTextProtector.restore(translated.get(index), masks.get(index))));
+                } else {
+                    out.append((String) part);
+                }
+            }
+            result.put(plan.getKey(), out.toString());
         }
         TranslationDraftValidator.validateFields(source, result);
         int billed = 0;

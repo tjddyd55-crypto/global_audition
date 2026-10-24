@@ -86,10 +86,10 @@ class ContentTranslationEngineTest {
         assertPair("mn", "en", "Улаанбаатар сонгон шалгаруулалт");
         source.snapshot = snapshot("ko", "대한민국 서울 오디션");
         UUID inactive = UUID.randomUUID();
-        ContentTranslationView mongolian = service.read(ContentTypes.APPLICATION_INTRO, inactive, "mn", false, viewer);
+        ContentTranslationView mongolian = service.read(ContentTypes.APPLICATION_INTRO, inactive, "ja", false, viewer);
         assertTrue(mongolian.showingOriginal());
         assertEquals(ContentTypes.TARGET_INACTIVE, mongolian.errorCode());
-        assertTrue(store.findLatestJob(ContentTypes.APPLICATION_INTRO, inactive, "mn").isEmpty());
+        assertTrue(store.findLatestJob(ContentTypes.APPLICATION_INTRO, inactive, "ja").isEmpty());
     }
 
     @Test
@@ -240,7 +240,7 @@ class ContentTranslationEngineTest {
         service.requestActiveTargets(ContentTypes.AUDITION_POSTING, contentId, viewer);
         assertTrue(store.findActiveJob(ContentTypes.AUDITION_POSTING, contentId, "en").isPresent());
         assertTrue(store.findLatestJob(ContentTypes.AUDITION_POSTING, contentId, "ko").isEmpty());
-        assertTrue(store.findLatestJob(ContentTypes.AUDITION_POSTING, contentId, "mn").isEmpty());
+        assertTrue(store.findLatestJob(ContentTypes.AUDITION_POSTING, contentId, "ja").isEmpty());
 
         UUID englishPosting = UUID.randomUUID();
         source.snapshot = snapshot("en", "Open call");
@@ -252,7 +252,7 @@ class ContentTranslationEngineTest {
     @Test
     void explicitRetryOfAnInactiveLocaleIsRejected() {
         ResponseStatusException ex = assertThrows(ResponseStatusException.class,
-                () -> service.retry(ContentTypes.APPLICATION_INTRO, contentId, "mn", false, viewer));
+                () -> service.retry(ContentTypes.APPLICATION_INTRO, contentId, "ja", false, viewer));
         assertEquals(400, ex.getStatusCode().value());
         assertEquals(ContentTypes.TARGET_INACTIVE, ex.getReason());
     }
