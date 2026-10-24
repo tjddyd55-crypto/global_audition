@@ -244,7 +244,11 @@
     "signup": "Бүртгүүлэх",
     "channels": "Нээлттэй суваг",
     "agencies": "Батлагдсан агентлаг",
-    "seeAllAgencies": "Бүх агентлаг"
+    "seeAllAgencies": "Бүх агентлаг",
+    "recruitCountries": "Бүртгэж буй улс",
+    "recruitingNow": "Бүртгэл явагдаж буй",
+    "seeAll": "Бүгдийг үзэх",
+    "recommendedBadge": "Онцлох"
   },
   "auditions": {
     "title": "Аудишн",
