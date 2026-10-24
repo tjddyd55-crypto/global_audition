@@ -1,5 +1,6 @@
 'use client'
 
+import { DEV_HERO_IMAGE } from './devAssets'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n.config'
 import { useAudienceCountrySelection } from '@/shared/audition/useAudienceCountrySelection'
@@ -30,6 +31,16 @@ export default function MobileHomePage() {
   return (
     <div className="w-full min-w-0 overflow-x-hidden pb-8" data-testid="mobile-home">
       <section className="relative overflow-hidden bg-gradient-to-br from-[#2e1065] via-[#7c3aed] to-[#db2777] px-4 pb-6 pt-7 text-white">
+        {/* DEV/DUMMY 히어로 배경 — 기존 그라디언트가 위에 오버레이됨 */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={DEV_HERO_IMAGE}
+          alt=""
+          aria-hidden
+          data-testid="mobile-hero-bg"
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+        />
+        <div aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#2e1065]/85 via-[#7c3aed]/60 to-[#db2777]/75" />
         <div aria-hidden className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-pink-400/40 blur-2xl" />
         <div aria-hidden className="pointer-events-none absolute right-16 top-16 h-16 w-16 rounded-full bg-white/30 blur-xl" />
         <div aria-hidden className="pointer-events-none absolute -bottom-8 left-1/3 h-24 w-24 rounded-full bg-fuchsia-300/30 blur-2xl" />

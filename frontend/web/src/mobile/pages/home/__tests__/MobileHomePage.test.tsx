@@ -1,3 +1,4 @@
+import { devAuditionThumbnail } from '../devAssets'
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { NextIntlClientProvider } from 'next-intl'
 import ko from '../../../../../messages/ko.json'
@@ -10,6 +11,8 @@ jest.mock('@/components/audition/useAuditionsListQuery', () => ({
 }))
 
 const mockedQuery = useAuditionsListQuery as jest.Mock
+
+const REAL = 'https://cdn.example.com/real-thumb.jpg'
 
 function audition(id: string, title: string): AuditionDto {
   return {
@@ -48,7 +51,10 @@ describe('MobileHomePage', () => {
     window.localStorage.clear()
     mockedQuery.mockReset()
     mockedQuery.mockReturnValue({
-      data: [1, 2, 3, 4, 5, 6].map((n) => audition(`a${n}`, `오디션${n}`)),
+      data: [1, 2, 3, 4, 5, 6].map((n) => {
+        const a = audition(`a${n}`, `오디션${n}`)
+        return n === 2 ? { ...a, images: { original: REAL, medium: REAL, thumb: REAL } } : a
+      }),
       isLoading: false,
     })
   })
@@ -68,6 +74,10 @@ describe('MobileHomePage', () => {
     expect(recruiting).toHaveLength(3)
     expect(recommended).toHaveLength(3)
     expect(recruiting[0].getAttribute('href')).toMatch(/\/auditions\/a1$/)
+    // 실제 썸네일 없음 → id 기반 DEV 더미 썸네일
+    expect(recruiting[0].querySelector('img')?.getAttribute('src')).toBe(devAuditionThumbnail('a1'))
+    // 실제 썸네일이 있으면 그대로 사용
+    expect(recruiting[1].querySelector('img')?.getAttribute('src')).toBe(REAL)
     expect(recommended[0].getAttribute('href')).toMatch(/\/auditions\/a4$/)
     expect(within(recruiting[0]).getByText('오디션1 기획사')).toBeInTheDocument()
     expect(within(recruiting[0]).getByText('2026.09.01 ~ 2026.10.31')).toBeInTheDocument()

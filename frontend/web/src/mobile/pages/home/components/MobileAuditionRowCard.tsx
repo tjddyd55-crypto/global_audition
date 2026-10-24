@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from 'next-intl'
 import { Link } from '@/i18n.config'
 import { dateFnsLocale } from '@/shared/datetime/dateFnsLocale'
 import { DEFAULT_IMAGES } from '@/shared/constants/fallbacks'
+import { devAuditionThumbnail } from '../devAssets'
 import { auditionHeadlineTitle, auditionListImageUrl, type AuditionDto } from '@/shared/types/audition'
 
 type Props = {
@@ -28,8 +29,10 @@ export default function MobileAuditionRowCard({ audition, badge = 'status' }: Pr
   const tFallback = useTranslations('fallback')
   const locale = useLocale()
   const primary = auditionListImageUrl(audition.images)
-  const [imgSrc, setImgSrc] = useState(primary || DEFAULT_IMAGES.videoThumbnail)
-  useEffect(() => setImgSrc(primary || DEFAULT_IMAGES.videoThumbnail), [primary])
+  // 실제 썸네일이 없을 때만 DEV 더미 이미지(id 기반 결정적) 사용
+  const fallback = devAuditionThumbnail(audition.id)
+  const [imgSrc, setImgSrc] = useState(primary || fallback)
+  useEffect(() => setImgSrc(primary || fallback), [primary, fallback])
 
   const title = auditionHeadlineTitle(audition).trim() || tFallback('videoTitle')
   const status = String(audition.status ?? '')
@@ -62,7 +65,7 @@ export default function MobileAuditionRowCard({ audition, badge = 'status' }: Pr
           className="absolute inset-0 h-full w-full object-cover"
           loading="lazy"
           decoding="async"
-          onError={() => setImgSrc(DEFAULT_IMAGES.videoThumbnail)}
+          onError={() => setImgSrc((cur) => (cur === fallback ? DEFAULT_IMAGES.videoThumbnail : fallback))}
         />
         <span
           className={`absolute left-2 top-2 max-w-[calc(100%-1rem)] truncate rounded-full px-2 py-0.5 text-[11px] font-semibold text-white ${badgeClass}`}
