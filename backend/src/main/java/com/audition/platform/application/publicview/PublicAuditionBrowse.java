@@ -2,8 +2,14 @@ package com.audition.platform.application.publicview;
 
 import com.audition.platform.application.AuditionService;
 
+import com.audition.platform.domain.audition.RecruitFieldCodes;
+
 import java.time.Instant;
+
+import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
+import java.util.function.Function;
 import java.util.Locale;
 
 /**
@@ -18,7 +24,63 @@ public final class PublicAuditionBrowse {
             String agency,
             String text,
             Instant from,
-            Instant to) {
+            Instant to,
+            String field,
+            String sort) {
+
+        public Query(String recruitment, String country, String category, String agency, String text,
+                Instant from, Instant to) {
+            this(recruitment, country, category, agency, text, from, to, null, null);
+        }
+    }
+
+    public static final Set<String> SORTS = Set.of("LATEST", "DEADLINE");
+    public static final int MAX_PAGE_SIZE = 100;
+
+    /** 모집 분야 코드(VOCAL 등) 일치. 레거시 한글/영문 값도 RecruitFieldCodes 로 정규화해 비교한다. */
+    public static boolean matchesField(String[] recruitFields, String field) {
+        if (field == null || field.isBlank()) {
+            return true;
+        }
+        String wanted = RecruitFieldCodes.normalize(field).toUpperCase(Locale.ROOT);
+        if (recruitFields == null) {
+            return false;
+        }
+        for (String value : recruitFields) {
+            if (value != null && RecruitFieldCodes.normalize(value).toUpperCase(Locale.ROOT).equals(wanted)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** LATEST: 생성일 최신순. DEADLINE: 마감(endDate, 없으면 deadlineAt) 빠른 순, 마감 없는 공고는 뒤로. 동률은 최신순. */
+    public static <T> Comparator<T> comparator(
+            String sort, Function<T, Instant> createdAt, Function<T, Instant> endDate, Function<T, Instant> deadlineAt) {
+        Comparator<T> latest = Comparator.comparing(createdAt, Comparator.nullsLast(Comparator.reverseOrder()));
+        if (!"DEADLINE".equals(normalizeSort(sort))) {
+            return latest;
+        }
+        Function<T, Instant> due = row -> endDate.apply(row) != null ? endDate.apply(row) : deadlineAt.apply(row);
+        return Comparator.comparing(due, Comparator.nullsLast(Comparator.<Instant>naturalOrder())).thenComparing(latest);
+    }
+
+    public static String normalizeSort(String sort) {
+        if (sort == null || sort.isBlank()) {
+            return "LATEST";
+        }
+        String up = sort.trim().toUpperCase(Locale.ROOT);
+        if (!SORTS.contains(up)) {
+            throw new IllegalArgumentException("sort");
+        }
+        return up;
+    }
+
+    /** 0-based page 슬라이스. page 가 범위를 넘으면 빈 목록. */
+    public static <T> List<T> slice(List<T> rows, int page, int size) {
+        int from = (int) Math.min((long) page * size, rows.size());
+        int to = (int) Math.min((long) from + size, rows.size());
+        return rows.subList(from, to);
     }
 
     private PublicAuditionBrowse() {
@@ -57,6 +119,9 @@ public final class PublicAuditionBrowse {
             return false;
         }
         if (!contains(agencyName, query.agency())) {
+            return false;
+        }
+        if (!matchesField(recruitFields, query.field())) {
             return false;
         }
         if (!containsAny(query.category(), recruitFields, tags)) {

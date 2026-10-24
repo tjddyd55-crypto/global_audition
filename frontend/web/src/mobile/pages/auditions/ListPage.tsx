@@ -1,7 +1,7 @@
 'use client'
 
-import { Suspense, useMemo, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { Suspense, useEffect, useRef, useState } from 'react'
+import { useInfiniteQuery } from '@tanstack/react-query'
 import { useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import EmptyState from '@/components/ui/EmptyState'
@@ -9,7 +9,6 @@ import { publicPlatformApi } from '@/shared/api/publicPlatform'
 import { AUDIENCE_FILTER_OPTIONS } from '@/shared/audition/audienceSelection'
 import { RECRUIT_FIELD_CODES, toRecruitFieldCode } from '@/shared/audition/recruitFields'
 import { useAudienceCountrySelection } from '@/shared/audition/useAudienceCountrySelection'
-import type { AuditionDto } from '@/shared/types/audition'
 import MobileAuditionRowCard from '../home/components/MobileAuditionRowCard'
 import {
   M_CARD_GAP,
@@ -33,7 +32,7 @@ export default function MobileAuditionsListPage() {
   )
 }
 
-const time = (v?: string | null) => (v ? new Date(v).getTime() || 0 : 0)
+const PAGE_SIZE = 10
 
 function MobileAuditionBrowse() {
   const t = useTranslations('auditions')
@@ -44,21 +43,34 @@ function MobileAuditionBrowse() {
   const [field, setField] = useState(() => toRecruitFieldCode(params.get('category') ?? '') ?? '')
   const [recruitment, setRecruitment] = useState(params.get('recruitment') ?? 'OPEN')
   const [sort, setSort] = useState<Sort>('LATEST')
-  const query = useQuery({
-    queryKey: ['public-auditions', country, '', '', '', '', '', recruitment],
-    queryFn: () => publicPlatformApi.browseAuditions({ recruitment, country }),
+  // 국가·분야·상태·정렬은 모두 서버 조건. 조건이 바뀌면 queryKey 가 바뀌어 0페이지부터 다시 조회한다.
+  const query = useInfiniteQuery({
+    queryKey: ['public-auditions-page', country, field, recruitment, sort, PAGE_SIZE],
+    initialPageParam: 0,
+    queryFn: ({ pageParam }) =>
+      publicPlatformApi.browseAuditionsPage({
+        recruitment,
+        country,
+        field: field || undefined,
+        sort,
+        page: pageParam,
+        size: PAGE_SIZE,
+      }),
+    getNextPageParam: (last) => ((last.page + 1) * last.size < last.total ? last.page + 1 : undefined),
   })
-
-  const auditions = useMemo(() => {
-    const rows: AuditionDto[] = (query.data ?? []).filter(
-      (a) => !field || (a.recruitFields ?? []).some((f) => toRecruitFieldCode(f) === field),
-    )
-    return [...rows].sort((a, b) =>
-      sort === 'DEADLINE'
-        ? (time(a.endDate || a.deadlineAt) || Infinity) - (time(b.endDate || b.deadlineAt) || Infinity)
-        : time(b.createdAt || b.startDate) - time(a.createdAt || a.startDate),
-    )
-  }, [query.data, field, sort])
+  const auditions = query.data?.pages.flatMap((p) => p.items) ?? []
+  const total = query.data?.pages[0]?.total ?? 0
+  const sentinel = useRef<HTMLDivElement>(null)
+  const { hasNextPage, isFetchingNextPage, fetchNextPage } = query
+  useEffect(() => {
+    const el = sentinel.current
+    if (!el || !hasNextPage || typeof IntersectionObserver === 'undefined') return
+    const io = new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting) && !isFetchingNextPage) void fetchNextPage()
+    }, { rootMargin: '200px' })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage, auditions.length])
 
   return (
     <div className="w-full min-w-0 overflow-x-hidden pb-6 pt-3" data-testid="mobile-audition-list">
@@ -126,10 +138,22 @@ function MobileAuditionBrowse() {
         ) : auditions.length === 0 ? (
           <EmptyState message={t('empty')} />
         ) : (
-          <div className={`flex flex-col ${M_CARD_GAP}`}>
+          <div className={`flex flex-col ${M_CARD_GAP}`} data-testid="mobile-audition-results" data-total={total}>
             {auditions.map((audition) => (
               <MobileAuditionRowCard key={audition.id} audition={audition} />
             ))}
+            {hasNextPage ? (
+              <div ref={sentinel} className="flex justify-center py-2">
+                <button
+                  type="button"
+                  onClick={() => void fetchNextPage()}
+                  disabled={isFetchingNextPage}
+                  className="h-10 rounded-full border border-neutral-200 px-5 text-sm font-medium text-neutral-700"
+                >
+                  {isFetchingNextPage ? t('loadingMore') : t('loadMore')}
+                </button>
+              </div>
+            ) : null}
           </div>
         )}
       </div>

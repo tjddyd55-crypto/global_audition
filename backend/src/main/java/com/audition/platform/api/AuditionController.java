@@ -68,20 +68,43 @@ public class AuditionController {
     }
 
     @GetMapping("/browse")
-    public List<AuditionResponse> browse(
+    public ResponseEntity<List<AuditionResponse>> browse(
             @RequestParam(required = false) String recruitment,
             @RequestParam(required = false) String country,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String agency,
             @RequestParam(required = false) String q,
             @RequestParam(required = false) String from,
-            @RequestParam(required = false) String to) {
+            @RequestParam(required = false) String to,
+            @RequestParam(required = false) String field,
+            @RequestParam(required = false) String sort,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size) {
         String status = recruitment == null ? null : recruitment.trim().toUpperCase(Locale.ROOT);
         if (status != null && !status.isBlank() && !Set.of("OPEN", "CLOSED", "ENDED", "ALL").contains(status)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "recruitment 값이 올바르지 않습니다.");
         }
-        return auditionService.browsePublic(new PublicAuditionBrowse.Query(
-                status, country, category, agency, q, startOfDay(from), endOfDay(to)));
+        String sortKey;
+        try {
+            sortKey = PublicAuditionBrowse.normalizeSort(sort);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "sort 값이 올바르지 않습니다.");
+        }
+        if ((page != null && page < 0) || (size != null && (size < 1 || size > PublicAuditionBrowse.MAX_PAGE_SIZE))) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "page/size 값이 올바르지 않습니다.");
+        }
+        List<AuditionResponse> rows = auditionService.browsePublic(new PublicAuditionBrowse.Query(
+                status, country, category, agency, q, startOfDay(from), endOfDay(to), field, sortKey));
+        // size 가 없으면 기존처럼 전체 목록(PC 호환). 있으면 page 슬라이스 + 전체 건수 헤더.
+        if (size == null) {
+            return ResponseEntity.ok().header("X-Total-Count", String.valueOf(rows.size())).body(rows);
+        }
+        int p = page == null ? 0 : page;
+        return ResponseEntity.ok()
+                .header("X-Total-Count", String.valueOf(rows.size()))
+                .header("X-Page", String.valueOf(p))
+                .header("X-Page-Size", String.valueOf(size))
+                .body(PublicAuditionBrowse.slice(rows, p, size));
     }
 
     @GetMapping("/my")

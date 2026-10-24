@@ -22,7 +22,6 @@ describe('roundDisplayName', () => {
     expect(roundDisplayName(4, null, tFor('mn'))).toBe('4-р шат')
   })
   it('mn catalog has no legacy "Шат {n}" round labels', () => {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const raw = JSON.stringify(require('../../../../messages/mn.json'))
     expect(raw).not.toMatch(/Шат \{|: шат \{/)
     expect(raw).toContain('{n}-р шат')
