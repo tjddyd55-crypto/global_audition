@@ -16,6 +16,17 @@ describe('roundDisplayName', () => {
     expect(roundDisplayName(2, null, tFor('en'))).toBe('Round 2')
     expect(roundDisplayName(1, 'Round 1', tFor('ko'))).toBe('1차')
   })
+  it('mn labels unify to N-р шат (incl. legacy "Шат N")', () => {
+    expect(roundDisplayName(3, 'Шат 3', tFor('mn'))).toBe('3-р шат')
+    expect(roundDisplayName(1, '1-р шат', tFor('mn'))).toBe('1-р шат')
+    expect(roundDisplayName(4, null, tFor('mn'))).toBe('4-р шат')
+  })
+  it('mn catalog has no legacy "Шат {n}" round labels', () => {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const raw = JSON.stringify(require('../../../../messages/mn.json'))
+    expect(raw).not.toMatch(/Шат \{|: шат \{/)
+    expect(raw).toContain('{n}-р шат')
+  })
   it('custom names are preserved', () => {
     expect(roundDisplayName(2, '보컬 실기', tFor('en'))).toBe('Round 2 보컬 실기')
     expect(isDefaultRoundName('2차', 3)).toBe(false)
