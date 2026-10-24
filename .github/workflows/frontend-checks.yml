@@ -49,7 +49,8 @@ jobs:
           node-version: "20"
           cache: npm
           cache-dependency-path: frontend/mobile/package-lock.json
-      - run: npm ci
+      # 기존 lock 파일에 선택적 peer(react-dom 등)가 빠져 있어 npm ci 가 EUSAGE 로 실패한다. lock 은 건드리지 않고 peer 자동설치만 끈다.
+      - run: npm ci --legacy-peer-deps
       - name: tsc
         run: npx tsc --noEmit
       - name: jest
