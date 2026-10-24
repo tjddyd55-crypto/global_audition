@@ -24,6 +24,7 @@ export default function MainHeader() {
   const tAgency = useTranslations('agency')
   const tChannel = useTranslations('channel')
   const tVault = useTranslations('vault')
+  const tLanguages = useTranslations('languages')
   const locale = useLocale()
   const router = useRouter()
   const pathname = usePathname()
@@ -97,12 +98,29 @@ export default function MainHeader() {
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-[#eeeeee] bg-white">
       <div className="flex h-16 items-center justify-between px-6 max-md:px-4">
-        <Link href="/" className="flex min-w-0 shrink-0 items-center gap-2 no-underline">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-[#7c3aed] to-[#ec4899] text-base font-bold text-white">
-            G
-          </div>
-          <span className="truncate text-base font-semibold text-black max-md:max-w-[140px]">{t('appName')}</span>
-        </Link>
+        <div className="flex min-w-0 items-center gap-1 lg:contents">
+          <button
+            type="button"
+            onClick={() => setIsMobileOpen((p) => !p)}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded border-0 bg-transparent lg:hidden"
+            data-testid="mobile-menu-button"
+            aria-label={tNav('menu')}
+          >
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {isMobileOpen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              )}
+            </svg>
+          </button>
+          <Link href="/" className="flex min-w-0 items-center gap-2 no-underline lg:shrink-0">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-[#7c3aed] to-[#ec4899] text-base font-bold text-white">
+              G
+            </div>
+            <span className="truncate text-base font-semibold text-black max-lg:text-[15px]">{t('appName')}</span>
+          </Link>
+        </div>
 
         <nav className="hidden gap-8 lg:flex">
           <Link href="/auditions" className={navLinkClass}>
@@ -204,20 +222,57 @@ export default function MainHeader() {
           )}
         </div>
 
-        <button
-          type="button"
-          onClick={() => setIsMobileOpen((p) => !p)}
-          className="flex h-9 w-9 items-center justify-center rounded border border-gray-200 lg:hidden"
-          aria-label={tNav('menu')}
-        >
-          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            {isMobileOpen ? (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            ) : (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+        <div className="flex shrink-0 items-center gap-1.5 lg:hidden" data-testid="mobile-header-actions">
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setIsLanguageOpen((p) => !p)}
+              className="flex h-9 items-center gap-1 rounded-lg border border-gray-200 bg-white px-2 text-xs text-gray-800"
+              data-testid="mobile-language-current"
+              aria-label={t('language')}
+            >
+              <svg aria-hidden className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="9" strokeWidth={1.8} />
+                <path strokeWidth={1.8} d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18" />
+              </svg>
+              <span className="hidden whitespace-nowrap min-[375px]:inline">{tLanguages(locale)}</span>
+              <span className="whitespace-nowrap uppercase min-[375px]:hidden">{locale}</span>
+            </button>
+            {isLanguageOpen && (
+              <div className="absolute right-0 top-full z-50 mt-1 min-w-[120px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+                {locales.map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    onClick={() => changeLocale(item)}
+                    className="block w-full whitespace-nowrap px-3 py-2 text-left text-sm hover:bg-gray-100"
+                  >
+                    {tLanguages(item)}
+                  </button>
+                ))}
+              </div>
             )}
-          </svg>
-        </button>
+          </div>
+          {!showUserChrome ? (
+            <Link
+              href="/login"
+              data-testid="mobile-login-button"
+              className="inline-flex h-9 items-center whitespace-nowrap rounded-lg bg-gradient-to-r from-[#7c3aed] to-[#ec4899] px-3 text-xs font-semibold text-white no-underline"
+            >
+              {t('login')}
+            </Link>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setIsMobileOpen((p) => !p)}
+              aria-label={displayName}
+              data-testid="mobile-account-button"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-0 bg-gradient-to-r from-[#7c3aed] to-[#ec4899] text-sm font-semibold text-white"
+            >
+              {displayName.charAt(0) || '?'}
+            </button>
+          )}
+        </div>
       </div>
 
       {isMobileOpen && (

@@ -244,7 +244,11 @@
     "signup": "가입",
     "channels": "공개 채널",
     "agencies": "승인된 기획사",
-    "seeAllAgencies": "모든 기획사 보기"
+    "seeAllAgencies": "모든 기획사 보기",
+    "recruitCountries": "모집 국가",
+    "recruitingNow": "모집 중인 공고",
+    "seeAll": "전체보기",
+    "recommendedBadge": "추천"
   },
   "auditions": {
     "title": "오디션",
