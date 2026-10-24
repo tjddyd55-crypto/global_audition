@@ -52,7 +52,7 @@ roundStatusLabel(status, audition.round, tStatus)
     <Link
       href={`/auditions/${audition.id}`}
       data-testid="mobile-audition-card"
-      className="flex min-w-0 items-stretch overflow-hidden rounded-xl border border-neutral-200 bg-white text-inherit no-underline shadow-sm"
+      className="flex h-[124px] min-w-0 items-stretch overflow-hidden rounded-xl border border-neutral-200 bg-white text-inherit no-underline shadow-sm"
     >
       <div className="relative w-[38%] max-w-[168px] shrink-0 bg-neutral-900">
         {/* eslint-disable-next-line @next/next/no-img-element */}
