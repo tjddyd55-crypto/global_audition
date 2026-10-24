@@ -7,7 +7,8 @@ const config: Config = {
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
     // 홈 페이지(PC/모바일 분리) — 기존 app/[locale]/page.tsx 에서 이동된 파일 포함
     './src/pc/pages/home/**/*.{js,ts,jsx,tsx,mdx}',
-    './src/mobile/pages/home/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/pc/pages/channels/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/mobile/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
     extend: {
