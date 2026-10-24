@@ -57,6 +57,28 @@ export default function MainHeader() {
     gcTime: 30 * 60 * 1000,
   })
 
+  useEffect(() => {
+    setIsLanguageOpen(false)
+    setIsMobileOpen(false)
+  }, [pathname])
+
+  useEffect(() => {
+    if (!isLanguageOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsLanguageOpen(false)
+    }
+    const onPointer = (e: PointerEvent) => {
+      const el = e.target as Element | null
+      if (!el?.closest('[data-language-menu],[data-language-toggle]')) setIsLanguageOpen(false)
+    }
+    document.addEventListener('keydown', onKey)
+    document.addEventListener('pointerdown', onPointer)
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.removeEventListener('pointerdown', onPointer)
+    }
+  }, [isLanguageOpen])
+
   const locales = isAgencyConsolePath(pathname) ? [AGENCY_UI_LOCALE] : PUBLIC_SELECTOR
 
   const changeLocale = (nextLocale: string) => {
@@ -101,7 +123,7 @@ export default function MainHeader() {
         <div className="flex min-w-0 items-center gap-1 lg:contents">
           <button
             type="button"
-            onClick={() => setIsMobileOpen((p) => !p)}
+            onClick={() => { setIsLanguageOpen(false); setIsMobileOpen((p) => !p) }}
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded border-0 bg-transparent lg:hidden"
             data-testid="mobile-menu-button"
             aria-label={tNav('menu')}
@@ -141,20 +163,23 @@ export default function MainHeader() {
           <div className="relative">
             <button
               type="button"
-              onClick={() => setIsLanguageOpen((p) => !p)}
+              onClick={() => { setIsMobileOpen(false); setIsLanguageOpen((p) => !p) }}
+              data-language-toggle
               className="cursor-pointer border-0 bg-transparent text-sm text-[#555555]"
               data-testid="language-current"
             >
               {locale.toUpperCase()}
             </button>
             {isLanguageOpen && (
-              <div className="absolute right-0 top-full z-50 mt-1 min-w-[80px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+              <div data-language-menu className="absolute right-0 top-full z-50 mt-1 min-w-[80px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
                 {locales.map((item) => (
                   <button
                     key={item}
                     type="button"
                     onClick={() => changeLocale(item)}
-                    className="block w-full px-3 py-2 text-left text-sm uppercase hover:bg-gray-100"
+                    aria-current={item === locale ? 'true' : undefined}
+                    data-testid={`language-option-${item}`}
+                    className={`block w-full px-3 py-2 text-left text-sm uppercase hover:bg-gray-100 ${item === locale ? 'font-semibold text-[#7c3aed]' : ''}`}
                   >
                     {item}
                   </button>
@@ -226,7 +251,8 @@ export default function MainHeader() {
           <div className="relative">
             <button
               type="button"
-              onClick={() => setIsLanguageOpen((p) => !p)}
+              onClick={() => { setIsMobileOpen(false); setIsLanguageOpen((p) => !p) }}
+              data-language-toggle
               className="flex h-9 items-center gap-1 rounded-lg border border-gray-200 bg-white px-2 text-xs text-gray-800"
               data-testid="mobile-language-current"
               aria-label={t('language')}
@@ -239,15 +265,17 @@ export default function MainHeader() {
               <span className="whitespace-nowrap uppercase min-[375px]:hidden">{locale}</span>
             </button>
             {isLanguageOpen && (
-              <div className="absolute right-0 top-full z-50 mt-1 min-w-[120px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+              <div data-language-menu className="absolute right-0 top-full z-50 mt-1 min-w-[120px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
                 {locales.map((item) => (
                   <button
                     key={item}
                     type="button"
                     onClick={() => changeLocale(item)}
-                    className="block w-full whitespace-nowrap px-3 py-2 text-left text-sm hover:bg-gray-100"
+                    aria-current={item === locale ? 'true' : undefined}
+                    data-testid={`mobile-language-option-${item}`}
+                    className={`block w-full whitespace-nowrap px-3 py-2 text-left text-sm hover:bg-gray-100 ${item === locale ? 'font-semibold text-[#7c3aed]' : ''}`}
                   >
-                    {tLanguages(item)}
+                    {item === locale ? '✓ ' : ''}{tLanguages(item)}
                   </button>
                 ))}
               </div>
@@ -264,7 +292,7 @@ export default function MainHeader() {
           ) : (
             <button
               type="button"
-              onClick={() => setIsMobileOpen((p) => !p)}
+              onClick={() => { setIsLanguageOpen(false); setIsMobileOpen((p) => !p) }}
               aria-label={displayName}
               data-testid="mobile-account-button"
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-0 bg-gradient-to-r from-[#7c3aed] to-[#ec4899] text-sm font-semibold text-white"
@@ -299,7 +327,8 @@ export default function MainHeader() {
                   key={item}
                   type="button"
                   onClick={() => changeLocale(item)}
-                  className="rounded border border-gray-200 px-2 py-1 text-sm uppercase"
+                  aria-current={item === locale ? 'true' : undefined}
+                  className={`rounded border px-2 py-1 text-sm uppercase ${item === locale ? 'border-[#7c3aed] text-[#7c3aed]' : 'border-gray-200'}`}
                 >
                   {item}
                 </button>

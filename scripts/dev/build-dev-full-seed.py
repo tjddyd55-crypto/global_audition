@@ -34,7 +34,7 @@ BEGIN
   SELECT count(*) INTO ext FROM public.users WHERE email NOT LIKE '%@audition.local';
   SELECT count(*) INTO pay FROM public.payment_orders;
   IF ext > 5 OR pay > 0 THEN
-    RAISE EXCEPTION 'seed refused: DB has % non-QA users / % payment orders — not a freshly reset development DB', ext, pay;
+    RAISE EXCEPTION 'seed refused: DB has % non-QA users / % payment orders - not a freshly reset development DB', ext, pay;
   END IF;
 END
 $devguard$;
@@ -64,10 +64,40 @@ UNION ALL SELECT 'apply_fee_dup_groups', count(*)::text FROM (SELECT 1 FROM publ
 UNION ALL SELECT 'v39_index', indexname FROM pg_indexes WHERE schemaname='public' AND indexname IN ('ux_credit_tx_apply_fee','ux_credit_tx_package_purchase','ux_credit_tx_signup_reward')
 ORDER BY 1, 2;
 """
+
+_LITERAL = re.compile(r"'((?:[^']|'')*)'")
+
+
+def _uescape(body: str) -> str:
+    out = []
+    for c in body:
+        if c == "\\":
+            out.append("\\\\")
+        elif c.isascii():
+            out.append(c)
+        elif ord(c) <= 0xFFFF:
+            out.append("\\%04X" % ord(c))
+        else:
+            out.append("\\+%06X" % ord(c))
+    return "U&'" + "".join(out) + "'"
+
+
+def ascii_safe_sql(sql: str) -> str:
+    """Pure-ASCII output so a dashboard/clipboard paste cannot double-encode UTF-8.
+
+    Non-ASCII string literals become U&'' escapes; any other non-ASCII (comments) becomes '-'.
+    """
+    lines = []
+    for line in sql.split("\n"):
+        line = _LITERAL.sub(lambda m: m.group(0) if m.group(1).isascii() else _uescape(m.group(1)), line)
+        lines.append("".join(c if c.isascii() else "-" for c in line))
+    return "\n".join(lines)
+
+
 out = pathlib.Path(sys.argv[1])
 old = os.umask(0o077)
 try:
-    out.write_text(guard + base + "\n" + full + verify)
+    out.write_text(ascii_safe_sql("SET client_encoding = 'UTF8';\n" + guard + base + "\n" + full + verify), encoding="ascii")
 finally:
     os.umask(old)
 os.chmod(out, 0o600)

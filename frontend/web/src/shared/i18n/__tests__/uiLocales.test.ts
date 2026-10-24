@@ -60,7 +60,7 @@ describe('official UI locales', () => {
 
   it('keeps ko/en/mn catalogs and narrows the public selector to English', () => {
     expect([...UI_LOCALES]).toEqual(['ko', 'en', 'mn'])
-    expect([...PUBLIC_SELECTOR]).toEqual(['en'])
+    expect([...PUBLIC_SELECTOR]).toEqual(['ko', 'en', 'mn'])
     expect(AGENCY_UI_LOCALE).toBe('ko')
     expect(localesMeta.superAdminUiLocale).toBe('ko')
     expect(localesMeta.activeTranslationTargets).toEqual(['en', 'ko'])
