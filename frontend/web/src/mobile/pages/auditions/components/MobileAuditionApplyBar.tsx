@@ -44,7 +44,7 @@ export default function MobileAuditionApplyBar({
         <button
           type="button"
           disabled
-          className="w-full rounded-lg bg-black py-4 text-lg font-semibold text-white opacity-60"
+          className="w-full rounded-xl bg-black py-3.5 text-base font-semibold text-white opacity-60"
           title={tDetail('alreadyAppliedHere')}
         >
           {tDetail('alreadyAppliedShort')}
@@ -53,7 +53,7 @@ export default function MobileAuditionApplyBar({
         <button
           type="button"
           disabled
-          className="w-full rounded-lg bg-black py-4 text-lg font-semibold text-white opacity-60"
+          className="w-full rounded-xl bg-black py-3.5 text-base font-semibold text-white opacity-60"
           title={applyBlockedDisplayMessage(
             audition.applyBlockedCode,
             tApply('prevRoundBlocked'),
@@ -65,7 +65,7 @@ export default function MobileAuditionApplyBar({
       ) : (
         <Link
           href={`/auditions/${auditionId}/apply`}
-          className="flex w-full items-center justify-center rounded-lg bg-black py-4 text-lg font-semibold text-white no-underline"
+          className="flex w-full items-center justify-center rounded-xl bg-black py-3.5 text-base font-semibold text-white no-underline"
         >
           {tDetail('applyNow')}
         </Link>

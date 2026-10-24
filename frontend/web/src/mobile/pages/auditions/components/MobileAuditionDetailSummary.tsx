@@ -53,8 +53,8 @@ function statusBadgeClass(status: string): string {
 
 function MobileDetailSectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="mt-6 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-      <h2 className="mb-3 text-lg font-semibold text-gray-900">{title}</h2>
+    <section className="mt-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+      <h2 className="mb-2 text-base font-bold text-gray-900">{title}</h2>
       {children}
     </section>
   )
@@ -124,7 +124,8 @@ export default function MobileAuditionDetailSummary({
   const location = safeStr(audition.location)
   const createdAtFormatted = fmtDate(safeStr(audition.createdAt), locale)
 
-  const hasMedium = heroMedium.length > 0
+  // 시드·미등록 공고는 공용 placeholder 경로가 들어온다. 실제 이미지가 없거나 로드 실패면 CSS 플레이스홀더를 쓴다.
+  const hasMedium = heroMedium.length > 0 && heroMedium !== AUDITION_COVER_PLACEHOLDER_SRC
   const [posterFailed, setPosterFailed] = useState(false)
   const posterSrc =
     posterFailed || !hasMedium ? AUDITION_COVER_PLACEHOLDER_SRC : heroMedium
@@ -135,14 +136,31 @@ export default function MobileAuditionDetailSummary({
         ? heroMedium
         : ''
 
-  const PosterInner = (
+  const showFallbackPoster = posterSrc === AUDITION_COVER_PLACEHOLDER_SRC
+  const fallbackLabel = recruitList[0] ?? safeStr(audition.agencyName)
+  const PosterInner = showFallbackPoster ? (
+    <div
+      data-testid="audition-poster-fallback"
+      className="flex aspect-[2/1] w-full flex-col items-center justify-center gap-1.5 bg-gradient-to-br from-violet-100 via-fuchsia-50 to-pink-100 text-violet-700"
+    >
+      <svg aria-hidden className="h-9 w-9 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <rect x="9" y="3" width="6" height="11" rx="3" strokeWidth={1.6} />
+        <path strokeWidth={1.6} strokeLinecap="round" d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7" />
+      </svg>
+      {fallbackLabel ? (
+        <span className="max-w-[80%] truncate text-xs font-semibold uppercase tracking-wide text-violet-700/80">
+          {fallbackLabel}
+        </span>
+      ) : null}
+    </div>
+  ) : (
     // eslint-disable-next-line @next/next/no-img-element
     <img
       src={posterSrc}
       alt=""
       width={1200}
       height={800}
-      className="max-h-[min(70vh,520px)] w-full object-cover"
+      className="aspect-[16/10] max-h-[44vh] w-full object-cover"
       loading="eager"
       decoding="async"
       onError={() => setPosterFailed(true)}
@@ -150,7 +168,7 @@ export default function MobileAuditionDetailSummary({
   )
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-5">
+    <div className="mx-auto max-w-3xl px-4 pb-4 pt-2">
       <div className="overflow-hidden rounded-2xl bg-gray-100">
         {posterLinkHref.length > 0 && !readOnly ? (
           <a href={posterLinkHref} target="_blank" rel="noopener noreferrer" className="block w-full">
@@ -161,11 +179,11 @@ export default function MobileAuditionDetailSummary({
         )}
       </div>
 
-      <div className="mt-4 space-y-3">
-        <h1 className="text-balance text-3xl font-bold leading-tight text-gray-950">{headlineTitle}</h1>
+      <div className="mt-3 space-y-2">
+        <h1 className="text-balance break-keep text-[24px] font-bold leading-[1.25] tracking-tight text-gray-950 [overflow-wrap:anywhere]">{headlineTitle}</h1>
 
         <div className="flex flex-wrap items-center gap-2">
-          <span className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${statusBadgeClass(status)}`}>
+          <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusBadgeClass(status)}`}>
             {pillLabel}
           </span>
           {deadlineUrgent ? (
@@ -188,18 +206,18 @@ export default function MobileAuditionDetailSummary({
 
         {heroSubtitle.length > 0 ? <p className="text-sm leading-relaxed text-gray-600">{heroSubtitle}</p> : null}
 
-        <dl className="grid gap-1 text-sm text-gray-700">
+        <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-0.5 text-sm text-gray-700">
           {location.length > 0 ? (
-            <div className="flex flex-wrap gap-x-2 gap-y-1">
+            <div className="contents">
               <dt className="font-medium text-gray-500">{t('location')}</dt>
-              <dd>{location}</dd>
+              <dd className="min-w-0 break-words">{location}</dd>
             </div>
           ) : null}
-          <div className="flex flex-wrap gap-x-2 gap-y-1">
+          <div className="contents">
             <dt className="font-medium text-gray-500">{t('endDate')}</dt>
             <dd>{endDateFormatted}</dd>
           </div>
-          <div className="flex flex-wrap gap-x-2 gap-y-1">
+          <div className="contents">
             <dt className="font-medium text-gray-500">{t('registeredAt')}</dt>
             <dd>{createdAtFormatted}</dd>
           </div>
@@ -207,7 +225,7 @@ export default function MobileAuditionDetailSummary({
       </div>
 
       {embed ? (
-        <section className="mt-8">
+        <section className="mt-5">
           <h2 className="mb-2 text-lg font-semibold text-gray-900">{t('introVideoTitle')}</h2>
           <div className="aspect-video overflow-hidden rounded-2xl bg-black">
             <iframe
@@ -220,7 +238,7 @@ export default function MobileAuditionDetailSummary({
           </div>
         </section>
       ) : videoHref.length > 0 && !readOnly ? (
-        <section className="mt-8 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+        <section className="mt-5 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
           <h2 className="mb-2 text-lg font-semibold text-gray-900">{t('introVideoTitle')}</h2>
           <a
             href={videoHref}
@@ -234,7 +252,7 @@ export default function MobileAuditionDetailSummary({
       ) : null}
 
       {galleryExtra.length > 0 ? (
-        <div className="mt-8">
+        <div className="mt-5">
           <AuditionDetailMediaSection galleryUrls={galleryExtra} />
         </div>
       ) : null}
@@ -245,7 +263,7 @@ export default function MobileAuditionDetailSummary({
           <div className="mt-4 text-sm text-gray-600">{t('applyHow')}</div>
         </MobileDetailSectionCard>
       ) : (
-        <div className="mt-6 rounded-2xl border border-gray-100 bg-white p-4 text-sm text-gray-600 shadow-sm">
+        <div className="mt-4 rounded-2xl border border-gray-100 bg-white p-4 text-sm text-gray-600 shadow-sm">
           {t('applyHow')}
         </div>
       )}
@@ -275,11 +293,11 @@ export default function MobileAuditionDetailSummary({
       ) : null}
 
       {alreadyApplied ? (
-        <p className="mt-8 text-sm text-neutral-600">
+        <p className="mt-4 text-sm text-neutral-600">
           {t('alreadyAppliedMyPage')}
         </p>
       ) : applyBlocked ? (
-        <p className="mt-8 text-sm text-amber-800">
+        <p className="mt-4 text-sm text-amber-800">
           {applyBlockedDisplayMessage(audition.applyBlockedCode, tApply('prevRoundBlocked'), tApply('failed'))}
         </p>
       ) : null}

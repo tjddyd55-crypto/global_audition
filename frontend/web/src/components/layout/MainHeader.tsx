@@ -117,8 +117,8 @@ export default function MainHeader() {
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-[#eeeeee] bg-white">
-      <div className="flex h-16 items-center justify-between px-6 max-md:px-4">
-        <div className="flex min-w-0 items-center gap-1 lg:contents">
+      <div className="flex h-16 items-center justify-between gap-2 px-6 max-lg:h-14 max-lg:px-3" data-testid="site-header-bar">
+        <div className="flex min-w-0 items-center gap-0.5 lg:contents">
           <button
             type="button"
             onClick={() => { setIsLanguageOpen(false); setIsMobileOpen((p) => !p) }}
@@ -134,11 +134,12 @@ export default function MainHeader() {
               )}
             </svg>
           </button>
-          <Link href="/" className="flex min-w-0 items-center gap-2 no-underline lg:shrink-0">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-[#7c3aed] to-[#ec4899] text-base font-bold text-white">
+          <Link href="/" className="flex min-w-0 items-center gap-2 no-underline lg:shrink-0" data-testid="brand-link">
+            {/* 모바일은 원형 G 로고 없이 서비스명만 보여준다. PC(lg 이상)는 기존 유지. */}
+            <div aria-hidden className="flex h-9 w-9 shrink-0 max-lg:hidden items-center justify-center rounded-full bg-gradient-to-r from-[#7c3aed] to-[#ec4899] text-base font-bold text-white">
               G
             </div>
-            <span className="truncate text-base font-semibold text-black max-lg:text-[15px]">{t('appName')}</span>
+            <span className="truncate text-base font-semibold text-black max-lg:text-[17px] max-lg:font-extrabold max-lg:tracking-tight">{t('appName')}</span>
           </Link>
         </div>
 

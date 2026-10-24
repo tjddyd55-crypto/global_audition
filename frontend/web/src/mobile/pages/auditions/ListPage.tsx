@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useRef, useState } from 'react'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { useSearchParams } from 'next/navigation'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import EmptyState from '@/components/ui/EmptyState'
 import { publicPlatformApi } from '@/shared/api/publicPlatform'
 import { AUDIENCE_FILTER_OPTIONS } from '@/shared/audition/audienceSelection'
@@ -36,6 +36,8 @@ const PAGE_SIZE = 10
 
 function MobileAuditionBrowse() {
   const t = useTranslations('auditions')
+  // 콘텐츠 로케일은 X-Content-Locale 로 서버 번역 오버레이에 쓰인다. 로케일이 바뀌면 다시 조회한다.
+  const locale = useLocale()
   const tCountry = useTranslations('country')
   const tField = useTranslations('recruitField')
   const params = useSearchParams()
@@ -45,7 +47,7 @@ function MobileAuditionBrowse() {
   const [sort, setSort] = useState<Sort>('LATEST')
   // 국가·분야·상태·정렬은 모두 서버 조건. 조건이 바뀌면 queryKey 가 바뀌어 0페이지부터 다시 조회한다.
   const query = useInfiniteQuery({
-    queryKey: ['public-auditions-page', country, field, recruitment, sort, PAGE_SIZE],
+    queryKey: ['public-auditions-page', locale, country, field, recruitment, sort, PAGE_SIZE],
     initialPageParam: 0,
     queryFn: ({ pageParam }) =>
       publicPlatformApi.browseAuditionsPage({

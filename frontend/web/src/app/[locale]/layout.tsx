@@ -53,7 +53,7 @@ export default async function LocaleLayout({
   const device = getDeviceFromHeaders()
 
   const body = (
-    <main className={device === 'mobile' ? 'flex-1 pt-16' : 'flex-1 pt-16'}>
+    <main className={device === 'mobile' ? 'flex-1 pt-14 lg:pt-16' : 'flex-1 pt-14 lg:pt-16'}>
       <ErrorBoundary>
         <MainWidthContainer>{children}</MainWidthContainer>
       </ErrorBoundary>

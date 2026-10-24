@@ -16,7 +16,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.audition.platform.application.i18n.content.ContentTranslationStore;
+import com.audition.platform.application.i18n.content.ContentTypes;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import java.time.Instant;
+import java.util.Map;
 import java.util.List;
 import java.util.UUID;
 
@@ -37,6 +44,16 @@ public class AuditionLocalizationService {
         this.auditionRepository = auditionRepository;
         this.contentLocaleResolver = contentLocaleResolver;
         this.attemptRepository = attemptRepository;
+    }
+
+    private ContentTranslationStore contentStore;
+    private ObjectMapper objectMapper;
+
+    /** 콘텐츠 번역 저장소(AUDITION_POSTING). 공고 번역 행이 없을 때 목록·카드도 같은 번역을 쓰게 한다. */
+    @Autowired(required = false)
+    public void setContentTranslationStore(ContentTranslationStore contentStore, ObjectMapper objectMapper) {
+        this.contentStore = contentStore;
+        this.objectMapper = objectMapper;
     }
 
     public void apply(Audition audition, AuditionResponse response) {
@@ -103,6 +120,8 @@ public class AuditionLocalizationService {
             overlay(response, row);
             response.setContentLocale(requested);
             describeRow(audition, response, row);
+        } else if (!preview && overlayFromContentStore(audition, response, requested)) {
+            response.setContentLocale(requested);
         } else {
             response.setContentLocaleFallback(true);
             response.setShowingOriginal(true);
@@ -197,6 +216,38 @@ public class AuditionLocalizationService {
         response.setQualifications(row.getQualifications() != null ? row.getQualifications() : new String[0]);
         response.setSchedules(row.getSchedules() != null ? row.getSchedules() : new String[0]);
         response.setBenefits(row.getBenefits() != null ? row.getBenefits() : new String[0]);
+    }
+
+    /**
+     * 저장된 콘텐츠 번역(완료 상태)의 제목·설명만 덮는다. 공급자를 호출하지 않고 큐에도 넣지 않는다.
+     * 번역이 없거나 비어 있으면 원문을 그대로 둔다.
+     */
+    private boolean overlayFromContentStore(Audition audition, AuditionResponse response, String requested) {
+        if (contentStore == null || objectMapper == null || audition.getId() == null) {
+            return false;
+        }
+        try {
+            var row = contentStore.findTranslation(ContentTypes.AUDITION_POSTING, audition.getId(), requested).orElse(null);
+            if (row == null || !AuditionTranslation.STATUS_COMPLETED.equals(row.status()) || row.bodyJson() == null) {
+                return false;
+            }
+            Map<String, String> fields = objectMapper.readValue(row.bodyJson(), new TypeReference<Map<String, String>>() { });
+            String title = fields.get("title");
+            if (title == null || title.isBlank()) {
+                return false;
+            }
+            response.setTitle(title.trim());
+            String description = fields.get("description");
+            if (description != null && !description.isBlank()) {
+                response.setDescription(description.trim());
+            }
+            response.setTranslationStatus(row.status());
+            response.setTranslationOrigin(row.origin());
+            response.setTranslationStale(row.stale());
+            return true;
+        } catch (Exception ex) {
+            return false;
+        }
     }
 
     private static String safeText(String raw) {
