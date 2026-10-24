@@ -3,7 +3,6 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { routing } from './i18n.config'
 import { adminPageAllowed, countryAgencyDetailId, isAdminPagePath } from './shared/auth/adminPageAccess'
 import {
-  redirectPathForAgencyConsole,
   redirectPathForRetiredLocale,
   redirectPathForSavedLocale,
   SAVED_LOCALE_COOKIE,
@@ -139,9 +138,6 @@ export default async function middleware(req: NextRequest) {
   }
   const retired = redirectPathForRetiredLocale(req.nextUrl.pathname)
   if (retired) return redirectOnRequestOrigin(req, retired)
-
-  const agency = redirectPathForAgencyConsole(req.nextUrl.pathname)
-  if (agency) return redirectOnRequestOrigin(req, agency)
 
   const saved = redirectPathForSavedLocale(
     req.nextUrl.pathname,

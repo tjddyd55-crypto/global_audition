@@ -11,8 +11,6 @@ import { getDisplayNickname } from '@/shared/user/getDisplayNickname'
 import { BTN_PRIMARY, DROPDOWN_ITEM } from '@/shared/ui/specClasses'
 import { DeviceToggle } from '@/shared/device/DeviceToggle'
 import {
-  AGENCY_UI_LOCALE,
-  isAgencyConsolePath,
   localeSwitchTarget,
   PUBLIC_SELECTOR,
 } from '@/shared/i18n/uiLocales'
@@ -79,7 +77,7 @@ export default function MainHeader() {
     }
   }, [isLanguageOpen])
 
-  const locales = isAgencyConsolePath(pathname) ? [AGENCY_UI_LOCALE] : PUBLIC_SELECTOR
+  const locales = PUBLIC_SELECTOR
 
   const changeLocale = (nextLocale: string) => {
     const target = localeSwitchTarget(pathname, nextLocale)
