@@ -31,7 +31,7 @@ describe('native i18n catalogs', () => {
   it('uses the same active locale list as web', () => {
     expect([...PRIMARY_LOCALES]).toEqual(locales.primary)
     expect(locales.defaultLocale).toBe('en')
-    expect(locales.publicSelector).toEqual(['en'])
+    expect(locales.publicSelector).toEqual(['ko', 'en', 'mn'])
     expect(locales.agencyUiLocale).toBe('ko')
     expect(locales.activeTranslationTargets).toEqual(['en', 'ko'])
     expect(locales.contentLocales).toEqual(locales.providerLocales)
