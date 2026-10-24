@@ -13,6 +13,7 @@ import {
 import { stripImageUrlResizeParams } from '@/shared/utils/imageDisplayUrl'
 import { DEFAULT_IMAGES } from '@/shared/constants/fallbacks'
 import { useLocale, useTranslations } from 'next-intl'
+import { roundStatusLabel } from '@/shared/audition/roundStatusLabel'
 
 interface AuditionCardProps {
   audition: AuditionDto
@@ -42,8 +43,8 @@ export default function AuditionCard({ audition }: AuditionCardProps) {
     : tFallback('videoTitle')
   const status = audition?.status ?? 'DRAFT'
   const statusBadgeLabel =
-    status === 'OPEN' && audition?.recruitmentRoundLabel?.trim()
-      ? audition.recruitmentRoundLabel.trim()
+    status === 'OPEN' || status === 'CLOSED' || status === 'DRAFT'
+      ? roundStatusLabel(status, audition?.round, tStatus)
       : statusLabels[status] ?? status
   const im = normalizeAuditionImages(audition?.images)
   const thumb = (im.thumb ?? '').trim()

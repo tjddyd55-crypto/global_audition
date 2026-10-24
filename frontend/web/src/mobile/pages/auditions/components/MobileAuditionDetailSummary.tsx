@@ -16,6 +16,7 @@ import {
 import { useLocale, useTranslations } from 'next-intl'
 import { dateFnsLocale } from '@/shared/datetime/dateFnsLocale'
 import { applyBlockedDisplayMessage } from '@/shared/audition/applyBlockedCopy'
+import { roundStatusLabel } from '@/shared/audition/roundStatusLabel'
 
 type MobileAuditionDetailSummaryProps = {
   audition: AuditionDto
@@ -77,6 +78,7 @@ export default function MobileAuditionDetailSummary({
 }: MobileAuditionDetailSummaryProps) {
   const t = useTranslations('auditionDetail')
   const tApply = useTranslations('apply')
+  const tStatus = useTranslations('status')
   const locale = useLocale()
   const embed = getVideoEmbedSrc(safeStr(audition.videoUrl))
   const videoHref = safeStr(audition.videoUrl).trim()
@@ -111,9 +113,10 @@ export default function MobileAuditionDetailSummary({
   const deadlineUrgent = isOpen && remainingDaysVal <= 3 && remainingDaysVal >= 0
 
   const status = String(audition.status ?? '')
-  const pillLabelRaw = audition.recruitmentRoundLabel != null ? String(audition.recruitmentRoundLabel).trim() : ''
   const pillLabel =
-    pillLabelRaw.length > 0 ? pillLabelRaw : statusBadgeCopy(status, t)
+    status === 'OPEN' || status === 'CLOSED' || status === 'DRAFT'
+      ? roundStatusLabel(status, audition.round, tStatus)
+      : statusBadgeCopy(status, t)
 
   const endDateFormatted = fmtDate(safeStr(audition.endDate), locale)
   const location = safeStr(audition.location)

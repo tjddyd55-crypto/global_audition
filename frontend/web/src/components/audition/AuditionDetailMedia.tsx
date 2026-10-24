@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import AuditionGallery from '@/components/gallery/AuditionGallery'
 import { AUDITION_COVER_PLACEHOLDER_SRC } from '@/components/audition/AuditionEditorPreview'
 
@@ -42,6 +43,7 @@ type AuditionDetailMediaProps = {
 
 /** 풀폭 가로 스크롤 갤러리(히어로·소개 영상과 동일 폭 규칙) */
 export function AuditionDetailMediaSection({ galleryUrls }: AuditionDetailMediaProps) {
+  const t = useTranslations('auditionDetail')
   if (galleryUrls.length === 0) {
     return null
   }
@@ -55,7 +57,7 @@ export function AuditionDetailMediaSection({ galleryUrls }: AuditionDetailMediaP
           paddingRight: 'max(1rem, env(safe-area-inset-right))',
         }}
       >
-        이미지
+        {t('imagesHeading')}
       </h2>
       <AuditionGallery images={galleryUrls} />
     </section>

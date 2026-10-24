@@ -334,7 +334,8 @@
     "agencyFallback": "Agency",
     "daysLeftPeriod": "Time left D-{n}",
     "quickInfo": "Quick info",
-    "galleryAria": "Gallery"
+    "galleryAria": "Gallery",
+    "imagesHeading": "Images"
   },
   "apply": {
     "title": "Apply",
@@ -674,7 +675,10 @@
     "underReview": "Under review",
     "roundPass": "Round passed",
     "roundFail": "Round failed",
-    "skipped": "Skipped"
+    "skipped": "Skipped",
+    "roundOpen": "Round {n} open",
+    "roundClosed": "Round {n} closed",
+    "roundDraft": "Round {n} draft"
   },
   "validation": {
     "required": "This field is required",

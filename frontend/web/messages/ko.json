@@ -334,7 +334,8 @@
     "agencyFallback": "기획사",
     "daysLeftPeriod": "남은 기간 D-{n}",
     "quickInfo": "빠른 정보",
-    "galleryAria": "갤러리"
+    "galleryAria": "갤러리",
+    "imagesHeading": "이미지"
   },
   "apply": {
     "title": "지원하기",
@@ -674,7 +675,10 @@
     "underReview": "검토중",
     "roundPass": "라운드 통과",
     "roundFail": "라운드 미통과",
-    "skipped": "생략"
+    "skipped": "생략",
+    "roundOpen": "{n}차 모집 중",
+    "roundClosed": "{n}차 마감",
+    "roundDraft": "{n}차 · 초안"
   },
   "validation": {
     "required": "필수 항목입니다",

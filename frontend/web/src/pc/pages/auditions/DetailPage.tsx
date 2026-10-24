@@ -28,11 +28,13 @@ import {
   auditionHeadlineTitle,
   normalizeAuditionImages,
 } from '@/shared/types/audition'
+import { roundStatusLabel } from '@/shared/audition/roundStatusLabel'
 
 export default function PcAuditionDetailPage() {
   const params = useParams()
   const t = useTranslations('common')
   const tDetail = useTranslations('auditionDetail')
+  const tStatus = useTranslations('status')
   const locale = useLocale()
   const id = params.id as string
 
@@ -145,7 +147,7 @@ export default function PcAuditionDetailPage() {
         heroImageOriginalUrl={heroOriginal}
         title={headlineTitle}
         status={String(audition.status)}
-        statusPillText={audition.recruitmentRoundLabel}
+        statusPillText={roundStatusLabel(audition.status, audition.round, tStatus)}
         tags={auditionTags}
         endDateFormatted={fmt(safeStr(audition.endDate))}
         location={safeStr(audition.location)}
