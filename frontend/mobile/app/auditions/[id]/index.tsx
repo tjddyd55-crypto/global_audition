@@ -15,6 +15,7 @@ import { StickyCta } from '../../../src/ui/StickyCta'
 import { colors } from '../../../src/theme/tokens'
 import { useTranslation } from 'react-i18next'
 import { applyBlockedDisplayMessage } from '../../../src/domain/applyBlocked'
+import { recruitFieldLabels } from '../../../../web/src/shared/audition/recruitFields'
 import { getRuntimeLocale } from '../../../src/i18n/runtime'
 
 export default function AuditionDetailScreen() {
@@ -82,7 +83,7 @@ export default function AuditionDetailScreen() {
             {audition.translationStatus && audition.translationStatus !== 'COMPLETED' ? (
               <Text style={styles.meta}>{audition.translationStatus}</Text>
             ) : null}
-            <Info label={t('auditionDetail.recruitFields')} items={audition.recruitFields} />
+            <Info label={t('auditionDetail.recruitFields')} items={recruitFieldLabels(audition.recruitFields, (k) => t(`recruitField.${k}`))} />
             <Info label={t('auditionDetail.qualifications')} items={audition.qualifications} />
             <Info label={t('auditionDetail.schedules')} items={audition.schedules} />
             <Info label={t('auditionDetail.benefits')} items={audition.benefits} />

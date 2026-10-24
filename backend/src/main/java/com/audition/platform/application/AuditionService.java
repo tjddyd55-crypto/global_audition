@@ -304,7 +304,7 @@ public class AuditionService {
         a.setGalleryImages(listToArray(req.getGalleryImages() != null ? req.getGalleryImages() : List.of()));
         a.setAgencyName(req.getAgencyName().trim());
         a.setAgencyLogo(req.getAgencyLogo());
-        a.setRecruitFields(listToArray(req.getRecruitFields() != null ? req.getRecruitFields() : List.of()));
+        a.setRecruitFields(com.audition.platform.domain.audition.RecruitFieldCodes.normalizeAll(listToArray(req.getRecruitFields() != null ? req.getRecruitFields() : List.of())));
         a.setQualifications(listToArray(req.getQualifications() != null ? req.getQualifications() : List.of()));
         a.setSchedules(listToArray(req.getSchedules() != null ? req.getSchedules() : List.of()));
         a.setBenefits(listToArray(req.getBenefits() != null ? req.getBenefits() : List.of()));
@@ -605,7 +605,7 @@ public class AuditionService {
             audition.setEndDate(parseInstantRequired(request.getEndDate(), "endDate"));
         }
         if (request.getRecruitFields() != null) {
-            audition.setRecruitFields(listToArray(request.getRecruitFields()));
+            audition.setRecruitFields(com.audition.platform.domain.audition.RecruitFieldCodes.normalizeAll(listToArray(request.getRecruitFields())));
         }
         if (request.getQualifications() != null) {
             audition.setQualifications(listToArray(request.getQualifications()));
@@ -690,7 +690,7 @@ public class AuditionService {
         int maxRound = auditionRepository.findMaxSeriesRoundByGroupId(source.getGroupId());
         int nextRound = maxRound + 1;
         String baseTitle = AuditionSeriesPresentation.stripTrailingSeriesRoundSuffix(source.getTitle());
-        String newTitle = baseTitle + " (" + nextRound + "차)";
+        String newTitle = baseTitle;
 
         UUID newId = UUID.randomUUID();
         Audition n = new Audition();

@@ -68,7 +68,7 @@ class AuditionLocalizationServiceTest {
         assertEquals("Тайлбар", response.getDescription());
         assertEquals("mn", response.getContentLocale());
         assertFalse(response.isContentLocaleFallback());
-        assertEquals("Монгол гарчиг (2-р шат)", response.getDisplayTitle());
+        assertEquals("Монгол гарчиг", response.getDisplayTitle());
     }
 
     @Test

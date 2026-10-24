@@ -30,6 +30,7 @@ import {
   normalizeTargetCountry,
 } from '@/shared/audition/audience'
 import { useTranslations } from 'next-intl'
+import { RECRUIT_FIELD_CODES, toRecruitFieldCode } from '@/shared/audition/recruitFields'
 import { Link } from '@/i18n.config'
 
 function trimNonEmpty(lines: string[] | undefined): string[] {
@@ -42,6 +43,56 @@ function defaultDatetimeLocalStart(): string {
 
 function defaultDatetimeLocalEnd(): string {
   return isoToDatetimeLocalValue(new Date(Date.now() + 30 * 86400000).toISOString())
+}
+
+function RecruitFieldPicker({ values, onChange }: { values: string[]; onChange: (next: string[]) => void }) {
+  const tEditor = useTranslations('editor')
+  const tRecruit = useTranslations('recruitField')
+  const codes = new Set<string>()
+  const others: string[] = []
+  for (const v of values) {
+    const c = toRecruitFieldCode(v)
+    if (c) codes.add(c)
+    else others.push(v)
+  }
+  const emit = (nextCodes: Set<string>, nextOthers: string[]) =>
+    onChange([...RECRUIT_FIELD_CODES.filter((c) => nextCodes.has(c)), ...nextOthers])
+  const toggle = (c: string) => {
+    const n = new Set(codes)
+    if (n.has(c)) n.delete(c)
+    else n.add(c)
+    emit(n, others)
+  }
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <div style={{ fontWeight: 600, marginBottom: 8 }}>{tEditor('recruitFields')}</div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 8 }} data-testid="recruit-field-codes">
+        {RECRUIT_FIELD_CODES.map((c) => {
+          const on = codes.has(c)
+          return (
+            <button
+              key={c}
+              type="button"
+              aria-pressed={on}
+              data-testid={`recruit-field-${c}`}
+              onClick={() => toggle(c)}
+              style={{
+                padding: '6px 12px',
+                borderRadius: 999,
+                border: on ? '1px solid #2563eb' : '1px solid #d1d5db',
+                background: on ? '#eff6ff' : '#fff',
+                color: on ? '#1d4ed8' : '#374151',
+                fontSize: 13,
+              }}
+            >
+              {tRecruit(c)}
+            </button>
+          )
+        })}
+      </div>
+      <StringListEditor label={tEditor('recruitFieldsOther')} values={others} onChange={(o) => emit(codes, o)} />
+    </div>
+  )
 }
 
 function StringListEditor({
@@ -153,7 +204,7 @@ function applyInitial(a: AuditionDto) {
     galleryImages: [...(a.galleryImages ?? [])],
     agencyName: a.agencyName ?? '',
     agencyLogo: a.agencyLogo ?? '',
-    recruitFields: [...(a.recruitFields ?? [])],
+    recruitFields: (a.recruitFields ?? []).map((v) => toRecruitFieldCode(v) ?? v),
     qualifications: [...(a.qualifications ?? [])],
     schedules: [...(a.schedules ?? [])],
     benefits: [...(a.benefits ?? [])],
@@ -833,7 +884,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
         </div>
 
         <h2 style={sectionTitle}>{tEditor('sectionLists')}</h2>
-        <StringListEditor label={tEditor('recruitFields')} values={recruitFields} onChange={setRecruitFields} />
+        <RecruitFieldPicker values={recruitFields} onChange={setRecruitFields} />
         <StringListEditor label={tEditor('qualifications')} values={qualifications} onChange={setQualifications} />
         <StringListEditor label={tEditor('schedules')} values={schedules} onChange={setSchedules} />
 

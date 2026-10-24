@@ -3,6 +3,7 @@
 import { useParams } from 'next/navigation'
 import { format } from 'date-fns'
 import { useLocale, useTranslations } from 'next-intl'
+import { recruitFieldLabels } from '@/shared/audition/recruitFields'
 import { dateFnsLocale } from '@/shared/datetime/dateFnsLocale'
 import { AUDITION_DETAIL } from '@/shared/design-tokens'
 import { getVideoEmbedSrc } from '@/shared/utils/videoEmbed'
@@ -35,6 +36,7 @@ export default function PcAuditionDetailPage() {
   const t = useTranslations('common')
   const tDetail = useTranslations('auditionDetail')
   const tStatus = useTranslations('status')
+  const tRecruit = useTranslations('recruitField')
   const locale = useLocale()
   const id = params.id as string
 
@@ -99,7 +101,7 @@ export default function PcAuditionDetailPage() {
     .map((src) => safeStr(src))
     .filter((s) => s.length > 0 && !coverDedupUrls.has(s))
     .slice(0, 24)
-  const recruitList = safeArr(shown.recruitFields)
+  const recruitList = recruitFieldLabels(safeArr(shown.recruitFields), tRecruit)
   const qualifications = safeArr(shown.qualifications)
   const schedules = safeArr(shown.schedules)
   const benefits = safeArr(shown.benefits)

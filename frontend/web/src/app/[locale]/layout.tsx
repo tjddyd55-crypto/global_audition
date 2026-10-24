@@ -11,6 +11,7 @@ import { MainWidthContainer } from '../../components/layout/MainWidthContainer'
 import ErrorBoundary from '../../components/ErrorBoundary'
 import { getDeviceFromHeaders } from '@/shared/device/resolveDevice'
 import { MobileShell } from '@/mobile/layouts/MobileShell'
+import { HtmlLangSync } from '@/shared/i18n/HtmlLangSync'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -60,7 +61,8 @@ export default async function LocaleLayout({
   )
 
   return (
-    <NextIntlClientProvider messages={messages}>
+    <NextIntlClientProvider locale={locale} messages={messages}>
+      <HtmlLangSync />
       <div className={`flex flex-col min-h-screen ${inter.variable}`}>
         <Header />
         {device === 'mobile' ? <MobileShell>{body}</MobileShell> : (
