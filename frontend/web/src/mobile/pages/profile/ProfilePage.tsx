@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { videoApi } from '@/shared/api/videos'
 import { authApi } from '@/shared/api/auth'
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@/i18n.config'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'

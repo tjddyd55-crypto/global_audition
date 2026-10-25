@@ -18,6 +18,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -107,6 +109,23 @@ public class GlobalExceptionHandler {
         }
         return ResponseEntity.badRequest().body(
                 new ErrorResponse("400", message, request.getRequestURI(), Instant.now())
+        );
+    }
+
+    /**
+     * 매핑되지 않은 경로만 404. (Spring 6.1+ 는 정적 리소스 핸들러가 NoResourceFoundException 을 던진다.)
+     * 인증·인가는 보안 필터가 먼저 처리하므로 미인증 401 / 권한 부족 403 은 그대로 유지된다.
+     * 컨트롤러 내부의 다른 예외는 아래 Exception 핸들러가 계속 500 으로 처리한다.
+     */
+    @ExceptionHandler({NoResourceFoundException.class, NoHandlerFoundException.class})
+    public ResponseEntity<?> handleNotFound(Exception ex, HttpServletRequest request) {
+        log.debug("No mapping for {} {}", request.getMethod(), request.getRequestURI());
+        String message = "Not found";
+        if (useSsotEnvelope(request)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiFailResponse(message));
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                new ErrorResponse("404", message, request.getRequestURI(), Instant.now())
         );
     }
 

@@ -65,7 +65,7 @@ roundStatusLabel(status, audition.round, tStatus)
           onError={() => setImgSrc((cur) => (cur === fallback ? DEFAULT_IMAGES.videoThumbnail : fallback))}
         />
         <span
-          className={`absolute left-2 top-2 max-w-[calc(100%-1rem)] truncate rounded-full px-2 py-0.5 text-[11px] font-semibold text-white ${badgeClass}`}
+          className={`absolute left-2 top-2 max-w-[calc(100%-1rem)] whitespace-normal break-words rounded-xl leading-tight px-2 py-0.5 text-[11px] font-semibold text-white ${badgeClass}`}
         >
           {badgeLabel}
         </span>

@@ -119,6 +119,22 @@ class JwtAuthorizationIT {
                 .andExpect(status().isOk());
     }
 
+    @Test
+    void unknownApiPathIs401WhenAnonymousAnd404WhenAuthenticated() throws Exception {
+        // 미인증: 존재 여부와 무관하게 보안 필터가 먼저 401 (경로 탐색·우회 불가)
+        mvc.perform(get("/api/no-such-endpoint-zz")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/admin/no-such-endpoint-zz")).andExpect(status().isUnauthorized());
+        UUID applicant = signup("APPLICANT");
+        String token = jwt.createToken(applicant, "x@local.test", "APPLICANT");
+        // 인증됨 + 매핑 없음: 500 이 아니라 404
+        mvc.perform(get("/api/no-such-endpoint-zz").header("Authorization", "Bearer " + token))
+                .andExpect(status().isNotFound());
+        // 기존 보호 API 는 여전히 403
+        mvc.perform(get(SUPER_ADMIN_API).header("Authorization", "Bearer " + token))
+                .andExpect(status().isForbidden());
+        mvc.perform(get(SUPER_ADMIN_API)).andExpect(status().isUnauthorized());
+    }
+
     private UUID signup(String role) throws Exception {
         String nick = "az" + UUID.randomUUID().toString().replace("-", "").substring(0, 8);
         String email = nick + "@local.test";
