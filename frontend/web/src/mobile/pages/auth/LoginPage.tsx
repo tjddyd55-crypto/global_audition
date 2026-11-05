@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from '@/i18n.config'
+import { Link, useRouter } from '@/i18n.config'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQueryClient } from '@tanstack/react-query'
@@ -140,9 +140,9 @@ export default function MobileLoginPage() {
         <div className="mt-6 space-y-2 text-center">
           <p className="text-gray-600">
             {t('noAccount')}{' '}
-            <a href="/register" className="text-primary-600 hover:underline">
+            <Link href="/register" className="text-primary-600 hover:underline">
               {t('registerButton')}
-            </a>
+            </Link>
           </p>
           <div className="flex justify-center gap-4 text-sm">
             <a href="/find-user-id" className="hover:text-primary-600 text-gray-600">

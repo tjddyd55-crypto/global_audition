@@ -10,7 +10,7 @@ import { authApi } from '@/shared/api/auth'
 import { RecoveryCodeNotice } from '@/components/auth/RecoveryCodeNotice'
 import { countries, languages, timezones } from '@/shared/utils/countries'
 import { createNicknameZodField } from '@/shared/user/nicknameZod'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 
 function createMobileRegisterSchema(
   tReg: (key: string) => string,
@@ -69,6 +69,7 @@ export default function MobileRegisterPage() {
   const tCountries = useTranslations('countries')
   const tLanguages = useTranslations('languages')
   const router = useRouter()
+  const locale = useLocale()
   const queryClient = useQueryClient()
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -199,9 +200,9 @@ export default function MobileRegisterPage() {
         return
       }
       if (response.signupIntent === 'AGENCY') {
-        window.location.href = '/en/my/studio/agency-application'
+        window.location.href = `/${locale}/my/studio/agency-application`
       } else {
-        window.location.href = '/'
+        window.location.href = `/${locale}`
       }
     } catch (err: any) {
       console.error('signup failed', err)
@@ -246,8 +247,8 @@ export default function MobileRegisterPage() {
           <RecoveryCodeNotice
             recoveryCode={issuedCode}
             onAcknowledged={() => {
-              if (issuedRole === 'AGENCY') window.location.href = '/en/my/studio/agency-application'
-              else window.location.href = '/'
+              if (issuedRole === 'AGENCY') window.location.href = `/${locale}/my/studio/agency-application`
+              else window.location.href = `/${locale}`
             }}
           />
         </div>
@@ -610,7 +611,9 @@ export default function MobileRegisterPage() {
                 <label className="block text-sm font-medium mb-2">{tReg('establishedYear')}</label>
                 <input
                   type="number"
-                  {...register('establishedYear', { valueAsNumber: true })}
+                  {...register('establishedYear', {
+                    setValueAs: (v) => (v === '' || v == null || Number.isNaN(Number(v)) ? undefined : Number(v)),
+                  })}
                   className="w-full px-4 py-2 border rounded-lg"
                   placeholder={tReg('establishedOptional')}
                   min={1800}
