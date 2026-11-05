@@ -34,6 +34,7 @@ export type SignupDraft = {
   representativeName?: string
   contactPhone?: string
   businessCity?: string
+  timezone?: string
 }
 
 export function validateSignupDraft(input: SignupDraft): string | null {

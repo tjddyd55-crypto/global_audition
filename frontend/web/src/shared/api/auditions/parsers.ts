@@ -1,4 +1,4 @@
-import type { AuditionDto, AuditionImages } from '@/shared/types/audition'
+import type { AuditionDto, AuditionImages, AuditionTextContent } from '@/shared/types/audition'
 import { safeStringArr } from '@/shared/utils/safe'
 import type { PublicVoteItem } from './types'
 
@@ -128,5 +128,22 @@ export function parseAuditionDto(raw: Record<string, unknown>): AuditionDto {
     translationStale: raw.translationStale === true,
     translationErrorCode: raw.translationErrorCode != null ? String(raw.translationErrorCode) : null,
     translationOrigin: raw.translationOrigin != null ? String(raw.translationOrigin) : null,
+    originalContent: parseTextContent(raw.originalContent),
+    translationContent: parseTextContent(raw.translationContent) ?? null,
+  }
+}
+
+function parseTextContent(value: unknown): AuditionTextContent | undefined {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined
+  const row = value as Record<string, unknown>
+  return {
+    title: String(row.title ?? ''),
+    description: String(row.description ?? ''),
+    location: String(row.location ?? ''),
+    agencyName: String(row.agencyName ?? ''),
+    recruitFields: safeStringArr(row.recruitFields),
+    qualifications: safeStringArr(row.qualifications),
+    schedules: safeStringArr(row.schedules),
+    benefits: safeStringArr(row.benefits),
   }
 }

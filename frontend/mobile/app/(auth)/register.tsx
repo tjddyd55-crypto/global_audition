@@ -4,6 +4,7 @@ import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, View } fro
 import { useAuth } from '../../src/auth/AuthProvider'
 import { ApiError } from '../../src/api/http'
 import { validateSignupDraft } from '../../src/domain/signupRules'
+import { buildApplicantSignupPayload } from '../../../web/src/shared/auth/buildApplicantSignupPayload'
 import { Button } from '../../src/ui/Button'
 import { RecoveryCodeNotice } from '../../src/ui/RecoveryCodeNotice'
 import { Screen } from '../../src/ui/Screen'
@@ -20,6 +21,7 @@ export default function RegisterScreen() {
   const [nickname, setNickname] = useState('')
   const [name, setName] = useState('')
   const [countryCode, setCountryCode] = useState('')
+  const [timezone, setTimezone] = useState('')
   const [companyName, setCompanyName] = useState('')
   const [legalName, setLegalName] = useState('')
   const [businessRegistrationNumber, setBusinessRegistrationNumber] = useState('')
@@ -62,20 +64,35 @@ export default function RegisterScreen() {
             <TextField label={t('register.contactPhone')} value={contactPhone} onChangeText={setContactPhone} keyboardType="phone-pad" />
           </>
         ) : (
-          <TextField label={t('auth.legalNameOptional')} value={name} onChangeText={setName} autoCapitalize="words" />
+          <>
+            <TextField label={t('auth.legalNameOptional')} value={name} onChangeText={setName} autoCapitalize="words" />
+            <TextField label={t('register.country')} value={countryCode} onChangeText={(v) => setCountryCode(v.toUpperCase())} autoCapitalize="characters" />
+            <TextField label={t('register.timezone')} value={timezone} onChangeText={setTimezone} autoCapitalize="none" />
+          </>
         )}
         {error ? <Text style={styles.error}>{error}</Text> : null}
         <Button
           label={t('auth.registerButton')}
           loading={loading}
           onPress={async () => {
+            const applicant = role === 'APPLICANT'
+              ? buildApplicantSignupPayload({
+                  email: email.trim(),
+                  password,
+                  nickname: nickname.trim(),
+                  name: name.trim() || undefined,
+                  countryCode,
+                  timezone,
+                })
+              : null
             const draft = {
               email: email.trim(),
               password,
               nickname: nickname.trim(),
               role,
               name: role === 'AGENCY' ? legalName.trim() || undefined : name.trim() || undefined,
-              countryCode: role === 'AGENCY' ? countryCode.trim().toUpperCase() : undefined,
+              countryCode: role === 'AGENCY' ? countryCode.trim().toUpperCase() : applicant?.countryCode,
+              timezone: role === 'APPLICANT' ? applicant?.timezone : undefined,
               companyName: role === 'AGENCY' ? companyName.trim() || undefined : undefined,
               legalName: role === 'AGENCY' ? legalName.trim() || undefined : undefined,
               businessRegistrationNumber: role === 'AGENCY' ? businessRegistrationNumber.trim() || undefined : undefined,

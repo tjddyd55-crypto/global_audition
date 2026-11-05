@@ -59,9 +59,13 @@ public class User {
     @Column(name = "profile_image_url", columnDefinition = "TEXT")
     private String profileImageUrl;
 
-    /** 대량 지급 필터용 (선택) */
+    /** 대량 지급 필터용 (선택). 지원자 가입 국가도 여기 둔다. UI 언어와 무관하다. */
     @Column(name = "country_code", columnDefinition = "TEXT")
     private String countryCode;
+
+    /** IANA 시간대. UI 언어를 바꾸지 않는다. */
+    @Column(length = 64)
+    private String timezone;
 
     @Column(name = "birth_date")
     private LocalDate birthDate;
@@ -180,6 +184,8 @@ public class User {
     public void setProfileImageUrl(String profileImageUrl) { this.profileImageUrl = profileImageUrl; }
     public String getCountryCode() { return countryCode; }
     public void setCountryCode(String countryCode) { this.countryCode = countryCode; }
+    public String getTimezone() { return timezone; }
+    public void setTimezone(String timezone) { this.timezone = timezone; }
 
     public LocalDate getBirthDate() {
         return birthDate;

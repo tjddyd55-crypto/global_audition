@@ -26,8 +26,8 @@ export default function AuditionEditPage() {
   const role = useAuthStore((s) => s.role)
 
   const { data: audition, isLoading, error } = useQuery({
-    queryKey: ['audition', id],
-    queryFn: () => auditionApi.getById(id),
+    queryKey: ['audition-original', id],
+    queryFn: () => auditionApi.getOriginal(id),
     enabled: !!id,
   })
 

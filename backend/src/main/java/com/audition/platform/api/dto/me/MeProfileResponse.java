@@ -25,6 +25,10 @@ public class MeProfileResponse {
     private String careerText;
     private List<String> activityFields = new ArrayList<>();
     private List<MeUserSnsLinkDto> snsLinks = new ArrayList<>();
+    /** ISO 3166-1 alpha-2. nationality 와 별개이며 UI 언어를 바꾸지 않는다. */
+    private String countryCode;
+    /** IANA 시간대. UI 언어와 무관하다. */
+    private String timezone;
 
     public String getId() {
         return id;
@@ -173,5 +177,21 @@ public class MeProfileResponse {
 
     public void setSnsLinks(List<MeUserSnsLinkDto> snsLinks) {
         this.snsLinks = snsLinks != null ? snsLinks : new ArrayList<>();
+    }
+
+    public String getCountryCode() {
+        return countryCode;
+    }
+
+    public void setCountryCode(String countryCode) {
+        this.countryCode = countryCode;
+    }
+
+    public String getTimezone() {
+        return timezone;
+    }
+
+    public void setTimezone(String timezone) {
+        this.timezone = timezone;
     }
 }

@@ -13,7 +13,7 @@ function translate(locale: keyof typeof catalogs, key: string): string {
 }
 
 describe('notificationCopy', () => {
-  it('renders a single-stage result in ko, en, and mn from catalog keys', () => {
+  it('names a single-stage result in ko, en, and mn', () => {
     const item = {
       type: 'PASS_NOTICE',
       title: '',
@@ -21,19 +21,32 @@ describe('notificationCopy', () => {
       titleKey: 'singleStagePassTitle',
       bodyKey: 'singleStagePassBody',
     }
-    const titles = (['ko', 'en', 'mn'] as const).map((locale) => notificationCopy(item, (key) => translate(locale, key)).title)
-    expect(titles[0]).toBe(ko.notifications.singleStagePassTitle)
-    expect(titles[1]).toBe(en.notifications.singleStagePassTitle)
-    expect(titles[2]).toBe(mn.notifications.singleStagePassTitle)
-    expect(new Set(titles).size).toBe(3)
+    const copies = (['ko', 'en', 'mn'] as const).map((locale) => notificationCopy(item, (key) => translate(locale, key)))
+    expect(copies.map((copy) => copy.title)).toEqual([
+      ko.notifications.singleStageResultTitle,
+      en.notifications.singleStageResultTitle,
+      mn.notifications.singleStageResultTitle,
+    ])
+    expect(copies.map((copy) => copy.body)).toEqual([
+      ko.notifications.singleStagePassBody,
+      en.notifications.singleStagePassBody,
+      mn.notifications.singleStagePassBody,
+    ])
+    expect(new Set(copies.map((copy) => copy.title)).size).toBe(3)
   })
 
-  it('keeps a round notice that already stored a title', () => {
-    const copy = notificationCopy(
-      { type: 'PASS_NOTICE', title: '라운드 합격 안내', body: '다음 라운드', titleKey: '', bodyKey: '' },
+  it('names a multi-stage notice from the notification type', () => {
+    const pass = notificationCopy(
+      { type: 'PASS_NOTICE', title: '라운드 합격 안내', body: '다음 라운드', titleKey: '', bodyKey: '', roundId: 'round-1' },
+      (key) => translate('ko', key),
+    )
+    const fail = notificationCopy(
+      { type: 'FAIL_NOTICE', title: '라운드 결과 안내', body: '진행이 어렵습니다', roundId: 'round-1' },
       (key) => translate('en', key),
     )
-    expect(copy.title).toBe('라운드 합격 안내')
-    expect(copy.body).toBe('다음 라운드')
+    expect(pass.title).toBe(ko.notifications.multiStageResultTitle)
+    expect(pass.body).toBe(ko.notifications.multiStagePassBody)
+    expect(fail.title).toBe(en.notifications.multiStageResultTitle)
+    expect(fail.body).toBe(en.notifications.multiStageFailBody)
   })
 })

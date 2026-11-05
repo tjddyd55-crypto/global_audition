@@ -1,5 +1,5 @@
 ﻿import { parseAuditionDto } from './auditions/parsers'
-import { listOpenAuditions, getAuditionById, getAuditionPreview } from './auditions/public'
+import { listOpenAuditions, getAuditionById, getAuditionOriginal, getAuditionPreview } from './auditions/public'
 import {
   listAuditionVotes,
   voteAudition,
@@ -46,6 +46,7 @@ export { parseAuditionDto }
 export const auditionApi = {
   listOpen: listOpenAuditions,
   getById: getAuditionById,
+  getOriginal: getAuditionOriginal,
   getPreview: getAuditionPreview,
   create: createAudition,
   update: updateAudition,

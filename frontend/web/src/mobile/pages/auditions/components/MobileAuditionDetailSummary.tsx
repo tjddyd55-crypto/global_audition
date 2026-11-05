@@ -15,6 +15,8 @@ import {
 } from '@/shared/types/audition'
 import { useLocale, useTranslations } from 'next-intl'
 import { recruitFieldLabels } from '@/shared/audition/recruitFields'
+import { displayAuditionTag } from '@/shared/audition/auditionTagLabels'
+import { useContentTranslation } from '@/components/i18n/TranslatedField'
 import { dateFnsLocale } from '@/shared/datetime/dateFnsLocale'
 import { applyBlockedDisplayMessage } from '@/shared/audition/applyBlockedCopy'
 import { roundStatusLabel } from '@/shared/audition/roundStatusLabel'
@@ -81,6 +83,8 @@ export default function MobileAuditionDetailSummary({
   const tApply = useTranslations('apply')
   const tStatus = useTranslations('status')
   const tRecruit = useTranslations('recruitField')
+  const tTag = useTranslations('auditionTag')
+  const posting = useContentTranslation('AUDITION_POSTING', audition.id)
   const locale = useLocale()
   const embed = getVideoEmbedSrc(safeStr(audition.videoUrl))
   const videoHref = safeStr(audition.videoUrl).trim()
@@ -198,7 +202,7 @@ export default function MobileAuditionDetailSummary({
                 key={tag}
                 className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700"
               >
-                #{tag}
+                #{displayAuditionTag(tag, (key) => tTag(key), posting.view?.fields, posting.showOriginal)}
               </span>
             ))}
           </div>

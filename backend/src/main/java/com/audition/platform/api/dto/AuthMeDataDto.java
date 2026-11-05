@@ -13,6 +13,8 @@ public class AuthMeDataDto {
     private String displayName;
     private String role;
     private String profileImageUrl;
+    private String countryCode;
+    private String timezone;
 
     public String getId() {
         return id;
@@ -76,5 +78,21 @@ public class AuthMeDataDto {
 
     public void setProfileImageUrl(String profileImageUrl) {
         this.profileImageUrl = profileImageUrl;
+    }
+
+    public String getCountryCode() {
+        return countryCode;
+    }
+
+    public void setCountryCode(String countryCode) {
+        this.countryCode = countryCode;
+    }
+
+    public String getTimezone() {
+        return timezone;
+    }
+
+    public void setTimezone(String timezone) {
+        this.timezone = timezone;
     }
 }

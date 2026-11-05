@@ -31,9 +31,13 @@ public class SignupRequest {
     @Size(max = 120)
     private String name;
 
-    /** 기획사 신청의 소속 국가. 일반 지원자는 비운다. */
+    /** ISO 3166-1 alpha-2. 기획사는 필수, 일반 지원자는 선택. UI 언어와 무관하다. */
     @Size(max = 8)
     private String countryCode;
+
+    /** IANA 시간대. 비어 있으면 저장하지 않는다. UI 언어와 무관하다. */
+    @Size(max = 64)
+    private String timezone;
 
     /** 기획사 표시명(회사명). */
     @Size(max = 200)
@@ -125,6 +129,14 @@ public class SignupRequest {
 
     public void setCountryCode(String countryCode) {
         this.countryCode = countryCode;
+    }
+
+    public String getTimezone() {
+        return timezone;
+    }
+
+    public void setTimezone(String timezone) {
+        this.timezone = timezone;
     }
 
     public String getCompanyName() {

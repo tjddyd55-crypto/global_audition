@@ -17,6 +17,8 @@ public class MeNotificationItemResponse {
     private String auditionId;
     private String applicationId;
     private String channel;
+    /** 다단계 알림의 회차. 단일 심사 결과는 null. 저장된 타입은 바꾸지 않는다. */
+    private String roundId;
 
     public String getId() {
         return id;
@@ -112,5 +114,13 @@ public class MeNotificationItemResponse {
 
     public void setChannel(String channel) {
         this.channel = channel;
+    }
+
+    public String getRoundId() {
+        return roundId;
+    }
+
+    public void setRoundId(String roundId) {
+        this.roundId = roundId;
     }
 }

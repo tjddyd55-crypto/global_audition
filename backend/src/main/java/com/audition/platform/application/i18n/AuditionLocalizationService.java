@@ -1,8 +1,10 @@
 package com.audition.platform.application.i18n;
 
 import com.audition.platform.api.dto.AuditionResponse;
+import com.audition.platform.api.dto.AuditionTextSnapshot;
 import com.audition.platform.api.dto.AuditionTranslationUpsertRequest;
 import com.audition.platform.api.dto.AuditionTranslationView;
+import com.audition.platform.api.dto.UpdateAuditionRequest;
 import com.audition.platform.application.audition.AuditionSeriesPresentation;
 import com.audition.platform.domain.audition.Audition;
 import com.audition.platform.domain.audition.AuditionRepository;
@@ -23,6 +25,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.List;
 import java.util.UUID;
@@ -69,6 +72,28 @@ public class AuditionLocalizationService {
         response.setPreview(true);
     }
 
+    /** 소유자 편집 화면. 표시 필드를 번역으로 덮지 않는다. */
+    public void attachOriginalOnly(Audition audition, AuditionResponse response) {
+        String original = authoringLocale(audition);
+        response.setDefaultLocale(original);
+        response.setContentLocale(original);
+        response.setContentLocaleFallback(false);
+        response.setShowingOriginal(true);
+        response.setPreview(false);
+        rememberOriginal(response);
+        response.setTranslationContent(null);
+        finishLabels(audition, response);
+    }
+
+    /**
+     * 번역 오버레이와 같은 값은 원문에 쓰지 않는다.
+     * @return 원문 필드가 실제로 바뀌었으면 true
+     */
+    @Transactional
+    public boolean writeOriginal(Audition audition, UpdateAuditionRequest request) {
+        return AuditionOriginalWriteGuard.apply(audition, request, overlaySnapshots(audition.getId()));
+    }
+
     /**
      * 원문 해시가 바뀌면 번역 행을 지우지 않고 stale 로만 표시한다.
      * 해시가 아직 없으면 이번 저장을 기준선으로 삼고, 번역 가능 필드가 포함된 저장이면 stale 로 표시한다.
@@ -106,9 +131,11 @@ public class AuditionLocalizationService {
         response.setApplyBlockedCode(response.getApplyBlockedMessage() == null
                 ? null
                 : AuditionSeriesPresentation.APPLY_BLOCKED_PREV_ROUND_NOT_ACCEPTED_CODE);
+        rememberOriginal(response);
 
         if (requested.equals(original)) {
             response.setShowingOriginal(true);
+            response.setTranslationContent(null);
             finishLabels(audition, response);
             return;
         }
@@ -130,6 +157,76 @@ public class AuditionLocalizationService {
             }
         }
         finishLabels(audition, response);
+        publishTranslation(response);
+    }
+
+    private void rememberOriginal(AuditionResponse response) {
+        if (response.getOriginalContent() == null) {
+            response.setOriginalContent(AuditionTextSnapshot.capture(response));
+        }
+    }
+
+    private static void publishTranslation(AuditionResponse response) {
+        if (response.isShowingOriginal() || response.isContentLocaleFallback()) {
+            response.setTranslationContent(null);
+            return;
+        }
+        response.setTranslationContent(AuditionTextSnapshot.capture(response));
+    }
+
+    private List<AuditionTextSnapshot> overlaySnapshots(UUID auditionId) {
+        List<AuditionTextSnapshot> overlays = new ArrayList<>();
+        for (AuditionTranslation row : translationRepository.findByAuditionIdOrderByLocaleAsc(auditionId)) {
+            if (row.getTitle() == null || row.getTitle().isBlank()) {
+                continue;
+            }
+            overlays.add(fromTranslation(row));
+        }
+        appendContentStore(auditionId, overlays);
+        return overlays;
+    }
+
+    private static AuditionTextSnapshot fromTranslation(AuditionTranslation row) {
+        AuditionTextSnapshot snapshot = new AuditionTextSnapshot();
+        snapshot.setTitle(row.getTitle());
+        snapshot.setDescription(row.getDescription());
+        snapshot.setLocation(row.getLocation());
+        snapshot.setAgencyName(row.getAgencyName());
+        snapshot.setRecruitFields(row.getRecruitFields());
+        snapshot.setQualifications(row.getQualifications());
+        snapshot.setSchedules(row.getSchedules());
+        snapshot.setBenefits(row.getBenefits());
+        return snapshot;
+    }
+
+    private void appendContentStore(UUID auditionId, List<AuditionTextSnapshot> overlays) {
+        if (contentStore == null || objectMapper == null || auditionId == null) {
+            return;
+        }
+        for (String locale : ContentLocales.SUPPORTED) {
+            appendStoreLocale(auditionId, locale, overlays);
+        }
+    }
+
+    private void appendStoreLocale(UUID auditionId, String locale, List<AuditionTextSnapshot> overlays) {
+        try {
+            var row = contentStore.findTranslation(ContentTypes.AUDITION_POSTING, auditionId, locale).orElse(null);
+            if (row == null || !AuditionTranslation.STATUS_COMPLETED.equals(row.status()) || row.bodyJson() == null) {
+                return;
+            }
+            Map<String, String> fields = objectMapper.readValue(row.bodyJson(), new TypeReference<Map<String, String>>() { });
+            String title = fields.get("title");
+            if (title == null || title.isBlank()) {
+                return;
+            }
+            AuditionTextSnapshot snapshot = new AuditionTextSnapshot();
+            snapshot.setTitle(title);
+            String description = fields.get("description");
+            snapshot.setDescription(description == null ? "" : description);
+            overlays.add(snapshot);
+        } catch (Exception ex) {
+            // 깨진 번역 본문은 원문 가드에 넣지 않는다.
+        }
     }
 
     @Transactional(readOnly = true)

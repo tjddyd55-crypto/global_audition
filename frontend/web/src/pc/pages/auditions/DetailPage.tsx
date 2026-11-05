@@ -4,6 +4,7 @@ import { useParams } from 'next/navigation'
 import { format } from 'date-fns'
 import { useLocale, useTranslations } from 'next-intl'
 import { recruitFieldLabels } from '@/shared/audition/recruitFields'
+import { displayAuditionTag } from '@/shared/audition/auditionTagLabels'
 import { dateFnsLocale } from '@/shared/datetime/dateFnsLocale'
 import { AUDITION_DETAIL } from '@/shared/design-tokens'
 import { getVideoEmbedSrc } from '@/shared/utils/videoEmbed'
@@ -37,6 +38,7 @@ export default function PcAuditionDetailPage() {
   const tDetail = useTranslations('auditionDetail')
   const tStatus = useTranslations('status')
   const tRecruit = useTranslations('recruitField')
+  const tTag = useTranslations('auditionTag')
   const locale = useLocale()
   const id = params.id as string
 
@@ -105,7 +107,9 @@ export default function PcAuditionDetailPage() {
   const qualifications = safeArr(shown.qualifications)
   const schedules = safeArr(shown.schedules)
   const benefits = safeArr(shown.benefits)
-  const auditionTags = safeArr(audition.tags)
+  const auditionTags = safeArr(audition.tags).map((tag) =>
+    displayAuditionTag(safeStr(tag), (key) => tTag(key), posting.view?.fields, posting.showOriginal),
+  )
   const headlineTitle = auditionHeadlineTitle(shown)
   const descriptionText = safeStr(shown.description)
   const heroSubtitle =

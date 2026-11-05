@@ -8,6 +8,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { z } from 'zod'
 import { authApi } from '@/shared/api/auth'
 import { buildAgencySignupPayload } from '@/shared/auth/buildAgencySignupPayload'
+import { buildApplicantSignupPayload } from '@/shared/auth/buildApplicantSignupPayload'
 import { RecoveryCodeNotice } from '@/components/auth/RecoveryCodeNotice'
 import { countries, languages, timezones } from '@/shared/utils/countries'
 import { createNicknameZodField } from '@/shared/user/nicknameZod'
@@ -207,13 +208,14 @@ export default function MobileRegisterPage() {
               establishedYear: submitData.establishedYear,
               businessLicenseDocumentUrl: submitData.businessLicenseDocumentUrl,
             })
-          : {
+          : buildApplicantSignupPayload({
               email: submitData.email,
               password: submitData.password,
-              role: 'APPLICANT',
               nickname: submitData.nickname.trim(),
-              name: submitData.name?.trim() ? submitData.name.trim() : undefined,
-            },
+              name: submitData.name,
+              countryCode: submitData.country,
+              timezone: submitData.timezone,
+            }),
       )
       queryClient.invalidateQueries({ queryKey: ['currentUser'] })
       if (response.recoveryCode) {

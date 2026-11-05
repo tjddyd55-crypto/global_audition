@@ -50,7 +50,8 @@ class MainSecurityScopeTest {
             return user;
         });
         auth = new AuthService(users, encoder, new JwtService(TestJwtSecrets.ACCEPTABLE, 60_000L), nicknames,
-                mock(AuthRecoveryService.class), mock(CreditService.class), agencySignup);
+                mock(AuthRecoveryService.class), mock(CreditService.class), agencySignup,
+                mock(com.audition.platform.application.user.ApplicantSignupProfileService.class));
     }
 
     /**

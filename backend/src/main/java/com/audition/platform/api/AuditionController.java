@@ -117,6 +117,11 @@ public class AuditionController {
         return auditionService.listMine();
     }
 
+    @GetMapping("/{id}/original")
+    public AuditionResponse getOriginal(@PathVariable UUID id) {
+        return auditionService.getOriginal(id);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<?> getById(@PathVariable UUID id) {
         try {

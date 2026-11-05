@@ -55,6 +55,18 @@ export const EMPTY_AUDITION_FORM_IMAGES: AuditionFormImages = {
   thumb: '',
 }
 
+/** 원문 또는 번역 한 벌. description 이 본문이다. */
+export type AuditionTextContent = {
+  title: string
+  description: string
+  location: string
+  agencyName: string
+  recruitFields: string[]
+  qualifications: string[]
+  schedules: string[]
+  benefits: string[]
+}
+
 export type AuditionDto = {
   id: string
   ownerId: string
@@ -116,6 +128,10 @@ export type AuditionDto = {
   translationStale?: boolean
   translationErrorCode?: string | null
   translationOrigin?: string | null
+  /** 저장된 원문. 편집은 이 값을 쓴다. */
+  originalContent?: AuditionTextContent
+  /** 선택 로케일 번역. 원문 표시 중이면 없다. */
+  translationContent?: AuditionTextContent | null
 }
 
 export function auditionHeadlineTitle(a: Pick<AuditionDto, 'displayTitle' | 'title'>): string {

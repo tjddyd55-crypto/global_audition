@@ -230,7 +230,7 @@ public class AuditionService {
         return dto;
     }
 
-    private AuditionResponse toResponse(Audition a) {
+    private AuditionResponse toResponse(Audition a, boolean localize) {
         normalizeAuditionArrayFields(a);
         AuditionResponse r = new AuditionResponse();
         r.setId(a.getId());
@@ -276,12 +276,16 @@ public class AuditionService {
         r.setSelectionStatus(a.getSelectionStatus());
         r.setGroupId(a.getGroupId());
         r.setSeriesRound(a.getSeriesRound());
-        String statusForLabel = a.getStatus() != null ? a.getStatus() : "";
-        r.setDisplayTitle(AuditionSeriesPresentation.displayTitle(a.getTitle(), a.getSeriesRound()));
-        r.setRecruitmentRoundLabel(
-                AuditionSeriesPresentation.recruitmentRoundLabel(statusForLabel, a.getSeriesRound()));
-        auditionLocalizationService.apply(a, r);
+        if (localize) {
+            auditionLocalizationService.apply(a, r);
+        } else {
+            auditionLocalizationService.attachOriginalOnly(a, r);
+        }
         return r;
+    }
+
+    private AuditionResponse toResponse(Audition a) {
+        return toResponse(a, true);
     }
 
     private void applyAuditionTagsInput(UUID auditionId, CreateAuditionRequest req) {
@@ -488,6 +492,13 @@ public class AuditionService {
                 .collect(Collectors.toList());
     }
 
+    public AuditionResponse getOriginal(UUID id) {
+        Audition audition = auditionRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Not found"));
+        requireOwnerOrAdmin(audition);
+        return toResponse(audition, false);
+    }
+
     public AuditionResponse getById(UUID id) {
         Audition a = auditionRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Not found"));
@@ -551,12 +562,7 @@ public class AuditionService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only owner or ADMIN can update this audition");
         }
 
-        if (request.getTitle() != null) {
-            audition.setTitle(request.getTitle().trim());
-        }
-        if (request.getDescription() != null) {
-            audition.setDescription(request.getDescription().trim());
-        }
+        boolean originalChanged = auditionLocalizationService.writeOriginal(audition, request);
         if (request.getStatus() != null) {
             requireApprovedAgencyForPublish(audition.getOwnerId(), request.getStatus());
             audition.setStatus(request.getStatus());
@@ -568,7 +574,11 @@ public class AuditionService {
             audition.setHostCountry(normalizeHostCountry(request.getHostCountry()));
         }
         if (request.getDefaultLocale() != null && !request.getDefaultLocale().isBlank()) {
-            audition.setDefaultLocale(requireAuthoringLocale(request.getDefaultLocale()));
+            String nextLocale = requireAuthoringLocale(request.getDefaultLocale());
+            if (!nextLocale.equals(audition.getDefaultLocale())) {
+                audition.setDefaultLocale(nextLocale);
+                originalChanged = true;
+            }
         }
         boolean patchNewTags = request.getTagIds() != null || request.getCustomTagNames() != null;
         if (patchNewTags) {
@@ -591,32 +601,14 @@ public class AuditionService {
         if (request.getGalleryImages() != null) {
             audition.setGalleryImages(listToArray(request.getGalleryImages()));
         }
-        if (request.getAgencyName() != null) {
-            audition.setAgencyName(request.getAgencyName().trim());
-        }
         if (request.getAgencyLogo() != null) {
             audition.setAgencyLogo(request.getAgencyLogo());
-        }
-        if (request.getLocation() != null) {
-            audition.setLocation(request.getLocation().trim());
         }
         if (request.getStartDate() != null) {
             audition.setStartDate(parseInstantRequired(request.getStartDate(), "startDate"));
         }
         if (request.getEndDate() != null) {
             audition.setEndDate(parseInstantRequired(request.getEndDate(), "endDate"));
-        }
-        if (request.getRecruitFields() != null) {
-            audition.setRecruitFields(com.audition.platform.domain.audition.RecruitFieldCodes.normalizeAll(listToArray(request.getRecruitFields())));
-        }
-        if (request.getQualifications() != null) {
-            audition.setQualifications(listToArray(request.getQualifications()));
-        }
-        if (request.getSchedules() != null) {
-            audition.setSchedules(listToArray(request.getSchedules()));
-        }
-        if (request.getBenefits() != null) {
-            audition.setBenefits(listToArray(request.getBenefits()));
         }
         if (request.getProcessMode() != null) {
             if (AuditionProcessModes.isMultiRound(request.getProcessMode())) {
@@ -644,10 +636,14 @@ public class AuditionService {
             audition.setRemainingDays(computeRemainingDays(audition.getEndDate()));
         }
         audition.setUpdatedAt(Instant.now());
-        auditionLocalizationService.onSourceWritten(audition, translatableFieldsPresent(request));
+        if (originalChanged) {
+            auditionLocalizationService.onSourceWritten(audition, true);
+        }
         Audition saved = auditionRepository.save(audition);
-        enqueuePostingTranslation(saved);
-        return toResponse(saved);
+        if (originalChanged) {
+            enqueuePostingTranslation(saved);
+        }
+        return toResponse(saved, false);
     }
 
     /** 게시된 공고만 활성 대상(영어 우선)을 큐에 넣는다. 실패해도 공고 저장은 유지한다. */
@@ -782,15 +778,4 @@ public class AuditionService {
         }
     }
 
-    private static boolean translatableFieldsPresent(UpdateAuditionRequest request) {
-        return request.getTitle() != null
-                || request.getDescription() != null
-                || request.getLocation() != null
-                || request.getAgencyName() != null
-                || request.getRecruitFields() != null
-                || request.getQualifications() != null
-                || request.getSchedules() != null
-                || request.getBenefits() != null
-                || (request.getDefaultLocale() != null && !request.getDefaultLocale().isBlank());
-    }
 }
