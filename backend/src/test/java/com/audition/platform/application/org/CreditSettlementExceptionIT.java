@@ -26,6 +26,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.YearMonth;
@@ -260,6 +261,7 @@ class CreditSettlementExceptionIT {
         UUID audition = insertAudition(owner, agency.id(), "SINGLE");
         asApplicant(applicant);
         applications.submitApplication(request(audition, "JP"));
+        placeAuditionApplyUseInOctober(applicant);
         asUser(hq);
         attributions.reconcileApplyUses();
         assertEquals(1, count("SELECT COUNT(*) FROM revenue_attributions WHERE audition_id = '" + audition + "' AND line_kind = 'REVENUE'"));
@@ -331,6 +333,8 @@ class CreditSettlementExceptionIT {
         UUID audition = insertAudition(owner, agency.id(), "SINGLE");
         asApplicant(applicant);
         applications.submitApplication(request(audition, "OTHER"));
+        placeFreeGrantBeforeOctoberUse(applicant);
+        placeAuditionApplyUseInOctober(applicant);
         asUser(hq);
         attributions.reconcileApplyUses();
         SettlementView october = settlements.calculate(COUNTRY, contract.id(), "2026-10");
@@ -364,6 +368,35 @@ class CreditSettlementExceptionIT {
         ResponseStatusException invalid = assertThrows(ResponseStatusException.class, () -> workspace.metrics(COUNTRY, "2026-13"));
         assertEquals(400, invalid.getStatusCode().value());
         assertEquals("PERIOD_INVALID", invalid.getReason());
+    }
+
+    /**
+     * 유료 로트({@code paid_at} 10월 3–5일)보다 뒤이고, 고정 정산월 2026-10 안이다.
+     * 지원 사용은 벽시계로 기록되므로 reconcile 전에 이 시각으로 되돌린다.
+     */
+    private static final Instant OCTOBER_APPLY_USE_AT =
+            OffsetDateTime.parse("2026-10-16T12:00:00Z").toInstant();
+
+    /** 무료 로트가 10월 16일 사용보다 먼저 열려 있어야 FREE_FIRST 가 무료 2장을 쓴다. */
+    private static final Instant OCTOBER_FREE_GRANT_AT =
+            OffsetDateTime.parse("2026-10-02T00:00:00Z").toInstant();
+
+    private void placeAuditionApplyUseInOctober(UUID applicantId) {
+        int updated = jdbc.update("""
+                UPDATE credit_transactions
+                SET created_at = ?
+                WHERE user_id = ? AND type = 'USE' AND reason = 'AUDITION_APPLY'
+                """, Timestamp.from(OCTOBER_APPLY_USE_AT), applicantId);
+        assertEquals(1, updated, "AUDITION_APPLY use must move into 2026-10");
+    }
+
+    private void placeFreeGrantBeforeOctoberUse(UUID applicantId) {
+        int updated = jdbc.update("""
+                UPDATE credit_transactions
+                SET created_at = ?
+                WHERE user_id = ? AND type = 'GRANT'
+                """, Timestamp.from(OCTOBER_FREE_GRANT_AT), applicantId);
+        assertEquals(1, updated, "free GRANT must precede the October apply use");
     }
 
     private Draft moneyContract(UUID agencyId, UUID rep, String number) {
