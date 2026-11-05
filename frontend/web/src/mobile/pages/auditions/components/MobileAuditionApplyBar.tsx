@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import { Link } from '@/i18n.config'
 import { useLocale, useTranslations } from 'next-intl'
 import type { AuditionDto } from '@/shared/types/audition'
 import { applyBlockedDisplayMessage } from '@/shared/audition/applyBlockedCopy'
