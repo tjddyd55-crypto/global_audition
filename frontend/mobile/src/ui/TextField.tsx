@@ -1,4 +1,4 @@
-import { StyleSheet, Text, TextInput, View } from 'react-native'
+import { StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native'
 import { colors, radius, touch } from '../theme/tokens'
 
 type Props = {
@@ -7,8 +7,8 @@ type Props = {
   onChangeText: (value: string) => void
   placeholder?: string
   secureTextEntry?: boolean
-  autoCapitalize?: 'none' | 'sentences' | 'words'
-  keyboardType?: 'default' | 'email-address' | 'url' | 'numeric'
+  autoCapitalize?: TextInputProps['autoCapitalize']
+  keyboardType?: TextInputProps['keyboardType']
   multiline?: boolean
   error?: string
 }
