@@ -1,5 +1,9 @@
-﻿export const COUNTRY_CODES = [
+﻿/**
+ * 지원자 가입 국가. UI 언어(ko/en/mn)와 따로 고르며, 전 세계 지원이므로 몽골(MN)을 포함한다.
+ */
+export const COUNTRY_CODES = [
   'KR',
+  'MN',
   'US',
   'JP',
   'CN',
@@ -53,6 +57,7 @@ export const languages: ReadonlyArray<{ code: LanguageCode }> = LANGUAGE_CODES.m
 
 export const timezones = [
   { value: 'Asia/Seoul', label: 'Asia/Seoul (KST)' },
+  { value: 'Asia/Ulaanbaatar', label: 'Asia/Ulaanbaatar (ULAT)' },
   { value: 'America/New_York', label: 'America/New_York (EST)' },
   { value: 'America/Los_Angeles', label: 'America/Los_Angeles (PST)' },
   { value: 'America/Chicago', label: 'America/Chicago (CST)' },

@@ -867,6 +867,7 @@
   },
   "countries": {
     "KR": "대한민국 (South Korea)",
+    "MN": "몽골 (Mongolia)",
     "US": "미국 (United States)",
     "JP": "일본 (Japan)",
     "CN": "중국 (China)",
@@ -1061,7 +1062,11 @@
     "ROUND_OPEN": "라운드가 열리면 알려 드립니다.",
     "PASS_NOTICE": "라운드 통과 안내",
     "FAIL_NOTICE": "라운드 결과 안내",
-    "FINAL_NOTICE": "최종 결과 안내"
+    "FINAL_NOTICE": "최종 결과 안내",
+    "singleStagePassTitle": "합격 안내",
+    "singleStagePassBody": "축하합니다. 이 오디션에 합격했습니다. 다음 안내는 기획사 공지를 확인해 주세요.",
+    "singleStageFailTitle": "결과 안내",
+    "singleStageFailBody": "이번에는 함께하지 못하게 되었습니다. 다음 기회에서 다시 만나요."
   },
   "vault": {
     "title": "창작물 보관소",

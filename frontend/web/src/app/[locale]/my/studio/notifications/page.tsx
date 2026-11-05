@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useLocale, useTranslations } from 'next-intl'
 import { studioApi } from '@/shared/api/studio'
+import { notificationCopy } from '@/shared/studio/notificationCopy'
 import { TEXT_SUB, TITLE_PAGE } from '@/shared/ui/specClasses'
 
 export default function StudioNotificationsPage() {
@@ -29,10 +30,12 @@ export default function StudioNotificationsPage() {
       {query.isError ? <p className="text-sm text-red-600">{tNotice('loadFailed')}</p> : null}
       {query.data && query.data.length === 0 ? <p className={TEXT_SUB}>{tNotice('empty')}</p> : null}
       <ul className="flex flex-col gap-2">
-        {(query.data ?? []).map((item) => (
+        {(query.data ?? []).map((item) => {
+          const copy = notificationCopy(item, (key) => tNotice(key))
+          return (
           <li key={item.id} className="rounded-lg border border-neutral-200 p-3">
-            <div className="font-medium text-gray-900">{item.title || item.type}</div>
-            <p className={`mt-1 ${TEXT_SUB}`}>{item.body}</p>
+            <div className="font-medium text-gray-900">{copy.title}</div>
+            <p className={`mt-1 ${TEXT_SUB}`}>{copy.body}</p>
             <div className={`mt-2 ${TEXT_SUB}`}>
               {item.type} · {item.status}
               {item.readAt ? ` · ${t('read')}` : ''}
@@ -48,7 +51,8 @@ export default function StudioNotificationsPage() {
               </button>
             ) : null}
           </li>
-        ))}
+          )
+        })}
       </ul>
     </div>
   )

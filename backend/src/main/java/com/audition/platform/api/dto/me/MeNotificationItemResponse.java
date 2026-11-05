@@ -9,6 +9,9 @@ public class MeNotificationItemResponse {
     private String status;
     private String title;
     private String body;
+    /** notifications 카탈로그 키. 있으면 화면이 ko/en/mn 으로 번역한다. */
+    private String titleKey;
+    private String bodyKey;
     private Instant createdAt;
     private Instant readAt;
     private String auditionId;
@@ -53,6 +56,22 @@ public class MeNotificationItemResponse {
 
     public void setBody(String body) {
         this.body = body;
+    }
+
+    public String getTitleKey() {
+        return titleKey;
+    }
+
+    public void setTitleKey(String titleKey) {
+        this.titleKey = titleKey;
+    }
+
+    public String getBodyKey() {
+        return bodyKey;
+    }
+
+    public void setBodyKey(String bodyKey) {
+        this.bodyKey = bodyKey;
     }
 
     public Instant getCreatedAt() {

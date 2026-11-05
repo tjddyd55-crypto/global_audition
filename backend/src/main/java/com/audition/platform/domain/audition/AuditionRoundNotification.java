@@ -25,7 +25,8 @@ public class AuditionRoundNotification {
     @JoinColumn(name = "audition_id", insertable = false, updatable = false)
     private Audition audition;
 
-    @Column(name = "round_id", nullable = false)
+    /** 다단계 알림만 라운드를 가리킨다. 단일 단계 결과 알림은 null. */
+    @Column(name = "round_id")
     private UUID roundId;
 
     @ManyToOne(fetch = FetchType.LAZY)
