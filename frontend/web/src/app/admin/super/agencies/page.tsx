@@ -4,23 +4,33 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { adminKo } from '@/app/admin/org/copy'
 import { orgAdminApi, orgErrorMessage } from '@/shared/api/orgAdmin'
+import { AGENCY_APPROVAL_SUCCESS_NOTICE } from './approvalNotice'
 
 export default function AgenciesPage() {
   const qc = useQueryClient()
   const [country, setCountry] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
   const agencies = useQuery({
     queryKey: ['org', 'agencies', country],
     queryFn: () => orgAdminApi.agencies(country),
     enabled: country.trim().length === 2,
   })
   const decide = useMutation({
-    mutationFn: (input: { id: string; action: string }) => orgAdminApi.decide(input.id, input.action, '본사 화면'),
+    mutationFn: (input: { id: string; action: string }) => {
+      setNotice(null)
+      setError(null)
+      return orgAdminApi.decide(input.id, input.action, '본사 화면')
+    },
     onSuccess: async () => {
       setError(null)
+      setNotice(AGENCY_APPROVAL_SUCCESS_NOTICE)
       await qc.invalidateQueries({ queryKey: ['org', 'agencies', country] })
     },
-    onError: (err) => setError(orgErrorMessage(err)),
+    onError: (err) => {
+      setNotice(null)
+      setError(orgErrorMessage(err))
+    },
   })
 
   return (
@@ -36,6 +46,7 @@ export default function AgenciesPage() {
         value={country}
         onChange={(e) => setCountry(e.target.value.toUpperCase())}
       />
+      {notice ? <p className="mb-4 text-sm text-green-700" role="status">{notice}</p> : null}
       {error ? <p className="mb-4 text-sm text-red-700">{error}</p> : null}
       <table className="w-full text-sm">
         <thead>
