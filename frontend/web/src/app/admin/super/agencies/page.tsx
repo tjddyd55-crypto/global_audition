@@ -41,6 +41,8 @@ export default function AgenciesPage() {
         <thead>
           <tr className="border-b text-left">
             <th className="py-2">이름</th>
+            <th>사업자번호</th>
+            <th>연락처</th>
             <th>단계</th>
             <th>승인</th>
             <th></th>
@@ -50,6 +52,8 @@ export default function AgenciesPage() {
           {(agencies.data ?? []).map((row) => (
             <tr key={row.id} className="border-b">
               <td className="py-2">{row.displayName}</td>
+              <td>{row.businessRegistration ?? '—'}</td>
+              <td>{row.contactPhone ?? '—'}</td>
               <td>{row.stage}</td>
               <td>{row.approvalState}</td>
               <td className="space-x-2">

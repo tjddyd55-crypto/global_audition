@@ -22,6 +22,12 @@ export type AgencyRow = {
   countryCode: string
   displayName: string
   legalName: string | null
+  businessRegistration?: string | null
+  contactName?: string | null
+  contactEmail?: string | null
+  contactPhone?: string | null
+  website?: string | null
+  city?: string | null
   stage: string
   approvalState: string
   assignedStaffUserId: string | null

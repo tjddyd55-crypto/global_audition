@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { authApi } from '@/shared/api/auth'
+import { buildAgencySignupPayload } from '@/shared/auth/buildAgencySignupPayload'
 import { Link, useRouter } from '@/i18n.config'
 import RoleSelectCard from '@/components/auth/RoleSelectCard'
 import AuthCardLayout from '@/components/auth/AuthCardLayout'
@@ -19,6 +20,11 @@ type RegisterFormData = {
   legalName?: string
   password: string
   confirmPassword: string
+  companyName?: string
+  businessRegistrationNumber?: string
+  representativeName?: string
+  contactPhone?: string
+  businessCity?: string
 }
 type RegisterRole = 'APPLICANT' | 'AGENCY'
 
@@ -41,7 +47,12 @@ function createRegisterSchema(tAuth: (key: string) => string, tReg: (key: string
         length: tAuth('nicknameLen'),
         charset: tAuth('nicknameCharset'),
       }),
-      legalName: z.string().max(120, tAuth('legalNameMax')).optional().or(z.literal('')),
+      legalName: z.string().max(200).optional().or(z.literal('')),
+      companyName: z.string().max(200).optional().or(z.literal('')),
+      businessRegistrationNumber: z.string().max(80).optional().or(z.literal('')),
+      representativeName: z.string().max(120).optional().or(z.literal('')),
+      contactPhone: z.string().max(40).optional().or(z.literal('')),
+      businessCity: z.string().max(120).optional().or(z.literal('')),
       password: z
         .string({ required_error: tAuth('requiredValues') })
         .min(1, tAuth('requiredValues'))
@@ -61,6 +72,7 @@ export default function PcRegisterPage() {
   const router = useRouter()
   const tAuth = useTranslations('auth')
   const tReg = useTranslations('register')
+  const tVal = useTranslations('validation')
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [role, setRole] = useState<RegisterRole>('APPLICANT')
@@ -77,20 +89,61 @@ export default function PcRegisterPage() {
     setIsLoading(true)
     setError(null)
     const agencyCountry = countryCode.trim().toUpperCase()
-    if (role === 'AGENCY' && !/^[A-Z]{2}$/.test(agencyCountry)) {
-      setError(tAuth('agencyCountry'))
-      setIsLoading(false)
-      return
+    if (role === 'AGENCY') {
+      if (!/^[A-Z]{2}$/.test(agencyCountry)) {
+        setError(tAuth('agencyCountry'))
+        setIsLoading(false)
+        return
+      }
+      if (!data.companyName?.trim()) {
+        setError(tVal('companyNameRequired'))
+        setIsLoading(false)
+        return
+      }
+      if (!data.legalName?.trim()) {
+        setError(tVal('legalNameRequired'))
+        setIsLoading(false)
+        return
+      }
+      if (!data.representativeName?.trim()) {
+        setError(tVal('representativeNameRequired'))
+        setIsLoading(false)
+        return
+      }
+      if (!data.businessRegistrationNumber?.trim()) {
+        setError(tVal('businessRegistrationNumberRequired'))
+        setIsLoading(false)
+        return
+      }
+      if (!data.businessCity?.trim()) {
+        setError(tVal('cityRequired'))
+        setIsLoading(false)
+        return
+      }
     }
     try {
-      const res = await authApi.signup({
-        email: data.email,
-        password: data.password,
-        role,
-        nickname: data.nickname.trim(),
-        name: data.legalName?.trim() ? data.legalName.trim() : undefined,
-        countryCode: role === 'AGENCY' ? agencyCountry : undefined,
-      })
+      const res = await authApi.signup(
+        role === 'AGENCY'
+          ? buildAgencySignupPayload({
+              email: data.email,
+              password: data.password,
+              nickname: data.nickname,
+              countryCode: agencyCountry,
+              companyName: data.companyName!.trim(),
+              legalName: data.legalName!.trim(),
+              businessRegistrationNumber: data.businessRegistrationNumber!.trim(),
+              representativeName: data.representativeName!.trim(),
+              contactPhone: data.contactPhone,
+              businessCity: data.businessCity!.trim(),
+            })
+          : {
+              email: data.email,
+              password: data.password,
+              role,
+              nickname: data.nickname.trim(),
+              name: data.legalName?.trim() ? data.legalName.trim() : undefined,
+            },
+      )
       if (res.recoveryCode) {
         setIssuedIntent(res.signupIntent ?? role)
         setIssuedCode(res.recoveryCode)
@@ -134,26 +187,47 @@ export default function PcRegisterPage() {
       <form onSubmit={handleSubmit(onSubmit)}>
         <RoleSelectCard value={role} onChange={setRole} />
         {role === 'AGENCY' ? (
-          <Field id="agency-country" label={tAuth('agencyCountry')}>
-            <input
-              id="agency-country"
-              aria-label={tAuth('agencyCountry')}
-              value={countryCode}
-              onChange={(event) => setCountryCode(event.target.value.toUpperCase())}
-              placeholder="JP"
-              maxLength={2}
-              style={inputStyle}
-            />
+          <>
+            <Field id="agency-country" label={tAuth('agencyCountry')}>
+              <input
+                id="agency-country"
+                aria-label={tAuth('agencyCountry')}
+                value={countryCode}
+                onChange={(event) => setCountryCode(event.target.value.toUpperCase())}
+                placeholder="JP"
+                maxLength={2}
+                style={inputStyle}
+              />
+            </Field>
+            <Field id="companyName" label={`${tReg('companyName')} *`} error={errors.companyName?.message}>
+              <input id="companyName" type="text" {...register('companyName')} placeholder={tReg('companyName')} style={inputStyle} />
+            </Field>
+            <Field id="legalName" label={`${tReg('legalName')} *`} error={errors.legalName?.message}>
+              <input id="legalName" type="text" {...register('legalName')} placeholder={tReg('legalNameOfficial')} style={inputStyle} />
+            </Field>
+            <Field id="representativeName" label={`${tReg('representativeName')} *`} error={errors.representativeName?.message}>
+              <input id="representativeName" type="text" {...register('representativeName')} placeholder={tReg('representativeName')} style={inputStyle} />
+            </Field>
+            <Field id="businessRegistrationNumber" label={`${tReg('businessRegistrationNumber')} *`} error={errors.businessRegistrationNumber?.message}>
+              <input id="businessRegistrationNumber" type="text" {...register('businessRegistrationNumber')} placeholder={tReg('businessRegistrationNumber')} style={inputStyle} />
+            </Field>
+            <Field id="businessCity" label={`${tReg('enterCity')} *`} error={errors.businessCity?.message}>
+              <input id="businessCity" type="text" {...register('businessCity')} placeholder={tReg('enterCity')} style={inputStyle} />
+            </Field>
+            <Field id="contactPhone" label={tReg('contactPhone')} error={errors.contactPhone?.message}>
+              <input id="contactPhone" type="tel" {...register('contactPhone')} placeholder={tReg('phoneOptional')} style={inputStyle} />
+            </Field>
+          </>
+        ) : (
+          <Field id="legalName" label={tAuth('legalNameOptional')} error={errors.legalName?.message}>
+            <input id="legalName" type="text" {...register('legalName')} placeholder={tAuth('legalNamePlaceholder')} style={inputStyle} />
           </Field>
-        ) : null}
+        )}
         <Field id="email" label={tAuth('email')} error={errors.email?.message}>
           <input id="email" type="email" autoComplete="email" {...register('email')} placeholder="your@email.com" style={inputStyle} />
         </Field>
         <Field id="nickname" label={`${tAuth('nickname')} *`} error={errors.nickname?.message}>
           <input id="nickname" type="text" {...register('nickname')} placeholder={tAuth('displayNamePlaceholder')} style={inputStyle} />
-        </Field>
-        <Field id="legalName" label={tAuth('legalNameOptional')} error={errors.legalName?.message}>
-          <input id="legalName" type="text" {...register('legalName')} placeholder={tAuth('legalNamePlaceholder')} style={inputStyle} />
         </Field>
         <Field id="password" label={tAuth('password')} error={errors.password?.message}>
           <input id="password" type="password" autoComplete="new-password" {...register('password')} placeholder={tReg('passwordMin6')} style={inputStyle} />

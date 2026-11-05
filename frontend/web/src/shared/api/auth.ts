@@ -9,6 +9,18 @@ export interface SignupRequest {
   nickname: string
   name?: string | null
   countryCode?: string | null
+  companyName?: string | null
+  legalName?: string | null
+  businessRegistrationNumber?: string | null
+  representativeName?: string | null
+  contactEmail?: string | null
+  contactPhone?: string | null
+  website?: string | null
+  businessCity?: string | null
+  taxId?: string | null
+  businessAddress?: string | null
+  establishedYear?: number | null
+  businessLicenseDocumentUrl?: string | null
 }
 
 export interface LoginRequest {

@@ -6,6 +6,7 @@ import com.audition.platform.api.dto.AuthResponse;
 import com.audition.platform.api.dto.LoginRequest;
 import com.audition.platform.api.dto.SignupRequest;
 import com.audition.platform.application.credit.CreditService;
+import com.audition.platform.application.org.AgencySignupProfile;
 import com.audition.platform.application.org.AgencySignupService;
 import com.audition.platform.application.recovery.AuthRecoveryService;
 import com.audition.platform.application.user.UserNicknameService;
@@ -79,7 +80,7 @@ class AuthServiceTest {
         assertEquals("ABCD-2345-EFGH", res.getRecoveryCode());
         assertNotNull(res.getToken());
         assertEquals("new@example.com", res.getEmail());
-        verify(agencySignupService, never()).openApplication(any(), eq("AGENCY"), any(), any());
+        verify(agencySignupService, never()).openApplication(any(), eq("AGENCY"), any());
     }
 
     @Test
@@ -89,7 +90,13 @@ class AuthServiceTest {
         req.setPassword("secret1");
         req.setRole("AGENCY");
         req.setNickname("기획사닉");
-        req.setName("QA Entity");
+        req.setName("Legacy Name");
+        req.setLegalName("QA Entity");
+        req.setCompanyName("GLOBAL TEST AGENCY");
+        req.setBusinessRegistrationNumber("123-45-67890");
+        req.setRepresentativeName("Hong Gildong");
+        req.setContactPhone("010-1234-5678");
+        req.setBusinessCity("Seoul");
         req.setCountryCode("JP");
         when(userRepository.existsByEmail("agency@example.com")).thenReturn(false);
         when(userNicknameService.prepareNicknameOrThrow(eq("기획사닉"), isNull())).thenReturn("기획사닉");
@@ -100,7 +107,16 @@ class AuthServiceTest {
         assertEquals("APPLICANT", res.getRole());
         assertEquals("AGENCY", res.getSignupIntent());
         verify(agencySignupService).requireAgencyCountry("AGENCY", "JP");
-        verify(agencySignupService).openApplication(any(User.class), eq("AGENCY"), eq("JP"), eq("QA Entity"));
+        org.mockito.ArgumentCaptor<AgencySignupProfile> profile =
+                org.mockito.ArgumentCaptor.forClass(AgencySignupProfile.class);
+        verify(agencySignupService).openApplication(any(User.class), eq("AGENCY"), profile.capture());
+        assertEquals("JP", profile.getValue().countryCode());
+        assertEquals("GLOBAL TEST AGENCY", profile.getValue().companyName());
+        assertEquals("QA Entity", profile.getValue().legalName());
+        assertEquals("123-45-67890", profile.getValue().businessRegistrationNumber());
+        assertEquals("Hong Gildong", profile.getValue().representativeName());
+        assertEquals("010-1234-5678", profile.getValue().contactPhone());
+        assertEquals("Seoul", profile.getValue().businessCity());
         org.mockito.ArgumentCaptor<User> saved = org.mockito.ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(saved.capture());
         assertEquals("APPLICANT", saved.getValue().getRole());

@@ -300,6 +300,10 @@ function AgencyDetail({ row }: { row: AgencyRow }) {
       <p className="mb-3 text-sm">
         {row.legalName ?? '법인명 없음'} · {row.stage} · {row.approvalState}
       </p>
+      <p className="mb-2 text-sm text-gray-700">
+        사업자등록번호 {row.businessRegistration ?? '—'} · 대표 {row.contactName ?? '—'} · 연락처 {row.contactPhone ?? '—'}
+        {row.city ? ` · ${row.city}` : ''}
+      </p>
       <p className="mb-2 text-sm text-gray-600">이 기획사 오디션 {mine.length}건. 지원자 개인정보는 표시하지 않습니다.</p>
       <ul className="text-sm">
         {mine.map((item) => (

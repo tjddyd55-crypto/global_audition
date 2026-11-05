@@ -45,7 +45,20 @@ import type {
 export const authApi = {
   login: (email: string, password: string) =>
     apiRequest<AuthResponse>('/auth/login', { method: 'POST', body: { email, password }, auth: false }),
-  signup: (body: { email: string; password: string; role: 'APPLICANT' | 'AGENCY'; nickname: string; name?: string }) =>
+  signup: (body: {
+    email: string
+    password: string
+    role: 'APPLICANT' | 'AGENCY'
+    nickname: string
+    name?: string
+    countryCode?: string
+    companyName?: string
+    legalName?: string
+    businessRegistrationNumber?: string
+    representativeName?: string
+    contactPhone?: string
+    businessCity?: string
+  }) =>
     apiRequest<AuthResponse>('/auth/signup', { method: 'POST', body, auth: false }),
   me: async (): Promise<AuthMe> => parseAuthMe(unwrapData(await apiRequest<unknown>('/auth/me'))),
   logout: () => apiRequest<unknown>('/auth/logout', { method: 'POST' }),

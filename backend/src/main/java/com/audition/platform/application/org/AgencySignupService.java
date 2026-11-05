@@ -35,18 +35,26 @@ public class AgencySignupService {
         }
     }
 
-    public void openApplication(User user, String requestedRole, String countryCode, String legalName) {
+    public void openApplication(User user, String requestedRole, AgencySignupProfile profile) {
         if (!"AGENCY".equals(requestedRole)) {
             return;
         }
-        String country = CountryCodes.iso2(countryCode);
+        AgencySignupProfile safe = profile == null
+                ? AgencySignupProfile.fromSignup(null, null, null, null, null, null, null, null, null, null, null, null, null, null)
+                : profile;
+        String country = CountryCodes.iso2(safe.countryCode());
         UUID id = UUID.randomUUID();
-        String legal = legalName == null || legalName.isBlank() ? null : legalName.trim();
-        String display = legal != null ? legal : user.getNickname();
+        String legal = safe.legalName();
+        String display = safe.companyName() != null ? safe.companyName()
+                : (legal != null ? legal : user.getNickname());
+        String contactName = safe.representativeName() != null ? safe.representativeName() : user.getNickname();
+        String contactEmail = safe.contactEmail() != null ? safe.contactEmail() : user.getEmail();
         crm.insertAgency(new JdbcCrmStore.AgencyRow(
-                id, country, display, legal, null,
-                user.getNickname(), user.getEmail(), null, null,
-                null, "LEAD", AgencyApproval.PENDING, user.getId(), NOTE));
+                id, country, display, legal, safe.businessRegistrationNumber(),
+                contactName, contactEmail, safe.contactPhone(), safe.website(),
+                null, "LEAD", AgencyApproval.PENDING, user.getId(), NOTE,
+                safe.businessCity(), safe.taxId(), safe.businessAddress(),
+                safe.establishedYear(), safe.businessLicenseDocumentUrl()));
         crm.stageEvent(UUID.randomUUID(), id, null, "LEAD", user.getId(), "SIGNUP");
         crm.approvalEvent(UUID.randomUUID(), id, null, AgencyApproval.PENDING, "REGISTER", user.getId(), null);
     }

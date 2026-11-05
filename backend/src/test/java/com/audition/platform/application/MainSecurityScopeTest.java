@@ -70,7 +70,7 @@ class MainSecurityScopeTest {
         org.mockito.Mockito.verify(users).save(org.mockito.ArgumentMatchers.argThat(user ->
                 "APPLICANT".equals(user.getRole()) && "AGENCY".equals(user.getSignupIntent())));
         org.mockito.Mockito.verify(agencySignup).openApplication(any(User.class), org.mockito.ArgumentMatchers.eq("AGENCY"),
-                org.mockito.ArgumentMatchers.eq("KR"), any());
+                any());
     }
 
     @Test

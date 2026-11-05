@@ -6,6 +6,7 @@ import com.audition.platform.api.dto.LoginRequest;
 import com.audition.platform.api.dto.SignupRequest;
 import com.audition.platform.application.me.MeApiMapping;
 import com.audition.platform.application.credit.CreditService;
+import com.audition.platform.application.org.AgencySignupProfile;
 import com.audition.platform.application.org.AgencySignupService;
 import com.audition.platform.application.recovery.AuthRecoveryService;
 import com.audition.platform.application.user.UserNicknameService;
@@ -78,7 +79,21 @@ public class AuthService {
             user.setName(req.getName().trim());
         }
         user = userRepository.save(user);
-        agencySignupService.openApplication(user, requested, req.getCountryCode(), req.getName());
+        agencySignupService.openApplication(user, requested, AgencySignupProfile.fromSignup(
+                req.getCountryCode(),
+                req.getCompanyName(),
+                req.getLegalName(),
+                req.getName(),
+                req.getBusinessRegistrationNumber(),
+                req.getRepresentativeName(),
+                req.getContactEmail(),
+                req.getContactPhone(),
+                req.getWebsite(),
+                req.getBusinessCity(),
+                req.getTaxId(),
+                req.getBusinessAddress(),
+                req.getEstablishedYear(),
+                req.getBusinessLicenseDocumentUrl()));
         creditService.grantSignupRewardIfEnabled(user.getId());
         String recoveryCode = authRecoveryService.issueNewCode(user);
         String token = jwtService.createToken(user.getId(), user.getEmail(), user.getRole());

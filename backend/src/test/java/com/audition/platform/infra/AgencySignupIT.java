@@ -174,6 +174,53 @@ class AgencySignupIT {
         mvc.perform(get(AGENCY_API).header("Authorization", targetToken)).andExpect(status().isForbidden());
     }
 
+
+    @Test
+    void agencySignupPersistsCompanyRegistrationAndContact() throws Exception {
+        jdbc.update("INSERT INTO countries (code, name, status, default_currency) VALUES ('ZR', 'Test ZR', 'ACTIVE', 'USD') "
+                + "ON CONFLICT (code) DO NOTHING");
+        String nick = nick();
+        String body = mvc.perform(post("/api/auth/signup").contentType(APPLICATION_JSON)
+                        .content("{"
+                                + "\"email\":\"" + nick + "@local.test\","
+                                + "\"password\":\"Localtest1!\","
+                                + "\"role\":\"AGENCY\","
+                                + "\"nickname\":\"" + nick + "\","
+                                + "\"countryCode\":\"ZR\","
+                                + "\"companyName\":\"GLOBAL TEST AGENCY\","
+                                + "\"legalName\":\"Global Test Agency Co.\","
+                                + "\"businessRegistrationNumber\":\"123-45-67890\","
+                                + "\"representativeName\":\"Hong Gildong\","
+                                + "\"contactPhone\":\"010-1234-5678\","
+                                + "\"businessCity\":\"Seoul\","
+                                + "\"website\":\"https://example.com\","
+                                + "\"taxId\":\"TAX-1\","
+                                + "\"businessAddress\":\"123 Road\","
+                                + "\"establishedYear\":2012"
+                                + "}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.role").value("APPLICANT"))
+                .andExpect(jsonPath("$.signupIntent").value("AGENCY"))
+                .andReturn().getResponse().getContentAsString();
+        UUID id = UUID.fromString(json.readTree(body).get("userId").asText());
+        var row = jdbc.queryForMap("""
+                SELECT display_name, legal_name, business_registration, contact_name, contact_phone,
+                       city, tax_id, business_address, established_year, website, notes
+                FROM crm_agencies WHERE linked_user_id = ?
+                """, id);
+        assertEquals("GLOBAL TEST AGENCY", row.get("display_name"));
+        assertEquals("Global Test Agency Co.", row.get("legal_name"));
+        assertEquals("123-45-67890", row.get("business_registration"));
+        assertEquals("Hong Gildong", row.get("contact_name"));
+        assertEquals("010-1234-5678", row.get("contact_phone"));
+        assertEquals("Seoul", row.get("city"));
+        assertEquals("TAX-1", row.get("tax_id"));
+        assertEquals("123 Road", row.get("business_address"));
+        assertEquals(2012, ((Number) row.get("established_year")).intValue());
+        assertEquals("https://example.com", row.get("website"));
+        assertEquals("SIGNUP", row.get("notes"));
+    }
+
     private org.springframework.test.web.servlet.RequestBuilder signup(String nick, String role) {
         return post("/api/auth/signup").contentType(APPLICATION_JSON)
                 .content("{\"email\":\"" + nick + "@local.test\",\"password\":\"Localtest1!\",\"role\":\"" + role
