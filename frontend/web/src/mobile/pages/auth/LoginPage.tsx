@@ -8,6 +8,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { z } from 'zod'
 import { useTranslations } from 'next-intl'
 import { authApi } from '@/shared/api/auth'
+import { useLoginSubmitGuard } from '@/shared/auth/loginSubmitGuard'
 import { isAdminConsolePath, pathAfterLogin } from '@/shared/auth/roleHome'
 
 function createMobileLoginSchema(emailInvalid: string, passwordRequired: string) {
@@ -26,6 +27,7 @@ export default function MobileLoginPage() {
   const tValidation = useTranslations('validation')
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const submitGuard = useLoginSubmitGuard()
 
   const {
     register,
@@ -36,6 +38,7 @@ export default function MobileLoginPage() {
   })
 
   const onSubmit = async (data: LoginFormData) => {
+    if (!submitGuard.tryBegin()) return
     setIsLoading(true)
     setError(null)
     try {
@@ -47,6 +50,7 @@ export default function MobileLoginPage() {
       if (!response || !token) {
         setError(t('loginInvalidResponse'))
         setIsLoading(false)
+        submitGuard.end()
         return
       }
 
@@ -55,13 +59,15 @@ export default function MobileLoginPage() {
       if (!savedToken) {
         setError(t('tokenSaveFailed'))
         setIsLoading(false)
+        submitGuard.end()
         return
       }
 
       queryClient.invalidateQueries({ queryKey: ['currentUser'] })
       queryClient.invalidateQueries({ queryKey: ['currentUser', savedToken] })
 
-      await new Promise((resolve) => setTimeout(resolve, 300))
+      // 고정 지연 대신 세션 확정(/auth/me 200) 후 이동
+      await authApi.me()
 
       const home = pathAfterLogin(userRole)
       if (isAdminConsolePath(home)) {
@@ -78,6 +84,7 @@ export default function MobileLoginPage() {
       const errorMessage = ax.response?.data?.message || ax.message || t('loginFailed')
       setError(errorMessage)
       setIsLoading(false)
+      submitGuard.end()
     }
   }
 
@@ -86,7 +93,7 @@ export default function MobileLoginPage() {
       <div className="w-full max-w-md">
         <h1 className="mb-8 text-center text-3xl font-bold">{t('loginTitle')}</h1>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form method="post" onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {error && (
             <div className="rounded border border-red-200 bg-red-50 px-4 py-3 text-red-700">
               {error}
@@ -123,7 +130,7 @@ export default function MobileLoginPage() {
 
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={!submitGuard.hydrated || isLoading}
             className="bg-primary-600 hover:bg-primary-700 w-full rounded-lg px-6 py-3 text-white disabled:opacity-50"
           >
             {isLoading ? t('loggingIn') : t('loginButton')}

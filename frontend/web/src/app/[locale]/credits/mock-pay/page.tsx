@@ -71,7 +71,7 @@ function MockPayContent() {
     return () => {
       c = true
     }
-  }, [router, orderNo])
+  }, [router, orderNo, t])
 
   const onSuccess = async () => {
     if (!orderNo || isCallbackLocked || callbackInFlightRef.current) return

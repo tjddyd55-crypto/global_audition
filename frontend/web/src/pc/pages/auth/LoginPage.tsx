@@ -8,6 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useQueryClient } from '@tanstack/react-query'
 import { authApi } from '@/shared/api/auth'
+import { useLoginSubmitGuard } from '@/shared/auth/loginSubmitGuard'
 import { isAdminConsolePath, pathAfterLogin } from '@/shared/auth/roleHome'
 import { useLocale, useTranslations } from 'next-intl'
 import { Link } from '@/i18n.config'
@@ -35,6 +36,7 @@ export default function PcLoginPage() {
   const tValidation = useTranslations('validation')
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const submitGuard = useLoginSubmitGuard()
   const [socialMessage, setSocialMessage] = useState<string | null>(null)
 
   const {
@@ -46,6 +48,7 @@ export default function PcLoginPage() {
   })
 
   const onSubmit = async (data: LoginFormData) => {
+    if (!submitGuard.tryBegin()) return
     setIsLoading(true)
     setSocialMessage(null)
     setError(null)
@@ -56,6 +59,7 @@ export default function PcLoginPage() {
       if (!response || !token) {
         setError(t('loginInvalidResponse'))
         setIsLoading(false)
+        submitGuard.end()
         return
       }
 
@@ -63,13 +67,15 @@ export default function PcLoginPage() {
       if (!savedToken) {
         setError(t('tokenSaveFailed'))
         setIsLoading(false)
+        submitGuard.end()
         return
       }
 
       queryClient.invalidateQueries({ queryKey: ['currentUser'] })
       queryClient.invalidateQueries({ queryKey: ['currentUser', savedToken] })
 
-      await new Promise(resolve => setTimeout(resolve, 300))
+      // 고정 지연 대신 세션 확정(/auth/me 200) 후 이동
+      await authApi.me()
 
       const nextRaw = searchParams.get('next')
       const path =
@@ -96,6 +102,7 @@ export default function PcLoginPage() {
       }
 
       setIsLoading(false)
+      submitGuard.end()
     }
   }
 
@@ -114,7 +121,7 @@ export default function PcLoginPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form method="post" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-1.5">
           <label htmlFor="email" className="text-sm font-medium text-gray-700">
             {t('email')}
@@ -147,7 +154,7 @@ export default function PcLoginPage() {
 
         <button
           type="submit"
-          disabled={isLoading}
+          disabled={!submitGuard.hydrated || isLoading}
           className="w-full rounded-md bg-gradient-to-r from-purple-500 to-pink-500 py-2 font-medium text-white transition hover:opacity-95 disabled:opacity-60"
         >
           {isLoading ? t('processing') : t('loginButton')}
