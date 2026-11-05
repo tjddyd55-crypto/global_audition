@@ -31,16 +31,12 @@ public class RoundNotificationService {
 
     @Transactional
     public void logPassNotice(Application application, AuditionRound round) {
-        save(application, round, "PASS_NOTICE", Map.of(
-                "title", "라운드 합격 안내",
-                "body", "축하합니다. 다음 라운드 안내를 확인해 주세요."));
+        save(application, round, "PASS_NOTICE", multiStagePayload("multiStagePassBody"));
     }
 
     @Transactional
     public void logFailNotice(Application application, AuditionRound round) {
-        save(application, round, "FAIL_NOTICE", Map.of(
-                "title", "라운드 결과 안내",
-                "body", "아쉽게도 이번 라운드에서는 진행이 어렵습니다."));
+        save(application, round, "FAIL_NOTICE", multiStagePayload("multiStageFailBody"));
     }
 
     /**
@@ -71,9 +67,11 @@ public class RoundNotificationService {
         n.setNotificationType("ROUND_OPEN");
         n.setChannel("IN_APP");
         n.setStatus("PENDING");
-        n.setPayloadJson(Map.of(
-                "title", round.getRoundName() + " 오픈",
-                "body", round.getAnnouncementBody() != null ? round.getAnnouncementBody() : ""));
+        Map<String, Object> openPayload = new LinkedHashMap<>();
+        openPayload.put("titleKey", "multiStageResultTitle");
+        openPayload.put("title", round.getRoundName() + " 오픈");
+        openPayload.put("body", round.getAnnouncementBody() != null ? round.getAnnouncementBody() : "");
+        n.setPayloadJson(openPayload);
         notificationRepository.save(n);
     }
 
@@ -105,10 +103,18 @@ public class RoundNotificationService {
         return notice;
     }
 
+    private static Map<String, Object> multiStagePayload(String bodyKey) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("titleKey", "multiStageResultTitle");
+        payload.put("bodyKey", bodyKey);
+        return payload;
+    }
+
     private static Map<String, Object> singleStagePayload(boolean passed) {
         Map<String, Object> payload = new LinkedHashMap<>();
-        payload.put("titleKey", passed ? "singleStagePassTitle" : "singleStageFailTitle");
+        payload.put("titleKey", "singleStageResultTitle");
         payload.put("bodyKey", passed ? "singleStagePassBody" : "singleStageFailBody");
+        payload.put("resultKey", passed ? "singleStagePassTitle" : "singleStageFailTitle");
         payload.put("result", passed ? "ACCEPTED" : "REJECTED");
         return payload;
     }

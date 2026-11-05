@@ -22,6 +22,7 @@ import { SingleImageUploadField } from '@/components/audition/AuditionEditorImag
 import { ImageUploader } from '@/components/common/ImageUploader'
 import { editorStatusMessageKey } from '@/shared/audition/auditionEditorCopy'
 import { normalizeCustomTagNamesForPayload } from '@/shared/audition/auditionTags'
+import { auditionEditSource } from '@/shared/audition/auditionEditSource'
 import { AuditionTranslationPanel } from '@/components/audition/AuditionTranslationPanel'
 import {
   AUDITION_TARGET_COUNTRIES,
@@ -190,25 +191,26 @@ const textareaStyle: React.CSSProperties = {
 
 function applyInitial(a: AuditionDto) {
   const im = a.images
+  const source = auditionEditSource(a)
   const images: AuditionFormImages = {
     original: im?.original ?? '',
     medium: im?.medium ?? '',
     thumb: im?.thumb ?? '',
   }
   return {
-    title: a.title ?? '',
-    description: a.description ?? '',
+    title: source.title ?? '',
+    description: source.description ?? '',
     status: (a.status as AuditionStatus) || 'DRAFT',
     images,
     videoUrl: a.videoUrl ?? '',
     galleryImages: [...(a.galleryImages ?? [])],
-    agencyName: a.agencyName ?? '',
+    agencyName: source.agencyName ?? '',
     agencyLogo: a.agencyLogo ?? '',
-    recruitFields: (a.recruitFields ?? []).map((v) => toRecruitFieldCode(v) ?? v),
-    qualifications: [...(a.qualifications ?? [])],
-    schedules: [...(a.schedules ?? [])],
-    benefits: [...(a.benefits ?? [])],
-    location: a.location ?? '',
+    recruitFields: (source.recruitFields ?? []).map((v) => toRecruitFieldCode(v) ?? v),
+    qualifications: [...(source.qualifications ?? [])],
+    schedules: [...(source.schedules ?? [])],
+    benefits: [...(source.benefits ?? [])],
+    location: source.location ?? '',
     startDate: isoToDatetimeLocalValue(a.startDate ?? ''),
     endDate: isoToDatetimeLocalValue(a.endDate ?? ''),
     countryCode: normalizeTargetCountry(a.countryCode),

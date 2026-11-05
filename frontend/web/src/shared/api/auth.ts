@@ -9,6 +9,8 @@ export interface SignupRequest {
   nickname: string
   name?: string | null
   countryCode?: string | null
+  /** IANA 시간대. UI 언어와 무관하다. */
+  timezone?: string | null
   companyName?: string | null
   legalName?: string | null
   businessRegistrationNumber?: string | null
@@ -48,6 +50,8 @@ export interface AuthMeResponse {
   name?: string | null
   displayName?: string | null
   profileImageUrl?: string | null
+  countryCode?: string | null
+  timezone?: string | null
 }
 
 /**
@@ -95,6 +99,8 @@ export const authApi = {
       displayName?: string | null
       role: string
       profileImageUrl?: string | null
+      countryCode?: string | null
+      timezone?: string | null
     }>(data)
     return {
       userId: raw.id,
@@ -103,6 +109,8 @@ export const authApi = {
       name: raw.name ?? null,
       displayName: raw.displayName ?? null,
       profileImageUrl: raw.profileImageUrl ?? null,
+      countryCode: raw.countryCode ?? null,
+      timezone: raw.timezone ?? null,
       role: (raw.role === 'USER' ? 'APPLICANT' : raw.role) as AuthMeResponse['role'],
     }
   },

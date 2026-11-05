@@ -18,6 +18,7 @@ type SignupInput = {
   representativeName?: string
   contactPhone?: string
   businessCity?: string
+  timezone?: string
 }
 
 type AuthContextValue = {

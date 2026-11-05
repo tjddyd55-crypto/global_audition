@@ -54,7 +54,7 @@ class RoundNotificationServiceTest {
         assertEquals("PASS_NOTICE", notice.getNotificationType());
         assertEquals("IN_APP", notice.getChannel());
         assertEquals("applicant@example.com", notice.getTargetEmail());
-        assertEquals("singleStagePassTitle", notice.getPayloadJson().get("titleKey"));
+        assertEquals("singleStageResultTitle", notice.getPayloadJson().get("titleKey"));
         assertEquals("singleStagePassBody", notice.getPayloadJson().get("bodyKey"));
         assertEquals("ACCEPTED", notice.getPayloadJson().get("result"));
     }

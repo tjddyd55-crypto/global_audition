@@ -9,6 +9,7 @@ import com.audition.platform.application.credit.CreditService;
 import com.audition.platform.application.org.AgencySignupProfile;
 import com.audition.platform.application.org.AgencySignupService;
 import com.audition.platform.application.recovery.AuthRecoveryService;
+import com.audition.platform.application.user.ApplicantSignupProfileService;
 import com.audition.platform.application.user.UserNicknameService;
 import com.audition.platform.domain.user.User;
 import com.audition.platform.domain.user.UserRepository;
@@ -36,6 +37,7 @@ public class AuthService {
     private final AuthRecoveryService authRecoveryService;
     private final CreditService creditService;
     private final AgencySignupService agencySignupService;
+    private final ApplicantSignupProfileService applicantSignupProfileService;
 
     public AuthService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
@@ -43,7 +45,8 @@ public class AuthService {
                        UserNicknameService userNicknameService,
                        AuthRecoveryService authRecoveryService,
                        CreditService creditService,
-                       AgencySignupService agencySignupService) {
+                       AgencySignupService agencySignupService,
+                       ApplicantSignupProfileService applicantSignupProfileService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
@@ -51,6 +54,7 @@ public class AuthService {
         this.authRecoveryService = authRecoveryService;
         this.creditService = creditService;
         this.agencySignupService = agencySignupService;
+        this.applicantSignupProfileService = applicantSignupProfileService;
     }
 
     @Transactional
@@ -78,6 +82,7 @@ public class AuthService {
         if (req.getName() != null && !req.getName().isBlank()) {
             user.setName(req.getName().trim());
         }
+        applicantSignupProfileService.apply(user, requested, req.getCountryCode(), req.getTimezone());
         user = userRepository.save(user);
         agencySignupService.openApplication(user, requested, AgencySignupProfile.fromSignup(
                 req.getCountryCode(),
@@ -153,6 +158,8 @@ public class AuthService {
         d.setDisplayName(user.getPublicDisplayLabel());
         d.setRole(MeApiMapping.userRoleToApi(user.getRole()));
         d.setProfileImageUrl(user.getProfileImageUrl());
+        d.setCountryCode(user.getCountryCode());
+        d.setTimezone(user.getTimezone());
         return d;
     }
 

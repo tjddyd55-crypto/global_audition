@@ -20,6 +20,12 @@ export const getAuditionPreview = async (id: string, locale: string): Promise<Au
   return parseAuditionDto(data ?? {})
 }
 
+/** 소유자 편집용. 공개 상세와 쿼리 키를 나누고, 로케일 오버레이를 적용하지 않는다. */
+export const getAuditionOriginal = async (id: string): Promise<AuditionDto> => {
+  const { data } = await apiClient.get<Record<string, unknown>>(`/auditions/${encodeURIComponent(id)}/original`)
+  return parseAuditionDto(data ?? {})
+}
+
 export const getAuditionById = async (id: string, locale?: string): Promise<AuditionDto> => {
   const { data } = await apiClient.get<Record<string, unknown>>(`/auditions/${id}`, {
     params: { locale },

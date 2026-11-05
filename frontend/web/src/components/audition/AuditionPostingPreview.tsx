@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { useLocale, useTranslations } from 'next-intl'
 import { recruitFieldLabels } from '@/shared/audition/recruitFields'
+import { displayAuditionTag } from '@/shared/audition/auditionTagLabels'
 import { auditionApi } from '@/shared/api/auditions'
 import { apiClient } from '@/shared/api/client'
 import { TranslationNotice } from '@/components/i18n/TranslatedField'
@@ -39,6 +40,7 @@ export function AuditionPostingPreview({ auditionId }: Props) {
   const tDetail = useTranslations('auditionDetail')
   const tStatus = useTranslations('status')
   const tRecruit = useTranslations('recruitField')
+  const tTag = useTranslations('auditionTag')
   const tLocale = useTranslations('locale')
   const uiLocale = useLocale()
   const [locale, setLocale] = useState('en')
@@ -137,7 +139,9 @@ export function AuditionPostingPreview({ auditionId }: Props) {
             title={auditionHeadlineTitle(audition)}
             status={String(audition.status)}
             statusPillText={roundStatusLabel(audition.status, audition.round, tStatus)}
-            tags={safeArr(audition.tags)}
+            tags={safeArr(audition.tags).map((tag) =>
+              displayAuditionTag(safeStr(tag), (key) => tTag(key), engine.data?.fields, showOriginal),
+            )}
             endDateFormatted={fmt(safeStr(audition.endDate))}
             location={safeStr(audition.location)}
             subtitle={safeStr(audition.description).split('\n').find((line) => line.trim()) ?? ''}

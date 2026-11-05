@@ -86,19 +86,20 @@ class SingleStageResultNotificationIT {
         assertEquals(1L, noticeCount(applicationId));
         assertEquals("PASS_NOTICE", noticeType(applicationId, "PASS_NOTICE"));
         assertNull(roundId(applicationId, "PASS_NOTICE"));
-        assertTrue(payload(applicationId, "PASS_NOTICE").contains("singleStagePassTitle"));
+        assertTrue(payload(applicationId, "PASS_NOTICE").contains("singleStageResultTitle"));
         assertTrue(payload(applicationId, "PASS_NOTICE").contains("singleStagePassBody"));
 
         statusService.patchApplicationStatus(applicationId, "REJECTED");
         statusService.patchApplicationStatus(applicationId, "REJECTED");
         assertEquals(2L, noticeCount(applicationId));
-        assertTrue(payload(applicationId, "FAIL_NOTICE").contains("singleStageFailTitle"));
+        assertTrue(payload(applicationId, "FAIL_NOTICE").contains("singleStageResultTitle"));
+        assertTrue(payload(applicationId, "FAIL_NOTICE").contains("singleStageFailBody"));
 
         asUser(applicant, "APPLICANT");
         List<MeNotificationItemResponse> inbox = notifications.listMine();
         assertEquals(2, inbox.size());
         assertTrue(inbox.stream().allMatch(item -> applicationId.toString().equals(item.getApplicationId())));
-        assertTrue(inbox.stream().anyMatch(item -> "singleStagePassTitle".equals(item.getTitleKey())));
+        assertTrue(inbox.stream().anyMatch(item -> "singleStageResultTitle".equals(item.getTitleKey())));
         assertTrue(inbox.stream().anyMatch(item -> "singleStageFailBody".equals(item.getBodyKey())));
 
         UUID noticeId = UUID.fromString(inbox.get(0).getId());

@@ -112,6 +112,13 @@ public class AuditionResponse {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String translationOrigin;
 
+    /** 저장된 원문. 표시용 title 과 별개이며 로케일 오버레이로 바뀌지 않는다. */
+    private AuditionTextSnapshot originalContent;
+
+    /** 선택 로케일 번역. 원문을 보여 주거나 번역이 없으면 null. */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private AuditionTextSnapshot translationContent;
+
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
     public UUID getOwnerId() { return ownerId; }
@@ -308,4 +315,9 @@ public class AuditionResponse {
     public void setTranslationErrorCode(String translationErrorCode) { this.translationErrorCode = translationErrorCode; }
     public String getTranslationOrigin() { return translationOrigin; }
     public void setTranslationOrigin(String translationOrigin) { this.translationOrigin = translationOrigin; }
+
+    public AuditionTextSnapshot getOriginalContent() { return originalContent; }
+    public void setOriginalContent(AuditionTextSnapshot originalContent) { this.originalContent = originalContent; }
+    public AuditionTextSnapshot getTranslationContent() { return translationContent; }
+    public void setTranslationContent(AuditionTextSnapshot translationContent) { this.translationContent = translationContent; }
 }

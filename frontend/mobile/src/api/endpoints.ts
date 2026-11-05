@@ -58,6 +58,7 @@ export const authApi = {
     representativeName?: string
     contactPhone?: string
     businessCity?: string
+    timezone?: string
   }) =>
     apiRequest<AuthResponse>('/auth/signup', { method: 'POST', body, auth: false }),
   me: async (): Promise<AuthMe> => parseAuthMe(unwrapData(await apiRequest<unknown>('/auth/me'))),

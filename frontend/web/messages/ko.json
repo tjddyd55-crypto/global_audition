@@ -1066,7 +1066,12 @@
     "singleStagePassTitle": "합격 안내",
     "singleStagePassBody": "축하합니다. 이 오디션에 합격했습니다. 다음 안내는 기획사 공지를 확인해 주세요.",
     "singleStageFailTitle": "결과 안내",
-    "singleStageFailBody": "이번에는 함께하지 못하게 되었습니다. 다음 기회에서 다시 만나요."
+    "singleStageFailBody": "이번에는 함께하지 못하게 되었습니다. 다음 기회에서 다시 만나요.",
+    "singleStageResultTitle": "심사 결과 알림",
+    "multiStageResultTitle": "회차별 심사 알림",
+    "multiStagePassBody": "축하합니다. 이번 회차 심사를 통과했습니다. 다음 회차 안내를 확인해 주세요.",
+    "multiStageFailBody": "이번에는 이번 회차에서 함께하지 못했습니다.",
+    "multiStageOpenBody": "다음 회차 심사가 열리면 안내합니다."
   },
   "vault": {
     "title": "창작물 보관소",
@@ -1486,7 +1491,7 @@
     "policy": "사용 순서",
     "policyFreeFirst": "무료 크레딧을 먼저 쓰고, 그다음 유료 크레딧을 씁니다.",
     "buyCredits": "크레딧 스토어",
-    "notificationsHint": "내 계정에 기록된 라운드 알림입니다.",
+    "notificationsHint": "단일 심사는 심사 결과 알림, 여러 회차는 회차별 심사 알림으로 보여 줍니다.",
     "settingsHint": "이메일은 계정 주소입니다. 비밀번호는 현재 비밀번호로 바꿉니다.",
     "email": "이메일",
     "currentPassword": "현재 비밀번호",
@@ -1577,6 +1582,13 @@
     "ACTING": "연기",
     "MODEL": "모델",
     "TEAM": "팀"
+  },
+  "auditionTag": {
+    "VOCAL": "보컬",
+    "DANCE": "댄서",
+    "TEAM": "팀",
+    "ACTING": "배우",
+    "MODEL": "모델"
   },
   "mockPay": {
     "orderNo": "주문번호 {v}",

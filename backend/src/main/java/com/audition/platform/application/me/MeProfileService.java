@@ -191,6 +191,8 @@ public class MeProfileService {
             d.setUrl(l.getUrl());
             return d;
         }).collect(Collectors.toList()));
+        r.setCountryCode(user.getCountryCode());
+        r.setTimezone(user.getTimezone());
         return r;
     }
 

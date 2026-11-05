@@ -48,6 +48,7 @@ public class MeNotificationService {
                        n.channel,
                        n.created_at,
                        n.read_at,
+                       n.round_id::text AS round_id,
                        n.payload_json::text AS payload
                 FROM audition_round_notifications n
                 LEFT JOIN applications a ON a.id = n.application_id
@@ -128,6 +129,7 @@ public class MeNotificationService {
         item.setBody(NotificationPayloadText.text(payload, "body"));
         item.setTitleKey(NotificationPayloadText.text(payload, "titleKey"));
         item.setBodyKey(NotificationPayloadText.text(payload, "bodyKey"));
+        item.setRoundId(rs.getString("round_id"));
         return item;
     }
 }

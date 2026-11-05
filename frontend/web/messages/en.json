@@ -1066,7 +1066,12 @@
     "singleStagePassTitle": "Acceptance notice",
     "singleStagePassBody": "Congratulations. You passed this audition. Check the agency notice for what happens next.",
     "singleStageFailTitle": "Result notice",
-    "singleStageFailBody": "You were not selected this time. We hope to see you at the next audition."
+    "singleStageFailBody": "You were not selected this time. We hope to see you at the next audition.",
+    "singleStageResultTitle": "Audition result notice",
+    "multiStageResultTitle": "Per-round review notice",
+    "multiStagePassBody": "You passed this round. Check the notice for the next round.",
+    "multiStageFailBody": "You were not selected for this round.",
+    "multiStageOpenBody": "We will tell you when the next round opens."
   },
   "vault": {
     "title": "Creative vault",
@@ -1486,7 +1491,7 @@
     "policy": "Use order",
     "policyFreeFirst": "Free credits first, then paid credits.",
     "buyCredits": "Credit store",
-    "notificationsHint": "Round notices recorded for your account.",
+    "notificationsHint": "A single review is an audition result notice. A multi-stage review is a per-round notice.",
     "settingsHint": "Email stays the account address. The password change uses your current password.",
     "email": "Email",
     "currentPassword": "Current password",
@@ -1577,6 +1582,13 @@
     "ACTING": "Acting",
     "MODEL": "Model",
     "TEAM": "Team"
+  },
+  "auditionTag": {
+    "VOCAL": "Vocal",
+    "DANCE": "Dancer",
+    "TEAM": "Team",
+    "ACTING": "Actor",
+    "MODEL": "Model"
   },
   "mockPay": {
     "orderNo": "Order no. {v}",

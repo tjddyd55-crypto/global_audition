@@ -52,7 +52,8 @@ class AuthServiceTest {
         encoder = new BCryptPasswordEncoder();
         JwtService jwtService = new JwtService(TestJwtSecrets.ACCEPTABLE, 86_400_000L);
         authService = new AuthService(
-                userRepository, encoder, jwtService, userNicknameService, authRecoveryService, creditService, agencySignupService);
+                userRepository, encoder, jwtService, userNicknameService, authRecoveryService, creditService, agencySignupService,
+                mock(com.audition.platform.application.user.ApplicantSignupProfileService.class));
         when(userRepository.existsByUsername(any())).thenReturn(false);
         when(userRepository.save(any(User.class))).thenAnswer(inv -> {
             User user = inv.getArgument(0);

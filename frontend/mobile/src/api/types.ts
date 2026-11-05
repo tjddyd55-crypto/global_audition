@@ -289,6 +289,7 @@ export type MeNotificationItem = {
   body: string
   titleKey?: string | null
   bodyKey?: string | null
+  roundId?: string | null
   createdAt?: string | null
   readAt?: string | null
   auditionId?: string | null
