@@ -10,6 +10,7 @@ import com.audition.platform.api.dto.ManageApplicationsPageDataDto;
 import com.audition.platform.api.dto.CreateApplicationRequest;
 import com.audition.platform.application.me.MeApiMapping;
 import com.audition.platform.application.ranking.ApplicationRankingService;
+import com.audition.platform.application.round.RoundNotificationService;
 import com.audition.platform.domain.audition.Application;
 import com.audition.platform.domain.audition.ApplicationRepository;
 import com.audition.platform.domain.audition.ApplicationStatusHistory;
@@ -47,6 +48,7 @@ public class ApplicationService {
     private final ApplicationVideoRepository applicationVideoRepository;
     private final ApplicationSnsLinkRepository applicationSnsLinkRepository;
     private final ApplicationStatusHistoryRepository applicationStatusHistoryRepository;
+    private final RoundNotificationService roundNotificationService;
 
     public ApplicationService(
             ApplicationRepository applicationRepository,
@@ -55,7 +57,8 @@ public class ApplicationService {
             ApplicationRankingService applicationRankingService,
             ApplicationVideoRepository applicationVideoRepository,
             ApplicationSnsLinkRepository applicationSnsLinkRepository,
-            ApplicationStatusHistoryRepository applicationStatusHistoryRepository) {
+            ApplicationStatusHistoryRepository applicationStatusHistoryRepository,
+            RoundNotificationService roundNotificationService) {
         this.applicationRepository = applicationRepository;
         this.auditionRepository = auditionRepository;
         this.userRepository = userRepository;
@@ -63,6 +66,7 @@ public class ApplicationService {
         this.applicationVideoRepository = applicationVideoRepository;
         this.applicationSnsLinkRepository = applicationSnsLinkRepository;
         this.applicationStatusHistoryRepository = applicationStatusHistoryRepository;
+        this.roundNotificationService = roundNotificationService;
     }
 
     private void recordApplicationStatusChange(
@@ -205,6 +209,7 @@ public class ApplicationService {
         app = applicationRepository.save(app);
         recordApplicationStatusChange(applicationId, previousDb, dbTarget, currentUserId);
         applicationRankingService.recalculateScores(app.getAuditionId());
+        roundNotificationService.logSingleStageDecision(app, audition, dbTarget);
         return new ApplicationStatusPatchDataDto(
                 app.getId().toString(),
                 MeApiMapping.agencyBoardStatusToApi(app.getStatus())
@@ -307,6 +312,7 @@ public class ApplicationService {
         app = applicationRepository.save(app);
         recordApplicationStatusChange(applicationId, previousDb, newStatus, currentUserId);
         applicationRankingService.recalculateScores(app.getAuditionId());
+        roundNotificationService.logSingleStageDecision(app, audition, newStatus);
         User applicant = userRepository.findById(app.getApplicantId()).orElse(null);
         return toResponse(app, applicant);
     }

@@ -126,6 +126,8 @@ public class MeNotificationService {
         String payload = rs.getString("payload");
         item.setTitle(NotificationPayloadText.text(payload, "title"));
         item.setBody(NotificationPayloadText.text(payload, "body"));
+        item.setTitleKey(NotificationPayloadText.text(payload, "titleKey"));
+        item.setBodyKey(NotificationPayloadText.text(payload, "bodyKey"));
         return item;
     }
 }

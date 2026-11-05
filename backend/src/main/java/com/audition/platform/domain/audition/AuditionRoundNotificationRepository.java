@@ -8,4 +8,7 @@ import java.util.UUID;
 public interface AuditionRoundNotificationRepository extends JpaRepository<AuditionRoundNotification, UUID> {
 
     List<AuditionRoundNotification> findByAuditionIdAndRoundIdOrderByCreatedAtDesc(UUID auditionId, UUID roundId);
+
+    boolean existsByApplicationIdAndNotificationTypeAndChannelAndRoundIdIsNull(
+            UUID applicationId, String notificationType, String channel);
 }

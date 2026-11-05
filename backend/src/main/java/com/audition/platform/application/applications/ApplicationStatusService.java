@@ -3,6 +3,7 @@ package com.audition.platform.application.applications;
 import com.audition.platform.api.dto.ApplicationStatusPatchDataDto;
 import com.audition.platform.application.me.MeApiMapping;
 import com.audition.platform.application.ranking.ApplicationRankingService;
+import com.audition.platform.application.round.RoundNotificationService;
 import com.audition.platform.domain.audition.Application;
 import com.audition.platform.domain.audition.ApplicationRepository;
 import com.audition.platform.domain.audition.ApplicationStatusHistory;
@@ -30,16 +31,19 @@ public class ApplicationStatusService {
     private final AuditionRepository auditionRepository;
     private final ApplicationStatusHistoryRepository applicationStatusHistoryRepository;
     private final ApplicationRankingService applicationRankingService;
+    private final RoundNotificationService roundNotificationService;
 
     public ApplicationStatusService(
             ApplicationRepository applicationRepository,
             AuditionRepository auditionRepository,
             ApplicationStatusHistoryRepository applicationStatusHistoryRepository,
-            ApplicationRankingService applicationRankingService) {
+            ApplicationRankingService applicationRankingService,
+            RoundNotificationService roundNotificationService) {
         this.applicationRepository = applicationRepository;
         this.auditionRepository = auditionRepository;
         this.applicationStatusHistoryRepository = applicationStatusHistoryRepository;
         this.applicationRankingService = applicationRankingService;
+        this.roundNotificationService = roundNotificationService;
     }
 
     @Transactional
@@ -71,6 +75,7 @@ public class ApplicationStatusService {
         app = applicationRepository.save(app);
         recordApplicationStatusChange(id, previousDb, dbTarget, currentUserId);
         applicationRankingService.recalculateScores(app.getAuditionId());
+        roundNotificationService.logSingleStageDecision(app, audition, dbTarget);
         return new ApplicationStatusPatchDataDto(
                 app.getId().toString(),
                 MeApiMapping.agencyBoardStatusToApi(app.getStatus())

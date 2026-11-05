@@ -867,6 +867,7 @@
   },
   "countries": {
     "KR": "South Korea",
+    "MN": "Mongolia",
     "US": "United States",
     "JP": "Japan",
     "CN": "China",
@@ -1061,7 +1062,11 @@
     "ROUND_OPEN": "We notify you when a round opens.",
     "PASS_NOTICE": "Round pass notice",
     "FAIL_NOTICE": "Round result notice",
-    "FINAL_NOTICE": "Final result notice"
+    "FINAL_NOTICE": "Final result notice",
+    "singleStagePassTitle": "Acceptance notice",
+    "singleStagePassBody": "Congratulations. You passed this audition. Check the agency notice for what happens next.",
+    "singleStageFailTitle": "Result notice",
+    "singleStageFailBody": "You were not selected this time. We hope to see you at the next audition."
   },
   "vault": {
     "title": "Creative vault",

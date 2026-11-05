@@ -7,6 +7,8 @@ export type StudioNotification = {
   status: string
   title: string
   body: string
+  titleKey?: string | null
+  bodyKey?: string | null
   createdAt: string | null
   readAt: string | null
   auditionId: string | null

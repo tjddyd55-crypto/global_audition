@@ -4,6 +4,7 @@ import { Button } from '../src/ui/Button'
 import { useTranslation } from 'react-i18next'
 import { notificationApi } from '../src/api/endpoints'
 import { queryKeys } from '../src/api/queryKeys'
+import { notificationCopy } from '../src/features/notifications/notificationCopy'
 import { Screen } from '../src/ui/Screen'
 import { colors, radius } from '../src/theme/tokens'
 
@@ -23,10 +24,12 @@ export default function NotificationsScreen() {
       <Text style={styles.body}>{t('studio.notificationsHint')}</Text>
       {query.isError ? <Text style={styles.body}>{t('notifications.loadFailed')}</Text> : null}
       {query.data && query.data.length === 0 ? <Text style={styles.body}>{t('notifications.empty')}</Text> : null}
-      {(query.data ?? []).map((item) => (
+      {(query.data ?? []).map((item) => {
+        const copy = notificationCopy(item, (key) => t(`notifications.${key}`))
+        return (
         <View key={item.id} style={styles.card}>
-          <Text style={styles.type}>{item.title || item.type}</Text>
-          {item.body ? <Text style={styles.body}>{item.body}</Text> : null}
+          <Text style={styles.type}>{copy.title}</Text>
+          {copy.body ? <Text style={styles.body}>{copy.body}</Text> : null}
           <Text style={styles.meta}>
             {item.type} · {item.status}
             {item.readAt ? ` · ${t('studio.read')}` : ''}
@@ -35,7 +38,8 @@ export default function NotificationsScreen() {
             <Button label={t('studio.markRead')} variant="secondary" onPress={() => markRead.mutate(item.id)} />
           ) : null}
         </View>
-      ))}
+        )
+      })}
     </Screen>
   )
 }
