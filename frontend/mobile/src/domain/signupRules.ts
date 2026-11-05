@@ -27,6 +27,13 @@ export type SignupDraft = {
   nickname: string
   role: 'APPLICANT' | 'AGENCY'
   name?: string
+  countryCode?: string
+  companyName?: string
+  legalName?: string
+  businessRegistrationNumber?: string
+  representativeName?: string
+  contactPhone?: string
+  businessCity?: string
 }
 
 export function validateSignupDraft(input: SignupDraft): string | null {

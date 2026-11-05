@@ -24,12 +24,14 @@ public class JdbcCrmStore {
                 INSERT INTO crm_agencies (
                     id, country_code, display_name, legal_name, business_registration,
                     contact_name, contact_email, contact_phone, website,
-                    assigned_staff_user_id, stage, approval_state, linked_user_id, notes
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    assigned_staff_user_id, stage, approval_state, linked_user_id, notes,
+                    city, tax_id, business_address, established_year, business_license_document_url
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 row.id(), row.countryCode(), row.displayName(), row.legalName(), row.businessRegistration(),
                 row.contactName(), row.contactEmail(), row.contactPhone(), row.website(),
-                row.assignedStaffUserId(), row.stage(), row.approvalState(), row.linkedUserId(), row.notes());
+                row.assignedStaffUserId(), row.stage(), row.approvalState(), row.linkedUserId(), row.notes(),
+                row.city(), row.taxId(), row.businessAddress(), row.establishedYear(), row.businessLicenseDocumentUrl());
     }
 
     public Optional<AgencyRow> find(UUID id) {
@@ -205,7 +207,12 @@ public class JdbcCrmStore {
                 rs.getString("stage"),
                 rs.getString("approval_state"),
                 rs.getObject("linked_user_id", UUID.class),
-                rs.getString("notes"));
+                rs.getString("notes"),
+                rs.getString("city"),
+                rs.getString("tax_id"),
+                rs.getString("business_address"),
+                rs.getObject("established_year", Integer.class),
+                rs.getString("business_license_document_url"));
     }
 
     public record ActivityCount(UUID actorId, String kind, long total) {
@@ -235,6 +242,11 @@ public class JdbcCrmStore {
             String stage,
             String approvalState,
             UUID linkedUserId,
-            String notes) {
+            String notes,
+            String city,
+            String taxId,
+            String businessAddress,
+            Integer establishedYear,
+            String businessLicenseDocumentUrl) {
     }
 }

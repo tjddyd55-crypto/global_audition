@@ -39,7 +39,8 @@ public class CrmService {
         AgencyRow row = new AgencyRow(
                 id, code, draft.displayName().trim(), draft.legalName(), draft.businessRegistration(),
                 draft.contactName(), draft.contactEmail(), draft.contactPhone(), draft.website(),
-                draft.assignedStaffUserId(), "LEAD", AgencyApproval.PENDING, draft.linkedUserId(), draft.notes());
+                draft.assignedStaffUserId(), "LEAD", AgencyApproval.PENDING, draft.linkedUserId(), draft.notes(),
+                null, null, null, null, null);
         crm.insertAgency(row);
         crm.stageEvent(UUID.randomUUID(), id, null, "LEAD", actor.id(), "REGISTERED");
         crm.approvalEvent(UUID.randomUUID(), id, null, AgencyApproval.PENDING, "REGISTER", actor.id(), null);
@@ -196,6 +197,8 @@ public class CrmService {
         AgencyRow row = rows.get(rows.size() - 1);
         return new AgencyApplicationView(
                 row.id(), row.countryCode(), row.displayName(), row.legalName(),
+                row.businessRegistration(), row.contactName(), row.contactEmail(), row.contactPhone(),
+                row.website(), row.city(),
                 row.stage(), row.approvalState(), row.notes(),
                 crm.latestReason(row.id(), AgencyApproval.SUPPLEMENT));
     }
@@ -225,6 +228,12 @@ public class CrmService {
             String countryCode,
             String displayName,
             String legalName,
+            String businessRegistration,
+            String contactName,
+            String contactEmail,
+            String contactPhone,
+            String website,
+            String city,
             String stage,
             String approvalState,
             String origin,

@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useQueryClient } from '@tanstack/react-query'
 import { z } from 'zod'
 import { authApi } from '@/shared/api/auth'
+import { buildAgencySignupPayload } from '@/shared/auth/buildAgencySignupPayload'
 import { RecoveryCodeNotice } from '@/components/auth/RecoveryCodeNotice'
 import { countries, languages, timezones } from '@/shared/utils/countries'
 import { createNicknameZodField } from '@/shared/user/nicknameZod'
@@ -185,14 +186,35 @@ export default function MobileRegisterPage() {
         }
       }
 
-      const response = await authApi.signup({
-        email: submitData.email,
-        password: submitData.password,
-        role: submitData.userType === 'BUSINESS' ? 'AGENCY' : 'APPLICANT',
-        nickname: submitData.nickname.trim(),
-        name: submitData.name?.trim() ? submitData.name.trim() : undefined,
-        countryCode: submitData.userType === 'BUSINESS' ? submitData.businessCountry : undefined,
-      })
+      const response = await authApi.signup(
+        submitData.userType === 'BUSINESS'
+          ? buildAgencySignupPayload({
+              email: submitData.email,
+              password: submitData.password,
+              nickname: submitData.nickname,
+              name: submitData.name,
+              countryCode: submitData.businessCountry,
+              companyName: submitData.companyName,
+              legalName: submitData.legalName,
+              businessRegistrationNumber: submitData.businessRegistrationNumber,
+              representativeName: submitData.representativeName,
+              contactEmail: submitData.contactEmail,
+              contactPhone: submitData.contactPhone,
+              website: submitData.website,
+              businessCity: submitData.businessCity,
+              taxId: submitData.taxId,
+              businessAddress: submitData.businessAddress,
+              establishedYear: submitData.establishedYear,
+              businessLicenseDocumentUrl: submitData.businessLicenseDocumentUrl,
+            })
+          : {
+              email: submitData.email,
+              password: submitData.password,
+              role: 'APPLICANT',
+              nickname: submitData.nickname.trim(),
+              name: submitData.name?.trim() ? submitData.name.trim() : undefined,
+            },
+      )
       queryClient.invalidateQueries({ queryKey: ['currentUser'] })
       if (response.recoveryCode) {
         setIssuedRole(response.signupIntent ?? 'APPLICANT')

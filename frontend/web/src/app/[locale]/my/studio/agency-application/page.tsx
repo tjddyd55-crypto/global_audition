@@ -14,6 +14,12 @@ type AgencyApplication = {
   countryCode: string
   displayName: string
   legalName: string | null
+  businessRegistration?: string | null
+  contactName?: string | null
+  contactEmail?: string | null
+  contactPhone?: string | null
+  website?: string | null
+  city?: string | null
   stage: string
   approvalState: string
   origin: string | null
@@ -47,6 +53,10 @@ export default function AgencyApplicationPage() {
             {query.data.displayName} · {query.data.countryCode} · {query.data.approvalState} · {query.data.stage}
           </p>
           <p className={`mt-2 ${TEXT_SUB}`}>{query.data.legalName || '—'}</p>
+          <p className={`mt-2 ${TEXT_SUB}`}>
+            {query.data.businessRegistration || '—'} · {query.data.contactPhone || '—'}
+            {query.data.city ? ` · ${query.data.city}` : ''}
+          </p>
           {query.data.origin === 'SIGNUP' ? <p className={`mt-2 ${TEXT_SUB}`}>{t('agencyApplication')}</p> : null}
           {query.data.supplementReason ? (
             <p className="mt-3 text-amber-800" data-testid="agency-supplement">

@@ -5,7 +5,20 @@ import type { AuthMe, UserRole } from '../api/types'
 import { ApiError } from '../api/http'
 import { clearSession, readSession, writeSession } from './secureSession'
 
-type SignupInput = { email: string; password: string; nickname: string; role: 'APPLICANT' | 'AGENCY'; name?: string }
+type SignupInput = {
+  email: string
+  password: string
+  nickname: string
+  role: 'APPLICANT' | 'AGENCY'
+  name?: string
+  countryCode?: string
+  companyName?: string
+  legalName?: string
+  businessRegistrationNumber?: string
+  representativeName?: string
+  contactPhone?: string
+  businessCity?: string
+}
 
 type AuthContextValue = {
   ready: boolean
