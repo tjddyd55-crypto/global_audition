@@ -1,5 +1,7 @@
 package com.audition.platform.application.audition;
 
+import com.audition.platform.application.org.AttributionPlanner;
+import com.audition.platform.application.org.AttributionService;
 import com.audition.platform.infra.JwtService;
 import com.audition.platform.infra.TestDatabase;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -13,6 +15,9 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
@@ -20,6 +25,8 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
+import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -27,7 +34,9 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -99,6 +108,34 @@ class PostingBranchAuditionIT {
                 WHERE content_id IN (SELECT id FROM auditions WHERE owner_id IN (SELECT id FROM users WHERE email LIKE ?))
                 """, "%" + MAIL);
         jdbc.update("""
+                DELETE FROM revenue_attributions
+                WHERE credit_transaction_id IN (
+                    SELECT id FROM credit_transactions
+                    WHERE user_id IN (SELECT id FROM users WHERE email LIKE ?)
+                )
+                """, "%" + MAIL);
+        jdbc.update("""
+                DELETE FROM credit_transactions
+                WHERE user_id IN (SELECT id FROM users WHERE email LIKE ?)
+                """, "%" + MAIL);
+        jdbc.update("""
+                DELETE FROM contract_versions
+                WHERE contract_id IN (
+                    SELECT id FROM contracts
+                    WHERE crm_agency_id IN (
+                        SELECT id FROM crm_agencies
+                        WHERE linked_user_id IN (SELECT id FROM users WHERE email LIKE ?)
+                    )
+                )
+                """, "%" + MAIL);
+        jdbc.update("""
+                DELETE FROM contracts
+                WHERE crm_agency_id IN (
+                    SELECT id FROM crm_agencies
+                    WHERE linked_user_id IN (SELECT id FROM users WHERE email LIKE ?)
+                )
+                """, "%" + MAIL);
+        jdbc.update("""
                 DELETE FROM applications
                 WHERE audition_id IN (SELECT id FROM auditions WHERE owner_id IN (SELECT id FROM users WHERE email LIKE ?))
                 """, "%" + MAIL);
@@ -123,6 +160,8 @@ class PostingBranchAuditionIT {
     private JwtService jwt;
     @Autowired
     private ObjectMapper json;
+    @Autowired
+    private AttributionService attributions;
 
     private UUID applicantId;
     private UUID krAgencyId;
@@ -259,6 +298,65 @@ class PostingBranchAuditionIT {
         assertRounds(jpAdminId, jpAuditionId, 200);
         assertRounds(jpAdminId, krAuditionId, 403);
         assertRounds(jpAdminId, mnAuditionId, 403);
+    }
+
+    @Test
+    void changingPostingBranchMovesCountryAdminScopeAndKeepsPastAttribution() throws Exception {
+        UUID owner = user("AGENCY", "KR");
+        UUID seoul = agency("KR", owner, "ACTIVE", "APPROVED", "서울");
+        UUID tokyo = agency("JP", owner, "ACTIVE", "APPROVED", "도쿄");
+        UUID krContract = contract(seoul, "KR");
+        UUID jpContract = contract(tokyo, "JP");
+        JsonNode created = created(owner, "OPEN", seoul.toString(), "MN");
+        UUID auditionId = UUID.fromString(created.get("id").asText());
+        assertRounds(krAdminId, auditionId, 200);
+        assertRounds(jpAdminId, auditionId, 403);
+
+        UUID payer = user("APPLICANT", "PH");
+        UUID firstUse = creditUse(payer, auditionId, "2026-11-02T00:00:00Z");
+        attribute(firstUse);
+        Map<String, Object> before = attributionRow(firstUse);
+        assertEquals(seoul, before.get("branch_id"));
+        assertEquals("KR", before.get("country"));
+        assertEquals(krContract, before.get("contract_id"));
+        assertNull(before.get("collected_usd"));
+        assertEquals(AttributionPlanner.ATTRIBUTED, before.get("confirmation_state"));
+        assertEquals(AttributionPlanner.CASH_MAPPING_UNDECIDED, before.get("cash_mapping_policy"));
+        assertEquals("SALES_FEE_IS_NOT_CASH", before.get("note"));
+
+        mvc.perform(patch("/api/auditions/" + auditionId).header("Authorization", bearer(owner))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"postingBranchId\":\"" + tokyo + "\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.postingBranchId").value(tokyo.toString()))
+                .andExpect(jsonPath("$.operatingCountry").value("JP"))
+                .andExpect(jsonPath("$.countryCode").value("MN"));
+        assertRounds(krAdminId, auditionId, 403);
+        assertRounds(jpAdminId, auditionId, 200);
+        assertEquals(before, attributionRow(firstUse));
+
+        mvc.perform(patch("/api/auditions/" + auditionId).header("Authorization", bearer(owner))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"title\":\"제목만\"}"))
+                .andExpect(status().isOk());
+        assertEquals(tokyo, branchColumn(auditionId));
+        assertEquals(before, attributionRow(firstUse));
+
+        UUID secondPayer = user("APPLICANT", "MN");
+        UUID secondUse = creditUse(secondPayer, auditionId, "2026-11-03T00:00:00Z");
+        attribute(secondUse);
+        Map<String, Object> after = attributionRow(secondUse);
+        assertEquals(tokyo, after.get("branch_id"));
+        assertEquals("JP", after.get("country"));
+        assertEquals(jpContract, after.get("contract_id"));
+        assertNull(after.get("collected_usd"));
+        assertEquals(AttributionPlanner.CASH_MAPPING_UNDECIDED, after.get("cash_mapping_policy"));
+        assertEquals("PH", userCountry(payer));
+        assertEquals("MN", userCountry(secondPayer));
+        assertNotEquals(userCountry(payer), before.get("country"));
+        assertNotEquals(userCountry(secondPayer), after.get("country"));
+        assertEquals(before, attributionRow(firstUse));
+        assertEquals("MN", jdbc.queryForObject(
+                "SELECT country_code FROM auditions WHERE id = ?", String.class, auditionId));
     }
 
     @Test
@@ -426,6 +524,50 @@ class PostingBranchAuditionIT {
                 INSERT INTO country_admin_appointments (id, country_code, user_id, status)
                 VALUES (?, ?, ?, 'ACTIVE')
                 """, UUID.randomUUID(), country, userId);
+    }
+
+    private UUID contract(UUID branchId, String country) {
+        UUID contractId = UUID.randomUUID();
+        UUID versionId = UUID.randomUUID();
+        jdbc.update("""
+                INSERT INTO contracts (
+                    id, contract_number, country_code, crm_agency_id, counterparty_name, status
+                ) VALUES (?, ?, ?, ?, '지점', 'ACTIVE')
+                """, contractId, "PB-" + contractId, country, branchId);
+        jdbc.update("""
+                INSERT INTO contract_versions (id, contract_id, version_no, start_date, payout_currency)
+                VALUES (?, ?, 1, DATE '2026-01-01', 'USD')
+                """, versionId, contractId);
+        return contractId;
+    }
+
+    private UUID creditUse(UUID userId, UUID auditionId, String instant) {
+        UUID id = UUID.randomUUID();
+        jdbc.update("""
+                INSERT INTO credit_transactions (
+                    id, user_id, amount, type, reason, reference_id, applied_fee_usd, applied_credit_quantity, created_at
+                ) VALUES (?, ?, -1, 'USE', 'AUDITION_APPLY', ?, 1, 1, ?)
+                """, id, userId, auditionId.toString(), Timestamp.from(OffsetDateTime.parse(instant).toInstant()));
+        return id;
+    }
+
+    private void attribute(UUID creditTransactionId) {
+        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(
+                superAdminId, null, List.of(new SimpleGrantedAuthority("ROLE_USER"))));
+        try {
+            assertTrue(attributions.attributeCreditUse(creditTransactionId));
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+    }
+
+    private Map<String, Object> attributionRow(UUID creditTransactionId) {
+        return new LinkedHashMap<>(jdbc.queryForMap("""
+                SELECT branch_id, btrim(attributed_country) AS country, contract_id, contract_version_id,
+                       collected_usd, confirmation_state, cash_mapping_policy, note
+                FROM revenue_attributions
+                WHERE credit_transaction_id = ? AND line_kind = 'REVENUE'
+                """, creditTransactionId));
     }
 
     private void ensureCountry(String code) {

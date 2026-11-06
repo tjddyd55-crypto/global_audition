@@ -165,6 +165,31 @@ class SettlementPolicyTest {
     }
 
     @Test
+    void switchingThePostingBranchFollowsThatBranchContractAndIgnoresApplicantCountry() {
+        UUID seoul = UUID.randomUUID();
+        UUID tokyo = UUID.randomUUID();
+        UUID krContract = UUID.randomUUID();
+        UUID jpContract = UUID.randomUUID();
+        UUID krVersion = UUID.randomUUID();
+        UUID jpVersion = UUID.randomUUID();
+        List<AttributionPlanner.Window> windows = List.of(
+                new AttributionPlanner.Window(krContract, krVersion, 1, "KR", seoul, LocalDate.parse("2026-01-01"), null),
+                new AttributionPlanner.Window(jpContract, jpVersion, 1, "JP", tokyo, LocalDate.parse("2026-01-01"), null));
+        AttributionPlanner.Plan onSeoul = AttributionPlanner.plan(new AttributionPlanner.Input(
+                AttributionPlanner.SALES, seoul, "PH", LocalDate.parse("2026-11-02"), 9L, windows));
+        AttributionPlanner.Plan onTokyo = AttributionPlanner.plan(new AttributionPlanner.Input(
+                AttributionPlanner.SALES, tokyo, "PH", LocalDate.parse("2026-11-03"), 9L, windows));
+        assertEquals("KR", onSeoul.attributedCountry());
+        assertEquals(krVersion, onSeoul.contractVersionId());
+        assertEquals("JP", onTokyo.attributedCountry());
+        assertEquals(jpVersion, onTokyo.contractVersionId());
+        assertNull(onSeoul.collectedUsd());
+        assertNull(onTokyo.collectedUsd());
+        assertEquals(AttributionPlanner.CASH_MAPPING_UNDECIDED, onTokyo.cashMappingPolicy());
+        assertEquals(AttributionPlanner.ATTRIBUTED, onTokyo.confirmationState());
+    }
+
+    @Test
     void multipleBranchesWithoutPostingBranchNeedConfirmation() {
         UUID contractA = UUID.randomUUID();
         UUID contractB = UUID.randomUUID();
