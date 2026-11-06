@@ -56,7 +56,7 @@ public class AdminAuditionRoundController {
 
     @GetMapping
     public List<AdminAuditionRoundResponse> list(@PathVariable UUID auditionId) {
-        manageAccess.requireManagedAudition(auditionId);
+        manageAccess.requireReadableAudition(auditionId);
         return roundService.listRounds(auditionId).stream()
                 .map(r -> toResponse(r))
                 .collect(Collectors.toList());
@@ -127,7 +127,7 @@ public class AdminAuditionRoundController {
     @GetMapping("/{roundId}/applications")
     public List<AdminRoundApplicationRowDto> applications(
             @PathVariable UUID auditionId, @PathVariable UUID roundId) {
-        manageAccess.requireManagedAudition(auditionId);
+        manageAccess.requireReadableAudition(auditionId);
         AuditionRound round = roundService.requireRoundBelongsToAudition(auditionId, roundId);
         List<ApplicationRoundSubmission> subs = submissionRepository.findByRoundId(round.getId());
         return subs.stream().map(this::toAppRow).collect(Collectors.toList());
@@ -147,6 +147,8 @@ public class AdminAuditionRoundController {
         dto.setLatestResultStatus(app.getLatestResultStatus());
         dto.setSubmissionStatus(sub.getSubmissionStatus());
         dto.setSubmittedAt(sub.getSubmittedAt());
+        dto.setVideoUrl(sub.getVideoUrl());
+        dto.setFileUrl(sub.getFileUrl());
         return dto;
     }
 

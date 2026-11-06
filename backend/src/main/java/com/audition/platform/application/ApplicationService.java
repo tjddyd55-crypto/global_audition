@@ -330,7 +330,8 @@ public class ApplicationService {
         boolean isApplicant = app.getApplicantId().equals(currentUserId);
         boolean isOwner = audition.getOwnerId().equals(currentUserId);
         boolean isAdmin = SecurityUtils.hasRole("ADMIN");
-        if (!isApplicant && !isOwner && !isAdmin) {
+        boolean isSuperAdminReader = SecurityUtils.hasRole("SUPER_ADMIN");
+        if (!isApplicant && !isOwner && !isAdmin && !isSuperAdminReader) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not allowed to access this application");
         }
 
