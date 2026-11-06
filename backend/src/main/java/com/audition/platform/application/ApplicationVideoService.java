@@ -2,6 +2,7 @@ package com.audition.platform.application;
 
 import com.audition.platform.api.dto.ApplicationVideoResponse;
 import com.audition.platform.api.dto.CreateApplicationVideoRequest;
+import com.audition.platform.application.round.AuditionManageAccess;
 import com.audition.platform.domain.audition.Application;
 import com.audition.platform.domain.audition.ApplicationRepository;
 import com.audition.platform.domain.audition.ApplicationVideo;
@@ -23,13 +24,16 @@ public class ApplicationVideoService {
     private final ApplicationVideoRepository applicationVideoRepository;
     private final ApplicationRepository applicationRepository;
     private final AuditionRepository auditionRepository;
+    private final AuditionManageAccess auditionManageAccess;
 
     public ApplicationVideoService(ApplicationVideoRepository applicationVideoRepository,
                                    ApplicationRepository applicationRepository,
-                                   AuditionRepository auditionRepository) {
+                                   AuditionRepository auditionRepository,
+                                   AuditionManageAccess auditionManageAccess) {
         this.applicationVideoRepository = applicationVideoRepository;
         this.applicationRepository = applicationRepository;
         this.auditionRepository = auditionRepository;
+        this.auditionManageAccess = auditionManageAccess;
     }
 
     private static ApplicationVideoResponse toResponse(ApplicationVideo video) {
@@ -82,12 +86,8 @@ public class ApplicationVideoService {
         }
         Application application = getApplication(applicationId);
         Audition audition = getAudition(application.getAuditionId());
-        boolean isApplicant = application.getApplicantId().equals(userId);
-        boolean isOwner = audition.getOwnerId().equals(userId);
-        boolean isAdmin = SecurityUtils.hasRole("ADMIN");
-        boolean isSuperAdminReader = SecurityUtils.hasRole("SUPER_ADMIN");
-        if (!isApplicant && !isOwner && !isAdmin && !isSuperAdminReader) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not allowed to access videos");
+        if (!application.getApplicantId().equals(userId)) {
+            auditionManageAccess.assertCanRead(audition);
         }
 
         return applicationVideoRepository.findByApplicationIdOrderByCreatedAtDesc(applicationId).stream()

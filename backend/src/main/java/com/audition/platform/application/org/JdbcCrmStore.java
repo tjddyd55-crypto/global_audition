@@ -39,6 +39,20 @@ public class JdbcCrmStore {
         return rows.stream().findFirst();
     }
 
+    /**
+     * 국가 관리자 오디션 목록과 같은 귀속.
+     * 게시 지점이 없으면 빈 값이며, 모집 대상 국가나 소유자 국가로 채우지 않는다.
+     */
+    public Optional<String> postingBranchCountry(UUID auditionId) {
+        List<String> rows = jdbc.query("""
+                SELECT g.country_code
+                FROM auditions a
+                JOIN crm_agencies g ON g.id = a.posting_branch_id
+                WHERE a.id = ?
+                """, (rs, n) -> rs.getString("country_code").trim(), auditionId);
+        return rows.stream().findFirst();
+    }
+
     public void updateState(UUID id, String stage, String approval, UUID linkedUserId) {
         jdbc.update("""
                 UPDATE crm_agencies
