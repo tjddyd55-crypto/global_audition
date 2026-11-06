@@ -35,6 +35,9 @@ export function Screen({
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       {scroll ? (
         <ScrollView
+          // 페이지 자체는 세로만 움직인다. 국가 칩의 가로 스크롤은 필터 줄이 맡는다.
+          horizontal={false}
+          nestedScrollEnabled
           contentContainerStyle={[styles.content, padded && styles.padded]}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
