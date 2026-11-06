@@ -6,6 +6,7 @@ import com.audition.platform.api.dto.AuditionRoundSummaryDto;
 import com.audition.platform.api.dto.CreateAuditionRequest;
 import com.audition.platform.api.dto.UpdateAuditionRequest;
 import com.audition.platform.application.audition.AuditionSeriesEligibilityService;
+import com.audition.platform.application.audition.PostingBranchPolicy;
 import com.audition.platform.application.org.AgencyApproval;
 import com.audition.platform.application.org.JdbcCrmStore;
 import com.audition.platform.application.publicview.PublicAuditionBrowse;
@@ -58,6 +59,7 @@ public class AuditionService {
     private final AuditionLocalizationService auditionLocalizationService;
     private final ContentTranslationService contentTranslations;
     private final JdbcCrmStore crm;
+    private final PostingBranchPolicy postingBranchPolicy;
 
     public AuditionService(AuditionRepository auditionRepository,
                            UserRepository userRepository,
@@ -67,7 +69,8 @@ public class AuditionService {
                            AuditionSeriesEligibilityService auditionSeriesEligibilityService,
                            AuditionLocalizationService auditionLocalizationService,
                            ContentTranslationService contentTranslations,
-                           JdbcCrmStore crm) {
+                           JdbcCrmStore crm,
+                           PostingBranchPolicy postingBranchPolicy) {
         this.auditionRepository = auditionRepository;
         this.userRepository = userRepository;
         this.applicationRepository = applicationRepository;
@@ -77,6 +80,7 @@ public class AuditionService {
         this.auditionLocalizationService = auditionLocalizationService;
         this.contentTranslations = contentTranslations;
         this.crm = crm;
+        this.postingBranchPolicy = postingBranchPolicy;
     }
 
     /** 연결된 기획사 심사가 끝나기 전에는 게시·마감을 막는다. 심사 행이 없으면 기존 권한을 유지한다. */
@@ -241,6 +245,8 @@ public class AuditionService {
         r.setUpdatedAt(a.getUpdatedAt());
         r.setCountryCode(a.getCountryCode());
         r.setHostCountry(a.getHostCountry());
+        r.setPostingBranchId(a.getPostingBranchId());
+        r.setOperatingCountry(operatingCountryOf(a.getPostingBranchId()));
         r.setDeadlineAt(a.getDeadlineAt());
         try {
             r.setTags(auditionTagService.resolveMergedDisplayNames(a.getId()).toArray(new String[0]));
@@ -377,6 +383,7 @@ public class AuditionService {
         a.setOwnerId(ownerId);
         a.setUpdatedAt(Instant.now());
         applyCreateBody(a, req);
+        a.setPostingBranchId(postingBranchPolicy.resolveCreate(ownerId, req.getPostingBranchId(), a.getStatus()));
         auditionLocalizationService.onSourceWritten(a, true);
         a = auditionRepository.save(a);
         applyAuditionTagsInput(a.getId(), req);
@@ -562,6 +569,7 @@ public class AuditionService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only owner or ADMIN can update this audition");
         }
 
+        String previousStatus = audition.getStatus();
         boolean originalChanged = auditionLocalizationService.writeOriginal(audition, request);
         boolean changed = originalChanged;
         if (request.getStatus() != null) {
@@ -610,6 +618,7 @@ public class AuditionService {
             changed |= assign(parseInstantRequired(request.getEndDate(), "endDate"), audition.getEndDate(), audition::setEndDate);
         }
         changed |= applyProcessMode(id, audition, request.getProcessMode());
+        changed |= applyPostingBranch(audition, request.getPostingBranchId(), previousStatus);
 
         assertYoutubeIfVideoPresent(audition.getStatus(), audition.getVideoUrl());
         String publishedOriginal = trimOrNull(audition.getImageOriginalUrl());
@@ -629,10 +638,37 @@ public class AuditionService {
             auditionLocalizationService.onSourceWritten(audition, true);
         }
         Audition saved = auditionRepository.save(audition);
-        if (originalChanged) {
+        if (originalChanged || enteredOpen(previousStatus, saved.getStatus())) {
             enqueuePostingTranslation(saved);
         }
         return toResponse(saved, false);
+    }
+
+    /** 게시로 바뀐 공고만 번역 큐에 넣는다. 이미 게시 중인 공고의 본문 수정은 originalChanged 가 담당한다. */
+    private static boolean enteredOpen(String previousStatus, String nextStatus) {
+        return "OPEN".equals(nextStatus) && !"OPEN".equals(previousStatus);
+    }
+
+    private boolean applyPostingBranch(Audition audition, String requestedBranchId, String previousStatus) {
+        UUID resolved = postingBranchPolicy.resolveUpdate(
+                audition.getOwnerId(),
+                audition.getPostingBranchId(),
+                requestedBranchId,
+                previousStatus,
+                audition.getStatus());
+        if (Objects.equals(resolved, audition.getPostingBranchId())) {
+            return false;
+        }
+        audition.setPostingBranchId(resolved);
+        return true;
+    }
+
+    /** 운영 국가는 게시 지점 국가만 본다. 지점이 없으면 null 이다. */
+    private String operatingCountryOf(UUID postingBranchId) {
+        if (postingBranchId == null || crm == null) {
+            return null;
+        }
+        return crm.find(postingBranchId).map(row -> row.countryCode()).orElse(null);
     }
 
     /** 공고 수정에는 감사 로그가 없다. 값이 같으면 컬럼을 쓰지 않는다. */
@@ -746,6 +782,7 @@ public class AuditionService {
         n.setGroupId(source.getGroupId());
         n.setSeriesRound(nextRound);
         n.setOwnerId(source.getOwnerId());
+        n.setPostingBranchId(postingBranchPolicy.continueSeries(source.getOwnerId(), source.getPostingBranchId()));
         n.setTitle(newTitle);
         n.setDescription(source.getDescription());
         n.setStatus("DRAFT");

@@ -850,7 +850,14 @@
     "publishConfirmRequired": "Нийтлэхийн өмнө шалгасныг батална уу.",
     "openPreview": "PC ба утасны урьдчилан харах",
     "backToEditor": "Засвар руу буцах",
-    "recruitFieldsOther": "Бусад чиглэл (чөлөөт бичвэр)"
+    "recruitFieldsOther": "Бусад чиглэл (чөлөөт бичвэр)",
+    "postingBranch": "Нийтлэх салбар",
+    "postingBranchHint": "Үйл ажиллагааны улс нь сонгосон салбарынх. Өргөдөл гаргагчийн иргэншил биш.",
+    "postingBranchFixed": "{name} ({country})",
+    "postingBranchPlaceholder": "Нийтлэх салбараа сонгоно уу",
+    "postingBranchRequired": "Нийтлэх салбараа сонгоно уу.",
+    "postingBranchNone": "Зөвшөөрөгдсөн идэвхтэй салбар алга. Ноорог хадгалж болно. Нийтлэхийн тулд салбараа бүртгүүлж, төв оффисын зөвшөөрөл авна уу.",
+    "postingBranchLoading": "Салбарыг ачаалж байна…"
   },
   "country": {
     "KR": "Солонгос",
@@ -1014,7 +1021,12 @@
     "NO_SUBMISSION_ROW": "Илгээлт бэлтгэж байна. Түр хүлээгээд дахин оролдоно уу",
     "SUBMISSION_CLOSED": "Энэ шат илгээлт хүлээж авахгүй",
     "ROUND_ALREADY_DECIDED": "Энэ шатыг аль хэдийн шийдсэн",
-    "ALREADY_APPLIED": "Та аль хэдийн бүртгүүлсэн."
+    "ALREADY_APPLIED": "Та аль хэдийн бүртгүүлсэн.",
+    "POSTING_BRANCH_REQUIRED": "Нийтлэх салбараа сонгоно уу.",
+    "POSTING_BRANCH_NONE": "Зөвшөөрөгдсөн идэвхтэй салбаргүй тул нийтлэх боломжгүй. Салбараа бүртгүүлж, төв оффисын зөвшөөрөл авна уу.",
+    "POSTING_BRANCH_NOT_APPROVED": "Зөвшөөрөгдөөгүй эсвэл идэвхгүй салбарыг ашиглах боломжгүй.",
+    "POSTING_BRANCH_FORBIDDEN": "Өөр агентлагийн салбарыг ашиглах боломжгүй.",
+    "POSTING_BRANCH_INVALID": "Нийтлэх салбарыг баталгаажуулж чадсангүй."
   },
   "application": {
     "detailLoadFailed": "Өргөдлийг ачаалж чадсангүй.",

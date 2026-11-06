@@ -143,6 +143,13 @@ public class Audition {
     @Column(name = "content_source_hash", length = 64)
     private String contentSourceHash;
 
+    /**
+     * 공고를 게시한 CRM 지점. 국가 관리자 범위는 이 지점의 국가를 본다.
+     * 비어 있으면 추정하지 않는다. 기존 행을 채우는 마이그레이션은 없다.
+     */
+    @Column(name = "posting_branch_id")
+    private UUID postingBranchId;
+
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
     public UUID getOwnerId() { return ownerId; }
@@ -218,4 +225,6 @@ public class Audition {
     public void setContentRevision(long contentRevision) { this.contentRevision = contentRevision; }
     public String getContentSourceHash() { return contentSourceHash; }
     public void setContentSourceHash(String contentSourceHash) { this.contentSourceHash = contentSourceHash; }
+    public UUID getPostingBranchId() { return postingBranchId; }
+    public void setPostingBranchId(UUID postingBranchId) { this.postingBranchId = postingBranchId; }
 }

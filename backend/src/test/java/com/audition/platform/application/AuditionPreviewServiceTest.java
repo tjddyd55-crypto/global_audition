@@ -57,7 +57,8 @@ class AuditionPreviewServiceTest {
                 mock(AuditionSeriesEligibilityService.class),
                 localization,
                 mock(com.audition.platform.application.i18n.content.ContentTranslationService.class),
-                mock(com.audition.platform.application.org.JdbcCrmStore.class));
+                mock(com.audition.platform.application.org.JdbcCrmStore.class),
+                mock(com.audition.platform.application.audition.PostingBranchPolicy.class));
     }
 
     @AfterEach

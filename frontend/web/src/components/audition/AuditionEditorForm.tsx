@@ -33,6 +33,8 @@ import {
 import { useTranslations } from 'next-intl'
 import { RECRUIT_FIELD_CODES, toRecruitFieldCode } from '@/shared/audition/recruitFields'
 import { Link } from '@/i18n.config'
+import { PostingBranchField, usePostingBranchChoice } from '@/components/audition/PostingBranchField'
+import { postingBranchIdForPayload, postingBranchPublishBlock } from '@/shared/audition/postingBranchChoice'
 
 function trimNonEmpty(lines: string[] | undefined): string[] {
   return (lines ?? []).map((s) => (s ?? '').trim()).filter((s) => s.length > 0)
@@ -215,6 +217,7 @@ function applyInitial(a: AuditionDto) {
     endDate: isoToDatetimeLocalValue(a.endDate ?? ''),
     countryCode: normalizeTargetCountry(a.countryCode),
     defaultLocale: authoringLocaleOrFallback(a.defaultLocale),
+    postingBranchId: a.postingBranchId ?? '',
   }
 }
 
@@ -273,7 +276,9 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [countryCode, setCountryCode] = useState('')
+  const [postingBranchId, setPostingBranchId] = useState('')
   const [defaultLocale, setDefaultLocale] = useState('ko')
+  const { state: postingBranchState } = usePostingBranchChoice(postingBranchId)
   const [publishReviewed, setPublishReviewed] = useState(false)
 
   const effectiveId = mode === 'edit' ? auditionId : draftId
@@ -305,6 +310,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
     setEndDate(v.endDate || defaultDatetimeLocalEnd())
     setCountryCode(v.countryCode)
     setDefaultLocale(v.defaultLocale)
+    setPostingBranchId(v.postingBranchId)
   }, [mode, initialAudition])
 
   useEffect(() => {
@@ -384,6 +390,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
       startDate: new Date(sd).toISOString(),
       endDate: new Date(ed).toISOString(),
       countryCode: countryCode || undefined,
+      postingBranchId: postingBranchIdForPayload(postingBranchState),
       defaultLocale,
     }
   }
@@ -414,6 +421,11 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
       if (!(agencyName ?? '').trim()) return tEditor('publishAgencyRequired')
       if (!(location ?? '').trim()) return tEditor('publishLocationRequired')
       if (!startDate || !endDate) return tEditor('datesRequired')
+      const branchBlock = postingBranchPublishBlock(postingBranchState)
+      if (branchBlock === 'none') return tEditor('postingBranchNone')
+      if (branchBlock === 'required') return tEditor('postingBranchRequired')
+    } else if (mode === 'create' && postingBranchPublishBlock(postingBranchState) === 'required') {
+      return tEditor('postingBranchRequired')
     } else {
       setShowDescriptionError(false)
       setShowVideoUrlError(false)
@@ -642,6 +654,8 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
             <span className="mt-1 block text-xs text-gray-500">{tEditor('targetCountryHint')}</span>
           </label>
         </div>
+
+        <PostingBranchField state={postingBranchState} onSelect={setPostingBranchId} />
 
         {mode === 'edit' && (
           <div style={{ marginBottom: AUDITION_DETAIL.benefitGridGapPx }}>

@@ -4,20 +4,16 @@ import com.audition.platform.api.dto.AgencyApplicantItemDto;
 import com.audition.platform.api.dto.AgencyApplicantsListDto;
 import com.audition.platform.application.audition.ApplicantCardMetricsLoader;
 import com.audition.platform.application.me.MeApiMapping;
+import com.audition.platform.application.round.AuditionManageAccess;
 import com.audition.platform.domain.audition.Application;
 import com.audition.platform.domain.audition.ApplicationRepository;
 import com.audition.platform.domain.audition.ApplicationSnsLinkRepository;
-import com.audition.platform.domain.audition.Audition;
-import com.audition.platform.domain.audition.AuditionRepository;
 import com.audition.platform.domain.score.ApplicationScore;
 import com.audition.platform.domain.score.ApplicationScoreRepository;
 import com.audition.platform.domain.user.User;
 import com.audition.platform.domain.user.UserRepository;
-import com.audition.platform.infra.SecurityUtils;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashMap;
 import java.util.List;
@@ -31,35 +27,29 @@ import java.util.stream.Collectors;
 public class AgencyApplicantsListQueryService {
 
     private final ApplicationRepository applicationRepository;
-    private final AuditionRepository auditionRepository;
     private final UserRepository userRepository;
     private final ApplicantCardMetricsLoader metricsLoader;
     private final ApplicationSnsLinkRepository applicationSnsLinkRepository;
     private final ApplicationScoreRepository applicationScoreRepository;
+    private final AuditionManageAccess auditionManageAccess;
 
     public AgencyApplicantsListQueryService(
             ApplicationRepository applicationRepository,
-            AuditionRepository auditionRepository,
             UserRepository userRepository,
             ApplicantCardMetricsLoader metricsLoader,
             ApplicationSnsLinkRepository applicationSnsLinkRepository,
-            ApplicationScoreRepository applicationScoreRepository) {
+            ApplicationScoreRepository applicationScoreRepository,
+            AuditionManageAccess auditionManageAccess) {
         this.applicationRepository = applicationRepository;
-        this.auditionRepository = auditionRepository;
         this.userRepository = userRepository;
         this.metricsLoader = metricsLoader;
         this.applicationSnsLinkRepository = applicationSnsLinkRepository;
         this.applicationScoreRepository = applicationScoreRepository;
+        this.auditionManageAccess = auditionManageAccess;
     }
 
     public AgencyApplicantsListDto listAgencyApplicants(UUID auditionId) {
-        UUID currentUserId = SecurityUtils.getCurrentUserId();
-        if (currentUserId == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
-        }
-        Audition audition = auditionRepository.findById(auditionId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "오디션을 찾을 수 없습니다."));
-        assertAgencyOrAdminCanManageAudition(audition);
+        auditionManageAccess.requireApplicantList(auditionId);
 
         List<Application> list = applicationRepository.findByAuditionIdOrderByCreatedAtDesc(auditionId);
         Map<UUID, ApplicationScore> scoreByApp = applicationScoreRepository.findByAuditionId(auditionId).stream()
@@ -71,19 +61,6 @@ public class AgencyApplicantsListQueryService {
                 .map(app -> toAgencyItem(app, scoreByApp.get(app.getId()), snsMap.getOrDefault(app.getId(), 0L)))
                 .collect(Collectors.toList()));
         return out;
-    }
-
-    private void assertAgencyOrAdminCanManageAudition(Audition audition) {
-        UUID currentUserId = SecurityUtils.getCurrentUserId();
-        if (currentUserId == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
-        }
-        if (SecurityUtils.hasRole("APPLICANT")) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "지원자는 이 작업을 수행할 수 없습니다.");
-        }
-        if (!audition.getOwnerId().equals(currentUserId) && !SecurityUtils.hasRole("ADMIN")) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "해당 오디션을 관리할 권한이 없습니다.");
-        }
     }
 
     private Map<UUID, Long> snsCountsByApplicationIds(List<Application> apps) {

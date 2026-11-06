@@ -18,6 +18,10 @@ public class AuditionResponse {
     private Instant updatedAt;
     private String countryCode;
     private String hostCountry;
+    /** 게시 지점. 없으면 null 이고 추정하지 않는다. */
+    private UUID postingBranchId;
+    /** 게시 지점의 국가. 지원자 국적이나 모집 대상 국가가 아니다. */
+    private String operatingCountry;
     private Instant deadlineAt;
     private String[] tags;
     private Instant createdAt;
@@ -135,6 +139,10 @@ public class AuditionResponse {
     public void setCountryCode(String countryCode) { this.countryCode = countryCode; }
     public String getHostCountry() { return hostCountry; }
     public void setHostCountry(String hostCountry) { this.hostCountry = hostCountry; }
+    public UUID getPostingBranchId() { return postingBranchId; }
+    public void setPostingBranchId(UUID postingBranchId) { this.postingBranchId = postingBranchId; }
+    public String getOperatingCountry() { return operatingCountry; }
+    public void setOperatingCountry(String operatingCountry) { this.operatingCountry = operatingCountry; }
     public Instant getDeadlineAt() { return deadlineAt; }
     public void setDeadlineAt(Instant deadlineAt) { this.deadlineAt = deadlineAt; }
     public String[] getTags() { return tags; }

@@ -76,6 +76,9 @@ public class CreateAuditionRequest {
     @Pattern(regexp = "SINGLE|MULTI_ROUND")
     private String processMode = "SINGLE";
 
+    /** 게시 지점(crm_agencies.id). 비우면 승인된 활성 지점이 하나일 때만 서버가 붙인다. */
+    private String postingBranchId;
+
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
     public String getDescription() { return description; }
@@ -122,4 +125,6 @@ public class CreateAuditionRequest {
     public void setDeadlineAt(String deadlineAt) { this.deadlineAt = deadlineAt; }
     public String getProcessMode() { return processMode; }
     public void setProcessMode(String processMode) { this.processMode = processMode; }
+    public String getPostingBranchId() { return postingBranchId; }
+    public void setPostingBranchId(String postingBranchId) { this.postingBranchId = postingBranchId; }
 }
