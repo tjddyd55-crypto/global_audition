@@ -7,6 +7,7 @@ import com.audition.platform.api.dto.ManageApplicationsPageDataDto;
 import com.audition.platform.application.ApplicationService;
 import com.audition.platform.application.audition.ApplicantCardMetricsLoader;
 import com.audition.platform.application.me.MeApiMapping;
+import com.audition.platform.application.round.AuditionManageAccess;
 import com.audition.platform.domain.audition.Application;
 import com.audition.platform.domain.audition.ApplicationRepository;
 import com.audition.platform.domain.audition.ApplicationSnsLink;
@@ -42,6 +43,7 @@ public class AgencyApplicationManageService {
     private final UserRepository userRepository;
     private final ApplicantCardMetricsLoader metricsLoader;
     private final ApplicationSnsLinkRepository applicationSnsLinkRepository;
+    private final AuditionManageAccess auditionManageAccess;
 
     public AgencyApplicationManageService(
             ApplicationService applicationService,
@@ -51,7 +53,8 @@ public class AgencyApplicationManageService {
             AuditionRepository auditionRepository,
             UserRepository userRepository,
             ApplicantCardMetricsLoader metricsLoader,
-            ApplicationSnsLinkRepository applicationSnsLinkRepository) {
+            ApplicationSnsLinkRepository applicationSnsLinkRepository,
+            AuditionManageAccess auditionManageAccess) {
         this.applicationService = applicationService;
         this.agencyApplicantsListQueryService = agencyApplicantsListQueryService;
         this.manageApplicationsQueryService = manageApplicationsQueryService;
@@ -60,6 +63,7 @@ public class AgencyApplicationManageService {
         this.userRepository = userRepository;
         this.metricsLoader = metricsLoader;
         this.applicationSnsLinkRepository = applicationSnsLinkRepository;
+        this.auditionManageAccess = auditionManageAccess;
     }
 
     public AgencyApplicantsListDto listAgencyApplicants(UUID auditionId) {
@@ -88,7 +92,7 @@ public class AgencyApplicationManageService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "지원서를 찾을 수 없습니다."));
         Audition audition = auditionRepository.findById(app.getAuditionId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "오디션을 찾을 수 없습니다."));
-        assertAgencyOrAdminCanManageAudition(audition);
+        auditionManageAccess.assertCanRead(audition);
 
         User applicant = userRepository.findById(app.getApplicantId()).orElse(null);
         var metrics = metricsLoader.resolve(app);
@@ -131,18 +135,5 @@ public class AgencyApplicationManageService {
 
     public ApplicationResponse markReviewed(UUID id) {
         return applicationService.markReviewed(id);
-    }
-
-    private void assertAgencyOrAdminCanManageAudition(Audition audition) {
-        UUID currentUserId = SecurityUtils.getCurrentUserId();
-        if (currentUserId == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
-        }
-        if (SecurityUtils.hasRole("APPLICANT")) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "지원자는 이 작업을 수행할 수 없습니다.");
-        }
-        if (!audition.getOwnerId().equals(currentUserId) && !SecurityUtils.hasRole("ADMIN")) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "해당 오디션을 관리할 권한이 없습니다.");
-        }
     }
 }

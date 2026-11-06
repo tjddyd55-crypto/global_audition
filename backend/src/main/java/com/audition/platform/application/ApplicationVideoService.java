@@ -85,7 +85,8 @@ public class ApplicationVideoService {
         boolean isApplicant = application.getApplicantId().equals(userId);
         boolean isOwner = audition.getOwnerId().equals(userId);
         boolean isAdmin = SecurityUtils.hasRole("ADMIN");
-        if (!isApplicant && !isOwner && !isAdmin) {
+        boolean isSuperAdminReader = SecurityUtils.hasRole("SUPER_ADMIN");
+        if (!isApplicant && !isOwner && !isAdmin && !isSuperAdminReader) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not allowed to access videos");
         }
 
