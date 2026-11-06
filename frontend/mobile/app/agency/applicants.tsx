@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
-import { useTranslation } from 'react-i18next'
 import { agencyApi, auditionApi, isAgencyRole } from '../../src/api/endpoints'
+import { agencyCopy } from '../../src/i18n/agencyCopy'
 import { queryKeys } from '../../src/api/queryKeys'
 import { useAuth } from '../../src/auth/AuthProvider'
 import { agencyBoardStatusLabel } from '../../src/domain/statusLabels'
@@ -13,7 +13,6 @@ import { colors, radius } from '../../src/theme/tokens'
 import type { AgencyBoardStatus } from '../../src/api/types'
 
 export default function AgencyApplicantsScreen() {
-  const { t } = useTranslation()
   const router = useRouter()
   const { session } = useAuth()
   const params = useLocalSearchParams<{ auditionId?: string; status?: AgencyBoardStatus }>()
@@ -28,14 +27,14 @@ export default function AgencyApplicantsScreen() {
   if (!isAgencyRole(session?.role)) {
     return (
       <Screen>
-        <EmptyState title={t('agency.agencyOnly')} />
+        <EmptyState title={agencyCopy('agency.agencyOnly')} />
       </Screen>
     )
   }
 
   return (
     <Screen loading={mineQuery.isLoading || manageQuery.isLoading}>
-      <Text style={styles.title}>{t('agency.applicants')}</Text>
+      <Text style={styles.title}>{agencyCopy('agency.applicants')}</Text>
       <View style={styles.chips}>
         {(mineQuery.data ?? []).map((audition) => (
           <Pressable
@@ -49,17 +48,26 @@ export default function AgencyApplicantsScreen() {
       </View>
       {manageQuery.data ? (
         <Text style={styles.meta}>
-          {t('agency.stats', {
+          {agencyCopy('agency.stats', {
             total: manageQuery.data.stats.total,
             submitted: manageQuery.data.stats.submitted,
             reviewing: manageQuery.data.stats.reviewing,
             accepted: manageQuery.data.stats.accepted,
             rejected: manageQuery.data.stats.rejected,
           })}
-          {manageQuery.data.audition.processMode === 'MULTI_ROUND' ? ` · maxRound ${manageQuery.data.maxRound}` : ''}
+          {manageQuery.data.audition.processMode === 'MULTI_ROUND'
+            ? ` · ${agencyCopy('agency.maxRoundSuffix', { n: manageQuery.data.maxRound })}`
+            : ''}
         </Text>
       ) : null}
-      {manageQuery.isError ? <ErrorState message={t('agency.loadFailed')} onRetry={() => void manageQuery.refetch()} /> : null}
+      {manageQuery.isError ? (
+        <ErrorState
+          title={agencyCopy('common.loadFailedTitle')}
+          message={agencyCopy('agency.loadFailed')}
+          retryLabel={agencyCopy('common.retry')}
+          onRetry={() => void manageQuery.refetch()}
+        />
+      ) : null}
       {(manageQuery.data?.items ?? []).map((item) => (
         <Pressable
           key={item.applicationId}
@@ -67,14 +75,14 @@ export default function AgencyApplicantsScreen() {
           style={styles.card}
           accessibilityRole="button"
         >
-          <StatusPill label={agencyBoardStatusLabel(item.status)} tone={toneForApplicationStatus(item.status)} />
+          <StatusPill label={agencyBoardStatusLabel(item.status, agencyCopy)} tone={toneForApplicationStatus(item.status)} />
           <Text style={styles.name}>{item.name || item.userName}</Text>
           <Text style={styles.meta}>
-            {item.category} · {t('agency.ageRoundVotes', { age: item.age ?? '-', round: item.round, votes: item.voteCount })}
+            {item.category} · {agencyCopy('agency.ageRoundVotes', { age: item.age ?? '-', round: item.round, votes: item.voteCount })}
           </Text>
         </Pressable>
       ))}
-      {!manageQuery.isLoading && (manageQuery.data?.items.length ?? 0) === 0 ? <EmptyState title={t('agency.empty')} /> : null}
+      {!manageQuery.isLoading && (manageQuery.data?.items.length ?? 0) === 0 ? <EmptyState title={agencyCopy('agency.empty')} /> : null}
     </Screen>
   )
 }

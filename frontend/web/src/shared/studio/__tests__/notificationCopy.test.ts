@@ -1,7 +1,7 @@
 import ko from '../../../../messages/ko.json'
 import en from '../../../../messages/en.json'
 import mn from '../../../../messages/mn.json'
-import { notificationCodeLabel, notificationCopy } from '../notificationCopy'
+import { notificationBadge, notificationCodeLabel, notificationCopy } from '../notificationCopy'
 
 const catalogs = { ko, en, mn } as const
 
@@ -59,5 +59,29 @@ describe('notificationCopy', () => {
       expect(`${type} · ${status}`).not.toBe('PASS_NOTICE · PENDING')
     }
     expect(notificationCodeLabel('UNKNOWN_CODE', () => '')).toBe('UNKNOWN_CODE')
+  })
+
+  it('shows a single accepted result as the decision, not the round type or delivery pending', () => {
+    const item = {
+      type: 'PASS_NOTICE',
+      status: 'PENDING',
+      titleKey: 'singleStageResultTitle',
+      bodyKey: 'singleStagePassBody',
+      roundId: null,
+    }
+    for (const locale of ['ko', 'en', 'mn'] as const) {
+      const badge = notificationBadge(item, (key) => translate(locale, key))
+      expect(badge).toBe(catalogs[locale].notifications.singleStagePassTitle)
+      expect(badge).not.toContain(catalogs[locale].notifications.PASS_NOTICE)
+      expect(badge).not.toContain(catalogs[locale].notifications.PENDING)
+    }
+  })
+
+  it('keeps a round notice badge as type and delivery status', () => {
+    const badge = notificationBadge(
+      { type: 'PASS_NOTICE', status: 'PENDING', titleKey: 'multiStageResultTitle', roundId: 'round-1' },
+      (key) => translate('en', key),
+    )
+    expect(badge).toBe(`${en.notifications.PASS_NOTICE} · ${en.notifications.PENDING}`)
   })
 })

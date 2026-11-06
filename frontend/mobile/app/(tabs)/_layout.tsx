@@ -3,18 +3,24 @@ import { useTranslation } from 'react-i18next'
 import { LanguageMenu } from '../../src/i18n/LanguageMenu'
 import { colors } from '../../src/theme/tokens'
 import { TabIcon, TabLabel } from '../../src/ui/tabs/TabChrome'
-import { NATIVE_TAB_ITEMS, type NativeTabRoute } from '../../src/ui/tabs/nativeTabItems'
+import {
+  NATIVE_TAB_ITEMS,
+  tabAccessibleLabelKey,
+  tabVisibleLabelKey,
+  type NativeTabRoute,
+} from '../../src/ui/tabs/nativeTabItems'
 
 /**
  * 아이콘 슬롯과 라벨 슬롯을 분리한다.
- * 아이콘에 탭 이름을 다시 그리면 title 라벨과 겹쳐 이름이 두 번 나온다.
+ * 보이는 이름은 하나이고, 스크린 리더는 전체 번역을 읽는다.
  */
-function tabOptions(route: NativeTabRoute, label: string) {
+function tabOptions(route: NativeTabRoute, visible: string, accessible: string) {
   const { icon } = NATIVE_TAB_ITEMS[route]
   return {
-    title: label,
+    title: accessible,
+    tabBarAccessibilityLabel: accessible,
     tabBarIcon: ({ color }: { color: string }) => <TabIcon icon={icon} color={color} />,
-    tabBarLabel: ({ color }: { color: string }) => <TabLabel label={label} color={color} />,
+    tabBarLabel: ({ color }: { color: string }) => <TabLabel label={visible} color={color} />,
   }
 }
 
@@ -35,11 +41,11 @@ export default function TabsLayout() {
         tabBarLabelPosition: 'below-icon',
       }}
     >
-      <Tabs.Screen name="index" options={tabOptions('index', t(NATIVE_TAB_ITEMS.index.labelKey))} />
-      <Tabs.Screen name="auditions" options={tabOptions('auditions', t(NATIVE_TAB_ITEMS.auditions.labelKey))} />
-      <Tabs.Screen name="vote" options={tabOptions('vote', t(NATIVE_TAB_ITEMS.vote.labelKey))} />
-      <Tabs.Screen name="applications" options={tabOptions('applications', t(NATIVE_TAB_ITEMS.applications.labelKey))} />
-      <Tabs.Screen name="profile" options={tabOptions('profile', t(NATIVE_TAB_ITEMS.profile.labelKey))} />
+      <Tabs.Screen name="index" options={tabOptions('index', t(tabVisibleLabelKey('index')), t(tabAccessibleLabelKey('index')))} />
+      <Tabs.Screen name="auditions" options={tabOptions('auditions', t(tabVisibleLabelKey('auditions')), t(tabAccessibleLabelKey('auditions')))} />
+      <Tabs.Screen name="vote" options={tabOptions('vote', t(tabVisibleLabelKey('vote')), t(tabAccessibleLabelKey('vote')))} />
+      <Tabs.Screen name="applications" options={tabOptions('applications', t(tabVisibleLabelKey('applications')), t(tabAccessibleLabelKey('applications')))} />
+      <Tabs.Screen name="profile" options={tabOptions('profile', t(tabVisibleLabelKey('profile')), t(tabAccessibleLabelKey('profile')))} />
     </Tabs>
   )
 }

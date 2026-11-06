@@ -7,22 +7,24 @@ type Props = {
   visible: boolean
   message: string
   confirmLabel?: string
+  cancelLabel?: string
+  closeLabel?: string
   loading?: boolean
   danger?: boolean
   onCancel: () => void
   onConfirm: () => void
 }
 
-export function ConfirmDialog({ visible, message, confirmLabel, loading, danger, onCancel, onConfirm }: Props) {
+export function ConfirmDialog({ visible, message, confirmLabel, cancelLabel, closeLabel, loading, danger, onCancel, onConfirm }: Props) {
   const { t } = useTranslation()
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
-      <Pressable style={styles.backdrop} onPress={onCancel} accessibilityRole="button" accessibilityLabel={t('common.close')}>
+      <Pressable style={styles.backdrop} onPress={onCancel} accessibilityRole="button" accessibilityLabel={closeLabel ?? t('common.close')}>
         <Pressable style={styles.card} onPress={(e) => e.stopPropagation()}>
           <Text style={styles.message}>{message}</Text>
           <View style={styles.actions}>
             <View style={styles.flex}>
-              <Button label={t('common.cancel')} variant="secondary" onPress={onCancel} disabled={loading} />
+              <Button label={cancelLabel ?? t('common.cancel')} variant="secondary" onPress={onCancel} disabled={loading} />
             </View>
             <View style={styles.flex}>
               <Button

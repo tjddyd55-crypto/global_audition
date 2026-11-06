@@ -25,6 +25,8 @@ const SINGLE_STAGE_TITLE_KEYS = new Set([
 
 export type NotificationCopySource = {
   type?: string | null
+  /** 발송 로그 상태. 심사 결과가 아니다. 생성 시 PENDING이며 수신함 조회는 이 값을 바꾸지 않는다. */
+  status?: string | null
   title?: string | null
   body?: string | null
   titleKey?: string | null
@@ -85,6 +87,32 @@ function roundOpenBody(item: NotificationCopySource): string {
 function translated(key: string | null | undefined, translate: (key: string) => string): string {
   if (!key || !CATALOG_KEYS.has(key)) return ''
   return text(translate(key))
+}
+
+/**
+ * 카드 하단 배지.
+ * 단일 심사 합격/불합격은 결과 라벨만 보여 준다.
+ * 회차가 있는 알림은 기존처럼 타입과 발송 상태를 함께 보여 준다.
+ */
+export function notificationBadge(
+  item: NotificationCopySource,
+  translate: (key: string) => string,
+): string {
+  const decided = singleStageDecisionLabel(item, translate)
+  if (decided) return decided
+  return [notificationCodeLabel(item.type, translate), notificationCodeLabel(item.status, translate)]
+    .filter((part) => part.length > 0)
+    .join(' · ')
+}
+
+function singleStageDecisionLabel(
+  item: NotificationCopySource,
+  translate: (key: string) => string,
+): string {
+  if (!isSingleStage(item)) return ''
+  const failed = item.bodyKey === 'singleStageFailBody' || item.titleKey === 'singleStageFailTitle' || item.type === 'FAIL_NOTICE'
+  const key = failed ? 'singleStageFailTitle' : 'singleStagePassTitle'
+  return translated(key, translate)
 }
 
 /** 알림 카드의 타입·전달 상태. 카탈로그에 있으면 ko/en/mn 라벨, 없으면 원문 코드. */
