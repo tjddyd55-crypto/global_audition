@@ -857,7 +857,10 @@
     "postingBranchPlaceholder": "Select a posting branch",
     "postingBranchRequired": "Select a posting branch.",
     "postingBranchNone": "No approved active branch. You can save a draft. To publish, register a branch and wait for headquarters approval.",
-    "postingBranchLoading": "Loading posting branches…"
+    "postingBranchLoading": "Loading posting branches…",
+    "postingBranchSavedName": "Saved branch",
+    "postingBranchUnusable": "The saved posting branch {name} ({country}) can no longer be used. Choose another branch.",
+    "postingBranchUnusableUnknown": "The saved posting branch can no longer be used. Choose another branch."
   },
   "country": {
     "KR": "Korea",

@@ -857,7 +857,10 @@
     "postingBranchPlaceholder": "Нийтлэх салбараа сонгоно уу",
     "postingBranchRequired": "Нийтлэх салбараа сонгоно уу.",
     "postingBranchNone": "Зөвшөөрөгдсөн идэвхтэй салбар алга. Ноорог хадгалж болно. Нийтлэхийн тулд салбараа бүртгүүлж, төв оффисын зөвшөөрөл авна уу.",
-    "postingBranchLoading": "Салбарыг ачаалж байна…"
+    "postingBranchLoading": "Салбарыг ачаалж байна…",
+    "postingBranchSavedName": "Хадгалсан салбар",
+    "postingBranchUnusable": "Хадгалсан нийтлэх салбар {name} ({country}) ашиглах боломжгүй болсон. Өөр салбар сонгоно уу.",
+    "postingBranchUnusableUnknown": "Хадгалсан нийтлэх салбарыг ашиглах боломжгүй болсон. Өөр салбар сонгоно уу."
   },
   "country": {
     "KR": "Солонгос",

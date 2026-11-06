@@ -857,7 +857,10 @@
     "postingBranchPlaceholder": "게시 지점을 선택하세요",
     "postingBranchRequired": "게시 지점을 선택해 주세요.",
     "postingBranchNone": "승인된 활성 지점이 없습니다. 임시 저장은 가능합니다. 게시하려면 지점을 등록하고 본사 승인을 받은 뒤 다시 시도하세요.",
-    "postingBranchLoading": "게시 지점을 불러오는 중…"
+    "postingBranchLoading": "게시 지점을 불러오는 중…",
+    "postingBranchSavedName": "저장된 지점",
+    "postingBranchUnusable": "저장된 게시 지점 {name} ({country})은 더 이상 사용할 수 없습니다. 다른 지점을 선택해 주세요.",
+    "postingBranchUnusableUnknown": "저장된 게시 지점은 더 이상 사용할 수 없습니다. 다른 지점을 선택해 주세요."
   },
   "country": {
     "KR": "한국",

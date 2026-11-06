@@ -35,6 +35,18 @@ import { RECRUIT_FIELD_CODES, toRecruitFieldCode } from '@/shared/audition/recru
 import { Link } from '@/i18n.config'
 import { PostingBranchField, usePostingBranchChoice } from '@/components/audition/PostingBranchField'
 import { postingBranchIdForPayload, postingBranchPublishBlock } from '@/shared/audition/postingBranchChoice'
+import type { PostingBranchFieldState } from '@/shared/audition/postingBranchChoice'
+
+function staleBranchSaveError(
+  t: (key: string, values?: Record<string, string>) => string,
+  state: Extract<PostingBranchFieldState, { kind: 'stale' }>,
+): string {
+  if (state.choices.length > 0) return t('postingBranchRequired')
+  const country = state.saved.countryCode.trim()
+  const name = state.saved.displayName.trim()
+  if (!country || !name) return t('postingBranchUnusableUnknown')
+  return t('postingBranchUnusable', { name, country })
+}
 
 function trimNonEmpty(lines: string[] | undefined): string[] {
   return (lines ?? []).map((s) => (s ?? '').trim()).filter((s) => s.length > 0)
@@ -278,7 +290,18 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
   const [countryCode, setCountryCode] = useState('')
   const [postingBranchId, setPostingBranchId] = useState('')
   const [defaultLocale, setDefaultLocale] = useState('ko')
-  const { state: postingBranchState } = usePostingBranchChoice(postingBranchId)
+  const savedPostingBranch = useMemo(() => {
+    if (mode !== 'edit' || !initialAudition?.postingBranchId) return null
+    return {
+      id: initialAudition.postingBranchId,
+      countryCode: initialAudition.operatingCountry ?? '',
+    }
+  }, [mode, initialAudition])
+  const { state: postingBranchState } = usePostingBranchChoice(
+    postingBranchId,
+    savedPostingBranch,
+    mode === 'edit' && !initialAudition,
+  )
   const [publishReviewed, setPublishReviewed] = useState(false)
 
   const effectiveId = mode === 'edit' ? auditionId : draftId
@@ -401,6 +424,10 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
       return tEditor('titleRequired')
     }
     setShowTitleError(false)
+
+    if (postingBranchState.kind === 'stale') {
+      return staleBranchSaveError(tEditor, postingBranchState)
+    }
 
     if (intent === 'publish') {
       if (!(description ?? '').trim() || (description ?? '').trim() === '—') {
