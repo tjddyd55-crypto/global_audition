@@ -120,6 +120,54 @@ class PublicAuditionBrowseFilterTest {
     }
 
     @Test
+    void freeTagQueryCombinesCountryFieldStatusAndPages() {
+        Instant base = Instant.parse("2026-11-01T00:00:00Z");
+        List<Tagged> rows = List.of(
+                tagged("kr-vocal-night", "OPEN", "KR", new String[] {"VOCAL"}, List.of("Night Market"), base),
+                tagged("kr-dance-night", "OPEN", "KR", new String[] {"DANCE"}, List.of("Night Market"), base.plusSeconds(10)),
+                tagged("mn-vocal-night", "OPEN", "MN", new String[] {"VOCAL"}, List.of("Night Market"), base.plusSeconds(20)),
+                tagged("kr-vocal-studio", "OPEN", "KR", new String[] {"VOCAL"}, List.of("Studio"), base.plusSeconds(30)),
+                tagged("kr-vocal-closed", "CLOSED", "KR", new String[] {"VOCAL"}, List.of("Night Market"), base.plusSeconds(40)),
+                tagged("kr-vocal-spaced", "OPEN", "KR", new String[] {"VOCAL"}, List.of("  night   market "), base.plusSeconds(50)),
+                tagged("kr-tag-only", "OPEN", "KR", new String[0], List.of("보컬"), base.plusSeconds(60)),
+                tagged("draft", "DRAFT", "KR", new String[] {"VOCAL"}, List.of("Night Market"), base.plusSeconds(70)));
+        PublicAuditionBrowse.Query query = new PublicAuditionBrowse.Query(
+                "OPEN", "KR", null, null, "  NIGHT   market ", null, null, "VOCAL", "LATEST");
+        List<Tagged> matched = filter(rows, query);
+        assertEquals(List.of("kr-vocal-spaced", "kr-vocal-night"), matched.stream().map(Tagged::id).toList());
+
+        List<Tagged> page0 = PublicAuditionBrowse.slice(matched, 0, 1);
+        List<Tagged> page1 = PublicAuditionBrowse.slice(matched, 1, 1);
+        assertEquals(2, matched.size());
+        assertEquals(List.of("kr-vocal-spaced"), page0.stream().map(Tagged::id).toList());
+        assertEquals(List.of("kr-vocal-night"), page1.stream().map(Tagged::id).toList());
+        assertTrue(PublicAuditionBrowse.slice(matched, 2, 1).isEmpty());
+
+        PublicAuditionBrowse.Query structured = new PublicAuditionBrowse.Query(
+                "OPEN", "KR", null, null, "Дуу", null, null, null, "LATEST");
+        assertEquals(List.of("kr-tag-only", "kr-vocal-spaced", "kr-vocal-studio", "kr-vocal-night"),
+                filter(rows, structured).stream().map(Tagged::id).toList());
+    }
+
+    private static Tagged tagged(
+            String id, String status, String country, String[] fields, List<String> tags, Instant created) {
+        return new Tagged(id, status, country, fields, tags, created);
+    }
+
+    private static List<Tagged> filter(List<Tagged> rows, PublicAuditionBrowse.Query query) {
+        return rows.stream()
+                .filter(row -> PublicAuditionBrowse.matches(
+                        row.status(), row.country(), row.country(), "Title", "Agency",
+                        row.fields(), row.tags(), null, null, null, query))
+                .sorted(PublicAuditionBrowse.comparator(query.sort(), Tagged::created, row -> null, row -> null))
+                .collect(Collectors.toList());
+    }
+
+    private record Tagged(
+            String id, String status, String country, String[] fields, List<String> tags, Instant created) {
+    }
+
+    @Test
     void sortValidation() {
         assertEquals("LATEST", PublicAuditionBrowse.normalizeSort(null));
         assertEquals("DEADLINE", PublicAuditionBrowse.normalizeSort("deadline"));

@@ -1,11 +1,11 @@
 package com.audition.platform.api;
 
 import com.audition.platform.api.dto.admin.AdminRoundReviewRequest;
+import com.audition.platform.api.dto.admin.AdminRoundReviewResponse;
 import com.audition.platform.application.round.AuditionManageAccess;
 import com.audition.platform.application.round.RoundReviewService;
 import com.audition.platform.domain.audition.Application;
 import com.audition.platform.domain.audition.ApplicationRepository;
-import com.audition.platform.domain.audition.ApplicationRoundSubmission;
 import com.audition.platform.domain.audition.Audition;
 import com.audition.platform.domain.audition.AuditionRepository;
 import jakarta.validation.Valid;
@@ -40,7 +40,7 @@ public class AdminApplicationRoundReviewController {
     }
 
     @PostMapping("/pass")
-    public ApplicationRoundSubmission pass(
+    public AdminRoundReviewResponse pass(
             @PathVariable UUID applicationId,
             @PathVariable UUID roundId,
             @Valid @RequestBody(required = false) AdminRoundReviewRequest body) {
@@ -49,7 +49,7 @@ public class AdminApplicationRoundReviewController {
     }
 
     @PostMapping("/fail")
-    public ApplicationRoundSubmission fail(
+    public AdminRoundReviewResponse fail(
             @PathVariable UUID applicationId,
             @PathVariable UUID roundId,
             @Valid @RequestBody(required = false) AdminRoundReviewRequest body) {
@@ -59,7 +59,7 @@ public class AdminApplicationRoundReviewController {
     }
 
     @PostMapping("/hold")
-    public ApplicationRoundSubmission hold(
+    public AdminRoundReviewResponse hold(
             @PathVariable UUID applicationId,
             @PathVariable UUID roundId,
             @Valid @RequestBody(required = false) AdminRoundReviewRequest body) {

@@ -161,6 +161,10 @@ public final class PublicAuditionBrowse {
         return matchesField(fields, field);
     }
 
+    /**
+     * 제목·기획사명, 정형 태그 키(ko/en/mn 표시명), 자유 입력 태그를 본다.
+     * 비교 문자열은 앞뒤 공백을 버리고 연속 공백을 한 칸으로 맞춘 뒤 소문자로 맞춘다.
+     */
     private static boolean matchesText(String title, String agencyName, String[] fields, List<String> tags, String text) {
         if (contains(title, text) || contains(agencyName, text)) {
             return true;
@@ -169,7 +173,7 @@ public final class PublicAuditionBrowse {
         if (key != null && StructuredCatalog.matches(key, fields, tags)) {
             return true;
         }
-        return normalize(text) == null;
+        return containsAnyValue(tags, text);
     }
 
     private static boolean containsAny(String needle, String[] fields, List<String> tags) {
@@ -198,18 +202,41 @@ public final class PublicAuditionBrowse {
         return false;
     }
 
+    private static boolean containsAnyValue(List<String> values, String needle) {
+        if (normalize(needle) == null || values == null) {
+            return false;
+        }
+        for (String value : values) {
+            if (containsNormalized(value, needle)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** needle 이 비어 있으면 필터를 걸지 않는다. */
     private static boolean contains(String value, String needle) {
         String wanted = normalize(needle);
         if (wanted == null) {
             return true;
         }
-        return value != null && value.toLowerCase(Locale.ROOT).contains(wanted);
+        return containsNormalized(value, wanted);
+    }
+
+    private static boolean containsNormalized(String value, String needle) {
+        String wanted = normalize(needle);
+        if (wanted == null) {
+            return false;
+        }
+        String haystack = normalize(value);
+        return haystack != null && haystack.contains(wanted);
     }
 
     private static String normalize(String value) {
-        if (value == null || value.isBlank()) {
+        if (value == null) {
             return null;
         }
-        return value.trim().toLowerCase(Locale.ROOT);
+        String collapsed = value.trim().replaceAll("\\s+", " ").toLowerCase(Locale.ROOT);
+        return collapsed.isEmpty() ? null : collapsed;
     }
 }

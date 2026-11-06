@@ -2,6 +2,7 @@ package com.audition.platform.application.publicview;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -39,6 +40,31 @@ class StructuredCatalogBrowseTest {
     }
 
     @Test
+    void textQueryMatchesFreeInputTagsWithoutChangingStoredValues() {
+        List<String> stored = new ArrayList<>(List.of("  Night   Market "));
+        PublicAuditionBrowse.Query spaced = text("  night market ");
+        PublicAuditionBrowse.Query upper = text("NIGHT MARKET");
+        assertTrue(PublicAuditionBrowse.matches(
+                "OPEN", "KR", "KR", "Title", "Agency", new String[0], stored, null, null, null, spaced));
+        assertTrue(PublicAuditionBrowse.matches(
+                "OPEN", "KR", "KR", "Title", "Agency", new String[0], stored, null, null, null, upper));
+        assertFalse(PublicAuditionBrowse.matches(
+                "OPEN", "KR", "KR", "Title", "Agency", new String[0], List.of("Studio"), null, null, null, spaced));
+        assertEquals(List.of("  Night   Market "), stored);
+    }
+
+    @Test
+    void textQueryStillMapsStructuredLabelsAcrossLocales() {
+        List<String> storedKorean = List.of("보컬");
+        for (String text : List.of("Vocal", "  보컬  ", "Дуу")) {
+            assertTrue(PublicAuditionBrowse.matches(
+                    "OPEN", "MN", "MN", "Title", "Agency", new String[0], storedKorean, null, null, null, text(text)));
+        }
+        assertFalse(PublicAuditionBrowse.matches(
+                "OPEN", "MN", "MN", "Title", "Agency", new String[0], List.of("Street"), null, null, null, text("Дуу")));
+    }
+
+    @Test
     void dancerLabelMapsToTheStoredDanceTag() {
         assertTrue(PublicAuditionBrowse.matches(
                 "OPEN", "MN", "MN", "Title", "Agency", new String[0], List.of("댄서"), null, null, null, query("Dancer")));
@@ -48,5 +74,9 @@ class StructuredCatalogBrowseTest {
 
     private static PublicAuditionBrowse.Query query(String category) {
         return new PublicAuditionBrowse.Query(null, null, category, null, null, null, null);
+    }
+
+    private static PublicAuditionBrowse.Query text(String q) {
+        return new PublicAuditionBrowse.Query(null, null, null, null, q, null, null);
     }
 }
