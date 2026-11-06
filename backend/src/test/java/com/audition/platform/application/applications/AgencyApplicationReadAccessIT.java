@@ -175,6 +175,23 @@ class AgencyApplicationReadAccessIT {
     }
 
     @Test
+    void twoActiveAppointmentsReadEachCountryAndNotTheOther() throws Exception {
+        try {
+            replaceActiveAppointment("MN", krCountryAdminId);
+            assertBranchOk(krCountryAdminToken, krBranch);
+            assertBranchOk(krCountryAdminToken, mnBranch);
+            mvc.perform(detail(jpBranch.applicationId, krCountryAdminToken)).andExpect(status().isForbidden());
+        } finally {
+            endAppointment(krCountryAdminId);
+            restoreAppointment(krCountryAdminId, "KR");
+            restoreAppointment(mnCountryAdminId, "MN");
+        }
+        assertBranchOk(krCountryAdminToken, krBranch);
+        mvc.perform(detail(mnBranch.applicationId, krCountryAdminToken)).andExpect(status().isForbidden());
+        assertBranchOk(mnCountryAdminToken, mnBranch);
+    }
+
+    @Test
     void agencyReadsOnlyItsOwnBranchAndStrangersStayOut() throws Exception {
         assertBranchOk(krBranchToken, krBranch);
         mvc.perform(detail(mnBranch.applicationId, krBranchToken)).andExpect(status().isForbidden());

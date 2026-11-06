@@ -9,8 +9,9 @@ import java.util.UUID;
  *
  * <p>역할과 활성 임명은 요청마다 DB 에서 읽는다. 토큰 클레임은 보지 않는다.
  * 공고 범위는 {@code CountryWorkspaceService#auditions} 와 같다.
- * 게시 지점 {@code crm_agencies.country_code} 가 활성 {@code country_admin_appointments}
- * 국가와 같을 때만 허용한다. 지점이 없으면 추정하지 않는다.
+ * 게시 지점 {@code crm_agencies.country_code} 가 그 사용자의 ACTIVE
+ * {@code country_admin_appointments} 국가 중 하나와 같을 때만 허용한다.
+ * 임명이 여러 국가이면 전부 본다. 지점이 없으면 추정하지 않는다.
  * 지원자 국적, 거주국가, 모집 대상 {@code auditions.country_code} 는 쓰지 않는다.</p>
  */
 @Component
@@ -31,11 +32,7 @@ public class CountryAdminAuditionRead {
         if (!OrgRoles.COUNTRY_ADMIN.equals(roleOf(userId))) {
             return false;
         }
-        String appointed = directory.activeRepCountry(userId);
-        if (appointed == null || appointed.isBlank()) {
-            return false;
-        }
-        return crm.postingBranchCountry(auditionId).map(appointed::equals).orElse(false);
+        return crm.postingBranchCoveredByActiveRep(auditionId, userId);
     }
 
     private String roleOf(UUID userId) {
