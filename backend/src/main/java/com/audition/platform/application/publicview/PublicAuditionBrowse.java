@@ -121,16 +121,14 @@ public final class PublicAuditionBrowse {
         if (!contains(agencyName, query.agency())) {
             return false;
         }
-        if (!matchesField(recruitFields, query.field())) {
+        if (!matchesFieldOrCatalog(recruitFields, tags, query.field())) {
             return false;
         }
         if (!containsAny(query.category(), recruitFields, tags)) {
             return false;
         }
-        if (!contains(title, query.text()) && !contains(agencyName, query.text())) {
-            if (normalize(query.text()) != null) {
-                return false;
-            }
+        if (!matchesText(title, agencyName, recruitFields, tags, query.text())) {
+            return false;
         }
         return overlaps(start, end != null ? end : deadline, query.from(), query.to());
     }
@@ -151,10 +149,37 @@ public final class PublicAuditionBrowse {
         return true;
     }
 
+    /** 분야 코드·번역 표시명은 모집 분야와 정형 태그를 같이 본다. 임의 값은 분야 원문만 본다. */
+    private static boolean matchesFieldOrCatalog(String[] fields, List<String> tags, String field) {
+        if (field == null || field.isBlank()) {
+            return true;
+        }
+        String key = StructuredCatalog.key(field);
+        if (key != null) {
+            return StructuredCatalog.matches(key, fields, tags);
+        }
+        return matchesField(fields, field);
+    }
+
+    private static boolean matchesText(String title, String agencyName, String[] fields, List<String> tags, String text) {
+        if (contains(title, text) || contains(agencyName, text)) {
+            return true;
+        }
+        String key = StructuredCatalog.key(text);
+        if (key != null && StructuredCatalog.matches(key, fields, tags)) {
+            return true;
+        }
+        return normalize(text) == null;
+    }
+
     private static boolean containsAny(String needle, String[] fields, List<String> tags) {
         String wanted = normalize(needle);
         if (wanted == null) {
             return true;
+        }
+        String key = StructuredCatalog.key(needle);
+        if (key != null) {
+            return StructuredCatalog.matches(key, fields, tags);
         }
         if (fields != null) {
             for (String field : fields) {

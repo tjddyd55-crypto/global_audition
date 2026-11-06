@@ -4,6 +4,7 @@ import com.audition.platform.api.dto.me.MeProfileResponse;
 import com.audition.platform.api.dto.me.MeUserSnsLinkDto;
 import com.audition.platform.api.dto.me.PatchMePasswordRequest;
 import com.audition.platform.api.dto.me.PatchMeProfileRequest;
+import com.audition.platform.application.user.ApplicantSignupProfileService;
 import com.audition.platform.application.user.UserNicknameService;
 import com.audition.platform.application.user.UserSnsLinkReplacementService;
 import com.audition.platform.domain.channel.Channel;
@@ -38,6 +39,7 @@ public class MeProfileService {
     private final PasswordEncoder passwordEncoder;
     private final ChannelVideoRepository channelVideoRepository;
     private final ChannelRepository channelRepository;
+    private final ApplicantSignupProfileService applicantSignupProfileService;
 
     public MeProfileService(
             UserRepository userRepository,
@@ -46,7 +48,8 @@ public class MeProfileService {
             UserSnsLinkReplacementService userSnsLinkReplacementService,
             PasswordEncoder passwordEncoder,
             ChannelVideoRepository channelVideoRepository,
-            ChannelRepository channelRepository) {
+            ChannelRepository channelRepository,
+            ApplicantSignupProfileService applicantSignupProfileService) {
         this.userRepository = userRepository;
         this.userNicknameService = userNicknameService;
         this.userSnsLinkRepository = userSnsLinkRepository;
@@ -54,6 +57,7 @@ public class MeProfileService {
         this.passwordEncoder = passwordEncoder;
         this.channelVideoRepository = channelVideoRepository;
         this.channelRepository = channelRepository;
+        this.applicantSignupProfileService = applicantSignupProfileService;
     }
 
     private UUID requireUserId() {
@@ -118,6 +122,7 @@ public class MeProfileService {
         if (req.resolveNationalityInput() != null) {
             UserChannelProfilePatchSupport.applyNationality(user, req.resolveNationalityInput());
         }
+        applicantSignupProfileService.updateResidence(user, req.getCountryCode(), req.getTimezone());
         if (req.getIntroText() != null) {
             user.setIntroText(req.getIntroText().trim().isEmpty() ? null : req.getIntroText().trim());
         }

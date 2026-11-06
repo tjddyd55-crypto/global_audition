@@ -25,7 +25,8 @@ public final class ContentTranslationRows {
             boolean manuallyEdited,
             long rowVersion,
             String errorCode,
-            String errorMessage) {
+            String errorMessage,
+            String sourceFieldHashes) {
     }
 
     public record StoredJob(

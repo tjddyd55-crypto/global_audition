@@ -9,6 +9,7 @@ import { useTranslations } from 'next-intl'
 import { meProfileApi, type MeProfileResponse } from '@/shared/api/meProfile'
 import { calculateAge } from '@/shared/audition/calculateAge'
 import { nationalityOptionValues } from '@/shared/i18n/nationalityOptions'
+import { COUNTRY_CODES, timezones } from '@/shared/utils/countries'
 import { CARD_BASE, BTN_PRIMARY, TEXT_SUB } from '@/shared/ui/specClasses'
 
 const SNS_PLATFORM_VALUES = ['instagram', 'tiktok', 'youtube', 'twitter', 'facebook', 'other'] as const
@@ -29,6 +30,8 @@ function createProfileSchema(nicknameMin: string, birthFormat: string) {
       nickname: z.string().min(2, nicknameMin).max(20),
       birthDate: z.string(),
       nationality: z.enum(['', 'KR', 'MN', 'JP', 'OTHER']),
+      countryCode: z.string().max(8),
+      timezone: z.string().max(64),
       introText: z.string().max(8000),
     })
     .superRefine((data, ctx) => {
@@ -58,6 +61,8 @@ function applyMeToForm(me: MeProfileResponse): ProfileFormValues {
     nickname: me.nickname?.trim() ?? '',
     birthDate: me.birthDate?.trim() ?? '',
     nationality: normalizeNationality(me.nationality),
+    countryCode: (me.countryCode ?? '').trim().toUpperCase(),
+    timezone: (me.timezone ?? '').trim(),
     introText: me.introText?.trim() ?? '',
   }
 }
@@ -77,6 +82,8 @@ function snapshotForDirty(values: ProfileFormValues, sns: SnsRow[]): string {
     nickname: values.nickname.trim(),
     birthDate: values.birthDate.trim(),
     nationality: values.nationality,
+    countryCode: values.countryCode.trim().toUpperCase(),
+    timezone: values.timezone.trim(),
     introText: values.introText.trim(),
     sns: sns.map((r) => ({
       platform: r.platform.trim().toLowerCase(),
@@ -97,6 +104,8 @@ export function ProfileManageForm() {
   const tAuth = useTranslations('auth')
   const tCommon = useTranslations('common')
   const tNat = useTranslations('nationality')
+  const tCountries = useTranslations('countries')
+  const tReg = useTranslations('register')
   const profileSchema = useMemo(
     () => createProfileSchema(tProfile('nicknameMin'), tProfile('birthFormat')),
     [tProfile],
@@ -119,6 +128,8 @@ export function ProfileManageForm() {
       nickname: '',
       birthDate: '',
       nationality: '',
+      countryCode: '',
+      timezone: '',
       introText: '',
     },
   })
@@ -195,6 +206,8 @@ export function ProfileManageForm() {
       nickname: values.nickname.trim(),
       birthDate: values.birthDate.trim(),
       nationality: values.nationality,
+      countryCode: values.countryCode.trim().toUpperCase(),
+      timezone: values.timezone.trim(),
       introText: values.introText.trim(),
       snsLinks: normalizedSns,
     })
@@ -284,6 +297,36 @@ export function ProfileManageForm() {
                 {code === '' ? tNat('unspecified') : tNat(code)}
               </option>
             ))}
+          </select>
+        </label>
+
+        <label className={`flex flex-col gap-1 ${labelClass}`}>
+          {tProfile('residenceCountry')}
+          <select {...form.register('countryCode')} disabled={blocked} className={`${inputClass} bg-white`}>
+            <option value="">{tNat('unspecified')}</option>
+            {COUNTRY_CODES.map((code) => (
+              <option key={code} value={code}>
+                {tCountries(code)}
+              </option>
+            ))}
+            {watched.countryCode && !(COUNTRY_CODES as readonly string[]).includes(watched.countryCode) ? (
+              <option value={watched.countryCode}>{watched.countryCode}</option>
+            ) : null}
+          </select>
+        </label>
+
+        <label className={`flex flex-col gap-1 ${labelClass}`}>
+          {tProfile('timezone')}
+          <select {...form.register('timezone')} disabled={blocked} className={`${inputClass} bg-white`}>
+            <option value="">{tReg('selectTimezone')}</option>
+            {timezones.map((zone) => (
+              <option key={zone.value} value={zone.value}>
+                {zone.label}
+              </option>
+            ))}
+            {watched.timezone && !timezones.some((zone) => zone.value === watched.timezone) ? (
+              <option value={watched.timezone}>{watched.timezone}</option>
+            ) : null}
           </select>
         </label>
       </section>

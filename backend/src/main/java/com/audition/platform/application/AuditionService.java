@@ -563,67 +563,53 @@ public class AuditionService {
         }
 
         boolean originalChanged = auditionLocalizationService.writeOriginal(audition, request);
+        boolean changed = originalChanged;
         if (request.getStatus() != null) {
             requireApprovedAgencyForPublish(audition.getOwnerId(), request.getStatus());
-            audition.setStatus(request.getStatus());
+            changed |= assign(request.getStatus(), audition.getStatus(), audition::setStatus);
         }
         if (request.getCountryCode() != null) {
-            audition.setCountryCode(normalizeCountryCode(request.getCountryCode()));
+            changed |= assign(normalizeCountryCode(request.getCountryCode()), audition.getCountryCode(), audition::setCountryCode);
         }
         if (request.getHostCountry() != null) {
-            audition.setHostCountry(normalizeHostCountry(request.getHostCountry()));
+            changed |= assign(normalizeHostCountry(request.getHostCountry()), audition.getHostCountry(), audition::setHostCountry);
         }
         if (request.getDefaultLocale() != null && !request.getDefaultLocale().isBlank()) {
             String nextLocale = requireAuthoringLocale(request.getDefaultLocale());
             if (!nextLocale.equals(audition.getDefaultLocale())) {
                 audition.setDefaultLocale(nextLocale);
                 originalChanged = true;
+                changed = true;
             }
         }
-        boolean patchNewTags = request.getTagIds() != null || request.getCustomTagNames() != null;
-        if (patchNewTags) {
-            auditionTagService.replaceAuditionTags(
-                    id,
-                    request.getTagIds() != null ? request.getTagIds() : List.of(),
-                    request.getCustomTagNames() != null ? request.getCustomTagNames() : List.of());
-        } else if (request.getTags() != null) {
-            auditionTagService.replaceFromLegacyList(id, request.getTags());
-        }
+        changed |= replaceTagsIfRequested(id, request);
         if (request.getDeadlineAt() != null) {
-            audition.setDeadlineAt(parseInstantOrNull(request.getDeadlineAt()));
+            changed |= assign(parseInstantOrNull(request.getDeadlineAt()), audition.getDeadlineAt(), audition::setDeadlineAt);
         }
-        if (request.getImages() != null) {
+        if (request.getImages() != null && imagesDiffer(audition, request.getImages())) {
             applyImagesToEntity(audition, request.getImages());
+            changed = true;
         }
         if (request.getVideoUrl() != null) {
-            audition.setVideoUrl(request.getVideoUrl());
+            changed |= assign(request.getVideoUrl(), audition.getVideoUrl(), audition::setVideoUrl);
         }
         if (request.getGalleryImages() != null) {
-            audition.setGalleryImages(listToArray(request.getGalleryImages()));
-        }
-        if (request.getAgencyLogo() != null) {
-            audition.setAgencyLogo(request.getAgencyLogo());
-        }
-        if (request.getStartDate() != null) {
-            audition.setStartDate(parseInstantRequired(request.getStartDate(), "startDate"));
-        }
-        if (request.getEndDate() != null) {
-            audition.setEndDate(parseInstantRequired(request.getEndDate(), "endDate"));
-        }
-        if (request.getProcessMode() != null) {
-            if (AuditionProcessModes.isMultiRound(request.getProcessMode())) {
-                audition.setProcessMode(AuditionProcessModes.MULTI_ROUND);
-                if (auditionRoundService.listRounds(id).isEmpty()) {
-                    audition.setCurrentRoundNumber(1);
-                    audition.setMaxRoundNumber(1);
-                    audition.setSelectionStatus("OPEN".equals(audition.getStatus()) ? "OPEN" : "DRAFT");
-                    auditionRepository.save(audition);
-                    auditionRoundService.bootstrapFirstRound(id, "OPEN".equals(audition.getStatus()));
-                }
-            } else {
-                audition.setProcessMode(AuditionProcessModes.SINGLE);
+            String[] nextGallery = listToArray(request.getGalleryImages());
+            if (!java.util.Arrays.equals(nextGallery, audition.getGalleryImages())) {
+                audition.setGalleryImages(nextGallery);
+                changed = true;
             }
         }
+        if (request.getAgencyLogo() != null) {
+            changed |= assign(request.getAgencyLogo(), audition.getAgencyLogo(), audition::setAgencyLogo);
+        }
+        if (request.getStartDate() != null) {
+            changed |= assign(parseInstantRequired(request.getStartDate(), "startDate"), audition.getStartDate(), audition::setStartDate);
+        }
+        if (request.getEndDate() != null) {
+            changed |= assign(parseInstantRequired(request.getEndDate(), "endDate"), audition.getEndDate(), audition::setEndDate);
+        }
+        changed |= applyProcessMode(id, audition, request.getProcessMode());
 
         assertYoutubeIfVideoPresent(audition.getStatus(), audition.getVideoUrl());
         String publishedOriginal = trimOrNull(audition.getImageOriginalUrl());
@@ -632,6 +618,9 @@ public class AuditionService {
         }
         assertCoverImageForPublished(audition.getStatus(), publishedOriginal);
 
+        if (!changed) {
+            return toResponse(audition, false);
+        }
         if (audition.getEndDate() != null) {
             audition.setRemainingDays(computeRemainingDays(audition.getEndDate()));
         }
@@ -644,6 +633,67 @@ public class AuditionService {
             enqueuePostingTranslation(saved);
         }
         return toResponse(saved, false);
+    }
+
+    /** 공고 수정에는 감사 로그가 없다. 값이 같으면 컬럼을 쓰지 않는다. */
+    private static <T> boolean assign(T next, T current, java.util.function.Consumer<T> write) {
+        if (java.util.Objects.equals(next, current)) {
+            return false;
+        }
+        write.accept(next);
+        return true;
+    }
+
+    private boolean replaceTagsIfRequested(UUID id, UpdateAuditionRequest request) {
+        boolean patchNewTags = request.getTagIds() != null || request.getCustomTagNames() != null;
+        if (patchNewTags) {
+            return auditionTagService.replaceAuditionTags(
+                    id,
+                    request.getTagIds() != null ? request.getTagIds() : List.of(),
+                    request.getCustomTagNames() != null ? request.getCustomTagNames() : List.of());
+        }
+        if (request.getTags() != null) {
+            return auditionTagService.replaceFromLegacyList(id, request.getTags());
+        }
+        return false;
+    }
+
+    private boolean applyProcessMode(UUID id, Audition audition, String requested) {
+        if (requested == null) {
+            return false;
+        }
+        if (AuditionProcessModes.isMultiRound(requested)) {
+            boolean changed = !AuditionProcessModes.isMultiRound(audition.getProcessMode());
+            if (changed) {
+                audition.setProcessMode(AuditionProcessModes.MULTI_ROUND);
+            }
+            if (!auditionRoundService.listRounds(id).isEmpty()) {
+                return changed;
+            }
+            audition.setCurrentRoundNumber(1);
+            audition.setMaxRoundNumber(1);
+            audition.setSelectionStatus("OPEN".equals(audition.getStatus()) ? "OPEN" : "DRAFT");
+            auditionRepository.save(audition);
+            auditionRoundService.bootstrapFirstRound(id, "OPEN".equals(audition.getStatus()));
+            return true;
+        }
+        if (AuditionProcessModes.SINGLE.equals(audition.getProcessMode())) {
+            return false;
+        }
+        audition.setProcessMode(AuditionProcessModes.SINGLE);
+        return true;
+    }
+
+    private static boolean imagesDiffer(Audition audition, AuditionImagesDto img) {
+        String original = trimOrNull(img.getOriginal());
+        String medium = trimOrNull(img.getMedium());
+        String thumb = trimOrNull(img.getThumb());
+        String nextMedium = medium != null ? medium : original;
+        String nextThumb = thumb != null ? thumb : original;
+        return !java.util.Objects.equals(original, trimOrNull(audition.getImageOriginalUrl()))
+                || !java.util.Objects.equals(nextMedium, trimOrNull(audition.getImageMediumUrl()))
+                || !java.util.Objects.equals(nextThumb, trimOrNull(audition.getImageThumbUrl()))
+                || !java.util.Objects.equals(original, trimOrNull(audition.getCoverImage()));
     }
 
     /** 게시된 공고만 활성 대상(영어 우선)을 큐에 넣는다. 실패해도 공고 저장은 유지한다. */

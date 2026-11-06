@@ -1,5 +1,6 @@
 package com.audition.platform.application.i18n.content;
 
+import com.audition.platform.application.i18n.SourceFieldHashes;
 import com.audition.platform.application.i18n.TranslationAttemptRecorder;
 import com.audition.platform.application.i18n.content.ContentTranslationRows.AttemptFinish;
 import com.audition.platform.application.i18n.content.ContentTranslationRows.ContentSnapshot;
@@ -93,6 +94,14 @@ public class ContentTranslationWorker {
         }
         ContentSnapshot snapshot = loaded.get();
         StoredTranslation existing = store.findTranslation(job.contentType(), job.contentId(), job.locale()).orElse(null);
+        String hash = ContentSourceFingerprint.hash(snapshot.sourceLocale(), snapshot.fields());
+        String fieldHashes = SourceFieldHashes.ofContentFields(snapshot.fields());
+        if (!job.force() && existing != null && AuditionTranslation.STATUS_COMPLETED.equals(existing.status())
+                && !SourceFieldHashes.differs(existing.sourceFieldHashes(), fieldHashes, existing.sourceHash(), hash)) {
+            store.reconcileStale(job.contentType(), job.contentId(), job.locale(), hash, fieldHashes);
+            store.finishJob(job.id(), ContentTypes.JOB_COMPLETED, null, null);
+            return;
+        }
         if (existing != null && (existing.manuallyEdited() || AuditionTranslation.ORIGIN_MANUAL.equals(existing.origin())) && !job.force()) {
             blocked(job, ContentTypes.TRANSLATION_PROTECTED);
             return;
@@ -143,6 +152,7 @@ public class ContentTranslationWorker {
             throw new TranslationProviderException(ContentTypes.TRANSLATION_PROTECTED, ContentTypes.TRANSLATION_PROTECTED);
         }
         String hash = ContentSourceFingerprint.hash(snapshot.sourceLocale(), snapshot.fields());
+        String fieldHashes = SourceFieldHashes.ofContentFields(snapshot.fields());
         long revision = 1L;
         if (current != null && current.sourceRevision() != null) {
             revision = hash.equals(current.sourceHash()) ? current.sourceRevision() : current.sourceRevision() + 1;
@@ -156,7 +166,7 @@ public class ContentTranslationWorker {
         StoredTranslation row = new StoredTranslation(
                 job.contentType(), job.contentId(), job.locale(), snapshot.sourceLocale(), hash, revision, json,
                 AuditionTranslation.STATUS_COMPLETED, false, provider.providerId(), AuditionTranslation.ORIGIN_AUTO,
-                false, current == null ? 0L : current.rowVersion(), null, null);
+                false, current == null ? 0L : current.rowVersion(), null, null, fieldHashes);
         if (current == null) {
             store.insertTranslation(row);
             return;

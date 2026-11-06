@@ -1,6 +1,7 @@
 package com.audition.platform.application.i18n.content;
 
 import com.audition.platform.application.i18n.Bcp47Tags;
+import com.audition.platform.application.i18n.SourceFieldHashes;
 import com.audition.platform.application.i18n.LocaleRegistry;
 import com.audition.platform.application.i18n.content.ContentTranslationRows.ContentSnapshot;
 import com.audition.platform.application.i18n.content.ContentTranslationRows.NewJob;
@@ -63,11 +64,10 @@ public class ContentTranslationService {
             return original(loaded.snapshot(), requested, true, null, ContentTypes.TARGET_INACTIVE);
         }
         String hash = ContentSourceFingerprint.hash(loaded.snapshot().sourceLocale(), loaded.snapshot().fields());
-        store.markStaleWhereHashDiffers(type, id, hash);
+        String fieldHashes = SourceFieldHashes.ofContentFields(loaded.snapshot().fields());
+        store.reconcileStale(type, id, requested, hash, fieldHashes);
         StoredTranslation row = store.findTranslation(type, id, requested).orElse(null);
-        boolean fresh = row != null
-                && AuditionTranslation.STATUS_COMPLETED.equals(row.status())
-                && hash.equals(row.sourceHash());
+        boolean fresh = completedForSource(row, hash, fieldHashes);
         if (fresh) {
             return translated(loaded.snapshot(), requested, row, null);
         }
@@ -109,7 +109,11 @@ public class ContentTranslationService {
         Map<String, String> body = new LinkedHashMap<>();
         loaded.snapshot().fields().keySet().forEach(key -> body.put(key, fields == null ? "" : fields.getOrDefault(key, "")));
         String hash = ContentSourceFingerprint.hash(loaded.snapshot().sourceLocale(), loaded.snapshot().fields());
+        String fieldHashes = SourceFieldHashes.ofContentFields(loaded.snapshot().fields());
         StoredTranslation existing = store.findTranslation(type, id, requested).orElse(null);
+        if (existing != null && sameManual(existing, body, hash, fieldHashes)) {
+            return translated(loaded.snapshot(), requested, existing, null);
+        }
         long revision = existing == null || existing.sourceRevision() == null ? 1L : existing.sourceRevision();
         if (existing != null && existing.sourceHash() != null && !existing.sourceHash().equals(hash)) {
             revision = existing.sourceRevision() == null ? 2L : existing.sourceRevision() + 1;
@@ -118,7 +122,7 @@ public class ContentTranslationService {
                 type, id, requested, loaded.snapshot().sourceLocale(), hash, revision, writeJson(body),
                 AuditionTranslation.STATUS_COMPLETED, false, AuditionTranslation.PROVIDER_MANUAL,
                 AuditionTranslation.ORIGIN_MANUAL, true, existing == null ? 0L : existing.rowVersion(),
-                null, null);
+                null, null, fieldHashes);
         if (existing == null) {
             store.insertTranslation(row);
         } else if (!store.compareAndSet(row, existing.rowVersion())) {
@@ -150,7 +154,8 @@ public class ContentTranslationService {
             return;
         }
         String hash = ContentSourceFingerprint.hash(snapshot.sourceLocale(), snapshot.fields());
-        store.markStaleWhereHashDiffers(type, id, hash);
+        String fieldHashes = SourceFieldHashes.ofContentFields(snapshot.fields());
+        store.reconcileStale(type, id, null, hash, fieldHashes);
         Loaded loaded = new Loaded(source, snapshot);
         for (String target : locales.activeTargets()) {
             if (sameLocale(snapshot, target) || !locales.providerSupports(target)) {
@@ -162,7 +167,11 @@ public class ContentTranslationService {
 
     private Optional<UUID> enqueue(Loaded loaded, String locale, String hash, boolean explicit, boolean force, UUID viewer) {
         ContentSnapshot snapshot = loaded.snapshot();
+        String fieldHashes = SourceFieldHashes.ofContentFields(snapshot.fields());
         StoredTranslation current = store.findTranslation(snapshot.contentType(), snapshot.contentId(), locale).orElse(null);
+        if (!explicit && !force && completedForSource(current, hash, fieldHashes)) {
+            return Optional.empty();
+        }
         if (protectedRow(current) && !force) {
             return store.findLatestJob(snapshot.contentType(), snapshot.contentId(), locale).map(StoredJob::id);
         }
@@ -239,6 +248,26 @@ public class ContentTranslationService {
         return snapshot.sourceLocale() != null && snapshot.sourceLocale().equals(requested);
     }
 
+    private static boolean completedForSource(StoredTranslation row, String hash, String fieldHashes) {
+        return row != null
+                && AuditionTranslation.STATUS_COMPLETED.equals(row.status())
+                && !SourceFieldHashes.differs(row.sourceFieldHashes(), fieldHashes, row.sourceHash(), hash);
+    }
+
+    private boolean sameManual(StoredTranslation existing, Map<String, String> body, String hash, String fieldHashes) {
+        if (!AuditionTranslation.ORIGIN_MANUAL.equals(existing.origin()) || existing.stale()) {
+            return false;
+        }
+        if (SourceFieldHashes.differs(existing.sourceFieldHashes(), fieldHashes, existing.sourceHash(), hash)) {
+            return false;
+        }
+        return readJson(existing.bodyJson()).equals(body);
+    }
+
+    private static boolean present(String raw) {
+        return raw != null && !raw.isBlank();
+    }
+
     private static boolean protectedRow(StoredTranslation row) {
         return row != null && (row.manuallyEdited() || AuditionTranslation.ORIGIN_MANUAL.equals(row.origin()));
     }
@@ -263,8 +292,12 @@ public class ContentTranslationService {
 
     private ContentTranslationView translated(
             ContentSnapshot snapshot, String requested, StoredTranslation row, UUID jobId) {
-        boolean stale = row.stale() || (row.sourceHash() != null
-                && !row.sourceHash().equals(ContentSourceFingerprint.hash(snapshot.sourceLocale(), snapshot.fields())));
+        String hash = ContentSourceFingerprint.hash(snapshot.sourceLocale(), snapshot.fields());
+        String fieldHashes = SourceFieldHashes.ofContentFields(snapshot.fields());
+        boolean hasBaseline = present(row.sourceFieldHashes()) || present(row.sourceHash());
+        boolean stale = hasBaseline
+                ? SourceFieldHashes.differs(row.sourceFieldHashes(), fieldHashes, row.sourceHash(), hash)
+                : row.stale();
         return new ContentTranslationView(
                 snapshot.contentType(), snapshot.contentId(), snapshot.sourceLocale(), requested, requested,
                 false, false, stale, row.status(), row.origin(), row.errorCode(), readJson(row.bodyJson()), jobId);

@@ -21,6 +21,12 @@ public interface ContentTranslationStore {
 
     void markStaleWhereHashDiffers(String type, UUID id, String hash);
 
+    /**
+     * 한 로케일만, 또는 locale 이 null 이면 그 콘텐츠의 모든 로케일을 각자 비교한다.
+     * stale 플래그가 바뀌지 않으면 updated_at 을 갱신하지 않는다.
+     */
+    void reconcileStale(String type, UUID id, String locale, String combinedHash, String fieldHashes);
+
     UUID insertAttempt(NewAttempt attempt);
 
     void finishAttempt(AttemptFinish finish);

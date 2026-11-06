@@ -1,5 +1,6 @@
 package com.audition.platform.application.i18n.content;
 
+import com.audition.platform.application.i18n.SourceFieldHashes;
 import com.audition.platform.application.i18n.content.ContentTranslationRows.AttemptFinish;
 import com.audition.platform.application.i18n.content.ContentTranslationRows.NewAttempt;
 import com.audition.platform.application.i18n.content.ContentTranslationRows.NewJob;
@@ -26,7 +27,8 @@ public class JdbcContentTranslationStore implements ContentTranslationStore {
 
     private static final String TRANSLATION_COLUMNS = """
             content_type, content_id, locale, source_locale, source_hash, source_revision, body::text AS body,
-            status, stale, provider, origin, manually_edited, row_version, error_code, error_message
+            status, stale, provider, origin, manually_edited, row_version, error_code, error_message,
+            source_field_hashes
             """;
 
     private static final String JOB_COLUMNS = """
@@ -54,12 +56,13 @@ public class JdbcContentTranslationStore implements ContentTranslationStore {
         jdbc.update("""
                 INSERT INTO content_translations (
                     content_type, content_id, locale, source_locale, source_hash, source_revision, body,
-                    status, stale, provider, origin, manually_edited, row_version, error_code, error_message
-                ) VALUES (?, ?, ?, ?, ?, ?, CAST(? AS jsonb), ?, ?, ?, ?, ?, ?, ?, ?)
+                    status, stale, provider, origin, manually_edited, row_version, error_code, error_message,
+                    source_field_hashes
+                ) VALUES (?, ?, ?, ?, ?, ?, CAST(? AS jsonb), ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 row.contentType(), row.contentId(), row.locale(), row.sourceLocale(), row.sourceHash(),
                 row.sourceRevision(), row.bodyJson(), row.status(), row.stale(), row.provider(), row.origin(),
-                row.manuallyEdited(), row.rowVersion(), row.errorCode(), row.errorMessage());
+                row.manuallyEdited(), row.rowVersion(), row.errorCode(), row.errorMessage(), row.sourceFieldHashes());
     }
 
     @Override
@@ -68,22 +71,52 @@ public class JdbcContentTranslationStore implements ContentTranslationStore {
                 UPDATE content_translations
                 SET source_locale = ?, source_hash = ?, source_revision = ?, body = CAST(? AS jsonb),
                     status = ?, stale = ?, provider = ?, origin = ?, manually_edited = ?,
-                    error_code = ?, error_message = ?, row_version = row_version + 1, updated_at = NOW()
+                    error_code = ?, error_message = ?, source_field_hashes = ?,
+                    row_version = row_version + 1, updated_at = NOW()
                 WHERE content_type = ? AND content_id = ? AND locale = ? AND row_version = ?
                 """,
                 row.sourceLocale(), row.sourceHash(), row.sourceRevision(), row.bodyJson(), row.status(),
                 row.stale(), row.provider(), row.origin(), row.manuallyEdited(), row.errorCode(),
-                row.errorMessage(), row.contentType(), row.contentId(), row.locale(), expectedVersion);
+                row.errorMessage(), row.sourceFieldHashes(), row.contentType(), row.contentId(), row.locale(),
+                expectedVersion);
         return updated == 1;
     }
 
     @Override
     public void markStaleWhereHashDiffers(String type, UUID id, String hash) {
-        jdbc.update("""
-                UPDATE content_translations
-                SET stale = TRUE, updated_at = NOW()
-                WHERE content_type = ? AND content_id = ? AND source_hash IS DISTINCT FROM ?
-                """, type, id, hash);
+        reconcileStale(type, id, null, hash, null);
+    }
+
+    @Override
+    public void reconcileStale(String type, UUID id, String locale, String combinedHash, String fieldHashes) {
+        String sql = "SELECT " + TRANSLATION_COLUMNS + " FROM content_translations WHERE content_type = ? AND content_id = ?";
+        List<StoredTranslation> rows = locale == null
+                ? jdbc.query(sql, translationMapper(), type, id)
+                : jdbc.query(sql + " AND locale = ?", translationMapper(), type, id, locale);
+        for (StoredTranslation row : rows) {
+            if (row.sourceFieldHashes() != null && !row.sourceFieldHashes().isBlank() && (fieldHashes == null || fieldHashes.isBlank())) {
+                continue;
+            }
+            boolean next = nextStale(row, combinedHash, fieldHashes);
+            if (next == row.stale()) {
+                continue;
+            }
+            jdbc.update("""
+                    UPDATE content_translations
+                    SET stale = ?, updated_at = NOW()
+                    WHERE content_type = ? AND content_id = ? AND locale = ? AND stale <> ?
+                    """, next, type, id, row.locale(), next);
+        }
+    }
+
+    private static boolean nextStale(StoredTranslation row, String combinedHash, String fieldHashes) {
+        if (row.sourceFieldHashes() != null && !row.sourceFieldHashes().isBlank()) {
+            return SourceFieldHashes.differs(row.sourceFieldHashes(), fieldHashes, row.sourceHash(), combinedHash);
+        }
+        if (row.sourceHash() == null || row.sourceHash().isBlank()) {
+            return true;
+        }
+        return !row.sourceHash().equals(combinedHash);
     }
 
     @Override
@@ -315,7 +348,8 @@ public class JdbcContentTranslationStore implements ContentTranslationStore {
                 rs.getBoolean("manually_edited"),
                 rs.getLong("row_version"),
                 rs.getString("error_code"),
-                rs.getString("error_message"));
+                rs.getString("error_message"),
+                rs.getString("source_field_hashes"));
     }
 
     private static RowMapper<StoredJob> jobMapper() {

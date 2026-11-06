@@ -1,5 +1,6 @@
 package com.audition.platform.application.i18n.content;
 
+import com.audition.platform.application.i18n.SourceFieldHashes;
 import com.audition.platform.application.i18n.content.ContentTranslationRows.AttemptFinish;
 import com.audition.platform.application.i18n.content.ContentTranslationRows.NewAttempt;
 import com.audition.platform.application.i18n.content.ContentTranslationRows.NewJob;
@@ -55,7 +56,8 @@ public class MemoryContentTranslationStore implements ContentTranslationStore {
                 translations.set(i, new StoredTranslation(
                         row.contentType(), row.contentId(), row.locale(), row.sourceLocale(), row.sourceHash(),
                         row.sourceRevision(), row.bodyJson(), row.status(), row.stale(), row.provider(), row.origin(),
-                        row.manuallyEdited(), expectedVersion + 1, row.errorCode(), row.errorMessage()));
+                        row.manuallyEdited(), expectedVersion + 1, row.errorCode(), row.errorMessage(),
+                        row.sourceFieldHashes()));
                 return true;
             }
         }
@@ -64,17 +66,50 @@ public class MemoryContentTranslationStore implements ContentTranslationStore {
 
     @Override
     public synchronized void markStaleWhereHashDiffers(String type, UUID id, String hash) {
+        reconcileStale(type, id, null, hash, null);
+    }
+
+    @Override
+    public synchronized void reconcileStale(String type, UUID id, String locale, String combinedHash, String fieldHashes) {
         for (int i = 0; i < translations.size(); i++) {
             StoredTranslation current = translations.get(i);
-            if (current.contentType().equals(type) && current.contentId().equals(id)
-                    && (current.sourceHash() == null || !current.sourceHash().equals(hash))) {
-                translations.set(i, new StoredTranslation(
-                        current.contentType(), current.contentId(), current.locale(), current.sourceLocale(),
-                        current.sourceHash(), current.sourceRevision(), current.bodyJson(), current.status(), true,
-                        current.provider(), current.origin(), current.manuallyEdited(), current.rowVersion(),
-                        current.errorCode(), current.errorMessage()));
+            if (!current.contentType().equals(type) || !current.contentId().equals(id)) {
+                continue;
             }
+            if (locale != null && !locale.equals(current.locale())) {
+                continue;
+            }
+            if (present(current.sourceFieldHashes()) && !present(fieldHashes)) {
+                continue;
+            }
+            boolean next = nextStale(current, combinedHash, fieldHashes);
+            if (next == current.stale()) {
+                continue;
+            }
+            translations.set(i, copy(current, next));
         }
+    }
+
+    private static StoredTranslation copy(StoredTranslation current, boolean stale) {
+        return new StoredTranslation(
+                current.contentType(), current.contentId(), current.locale(), current.sourceLocale(),
+                current.sourceHash(), current.sourceRevision(), current.bodyJson(), current.status(), stale,
+                current.provider(), current.origin(), current.manuallyEdited(), current.rowVersion(),
+                current.errorCode(), current.errorMessage(), current.sourceFieldHashes());
+    }
+
+    private static boolean nextStale(StoredTranslation row, String combinedHash, String fieldHashes) {
+        if (present(row.sourceFieldHashes())) {
+            return SourceFieldHashes.differs(row.sourceFieldHashes(), fieldHashes, row.sourceHash(), combinedHash);
+        }
+        if (!present(row.sourceHash())) {
+            return true;
+        }
+        return !row.sourceHash().equals(combinedHash);
+    }
+
+    private static boolean present(String raw) {
+        return raw != null && !raw.isBlank();
     }
 
     @Override

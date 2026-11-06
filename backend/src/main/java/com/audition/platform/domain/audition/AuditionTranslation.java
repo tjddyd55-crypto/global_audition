@@ -88,6 +88,10 @@ public class AuditionTranslation {
     @Column(name = "source_hash", length = 64)
     private String sourceHash;
 
+    /** 제목·설명·본문 SHA-256 JSON. V65 이전 행은 null 이고 source_hash 만 비교한다. */
+    @Column(name = "source_field_hashes", columnDefinition = "TEXT")
+    private String sourceFieldHashes;
+
     @Column(name = "source_revision")
     private Long sourceRevision;
 
@@ -140,6 +144,8 @@ public class AuditionTranslation {
     public void setErrorMessage(String errorMessage) { this.errorMessage = errorMessage; }
     public String getSourceHash() { return sourceHash; }
     public void setSourceHash(String sourceHash) { this.sourceHash = sourceHash; }
+    public String getSourceFieldHashes() { return sourceFieldHashes; }
+    public void setSourceFieldHashes(String sourceFieldHashes) { this.sourceFieldHashes = sourceFieldHashes; }
     public Long getSourceRevision() { return sourceRevision; }
     public void setSourceRevision(Long sourceRevision) { this.sourceRevision = sourceRevision; }
     public String getOrigin() { return origin; }

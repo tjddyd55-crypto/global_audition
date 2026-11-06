@@ -229,6 +229,8 @@ export type MeProfile = {
   profileImageUrl?: string | null
   birthDate?: string | null
   nationality?: string | null
+  countryCode?: string | null
+  timezone?: string | null
   introText?: string | null
   shortBio?: string | null
   bio?: string | null

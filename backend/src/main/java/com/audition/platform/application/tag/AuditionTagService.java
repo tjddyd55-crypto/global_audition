@@ -105,8 +105,9 @@ public class AuditionTagService {
      * 같은 키를 지웠다가 다시 넣으면 Hibernate 가 INSERT 를 DELETE 보다 먼저 flush 해
      * audition_tags_audition_tag_id_uniq 가 깨진다. 제거가 있으면 삽입 전에 flush 한다.
      */
+    /** @return 행을 지우거나 넣거나 커스텀 이름이 바뀌었으면 true */
     @Transactional
-    public void replaceAuditionTags(UUID auditionId, List<String> tagIdStrings, List<String> customNames) {
+    public boolean replaceAuditionTags(UUID auditionId, List<String> tagIdStrings, List<String> customNames) {
         Map<UUID, Tag> desiredTags = loadActiveTags(tagIdStrings);
         Map<String, String> desiredCustoms = customLabels(customNames, desiredTags.values());
         Kept kept = new Kept();
@@ -114,7 +115,8 @@ public class AuditionTagService {
         if (removed) {
             auditionTagRepository.flush();
         }
-        insertMissing(auditionId, desiredTags.keySet(), desiredCustoms, kept);
+        boolean inserted = insertMissing(auditionId, desiredTags.keySet(), desiredCustoms, kept);
+        return removed || inserted;
     }
 
     private Map<UUID, Tag> loadActiveTags(List<String> tagIdStrings) {
@@ -182,6 +184,7 @@ public class AuditionTagService {
         if (label != null && kept.customKeys.add(key)) {
             if (!label.equals(row.getTagName())) {
                 row.setTagName(label);
+                return true;
             }
             return false;
         }
@@ -189,7 +192,8 @@ public class AuditionTagService {
         return true;
     }
 
-    private void insertMissing(UUID auditionId, Set<UUID> desiredIds, Map<String, String> desiredCustoms, Kept kept) {
+    private boolean insertMissing(UUID auditionId, Set<UUID> desiredIds, Map<String, String> desiredCustoms, Kept kept) {
+        boolean inserted = false;
         for (UUID tagId : desiredIds) {
             if (kept.tagIds.contains(tagId)) {
                 continue;
@@ -199,6 +203,7 @@ public class AuditionTagService {
             link.setTagId(tagId);
             link.setTagName(null);
             auditionTagRepository.save(link);
+            inserted = true;
         }
         for (Map.Entry<String, String> custom : desiredCustoms.entrySet()) {
             if (kept.customKeys.contains(custom.getKey())) {
@@ -209,7 +214,9 @@ public class AuditionTagService {
             link.setTagId(null);
             link.setTagName(custom.getValue());
             auditionTagRepository.save(link);
+            inserted = true;
         }
+        return inserted;
     }
 
     private static final class Kept {
@@ -221,12 +228,12 @@ public class AuditionTagService {
      * 레거시 API: 허용 문자열 목록만 → 카탈로그에 이름이 있으면 tag_id, 없으면 스킵.
      */
     @Transactional
-    public void replaceFromLegacyList(UUID auditionId, List<String> incoming) {
+    public boolean replaceFromLegacyList(UUID auditionId, List<String> incoming) {
         String[] normalized = AuditionTagNormalizer.normalize(incoming);
         List<UUID> ids = new ArrayList<>();
         for (String n : normalized) {
             tagRepository.findFirstByNameIgnoreCaseAndActiveTrue(n).ifPresent(t -> ids.add(t.getId()));
         }
-        replaceAuditionTags(auditionId, ids.stream().map(UUID::toString).collect(Collectors.toList()), List.of());
+        return replaceAuditionTags(auditionId, ids.stream().map(UUID::toString).collect(Collectors.toList()), List.of());
     }
 }

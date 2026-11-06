@@ -22,6 +22,10 @@ export type MeProfileResponse = {
   careerText?: string | null
   activityFields?: string[]
   snsLinks?: Array<{ platform: string; url: string }>
+  /** 거주 국가 ISO alpha-2. 국적(nationality)과 별개. */
+  countryCode?: string | null
+  /** IANA 시간대. */
+  timezone?: string | null
 }
 
 /** 지원서 자동 입력에 쓰는 부분 집합 */
@@ -46,6 +50,8 @@ export type PatchMeProfilePayload = {
   featuredVideoId?: string | null
   careerText?: string | null
   activityFields?: string[]
+  countryCode?: string | null
+  timezone?: string | null
 }
 
 export const meProfileApi = {

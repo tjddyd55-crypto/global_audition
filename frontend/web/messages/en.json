@@ -563,7 +563,9 @@
     "ageAuto": "{age} years old (calculated from birth date)",
     "snsHint": "Enter platform and URL together. Saving replaces the full list.",
     "snsEmpty": "No SNS links yet.",
-    "introPlaceholder": "Write a short introduction."
+    "introPlaceholder": "Write a short introduction.",
+    "residenceCountry": "Country of residence",
+    "timezone": "Time zone"
   },
   "credits": {
     "title": "Credits",
@@ -1509,6 +1511,8 @@
     "fieldActivity": "Activity fields",
     "fieldSns": "Social links",
     "nationality": "Nationality",
+    "residenceCountry": "Country of residence",
+    "timezone": "Time zone",
     "birthDate": "Birth date",
     "name": "Name",
     "nickname": "Nickname",

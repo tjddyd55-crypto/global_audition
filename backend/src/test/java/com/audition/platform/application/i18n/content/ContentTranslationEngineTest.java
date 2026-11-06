@@ -210,6 +210,23 @@ class ContentTranslationEngineTest {
     }
 
     @Test
+    void revertedSourceClearsStaleAndDoesNotCallTheProviderAgain() {
+        service.read(ContentTypes.APPLICATION_INTRO, contentId, "en", false, viewer);
+        assertEquals(1, worker.drain());
+        int calls = provider.calls;
+        String kept = store.findTranslation(ContentTypes.APPLICATION_INTRO, contentId, "en").orElseThrow().bodyJson();
+        source.snapshot = snapshot("ko", "수정된 모집 요강");
+        assertTrue(service.read(ContentTypes.APPLICATION_INTRO, contentId, "en", false, viewer).stale());
+        source.snapshot = snapshot("ko", "연습생 오디션");
+        ContentTranslationView restored = service.read(ContentTypes.APPLICATION_INTRO, contentId, "en", false, viewer);
+        assertFalse(restored.stale());
+        assertEquals("en:연습생 오디션", restored.fields().get("introText"));
+        assertEquals(1, worker.drain());
+        assertEquals(calls, provider.calls);
+        assertEquals(kept, store.findTranslation(ContentTypes.APPLICATION_INTRO, contentId, "en").orElseThrow().bodyJson());
+    }
+
+    @Test
     void repeatedReadsDoNotCallTheProvider() {
         service.read(ContentTypes.APPLICATION_INTRO, contentId, "en", false, viewer);
         assertEquals(1, worker.drain());

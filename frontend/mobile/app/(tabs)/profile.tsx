@@ -1,7 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import { useRouter } from 'expo-router'
 import { useEffect, useState } from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import { Pressable, StyleSheet, Text, View } from 'react-native'
+import { COUNTRY_CODES, timezones } from '../../../web/src/shared/utils/countries'
 import { authApi, isAgencyRole, profileApi } from '../../src/api/endpoints'
 import { ApiError } from '../../src/api/http'
 import { queryKeys } from '../../src/api/queryKeys'
@@ -22,6 +23,8 @@ export default function ProfileScreen() {
   const query = useQuery({ queryKey: queryKeys.profile, queryFn: profileApi.get, enabled: isAuthenticated })
   const [name, setName] = useState('')
   const [nickname, setNickname] = useState('')
+  const [countryCode, setCountryCode] = useState('')
+  const [timezone, setTimezone] = useState('')
   const [intro, setIntro] = useState('')
   const [career, setCareer] = useState('')
   const [activity, setActivity] = useState('')
@@ -34,6 +37,8 @@ export default function ProfileScreen() {
     if (!query.data) return
     setName(query.data.name ?? '')
     setNickname(query.data.nickname ?? '')
+    setCountryCode((query.data.countryCode ?? '').trim().toUpperCase())
+    setTimezone((query.data.timezone ?? '').trim())
     setIntro(query.data.introText ?? '')
     setCareer(query.data.careerText ?? '')
     setActivity((query.data.activityFields ?? []).join('\n'))
@@ -72,6 +77,28 @@ export default function ProfileScreen() {
       <View style={styles.card}>
         <TextField label={t('profile.name')} value={name} onChangeText={setName} autoCapitalize="words" />
         <TextField label={t('profile.nickname')} value={nickname} onChangeText={setNickname} />
+        <Text style={styles.meta}>{t('profile.residenceCountry')}</Text>
+        <View style={styles.langBtns}>
+          <Pressable onPress={() => setCountryCode('')} accessibilityRole="button">
+            <Text style={countryCode === '' ? styles.picked : styles.meta}>{t('nationality.unspecified')}</Text>
+          </Pressable>
+          {COUNTRY_CODES.map((code) => (
+            <Pressable key={code} onPress={() => setCountryCode(code)} accessibilityRole="button">
+              <Text style={countryCode === code ? styles.picked : styles.meta}>{t(`countries.${code}`)}</Text>
+            </Pressable>
+          ))}
+        </View>
+        <Text style={styles.meta}>{t('profile.timezone')}</Text>
+        <View style={styles.langBtns}>
+          <Pressable onPress={() => setTimezone('')} accessibilityRole="button">
+            <Text style={timezone === '' ? styles.picked : styles.meta}>{t('register.selectTimezone')}</Text>
+          </Pressable>
+          {timezones.map((zone) => (
+            <Pressable key={zone.value} onPress={() => setTimezone(zone.value)} accessibilityRole="button">
+              <Text style={timezone === zone.value ? styles.picked : styles.meta}>{zone.label}</Text>
+            </Pressable>
+          ))}
+        </View>
         <TextField label={t('profile.intro')} value={intro} onChangeText={setIntro} multiline />
         <TextField label={t('studio.career')} value={career} onChangeText={setCareer} multiline />
         <TextField label={t('studio.specialties')} value={specialties} onChangeText={setSpecialties} multiline />
@@ -85,6 +112,8 @@ export default function ProfileScreen() {
               await profileApi.patch({
                 name,
                 nickname,
+                countryCode,
+                timezone,
                 introText: intro,
                 careerText: career,
                 categories: specialties
@@ -147,6 +176,7 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   heading: { fontSize: 22, fontWeight: '800', color: colors.text },
   meta: { color: colors.muted, marginTop: 4 },
+  picked: { color: colors.purple, fontWeight: '700', marginTop: 4 },
   role: { color: colors.purple, fontWeight: '700', marginBottom: 16, marginTop: 4 },
   card: {
     backgroundColor: colors.surface,
