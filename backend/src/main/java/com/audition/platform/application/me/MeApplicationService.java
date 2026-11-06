@@ -2,6 +2,8 @@ package com.audition.platform.application.me;
 
 import com.audition.platform.api.dto.AuditionRoundSummaryDto;
 import com.audition.platform.api.dto.me.*;
+import com.audition.platform.application.i18n.AuditionLocalizationService;
+import com.audition.platform.application.i18n.ContentLocaleResolver;
 import com.audition.platform.application.round.AuditionProcessModes;
 import com.audition.platform.application.round.AuditionRoundService;
 import com.audition.platform.domain.audition.Application;
@@ -30,18 +32,24 @@ public class MeApplicationService {
     private final ApplicationSnsLinkRepository applicationSnsLinkRepository;
     private final AuditionRepository auditionRepository;
     private final AuditionRoundService auditionRoundService;
+    private final AuditionLocalizationService auditionLocalizationService;
+    private final ContentLocaleResolver contentLocaleResolver;
 
     public MeApplicationService(
             ApplicationRepository applicationRepository,
             ApplicationVideoRepository applicationVideoRepository,
             ApplicationSnsLinkRepository applicationSnsLinkRepository,
             AuditionRepository auditionRepository,
-            AuditionRoundService auditionRoundService) {
+            AuditionRoundService auditionRoundService,
+            AuditionLocalizationService auditionLocalizationService,
+            ContentLocaleResolver contentLocaleResolver) {
         this.applicationRepository = applicationRepository;
         this.applicationVideoRepository = applicationVideoRepository;
         this.applicationSnsLinkRepository = applicationSnsLinkRepository;
         this.auditionRepository = auditionRepository;
         this.auditionRoundService = auditionRoundService;
+        this.auditionLocalizationService = auditionLocalizationService;
+        this.contentLocaleResolver = contentLocaleResolver;
     }
 
     private UUID requireApplicant() {
@@ -53,6 +61,14 @@ public class MeApplicationService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "지원자만 이용할 수 있습니다.");
         }
         return userId;
+    }
+
+    private String auditionTitle(UUID auditionId, String requestedLocale) {
+        Audition audition = auditionRepository.findById(auditionId).orElse(null);
+        if (audition == null) {
+            return "";
+        }
+        return auditionLocalizationService.titleForViewer(audition, requestedLocale);
     }
 
     private Application requireOwnedApplication(UUID applicationId, UUID applicantId) {
@@ -73,12 +89,13 @@ public class MeApplicationService {
 
     public MyApplicationsPageDto listApplications() {
         UUID userId = requireApplicant();
+        String requestedLocale = contentLocaleResolver.resolve();
         List<Application> all = applicationRepository.findByApplicantIdOrderByCreatedAtDesc(userId);
         List<MyApplicationListItemDto> items = all.stream().map(app -> {
             MyApplicationListItemDto dto = new MyApplicationListItemDto();
             dto.setApplicationId(app.getId().toString());
             dto.setAuditionId(app.getAuditionId().toString());
-            dto.setAuditionTitle(auditionRepository.findById(app.getAuditionId()).map(Audition::getTitle).orElse(""));
+            dto.setAuditionTitle(auditionTitle(app.getAuditionId(), requestedLocale));
             dto.setAppliedAt(app.getCreatedAt());
             dto.setStatus(MeApiMapping.applicationStatusToApi(app.getStatus()));
             return dto;

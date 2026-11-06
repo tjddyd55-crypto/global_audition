@@ -47,7 +47,9 @@ function AuditionBrowse() {
 
   return (
     <div className="min-w-0">
-      <AuditionAudienceFilter country={country} onChange={selectCountry} />
+      <div className="px-4" data-testid="audition-country-guide">
+        <AuditionAudienceFilter country={country} onChange={selectCountry} />
+      </div>
       <form
         className="mb-4 grid gap-2 px-4 sm:grid-cols-3"
         onSubmit={(event) => {
@@ -55,7 +57,7 @@ function AuditionBrowse() {
           void query.refetch()
         }}
       >
-        <input className={INPUT_BASE} value={text} onChange={(event) => setText(event.target.value)} placeholder={t('search')} />
+        <input className={`${INPUT_BASE} hidden sm:block`} value={text} onChange={(event) => setText(event.target.value)} placeholder={t('search')} />
         <input className={INPUT_BASE} value={category} onChange={(event) => setCategory(event.target.value)} placeholder={t('category')} />
         <input className={INPUT_BASE} value={agency} onChange={(event) => setAgency(event.target.value)} placeholder={t('agency')} />
         <input className={INPUT_BASE} type="date" value={from} onChange={(event) => setFrom(event.target.value)} aria-label={t('periodFrom')} />

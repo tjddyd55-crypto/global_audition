@@ -41,6 +41,9 @@ import java.util.UUID;
 @Service
 public class ApplicationSubmitService {
 
+    /** 중복 지원. ko/en/mn `errors.ALREADY_APPLIED` 와 같은 키. */
+    public static final String ALREADY_APPLIED = "ALREADY_APPLIED";
+
     private final ApplicationService applicationService;
     private final ApplicationRepository applicationRepository;
     private final AuditionRepository auditionRepository;
@@ -100,7 +103,7 @@ public class ApplicationSubmitService {
                     HttpStatus.FORBIDDEN, AuditionSeriesPresentation.APPLY_BLOCKED_PREV_ROUND_NOT_ACCEPTED);
         }
         if (applicationRepository.existsByAuditionIdAndApplicantId(auditionId, applicantId)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 지원 완료입니다.");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, ALREADY_APPLIED);
         }
 
         String applicantName = body.getName() != null ? body.getName().trim() : "";
@@ -142,7 +145,7 @@ public class ApplicationSubmitService {
         try {
             app = applicationRepository.saveAndFlush(app);
         } catch (DataIntegrityViolationException e) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 지원 완료입니다.");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, ALREADY_APPLIED);
         }
 
         creditService.useCredits(applicantId, CreditPolicyKey.AUDITION_APPLY, auditionId.toString());

@@ -35,6 +35,23 @@ class AuditionLocalizationServiceTest {
     }
 
     @Test
+    void applicationListTitleUsesSelectedLocaleOrOriginal() {
+        Audition audition = baseAudition("ko");
+        AuditionTranslation english = new AuditionTranslation();
+        english.setAuditionId(audition.getId());
+        english.setLocale("en");
+        english.setTitle("Seoul open call");
+        english.setStatus(AuditionTranslation.STATUS_COMPLETED);
+        when(translationRepository.findByAuditionIdAndLocale(audition.getId(), "en"))
+                .thenReturn(Optional.of(english));
+        when(translationRepository.findByAuditionIdAndLocale(audition.getId(), "mn"))
+                .thenReturn(Optional.empty());
+
+        assertEquals("Seoul open call", service.titleForViewer(audition, "en"));
+        assertEquals("원문 제목", service.titleForViewer(audition, "mn"));
+    }
+
+    @Test
     void fallsBackToOriginalWhenMnMissing() {
         Audition audition = baseAudition("ko");
         AuditionResponse response = baseResponse(audition);

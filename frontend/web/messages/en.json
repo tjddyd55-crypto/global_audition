@@ -1013,7 +1013,8 @@
     "PREVIOUS_ROUND_NOT_PASSED": "You did not pass the previous round",
     "NO_SUBMISSION_ROW": "Preparing your submission. Try again shortly",
     "SUBMISSION_CLOSED": "This round no longer accepts submissions",
-    "ROUND_ALREADY_DECIDED": "This round has already been decided"
+    "ROUND_ALREADY_DECIDED": "This round has already been decided",
+    "ALREADY_APPLIED": "You have already applied."
   },
   "application": {
     "detailLoadFailed": "Could not load the application.",
@@ -1073,7 +1074,10 @@
     "multiStageResultTitle": "Per-round review notice",
     "multiStagePassBody": "You passed this round. Check the notice for the next round.",
     "multiStageFailBody": "You were not selected for this round.",
-    "multiStageOpenBody": "We will tell you when the next round opens."
+    "multiStageOpenBody": "We will tell you when the next round opens.",
+    "PENDING": "Pending",
+    "SENT": "Sent",
+    "FAILED": "Delivery failed"
   },
   "vault": {
     "title": "Creative vault",

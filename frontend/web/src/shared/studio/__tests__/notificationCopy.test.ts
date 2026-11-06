@@ -1,7 +1,7 @@
 import ko from '../../../../messages/ko.json'
 import en from '../../../../messages/en.json'
 import mn from '../../../../messages/mn.json'
-import { notificationCopy } from '../notificationCopy'
+import { notificationCodeLabel, notificationCopy } from '../notificationCopy'
 
 const catalogs = { ko, en, mn } as const
 
@@ -48,5 +48,16 @@ describe('notificationCopy', () => {
     expect(pass.body).toBe(ko.notifications.multiStagePassBody)
     expect(fail.title).toBe(en.notifications.multiStageResultTitle)
     expect(fail.body).toBe(en.notifications.multiStageFailBody)
+  })
+
+  it('maps PASS_NOTICE and PENDING to catalog labels in ko, en, and mn', () => {
+    for (const locale of ['ko', 'en', 'mn'] as const) {
+      const type = notificationCodeLabel('PASS_NOTICE', (key) => translate(locale, key))
+      const status = notificationCodeLabel('PENDING', (key) => translate(locale, key))
+      expect(type).toBe(catalogs[locale].notifications.PASS_NOTICE)
+      expect(status).toBe(catalogs[locale].notifications.PENDING)
+      expect(`${type} · ${status}`).not.toBe('PASS_NOTICE · PENDING')
+    }
+    expect(notificationCodeLabel('UNKNOWN_CODE', () => '')).toBe('UNKNOWN_CODE')
   })
 })

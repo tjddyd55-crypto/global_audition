@@ -1,5 +1,8 @@
 import { PREV_ROUND_APPLY_BLOCKED_CODE, applyBlockedDisplayMessage } from '../applyBlockedCopy'
 import { mapApplySubmitError } from '../mapApplySubmitError'
+import ko from '../../../../messages/ko.json'
+import en from '../../../../messages/en.json'
+import mn from '../../../../messages/mn.json'
 
 const PREV = 'Only previous-round passers can apply'
 const GENERIC = 'Apply failed'
@@ -33,5 +36,25 @@ describe('apply blocked copy', () => {
     }
     const shown = mapApplySubmitError(err, (key) => key, { alreadyDone: 'Already applied', failed: GENERIC })
     expect(shown).toBe('Already applied')
+    expect(shown).not.toContain('이미')
+  })
+
+  it('maps the ALREADY_APPLIED catalog key in ko, en, and mn', () => {
+    const err = {
+      isAxiosError: true,
+      message: 'Request failed with status code 409',
+      response: { status: 409, data: { message: 'ALREADY_APPLIED' } },
+    }
+    const catalogs = { ko, en, mn } as const
+    for (const locale of ['ko', 'en', 'mn'] as const) {
+      const shown = mapApplySubmitError(
+        err,
+        (key) => (key === 'errors.ALREADY_APPLIED' ? catalogs[locale].errors.ALREADY_APPLIED : key),
+        { alreadyDone: 'fallback', failed: GENERIC },
+      )
+      expect(shown).toBe(catalogs[locale].errors.ALREADY_APPLIED)
+    }
+    expect(en.errors.ALREADY_APPLIED).not.toMatch(/[가-힣]/)
+    expect(mn.errors.ALREADY_APPLIED).not.toMatch(/[가-힣]/)
   })
 })

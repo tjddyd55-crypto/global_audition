@@ -12,6 +12,9 @@ const CATALOG_KEYS = new Set([
   'PASS_NOTICE',
   'FAIL_NOTICE',
   'FINAL_NOTICE',
+  'PENDING',
+  'SENT',
+  'FAILED',
 ])
 
 const SINGLE_STAGE_TITLE_KEYS = new Set([
@@ -82,6 +85,16 @@ function roundOpenBody(item: NotificationCopySource): string {
 function translated(key: string | null | undefined, translate: (key: string) => string): string {
   if (!key || !CATALOG_KEYS.has(key)) return ''
   return text(translate(key))
+}
+
+/** 알림 카드의 타입·전달 상태. 카탈로그에 있으면 ko/en/mn 라벨, 없으면 원문 코드. */
+export function notificationCodeLabel(
+  code: string | null | undefined,
+  translate: (key: string) => string,
+): string {
+  const raw = text(code)
+  if (!raw) return ''
+  return translated(raw, translate) || raw
 }
 
 function text(value: string | null | undefined): string {

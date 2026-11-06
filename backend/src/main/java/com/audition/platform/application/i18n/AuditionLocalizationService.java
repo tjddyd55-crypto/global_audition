@@ -72,6 +72,22 @@ public class AuditionLocalizationService {
         response.setPreview(true);
     }
 
+    /**
+     * 지원서 목록의 공고 제목. 선택 로케일에 완료된 번역이 있으면 그 제목, 없으면 원문.
+     * 공개 목록과 같은 오버레이이며 공급자를 호출하지 않는다.
+     */
+    public String titleForViewer(Audition audition, String requestedRaw) {
+        String original = audition.getTitle() != null ? audition.getTitle() : "";
+        AuditionResponse response = new AuditionResponse();
+        response.setTitle(original);
+        apply(audition, response, requestedRaw);
+        String shown = response.getTitle();
+        if (shown == null || shown.isBlank()) {
+            return original;
+        }
+        return shown;
+    }
+
     /** 소유자 편집 화면. 표시 필드를 번역으로 덮지 않는다. */
     public void attachOriginalOnly(Audition audition, AuditionResponse response) {
         String original = authoringLocale(audition);

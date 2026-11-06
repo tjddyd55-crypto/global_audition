@@ -1013,7 +1013,8 @@
     "PREVIOUS_ROUND_NOT_PASSED": "이전 라운드를 통과하지 않았습니다",
     "NO_SUBMISSION_ROW": "제출 준비 중입니다. 잠시 후 다시 시도해 주세요",
     "SUBMISSION_CLOSED": "이 라운드는 더 이상 제출할 수 없습니다",
-    "ROUND_ALREADY_DECIDED": "이미 심사가 완료된 라운드입니다"
+    "ROUND_ALREADY_DECIDED": "이미 심사가 완료된 라운드입니다",
+    "ALREADY_APPLIED": "이미 지원 완료입니다."
   },
   "application": {
     "detailLoadFailed": "지원서를 불러오지 못했습니다.",
@@ -1073,7 +1074,10 @@
     "multiStageResultTitle": "회차별 심사 알림",
     "multiStagePassBody": "축하합니다. 이번 회차 심사를 통과했습니다. 다음 회차 안내를 확인해 주세요.",
     "multiStageFailBody": "이번에는 이번 회차에서 함께하지 못했습니다.",
-    "multiStageOpenBody": "다음 회차 심사가 열리면 안내합니다."
+    "multiStageOpenBody": "다음 회차 심사가 열리면 안내합니다.",
+    "PENDING": "대기",
+    "SENT": "발송됨",
+    "FAILED": "전송 실패"
   },
   "vault": {
     "title": "창작물 보관소",
