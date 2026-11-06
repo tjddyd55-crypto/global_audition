@@ -1,25 +1,21 @@
 import { Tabs } from 'expo-router'
 import { useTranslation } from 'react-i18next'
-import { Text } from 'react-native'
-import { colors } from '../../src/theme/tokens'
 import { LanguageMenu } from '../../src/i18n/LanguageMenu'
+import { colors } from '../../src/theme/tokens'
+import { TabIcon, TabLabel } from '../../src/ui/tabs/TabChrome'
+import { NATIVE_TAB_ITEMS, type NativeTabRoute } from '../../src/ui/tabs/nativeTabItems'
 
-function TabIcon({ label, focused }: { label: string; focused: boolean }) {
-  return (
-    <Text
-      numberOfLines={2}
-      style={{
-        fontSize: 11,
-        lineHeight: 14,
-        textAlign: 'center',
-        fontWeight: focused ? '800' : '600',
-        color: focused ? colors.purple : colors.faint,
-        maxWidth: 72,
-      }}
-    >
-      {label}
-    </Text>
-  )
+/**
+ * 아이콘 슬롯과 라벨 슬롯을 분리한다.
+ * 아이콘에 탭 이름을 다시 그리면 title 라벨과 겹쳐 이름이 두 번 나온다.
+ */
+function tabOptions(route: NativeTabRoute, label: string) {
+  const { icon } = NATIVE_TAB_ITEMS[route]
+  return {
+    title: label,
+    tabBarIcon: ({ color }: { color: string }) => <TabIcon icon={icon} color={color} />,
+    tabBarLabel: ({ color }: { color: string }) => <TabLabel label={label} color={color} />,
+  }
 }
 
 export default function TabsLayout() {
@@ -33,47 +29,17 @@ export default function TabsLayout() {
         headerShadowVisible: false,
         tabBarActiveTintColor: colors.purple,
         tabBarInactiveTintColor: colors.faint,
-        tabBarStyle: { minHeight: 72, paddingTop: 6, paddingBottom: 8 },
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '700', lineHeight: 14 },
+        tabBarStyle: { minHeight: 64, paddingTop: 4, paddingBottom: 6 },
+        tabBarItemStyle: { alignItems: 'center', justifyContent: 'center' },
         tabBarAllowFontScaling: false,
         tabBarLabelPosition: 'below-icon',
       }}
     >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: t('nav.home'),
-          tabBarIcon: ({ focused }) => <TabIcon label={t('nav.home')} focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="auditions"
-        options={{
-          title: t('nav.auditions'),
-          tabBarIcon: ({ focused }) => <TabIcon label={t('nav.auditions')} focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="vote"
-        options={{
-          title: t('nav.vote'),
-          tabBarIcon: ({ focused }) => <TabIcon label={t('nav.vote')} focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="applications"
-        options={{
-          title: t('nav.applications'),
-          tabBarIcon: ({ focused }) => <TabIcon label={t('nav.applications')} focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: t('nav.profile'),
-          tabBarIcon: ({ focused }) => <TabIcon label={t('nav.profile')} focused={focused} />,
-        }}
-      />
+      <Tabs.Screen name="index" options={tabOptions('index', t(NATIVE_TAB_ITEMS.index.labelKey))} />
+      <Tabs.Screen name="auditions" options={tabOptions('auditions', t(NATIVE_TAB_ITEMS.auditions.labelKey))} />
+      <Tabs.Screen name="vote" options={tabOptions('vote', t(NATIVE_TAB_ITEMS.vote.labelKey))} />
+      <Tabs.Screen name="applications" options={tabOptions('applications', t(NATIVE_TAB_ITEMS.applications.labelKey))} />
+      <Tabs.Screen name="profile" options={tabOptions('profile', t(NATIVE_TAB_ITEMS.profile.labelKey))} />
     </Tabs>
   )
 }
