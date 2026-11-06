@@ -239,7 +239,7 @@ class GoogleCloudTranslationProviderTest {
                 ContentTypes.APPLICATION_INTRO, id, "en", "ko", "hash", 1L,
                 "{\"introText\":\"사람이 고친 문장\"}",
                 AuditionTranslation.STATUS_COMPLETED, false, "GOOGLE_CLOUD_TRANSLATION",
-                AuditionTranslation.ORIGIN_MANUAL, true, 0L, null, null));
+                AuditionTranslation.ORIGIN_MANUAL, true, 0L, null, null, null));
         store.insertPendingJob(new NewJob(
                 UUID.randomUUID(), ContentTypes.APPLICATION_INTRO, id, "en", "hash", null, null, 1, false));
 
@@ -256,7 +256,7 @@ class GoogleCloudTranslationProviderTest {
                 ContentTypes.APPLICATION_INTRO, generated, "en", "ko", "hash", 1L,
                 "{\"introText\":\"en:원문\"}",
                 AuditionTranslation.STATUS_COMPLETED, false, "GOOGLE_CLOUD_TRANSLATION",
-                AuditionTranslation.ORIGIN_AUTO, false, 0L, null, null));
+                AuditionTranslation.ORIGIN_AUTO, false, 0L, null, null, null));
         transport.respond(200, token("ya29.token-a"));
         transport.respond(200, "{\"translations\":[]}");
         store.insertPendingJob(new NewJob(

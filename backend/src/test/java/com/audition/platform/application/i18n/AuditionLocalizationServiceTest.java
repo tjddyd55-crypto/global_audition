@@ -59,7 +59,7 @@ class AuditionLocalizationServiceTest {
                 new com.audition.platform.application.i18n.content.ContentTranslationRows.StoredTranslation(
                         "AUDITION_POSTING", audition.getId(), "mn", "ko", "h", 1L,
                         "{\"title\":\"Монгол гарчиг\",\"description\":\"Тайлбар\"}",
-                        AuditionTranslation.STATUS_COMPLETED, false, "GOOGLE", "AUTO", false, 0L, null, null)));
+                        AuditionTranslation.STATUS_COMPLETED, false, "GOOGLE", "AUTO", false, 0L, null, null, null)));
         service.setContentTranslationStore(store, new com.fasterxml.jackson.databind.ObjectMapper());
 
         service.apply(audition, response, "mn");
@@ -79,7 +79,7 @@ class AuditionLocalizationServiceTest {
         when(store.findTranslation("AUDITION_POSTING", audition.getId(), "mn")).thenReturn(Optional.of(
                 new com.audition.platform.application.i18n.content.ContentTranslationRows.StoredTranslation(
                         "AUDITION_POSTING", audition.getId(), "mn", "ko", "h", 1L, "{}",
-                        "PENDING", false, null, null, false, 0L, null, null)));
+                        "PENDING", false, null, null, false, 0L, null, null, null)));
         service.setContentTranslationStore(store, new com.fasterxml.jackson.databind.ObjectMapper());
 
         service.apply(audition, response, "mn");

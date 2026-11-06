@@ -95,29 +95,26 @@ public class AuditionLocalizationService {
     }
 
     /**
-     * 원문 해시가 바뀌면 번역 행을 지우지 않고 stale 로만 표시한다.
-     * 해시가 아직 없으면 이번 저장을 기준선으로 삼고, 번역 가능 필드가 포함된 저장이면 stale 로 표시한다.
+     * 번역 행마다 제목·설명·본문 해시(없으면 기존 source_hash)를 현재 원문과 비교한다.
+     * 같으면 stale 을 해제하고 번역 본문은 그대로 둔다. 다를 때만 stale 이다.
+     * 기준 해시가 아직 없는 행은 원문 해시를 처음 잡을 때만 stale 로 표시한다.
      */
     @Transactional
     public void onSourceWritten(Audition audition, boolean translatableFieldsPresent) {
         String hash = AuditionSourceFingerprint.hash(audition);
+        String fields = SourceFieldHashes.ofAudition(audition);
         String previous = audition.getContentSourceHash();
-        if (previous == null) {
+        boolean firstBaseline = previous == null;
+        if (firstBaseline) {
             audition.setContentSourceHash(hash);
             if (audition.getContentRevision() < 1) {
                 audition.setContentRevision(1);
             }
-            if (translatableFieldsPresent) {
-                markRowsStale(audition.getId());
-            }
-            return;
+        } else if (!hash.equals(previous)) {
+            audition.setContentSourceHash(hash);
+            audition.setContentRevision(audition.getContentRevision() + 1);
         }
-        if (hash.equals(previous)) {
-            return;
-        }
-        audition.setContentSourceHash(hash);
-        audition.setContentRevision(audition.getContentRevision() + 1);
-        markRowsStale(audition.getId());
+        reconcileRows(audition.getId(), fields, hash, firstBaseline && translatableFieldsPresent);
     }
 
     private void applyOverlay(Audition audition, AuditionResponse response, String requestedRaw, boolean preview) {
@@ -260,16 +257,18 @@ public class AuditionLocalizationService {
         Audition audition = auditionRepository.findById(auditionId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Audition not found"));
         Instant now = Instant.now();
-        AuditionTranslation row = translationRepository
-                .findById(new AuditionTranslationId(auditionId, locale))
-                .orElseGet(() -> {
-                    AuditionTranslation created = new AuditionTranslation();
-                    created.setAuditionId(auditionId);
-                    created.setLocale(locale);
-                    created.setCreatedAt(now);
-                    created.setProvider(AuditionTranslation.PROVIDER_MANUAL);
-                    return created;
-                });
+        var existing = translationRepository.findById(new AuditionTranslationId(auditionId, locale));
+        if (existing.isPresent() && translationUnchanged(existing.get(), body, audition)) {
+            return AuditionTranslationMapper.toView(existing.get());
+        }
+        AuditionTranslation row = existing.orElseGet(() -> {
+            AuditionTranslation created = new AuditionTranslation();
+            created.setAuditionId(auditionId);
+            created.setLocale(locale);
+            created.setCreatedAt(now);
+            created.setProvider(AuditionTranslation.PROVIDER_MANUAL);
+            return created;
+        });
         row.setTitle(body.getTitle().trim());
         row.setDescription(nullToEmpty(body.getDescription()));
         row.setLocation(nullToEmpty(body.getLocation()));
@@ -286,6 +285,7 @@ public class AuditionLocalizationService {
         row.setErrorCode(null);
         row.setErrorMessage(null);
         row.setSourceHash(AuditionSourceFingerprint.hash(audition));
+        row.setSourceFieldHashes(SourceFieldHashes.ofAudition(audition));
         row.setSourceRevision(audition.getContentRevision());
         row.setUpdatedAt(now);
         return AuditionTranslationMapper.toView(translationRepository.save(row));
@@ -351,16 +351,74 @@ public class AuditionLocalizationService {
         return raw == null ? "" : raw;
     }
 
-    private void markRowsStale(UUID auditionId) {
+    private void reconcileRows(UUID auditionId, String fields, String hash, boolean markMissingBaseline) {
         Instant now = Instant.now();
-        List<AuditionTranslation> rows = translationRepository.findByAuditionIdOrderByLocaleAsc(auditionId);
-        for (AuditionTranslation row : rows) {
-            row.setStale(true);
+        List<AuditionTranslation> dirty = new ArrayList<>();
+        for (AuditionTranslation row : translationRepository.findByAuditionIdOrderByLocaleAsc(auditionId)) {
+            boolean next = nextStale(row, fields, hash, markMissingBaseline);
+            if (row.isStale() == next) {
+                continue;
+            }
+            row.setStale(next);
             row.setUpdatedAt(now);
+            dirty.add(row);
         }
-        if (!rows.isEmpty()) {
-            translationRepository.saveAll(rows);
+        if (!dirty.isEmpty()) {
+            translationRepository.saveAll(dirty);
         }
+    }
+
+    private static boolean nextStale(AuditionTranslation row, String fields, String hash, boolean markMissingBaseline) {
+        boolean hasBaseline = present(row.getSourceFieldHashes()) || present(row.getSourceHash());
+        if (!hasBaseline) {
+            return markMissingBaseline || row.isStale();
+        }
+        return SourceFieldHashes.differs(row.getSourceFieldHashes(), fields, row.getSourceHash(), hash);
+    }
+
+    private static boolean translationUnchanged(
+            AuditionTranslation row, AuditionTranslationUpsertRequest body, Audition audition) {
+        if (!sameText(row.getTitle(), body.getTitle()) || !sameText(row.getDescription(), body.getDescription())) {
+            return false;
+        }
+        if (!sameText(row.getLocation(), body.getLocation()) || !sameText(row.getAgencyName(), body.getAgencyName())) {
+            return false;
+        }
+        if (!sameList(row.getRecruitFields(), body.getRecruitFields(), true)) {
+            return false;
+        }
+        if (!sameList(row.getQualifications(), body.getQualifications(), false)
+                || !sameList(row.getSchedules(), body.getSchedules(), false)
+                || !sameList(row.getBenefits(), body.getBenefits(), false)) {
+            return false;
+        }
+        if (!row.isManuallyEdited() || !AuditionTranslation.ORIGIN_MANUAL.equals(row.getOrigin())) {
+            return false;
+        }
+        if (!AuditionTranslation.STATUS_COMPLETED.equals(row.getStatus()) || row.isStale()) {
+            return false;
+        }
+        if (!present(row.getSourceFieldHashes()) && !present(row.getSourceHash())) {
+            return true;
+        }
+        String fields = SourceFieldHashes.ofAudition(audition);
+        String hash = AuditionSourceFingerprint.hash(audition);
+        return !SourceFieldHashes.differs(row.getSourceFieldHashes(), fields, row.getSourceHash(), hash);
+    }
+
+    private static boolean sameText(String stored, String incoming) {
+        return nullToEmpty(stored).equals(nullToEmpty(incoming));
+    }
+
+    private static boolean sameList(String[] stored, java.util.List<String> incoming, boolean recruitCodes) {
+        String[] next = recruitCodes
+                ? com.audition.platform.domain.audition.RecruitFieldCodes.normalizeAll(toArray(incoming))
+                : toArray(incoming);
+        return java.util.Arrays.equals(stored == null ? new String[0] : stored, next);
+    }
+
+    private static boolean present(String raw) {
+        return raw != null && !raw.isBlank();
     }
 
     private static boolean canOverlay(AuditionTranslation row, boolean preview) {
@@ -377,8 +435,9 @@ public class AuditionLocalizationService {
         response.setTranslationStatus(row.getStatus());
         response.setTranslationErrorCode(row.getErrorCode());
         response.setTranslationOrigin(row.getOrigin());
-        boolean hashMismatch = row.getSourceHash() != null && !AuditionSourceFingerprint.matches(audition, row.getSourceHash());
-        response.setTranslationStale(row.isStale() || hashMismatch);
+        String fields = SourceFieldHashes.ofAudition(audition);
+        String hash = AuditionSourceFingerprint.hash(audition);
+        response.setTranslationStale(nextStale(row, fields, hash, false));
     }
 
     private static void finishLabels(Audition audition, AuditionResponse response) {

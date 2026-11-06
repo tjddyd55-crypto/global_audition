@@ -135,6 +135,23 @@ class JwtAuthorizationIT {
         mvc.perform(get(SUPER_ADMIN_API)).andExpect(status().isUnauthorized());
     }
 
+    @Test
+    void notificationReadKeepsTheAuthFilterAheadOfUuidParsing() throws Exception {
+        String missing = java.util.UUID.randomUUID().toString();
+        mvc.perform(post("/api/me/notifications/not-a-uuid/read")).andExpect(status().isUnauthorized());
+        mvc.perform(post("/api/me/notifications/" + missing + "/read")).andExpect(status().isUnauthorized());
+
+        UUID applicant = signup("APPLICANT");
+        String token = jwt.createToken(applicant, "x@local.test", "APPLICANT");
+        mvc.perform(post("/api/me/notifications/not-a-uuid/read").header("Authorization", "Bearer " + token))
+                .andExpect(status().isBadRequest());
+        mvc.perform(post("/api/me/notifications/" + missing + "/read").header("Authorization", "Bearer " + token))
+                .andExpect(status().isNotFound());
+        mvc.perform(get(SUPER_ADMIN_API)).andExpect(status().isUnauthorized());
+        mvc.perform(get(SUPER_ADMIN_API).header("Authorization", "Bearer " + token))
+                .andExpect(status().isForbidden());
+    }
+
     private UUID signup(String role) throws Exception {
         String nick = "az" + UUID.randomUUID().toString().replace("-", "").substring(0, 8);
         String email = nick + "@local.test";

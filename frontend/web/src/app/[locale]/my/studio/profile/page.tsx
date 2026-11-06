@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import { meProfileApi } from '@/shared/api/meProfile'
 import { uploadAuditionImage } from '@/shared/api/uploads'
+import { COUNTRY_CODES, timezones } from '@/shared/utils/countries'
 import { INPUT_BASE, TEXT_SUB, TITLE_PAGE } from '@/shared/ui/specClasses'
 
 const NATIONALITIES = ['', 'KR', 'MN', 'JP', 'OTHER'] as const
@@ -12,12 +13,17 @@ const NATIONALITIES = ['', 'KR', 'MN', 'JP', 'OTHER'] as const
 export default function StudioProfilePage() {
   const t = useTranslations('studio')
   const tCommon = useTranslations('common')
+  const tCountries = useTranslations('countries')
+  const tNat = useTranslations('nationality')
+  const tReg = useTranslations('register')
   const queryClient = useQueryClient()
   const query = useQuery({ queryKey: ['studio', 'profile'], queryFn: meProfileApi.get })
   const [name, setName] = useState('')
   const [nickname, setNickname] = useState('')
   const [birthDate, setBirthDate] = useState('')
   const [nationality, setNationality] = useState('')
+  const [countryCode, setCountryCode] = useState('')
+  const [timezone, setTimezone] = useState('')
   const [introText, setIntroText] = useState('')
   const [shortBio, setShortBio] = useState('')
   const [bio, setBio] = useState('')
@@ -35,6 +41,8 @@ export default function StudioProfilePage() {
     setNickname(me.nickname ?? '')
     setBirthDate(me.birthDate ?? '')
     setNationality(me.nationality ?? me.country ?? '')
+    setCountryCode((me.countryCode ?? '').trim().toUpperCase())
+    setTimezone((me.timezone ?? '').trim())
     setIntroText(me.introText ?? '')
     setShortBio(me.shortBio ?? '')
     setBio(me.bio ?? '')
@@ -52,6 +60,8 @@ export default function StudioProfilePage() {
         nickname: nickname.trim(),
         birthDate,
         nationality,
+        countryCode,
+        timezone,
         introText,
         shortBio,
         bio,
@@ -119,6 +129,34 @@ export default function StudioProfilePage() {
               {code || '—'}
             </option>
           ))}
+        </select>
+      </label>
+      <label className="text-sm font-medium">
+        {t('residenceCountry')}
+        <select className={INPUT_BASE} value={countryCode} onChange={(e) => setCountryCode(e.target.value)}>
+          <option value="">{tNat('unspecified')}</option>
+          {COUNTRY_CODES.map((code) => (
+            <option key={code} value={code}>
+              {tCountries(code)}
+            </option>
+          ))}
+          {countryCode && !(COUNTRY_CODES as readonly string[]).includes(countryCode as (typeof COUNTRY_CODES)[number]) ? (
+            <option value={countryCode}>{countryCode}</option>
+          ) : null}
+        </select>
+      </label>
+      <label className="text-sm font-medium">
+        {t('timezone')}
+        <select className={INPUT_BASE} value={timezone} onChange={(e) => setTimezone(e.target.value)}>
+          <option value="">{tReg('selectTimezone')}</option>
+          {timezones.map((zone) => (
+            <option key={zone.value} value={zone.value}>
+              {zone.label}
+            </option>
+          ))}
+          {timezone && !timezones.some((zone) => zone.value === timezone) ? (
+            <option value={timezone}>{timezone}</option>
+          ) : null}
         </select>
       </label>
       <label className="text-sm font-medium">

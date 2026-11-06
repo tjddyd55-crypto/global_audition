@@ -36,4 +36,29 @@ public class ApplicantSignupProfileService {
         }
         user.setCountryCode(country);
     }
+
+    /**
+     * 프로필의 거주 국가와 IANA 시간대. 국적(nationality)은 바꾸지 않는다.
+     * null 필드는 그대로 두고, 빈 문자열은 값을 지운다.
+     */
+    public void updateResidence(User user, String countryCode, String timezone) {
+        if (countryCode != null) {
+            user.setCountryCode(countryOrNull(countryCode));
+        }
+        if (timezone != null) {
+            user.setTimezone(Timezones.optional(timezone));
+        }
+    }
+
+    private String countryOrNull(String countryCode) {
+        if (countryCode.isBlank()) {
+            return null;
+        }
+        String country = CountryCodes.iso2(countryCode);
+        Integer count = jdbc.queryForObject("SELECT COUNT(*) FROM countries WHERE code = ?", Integer.class, country);
+        if (count == null || count == 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "COUNTRY_NOT_FOUND");
+        }
+        return country;
+    }
 }

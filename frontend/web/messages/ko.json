@@ -563,7 +563,9 @@
     "ageAuto": "{age}세 (생년월일 기준 자동 계산)",
     "snsHint": "플랫폼과 URL을 함께 입력해 주세요. 저장 시 목록 전체가 교체됩니다.",
     "snsEmpty": "등록된 SNS가 없습니다.",
-    "introPlaceholder": "자기소개를 입력해 주세요."
+    "introPlaceholder": "자기소개를 입력해 주세요.",
+    "residenceCountry": "거주 국가",
+    "timezone": "시간대"
   },
   "credits": {
     "title": "크레딧",
@@ -1509,6 +1511,8 @@
     "fieldActivity": "활동 분야",
     "fieldSns": "SNS",
     "nationality": "국적",
+    "residenceCountry": "거주 국가",
+    "timezone": "시간대",
     "birthDate": "생년월일",
     "name": "이름",
     "nickname": "닉네임",

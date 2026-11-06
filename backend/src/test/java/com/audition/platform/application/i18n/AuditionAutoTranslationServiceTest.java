@@ -325,6 +325,41 @@ class AuditionAutoTranslationServiceTest {
         assertEquals(2, audition.getContentRevision());
     }
 
+    @Test
+    void matchingFieldHashesClearOnlyThatLocaleAndKeepTheTranslation() {
+        AuditionTranslation english = completed("en", "Old");
+        english.setSourceHash("previous");
+        english.setStale(true);
+        java.time.Instant frozen = java.time.Instant.parse("2020-01-01T00:00:00Z");
+        english.setUpdatedAt(frozen);
+        AuditionTranslation mongolian = completed("mn", "Хэвээр");
+        mongolian.setUpdatedAt(frozen);
+        audition.setTitle("바뀐 원문");
+        mongolian.setSourceFieldHashes(com.audition.platform.application.i18n.SourceFieldHashes.ofAudition(audition));
+        when(translationRepository.findByAuditionIdOrderByLocaleAsc(audition.getId())).thenReturn(List.of(english, mongolian));
+        when(translationRepository.saveAll(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        AuditionLocalizationService localization = new AuditionLocalizationService(
+                translationRepository,
+                auditionRepository,
+                new ContentLocaleResolver(new com.audition.platform.application.i18n.LocaleRegistry()),
+                mock(com.audition.platform.domain.audition.AuditionTranslationAttemptRepository.class));
+        audition.setContentSourceHash("previous");
+
+        localization.onSourceWritten(audition, true);
+
+        assertTrue(english.isStale());
+        assertEquals("Old", english.getTitle());
+        assertFalse(mongolian.isStale());
+        assertEquals("Хэвээр", mongolian.getTitle());
+        assertEquals(frozen, mongolian.getUpdatedAt());
+
+        audition.setTitle("연습생 오디션");
+        english.setSourceHash(com.audition.platform.application.i18n.AuditionSourceFingerprint.hash(audition));
+        localization.onSourceWritten(audition, true);
+        assertFalse(english.isStale());
+        assertEquals("Old", english.getTitle());
+    }
+
     private Audition audition(String title) {
         Audition row = new Audition();
         row.setId(UUID.randomUUID());

@@ -88,6 +88,9 @@ public class AuditionAutoTranslationService {
         if (existing.isPresent() && isProtected(existing.get()) && !force) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "TRANSLATION_PROTECTED");
         }
+        if (existing.isPresent() && !force && reusable(audition, existing.get())) {
+            return AuditionTranslationMapper.toView(clearStaleIfNeeded(existing.get()));
+        }
         Long seenVersion = existing.map(AuditionTranslation::getRowVersion).orElse(null);
         UUID attemptId = attemptRecorder.start(audition.getId(), locale, translationProvider.providerId());
         TranslationSource source = TranslationSource.fromAudition(audition);
@@ -207,8 +210,36 @@ public class AuditionAutoTranslationService {
         row.setErrorCode(null);
         row.setErrorMessage(null);
         row.setSourceHash(AuditionSourceFingerprint.hash(audition));
+        row.setSourceFieldHashes(SourceFieldHashes.ofAudition(audition));
         row.setSourceRevision(audition.getContentRevision());
         row.setUpdatedAt(Instant.now());
+    }
+
+    private static boolean reusable(Audition audition, AuditionTranslation row) {
+        if (!AuditionTranslation.STATUS_COMPLETED.equals(row.getStatus())) {
+            return false;
+        }
+        if (!present(row.getSourceFieldHashes()) && !present(row.getSourceHash())) {
+            return false;
+        }
+        return !SourceFieldHashes.differs(
+                row.getSourceFieldHashes(),
+                SourceFieldHashes.ofAudition(audition),
+                row.getSourceHash(),
+                AuditionSourceFingerprint.hash(audition));
+    }
+
+    private AuditionTranslation clearStaleIfNeeded(AuditionTranslation row) {
+        if (!row.isStale()) {
+            return row;
+        }
+        row.setStale(false);
+        row.setUpdatedAt(Instant.now());
+        return translationRepository.save(row);
+    }
+
+    private static boolean present(String raw) {
+        return raw != null && !raw.isBlank();
     }
 
     static boolean isProtected(AuditionTranslation row) {
@@ -285,6 +316,7 @@ public class AuditionAutoTranslationService {
             String errorCode,
             String errorMessage,
             String sourceHash,
+            String sourceFieldHashes,
             Long sourceRevision) {
 
         private static FieldSnapshot capture(AuditionTranslation row) {
@@ -305,6 +337,7 @@ public class AuditionAutoTranslationService {
                     row.getErrorCode(),
                     row.getErrorMessage(),
                     row.getSourceHash(),
+                    row.getSourceFieldHashes(),
                     row.getSourceRevision());
         }
 
@@ -325,6 +358,7 @@ public class AuditionAutoTranslationService {
             row.setErrorCode(errorCode);
             row.setErrorMessage(errorMessage);
             row.setSourceHash(sourceHash);
+            row.setSourceFieldHashes(sourceFieldHashes);
             row.setSourceRevision(sourceRevision);
         }
     }

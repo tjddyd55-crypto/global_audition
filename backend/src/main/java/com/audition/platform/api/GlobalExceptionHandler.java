@@ -15,6 +15,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
@@ -24,6 +25,7 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
@@ -53,6 +55,20 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(status).body(
                 new ErrorResponse(String.valueOf(status.value()), message, request.getRequestURI(), Instant.now())
         );
+    }
+
+    /** 경로 UUID 형식 오류는 500 이 아니다. 미인증 401 은 보안 필터가 이 핸들러보다 먼저 응답한다. */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<?> handleTypeMismatch(MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
+        Class<?> required = ex.getRequiredType();
+        boolean uuid = required != null && UUID.class.isAssignableFrom(required);
+        String message = uuid ? "Invalid UUID" : "Invalid value";
+        log.warn("Type mismatch on {} {}: {}", request.getMethod(), request.getRequestURI(), message);
+        if (useSsotEnvelope(request)) {
+            return ResponseEntity.badRequest().body(new ApiFailResponse(message));
+        }
+        return ResponseEntity.badRequest().body(
+                new ErrorResponse("400", message, request.getRequestURI(), Instant.now()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

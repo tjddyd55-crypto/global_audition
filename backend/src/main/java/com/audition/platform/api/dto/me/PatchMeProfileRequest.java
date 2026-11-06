@@ -63,6 +63,14 @@ public class PatchMeProfileRequest {
     @Valid
     private List<MeUserSnsLinkDto> snsLinks;
 
+    /** 거주 국가 ISO alpha-2. nationality 와 별개. 빈 문자열이면 삭제. */
+    @Size(max = 8)
+    private String countryCode;
+
+    /** IANA 시간대. 빈 문자열이면 삭제. */
+    @Size(max = 64)
+    private String timezone;
+
     public String getNickname() {
         return nickname;
     }
@@ -181,5 +189,21 @@ public class PatchMeProfileRequest {
 
     public void setFeaturedVideoId(String featuredVideoId) {
         this.featuredVideoId = featuredVideoId;
+    }
+
+    public String getCountryCode() {
+        return countryCode;
+    }
+
+    public void setCountryCode(String countryCode) {
+        this.countryCode = countryCode;
+    }
+
+    public String getTimezone() {
+        return timezone;
+    }
+
+    public void setTimezone(String timezone) {
+        this.timezone = timezone;
     }
 }
