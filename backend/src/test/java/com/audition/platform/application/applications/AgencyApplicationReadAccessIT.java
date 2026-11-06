@@ -3,6 +3,7 @@ package com.audition.platform.application.applications;
 import com.audition.platform.infra.JwtService;
 import com.audition.platform.infra.TestDatabase;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -29,10 +30,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * GET /api/applications/{id}/agency-detail 과 같은 조회 규칙.
  *
- * <p>국가 관리자: 이 API에는 국가·기획사 할당 테이블이 없다.
- * role ADMIN 은 소유 기획사와 users.country_code 와 무관하게 조회가 허용된다.
- * 그래서 KR 로 표시된 ADMIN 도 JP 지원서를 읽는다(기존 동작, 범위 밖 국가 차단 없음).
- * 범위 밖 차단은 소유하지 않은 AGENCY, USER, 지원자 역할에만 있다.</p>
+ * <p>role ADMIN 은 소유 기획사와 국가와 무관하게 조회가 허용된다.
+ * COUNTRY_ADMIN 은 users.role 과 활성 country_admin_appointments 가 맞고,
+ * 공고의 게시 지점(crm_agencies.country_code)이 그 국가일 때만 조회한다.
+ * 지원자 국적, 사용자 country_code, 모집 대상 auditions.country_code 로는 허용하지 않는다.
+ * 토큰 클레임은 권한 근거가 아니다.</p>
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -79,6 +81,17 @@ class AgencyApplicationReadAccessIT {
         mn = seedCountry("MN", krAgencyId);
         jp = seedCountry("JP", otherAgencyId);
         mutable = seedCountry("KR", krAgencyId);
+        seedCountryAdminScope();
+    }
+
+    @AfterAll
+    void releaseAppointments() {
+        if (krCountryAdminId != null) {
+            endAppointment(krCountryAdminId);
+        }
+        if (mnCountryAdminId != null) {
+            endAppointment(mnCountryAdminId);
+        }
     }
 
     @Autowired
@@ -106,6 +119,16 @@ class AgencyApplicationReadAccessIT {
     private Fixture mn;
     private Fixture jp;
     private Fixture mutable;
+    private UUID krBranchOwnerId;
+    private UUID krCountryAdminId;
+    private UUID mnCountryAdminId;
+    private String krCountryAdminToken;
+    private String mnCountryAdminToken;
+    private String krBranchToken;
+    private BranchFixture krBranch;
+    private BranchFixture mnBranch;
+    private BranchFixture jpBranch;
+    private BranchFixture caMutable;
 
     @Test
     void superAdminReadsKrMnJpByDatabaseRole() throws Exception {
@@ -136,8 +159,139 @@ class AgencyApplicationReadAccessIT {
     }
 
     @Test
+    void countryAdminReadsOnlyTheAppointedAgencyCountry() throws Exception {
+        assertBranchOk(superAdminToken, krBranch);
+        assertBranchOk(superAdminToken, mnBranch);
+        assertBranchOk(superAdminToken, jpBranch);
+
+        assertBranchOk(krCountryAdminToken, krBranch);
+        mvc.perform(detail(mnBranch.applicationId, krCountryAdminToken)).andExpect(status().isForbidden());
+        mvc.perform(detail(jpBranch.applicationId, krCountryAdminToken)).andExpect(status().isForbidden());
+        mvc.perform(detail(kr.applicationId, krCountryAdminToken)).andExpect(status().isForbidden());
+
+        assertBranchOk(mnCountryAdminToken, mnBranch);
+        mvc.perform(detail(krBranch.applicationId, mnCountryAdminToken)).andExpect(status().isForbidden());
+        mvc.perform(detail(jpBranch.applicationId, mnCountryAdminToken)).andExpect(status().isForbidden());
+    }
+
+    @Test
+    void twoActiveAppointmentsReadEachCountryAndNotTheOther() throws Exception {
+        try {
+            replaceActiveAppointment("MN", krCountryAdminId);
+            assertBranchOk(krCountryAdminToken, krBranch);
+            assertBranchOk(krCountryAdminToken, mnBranch);
+            mvc.perform(detail(jpBranch.applicationId, krCountryAdminToken)).andExpect(status().isForbidden());
+        } finally {
+            endAppointment(krCountryAdminId);
+            restoreAppointment(krCountryAdminId, "KR");
+            restoreAppointment(mnCountryAdminId, "MN");
+        }
+        assertBranchOk(krCountryAdminToken, krBranch);
+        mvc.perform(detail(mnBranch.applicationId, krCountryAdminToken)).andExpect(status().isForbidden());
+        assertBranchOk(mnCountryAdminToken, mnBranch);
+    }
+
+    @Test
+    void agencyReadsOnlyItsOwnBranchAndStrangersStayOut() throws Exception {
+        assertBranchOk(krBranchToken, krBranch);
+        mvc.perform(detail(mnBranch.applicationId, krBranchToken)).andExpect(status().isForbidden());
+        mvc.perform(detail(jpBranch.applicationId, krBranchToken)).andExpect(status().isForbidden());
+        mvc.perform(detail(krBranch.applicationId, userToken)).andExpect(status().isForbidden());
+        mvc.perform(get(detailPath(krBranch.applicationId))).andExpect(status().isUnauthorized());
+        mvc.perform(detail(UUID.randomUUID(), krCountryAdminToken)).andExpect(status().isNotFound());
+    }
+
+    @Test
+    void endedAppointmentAndRoleLossApplyOnTheNextRequest() throws Exception {
+        try {
+            endAppointment(krCountryAdminId);
+            mvc.perform(detail(krBranch.applicationId, krCountryAdminToken)).andExpect(status().isForbidden());
+            restoreAppointment(krCountryAdminId, "KR");
+            jdbc.update("UPDATE users SET role = 'USER' WHERE id = ?", krCountryAdminId);
+            mvc.perform(detail(krBranch.applicationId, krCountryAdminToken)).andExpect(status().isForbidden());
+        } finally {
+            jdbc.update("UPDATE users SET role = 'COUNTRY_ADMIN' WHERE id = ?", krCountryAdminId);
+            restoreAppointment(krCountryAdminId, "KR");
+        }
+        assertBranchOk(krCountryAdminToken, krBranch);
+    }
+
+    @Test
+    void countryAdminVideoAndRoundReadsFollowTheSameCountry() throws Exception {
+        mvc.perform(get("/api/applications/" + krBranch.applicationId + "/videos")
+                        .header("Authorization", krCountryAdminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].videoUrl").value(branchVideo(krBranch)));
+        mvc.perform(get("/api/applications/" + mnBranch.applicationId + "/videos")
+                        .header("Authorization", krCountryAdminToken))
+                .andExpect(status().isForbidden());
+        mvc.perform(get("/api/applications/" + krBranch.applicationId).header("Authorization", krCountryAdminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.videoUrl").value(branchVideo(krBranch)))
+                .andExpect(jsonPath("$.nationality").value(krBranch.nationality));
+        mvc.perform(get("/api/applications/" + jpBranch.applicationId).header("Authorization", mnCountryAdminToken))
+                .andExpect(status().isForbidden());
+        mvc.perform(get("/api/applications/" + jpBranch.applicationId + "/videos"))
+                .andExpect(status().isUnauthorized());
+
+        mvc.perform(get(rounds(krBranch.auditionId)).header("Authorization", krCountryAdminToken))
+                .andExpect(status().isOk());
+        mvc.perform(get(roundApplications(krBranch.auditionId, krBranch.round1))
+                        .header("Authorization", krCountryAdminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].videoUrl").value(VIDEO_PREFIX + "KR-branch/round1.mp4"))
+                .andExpect(jsonPath("$[0].fileUrl").value(VIDEO_PREFIX + "KR-branch/round1.pdf"));
+        mvc.perform(get(rounds(jpBranch.auditionId)).header("Authorization", krCountryAdminToken))
+                .andExpect(status().isForbidden());
+        mvc.perform(get(roundApplications(mnBranch.auditionId, mnBranch.round1))
+                        .header("Authorization", krCountryAdminToken))
+                .andExpect(status().isForbidden());
+        mvc.perform(get(rounds(mnBranch.auditionId)).header("Authorization", mnCountryAdminToken))
+                .andExpect(status().isOk());
+        mvc.perform(get(roundApplications(krBranch.auditionId, krBranch.round1))
+                        .header("Authorization", mnCountryAdminToken))
+                .andExpect(status().isForbidden());
+        mvc.perform(get(roundApplications(jpBranch.auditionId, jpBranch.round1)).header("Authorization", userToken))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void countryAdminCannotChangeReviewOutcome() throws Exception {
+        expectForbidden(post(review(caMutable, "pass")).header("Authorization", krCountryAdminToken)
+                .contentType(APPLICATION_JSON).content("{}"));
+        expectForbidden(post(review(caMutable, "fail")).header("Authorization", krCountryAdminToken)
+                .contentType(APPLICATION_JSON).content("{\"reason\":\"no\"}"));
+        expectForbidden(post(review(caMutable, "hold")).header("Authorization", krCountryAdminToken)
+                .contentType(APPLICATION_JSON).content("{\"reason\":\"wait\"}"));
+        expectForbidden(post("/api/applications/" + caMutable.applicationId + "/decision")
+                .header("Authorization", krCountryAdminToken)
+                .contentType(APPLICATION_JSON).content("{\"status\":\"ACCEPTED\"}"));
+        expectForbidden(post("/api/applications/" + caMutable.applicationId + "/accept")
+                .header("Authorization", krCountryAdminToken));
+        expectForbidden(post("/api/applications/" + caMutable.applicationId + "/reject")
+                .header("Authorization", krCountryAdminToken));
+        expectForbidden(post("/api/applications/" + caMutable.applicationId + "/mark-reviewed")
+                .header("Authorization", krCountryAdminToken));
+        expectForbidden(patch("/api/applications/" + caMutable.applicationId + "/status")
+                .header("Authorization", krCountryAdminToken)
+                .contentType(APPLICATION_JSON).content("{\"status\":\"REJECTED\"}"));
+        expectForbidden(post(review(caMutable, "pass")).header("Authorization", mnCountryAdminToken)
+                .contentType(APPLICATION_JSON).content("{}"));
+
+        assertEquals("SUBMITTED", applicationStatus(caMutable.applicationId));
+        assertEquals("PASSED", submissionStatus(caMutable.round1));
+        assertEquals("FAILED", submissionStatus(caMutable.round2));
+
+        mvc.perform(post("/api/applications/" + caMutable.applicationId + "/decision")
+                        .header("Authorization", krBranchToken)
+                        .contentType(APPLICATION_JSON).content("{\"status\":\"ACCEPTED\"}"))
+                .andExpect(status().isOk());
+        assertEquals("ACCEPTED", applicationStatus(caMutable.applicationId));
+    }
+
+    @Test
     void adminIsNotLimitedByCountryAndAgencyOutsideOwnershipIsBlocked() throws Exception {
-        // 국가 관리자에 해당하는 별도 역할·할당이 없다. ADMIN 은 KR/MN/JP 모두 조회한다.
+        // role ADMIN 은 국가 관리자가 아니다. 임명 국가와 무관하게 KR/MN/JP 를 조회한다.
         assertDetailOk(adminToken, kr);
         assertDetailOk(adminToken, mn);
         assertDetailOk(adminToken, jp);
@@ -244,14 +398,26 @@ class AgencyApplicationReadAccessIT {
     }
 
     private static String rounds(Fixture fixture) {
-        return "/api/admin/auditions/" + fixture.auditionId + "/rounds";
+        return rounds(fixture.auditionId);
+    }
+
+    private static String rounds(UUID auditionId) {
+        return "/api/admin/auditions/" + auditionId + "/rounds";
     }
 
     private static String roundApplications(Fixture fixture, UUID roundId) {
-        return rounds(fixture) + "/" + roundId + "/applications";
+        return roundApplications(fixture.auditionId, roundId);
+    }
+
+    private static String roundApplications(UUID auditionId, UUID roundId) {
+        return rounds(auditionId) + "/" + roundId + "/applications";
     }
 
     private static String review(Fixture fixture, String action) {
+        return "/api/admin/applications/" + fixture.applicationId + "/rounds/" + fixture.round1 + "/" + action;
+    }
+
+    private static String review(BranchFixture fixture, String action) {
         return "/api/admin/applications/" + fixture.applicationId + "/rounds/" + fixture.round1 + "/" + action;
     }
 
@@ -333,5 +499,142 @@ class AgencyApplicationReadAccessIT {
     }
 
     private record Fixture(String country, UUID auditionId, UUID applicationId, UUID round1, UUID round2) {
+    }
+
+    private void seedCountryAdminScope() throws Exception {
+        ensureCountry("KR", "KRW");
+        ensureCountry("MN", "MNT");
+        ensureCountry("JP", "JPY");
+
+        krBranchOwnerId = signup("APPLICANT");
+        UUID mnOwner = signup("APPLICANT");
+        UUID jpOwner = signup("APPLICANT");
+        krCountryAdminId = signup("APPLICANT");
+        mnCountryAdminId = signup("APPLICANT");
+        jdbc.update("UPDATE users SET role = 'AGENCY', country_code = 'JP' WHERE id = ?", krBranchOwnerId);
+        jdbc.update("UPDATE users SET role = 'AGENCY', country_code = 'KR' WHERE id = ?", mnOwner);
+        jdbc.update("UPDATE users SET role = 'AGENCY', country_code = 'MN' WHERE id = ?", jpOwner);
+        jdbc.update("UPDATE users SET role = 'COUNTRY_ADMIN', country_code = 'US' WHERE id = ?", krCountryAdminId);
+        jdbc.update("UPDATE users SET role = 'COUNTRY_ADMIN', country_code = 'US' WHERE id = ?", mnCountryAdminId);
+
+        krCountryAdminToken = token(krCountryAdminId, "SUPER_ADMIN");
+        mnCountryAdminToken = token(mnCountryAdminId, "ADMIN");
+        krBranchToken = token(krBranchOwnerId, "USER");
+
+        UUID krAgency = insertAgency("KR", krBranchOwnerId);
+        UUID mnAgency = insertAgency("MN", mnOwner);
+        UUID jpAgency = insertAgency("JP", jpOwner);
+        replaceActiveAppointment("KR", krCountryAdminId);
+        replaceActiveAppointment("MN", mnCountryAdminId);
+
+        krBranch = seedBranch("KR", "JP", "MN", krBranchOwnerId, krAgency);
+        mnBranch = seedBranch("MN", "KR", "JP", mnOwner, mnAgency);
+        jpBranch = seedBranch("JP", "KR", "KR", jpOwner, jpAgency);
+        caMutable = seedBranch("KR", "JP", "MN", krBranchOwnerId, krAgency);
+    }
+
+    private void ensureCountry(String code, String currency) {
+        jdbc.update("""
+                INSERT INTO countries (code, name, status, default_currency)
+                VALUES (?, ?, 'ACTIVE', ?)
+                ON CONFLICT (code) DO NOTHING
+                """, code, code, currency);
+    }
+
+    private UUID insertAgency(String country, UUID linkedUserId) {
+        UUID id = UUID.randomUUID();
+        jdbc.update("""
+                INSERT INTO crm_agencies (id, country_code, display_name, stage, approval_state, linked_user_id)
+                VALUES (?, ?, ?, 'ACTIVE', 'APPROVED', ?)
+                """, id, country, "read-scope-" + country, linkedUserId);
+        return id;
+    }
+
+    private void replaceActiveAppointment(String country, UUID userId) {
+        endActiveCountry(country);
+        jdbc.update("""
+                INSERT INTO country_admin_appointments (id, country_code, user_id, status)
+                VALUES (?, ?, ?, 'ACTIVE')
+                """, UUID.randomUUID(), country, userId);
+    }
+
+    private void endActiveCountry(String country) {
+        jdbc.update("""
+                UPDATE country_admin_appointments
+                SET status = 'ENDED', ended_at = NOW(), end_reason = 'IT_REPLACE'
+                WHERE country_code = ? AND status = 'ACTIVE'
+                """, country);
+    }
+
+    private void endAppointment(UUID userId) {
+        jdbc.update("""
+                UPDATE country_admin_appointments
+                SET status = 'ENDED', ended_at = NOW(), end_reason = 'REVOKED'
+                WHERE user_id = ? AND status = 'ACTIVE'
+                """, userId);
+    }
+
+    private void restoreAppointment(UUID userId, String country) {
+        endActiveCountry(country);
+        jdbc.update("""
+                UPDATE country_admin_appointments
+                SET status = 'ACTIVE', ended_at = NULL, end_reason = NULL
+                WHERE id = (
+                    SELECT id FROM country_admin_appointments
+                    WHERE user_id = ? AND country_code = ?
+                    ORDER BY appointed_at DESC
+                    LIMIT 1
+                )
+                """, userId, country);
+    }
+
+    private void assertBranchOk(String token, BranchFixture fixture) throws Exception {
+        mvc.perform(detail(fixture.applicationId, token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.nationality").value(fixture.nationality))
+                .andExpect(jsonPath("$.data.name").value("지원자-" + fixture.legalCountry))
+                .andExpect(jsonPath("$.data.videoUrl").value(branchVideo(fixture)));
+    }
+
+    private static String branchVideo(BranchFixture fixture) {
+        return VIDEO_PREFIX + fixture.legalCountry + "-branch/video.mp4";
+    }
+
+    private BranchFixture seedBranch(
+            String legalCountry, String audienceCountry, String nationality, UUID ownerId, UUID branchId) {
+        UUID auditionId = UUID.randomUUID();
+        jdbc.update("""
+                INSERT INTO auditions (
+                    id, owner_id, title, description, status, country_code, group_id, posting_branch_id
+                ) VALUES (?, ?, ?, '', 'OPEN', ?, ?, ?)
+                """, auditionId, ownerId, "branch-" + legalCountry, audienceCountry, auditionId, branchId);
+        UUID applicationId = UUID.randomUUID();
+        jdbc.update("""
+                INSERT INTO applications (
+                    id, audition_id, applicant_id, status, applicant_name, birth_date, age, nationality, intro_text
+                ) VALUES (?, ?, ?, 'SUBMITTED', ?, DATE '2000-01-02', 26, ?, ?)
+                """, applicationId, auditionId, applicantId, "지원자-" + legalCountry, nationality, "소개-" + legalCountry);
+        jdbc.update("""
+                INSERT INTO application_videos (id, application_id, video_url, title)
+                VALUES (?, ?, ?, '제출영상')
+                """, UUID.randomUUID(), applicationId, branchVideo(new BranchFixture(
+                legalCountry, audienceCountry, nationality, auditionId, applicationId, null, null)));
+        UUID round1 = insertRound(auditionId, 1);
+        UUID round2 = insertRound(auditionId, 2);
+        String prefix = VIDEO_PREFIX + legalCountry + "-branch/";
+        insertSubmission(applicationId, auditionId, round1, 1, "PASSED", prefix + "round1.mp4", prefix + "round1.pdf");
+        insertSubmission(applicationId, auditionId, round2, 2, "FAILED", prefix + "round2.mp4", prefix + "round2.pdf");
+        return new BranchFixture(legalCountry, audienceCountry, nationality, auditionId, applicationId, round1, round2);
+    }
+
+    private record BranchFixture(
+            String legalCountry,
+            String audienceCountry,
+            String nationality,
+            UUID auditionId,
+            UUID applicationId,
+            UUID round1,
+            UUID round2) {
     }
 }

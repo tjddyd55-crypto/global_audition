@@ -39,6 +39,27 @@ public class JdbcCrmStore {
         return rows.stream().findFirst();
     }
 
+    /**
+     * 게시 지점 국가가 이 사용자의 ACTIVE 임명 중 하나와 같은지.
+     * 국가 관리자 오디션 목록과 같은 조인이고, 지점이 없으면 추정하지 않는다.
+     * 임명이 여러 국가여도 한 행으로 자르지 않는다.
+     */
+    public boolean postingBranchCoveredByActiveRep(UUID auditionId, UUID userId) {
+        Integer count = jdbc.queryForObject("""
+                SELECT COUNT(*)
+                FROM auditions a
+                JOIN crm_agencies g ON g.id = a.posting_branch_id
+                WHERE a.id = ?
+                  AND EXISTS (
+                    SELECT 1 FROM country_admin_appointments ap
+                    WHERE ap.user_id = ?
+                      AND ap.status = 'ACTIVE'
+                      AND btrim(ap.country_code) = btrim(g.country_code)
+                  )
+                """, Integer.class, auditionId, userId);
+        return count != null && count > 0;
+    }
+
     public void updateState(UUID id, String stage, String approval, UUID linkedUserId) {
         jdbc.update("""
                 UPDATE crm_agencies

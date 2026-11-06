@@ -10,6 +10,7 @@ import com.audition.platform.api.dto.ManageApplicationsPageDataDto;
 import com.audition.platform.api.dto.CreateApplicationRequest;
 import com.audition.platform.application.me.MeApiMapping;
 import com.audition.platform.application.ranking.ApplicationRankingService;
+import com.audition.platform.application.round.AuditionManageAccess;
 import com.audition.platform.application.round.RoundNotificationService;
 import com.audition.platform.domain.audition.Application;
 import com.audition.platform.domain.audition.ApplicationRepository;
@@ -49,6 +50,7 @@ public class ApplicationService {
     private final ApplicationSnsLinkRepository applicationSnsLinkRepository;
     private final ApplicationStatusHistoryRepository applicationStatusHistoryRepository;
     private final RoundNotificationService roundNotificationService;
+    private final AuditionManageAccess auditionManageAccess;
 
     public ApplicationService(
             ApplicationRepository applicationRepository,
@@ -58,7 +60,8 @@ public class ApplicationService {
             ApplicationVideoRepository applicationVideoRepository,
             ApplicationSnsLinkRepository applicationSnsLinkRepository,
             ApplicationStatusHistoryRepository applicationStatusHistoryRepository,
-            RoundNotificationService roundNotificationService) {
+            RoundNotificationService roundNotificationService,
+            AuditionManageAccess auditionManageAccess) {
         this.applicationRepository = applicationRepository;
         this.auditionRepository = auditionRepository;
         this.userRepository = userRepository;
@@ -67,6 +70,7 @@ public class ApplicationService {
         this.applicationSnsLinkRepository = applicationSnsLinkRepository;
         this.applicationStatusHistoryRepository = applicationStatusHistoryRepository;
         this.roundNotificationService = roundNotificationService;
+        this.auditionManageAccess = auditionManageAccess;
     }
 
     private void recordApplicationStatusChange(
@@ -327,12 +331,8 @@ public class ApplicationService {
         Audition audition = auditionRepository.findById(app.getAuditionId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Audition not found"));
 
-        boolean isApplicant = app.getApplicantId().equals(currentUserId);
-        boolean isOwner = audition.getOwnerId().equals(currentUserId);
-        boolean isAdmin = SecurityUtils.hasRole("ADMIN");
-        boolean isSuperAdminReader = SecurityUtils.hasRole("SUPER_ADMIN");
-        if (!isApplicant && !isOwner && !isAdmin && !isSuperAdminReader) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not allowed to access this application");
+        if (!app.getApplicantId().equals(currentUserId)) {
+            auditionManageAccess.assertCanRead(audition);
         }
 
         User applicant = userRepository.findById(app.getApplicantId()).orElse(null);
