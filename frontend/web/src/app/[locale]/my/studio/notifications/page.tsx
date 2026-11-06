@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useLocale, useTranslations } from 'next-intl'
 import { studioApi } from '@/shared/api/studio'
-import { notificationCodeLabel, notificationCopy } from '@/shared/studio/notificationCopy'
+import { notificationBadge, notificationCopy } from '@/shared/studio/notificationCopy'
 import { TEXT_SUB, TITLE_PAGE } from '@/shared/ui/specClasses'
 
 export default function StudioNotificationsPage() {
@@ -37,7 +37,7 @@ export default function StudioNotificationsPage() {
             <div className="font-medium text-gray-900">{copy.title}</div>
             <p className={`mt-1 ${TEXT_SUB}`}>{copy.body}</p>
             <div className={`mt-2 ${TEXT_SUB}`}>
-              {notificationCodeLabel(item.type, (key) => tNotice(key))} · {notificationCodeLabel(item.status, (key) => tNotice(key))}
+              {notificationBadge(item, (key) => tNotice(key))}
               {item.readAt ? ` · ${t('read')}` : ''}
               {item.createdAt ? ` · ${new Date(item.createdAt).toLocaleString(locale)}` : ''}
             </div>

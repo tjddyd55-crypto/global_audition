@@ -13,13 +13,23 @@ export function EmptyState({ title, body, actionLabel, onAction }: { title: stri
   )
 }
 
-export function ErrorState({ message, onRetry }: { message: string; onRetry?: () => void }) {
+export function ErrorState({
+  message,
+  onRetry,
+  title,
+  retryLabel,
+}: {
+  message: string
+  onRetry?: () => void
+  title?: string
+  retryLabel?: string
+}) {
   const { t } = useTranslation()
   return (
     <View style={styles.box}>
-      <Text style={styles.title}>{t('common.loadFailedTitle')}</Text>
+      <Text style={styles.title}>{title ?? t('common.loadFailedTitle')}</Text>
       <Text style={styles.body}>{message}</Text>
-      {onRetry ? <Button label={t('common.retry')} onPress={onRetry} variant="secondary" /> : null}
+      {onRetry ? <Button label={retryLabel ?? t('common.retry')} onPress={onRetry} variant="secondary" /> : null}
     </View>
   )
 }

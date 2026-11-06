@@ -35,6 +35,8 @@ export function TabLabel({ label, color }: { label: string; color: string }) {
       allowFontScaling={false}
       android_hyphenationFrequency="none"
       textBreakStrategy="simple"
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
       style={[styles.label, { color, fontSize: TAB_LABEL_FONT_SIZE }]}
     >
       {label}

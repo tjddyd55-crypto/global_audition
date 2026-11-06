@@ -6,6 +6,8 @@
 import type { AgencyBoardStatus, ApplicationStatus } from '../api/types'
 import i18n from '../i18n'
 
+type Labeler = (key: string) => string
+
 function t(key: string): string {
   return i18n.t(key)
 }
@@ -26,19 +28,19 @@ export function applicationStatusLabel(status: string): string {
   return status
 }
 
-export function agencyBoardStatusLabel(status: AgencyBoardStatus | string): string {
-  if (status === 'REVIEWING') return t('status.reviewing')
-  if (status === 'APPROVED') return t('status.approved')
-  if (status === 'REJECTED') return t('status.rejected')
-  if (status === 'PENDING') return t('status.pending')
+export function agencyBoardStatusLabel(status: AgencyBoardStatus | string, label: Labeler = t): string {
+  if (status === 'REVIEWING') return label('status.reviewing')
+  if (status === 'APPROVED') return label('status.approved')
+  if (status === 'REJECTED') return label('status.rejected')
+  if (status === 'PENDING') return label('status.pending')
   return status
 }
 
-export function agencyConfirmMessage(status: AgencyBoardStatus): string {
-  if (status === 'APPROVED') return t('agency.confirmPass')
-  if (status === 'REJECTED') return t('agency.confirmReject')
-  if (status === 'REVIEWING') return t('agency.confirmReview')
-  return t('agency.confirmChange')
+export function agencyConfirmMessage(status: AgencyBoardStatus, label: Labeler = t): string {
+  if (status === 'APPROVED') return label('agency.confirmPass')
+  if (status === 'REJECTED') return label('agency.confirmReject')
+  if (status === 'REVIEWING') return label('agency.confirmReview')
+  return label('agency.confirmChange')
 }
 
 export function applicationResultCopy(status: ApplicationStatus | string): string {
@@ -60,21 +62,21 @@ export function roundSubmissionLabel(status: string | null | undefined): string 
   return status
 }
 
-export function nationalityLabel(code: string | null | undefined): string {
-  if (code === 'KR') return t('nationality.KR')
-  if (code === 'MN') return t('nationality.MN')
-  if (code === 'JP') return t('nationality.JP')
-  if (code === 'OTHER') return t('nationality.OTHER')
+export function nationalityLabel(code: string | null | undefined, label: Labeler = t): string {
+  if (code === 'KR') return label('nationality.KR')
+  if (code === 'MN') return label('nationality.MN')
+  if (code === 'JP') return label('nationality.JP')
+  if (code === 'OTHER') return label('nationality.OTHER')
   return code ?? ''
 }
 
-export function snsPlatformLabel(platform: string): string {
+export function snsPlatformLabel(platform: string, label: Labeler = t): string {
   if (platform === 'instagram') return 'Instagram'
   if (platform === 'tiktok') return 'TikTok'
   if (platform === 'youtube') return 'YouTube'
   if (platform === 'twitter') return 'X'
   if (platform === 'facebook') return 'Facebook'
-  if (platform === 'other') return t('nationality.OTHER')
+  if (platform === 'other') return label('nationality.OTHER')
   return platform
 }
 

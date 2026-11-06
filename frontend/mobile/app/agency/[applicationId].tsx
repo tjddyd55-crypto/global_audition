@@ -2,8 +2,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useLocalSearchParams } from 'expo-router'
 import { useState } from 'react'
 import { Linking, StyleSheet, Text, View } from 'react-native'
-import { useTranslation } from 'react-i18next'
 import { agencyApi } from '../../src/api/endpoints'
+import { agencyCopy } from '../../src/i18n/agencyCopy'
 import { queryKeys } from '../../src/api/queryKeys'
 import type { AgencyBoardStatus } from '../../src/api/types'
 import { agencyBoardStatusLabel, agencyConfirmMessage, nationalityLabel, snsPlatformLabel } from '../../src/domain/statusLabels'
@@ -15,7 +15,6 @@ import { StatusPill, toneForApplicationStatus } from '../../src/ui/StatusPill'
 import { colors } from '../../src/theme/tokens'
 
 export default function AgencyApplicantDetailScreen() {
-  const { t } = useTranslation()
   const { applicationId } = useLocalSearchParams<{ applicationId: string }>()
   const queryClient = useQueryClient()
   const query = useQuery({
@@ -36,32 +35,42 @@ export default function AgencyApplicantDetailScreen() {
 
   return (
     <Screen loading={query.isLoading}>
-      {query.isError ? <ErrorState message={t('agency.detailLoadFailed')} onRetry={() => void query.refetch()} /> : null}
+      {query.isError ? (
+        <ErrorState
+          title={agencyCopy('common.loadFailedTitle')}
+          message={agencyCopy('agency.detailLoadFailed')}
+          retryLabel={agencyCopy('common.retry')}
+          onRetry={() => void query.refetch()}
+        />
+      ) : null}
       {detail ? (
         <View style={styles.stack}>
-          <StatusPill label={agencyBoardStatusLabel(detail.status)} tone={toneForApplicationStatus(detail.status)} />
-          <Text style={styles.title}>{detail.name || t('agency.nameUnset')}</Text>
+          <StatusPill label={agencyBoardStatusLabel(detail.status, agencyCopy)} tone={toneForApplicationStatus(detail.status)} />
+          <Text style={styles.title}>{detail.name || agencyCopy('agency.nameUnset')}</Text>
           <Text style={styles.meta}>
-            {nationalityLabel(detail.nationality)}{' '}
-            {detail.age != null ? `· ${t('application.ageYears', { age: detail.age })}` : ''} · {t('application.roundN', { n: detail.round })}
+            {nationalityLabel(detail.nationality, agencyCopy)}{' '}
+            {detail.age != null ? `· ${agencyCopy('application.ageYears', { age: detail.age })}` : ''} · {agencyCopy('application.roundN', { n: detail.round })}
           </Text>
           {detail.introText ? <Text style={styles.body}>{detail.introText}</Text> : null}
           {detail.videoUrl ? (
-            <Button label={t('agency.openVideo')} variant="secondary" onPress={() => void Linking.openURL(detail.videoUrl)} />
+            <Button label={agencyCopy('agency.openVideo')} variant="secondary" onPress={() => void Linking.openURL(detail.videoUrl)} />
           ) : null}
           {detail.snsLinks.map((link) => (
             <Text key={`${link.platform}-${link.url}`} style={styles.meta}>
-              {snsPlatformLabel(link.platform)} · {link.url}
+              {snsPlatformLabel(link.platform, agencyCopy)} · {link.url}
             </Text>
           ))}
-          <Button label={t('agency.markReviewing')} variant="secondary" onPress={() => setPending('REVIEWING')} />
-          <Button label={t('agency.markPass')} onPress={() => setPending('APPROVED')} />
-          <Button label={t('agency.markReject')} variant="danger" onPress={() => setPending('REJECTED')} />
+          <Button label={agencyCopy('agency.markReviewing')} variant="secondary" onPress={() => setPending('REVIEWING')} />
+          <Button label={agencyCopy('agency.markPass')} onPress={() => setPending('APPROVED')} />
+          <Button label={agencyCopy('agency.markReject')} variant="danger" onPress={() => setPending('REJECTED')} />
         </View>
       ) : null}
       <ConfirmDialog
         visible={pending != null}
-        message={pending ? agencyConfirmMessage(pending) : ''}
+        message={pending ? agencyConfirmMessage(pending, agencyCopy) : ''}
+        cancelLabel={agencyCopy('common.cancel')}
+        confirmLabel={agencyCopy('common.confirm')}
+        closeLabel={agencyCopy('common.close')}
         danger={pending === 'REJECTED'}
         loading={mutation.isPending}
         onCancel={() => setPending(null)}

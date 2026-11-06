@@ -1,11 +1,19 @@
 import ko from '../../../../web/messages/ko.json'
 import en from '../../../../web/messages/en.json'
 import mn from '../../../../web/messages/mn.json'
-import { NATIVE_TAB_ITEMS, isSingleLineLabel, tabChrome, type NativeTabRoute } from './nativeTabItems'
+import {
+  NATIVE_TAB_ITEMS,
+  isSingleLineLabel,
+  tabAccessibleLabelKey,
+  tabChrome,
+  tabVisibleLabelKey,
+  type NativeTabRoute,
+} from './nativeTabItems'
 
 const ROUTES = Object.keys(NATIVE_TAB_ITEMS) as NativeTabRoute[]
 
 type NavCatalog = {
+  common: { applications: string }
   nav: Record<'home' | 'auditions' | 'vote' | 'applications' | 'profile', string>
 }
 
@@ -28,7 +36,9 @@ describe('native bottom tabs', () => {
       expect(chrome.numberOfLines).toBe(1)
       expect(chrome.adjustsFontSizeToFit).toBe(true)
       expect(chrome.fontSize).toBe(11)
-      expect(chrome.minimumFontScale).toBeLessThan(1)
+      expect(chrome.minimumFontScale).toBe(1)
+      expect(chrome.visibleLabelKey).toBe(tabVisibleLabelKey(route))
+      expect(chrome.labelKey).toBe(tabAccessibleLabelKey(route))
       expect(chrome.icon).not.toBe(chrome.labelKey)
     }
   })
@@ -47,6 +57,20 @@ describe('native bottom tabs', () => {
           singleLine: true,
         })
       }
+    }
+  })
+
+  it('shows the shorter applications translation at full size and keeps the full name for accessibility', () => {
+    expect(tabVisibleLabelKey('applications')).toBe('common.applications')
+    expect(tabAccessibleLabelKey('applications')).toBe('nav.applications')
+    expect(tabChrome('applications').labelSlots).toBe(1)
+    for (const [locale, messages] of CATALOGS) {
+      const visible = messages.common.applications
+      const accessible = messages.nav.applications
+      expect(isSingleLineLabel(visible)).toBe(true)
+      expect(isSingleLineLabel(accessible)).toBe(true)
+      expect(visible.length).toBeLessThan(accessible.length)
+      expect({ locale, readable: visible.length <= 12 }).toEqual({ locale, readable: true })
     }
   })
 })

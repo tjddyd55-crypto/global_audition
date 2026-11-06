@@ -11,6 +11,7 @@ import { AudienceCountryProvider } from '../src/domain/AudienceCountryProvider'
 import { OtaUpdatePrompt } from '../src/components/OtaUpdatePrompt'
 import { useOtaWatcher } from '../src/services/updates'
 import { colors } from '../src/theme/tokens'
+import { agencyCopy } from '../src/i18n/agencyCopy'
 import { LanguageMenu } from '../src/i18n/LanguageMenu'
 
 export default function RootLayout() {
@@ -65,8 +66,14 @@ function LocalizedStack() {
         <Stack.Screen name="auditions/[id]/vote" options={{ title: t('vote.title') }} />
         <Stack.Screen name="auditions/[id]/ranking" options={{ title: t('ranking.title') }} />
         <Stack.Screen name="applications/[id]" options={{ title: t('common.applications') }} />
-        <Stack.Screen name="agency/applicants" options={{ title: t('myApplications.title') }} />
-        <Stack.Screen name="agency/[applicationId]" options={{ title: t('myApplications.viewDetail') }} />
+        <Stack.Screen
+          name="agency/applicants"
+          options={{ title: agencyCopy('agency.applicants'), headerRight: () => null }}
+        />
+        <Stack.Screen
+          name="agency/[applicationId]"
+          options={{ title: agencyCopy('agency.detail'), headerRight: () => null }}
+        />
         <Stack.Screen name="credits/index" options={{ title: t('credits.title') }} />
         <Stack.Screen name="credits/checkout" options={{ title: t('payments.checkout') }} />
         <Stack.Screen name="payments/success" options={{ title: t('payments.success') }} />
