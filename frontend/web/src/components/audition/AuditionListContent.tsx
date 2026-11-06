@@ -36,7 +36,7 @@ export default function AuditionListContent({ auditions, isLoading, error }: Aud
   }
 
   return (
-    <div className="flex w-full flex-col lg:gap-3">
+    <div className="flex w-full flex-col lg:gap-3" data-testid="audition-list-results">
       {auditions.map((audition: AuditionDto) => (
         <div key={audition?.id ?? ''}>
           <AuditionCard audition={audition} />

@@ -1013,7 +1013,8 @@
     "PREVIOUS_ROUND_NOT_PASSED": "Өмнөх шатыг даваагүй",
     "NO_SUBMISSION_ROW": "Илгээлт бэлтгэж байна. Түр хүлээгээд дахин оролдоно уу",
     "SUBMISSION_CLOSED": "Энэ шат илгээлт хүлээж авахгүй",
-    "ROUND_ALREADY_DECIDED": "Энэ шатыг аль хэдийн шийдсэн"
+    "ROUND_ALREADY_DECIDED": "Энэ шатыг аль хэдийн шийдсэн",
+    "ALREADY_APPLIED": "Та аль хэдийн бүртгүүлсэн."
   },
   "application": {
     "detailLoadFailed": "Өргөдлийг ачаалж чадсангүй.",
@@ -1073,7 +1074,10 @@
     "multiStageResultTitle": "Шат бүрийн шалгалтын мэдэгдэл",
     "multiStagePassBody": "Баяр хүргэе. Та энэ шатыг давсан. Дараагийн шатны зааврыг шалгана уу.",
     "multiStageFailBody": "Энэ шатанд хамт ажиллах боломжгүй боллоо.",
-    "multiStageOpenBody": "Дараагийн шат нээгдэхэд мэдэгдэнэ."
+    "multiStageOpenBody": "Дараагийн шат нээгдэхэд мэдэгдэнэ.",
+    "PENDING": "Хүлээгдэж буй",
+    "SENT": "Илгээсэн",
+    "FAILED": "Илгээлт амжилтгүй"
   },
   "vault": {
     "title": "Бүтээлийн агуулах",

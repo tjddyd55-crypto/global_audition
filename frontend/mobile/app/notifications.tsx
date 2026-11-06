@@ -4,7 +4,7 @@ import { Button } from '../src/ui/Button'
 import { useTranslation } from 'react-i18next'
 import { notificationApi } from '../src/api/endpoints'
 import { queryKeys } from '../src/api/queryKeys'
-import { notificationCopy } from '../src/features/notifications/notificationCopy'
+import { notificationCodeLabel, notificationCopy } from '../src/features/notifications/notificationCopy'
 import { Screen } from '../src/ui/Screen'
 import { colors, radius } from '../src/theme/tokens'
 
@@ -31,7 +31,8 @@ export default function NotificationsScreen() {
           <Text style={styles.type}>{copy.title}</Text>
           {copy.body ? <Text style={styles.body}>{copy.body}</Text> : null}
           <Text style={styles.meta}>
-            {item.type} · {item.status}
+            {notificationCodeLabel(item.type, (key) => t(`notifications.${key}`))} ·{' '}
+            {notificationCodeLabel(item.status, (key) => t(`notifications.${key}`))}
             {item.readAt ? ` · ${t('studio.read')}` : ''}
           </Text>
           {!item.readAt ? (

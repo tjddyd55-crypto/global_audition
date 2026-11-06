@@ -12,11 +12,11 @@ import { colors, radius } from '../../src/theme/tokens'
 import { useTranslation } from 'react-i18next'
 
 export default function MyApplicationsScreen() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const router = useRouter()
   const { isAuthenticated, ready } = useAuth()
   const query = useQuery({
-    queryKey: queryKeys.myApplications,
+    queryKey: [...queryKeys.myApplications, i18n.language],
     queryFn: applicationApi.listMine,
     enabled: isAuthenticated,
   })

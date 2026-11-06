@@ -7,12 +7,14 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { authApi } from '@/shared/api/auth'
 import { buildAgencySignupPayload } from '@/shared/auth/buildAgencySignupPayload'
+import { buildApplicantSignupPayload } from '@/shared/auth/buildApplicantSignupPayload'
 import { Link, useRouter } from '@/i18n.config'
 import RoleSelectCard from '@/components/auth/RoleSelectCard'
 import AuthCardLayout from '@/components/auth/AuthCardLayout'
 import { RecoveryCodeNotice } from '@/components/auth/RecoveryCodeNotice'
 import { SIGNUP } from '@/shared/design-tokens'
 import { createNicknameZodField } from '@/shared/user/nicknameZod'
+import { countries, timezones } from '@/shared/utils/countries'
 
 type RegisterFormData = {
   email: string
@@ -25,6 +27,8 @@ type RegisterFormData = {
   representativeName?: string
   contactPhone?: string
   businessCity?: string
+  applicantCountry?: string
+  applicantTimezone?: string
 }
 type RegisterRole = 'APPLICANT' | 'AGENCY'
 
@@ -36,6 +40,17 @@ const inputStyle: React.CSSProperties = {
   padding: `0 ${SIGNUP.inputPaddingPx}px`,
   fontSize: SIGNUP.inputFontSizePx,
   boxSizing: 'border-box',
+}
+
+function applicantResidenceError(
+  country: string,
+  timezone: string,
+  tVal: (key: string) => string,
+  tReg: (key: string) => string,
+): string | null {
+  if (!/^[A-Z]{2}$/.test(country)) return tVal('countryRequired')
+  if (!timezones.some((zone) => zone.value === timezone)) return tReg('selectTimezone')
+  return null
 }
 
 function createRegisterSchema(tAuth: (key: string) => string, tReg: (key: string) => string) {
@@ -53,6 +68,8 @@ function createRegisterSchema(tAuth: (key: string) => string, tReg: (key: string
       representativeName: z.string().max(120).optional().or(z.literal('')),
       contactPhone: z.string().max(40).optional().or(z.literal('')),
       businessCity: z.string().max(120).optional().or(z.literal('')),
+      applicantCountry: z.string().max(2).optional().or(z.literal('')),
+      applicantTimezone: z.string().max(64).optional().or(z.literal('')),
       password: z
         .string({ required_error: tAuth('requiredValues') })
         .min(1, tAuth('requiredValues'))
@@ -73,6 +90,7 @@ export default function PcRegisterPage() {
   const tAuth = useTranslations('auth')
   const tReg = useTranslations('register')
   const tVal = useTranslations('validation')
+  const tCountries = useTranslations('countries')
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [role, setRole] = useState<RegisterRole>('APPLICANT')
@@ -121,6 +139,16 @@ export default function PcRegisterPage() {
         return
       }
     }
+    const applicantCountry = (data.applicantCountry ?? '').trim().toUpperCase()
+    const applicantTimezone = (data.applicantTimezone ?? '').trim()
+    if (role === 'APPLICANT') {
+      const residenceError = applicantResidenceError(applicantCountry, applicantTimezone, tVal, tReg)
+      if (residenceError) {
+        setError(residenceError)
+        setIsLoading(false)
+        return
+      }
+    }
     try {
       const res = await authApi.signup(
         role === 'AGENCY'
@@ -136,13 +164,14 @@ export default function PcRegisterPage() {
               contactPhone: data.contactPhone,
               businessCity: data.businessCity!.trim(),
             })
-          : {
+          : buildApplicantSignupPayload({
               email: data.email,
               password: data.password,
-              role,
               nickname: data.nickname.trim(),
               name: data.legalName?.trim() ? data.legalName.trim() : undefined,
-            },
+              countryCode: applicantCountry,
+              timezone: applicantTimezone,
+            }),
       )
       if (res.recoveryCode) {
         setIssuedIntent(res.signupIntent ?? role)
@@ -219,9 +248,31 @@ export default function PcRegisterPage() {
             </Field>
           </>
         ) : (
-          <Field id="legalName" label={tAuth('legalNameOptional')} error={errors.legalName?.message}>
-            <input id="legalName" type="text" {...register('legalName')} placeholder={tAuth('legalNamePlaceholder')} style={inputStyle} />
-          </Field>
+          <>
+            <Field id="legalName" label={tAuth('legalNameOptional')} error={errors.legalName?.message}>
+              <input id="legalName" type="text" {...register('legalName')} placeholder={tAuth('legalNamePlaceholder')} style={inputStyle} />
+            </Field>
+            <Field id="applicant-country" label={`${tReg('country')} *`}>
+              <select id="applicant-country" aria-label={tReg('country')} {...register('applicantCountry')} style={inputStyle}>
+                <option value="">{tReg('selectCountry')}</option>
+                {countries.map((country) => (
+                  <option key={country.code} value={country.code}>
+                    {tCountries(country.code)}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field id="applicant-timezone" label={`${tReg('timezone')} *`}>
+              <select id="applicant-timezone" aria-label={tReg('timezone')} {...register('applicantTimezone')} style={inputStyle}>
+                <option value="">{tReg('selectTimezone')}</option>
+                {timezones.map((zone) => (
+                  <option key={zone.value} value={zone.value}>
+                    {zone.label}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </>
         )}
         <Field id="email" label={tAuth('email')} error={errors.email?.message}>
           <input id="email" type="email" autoComplete="email" {...register('email')} placeholder="your@email.com" style={inputStyle} />

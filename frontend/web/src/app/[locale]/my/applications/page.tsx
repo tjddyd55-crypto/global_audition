@@ -25,7 +25,7 @@ export default function MyApplicationsPage() {
   const tStatus = useTranslations('status')
   const locale = useLocale()
   const { data, isLoading, error } = useQuery({
-    queryKey: ['my-applications'],
+    queryKey: ['my-applications', locale],
     queryFn: () => applicationApi.listMy(),
   })
 

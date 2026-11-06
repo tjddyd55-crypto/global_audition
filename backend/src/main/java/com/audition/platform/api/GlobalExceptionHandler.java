@@ -43,7 +43,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<?> handleResponseStatus(ResponseStatusException ex, HttpServletRequest request) {
-        log.warn("ResponseStatusException on {} {}: {}", request.getMethod(), request.getRequestURI(), ex.getReason(), ex);
+        if (ex.getStatusCode().value() == HttpStatus.FORBIDDEN.value()) {
+            log.warn("AccessDenied on {} {}: {}", request.getMethod(), request.getRequestURI(), ex.getReason());
+        } else {
+            log.warn("ResponseStatusException on {} {}: {}", request.getMethod(), request.getRequestURI(), ex.getReason(), ex);
+        }
         HttpStatusCode status = ex.getStatusCode();
         String reasonPhrase = (status instanceof HttpStatus)
                 ? ((HttpStatus) status).getReasonPhrase()
