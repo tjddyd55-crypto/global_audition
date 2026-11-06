@@ -71,6 +71,8 @@ export function parseAuditionDto(raw: Record<string, unknown>): AuditionDto {
     status: String(raw.status ?? 'DRAFT'),
     updatedAt: raw.updatedAt != null ? String(raw.updatedAt) : undefined,
     countryCode: raw.countryCode != null ? String(raw.countryCode) : null,
+    postingBranchId: raw.postingBranchId != null && String(raw.postingBranchId).length > 0 ? String(raw.postingBranchId) : null,
+    operatingCountry: raw.operatingCountry != null && String(raw.operatingCountry).length > 0 ? String(raw.operatingCountry) : null,
     deadlineAt: raw.deadlineAt != null ? String(raw.deadlineAt) : null,
     tags: safeStringArr(raw.tags),
     tagRefs: tagRefs && tagRefs.length > 0 ? tagRefs : undefined,

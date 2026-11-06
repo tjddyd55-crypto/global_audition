@@ -9,22 +9,19 @@ import com.audition.platform.api.dto.ManageRoundCountDto;
 import com.audition.platform.application.audition.ApplicantCardMetricsLoader;
 import com.audition.platform.application.me.MeApiMapping;
 import com.audition.platform.application.ranking.ApplicationRankingService;
+import com.audition.platform.application.round.AuditionManageAccess;
 import com.audition.platform.domain.audition.Application;
 import com.audition.platform.domain.audition.ApplicationRepository;
 import com.audition.platform.domain.audition.ApplicationSnsLinkRepository;
 import com.audition.platform.domain.audition.Audition;
-import com.audition.platform.domain.audition.AuditionRepository;
 import com.audition.platform.domain.audition.AuditionRound;
 import com.audition.platform.domain.audition.AuditionRoundRepository;
 import com.audition.platform.domain.score.ApplicationScore;
 import com.audition.platform.domain.score.ApplicationScoreRepository;
 import com.audition.platform.domain.user.User;
 import com.audition.platform.domain.user.UserRepository;
-import com.audition.platform.infra.SecurityUtils;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -46,31 +43,31 @@ public class ManageApplicationsQueryService {
     private static final List<String> STANDARD_MANAGE_CATEGORIES = List.of("보컬", "댄스", "랩", "프로듀싱");
 
     private final ApplicationRepository applicationRepository;
-    private final AuditionRepository auditionRepository;
     private final UserRepository userRepository;
     private final ApplicantCardMetricsLoader metricsLoader;
     private final ApplicationScoreRepository applicationScoreRepository;
     private final ApplicationRankingService applicationRankingService;
     private final ApplicationSnsLinkRepository applicationSnsLinkRepository;
     private final AuditionRoundRepository auditionRoundRepository;
+    private final AuditionManageAccess auditionManageAccess;
 
     public ManageApplicationsQueryService(
             ApplicationRepository applicationRepository,
-            AuditionRepository auditionRepository,
             UserRepository userRepository,
             ApplicantCardMetricsLoader metricsLoader,
             ApplicationScoreRepository applicationScoreRepository,
             ApplicationRankingService applicationRankingService,
             ApplicationSnsLinkRepository applicationSnsLinkRepository,
-            AuditionRoundRepository auditionRoundRepository) {
+            AuditionRoundRepository auditionRoundRepository,
+            AuditionManageAccess auditionManageAccess) {
         this.applicationRepository = applicationRepository;
-        this.auditionRepository = auditionRepository;
         this.userRepository = userRepository;
         this.metricsLoader = metricsLoader;
         this.applicationScoreRepository = applicationScoreRepository;
         this.applicationRankingService = applicationRankingService;
         this.applicationSnsLinkRepository = applicationSnsLinkRepository;
         this.auditionRoundRepository = auditionRoundRepository;
+        this.auditionManageAccess = auditionManageAccess;
     }
 
     public ManageApplicationsPageDataDto listManageApplications(
@@ -82,13 +79,7 @@ public class ManageApplicationsQueryService {
             Boolean hasSns,
             String boardStatus,
             Integer roundFilter) {
-        UUID currentUserId = SecurityUtils.getCurrentUserId();
-        if (currentUserId == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
-        }
-        Audition audition = auditionRepository.findById(auditionId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "오디션을 찾을 수 없습니다."));
-        assertAgencyOrAdminCanManageAudition(audition);
+        Audition audition = auditionManageAccess.requireApplicantList(auditionId);
 
         List<Application> all = applicationRepository.findByAuditionIdOrderByCreatedAtDesc(auditionId);
         if (applicationScoreRepository.countByAuditionId(auditionId) == 0 && !all.isEmpty()) {
@@ -126,19 +117,6 @@ public class ManageApplicationsQueryService {
         dto.setMaxRound(maxRound);
         dto.setRoundCounts(roundCounts);
         return dto;
-    }
-
-    private void assertAgencyOrAdminCanManageAudition(Audition audition) {
-        UUID currentUserId = SecurityUtils.getCurrentUserId();
-        if (currentUserId == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
-        }
-        if (SecurityUtils.hasRole("APPLICANT")) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "지원자는 이 작업을 수행할 수 없습니다.");
-        }
-        if (!audition.getOwnerId().equals(currentUserId) && !SecurityUtils.hasRole("ADMIN")) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "해당 오디션을 관리할 권한이 없습니다.");
-        }
     }
 
     private static int resolveMaxRoundForManage(Audition audition, List<Application> apps, List<AuditionRound> definedRounds) {

@@ -43,6 +43,20 @@ public class AuditionManageAccess {
         return loadAuthorized(auditionId, true);
     }
 
+    /**
+     * 지원자 목록 조회. 소유 기획사, role ADMIN, DB role SUPER_ADMIN.
+     * 국가 관리자는 넣지 않는다. 합격·불합격·보류는 {@link #requireManagedAudition} 만 쓴다.
+     */
+    public Audition requireApplicantList(UUID auditionId) {
+        UUID currentUserId = requireActor();
+        Audition audition = auditionRepository.findById(auditionId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "오디션을 찾을 수 없습니다."));
+        if (isOwnerOrAdmin(currentUserId, audition) || SecurityUtils.hasRole("SUPER_ADMIN")) {
+            return audition;
+        }
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "해당 오디션을 관리할 권한이 없습니다.");
+    }
+
     /** 이미 로드한 오디션의 지원서 상세 조회. */
     public void assertCanRead(Audition audition) {
         UUID currentUserId = requireActor();

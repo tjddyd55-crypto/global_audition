@@ -8,6 +8,8 @@ import { z } from 'zod'
 import { useTranslations } from 'next-intl'
 import { auditionApi } from '@/shared/api/auditions'
 import { Link } from '../../../../i18n.config'
+import { PostingBranchField, usePostingBranchChoice } from '@/components/audition/PostingBranchField'
+import { postingBranchIdForPayload, postingBranchPublishBlock } from '@/shared/audition/postingBranchChoice'
 
 function createAuditionSchema(titleRequired: string) {
   return z.object({
@@ -25,6 +27,8 @@ export default function NewAuditionPage() {
   const tEditor = useTranslations('editor')
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [postingBranchId, setPostingBranchId] = useState('')
+  const { state: postingBranchState } = usePostingBranchChoice(postingBranchId)
 
   const { register, handleSubmit, formState: { errors } } = useForm<CreateFormData>({
     resolver: zodResolver(createAuditionSchema(tEditor('titleRequired'))),
@@ -32,6 +36,11 @@ export default function NewAuditionPage() {
   })
 
   const onSubmit = async (data: CreateFormData) => {
+    const branchBlock = postingBranchPublishBlock(postingBranchState)
+    if (branchBlock === 'required' || (data.status !== 'DRAFT' && branchBlock === 'none')) {
+      setError(branchBlock === 'none' ? tEditor('postingBranchNone') : tEditor('postingBranchRequired'))
+      return
+    }
     setIsLoading(true)
     setError(null)
     try {
@@ -39,6 +48,7 @@ export default function NewAuditionPage() {
         title: data.title.trim(),
         description: (data.description ?? '').trim() || '—',
         status: data.status,
+        postingBranchId: postingBranchIdForPayload(postingBranchState),
         tagIds: [],
         customTagNames: [],
         galleryImages: [],
@@ -87,6 +97,7 @@ export default function NewAuditionPage() {
               className="w-full border rounded px-3 py-2"
             />
           </div>
+          <PostingBranchField state={postingBranchState} onSelect={setPostingBranchId} />
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">{tEditor('status')}</label>
             <select {...register('status')} className="w-full border rounded px-3 py-2">

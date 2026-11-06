@@ -62,6 +62,9 @@ public class UpdateAuditionRequest {
     @Pattern(regexp = "SINGLE|MULTI_ROUND")
     private String processMode;
 
+    /** 게시 지점. 생략하면 저장된 값을 유지한다. */
+    private String postingBranchId;
+
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
     public String getDescription() { return description; }
@@ -108,4 +111,6 @@ public class UpdateAuditionRequest {
     public void setDeadlineAt(String deadlineAt) { this.deadlineAt = deadlineAt; }
     public String getProcessMode() { return processMode; }
     public void setProcessMode(String processMode) { this.processMode = processMode; }
+    public String getPostingBranchId() { return postingBranchId; }
+    public void setPostingBranchId(String postingBranchId) { this.postingBranchId = postingBranchId; }
 }

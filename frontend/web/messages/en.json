@@ -850,7 +850,14 @@
     "publishConfirmRequired": "Confirm the review before publishing.",
     "openPreview": "PC and phone preview",
     "backToEditor": "Back to editor",
-    "recruitFieldsOther": "Other roles (free text)"
+    "recruitFieldsOther": "Other roles (free text)",
+    "postingBranch": "Posting branch",
+    "postingBranchHint": "The operating country follows the selected branch, not the applicant nationality.",
+    "postingBranchFixed": "{name} ({country})",
+    "postingBranchPlaceholder": "Select a posting branch",
+    "postingBranchRequired": "Select a posting branch.",
+    "postingBranchNone": "No approved active branch. You can save a draft. To publish, register a branch and wait for headquarters approval.",
+    "postingBranchLoading": "Loading posting branches…"
   },
   "country": {
     "KR": "Korea",
@@ -1014,7 +1021,12 @@
     "NO_SUBMISSION_ROW": "Preparing your submission. Try again shortly",
     "SUBMISSION_CLOSED": "This round no longer accepts submissions",
     "ROUND_ALREADY_DECIDED": "This round has already been decided",
-    "ALREADY_APPLIED": "You have already applied."
+    "ALREADY_APPLIED": "You have already applied.",
+    "POSTING_BRANCH_REQUIRED": "Select a posting branch.",
+    "POSTING_BRANCH_NONE": "This cannot be published without an approved active branch. Register a branch and get headquarters approval first.",
+    "POSTING_BRANCH_NOT_APPROVED": "That branch is not approved and active.",
+    "POSTING_BRANCH_FORBIDDEN": "A branch owned by another agency cannot be used.",
+    "POSTING_BRANCH_INVALID": "The posting branch could not be verified."
   },
   "application": {
     "detailLoadFailed": "Could not load the application.",

@@ -75,6 +75,10 @@ export type AuditionDto = {
   status: AuditionStatus | string
   updatedAt?: string
   countryCode?: string | null
+  /** 게시 지점. 없으면 비어 있다. */
+  postingBranchId?: string | null
+  /** 게시 지점 국가. 모집 대상 국가와 별개다. */
+  operatingCountry?: string | null
   deadlineAt?: string | null
   /** 검색·필터용 표시 태그 (catalog + 직입력 병합) */
   tags: string[]
@@ -164,6 +168,7 @@ export type CreateAuditionPayload = {
   endDate: string
   benefits: string[]
   countryCode?: string
+  postingBranchId?: string
   defaultLocale?: string
   deadlineAt?: string
 }
