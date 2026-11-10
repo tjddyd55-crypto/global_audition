@@ -1,0 +1,13 @@
+# Opt-in only through scripts/start-development-memory.sh in Railway Development.
+# Do not activate globally or change application.yml/Production to use this file.
+spring:
+  datasource:
+    hikari:
+      maximum-pool-size: 4
+      minimum-idle: 1
+
+server:
+  tomcat:
+    threads:
+      max: 50
+      min-spare: 2

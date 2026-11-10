@@ -1,0 +1,79 @@
+{
+  "date": "2026-11-10",
+  "base_commit": "aa6fc4e2bf5146b57eea8992d02fdfe64b33da18",
+  "scope": "local only; not Railway metrics",
+  "active_processor_count": 2,
+  "nmt": "summary",
+  "windows_seconds": 60,
+  "database": "dedicated local PostgreSQL 15; empty application data",
+  "runs": [
+    {
+      "label": "baseline",
+      "startup_seconds": 12.163436090000005,
+      "smoke": {
+        "/api/health": 200,
+        "/api/version": 200,
+        "/api/auditions": 200,
+        "/api/tags": 200,
+        "/api/agencies/public": 200,
+        "/api/auth/me": 401
+      },
+      "idle": {
+        "mean_rss_mib": 427.3994140625,
+        "max_rss_mib": 427.4375,
+        "last_rss_mib": 427.4375,
+        "last_threads": 37,
+        "cpu_pct_one_core": 1.9480725980504794
+      },
+      "after_load": {
+        "mean_rss_mib": 436.2906901041667,
+        "max_rss_mib": 436.34375,
+        "last_rss_mib": 436.34375,
+        "last_threads": 38,
+        "cpu_pct_one_core": 0.8800219513907642
+      },
+      "load": {
+        "count": 200,
+        "concurrency": 4,
+        "p50_ms": 10.968947000037588,
+        "p95_ms": 24.276874999941356,
+        "cpu_seconds": 2.210000000000001
+      }
+    },
+    {
+      "label": "candidate",
+      "startup_seconds": 12.177542914000014,
+      "smoke": {
+        "/api/health": 200,
+        "/api/version": 200,
+        "/api/auditions": 200,
+        "/api/tags": 200,
+        "/api/agencies/public": 200,
+        "/api/auth/me": 401
+      },
+      "idle": {
+        "mean_rss_mib": 347.4985026041667,
+        "max_rss_mib": 361.12890625,
+        "last_rss_mib": 346.8203125,
+        "last_threads": 27,
+        "cpu_pct_one_core": 2.048743785319419
+      },
+      "after_load": {
+        "mean_rss_mib": 355.08125,
+        "max_rss_mib": 355.1484375,
+        "last_rss_mib": 355.1484375,
+        "last_threads": 31,
+        "cpu_pct_one_core": 0.6433100920490026
+      },
+      "load": {
+        "count": 200,
+        "concurrency": 4,
+        "p50_ms": 8.24258750003537,
+        "p95_ms": 22.015858000031585,
+        "cpu_seconds": 1.7199999999999989
+      }
+    }
+  ],
+  "java": "Temurin 17.0.21+9",
+  "jdk_source_image_digest": "eclipse-temurin:17-jdk@sha256:43338b737d0f75d6883d3c4563bc66974113ca8ac296e82f39d161fb3d398f0d"
+}
