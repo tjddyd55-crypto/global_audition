@@ -13,3 +13,8 @@ buildCommand = "chmod +x mvnw && ./mvnw -DskipTests package"
 startCommand = "java -Xms128m -Xmx512m -XX:MaxMetaspaceSize=192m -XX:ReservedCodeCacheSize=64m -XX:+UseContainerSupport -XX:+ExitOnOutOfMemoryError -jar target/*.jar"
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
+
+# Development-only override: the base command remains the Production/default command.
+# Railway config-as-code takes precedence over the service dashboard start command.
+[environments.development.deploy]
+startCommand = "bash scripts/start-development-memory.sh"
