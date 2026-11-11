@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Script from 'next/script'
 import { useRouter, Link } from '../../../../i18n.config'
@@ -53,6 +53,7 @@ function TossCheckoutContent() {
   )
   const [accountCountry, setAccountCountry] = useState<string | null>(null)
   const [country, setCountry] = useState<string>(countryParam ?? 'US')
+  const countryTouched = useRef(false)
 
   useEffect(() => {
     if (countryParam) return
@@ -62,7 +63,7 @@ function TossCheckoutContent() {
       .then((me) => {
         if (cancelled) return
         setAccountCountry(me.countryCode ?? null)
-        setCountry(defaultOverseasCountry(me.countryCode))
+        if (!countryTouched.current) setCountry(defaultOverseasCountry(me.countryCode))
       })
       .catch(() => undefined)
     return () => {
@@ -276,7 +277,10 @@ function TossCheckoutContent() {
                   <select
                     className="rounded border px-3 py-2"
                     value={country}
-                    onChange={(event) => setCountry(event.target.value)}
+                    onChange={(event) => {
+                      countryTouched.current = true
+                      setCountry(event.target.value)
+                    }}
                     data-testid="toss-pay-country"
                   >
                     {(countryParam && !overseasCountryOptions(accountCountry).includes(countryParam)
