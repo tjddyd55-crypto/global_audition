@@ -4,12 +4,12 @@ import { persistLocale } from './LocaleProvider'
 import { PUBLIC_SELECTOR, getRuntimeLocale } from './runtime'
 import { colors } from '../theme/tokens'
 
-export function LanguageMenu() {
+export function LanguageMenu({ compact = false }: { compact?: boolean }) {
   const { t, i18n } = useTranslation()
   const active = PUBLIC_SELECTOR.includes(i18n.language) ? i18n.language : getRuntimeLocale()
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 8, paddingHorizontal: 12, paddingVertical: 8 }}>
-      <Text style={{ fontSize: 12, color: colors.faint }}>{t('profile.language')}</Text>
+    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: compact ? 4 : 8, paddingHorizontal: compact ? 4 : 12, paddingVertical: 8 }}>
+      {!compact ? <Text style={{ fontSize: 12, color: colors.faint }}>{t('profile.language')}</Text> : null}
       {PUBLIC_SELECTOR.map((code) => {
         const selected = active === code
         return (
@@ -19,7 +19,7 @@ export function LanguageMenu() {
             accessibilityState={{ selected }}
             onPress={() => void persistLocale(code)}
             style={{
-              paddingHorizontal: 8,
+              paddingHorizontal: compact ? 6 : 8,
               paddingVertical: 4,
               borderRadius: 999,
               backgroundColor: selected ? colors.purple : 'transparent',
@@ -28,7 +28,7 @@ export function LanguageMenu() {
             }}
           >
             <Text style={{ fontSize: 12, fontWeight: '700', color: selected ? '#fff' : colors.faint }}>
-              {t(`locale.${code}`)}
+              {compact ? code.toUpperCase() : t(`locale.${code}`)}
             </Text>
           </Pressable>
         )

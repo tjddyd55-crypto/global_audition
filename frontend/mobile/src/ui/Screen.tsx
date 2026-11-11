@@ -5,6 +5,7 @@ import { colors, space } from '../theme/tokens'
 type Props = {
   children?: React.ReactNode
   padded?: boolean
+  topInset?: boolean
   scroll?: boolean
   refreshing?: boolean
   onRefresh?: RefreshControlProps['onRefresh']
@@ -15,6 +16,7 @@ type Props = {
 export function Screen({
   children,
   padded = true,
+  topInset = true,
   scroll = true,
   loading,
   footer,
@@ -23,7 +25,7 @@ export function Screen({
 }: Props) {
   if (loading) {
     return (
-      <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+      <SafeAreaView style={styles.safe} edges={topInset ? ['top', 'left', 'right'] : ['left', 'right']}>
         <View style={styles.center}>
           <ActivityIndicator color={colors.purple} size="large" />
         </View>

@@ -30,8 +30,10 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: true,
-        headerTitle: '',
-        headerRight: () => <LanguageMenu />,
+        headerTitle: '글로벌 오디션',
+        headerTitleAlign: 'left',
+        headerTitleStyle: { fontWeight: '800', fontSize: 17, color: colors.text },
+        headerRight: () => <LanguageMenu compact />,
         headerShadowVisible: false,
         tabBarActiveTintColor: colors.purple,
         tabBarInactiveTintColor: colors.faint,
