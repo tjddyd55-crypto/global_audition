@@ -426,6 +426,8 @@ public class PaymentOrderService {
         out.put("foreignCurrencyEnabled", false);
         out.put("tossMethod", SettlementCurrency.TOSS_METHOD);
         out.put("foreignEasyPayProvider", SettlementCurrency.TOSS_EASY_PAY_PROVIDER);
+        // 결제창 선택지. 해외카드·해외간편결제는 USD 주문, 국내(KRW)는 관리자 환율이 있는 TOSS_DOMESTIC 글로벌 주문.
+        out.put("checkoutMethods", java.util.List.of("DOMESTIC", "OVERSEAS_CARD", "OVERSEAS_EASY_PAY"));
         out.put("variantKey", paymentSettingsService.resolvedVariantKey());
         out.put("midConfigured", paymentSettingsService.resolvedMid() != null);
         out.put("successScheme", NATIVE_SUCCESS_URL);

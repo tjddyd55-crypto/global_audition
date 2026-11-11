@@ -671,7 +671,19 @@
     "history": "Top-up history",
     "merchantCountry": "Merchant country",
     "environmentLabel": "Environment",
-    "iapNotice": "Credit packs are digital goods. This app does not open Toss, PayPal, or any other external checkout. Purchases belong in the store in-app purchase flow, which is not enabled in this build."
+    "iapNotice": "Credit packs are digital goods. This app does not open Toss, PayPal, or any other external checkout. Purchases belong in the store in-app purchase flow, which is not enabled in this build.",
+    "methodTitle": "Payment method",
+    "methodDomestic": "Korean cards & easy pay",
+    "methodDomesticHint": "Charged in KRW. The server sets the KRW amount from the exchange rate registered by the admin.",
+    "methodOverseasCard": "International card (Visa, Mastercard, JCB, etc.)",
+    "methodOverseasCardHint": "Charged in US dollars (USD).",
+    "methodOverseasEasyPay": "International easy pay (PayPal)",
+    "methodOverseasEasyPayHint": "Charged in US dollars (USD). Choose your payment country.",
+    "payCountry": "Payment country",
+    "domesticUnavailable": "Korean domestic payment is not available yet. ({code})",
+    "countryRequired": "Choose your payment country.",
+    "currencyMismatch": "This payment method cannot pay an order in {currency}.",
+    "selectedMethod": "Payment method"
   },
   "status": {
     "submitted": "Submitted",

@@ -671,7 +671,19 @@
     "history": "Цэнэглэлтийн түүх",
     "merchantCountry": "Мерчантын улс",
     "environmentLabel": "Орчин",
-    "iapNotice": "Кредит нь дижитал бараа. Энэ апп Toss, PayPal зэрэг гаднын төлбөр нээхгүй. Цэнэглэлт нь дэлгүүрийн in-app purchase-д хамаарна. Энэ бүтээцэд IAP бүтээгдэхүүн байхгүй."
+    "iapNotice": "Кредит нь дижитал бараа. Энэ апп Toss, PayPal зэрэг гаднын төлбөр нээхгүй. Цэнэглэлт нь дэлгүүрийн in-app purchase-д хамаарна. Энэ бүтээцэд IAP бүтээгдэхүүн байхгүй.",
+    "methodTitle": "Төлбөрийн хэрэгсэл",
+    "methodDomestic": "Солонгосын карт ба хялбар төлбөр",
+    "methodDomesticHint": "KRW-ээр төлнө. KRW дүнг админы бүртгэсэн ханшаар сервер тогтооно.",
+    "methodOverseasCard": "Олон улсын карт (Visa, Mastercard, JCB гэх мэт)",
+    "methodOverseasCardHint": "АНУ-ын доллар (USD)-оор төлнө.",
+    "methodOverseasEasyPay": "Олон улсын хялбар төлбөр (PayPal)",
+    "methodOverseasEasyPayHint": "АНУ-ын доллар (USD)-оор төлнө. Төлбөрийн улсаа сонгоно уу.",
+    "payCountry": "Төлбөрийн улс",
+    "domesticUnavailable": "Солонгосын дотоодын төлбөр одоогоор боломжгүй байна. ({code})",
+    "countryRequired": "Төлбөрийн улсаа сонгоно уу.",
+    "currencyMismatch": "Энэ төлбөрийн хэрэгслээр {currency} захиалгыг төлөх боломжгүй.",
+    "selectedMethod": "Төлбөрийн хэрэгсэл"
   },
   "status": {
     "submitted": "Илгээсэн",

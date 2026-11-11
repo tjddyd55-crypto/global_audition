@@ -71,7 +71,7 @@ export default function PaymentSettingsPage() {
 
   const testMut = useMutation({
     mutationFn: () => superAdminApi.testPaymentConnection(),
-    onSuccess: (res) => setTestResult(res.result),
+    onSuccess: (res) => setTestResult(res.detail ? `${res.result} (${res.detail})` : res.result),
     onError: (err) => setTestResult(errMsg(err)),
   })
 

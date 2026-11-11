@@ -210,9 +210,14 @@ public class PaymentSettingsService {
         }
         TossPaymentsClient.ConnectionProbe probe = tossPaymentsClient.probeSecret(secret);
         boolean live = ENV_LIVE.equals(row.getEnvironment());
-        String result = !probe.isValidKey()
-                ? PaymentConnectionTestResult.INVALID_KEY
-                : (live ? PaymentConnectionTestResult.LIVE_CONNECTED : PaymentConnectionTestResult.TEST_CONNECTED);
+        String result;
+        if (!probe.isReachable()) {
+            result = PaymentConnectionTestResult.UNREACHABLE;
+        } else if (!probe.isValidKey()) {
+            result = PaymentConnectionTestResult.INVALID_KEY;
+        } else {
+            result = live ? PaymentConnectionTestResult.LIVE_CONNECTED : PaymentConnectionTestResult.TEST_CONNECTED;
+        }
         UUID adminId = SecurityUtils.getCurrentUserId();
         if (adminId != null) {
             adminAuditLogService.log(
@@ -221,9 +226,10 @@ public class PaymentSettingsService {
                     "PAYMENT_SETTINGS",
                     "1",
                     Map.of(),
-                    Map.of("result", result, "environment", row.getEnvironment()));
+                    Map.of("result", result, "environment", row.getEnvironment(),
+                            "detail", probe.getDetail() == null ? "" : probe.getDetail()));
         }
-        return new PaymentConnectionTestResult(result, row.getEnvironment(), probe.isValidKey());
+        return new PaymentConnectionTestResult(result, row.getEnvironment(), probe.isValidKey(), probe.getDetail());
     }
 
     private String resolveSecretForProbe(PlatformPaymentSettings row) {

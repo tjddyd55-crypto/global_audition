@@ -133,6 +133,31 @@ class PaymentSettingsServiceTest {
     }
 
     @Test
+    void connectionTestSeparatesUnreachableFromInvalidKey() {
+        PlatformPaymentSettings row = completeTestRow();
+        when(repository.findById((short) 1)).thenReturn(Optional.of(row));
+        when(tossClient.probeSecret(any()))
+                .thenReturn(TossPaymentsClient.ConnectionProbe.unreachable("HTTP_502:TOSS_UNREACHABLE"));
+
+        PaymentConnectionTestResult result = service.testConnection();
+        assertEquals(PaymentConnectionTestResult.UNREACHABLE, result.getResult());
+        assertEquals("HTTP_502:TOSS_UNREACHABLE", result.getDetail());
+        assertFalse(result.isConnected());
+    }
+
+    @Test
+    void connectionTestReportsInvalidKeyWithTossCode() {
+        PlatformPaymentSettings row = completeTestRow();
+        when(repository.findById((short) 1)).thenReturn(Optional.of(row));
+        when(tossClient.probeSecret(any()))
+                .thenReturn(TossPaymentsClient.ConnectionProbe.invalidKey("HTTP_401:UNAUTHORIZED_KEY"));
+
+        PaymentConnectionTestResult result = service.testConnection();
+        assertEquals(PaymentConnectionTestResult.INVALID_KEY, result.getResult());
+        assertEquals("HTTP_401:UNAUTHORIZED_KEY", result.getDetail());
+    }
+
+    @Test
     void masksSecretsOnView() {
         PlatformPaymentSettings row = completeTestRow();
         when(repository.findById((short) 1)).thenReturn(Optional.of(row));

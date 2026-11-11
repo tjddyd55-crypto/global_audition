@@ -432,13 +432,19 @@ public class PaymentService {
                 return Map.of("providerId", providerId, "result", "NOT_CONFIGURED");
             }
             TossPaymentsClient.ConnectionProbe probe = tossPaymentsClient.probeSecret(plain);
+            String detail = probe.getDetail() == null ? "" : probe.getDetail();
+            if (!probe.isReachable()) {
+                // 네트워크·토스 장애는 키 실패로 기록하지 않는다.
+                catalog.markConnection(providerId, "NOT_CHECKED", provider.contractStatus());
+                return Map.of("providerId", providerId, "result", "UNREACHABLE", "detail", detail);
+            }
             if (!probe.isValidKey()) {
                 catalog.markConnection(providerId, "NOT_CHECKED", "TEST_FAILED");
-                return Map.of("providerId", providerId, "result", "TEST_FAILED");
+                return Map.of("providerId", providerId, "result", "TEST_FAILED", "detail", detail);
             }
             String status = "TOSS_INTERNATIONAL".equals(providerId) ? "APPROVAL_PENDING" : "TEST_READY";
             catalog.markConnection(providerId, "CONNECTED", status);
-            return Map.of("providerId", providerId, "result", "CONNECTED");
+            return Map.of("providerId", providerId, "result", "CONNECTED", "detail", detail);
         }
         if (plain == null || plain.isBlank() || client == null || client.isBlank()) {
             catalog.markConnection(providerId, "NOT_CHECKED", provider.contractStatus());

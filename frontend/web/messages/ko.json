@@ -671,7 +671,19 @@
     "history": "충전 내역",
     "merchantCountry": "가맹 국가",
     "environmentLabel": "환경",
-    "iapNotice": "크레딧은 디지털 상품입니다. 이 앱에서는 토스, PayPal 등 외부 결제창을 열지 않습니다. 충전은 스토어 인앱 결제로만 가능하며, 이 빌드에는 인앱 상품이 없습니다."
+    "iapNotice": "크레딧은 디지털 상품입니다. 이 앱에서는 토스, PayPal 등 외부 결제창을 열지 않습니다. 충전은 스토어 인앱 결제로만 가능하며, 이 빌드에는 인앱 상품이 없습니다.",
+    "methodTitle": "결제수단 선택",
+    "methodDomestic": "국내 카드·간편결제",
+    "methodDomesticHint": "원화(KRW)로 결제합니다. 원화 금액은 관리자가 등록한 환율로 서버가 확정합니다.",
+    "methodOverseasCard": "해외카드 (Visa·Mastercard·JCB 등)",
+    "methodOverseasCardHint": "미국 달러(USD)로 결제합니다.",
+    "methodOverseasEasyPay": "해외간편결제 (PayPal)",
+    "methodOverseasEasyPayHint": "미국 달러(USD)로 결제합니다. 결제 국가를 선택하세요.",
+    "payCountry": "결제 국가",
+    "domesticUnavailable": "국내 결제는 아직 사용할 수 없습니다. ({code})",
+    "countryRequired": "결제 국가를 선택하세요.",
+    "currencyMismatch": "이 결제수단으로는 {currency} 주문을 결제할 수 없습니다.",
+    "selectedMethod": "결제수단"
   },
   "status": {
     "submitted": "제출됨",
