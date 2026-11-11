@@ -23,14 +23,14 @@ export default function MyApplicationsScreen() {
 
   if (ready && !isAuthenticated) {
     return (
-      <Screen>
+      <Screen topInset={false}>
         <EmptyState title={t('myApplications.loginTitle')} body={t('myApplications.loginBody')} actionLabel={t('common.login')} onAction={() => router.push('/(auth)/login')} />
       </Screen>
     )
   }
 
   return (
-    <Screen loading={query.isLoading} refreshing={query.isFetching} onRefresh={() => void query.refetch()}>
+    <Screen topInset={false} loading={query.isLoading} refreshing={query.isFetching} onRefresh={() => void query.refetch()}>
       <Text style={styles.heading}>{t('myApplications.title')}</Text>
       {query.isError ? <ErrorState message={t('myApplications.loadFailed')} onRetry={() => void query.refetch()} /> : null}
       {(query.data ?? []).map((item) => (
