@@ -1,5 +1,6 @@
 import { Tabs } from 'expo-router'
 import { useTranslation } from 'react-i18next'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { LanguageMenu } from '../../src/i18n/LanguageMenu'
 import { colors } from '../../src/theme/tokens'
 import { TabIcon, TabLabel } from '../../src/ui/tabs/TabChrome'
@@ -26,6 +27,7 @@ function tabOptions(route: NativeTabRoute, visible: string, accessible: string) 
 
 export default function TabsLayout() {
   const { t } = useTranslation()
+  const insets = useSafeAreaInsets()
   return (
     <Tabs
       screenOptions={{
@@ -37,8 +39,9 @@ export default function TabsLayout() {
         headerShadowVisible: false,
         tabBarActiveTintColor: colors.purple,
         tabBarInactiveTintColor: colors.faint,
-        tabBarStyle: { minHeight: 64, paddingTop: 4, paddingBottom: 6 },
-        tabBarItemStyle: { alignItems: 'center', justifyContent: 'center' },
+        tabBarStyle: { height: 62 + insets.bottom, paddingTop: 6, paddingBottom: Math.max(insets.bottom, 8) },
+        tabBarItemStyle: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 0 },
+        tabBarLabelStyle: { textAlign: 'center', width: '100%' },
         tabBarAllowFontScaling: false,
         tabBarLabelPosition: 'below-icon',
       }}
