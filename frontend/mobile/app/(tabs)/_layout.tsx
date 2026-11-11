@@ -40,8 +40,8 @@ export default function TabsLayout() {
         tabBarActiveTintColor: colors.purple,
         tabBarInactiveTintColor: colors.faint,
         tabBarStyle: { height: 62 + insets.bottom, paddingTop: 6, paddingBottom: Math.max(insets.bottom, 8) },
-        tabBarItemStyle: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 0 },
-        tabBarLabelStyle: { textAlign: 'center', width: '100%' },
+        tabBarItemStyle: { flex: 1, flexBasis: 0, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 0 },
+        tabBarLabelStyle: { textAlign: 'center', alignSelf: 'center' },
         tabBarAllowFontScaling: false,
         tabBarLabelPosition: 'below-icon',
       }}
