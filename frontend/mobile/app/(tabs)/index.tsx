@@ -31,7 +31,7 @@ export default function HomeScreen() {
   })
 
   return (
-    <Screen refreshing={auditionsQuery.isFetching} onRefresh={() => void auditionsQuery.refetch()}>
+    <Screen topInset={false} refreshing={auditionsQuery.isFetching} onRefresh={() => void auditionsQuery.refetch()}>
       <View style={styles.hero}>
         <Text style={styles.kicker}>{t('home.kicker')}</Text>
         <Text style={styles.heroTitle}>{t('home.heroTitle')}</Text>
