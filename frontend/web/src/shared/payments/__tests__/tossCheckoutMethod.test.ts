@@ -39,7 +39,7 @@ describe('buildTossPaymentRequest', () => {
       expect.objectContaining({
         method: 'CARD',
         amount: { currency: 'USD', value: 10 },
-        card: { flowMode: 'DEFAULT', useInternationalCardOnly: true, language: 'en' },
+        card: { flowMode: 'DEFAULT', useInternationalCardOnly: true, language: 'EN' },
       })
     )
   })
@@ -53,6 +53,11 @@ describe('buildTossPaymentRequest', () => {
     expect(r.ok && r.request).toEqual(
       expect.objectContaining({ method: 'CARD', amount: { currency: 'KRW', value: 13000 }, card: { flowMode: 'DEFAULT' } })
     )
+  })
+
+  it('sends uppercase card language accepted by Toss', () => {
+    const r = buildTossPaymentRequest({ ...base, method: 'OVERSEAS_CARD', currency: 'USD', locale: 'ko' })
+    expect(r.ok && (r.request.card as { language: string }).language).toBe('KO')
   })
 
   it('overseas methods refuse non-USD', () => {

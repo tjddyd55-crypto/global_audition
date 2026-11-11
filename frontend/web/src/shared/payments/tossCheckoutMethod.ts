@@ -57,8 +57,9 @@ export type TossRequestResult =
   | { ok: true; request: Record<string, unknown> }
   | { ok: false; code: 'DOMESTIC_REQUIRES_KRW' | 'COUNTRY_REQUIRED' | 'INVALID_AMOUNT' | 'OVERSEAS_REQUIRES_USD' }
 
-function cardLanguage(locale: string | null | undefined): string {
-  return locale === 'ko' ? 'ko' : 'en'
+/** 토스 card.language 는 대문자 코드만 받는다(소문자 'ko'/'en' 은 INVALID_PARAMETERS). */
+function cardLanguage(locale: string | null | undefined): 'KO' | 'EN' {
+  return (locale || '').toLowerCase().startsWith('ko') ? 'KO' : 'EN'
 }
 
 export function buildTossPaymentRequest(input: TossRequestInput): TossRequestResult {
