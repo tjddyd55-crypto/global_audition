@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useEffect, useState, Suspense } from 'react'
+import { useEffect, useRef, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import axios from 'axios'
 import { useRouter, Link } from '../../../../i18n.config'
@@ -63,6 +63,9 @@ function CheckoutContent() {
   const [method, setMethod] = useState<TossCheckoutMethod>('OVERSEAS_CARD')
   const [accountCountry, setAccountCountry] = useState<string | null>(null)
   const [country, setCountry] = useState('US')
+  // 계정 국가로 정하는 기본값은 사용자가 직접 고르기 전까지만 적용한다(늦게 온 응답이 선택을 덮어쓰지 않게).
+  const methodTouched = useRef(false)
+  const countryTouched = useRef(false)
 
   useEffect(() => {
     let cancelled = false
@@ -77,8 +80,8 @@ function CheckoutContent() {
         const me = await authApi.me()
         if (cancelled) return
         setAccountCountry(me.countryCode ?? null)
-        setCountry(defaultOverseasCountry(me.countryCode))
-        if ((me.countryCode ?? '').toUpperCase() === 'KR') setMethod('DOMESTIC')
+        if (!countryTouched.current) setCountry(defaultOverseasCountry(me.countryCode))
+        if (!methodTouched.current && (me.countryCode ?? '').toUpperCase() === 'KR') setMethod('DOMESTIC')
       } catch {
         // 국가를 몰라도 선택 UI로 진행한다.
       }
@@ -272,7 +275,10 @@ function CheckoutContent() {
                       name="toss-method"
                       value={m}
                       checked={method === m}
-                      onChange={() => setMethod(m)}
+                      onChange={() => {
+                        methodTouched.current = true
+                        setMethod(m)
+                      }}
                       className="mt-1"
                       data-testid={`toss-method-${m}`}
                     />
@@ -288,7 +294,10 @@ function CheckoutContent() {
                     <select
                       className="rounded border px-3 py-2"
                       value={country}
-                      onChange={(event) => setCountry(event.target.value)}
+                      onChange={(event) => {
+                        countryTouched.current = true
+                        setCountry(event.target.value)
+                      }}
                       data-testid="toss-country"
                     >
                       {overseasCountryOptions(accountCountry).map((code) => (
