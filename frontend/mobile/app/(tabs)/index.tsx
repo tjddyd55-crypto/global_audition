@@ -1,5 +1,4 @@
 import { useQuery } from '@tanstack/react-query'
-import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
 import { StyleSheet, Text, View } from 'react-native'
 import { auditionApi, dashboardApi } from '../../src/api/endpoints'
@@ -9,7 +8,7 @@ import { AuditionCard } from '../../src/ui/AuditionCard'
 import { Button } from '../../src/ui/Button'
 import { EmptyState, ErrorState } from '../../src/ui/EmptyState'
 import { Screen } from '../../src/ui/Screen'
-import { colors, radius } from '../../src/theme/tokens'
+import { colors } from '../../src/theme/tokens'
 import { useTranslation } from 'react-i18next'
 import { AudienceFilter } from '../../src/ui/AudienceFilter'
 import { useAudienceCountry } from '../../src/domain/AudienceCountryProvider'
@@ -33,15 +32,17 @@ export default function HomeScreen() {
 
   return (
     <Screen refreshing={auditionsQuery.isFetching} onRefresh={() => void auditionsQuery.refetch()}>
-      <LinearGradient colors={[colors.heroStart, colors.surface]} style={styles.hero}>
+      <View style={styles.hero}>
         <Text style={styles.kicker}>{t('home.kicker')}</Text>
         <Text style={styles.heroTitle}>{t('home.heroTitle')}</Text>
         <Text style={styles.heroBody}>{t('home.heroBody')}</Text>
-        <Button label={t('home.browse')} onPress={() => router.push('/(tabs)/auditions')} />
-        <Button label={t('common.channels')} onPress={() => router.push('/channels')} />
-        <Button label={t('common.videos')} onPress={() => router.push('/videos')} />
-        <Button label={t('common.agencies')} onPress={() => router.push('/agencies')} />
-      </LinearGradient>
+        <View style={styles.heroActions}>
+          <Button label={t('home.browse')} onPress={() => router.push('/(tabs)/auditions')} />
+          <Button label={t('common.channels')} onPress={() => router.push('/channels')} />
+          <Button label={t('common.videos')} onPress={() => router.push('/videos')} />
+          <Button label={t('common.agencies')} onPress={() => router.push('/agencies')} />
+        </View>
+      </View>
 
       {isAuthenticated && dashQuery.data ? (
         <View style={styles.stats}>
@@ -86,7 +87,9 @@ function Stat({ label, value }: { label: string; value: number }) {
 }
 
 const styles = StyleSheet.create({
-  hero: { borderRadius: radius.card, padding: 20, gap: 12, marginBottom: 16 },
+  // The home content sits directly on the screen; only individual audition cards have a card frame.
+  hero: { width: '100%', alignSelf: 'stretch', gap: 10, marginBottom: 24 },
+  heroActions: { width: '100%', alignSelf: 'stretch', gap: 12, marginTop: 6 },
   kicker: { color: colors.purple, fontWeight: '800', letterSpacing: 0.6 },
   heroTitle: { fontSize: 24, fontWeight: '800', color: colors.text, lineHeight: 32 },
   heroBody: { fontSize: 14, color: colors.muted, lineHeight: 22 },
