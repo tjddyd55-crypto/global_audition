@@ -22,7 +22,7 @@ export default function VoteHubScreen() {
   })
 
   return (
-    <Screen loading={query.isLoading} refreshing={query.isFetching} onRefresh={() => void query.refetch()}>
+    <Screen topInset={false} loading={query.isLoading} refreshing={query.isFetching} onRefresh={() => void query.refetch()}>
       <Text style={{ fontSize: 22, fontWeight: '800', color: colors.text, marginBottom: 8 }}>{t('vote.hubTitle')}</Text>
       <Text style={{ fontSize: 14, color: colors.muted, lineHeight: 22, marginBottom: 16 }}>
         {t('vote.hubHint')}

@@ -47,7 +47,7 @@ export default function ProfileScreen() {
 
   if (ready && !isAuthenticated) {
     return (
-      <Screen>
+      <Screen topInset={false}>
         <EmptyState title={t('auth.recoverLoginRequired')} actionLabel={t('common.login')} onAction={() => router.push('/(auth)/login')} />
         <View style={{ height: 12 }} />
         <Button label={t('common.register')} variant="secondary" onPress={() => router.push('/(auth)/register')} />
@@ -56,7 +56,7 @@ export default function ProfileScreen() {
   }
 
   return (
-    <Screen loading={query.isLoading}>
+    <Screen topInset={false} loading={query.isLoading}>
       <Text style={styles.heading}>{t('profile.title')}</Text>
       <View style={styles.langRow}>
         <Text style={styles.meta}>{t('profile.language')}</Text>

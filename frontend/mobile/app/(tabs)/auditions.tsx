@@ -22,7 +22,7 @@ export default function AuditionsScreen() {
   })
 
   return (
-    <Screen loading={query.isLoading} refreshing={query.isFetching} onRefresh={() => void query.refetch()}>
+    <Screen topInset={false} loading={query.isLoading} refreshing={query.isFetching} onRefresh={() => void query.refetch()}>
       <AudienceFilter />
       {query.isError ? <ErrorState message={t('home.loadFailed')} onRetry={() => void query.refetch()} /> : null}
       {(query.data ?? []).map((audition) => (

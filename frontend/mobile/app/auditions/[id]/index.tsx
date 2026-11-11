@@ -38,6 +38,7 @@ export default function AuditionDetailScreen() {
 
   return (
     <Screen
+      topInset={false}
       loading={query.isLoading}
       padded={false}
       footer={
