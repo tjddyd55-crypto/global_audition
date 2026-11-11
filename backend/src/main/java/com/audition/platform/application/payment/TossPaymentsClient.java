@@ -58,31 +58,39 @@ public class TossPaymentsClient {
 
     /**
      * 실과금 없이 키 유효성만 확인.
-     * 존재하지 않는 paymentKey 조회: 401 → INVALID KEY, 404 → CONNECTED.
+     * 존재하지 않는 paymentKey 조회: 401/403 → INVALID KEY, 404 → CONNECTED.
+     * 네트워크 오류·5xx 등은 키 문제가 아니므로 UNREACHABLE 로 구분한다(이전에는 INVALID KEY 로 뭉뚱그려 원인을 숨겼다).
      */
     public ConnectionProbe probeSecret(String secretKey) {
         try {
             HttpResponse<String> response = send("GET", "/v1/payments/" + PROBE_PAYMENT_KEY, secretKey, null);
             int status = response.statusCode();
-            if (status == 401 || status == 403) {
-                return ConnectionProbe.invalidKey();
-            }
+            String code = tossCode(response.body());
             if (status == 404) {
-                return ConnectionProbe.connected();
+                return ConnectionProbe.connected("HTTP_404" + (code == null ? "" : ":" + code));
             }
-            log.warn("Toss connection probe unexpected status={}", status);
-            return status >= 200 && status < 300
-                    ? ConnectionProbe.connected()
-                    : ConnectionProbe.invalidKey();
+            if (status >= 200 && status < 300) {
+                return ConnectionProbe.connected("HTTP_" + status);
+            }
+            log.warn("Toss connection probe status={} code={}", status, code);
+            String detail = "HTTP_" + status + (code == null ? "" : ":" + code);
+            if (status == 401 || status == 403) {
+                return ConnectionProbe.invalidKey(detail);
+            }
+            return ConnectionProbe.unreachable(detail);
         } catch (TossPaymentsException e) {
+            log.warn("Toss connection probe failed status={} code={}", e.getHttpStatus(), e.getTossCode());
+            String detail = "HTTP_" + e.getHttpStatus() + ":" + e.getTossCode();
             if (e.getHttpStatus() == 401 || e.getHttpStatus() == 403) {
-                return ConnectionProbe.invalidKey();
+                return ConnectionProbe.invalidKey(detail);
             }
-            if (e.getHttpStatus() == 404) {
-                return ConnectionProbe.connected();
-            }
-            return ConnectionProbe.invalidKey();
+            return ConnectionProbe.unreachable(detail);
         }
+    }
+
+    private String tossCode(String body) {
+        JsonNode json = readJson(body);
+        return json != null && json.hasNonNull("code") ? json.get("code").asText() : null;
     }
 
     private JsonNode request(String method, String path, String secretKey, Map<String, Object> body) {
@@ -120,6 +128,7 @@ public class TossPaymentsClient {
             Thread.currentThread().interrupt();
             throw new TossPaymentsException(500, "INTERRUPTED", "토스 API 호출이 중단되었습니다.");
         } catch (Exception e) {
+            log.warn("Toss API unreachable path={} error={}", path, e.getClass().getSimpleName());
             throw new TossPaymentsException(502, "TOSS_UNREACHABLE", "토스 API에 연결할 수 없습니다.");
         }
     }
@@ -146,21 +155,47 @@ public class TossPaymentsClient {
 
     public static final class ConnectionProbe {
         private final boolean validKey;
+        private final boolean reachable;
+        private final String detail;
 
-        private ConnectionProbe(boolean validKey) {
+        private ConnectionProbe(boolean validKey, boolean reachable, String detail) {
             this.validKey = validKey;
+            this.reachable = reachable;
+            this.detail = detail;
         }
 
         public static ConnectionProbe connected() {
-            return new ConnectionProbe(true);
+            return connected(null);
+        }
+
+        public static ConnectionProbe connected(String detail) {
+            return new ConnectionProbe(true, true, detail);
         }
 
         public static ConnectionProbe invalidKey() {
-            return new ConnectionProbe(false);
+            return invalidKey(null);
+        }
+
+        public static ConnectionProbe invalidKey(String detail) {
+            return new ConnectionProbe(false, true, detail);
+        }
+
+        public static ConnectionProbe unreachable(String detail) {
+            return new ConnectionProbe(false, false, detail);
         }
 
         public boolean isValidKey() {
             return validKey;
+        }
+
+        /** false 면 키 판정 불가(네트워크·토스 장애). */
+        public boolean isReachable() {
+            return reachable;
+        }
+
+        /** 원인 코드(HTTP 상태·토스 코드). 키 값은 들어가지 않는다. */
+        public String getDetail() {
+            return detail;
         }
     }
 }

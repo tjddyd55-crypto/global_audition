@@ -8,6 +8,22 @@ import { authApi } from '@/shared/api/auth'
 import { creditsApi, type PaymentOrderView, type PreparePaymentResult } from '@/shared/api/credits'
 import { BTN_PRIMARY, BTN_SECONDARY, CARD_BASE, PAGE_CONTAINER, TEXT_SUB, TITLE_PAGE } from '@/shared/ui/specClasses'
 import { useLocale, useTranslations } from 'next-intl'
+import {
+  buildTossPaymentRequest,
+  defaultOverseasCountry,
+  overseasCountryOptions,
+  parseTossCheckoutMethod,
+  normalizeCountry,
+  type TossCheckoutMethod,
+  type TossRequestResult,
+} from '@/shared/payments/tossCheckoutMethod'
+
+const OVERSEAS_METHODS: TossCheckoutMethod[] = ['OVERSEAS_CARD', 'OVERSEAS_EASY_PAY']
+const METHOD_LABEL: Record<TossCheckoutMethod, string> = {
+  DOMESTIC: 'methodDomestic',
+  OVERSEAS_CARD: 'methodOverseasCard',
+  OVERSEAS_EASY_PAY: 'methodOverseasEasyPay',
+}
 
 declare global {
   interface Window {
@@ -30,6 +46,41 @@ function TossCheckoutContent() {
   const [globalOrder, setGlobalOrder] = useState<PaymentOrderView | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [ready, setReady] = useState(false)
+  const methodParam = parseTossCheckoutMethod(searchParams.get('method'))
+  const countryParam = normalizeCountry(searchParams.get('country'))
+  const [method, setMethod] = useState<TossCheckoutMethod>(
+    methodParam && methodParam !== 'DOMESTIC' ? methodParam : 'OVERSEAS_CARD'
+  )
+  const [accountCountry, setAccountCountry] = useState<string | null>(null)
+  const [country, setCountry] = useState<string>(countryParam ?? 'US')
+
+  useEffect(() => {
+    if (countryParam) return
+    let cancelled = false
+    authApi
+      .me()
+      .then((me) => {
+        if (cancelled) return
+        setAccountCountry(me.countryCode ?? null)
+        setCountry(defaultOverseasCountry(me.countryCode))
+      })
+      .catch(() => undefined)
+    return () => {
+      cancelled = true
+    }
+  }, [countryParam])
+
+  const reportBuildError = (r: Extract<TossRequestResult, { ok: false }>, currency: string) => {
+    if (r.code === 'COUNTRY_REQUIRED') setError(t('countryRequired'))
+    else if (r.code === 'INVALID_AMOUNT') setError(t('missingPrep'))
+    else setError(t('currencyMismatch', { currency }))
+  }
+
+  const tossErrorText = (e: unknown) => {
+    const err = e as { code?: string; message?: string }
+    if (err?.code && err?.message) return `[${err.code}] ${err.message}`
+    return e instanceof Error ? e.message : t('createFailed')
+  }
 
   useEffect(() => {
     if (!authApi.getToken()) {
@@ -80,6 +131,10 @@ function TossCheckoutContent() {
   }, [packageId, orderNoParam, router, t])
 
   const startPay = async () => {
+    setError(null)
+    const origin = window.location.origin
+    const successUrl = `${origin}/${locale}/credits/toss/success`
+    const failUrl = `${origin}/${locale}/credits/result/fail`
     if (globalOrder?.clientKey && globalOrder.chargeAmountMinor != null && globalOrder.chargeCurrency) {
       if (globalOrder.environment === 'LIVE') {
         setError(t('liveCheckoutBlocked'))
@@ -89,23 +144,43 @@ function TossCheckoutContent() {
         setError(t('scriptFailed'))
         return
       }
-      const origin = window.location.origin
-      const method = globalOrder.methodCode === 'TRANSFER' || globalOrder.methodCode === 'VIRTUAL_ACCOUNT' || globalOrder.methodCode === 'MOBILE_PHONE'
+      const legacyMethod = globalOrder.methodCode === 'TRANSFER' || globalOrder.methodCode === 'VIRTUAL_ACCOUNT' || globalOrder.methodCode === 'MOBILE_PHONE'
         ? globalOrder.methodCode
-        : 'CARD'
-      try {
-        const toss = window.TossPayments(globalOrder.clientKey)
-        const payment = toss.payment({ customerKey: globalOrder.orderNo })
-        await payment.requestPayment({
-          method,
+        : null
+      let request: Record<string, unknown>
+      if (legacyMethod) {
+        request = {
+          method: legacyMethod,
           amount: { currency: globalOrder.chargeCurrency, value: globalOrder.chargeAmountMinor },
           orderId: globalOrder.orderNo,
           orderName: `${globalOrder.credits} credits`,
-          successUrl: `${origin}/${locale}/credits/toss/success`,
-          failUrl: `${origin}/${locale}/credits/result/fail`,
+          successUrl,
+          failUrl,
+        }
+      } else {
+        // 글로벌 주문 금액·통화(KRW 포함)는 서버가 확정한 값만 쓴다.
+        const built = buildTossPaymentRequest({
+          method: globalOrder.chargeCurrency === 'KRW' ? 'DOMESTIC' : 'OVERSEAS_CARD',
+          currency: globalOrder.chargeCurrency,
+          amount: globalOrder.chargeAmountMinor,
+          orderId: globalOrder.orderNo,
+          orderName: `${globalOrder.credits} credits`,
+          successUrl,
+          failUrl,
+          locale,
         })
+        if (!built.ok) {
+          reportBuildError(built, globalOrder.chargeCurrency)
+          return
+        }
+        request = built.request
+      }
+      try {
+        const toss = window.TossPayments(globalOrder.clientKey)
+        const payment = toss.payment({ customerKey: globalOrder.orderNo })
+        await payment.requestPayment(request)
       } catch (e: unknown) {
-        setError(e instanceof Error ? e.message : t('createFailed'))
+        setError(tossErrorText(e))
       }
       return
     }
@@ -117,24 +192,30 @@ function TossCheckoutContent() {
       setError(t('scriptFailed'))
       return
     }
-    const origin = window.location.origin
-    const successUrl = `${origin}/${locale}/credits/toss/success`
-    const failUrl = `${origin}/${locale}/credits/result/fail`
+    const currency = prep.currency || 'USD'
+    const built = buildTossPaymentRequest({
+      method,
+      currency,
+      amount: prep.tossAmount,
+      orderId: prep.orderNo,
+      orderName: prep.orderName || prep.packageName,
+      successUrl,
+      failUrl,
+      country,
+      easyPayProvider: 'PAYPAL',
+      variantKey: prep.variantKey,
+      locale,
+    })
+    if (!built.ok) {
+      reportBuildError(built, currency)
+      return
+    }
     try {
       const toss = window.TossPayments(prep.clientKey)
       const payment = toss.payment({ customerKey: prep.orderNo })
-      await payment.requestPayment({
-        method: prep.tossMethod || 'FOREIGN_EASY_PAY',
-        amount: { currency: prep.currency || 'USD', value: prep.tossAmount },
-        orderId: prep.orderNo,
-        orderName: prep.orderName || prep.packageName,
-        successUrl,
-        failUrl,
-        foreignEasyPay: { provider: prep.foreignEasyPayProvider || 'PAYPAL' },
-        ...(prep.variantKey ? { variantKey: prep.variantKey } : {}),
-      })
+      await payment.requestPayment(built.request)
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : t('createFailed'))
+      setError(tossErrorText(e))
     }
   }
 
@@ -157,6 +238,11 @@ function TossCheckoutContent() {
             <p>
               {globalOrder.chargeAmountMinor} {globalOrder.chargeCurrency} · {globalOrder.credits} {t('creditsUnit')} · {globalOrder.environment}
             </p>
+            {globalOrder.chargeCurrency === 'KRW' ? (
+              <p className={`${TEXT_SUB} mt-1`}>
+                {t('selectedMethod')}: {t('methodDomestic')}
+              </p>
+            ) : null}
             <button type="button" disabled={!ready || globalOrder.environment === 'LIVE'} onClick={() => void startPay()} className={`${BTN_PRIMARY} mt-4`}>
               {t('openCheckout')}
             </button>
@@ -169,6 +255,42 @@ function TossCheckoutContent() {
             <p>
               {prep.tossAmount} {prep.currency} · {prep.credits + prep.bonusCredits} {t('creditsUnit')}
             </p>
+            <fieldset className="mt-4 flex flex-col gap-2" data-testid="toss-overseas-method">
+              <legend className="mb-1 text-sm font-semibold text-gray-800">{t('selectedMethod')}</legend>
+              {OVERSEAS_METHODS.map((m) => (
+                <label key={m} className="flex items-center gap-2 text-sm">
+                  <input
+                    type="radio"
+                    name="toss-overseas-method"
+                    value={m}
+                    checked={method === m}
+                    onChange={() => setMethod(m)}
+                    data-testid={`toss-pay-method-${m}`}
+                  />
+                  {t(METHOD_LABEL[m])}
+                </label>
+              ))}
+              {method === 'OVERSEAS_EASY_PAY' && (
+                <label className="mt-1 flex flex-col gap-1 text-sm">
+                  {t('payCountry')}
+                  <select
+                    className="rounded border px-3 py-2"
+                    value={country}
+                    onChange={(event) => setCountry(event.target.value)}
+                    data-testid="toss-pay-country"
+                  >
+                    {(countryParam && !overseasCountryOptions(accountCountry).includes(countryParam)
+                      ? [countryParam, ...overseasCountryOptions(accountCountry)]
+                      : overseasCountryOptions(accountCountry)
+                    ).map((code) => (
+                      <option key={code} value={code}>
+                        {code}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+            </fieldset>
             <button type="button" disabled={!ready} onClick={() => void startPay()} className={`${BTN_PRIMARY} mt-4`}>
               {t('openCheckout')}
             </button>

@@ -554,8 +554,8 @@ export const superAdminApi = {
     return data
   },
 
-  testPaymentConnection: async (): Promise<{ result: string; environment: string; connected: boolean }> => {
-    const { data } = await apiClient.post<{ result: string; environment: string; connected: boolean }>(
+  testPaymentConnection: async (): Promise<{ result: string; environment: string; connected: boolean; detail?: string | null }> => {
+    const { data } = await apiClient.post<{ result: string; environment: string; connected: boolean; detail?: string | null }>(
       '/admin/payment-settings/connection-test'
     )
     return data
