@@ -28,10 +28,15 @@ export function AudienceFilter() {
   const viewportWidth = useRef(0)
   const contentWidth = useRef(0)
   const offset = useRef(0)
-  const revealed = useRef<string | null>(null)
+  const retryTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  /**
+   * 선택 칩이 밖이면 보이게 스크롤한다.
+   * Android 는 첫 레이아웃 직후의 scrollTo 를 무시할 수 있어(앱 재실행·화면 진입 복원 시)
+   * 다음 프레임에 스크롤하고, 실제 위치는 onScroll 로만 갱신한 뒤 잠시 후 한 번 더 확인한다.
+   */
   const reveal = useCallback(
-    (animated: boolean) => {
+    (animated: boolean, retry = true) => {
       const frame = chipFrames.current[country]
       if (!frame || viewportWidth.current <= 0 || contentWidth.current <= 0) return
       const next = chipRevealOffset({
@@ -41,17 +46,26 @@ export function AudienceFilter() {
         contentWidth: contentWidth.current,
         currentOffset: offset.current,
       })
-      revealed.current = country
       if (next == null) return
-      offset.current = next
-      scrollRef.current?.scrollTo({ x: next, y: 0, animated })
+      requestAnimationFrame(() => scrollRef.current?.scrollTo({ x: next, y: 0, animated }))
+      if (retry) {
+        if (retryTimer.current) clearTimeout(retryTimer.current)
+        retryTimer.current = setTimeout(() => reveal(false, false), 350)
+      }
     },
     [country],
   )
 
+  useEffect(() => () => {
+    if (retryTimer.current) clearTimeout(retryTimer.current)
+  }, [])
+
   // 선택이 바뀌면 그 칩을 보이게 한다. 레이아웃이 아직이면 onLayout 에서 처리.
+  const lastCountry = useRef<string | null>(null)
   useEffect(() => {
-    if (revealed.current !== country) reveal(revealed.current !== null)
+    const changed = lastCountry.current !== null && lastCountry.current !== country
+    lastCountry.current = country
+    reveal(changed)
   }, [country, language, reveal])
 
   const onChipLayout = useCallback(
