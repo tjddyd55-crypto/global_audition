@@ -1,3 +1,4 @@
+import { isNationalityCode, type NationalityCode } from '@/shared/i18n/nationalityOptions'
 ﻿import type { AgencyBoardStatus } from '@/shared/api/auditions'
 
 const STATUS_KEYS: Record<AgencyBoardStatus, 'underReview' | 'accepted' | 'rejected' | 'pending'> = {
@@ -7,8 +8,8 @@ const STATUS_KEYS: Record<AgencyBoardStatus, 'underReview' | 'accepted' | 'rejec
   PENDING: 'pending',
 }
 
-export function nationalityCatalogKey(code?: string | null): 'KR' | 'MN' | 'JP' | 'OTHER' | 'unspecified' {
-  if (code === 'KR' || code === 'MN' || code === 'JP' || code === 'OTHER') return code
+export function nationalityCatalogKey(code?: string | null): NationalityCode | 'unspecified' {
+  if (code && isNationalityCode(code)) return code
   return 'unspecified'
 }
 

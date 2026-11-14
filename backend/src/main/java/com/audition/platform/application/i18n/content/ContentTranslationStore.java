@@ -56,6 +56,9 @@ public interface ContentTranslationStore {
 
     int countGlobalJobsSince(Instant since);
 
+    /** 공급자 호출 시도 수. 워커 처리량 상한에 쓴다. */
+    int countAttemptsSince(Instant since);
+
     long sumUserCostSince(UUID userId, Instant since);
 
     long sumAgencyCostSince(UUID agencyId, Instant since);

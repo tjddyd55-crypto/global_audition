@@ -38,7 +38,7 @@ public class PatchMyChannelRequest {
     @Size(max = 4000, message = "채널 소개는 4000자 이하여야 합니다.")
     private String introText;
 
-    /** KR | MN | JP | OTHER */
+    /** KR | MN | JP | KH | UZ | OTHER */
     @Size(max = 16)
     private String nationality;
 

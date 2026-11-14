@@ -8,10 +8,10 @@ export const AUDIENCE_COUNTRY_STORAGE_KEY = 'audition.audienceCountry'
  * 발견 필터에서 실제로 좁히는 값만 둔다.
  * GLOBAL 은 서버에서 ALL 과 같아 별도 칩으로 두지 않는다.
  */
-export const AUDIENCE_FILTER_OPTIONS = ['ALL', 'KR', 'MN', 'JP', 'OTHER'] as const
+export const AUDIENCE_FILTER_OPTIONS = ['ALL', 'KR', 'MN', 'JP', 'KH', 'UZ', 'OTHER'] as const
 export type AudienceFilterOption = (typeof AUDIENCE_FILTER_OPTIONS)[number]
 
-const NARROWING = new Set<string>(['KR', 'MN', 'JP', 'OTHER'])
+const NARROWING = new Set<string>(['KR', 'MN', 'JP', 'KH', 'UZ', 'OTHER'])
 
 /** 언어와 무관하다. 비어 있거나 GLOBAL 이면 공개 OPEN 전체. */
 export function normalizeAudienceCountry(raw?: string | null): AudienceFilterOption {

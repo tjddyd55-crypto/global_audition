@@ -24,7 +24,7 @@ import java.util.Set;
 @Service
 public class ApplicationValidationService {
 
-    private static final Set<String> ALLOWED_NATIONALITIES = Set.of("KR", "MN", "JP", "OTHER");
+    private static final Set<String> ALLOWED_NATIONALITIES = com.audition.platform.application.user.NationalityCodes.ALLOWED;
 
     private static final Set<String> ALLOWED_SNS_PLATFORMS = Set.of(
             "instagram", "tiktok", "youtube", "twitter", "facebook", "other");

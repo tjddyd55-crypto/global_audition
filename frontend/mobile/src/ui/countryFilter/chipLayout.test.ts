@@ -1,15 +1,17 @@
 import ko from '../../../../web/messages/ko.json'
 import en from '../../../../web/messages/en.json'
 import mn from '../../../../web/messages/mn.json'
+import km from '../../../../web/messages/km.json'
+import uz from '../../../../web/messages/uz.json'
 import { AUDIENCE_FILTER_OPTIONS } from '../../domain/audience'
 import { chipFrameFor, COUNTRY_CHIP_ROW, COUNTRY_FILTER_AXIS } from './chipLayout'
 
 type FilterCatalog = {
   auditions: { filterAll: string }
-  country: Record<'KR' | 'MN' | 'JP' | 'OTHER', string>
+  country: Record<Exclude<(typeof AUDIENCE_FILTER_OPTIONS)[number], 'ALL'>, string>
 }
 
-const CATALOGS = [ko, en, mn] as FilterCatalog[]
+const CATALOGS = [ko, en, mn, km, uz] as FilterCatalog[]
 
 function chipLabel(messages: FilterCatalog, option: (typeof AUDIENCE_FILTER_OPTIONS)[number]): string {
   if (option === 'ALL') return messages.auditions.filterAll

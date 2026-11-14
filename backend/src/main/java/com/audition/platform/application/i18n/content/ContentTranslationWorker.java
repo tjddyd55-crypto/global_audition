@@ -38,6 +38,7 @@ public class ContentTranslationWorker {
     private final TranslationCostEstimator costs;
     private final TranslationQueueProperties properties;
     private final ObjectMapper objectMapper;
+    private final ContentTranslationQuota quota;
 
     public ContentTranslationWorker(
             ContentTranslationStore store,
@@ -54,6 +55,7 @@ public class ContentTranslationWorker {
         this.costs = costs;
         this.properties = properties;
         this.objectMapper = objectMapper;
+        this.quota = new ContentTranslationQuota(store, properties);
     }
 
     public int drain() {
@@ -104,6 +106,12 @@ public class ContentTranslationWorker {
         }
         if (existing != null && (existing.manuallyEdited() || AuditionTranslation.ORIGIN_MANUAL.equals(existing.origin())) && !job.force()) {
             blocked(job, ContentTypes.TRANSLATION_PROTECTED);
+            return;
+        }
+        Optional<String> deferred = quota.executionBlock(job.requestedBy(), job.agencyId());
+        if (deferred.isPresent()) {
+            // 실패가 아니다. 시도 횟수를 쓰지 않고 PENDING 으로 되돌려 나중에 다시 집는다.
+            store.requeue(job.id(), job.attemptCount(), quota.deferUntil(deferred.get()), deferred.get(), deferred.get());
             return;
         }
         int attemptNumber = job.attemptCount() + 1;

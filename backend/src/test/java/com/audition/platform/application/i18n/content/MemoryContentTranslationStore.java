@@ -223,6 +223,11 @@ public class MemoryContentTranslationStore implements ContentTranslationStore {
     }
 
     @Override
+    public synchronized int countAttemptsSince(Instant since) {
+        return (int) attempts.stream().filter(row -> !row.startedAt.isBefore(since)).count();
+    }
+
+    @Override
     public synchronized int countGlobalJobsSince(Instant since) {
         return (int) jobs.stream().filter(row -> !row.createdAt.isBefore(since)).count();
     }
@@ -259,6 +264,23 @@ public class MemoryContentTranslationStore implements ContentTranslationStore {
                 .sum();
     }
 
+    public synchronized List<StoredJob> jobs() {
+        return jobs.stream().map(MutableJob::stored).toList();
+    }
+
+    public synchronized Instant runAfter(UUID jobId) {
+        return jobs.stream().filter(row -> row.id.equals(jobId)).findFirst().map(row -> row.runAfter).orElse(null);
+    }
+
+    /** 미룬 작업을 지금 실행할 수 있게 당긴다(시간 경과 흉내). */
+    public synchronized void releaseDeferred() {
+        for (MutableJob job : jobs) {
+            if (ContentTypes.JOB_PENDING.equals(job.status)) {
+                job.runAfter = null;
+            }
+        }
+    }
+
     public synchronized List<StoredTranslation> translations() {
         return new ArrayList<>(translations);
     }
@@ -290,6 +312,8 @@ public class MemoryContentTranslationStore implements ContentTranslationStore {
             this.agencyId = job.agencyId();
             this.maxAttempts = job.maxAttempts();
             this.force = job.force();
+            this.runAfter = job.runAfter();
+            this.errorCode = job.errorCode();
         }
 
         private boolean sameKey(String type, UUID id, String locale) {

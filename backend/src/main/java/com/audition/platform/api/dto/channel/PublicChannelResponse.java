@@ -17,7 +17,7 @@ public class PublicChannelResponse {
     private String nickname;
     /** /me 프로필 자기소개 */
     private String introText;
-    /** KR | MN | JP | OTHER */
+    /** KR | MN | JP | KH | UZ | OTHER */
     private String nationality;
     /** 채널 헤더 한줄 소개 */
     private String shortBio;

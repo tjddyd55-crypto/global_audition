@@ -881,6 +881,8 @@
     "MN": "Mongolia",
     "GLOBAL": "Global",
     "JP": "Japan",
+    "KH": "Cambodia",
+    "UZ": "Uzbekistan",
     "OTHER": "Other",
     "unspecified": "Not specified"
   },
@@ -888,6 +890,8 @@
     "KR": "Korea",
     "MN": "Mongolia",
     "JP": "Japan",
+    "KH": "Cambodia",
+    "UZ": "Uzbekistan",
     "OTHER": "Other",
     "unspecified": "Not selected"
   },

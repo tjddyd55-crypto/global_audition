@@ -12,7 +12,7 @@ import {
   mapChannelCategoriesForApi,
   resolveFeaturedVideoIdForMePatch,
 } from '@/shared/channel/channelProfilePatch'
-import { nationalityOptionValues } from '@/shared/i18n/nationalityOptions'
+import { isNationalityCode, nationalityOptionValues } from '@/shared/i18n/nationalityOptions'
 import { useTranslations } from 'next-intl'
 
 const BTN_PRIMARY = 'rounded-md bg-neutral-900 px-4 py-2 text-sm font-semibold text-white hover:bg-neutral-800 disabled:opacity-50'
@@ -22,7 +22,7 @@ const LONG_BIO_MAX = 8000
 
 function normalizeNationality(raw: string | null | undefined): string {
   const n = (raw ?? '').trim().toUpperCase()
-  if (n === 'KR' || n === 'MN' || n === 'JP' || n === 'OTHER') return n
+  if (isNationalityCode(n)) return n
   return ''
 }
 

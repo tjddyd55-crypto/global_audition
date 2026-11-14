@@ -31,6 +31,17 @@ export default function TranslationSettingsPage() {
     queryKey: ['superAdmin', 'translation-errors'],
     queryFn: () => superAdminApi.translationErrors(),
   })
+  const queue = useQuery({
+    queryKey: ['superAdmin', 'translation-queue'],
+    queryFn: () => superAdminApi.translationQueue(),
+    refetchInterval: 15000,
+  })
+  const retryFailed = useMutation({
+    mutationFn: () => superAdminApi.retryFailedTranslations(),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['superAdmin', 'translation-queue'] })
+    },
+  })
   const [activeProvider, setActiveProvider] = useState('GOOGLE_CLOUD_TRANSLATION')
   const [endpointUrl, setEndpointUrl] = useState('')
   const [model, setModel] = useState('')
@@ -206,6 +217,47 @@ export default function TranslationSettingsPage() {
           ? `공개 UI ${policy.data.viewingDefault} (${policy.data.publicSelector.join(', ')}), 기획사 ${policy.data.agencyUiLocale}, 슈퍼관리자 ${policy.data.superAdminUiLocale}. 번역 대상 ${policy.data.activeTranslationTargets.join(', ')}. 월 예산 ${policy.data.globalMonthlyCostMicroUsd} micro-USD / ${policy.data.globalMonthlyBilledCharacters}자.`
           : '정책을 불러오는 중'}
       </p>
+      <h2 className="mb-2 text-base font-semibold">번역 큐</h2>
+      <div className="mb-4 text-sm text-gray-700" data-testid="translation-queue">
+        {queue.data ? (
+          <>
+            <p>
+              상태별:{' '}
+              {Object.entries(queue.data.byStatus)
+                .map(([status, n]) => `${status} ${n}건`)
+                .join(', ') || '작업 없음'}
+            </p>
+            <p>
+              대기(미뤄짐) {queue.data.deferredPending}건
+              {Object.keys(queue.data.deferredBy).length > 0
+                ? ` (${Object.entries(queue.data.deferredBy)
+                    .map(([code, n]) => `${code} ${n}`)
+                    .join(', ')})`
+                : ''}
+              {queue.data.oldestActiveCreatedAt ? `, 가장 오래된 활성 작업 ${queue.data.oldestActiveCreatedAt}` : ''}
+            </p>
+            <ul className="mt-1">
+              {queue.data.recentFailed.map((row) => (
+                <li key={row.id}>
+                  실패: {row.contentType} / {row.locale} / {row.errorCode ?? '-'} ({row.attemptCount}/{row.maxAttempts}회)
+                </li>
+              ))}
+            </ul>
+            <button
+              type="button"
+              className="mt-2 rounded border border-gray-400 px-3 py-1 text-sm disabled:opacity-50"
+              disabled={retryFailed.isPending || queue.data.recentFailed.length === 0}
+              onClick={() => retryFailed.mutate()}
+              data-testid="translation-retry-failed"
+            >
+              실패 작업 다시 시도
+            </button>
+            {retryFailed.data ? <span className="ml-2">{retryFailed.data.requeued}건 다시 대기열에 넣음</span> : null}
+          </>
+        ) : (
+          '큐 상태를 불러오는 중'
+        )}
+      </div>
       <h2 className="mb-2 text-base font-semibold">오류</h2>
       <ul className="mb-4 text-sm text-gray-700" data-testid="translation-errors">
         {(errors.data ?? []).length === 0 ? <li>실패한 시도가 없습니다.</li> : null}

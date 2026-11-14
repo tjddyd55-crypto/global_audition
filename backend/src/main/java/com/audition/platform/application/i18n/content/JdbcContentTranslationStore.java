@@ -172,11 +172,12 @@ public class JdbcContentTranslationStore implements ContentTranslationStore {
             jdbc.update("""
                     INSERT INTO content_translation_jobs (
                         id, content_type, content_id, locale, source_hash, requested_by, agency_id,
-                        status, attempt_count, max_attempts, force, created_at, updated_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDING', 0, ?, ?, NOW(), NOW())
+                        status, attempt_count, max_attempts, force, run_after, error_code, created_at, updated_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDING', 0, ?, ?, ?, ?, NOW(), NOW())
                     """,
                     job.id(), job.contentType(), job.contentId(), job.locale(), job.sourceHash(),
-                    job.requestedBy(), job.agencyId(), job.maxAttempts(), job.force());
+                    job.requestedBy(), job.agencyId(), job.maxAttempts(), job.force(),
+                    job.runAfter() == null ? null : Timestamp.from(job.runAfter()), job.errorCode());
             return Optional.of(job.id());
         } catch (DuplicateKeyException ex) {
             return Optional.empty();
@@ -276,6 +277,14 @@ public class JdbcContentTranslationStore implements ContentTranslationStore {
     public int countAgencyJobsSince(UUID agencyId, Instant since) {
         return count("SELECT COUNT(*) FROM content_translation_jobs WHERE agency_id = ? AND created_at >= ?",
                 agencyId, Timestamp.from(since));
+    }
+
+    @Override
+    public int countAttemptsSince(Instant since) {
+        Integer value = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM content_translation_attempts WHERE started_at >= ?",
+                Integer.class, Timestamp.from(since));
+        return value == null ? 0 : value;
     }
 
     @Override

@@ -70,7 +70,7 @@ public class User {
     @Column(name = "birth_date")
     private LocalDate birthDate;
 
-    /** 지원서와 동일 코드: KR | MN | JP | OTHER */
+    /** 지원서와 동일 코드: KR | MN | JP | KH | UZ | OTHER */
     @Column(columnDefinition = "TEXT")
     private String nationality;
 

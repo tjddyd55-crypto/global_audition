@@ -3,6 +3,8 @@ package com.audition.platform.application.i18n.content;
 import com.audition.platform.application.i18n.content.ContentTranslationRows.ContentSnapshot;
 import com.audition.platform.application.i18n.content.ContentTranslationRows.NewJob;
 import com.audition.platform.application.i18n.content.ContentTranslationRows.StoredJob;
+import com.audition.platform.application.i18n.translation.TranslationAdminQuery;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,8 +12,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.TestPropertySource;
 
+import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -41,6 +48,8 @@ class ContentTranslationQueueIT {
     private ContentTranslationWorker worker;
     @Autowired
     private JdbcTemplate jdbc;
+    @Autowired
+    private TranslationAdminQuery adminQuery;
 
     private static final String FIXTURE = "TEST_FIXTURE";
 
@@ -111,6 +120,64 @@ class ContentTranslationQueueIT {
         assertNull(attempt.promptTokens());
         assertNull(attempt.estimatedCostMicroUsd());
         assertTrue(store.findTranslation(ContentTypes.APPLICATION_INTRO, contentId, "en").isEmpty());
+    }
+
+    @AfterEach
+    void clearAuth() {
+        SecurityContextHolder.clearContext();
+    }
+
+    @Test
+    void deferredJobKeepsItsReasonAndIsNotClaimedBeforeRunAfter() {
+        UUID contentId = UUID.randomUUID();
+        UUID deferred = store.insertPendingJob(new NewJob(
+                UUID.randomUUID(), FIXTURE, contentId, "km", "hash", null, null, 3, false,
+                Instant.now().plusSeconds(600), ContentTypes.RATE_LIMITED)).orElseThrow();
+        assertTrue(store.claim("it", 120).isEmpty());
+        StoredJob row = store.findActiveJob(FIXTURE, contentId, "km").orElseThrow();
+        assertEquals(deferred, row.id());
+        assertEquals(ContentTypes.RATE_LIMITED, row.errorCode());
+        // 같은 키의 두 번째 작업은 들어가지 않는다.
+        assertTrue(pending(contentId, "km").isEmpty());
+        jdbc.update("UPDATE content_translation_jobs SET run_after = NOW() - INTERVAL '1 second' WHERE id = ?", deferred);
+        assertEquals(deferred, store.claim("it", 120).orElseThrow().id());
+        assertEquals(0, store.countAttemptsSince(Instant.now().minusSeconds(60)));
+    }
+
+    @Test
+    void adminQueueShowsDeferredAndFailedAndRetryRequeuesOnlyLatestFailure() {
+        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(
+                UUID.randomUUID(), null, List.of(new SimpleGrantedAuthority("ROLE_SUPER_ADMIN"))));
+        UUID failedContent = UUID.randomUUID();
+        UUID busyContent = UUID.randomUUID();
+        UUID oldFail = pending(failedContent, "uz").orElseThrow();
+        store.finishJob(oldFail, ContentTypes.JOB_FAILED, "HTTP_ERROR", "down");
+        UUID newFail = pending(failedContent, "uz").orElseThrow();
+        jdbc.update("UPDATE content_translation_jobs SET created_at = NOW() + INTERVAL '1 second' WHERE id = ?", newFail);
+        store.finishJob(newFail, ContentTypes.JOB_FAILED, "HTTP_ERROR", "down");
+        jdbc.update("UPDATE content_translation_jobs SET force = TRUE WHERE id = ?", newFail);
+        UUID busyFail = pending(busyContent, "km").orElseThrow();
+        store.finishJob(busyFail, ContentTypes.JOB_FAILED, "HTTP_ERROR", "down");
+        store.insertPendingJob(new NewJob(
+                UUID.randomUUID(), FIXTURE, busyContent, "km", "hash", null, null, 3, false,
+                Instant.now().plusSeconds(600), ContentTypes.QUOTA_EXCEEDED));
+
+        Map<String, Object> status = adminQuery.queueStatus();
+        @SuppressWarnings("unchecked")
+        Map<String, Integer> byStatus = (Map<String, Integer>) status.get("byStatus");
+        assertEquals(3, byStatus.get("FAILED"));
+        assertEquals(1, byStatus.get("PENDING"));
+        assertEquals(1, status.get("deferredPending"));
+
+        Map<String, Object> retried = adminQuery.retryFailed(50);
+        assertEquals(1, retried.get("requeued"));
+        StoredJob active = store.findActiveJob(FIXTURE, failedContent, "uz").orElseThrow();
+        assertEquals(newFail, active.id());
+        assertEquals(0, active.attemptCount());
+        assertEquals(Boolean.FALSE, jdbc.queryForObject(
+                "SELECT force FROM content_translation_jobs WHERE id = ?", Boolean.class, newFail));
+        assertEquals(ContentTypes.JOB_FAILED, store.findActiveJob(FIXTURE, busyContent, "km")
+                .map(job -> job.id().equals(busyFail) ? "WRONG" : ContentTypes.JOB_FAILED).orElseThrow());
     }
 
     private Optional<UUID> pending(UUID contentId, String locale) {

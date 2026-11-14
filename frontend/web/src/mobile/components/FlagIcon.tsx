@@ -1,5 +1,5 @@
 /** 모집 국가 국기 (이모지 대신 인라인 SVG — 기기별 렌더링 차이 없음). OTHER 는 지구본. */
-type Code = 'KR' | 'MN' | 'JP' | 'OTHER'
+type Code = 'KR' | 'MN' | 'JP' | 'KH' | 'UZ' | 'OTHER'
 
 export default function FlagIcon({ code, className = 'h-7 w-10' }: { code: Code; className?: string }) {
   if (code === 'OTHER') {
@@ -12,7 +12,40 @@ export default function FlagIcon({ code, className = 'h-7 w-10' }: { code: Code;
   }
   return (
     <svg viewBox="0 0 36 24" className={`${className} rounded-[3px] shadow-[0_0_0_1px_rgba(0,0,0,0.08)]`} aria-hidden>
-      {code === 'JP' ? (
+      {code === 'KH' ? (
+        <>
+          <rect width="36" height="24" fill="#032EA1" />
+          <rect y="6" width="36" height="12" fill="#E00025" />
+          <g fill="#fff">
+            <rect x="10" y="14.6" width="16" height="1.4" />
+            <rect x="11.5" y="11.6" width="2" height="3" />
+            <rect x="22.5" y="11.6" width="2" height="3" />
+            <rect x="15" y="10.4" width="2" height="4.2" />
+            <rect x="19" y="10.4" width="2" height="4.2" />
+            <path d="M16.6 14.6V9.6L18 7.4l1.4 2.2v5z" />
+          </g>
+        </>
+      ) : code === 'UZ' ? (
+        <>
+          <rect width="36" height="24" fill="#fff" />
+          <rect width="36" height="7.6" fill="#0099B5" />
+          <rect y="16.4" width="36" height="7.6" fill="#1EB53A" />
+          <rect y="7.6" width="36" height="0.8" fill="#CE1126" />
+          <rect y="15.6" width="36" height="0.8" fill="#CE1126" />
+          <circle cx="5.4" cy="3.8" r="2.6" fill="#fff" />
+          <circle cx="6.4" cy="3.8" r="2.2" fill="#0099B5" />
+          <g fill="#fff">
+            <circle cx="10" cy="2.2" r="0.5" />
+            <circle cx="12" cy="2.2" r="0.5" />
+            <circle cx="14" cy="2.2" r="0.5" />
+            <circle cx="10" cy="4" r="0.5" />
+            <circle cx="12" cy="4" r="0.5" />
+            <circle cx="14" cy="4" r="0.5" />
+            <circle cx="12" cy="5.8" r="0.5" />
+            <circle cx="14" cy="5.8" r="0.5" />
+          </g>
+        </>
+      ) : code === 'JP' ? (
         <>
           <rect width="36" height="24" fill="#fff" />
           <circle cx="18" cy="12" r="7.2" fill="#BC002D" />

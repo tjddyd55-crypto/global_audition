@@ -27,6 +27,12 @@ public class TranslationQueueProperties {
     private long agencyMonthlyCostMicroUsd = 200_000_000L;
     private long globalMonthlyCostMicroUsd = 1_000_000_000L;
     private long globalMonthlyBilledCharacters = 2_000_000L;
+    /** 게시 시 작업량 제한에 걸린 작업을 버리지 않고 이 시간 뒤로 미룬다. */
+    private int rateDeferSeconds = 60;
+    /** 예산·시간당 상한에 걸린 작업을 미루는 시간. */
+    private int budgetDeferSeconds = 900;
+    /** 워커가 1분에 공급자를 부르는 최대 횟수. 넘으면 작업을 미룬다. */
+    private int workerAttemptsPerMinute = 60;
     private long inputMicroUsdPerMillion = 0L;
     private long outputMicroUsdPerMillion = 0L;
 
@@ -66,6 +72,12 @@ public class TranslationQueueProperties {
     public void setGlobalMonthlyCostMicroUsd(long globalMonthlyCostMicroUsd) { this.globalMonthlyCostMicroUsd = globalMonthlyCostMicroUsd; }
     public long getGlobalMonthlyBilledCharacters() { return globalMonthlyBilledCharacters; }
     public void setGlobalMonthlyBilledCharacters(long globalMonthlyBilledCharacters) { this.globalMonthlyBilledCharacters = globalMonthlyBilledCharacters; }
+    public int getRateDeferSeconds() { return rateDeferSeconds; }
+    public void setRateDeferSeconds(int rateDeferSeconds) { this.rateDeferSeconds = rateDeferSeconds; }
+    public int getBudgetDeferSeconds() { return budgetDeferSeconds; }
+    public void setBudgetDeferSeconds(int budgetDeferSeconds) { this.budgetDeferSeconds = budgetDeferSeconds; }
+    public int getWorkerAttemptsPerMinute() { return workerAttemptsPerMinute; }
+    public void setWorkerAttemptsPerMinute(int workerAttemptsPerMinute) { this.workerAttemptsPerMinute = workerAttemptsPerMinute; }
     public long getInputMicroUsdPerMillion() { return inputMicroUsdPerMillion; }
     public void setInputMicroUsdPerMillion(long inputMicroUsdPerMillion) { this.inputMicroUsdPerMillion = inputMicroUsdPerMillion; }
     public long getOutputMicroUsdPerMillion() { return outputMicroUsdPerMillion; }

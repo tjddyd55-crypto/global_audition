@@ -270,6 +270,140 @@ class ContentTranslationEngineTest {
     }
 
     @Test
+    void rapidPublishBurstEnqueuesEveryTargetOnceAndDefersInsteadOfSkipping() {
+        source.type = ContentTypes.AUDITION_POSTING;
+        source.snapshot = snapshot("ko", "연속 게시 공고");
+        java.util.List<UUID> postings = new java.util.ArrayList<>();
+        for (int i = 0; i < 6; i++) {
+            UUID posting = UUID.randomUUID();
+            postings.add(posting);
+            service.requestActiveTargets(ContentTypes.AUDITION_POSTING, posting, viewer);
+        }
+        java.util.List<String> targets = java.util.List.of("en", "mn", "km", "uz");
+        // 6건 x 4개 언어. 분당 10건을 넘은 작업도 버리지 않고 미뤄 둔다.
+        assertEquals(24, store.jobs().size());
+        for (UUID posting : postings) {
+            for (String target : targets) {
+                assertTrue(store.findActiveJob(ContentTypes.AUDITION_POSTING, posting, target).isPresent(),
+                        posting + "/" + target);
+            }
+        }
+        long deferred = store.jobs().stream().filter(job -> ContentTypes.RATE_LIMITED.equals(job.errorCode())).count();
+        assertEquals(14, deferred);
+        store.jobs().stream()
+                .filter(job -> ContentTypes.RATE_LIMITED.equals(job.errorCode()))
+                .forEach(job -> assertTrue(store.runAfter(job.id()).isAfter(java.time.Instant.now())));
+
+        // 같은 공고를 다시 게시해도 활성 작업은 늘지 않는다.
+        for (UUID posting : postings) {
+            service.requestActiveTargets(ContentTypes.AUDITION_POSTING, posting, viewer);
+        }
+        assertEquals(24, store.jobs().size());
+
+        int handled = drainAll();
+        assertEquals(10, handled);
+        assertEquals(10, provider.calls);
+        store.releaseDeferred();
+        assertEquals(14, drainAll());
+        assertEquals(24, provider.calls);
+        assertEquals(24, store.translations().size());
+        assertTrue(store.jobs().stream().allMatch(job -> ContentTypes.JOB_COMPLETED.equals(job.status())));
+        for (UUID posting : postings) {
+            for (String target : targets) {
+                ContentTranslationView view = service.read(ContentTypes.AUDITION_POSTING, posting, target, false, viewer);
+                assertFalse(view.showingOriginal());
+                assertEquals(target + ":연속 게시 공고", view.fields().get("introText"));
+            }
+        }
+        // 조회는 공급자를 부르지 않는다.
+        assertEquals(24, provider.calls);
+        assertEquals(0, worker.drain());
+    }
+
+    @Test
+    void workerThroughputLimitRequeuesWithoutSpendingAttempts() {
+        properties.setWorkerAttemptsPerMinute(2);
+        source.type = ContentTypes.AUDITION_POSTING;
+        source.snapshot = snapshot("ko", "처리량 제한");
+        service.requestActiveTargets(ContentTypes.AUDITION_POSTING, contentId, viewer);
+        drainAll();
+        assertEquals(2, provider.calls);
+        java.util.List<ContentTranslationRows.StoredJob> waiting = store.jobs().stream()
+                .filter(job -> ContentTypes.JOB_PENDING.equals(job.status()))
+                .toList();
+        assertEquals(2, waiting.size());
+        waiting.forEach(job -> {
+            assertEquals(ContentTypes.RATE_LIMITED, job.errorCode());
+            assertEquals(0, job.attemptCount());
+        });
+        properties.setWorkerAttemptsPerMinute(60);
+        store.releaseDeferred();
+        assertEquals(2, drainAll());
+        assertEquals(4, store.translations().size());
+    }
+
+    @Test
+    void exhaustedBudgetKeepsPublishJobsPendingInsteadOfFailingThem() {
+        properties.setGlobalDailyCostMicroUsd(1);
+        source.type = ContentTypes.AUDITION_POSTING;
+        source.snapshot = snapshot("ko", "예산 확인");
+        service.requestActiveTargets(ContentTypes.AUDITION_POSTING, contentId, viewer);
+        assertEquals(4, store.jobs().size());
+        drainAll();
+        assertEquals(1, provider.calls);
+        long pending = store.jobs().stream()
+                .filter(job -> ContentTypes.JOB_PENDING.equals(job.status())
+                        && ContentTypes.QUOTA_EXCEEDED.equals(job.errorCode())
+                        && job.attemptCount() == 0)
+                .count();
+        assertEquals(3, pending);
+        assertTrue(store.jobs().stream().noneMatch(job -> ContentTypes.JOB_FAILED.equals(job.status())));
+        // 예산이 막힌 동안 다음 게시도 버리지 않고 미뤄 넣는다.
+        UUID next = UUID.randomUUID();
+        service.requestActiveTargets(ContentTypes.AUDITION_POSTING, next, viewer);
+        assertEquals(8, store.jobs().size());
+        assertTrue(store.findActiveJob(ContentTypes.AUDITION_POSTING, next, "en").isPresent());
+    }
+
+    @Test
+    void exhaustedPublisherBudgetStillBlocksDeferredJobsAtExecution() {
+        properties.setUserDailyCostMicroUsd(1);
+        source.type = ContentTypes.AUDITION_POSTING;
+        source.snapshot = snapshot("ko", "요청자 예산");
+        service.requestActiveTargets(ContentTypes.AUDITION_POSTING, contentId, viewer);
+        drainAll();
+        assertEquals(1, provider.calls);
+        UUID next = UUID.randomUUID();
+        service.requestActiveTargets(ContentTypes.AUDITION_POSTING, next, viewer);
+        store.releaseDeferred();
+        drainAll();
+        // 미룬 작업이 풀려도 요청자 예산이 소진된 동안에는 공급자를 부르지 않는다.
+        assertEquals(1, provider.calls);
+        assertTrue(store.jobs().stream().noneMatch(job -> ContentTypes.JOB_FAILED.equals(job.status())));
+        assertEquals(7, store.jobs().stream().filter(job -> ContentTypes.JOB_PENDING.equals(job.status())).count());
+    }
+
+    @Test
+    void publishDoesNotQueueOverAManualTranslationAndKeepsItStale() {
+        source.type = ContentTypes.AUDITION_POSTING;
+        source.snapshot = snapshot("ko", "보컬 모집");
+        service.saveManual(ContentTypes.AUDITION_POSTING, contentId, "uz", Map.of("introText", "Vokal qabuli"), viewer);
+        service.requestActiveTargets(ContentTypes.AUDITION_POSTING, contentId, viewer);
+        assertTrue(store.findActiveJob(ContentTypes.AUDITION_POSTING, contentId, "uz").isEmpty());
+        assertTrue(store.findActiveJob(ContentTypes.AUDITION_POSTING, contentId, "km").isPresent());
+        drainAll();
+        source.snapshot = snapshot("ko", "보컬 모집 (수정)");
+        service.requestActiveTargets(ContentTypes.AUDITION_POSTING, contentId, viewer);
+        assertTrue(store.findActiveJob(ContentTypes.AUDITION_POSTING, contentId, "uz").isEmpty());
+        ContentTranslationView manual = service.read(ContentTypes.AUDITION_POSTING, contentId, "uz", false, viewer);
+        assertEquals("Vokal qabuli", manual.fields().get("introText"));
+        assertTrue(manual.stale());
+        assertEquals(AuditionTranslation.ORIGIN_MANUAL, manual.origin());
+        // 자동 번역 로케일은 원문이 바뀌면 다시 작업이 잡힌다.
+        assertTrue(store.findActiveJob(ContentTypes.AUDITION_POSTING, contentId, "km").isPresent());
+    }
+
+    @Test
     void khmerAndUzbekAreActiveProviderTargets() {
         assertPair("ko", "km", "보컬 연습생 모집");
         assertPair("en", "uz", "Vocal trainee audition");
@@ -342,6 +476,16 @@ class ContentTranslationEngineTest {
         assertFalse(done.showingOriginal());
         assertEquals(target + ":" + text, done.fields().get("introText"));
         assertTrue(done.fields().containsKey("introText"));
+    }
+
+    private int drainAll() {
+        int total = 0;
+        int handled;
+        do {
+            handled = worker.drain();
+            total += handled;
+        } while (handled > 0);
+        return total;
     }
 
     private ContentSnapshot snapshot(String sourceLocale, String text) {

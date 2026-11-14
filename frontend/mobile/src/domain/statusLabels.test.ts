@@ -7,6 +7,7 @@ import {
   applicationStatusLabel,
   auditionStatusLabel,
   nationalityLabel,
+  ALLOWED_NATIONALITIES,
   roundSubmissionLabel,
 } from './statusLabels'
 
@@ -51,6 +52,9 @@ describe('statusLabels — 백엔드 문자열만 매핑', () => {
     expect(applicationStatusLabel('UNKNOWN_FROM_SERVER')).toBe('UNKNOWN_FROM_SERVER')
     expect(roundSubmissionLabel('PASSED')).toBe('라운드 통과')
     expect(nationalityLabel('KR')).toBe('한국')
+    expect(nationalityLabel('KH')).toBe('캄보디아')
+    expect(nationalityLabel('UZ')).toBe('우즈베키스탄')
+    expect(ALLOWED_NATIONALITIES).toEqual(['KR', 'MN', 'JP', 'KH', 'UZ', 'OTHER'])
   })
 
   it('결과 문구는 차분하게 유지한다', () => {

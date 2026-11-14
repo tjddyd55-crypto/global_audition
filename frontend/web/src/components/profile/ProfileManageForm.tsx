@@ -8,7 +8,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import { meProfileApi, type MeProfileResponse } from '@/shared/api/meProfile'
 import { calculateAge } from '@/shared/audition/calculateAge'
-import { nationalityOptionValues } from '@/shared/i18n/nationalityOptions'
+import { NATIONALITY_CODES, nationalityOptionValues, normalizeNationalityCode, type NationalityCode } from '@/shared/i18n/nationalityOptions'
 import { COUNTRY_CODES, timezones } from '@/shared/utils/countries'
 import { CARD_BASE, BTN_PRIMARY, TEXT_SUB } from '@/shared/ui/specClasses'
 
@@ -29,7 +29,7 @@ function createProfileSchema(nicknameMin: string, birthFormat: string) {
       name: z.string().max(120),
       nickname: z.string().min(2, nicknameMin).max(20),
       birthDate: z.string(),
-      nationality: z.enum(['', 'KR', 'MN', 'JP', 'OTHER']),
+      nationality: z.enum(['', ...NATIONALITY_CODES]),
       countryCode: z.string().max(8),
       timezone: z.string().max(64),
       introText: z.string().max(8000),
@@ -49,10 +49,8 @@ type ProfileFormValues = z.infer<ReturnType<typeof createProfileSchema>>
 
 type SnsRow = { platform: string; url: string }
 
-function normalizeNationality(raw: string | null | undefined): '' | 'KR' | 'MN' | 'JP' | 'OTHER' {
-  const n = (raw ?? '').trim().toUpperCase()
-  if (n === 'KR' || n === 'MN' || n === 'JP' || n === 'OTHER') return n
-  return ''
+function normalizeNationality(raw: string | null | undefined): '' | NationalityCode {
+  return normalizeNationalityCode(raw)
 }
 
 function applyMeToForm(me: MeProfileResponse): ProfileFormValues {

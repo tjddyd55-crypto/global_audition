@@ -19,7 +19,7 @@ import java.util.UUID;
  */
 public final class UserChannelProfilePatchSupport {
 
-    private static final Set<String> ALLOWED_NATIONALITIES = Set.of("KR", "MN", "JP", "OTHER");
+    private static final Set<String> ALLOWED_NATIONALITIES = com.audition.platform.application.user.NationalityCodes.ALLOWED;
 
     private UserChannelProfilePatchSupport() {
     }
