@@ -1,3 +1,4 @@
+import { COUNTRY_CODES } from '../../utils/countries'
 import { routing } from '../../../i18n.config'
 import localesMeta from '../../../../messages/locales.json'
 import {
@@ -123,8 +124,6 @@ describe('official UI locales', () => {
 
 describe('signup countries stay independent of UI languages', () => {
   it('does not offer KH/UZ as residence countries until the backend provisions them', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { COUNTRY_CODES } = require('../../utils/countries')
     expect(COUNTRY_CODES).not.toContain('KH')
     expect(COUNTRY_CODES).not.toContain('UZ')
     expect(COUNTRY_CODES).toContain('MN')
