@@ -108,7 +108,7 @@ public class ContentTranslationWorker {
             blocked(job, ContentTypes.TRANSLATION_PROTECTED);
             return;
         }
-        Optional<String> deferred = quota.executionBlock(job.agencyId());
+        Optional<String> deferred = quota.executionBlock(job.requestedBy(), job.agencyId());
         if (deferred.isPresent()) {
             // 실패가 아니다. 시도 횟수를 쓰지 않고 PENDING 으로 되돌려 나중에 다시 집는다.
             store.requeue(job.id(), job.attemptCount(), quota.deferUntil(deferred.get()), deferred.get(), deferred.get());

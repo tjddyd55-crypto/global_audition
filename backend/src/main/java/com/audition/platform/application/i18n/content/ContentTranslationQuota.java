@@ -77,9 +77,9 @@ public class ContentTranslationQuota {
 
     /**
      * 워커가 공급자를 부르기 직전에 본다. 걸리면 작업을 실패시키지 않고 미룰 코드를 돌려준다.
-     * 처리량(1분 시도 수)과 전체·기획사 비용·문자 예산만 본다. 요청자별 접수 한도는 접수 때 이미 봤다.
+     * 처리량(1분 시도 수)과 전체·기획사·요청자 비용·문자 예산을 본다. 요청자별 건수 한도는 접수 때 이미 봤다.
      */
-    public Optional<String> executionBlock(UUID agencyId) {
+    public Optional<String> executionBlock(UUID userId, UUID agencyId) {
         Instant now = Instant.now();
         if (properties.getWorkerAttemptsPerMinute() > 0
                 && store.countAttemptsSince(now.minus(1, ChronoUnit.MINUTES)) >= properties.getWorkerAttemptsPerMinute()) {
@@ -94,6 +94,10 @@ public class ContentTranslationQuota {
         }
         if (agencyId != null && (overCost(properties.getAgencyDailyCostMicroUsd(), store.sumAgencyCostSince(agencyId, day))
                 || overCost(properties.getAgencyMonthlyCostMicroUsd(), store.sumAgencyCostSince(agencyId, month)))) {
+            return Optional.of(ContentTypes.QUOTA_EXCEEDED);
+        }
+        if (userId != null && (overCost(properties.getUserDailyCostMicroUsd(), store.sumUserCostSince(userId, day))
+                || overCost(properties.getUserMonthlyCostMicroUsd(), store.sumUserCostSince(userId, month)))) {
             return Optional.of(ContentTypes.QUOTA_EXCEEDED);
         }
         return Optional.empty();

@@ -155,6 +155,7 @@ class ContentTranslationQueueIT {
         UUID newFail = pending(failedContent, "uz").orElseThrow();
         jdbc.update("UPDATE content_translation_jobs SET created_at = NOW() + INTERVAL '1 second' WHERE id = ?", newFail);
         store.finishJob(newFail, ContentTypes.JOB_FAILED, "HTTP_ERROR", "down");
+        jdbc.update("UPDATE content_translation_jobs SET force = TRUE WHERE id = ?", newFail);
         UUID busyFail = pending(busyContent, "km").orElseThrow();
         store.finishJob(busyFail, ContentTypes.JOB_FAILED, "HTTP_ERROR", "down");
         store.insertPendingJob(new NewJob(
@@ -173,6 +174,8 @@ class ContentTranslationQueueIT {
         StoredJob active = store.findActiveJob(FIXTURE, failedContent, "uz").orElseThrow();
         assertEquals(newFail, active.id());
         assertEquals(0, active.attemptCount());
+        assertEquals(Boolean.FALSE, jdbc.queryForObject(
+                "SELECT force FROM content_translation_jobs WHERE id = ?", Boolean.class, newFail));
         assertEquals(ContentTypes.JOB_FAILED, store.findActiveJob(FIXTURE, busyContent, "km")
                 .map(job -> job.id().equals(busyFail) ? "WRONG" : ContentTypes.JOB_FAILED).orElseThrow());
     }

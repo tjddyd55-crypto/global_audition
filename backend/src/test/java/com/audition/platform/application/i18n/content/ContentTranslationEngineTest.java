@@ -366,6 +366,24 @@ class ContentTranslationEngineTest {
     }
 
     @Test
+    void exhaustedPublisherBudgetStillBlocksDeferredJobsAtExecution() {
+        properties.setUserDailyCostMicroUsd(1);
+        source.type = ContentTypes.AUDITION_POSTING;
+        source.snapshot = snapshot("ko", "요청자 예산");
+        service.requestActiveTargets(ContentTypes.AUDITION_POSTING, contentId, viewer);
+        drainAll();
+        assertEquals(1, provider.calls);
+        UUID next = UUID.randomUUID();
+        service.requestActiveTargets(ContentTypes.AUDITION_POSTING, next, viewer);
+        store.releaseDeferred();
+        drainAll();
+        // 미룬 작업이 풀려도 요청자 예산이 소진된 동안에는 공급자를 부르지 않는다.
+        assertEquals(1, provider.calls);
+        assertTrue(store.jobs().stream().noneMatch(job -> ContentTypes.JOB_FAILED.equals(job.status())));
+        assertEquals(7, store.jobs().stream().filter(job -> ContentTypes.JOB_PENDING.equals(job.status())).count());
+    }
+
+    @Test
     void publishDoesNotQueueOverAManualTranslationAndKeepsItStale() {
         source.type = ContentTypes.AUDITION_POSTING;
         source.snapshot = snapshot("ko", "보컬 모집");

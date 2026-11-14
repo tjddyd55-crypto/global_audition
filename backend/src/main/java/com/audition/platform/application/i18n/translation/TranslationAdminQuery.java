@@ -118,7 +118,7 @@ public class TranslationAdminQuery {
 
     /**
      * 실패한 작업을 다시 PENDING 으로 돌린다. 키(콘텐츠·로케일)마다 가장 최근 실패만, 활성 작업이 없을 때만.
-     * 수동 번역 보호와 예산은 워커가 실행 직전에 다시 본다.
+     * 일괄 재시도는 덮어쓰기(force)를 풀어 수동 번역을 보호한다. 예산은 워커가 실행 직전에 다시 본다.
      */
     @Transactional
     public Map<String, Object> retryFailed(int limit) {
@@ -126,7 +126,7 @@ public class TranslationAdminQuery {
         int capped = Math.max(1, Math.min(limit, 200));
         int updated = jdbc.update("""
                 UPDATE content_translation_jobs j
-                SET status = 'PENDING', attempt_count = 0, run_after = NOW(), error_code = 'RETRY_REQUESTED',
+                SET status = 'PENDING', attempt_count = 0, force = FALSE, run_after = NOW(), error_code = 'RETRY_REQUESTED',
                     error_message = NULL, lease_owner = NULL, lease_until = NULL, finished_at = NULL, updated_at = NOW()
                 WHERE j.id IN (
                     SELECT f.id FROM (
