@@ -14,8 +14,25 @@ import type { ExpoConfig, ConfigContext } from 'expo/config'
  */
 const DEFAULT_WEB_URL = 'https://frontend-production-8613a.up.railway.app'
 
+/**
+ * EAS 프로필별 기본 웹 origin (eas.json build.*.env 와 같은 값).
+ * `eas update`는 eas.json 의 build profile env 를 읽지 않는다. 그래서 EXPO_PUBLIC_* 없이
+ * `EAS_BUILD_PROFILE=preview eas update` 로 발행하면 Production 주소가 OTA manifest 에 박혀
+ * preview(Development) 앱의 모든 API 호출이 실패했다. 프로필 이름만으로도 올바른 Dev 주소를 쓰게 한다.
+ */
+export const PROFILE_WEB_URLS: Readonly<Record<string, string>> = {
+  preview: 'https://frontend-develop-3d3e.up.railway.app',
+}
+
+export function resolveWebUrl(env: Record<string, string | undefined>): string {
+  const explicit = env.EXPO_PUBLIC_WEB_URL?.trim()
+  if (explicit) return explicit
+  const profile = env.EAS_BUILD_PROFILE?.trim()
+  return (profile && PROFILE_WEB_URLS[profile]) || DEFAULT_WEB_URL
+}
+
 export default ({ config }: ConfigContext): ExpoConfig => {
-  const webUrl = process.env.EXPO_PUBLIC_WEB_URL?.trim() || DEFAULT_WEB_URL
+  const webUrl = resolveWebUrl(process.env)
   const apiUrl = process.env.EXPO_PUBLIC_API_URL?.trim() || `${webUrl.replace(/\/+$/, '')}/api`
   const allowedHosts = parseHosts(process.env.EXPO_PUBLIC_ALLOWED_HOSTS, webUrl)
 
