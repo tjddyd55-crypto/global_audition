@@ -5,15 +5,16 @@ import java.util.Set;
 
 /**
  * UI·콘텐츠가 공유하는 BCP-47 short locale.
- * 1급: ko / en / mn. 기존 next-intl 로케일도 유지.
+ * 1급: ko / en / mn / km(크메르어) / uz(우즈베크어, 라틴). 기존 next-intl 로케일도 유지.
+ * 언어 코드(km, uz)는 국가 코드(KH, UZ)와 별개다.
  */
 public final class ContentLocales {
 
     public static final String DEFAULT = "ko";
     public static final String FALLBACK = "en";
     public static final Set<String> SUPPORTED = Set.of(
-            "ko", "en", "mn", "ja", "zh", "es", "fr", "de");
-    public static final Set<String> PRIMARY = Set.of("ko", "en", "mn");
+            "ko", "en", "mn", "km", "uz", "ja", "zh", "es", "fr", "de");
+    public static final Set<String> PRIMARY = Set.of("ko", "en", "mn", "km", "uz");
     public static final int AUTHORING_MAX_LENGTH = 16;
 
     private ContentLocales() {

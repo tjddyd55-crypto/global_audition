@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { useLocale, useTranslations } from 'next-intl'
 import { Link } from '@/i18n.config'
 import { DEFAULT_IMAGES } from '@/shared/constants/fallbacks'
+import { intlTagForUiLocale } from '@/shared/i18n/uiLocales'
 
 export type VideoListItemProps = {
   href: string
@@ -42,7 +43,7 @@ export function VideoListItem({
   const tVideo = useTranslations('video')
   const tChannel = useTranslations('channel')
   const tProfile = useTranslations('profile')
-  const numberLocale = locale.startsWith('ko') ? 'ko-KR' : locale.startsWith('mn') ? 'mn-MN' : 'en-US'
+  const numberLocale = intlTagForUiLocale(locale)
   const channelLabel = channelName || tChannel('title')
   const viewsFormatted = Number(viewCount ?? 0).toLocaleString(numberLocale)
   const meta = `${channelLabel} · ${tVideo('viewsCount', { n: viewsFormatted })} · ${dateLabel}`

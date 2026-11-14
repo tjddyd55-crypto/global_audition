@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { AUDIENCE_FILTER_OPTIONS } from '../domain/audience'
 import { useAudienceCountry } from '../domain/AudienceCountryProvider'
 import { colors, radius } from '../theme/tokens'
+import { scriptLineHeight } from '../i18n/typography'
 import {
   chipFrameFor,
   COUNTRY_CHIP_HEIGHT,
@@ -15,8 +16,9 @@ import {
  * 높이는 고정하고, 가로 스크롤은 이 필터 줄 안에서만 일어난다.
  */
 export function AudienceFilter() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { country, selectCountry } = useAudienceCountry()
+  const language = i18n.language
 
   return (
     <View style={styles.wrap}>
@@ -38,13 +40,14 @@ export function AudienceFilter() {
                 option={option}
                 label={label}
                 selected={selected}
+                lineHeight={scriptLineHeight(language, 14, 18)}
                 onPress={() => selectCountry(option)}
               />
             )
           })}
         </ScrollView>
       </View>
-      <Text style={styles.hint}>{t('auditions.filterHint')}</Text>
+      <Text style={[styles.hint, { lineHeight: scriptLineHeight(language, 13, 18) }]}>{t('auditions.filterHint')}</Text>
     </View>
   )
 }
@@ -53,11 +56,13 @@ function CountryFilterChip({
   option,
   label,
   selected,
+  lineHeight,
   onPress,
 }: {
   option: string
   label: string
   selected: boolean
+  lineHeight: number
   onPress: () => void
 }) {
   const frame = chipFrameFor(option)
@@ -70,7 +75,7 @@ function CountryFilterChip({
       hitSlop={{ top: 4, bottom: 4 }}
       style={[styles.chip, { height: frame.height, paddingHorizontal: frame.paddingHorizontal }, selected && styles.chipOn]}
     >
-      <Text numberOfLines={1} style={[styles.chipLabel, selected && styles.chipLabelOn]}>
+      <Text numberOfLines={1} style={[styles.chipLabel, { lineHeight }, selected && styles.chipLabelOn]}>
         {label}
       </Text>
     </Pressable>

@@ -1,6 +1,8 @@
 import ko from '../../../../web/messages/ko.json'
 import en from '../../../../web/messages/en.json'
 import mn from '../../../../web/messages/mn.json'
+import km from '../../../../web/messages/km.json'
+import uz from '../../../../web/messages/uz.json'
 import {
   NATIVE_TAB_ITEMS,
   isSingleLineLabel,
@@ -17,10 +19,12 @@ type NavCatalog = {
   nav: Record<'home' | 'auditions' | 'vote' | 'applications' | 'profile', string>
 }
 
-const CATALOGS: ['ko' | 'en' | 'mn', NavCatalog][] = [
+const CATALOGS: ['ko' | 'en' | 'mn' | 'km' | 'uz', NavCatalog][] = [
   ['ko', ko as NavCatalog],
   ['en', en as NavCatalog],
   ['mn', mn as NavCatalog],
+  ['km', km as NavCatalog],
+  ['uz', uz as NavCatalog],
 ]
 
 describe('native bottom tabs', () => {
@@ -43,7 +47,7 @@ describe('native bottom tabs', () => {
     }
   })
 
-  it('keeps ko/en/mn tab names on a single line', () => {
+  it('keeps ko/en/mn/km/uz tab names on a single line', () => {
     for (const [locale, messages] of CATALOGS) {
       const labels = ROUTES.map((route) => {
         const key = NATIVE_TAB_ITEMS[route].labelKey.replace('nav.', '') as keyof NavCatalog['nav']

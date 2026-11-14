@@ -15,6 +15,8 @@ public class TranslationProbeView {
     private boolean koreanSupported;
     private boolean englishSupported;
     private boolean mongolianSupported;
+    private boolean khmerSupported;
+    private boolean uzbekSupported;
 
     public String getProvider() { return provider; }
     public void setProvider(String provider) { this.provider = provider; }
@@ -36,4 +38,8 @@ public class TranslationProbeView {
     public void setEnglishSupported(boolean englishSupported) { this.englishSupported = englishSupported; }
     public boolean isMongolianSupported() { return mongolianSupported; }
     public void setMongolianSupported(boolean mongolianSupported) { this.mongolianSupported = mongolianSupported; }
+    public boolean isKhmerSupported() { return khmerSupported; }
+    public void setKhmerSupported(boolean khmerSupported) { this.khmerSupported = khmerSupported; }
+    public boolean isUzbekSupported() { return uzbekSupported; }
+    public void setUzbekSupported(boolean uzbekSupported) { this.uzbekSupported = uzbekSupported; }
 }

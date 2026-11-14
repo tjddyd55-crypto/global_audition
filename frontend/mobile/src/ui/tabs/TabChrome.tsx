@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
+import { useTranslation } from 'react-i18next'
+import { isTallScriptLocale, scriptLineHeight } from '../../i18n/typography'
 import {
   TAB_LABEL_FONT_SIZE,
   TAB_LABEL_LINES,
@@ -27,6 +29,8 @@ export function TabIcon({ icon, color }: { icon: NativeTabIcon; color: string })
 }
 
 export function TabLabel({ label, color }: { label: string; color: string }) {
+  const { i18n } = useTranslation()
+  const tall = isTallScriptLocale(i18n.language)
   return (
     <Text
       numberOfLines={TAB_LABEL_LINES}
@@ -37,7 +41,11 @@ export function TabLabel({ label, color }: { label: string; color: string }) {
       textBreakStrategy="simple"
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
-      style={[styles.label, { color, fontSize: TAB_LABEL_FONT_SIZE }]}
+      style={[
+        styles.label,
+        { color, fontSize: TAB_LABEL_FONT_SIZE, lineHeight: scriptLineHeight(i18n.language, TAB_LABEL_FONT_SIZE, 16) },
+        tall && styles.labelTall,
+      ]}
     >
       {label}
     </Text>
@@ -112,6 +120,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textAlign: 'center',
     includeFontPadding: false,
+  },
+  /** 크메르어: 위·아래 결합 기호가 잘리지 않게 폰트 패딩을 살리고 위 여백을 줄인다. */
+  labelTall: {
+    marginTop: 1,
+    includeFontPadding: true,
   },
   roof: {
     width: 0,

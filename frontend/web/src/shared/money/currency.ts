@@ -8,6 +8,8 @@ const INTL_BY_APP_LOCALE: Record<string, string> = {
   ko: 'ko-KR',
   en: 'en-US',
   mn: 'mn-MN',
+  km: 'km-KH',
+  uz: 'uz-Latn-UZ',
   ja: 'ja-JP',
   zh: 'zh-CN',
   es: 'es-ES',

@@ -171,6 +171,8 @@ export const superAdminApi = {
       koreanSupported: boolean
       englishSupported: boolean
       mongolianSupported: boolean
+      khmerSupported?: boolean
+      uzbekSupported?: boolean
     }>('/admin/translation-settings/google/languages')
     return data
   },

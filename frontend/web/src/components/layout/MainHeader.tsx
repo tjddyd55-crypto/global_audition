@@ -11,9 +11,16 @@ import { getDisplayNickname } from '@/shared/user/getDisplayNickname'
 import { BTN_PRIMARY, DROPDOWN_ITEM } from '@/shared/ui/specClasses'
 import { DeviceToggle } from '@/shared/device/DeviceToggle'
 import {
+  isUiLocale,
   localeSwitchTarget,
   PUBLIC_SELECTOR,
+  UI_LOCALE_NATIVE_NAMES,
 } from '@/shared/i18n/uiLocales'
+
+/** 언어 이름은 항상 그 언어 자체로 쓴다(한국어 / English / Монгол / ខ្មែរ / Oʻzbekcha). */
+function nativeLanguageName(code: string): string {
+  return isUiLocale(code) ? UI_LOCALE_NATIVE_NAMES[code] : code.toUpperCase()
+}
 
 export default function MainHeader() {
   const t = useTranslations('common')
@@ -22,7 +29,6 @@ export default function MainHeader() {
   const tAgency = useTranslations('agency')
   const tChannel = useTranslations('channel')
   const tVault = useTranslations('vault')
-  const tLanguages = useTranslations('languages')
   const locale = useLocale()
   const router = useRouter()
   const pathname = usePathname()
@@ -164,23 +170,31 @@ export default function MainHeader() {
               type="button"
               onClick={() => { setIsMobileOpen(false); setIsLanguageOpen((p) => !p) }}
               data-language-toggle
-              className="cursor-pointer border-0 bg-transparent text-sm text-[#555555]"
+              className="flex cursor-pointer items-center gap-1 border-0 bg-transparent text-sm text-[#555555]"
               data-testid="language-current"
+              aria-haspopup="listbox"
+              aria-expanded={isLanguageOpen}
+              aria-label={t('language')}
             >
-              {locale.toUpperCase()}
+              <span className="whitespace-nowrap leading-normal">{nativeLanguageName(locale)}</span>
+              <span aria-hidden>▾</span>
             </button>
             {isLanguageOpen && (
-              <div data-language-menu className="absolute right-0 top-full z-50 mt-1 min-w-[80px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+              <div data-language-menu role="listbox" className="absolute right-0 top-full z-50 mt-1 min-w-[160px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
                 {locales.map((item) => (
                   <button
                     key={item}
                     type="button"
+                    lang={item}
+                    role="option"
+                    aria-selected={item === locale}
                     onClick={() => changeLocale(item)}
                     aria-current={item === locale ? 'true' : undefined}
                     data-testid={`language-option-${item}`}
-                    className={`block w-full px-3 py-2 text-left text-sm uppercase hover:bg-gray-100 ${item === locale ? 'font-semibold text-[#7c3aed]' : ''}`}
+                    className={`flex w-full items-center justify-between gap-3 whitespace-nowrap px-3 py-2 text-left text-sm leading-normal hover:bg-gray-100 ${item === locale ? 'bg-[#f5f3ff] font-semibold text-[#7c3aed]' : ''}`}
                   >
-                    {item}
+                    <span>{nativeLanguageName(item)}</span>
+                    {item === locale ? <span aria-hidden>✓</span> : null}
                   </button>
                 ))}
               </div>
@@ -260,21 +274,26 @@ export default function MainHeader() {
                 <circle cx="12" cy="12" r="9" strokeWidth={1.8} />
                 <path strokeWidth={1.8} d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18" />
               </svg>
-              <span className="hidden whitespace-nowrap min-[375px]:inline">{tLanguages(locale)}</span>
+              <span className="hidden whitespace-nowrap leading-normal min-[375px]:inline">{nativeLanguageName(locale)}</span>
               <span className="whitespace-nowrap uppercase min-[375px]:hidden">{locale}</span>
+              <span aria-hidden>▾</span>
             </button>
             {isLanguageOpen && (
-              <div data-language-menu className="absolute right-0 top-full z-50 mt-1 min-w-[120px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+              <div data-language-menu role="listbox" className="absolute right-0 top-full z-50 mt-1 min-w-[150px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
                 {locales.map((item) => (
                   <button
                     key={item}
                     type="button"
+                    lang={item}
+                    role="option"
+                    aria-selected={item === locale}
                     onClick={() => changeLocale(item)}
                     aria-current={item === locale ? 'true' : undefined}
                     data-testid={`mobile-language-option-${item}`}
-                    className={`block w-full whitespace-nowrap px-3 py-2 text-left text-sm hover:bg-gray-100 ${item === locale ? 'font-semibold text-[#7c3aed]' : ''}`}
+                    className={`flex w-full items-center justify-between gap-3 whitespace-nowrap px-3 py-2.5 text-left text-sm leading-normal hover:bg-gray-100 ${item === locale ? 'bg-[#f5f3ff] font-semibold text-[#7c3aed]' : ''}`}
                   >
-                    {item === locale ? '✓ ' : ''}{tLanguages(item)}
+                    <span>{nativeLanguageName(item)}</span>
+                    {item === locale ? <span aria-hidden>✓</span> : null}
                   </button>
                 ))}
               </div>
@@ -326,10 +345,11 @@ export default function MainHeader() {
                   key={item}
                   type="button"
                   onClick={() => changeLocale(item)}
+                  lang={item}
                   aria-current={item === locale ? 'true' : undefined}
-                  className={`rounded border px-2 py-1 text-sm uppercase ${item === locale ? 'border-[#7c3aed] text-[#7c3aed]' : 'border-gray-200'}`}
+                  className={`rounded border px-2 py-1 text-sm leading-normal ${item === locale ? 'border-[#7c3aed] text-[#7c3aed]' : 'border-gray-200'}`}
                 >
-                  {item}
+                  {nativeLanguageName(item)}
                 </button>
               ))}
             </div>

@@ -3,6 +3,8 @@ import { initReactI18next } from 'react-i18next'
 import ko from '../../../web/messages/ko.json'
 import en from '../../../web/messages/en.json'
 import mn from '../../../web/messages/mn.json'
+import km from '../../../web/messages/km.json'
+import uz from '../../../web/messages/uz.json'
 import { nativeTranslationResources } from './catalogs'
 import { DEFAULT_LOCALE, DEVICE_FALLBACK, PRIMARY_LOCALES } from './runtime'
 
@@ -10,6 +12,8 @@ const resources = nativeTranslationResources(
   en as Record<string, unknown>,
   ko as Record<string, unknown>,
   mn as Record<string, unknown>,
+  km as Record<string, unknown>,
+  uz as Record<string, unknown>,
 )
 
 void registerI18nPlugin.call(i18n, initReactI18next).init({

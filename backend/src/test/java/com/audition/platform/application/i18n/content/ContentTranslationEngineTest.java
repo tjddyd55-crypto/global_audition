@@ -256,6 +256,9 @@ class ContentTranslationEngineTest {
         source.snapshot = snapshot("ko", "보컬 모집");
         service.requestActiveTargets(ContentTypes.AUDITION_POSTING, contentId, viewer);
         assertTrue(store.findActiveJob(ContentTypes.AUDITION_POSTING, contentId, "en").isPresent());
+        assertTrue(store.findActiveJob(ContentTypes.AUDITION_POSTING, contentId, "mn").isPresent());
+        assertTrue(store.findActiveJob(ContentTypes.AUDITION_POSTING, contentId, "km").isPresent());
+        assertTrue(store.findActiveJob(ContentTypes.AUDITION_POSTING, contentId, "uz").isPresent());
         assertTrue(store.findLatestJob(ContentTypes.AUDITION_POSTING, contentId, "ko").isEmpty());
         assertTrue(store.findLatestJob(ContentTypes.AUDITION_POSTING, contentId, "ja").isEmpty());
 
@@ -264,6 +267,47 @@ class ContentTranslationEngineTest {
         service.requestActiveTargets(ContentTypes.AUDITION_POSTING, englishPosting, viewer);
         assertTrue(store.findLatestJob(ContentTypes.AUDITION_POSTING, englishPosting, "en").isEmpty());
         assertTrue(store.findActiveJob(ContentTypes.AUDITION_POSTING, englishPosting, "ko").isPresent());
+    }
+
+    @Test
+    void khmerAndUzbekAreActiveProviderTargets() {
+        assertPair("ko", "km", "보컬 연습생 모집");
+        assertPair("en", "uz", "Vocal trainee audition");
+    }
+
+    @Test
+    void khmerAndUzbekAreStoredOnceThenReusedWithoutProviderCalls() {
+        UUID posting = UUID.randomUUID();
+        source.snapshot = snapshot("ko", "댄스 오디션");
+        ContentTranslationView first = service.read(ContentTypes.APPLICATION_INTRO, posting, "km", false, viewer);
+        assertTrue(first.showingOriginal());
+        assertEquals("댄스 오디션", first.fields().get("introText"));
+        assertEquals(1, worker.drain());
+        int calls = provider.calls;
+        ContentTranslationView stored = service.read(ContentTypes.APPLICATION_INTRO, posting, "km", false, viewer);
+        assertFalse(stored.showingOriginal());
+        service.read(ContentTypes.APPLICATION_INTRO, posting, "km", false, viewer);
+        assertEquals(0, worker.drain());
+        assertEquals(calls, provider.calls);
+    }
+
+    @Test
+    void uzbekManualTranslationSurvivesSourceEditsAndIsMarkedStale() {
+        UUID posting = UUID.randomUUID();
+        source.snapshot = snapshot("ko", "보컬 모집");
+        service.read(ContentTypes.APPLICATION_INTRO, posting, "uz", false, viewer);
+        worker.drain();
+        source.snapshot = snapshot("ko", "보컬 모집 (수정)");
+        assertTrue(service.read(ContentTypes.APPLICATION_INTRO, posting, "uz", false, viewer).stale());
+        service.saveManual(ContentTypes.APPLICATION_INTRO, posting, "uz", Map.of("introText", "Vokalchilar qabuli"), viewer);
+        source.writable = true;
+        source.snapshot = snapshot("ko", "보컬 모집 (재수정)");
+        ContentTranslationView manual = service.read(ContentTypes.APPLICATION_INTRO, posting, "uz", false, viewer);
+        assertEquals("Vokalchilar qabuli", manual.fields().get("introText"));
+        assertEquals(AuditionTranslation.ORIGIN_MANUAL, manual.origin());
+        worker.drain();
+        assertEquals("Vokalchilar qabuli",
+                service.read(ContentTypes.APPLICATION_INTRO, posting, "uz", false, viewer).fields().get("introText"));
     }
 
     @Test

@@ -735,7 +735,9 @@
     "zh": "中文",
     "es": "Español",
     "fr": "Français",
-    "de": "Deutsch"
+    "de": "Deutsch",
+    "km": "ខ្មែរ",
+    "uz": "Oʻzbekcha"
   },
   "editor": {
     "title": "제목",
@@ -913,7 +915,9 @@
     "SG": "싱가포르 (Singapore)",
     "MY": "말레이시아 (Malaysia)",
     "TW": "대만 (Taiwan)",
-    "HK": "홍콩 (Hong Kong)"
+    "HK": "홍콩 (Hong Kong)",
+    "KH": "캄보디아",
+    "UZ": "우즈베키스탄"
   },
   "agency": {
     "applicants": "지원자 관리",
@@ -1585,7 +1589,9 @@
     "pt": "Português",
     "ru": "Русский",
     "th": "ไทย",
-    "vi": "Tiếng Việt"
+    "vi": "Tiếng Việt",
+    "km": "ខ្មែរ",
+    "uz": "Oʻzbekcha"
   },
   "device": {
     "viewPc": "PC 버전으로 보기",

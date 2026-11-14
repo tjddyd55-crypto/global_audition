@@ -4,7 +4,7 @@ import com.audition.platform.application.i18n.ContentLocales;
 
 /**
  * 공고 시리즈(1차·2차…) 표시용 — MULTI_ROUND의 current_round_number 와 별개.
- * 접미사/라벨은 콘텐츠 로케일(ko/en/mn)에 맞춘다.
+ * 접미사/라벨은 콘텐츠 로케일(ko/en/mn/km/uz)에 맞춘다.
  */
 public final class AuditionSeriesPresentation {
 
@@ -43,6 +43,8 @@ public final class AuditionSeriesPresentation {
             return switch (loc) {
                 case "en" -> "Round " + seriesRound + " open";
                 case "mn" -> seriesRound + "-р шатны элсэлт";
+                case "km" -> "កំពុងជ្រើសរើសជុំទី " + seriesRound;
+                case "uz" -> seriesRound + "-bosqich qabul ochiq";
                 default -> seriesRound + "차 모집 중";
             };
         }
@@ -50,12 +52,16 @@ public final class AuditionSeriesPresentation {
             return switch (loc) {
                 case "en" -> "Round " + seriesRound + " closed";
                 case "mn" -> seriesRound + "-р шат хаагдсан";
+                case "km" -> "ជុំទី " + seriesRound + " បានបិទ";
+                case "uz" -> seriesRound + "-bosqich yopildi";
                 default -> seriesRound + "차 마감";
             };
         }
         return switch (loc) {
             case "en" -> "Round " + seriesRound + " draft";
             case "mn" -> seriesRound + "-р шат · ноорог";
+            case "km" -> "ជុំទី " + seriesRound + " · សេចក្តីព្រាង";
+            case "uz" -> seriesRound + "-bosqich · qoralama";
             default -> seriesRound + "차 · 초안";
         };
     }
@@ -64,6 +70,8 @@ public final class AuditionSeriesPresentation {
         return switch (ContentLocales.normalize(locale)) {
             case "en" -> "Only applicants accepted in the previous round may apply";
             case "mn" -> "Зөвхөн өмнөх шатанд тэнцсэн өргөдөл гаргагч бүртгүүлнэ";
+            case "km" -> "មានតែបេក្ខជនដែលបានជាប់ក្នុងជុំមុនប៉ុណ្ណោះ ទើបអាចដាក់ពាក្យបាន";
+            case "uz" -> "Faqat oldingi bosqichdan oʻtgan nomzodlar ariza topshirishi mumkin";
             default -> APPLY_BLOCKED_PREV_ROUND_NOT_ACCEPTED;
         };
     }

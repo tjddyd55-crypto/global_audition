@@ -1,5 +1,6 @@
 ﻿/**
- * 지원자 가입 국가. UI 언어(ko/en/mn)와 따로 고르며, 전 세계 지원이므로 몽골(MN)을 포함한다.
+ * 지원자 가입 국가. UI 언어(ko/en/mn/km/uz)와 따로 고른다.
+ * 국가 코드(KH 캄보디아, UZ 우즈베키스탄)와 언어 코드(km, uz)는 서로 다른 값이다.
  */
 export const COUNTRY_CODES = [
   'KR',
@@ -26,6 +27,8 @@ export const COUNTRY_CODES = [
   'MY',
   'TW',
   'HK',
+  'KH',
+  'UZ',
 ] as const
 
 export type CountryCode = (typeof COUNTRY_CODES)[number]
@@ -47,6 +50,9 @@ export const LANGUAGE_CODES = [
   'ru',
   'th',
   'vi',
+  'mn',
+  'km',
+  'uz',
 ] as const
 
 export type LanguageCode = (typeof LANGUAGE_CODES)[number]
@@ -58,6 +64,8 @@ export const languages: ReadonlyArray<{ code: LanguageCode }> = LANGUAGE_CODES.m
 export const timezones = [
   { value: 'Asia/Seoul', label: 'Asia/Seoul (KST)' },
   { value: 'Asia/Ulaanbaatar', label: 'Asia/Ulaanbaatar (ULAT)' },
+  { value: 'Asia/Phnom_Penh', label: 'Asia/Phnom_Penh (ICT)' },
+  { value: 'Asia/Tashkent', label: 'Asia/Tashkent (UZT)' },
   { value: 'America/New_York', label: 'America/New_York (EST)' },
   { value: 'America/Los_Angeles', label: 'America/Los_Angeles (PST)' },
   { value: 'America/Chicago', label: 'America/Chicago (CST)' },

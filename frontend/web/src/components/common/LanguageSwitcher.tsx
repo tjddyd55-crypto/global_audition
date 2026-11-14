@@ -1,11 +1,12 @@
 'use client'
 
-import { useLocale, useTranslations } from 'next-intl'
+import { useLocale } from 'next-intl'
 import { usePathname, useRouter } from '../../i18n.config'
 import { useState } from 'react'
 import {
   localeSwitchTarget,
   PUBLIC_SELECTOR,
+  UI_LOCALE_NATIVE_NAMES,
   type UiLocale,
 } from '@/shared/i18n/uiLocales'
 
@@ -13,13 +14,14 @@ const FLAGS: Record<UiLocale, string> = {
   ko: '🇰🇷',
   en: '🇺🇸',
   mn: '🇲🇳',
+  km: '🇰🇭',
+  uz: '🇺🇿',
 }
 
 const LANGUAGE_OPTIONS = PUBLIC_SELECTOR.map((code) => ({ code, flag: FLAGS[code] }))
 
 export default function LanguageSwitcher() {
   const locale = useLocale()
-  const tLang = useTranslations('languages')
   const router = useRouter()
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
@@ -43,7 +45,7 @@ export default function LanguageSwitcher() {
         aria-label="Change language"
       >
         <span className="text-xl">{currentLanguage.flag}</span>
-        <span className="hidden sm:inline text-sm font-medium">{tLang(currentLanguage.code)}</span>
+        <span className="hidden sm:inline text-sm font-medium">{UI_LOCALE_NATIVE_NAMES[currentLanguage.code]}</span>
         <svg
           className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
           fill="none"
@@ -71,7 +73,7 @@ export default function LanguageSwitcher() {
                   }`}
                 >
                   <span className="text-xl">{lang.flag}</span>
-                  <span className="text-sm">{tLang(lang.code)}</span>
+                  <span className="text-sm">{UI_LOCALE_NATIVE_NAMES[lang.code]}</span>
                   {locale === lang.code && (
                     <span className="ml-auto text-primary-600">✓</span>
                   )}

@@ -3,11 +3,14 @@ import localesMeta from '../../../../messages/locales.json'
 import {
   AGENCY_UI_LOCALE,
   fallbackUiLocale,
+  intlTagForUiLocale,
+  isUiLocale,
   localeSwitchTarget,
   PUBLIC_SELECTOR,
   redirectPathForRetiredLocale,
   redirectPathForSavedLocale,
   RETIRED_UI_LOCALES,
+  UI_LOCALE_NATIVE_NAMES,
   UI_LOCALES,
 } from '../uiLocales'
 
@@ -24,8 +27,8 @@ function legacyPrefixedPath(pathname: string, nextLocale: string): string {
 }
 
 describe('official UI locales', () => {
-  it('exposes only ko/en/mn and retires the partial catalogs', () => {
-    expect([...UI_LOCALES]).toEqual(['ko', 'en', 'mn'])
+  it('exposes ko/en/mn/km/uz and retires the partial catalogs', () => {
+    expect([...UI_LOCALES]).toEqual(['ko', 'en', 'mn', 'km', 'uz'])
     expect(RETIRED_UI_LOCALES).toEqual(['ja', 'zh', 'es', 'fr', 'de'])
     expect(fallbackUiLocale()).toBe('en')
   })
@@ -57,12 +60,44 @@ describe('official UI locales', () => {
     expect(localeSwitchTarget('/auditions', 'ja').locale).toBe('en')
   })
 
-  it('keeps ko/en/mn catalogs and narrows the public selector to English', () => {
-    expect([...UI_LOCALES]).toEqual(['ko', 'en', 'mn'])
-    expect([...PUBLIC_SELECTOR]).toEqual(['ko', 'en', 'mn'])
+  it('offers five public languages while admin screens stay Korean', () => {
+    expect([...UI_LOCALES]).toEqual(['ko', 'en', 'mn', 'km', 'uz'])
+    expect([...PUBLIC_SELECTOR]).toEqual(['ko', 'en', 'mn', 'km', 'uz'])
     expect(AGENCY_UI_LOCALE).toBe('ko')
     expect(localesMeta.superAdminUiLocale).toBe('ko')
-    expect(localesMeta.activeTranslationTargets).toEqual(['en', 'ko', 'mn'])
+    expect(localesMeta.activeTranslationTargets).toEqual(['en', 'ko', 'mn', 'km', 'uz'])
+  })
+
+  it('names every public language in its own script', () => {
+    expect(PUBLIC_SELECTOR.map((code) => UI_LOCALE_NATIVE_NAMES[code])).toEqual([
+      '한국어',
+      'English',
+      'Монгол',
+      'ខ្មែរ',
+      'Oʻzbekcha',
+    ])
+  })
+
+  it('maps km/uz to Intl tags (uz uses Latin script) and keeps language codes apart from country codes', () => {
+    expect(intlTagForUiLocale('km')).toBe('km-KH')
+    expect(intlTagForUiLocale('uz')).toBe('uz-Latn-UZ')
+    expect(intlTagForUiLocale('ja')).toBe('en-US')
+    // 국가 코드 KH/UZ 는 언어 코드가 아니다.
+    expect(isUiLocale('KH')).toBe(false)
+    expect(isUiLocale('kh')).toBe(false)
+    expect(isUiLocale('UZ')).toBe(false)
+    expect(isUiLocale('km')).toBe(true)
+    expect(isUiLocale('uz')).toBe(true)
+  })
+
+  it('switches into and out of km/uz without dropping the path', () => {
+    expect(localeSwitchTarget('/auditions/42', 'km')).toEqual({ href: '/auditions/42', locale: 'km' })
+    expect(localeSwitchTarget('/km/auditions/42', 'uz')).toEqual({ href: '/auditions/42', locale: 'uz' })
+    expect(localeSwitchTarget('/uz/channels', 'ko')).toEqual({ href: '/channels', locale: 'ko' })
+    expect(redirectPathForSavedLocale('/auditions', 'km')).toBe('/km/auditions')
+    expect(redirectPathForSavedLocale('/', 'uz')).toBe('/uz')
+    expect(redirectPathForRetiredLocale('/km/auditions')).toBeNull()
+    expect(routing.locales).toEqual(['ko', 'en', 'mn', 'km', 'uz'])
   })
 
   it('agency management screens follow the selected UI locale (no forced Korean)', () => {
