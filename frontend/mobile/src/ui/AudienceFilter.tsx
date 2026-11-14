@@ -112,7 +112,11 @@ export function AudienceFilter() {
                 selected={selected}
                 lineHeight={scriptLineHeight(language, 14, 18)}
                 onLayout={(e) => onChipLayout(option, e)}
-                onPress={() => selectCountry(option)}
+                onPress={() => {
+                  // 이미 선택된 칩을 다시 누르면 국가는 그대로(재요청 없음) 두고, 일부만 보이면 전부 보이게 스크롤한다.
+                  if (option === country) reveal(true)
+                  selectCountry(option)
+                }}
               />
             )
           })}

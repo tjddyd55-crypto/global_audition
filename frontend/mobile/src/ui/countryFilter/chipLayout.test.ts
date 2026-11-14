@@ -59,3 +59,16 @@ describe('chipRevealOffset', () => {
     expect(chipRevealOffset({ ...base, viewportWidth: 0, chipX: 500, chipWidth: 120 })).toBeNull()
   })
 })
+
+describe('chipRevealOffset — re-tap of the selected chip', () => {
+  it('reveals a selected chip that is cut off at the right edge after manual scroll', () => {
+    // 칩 x=796..1102 (content 좌표), 사용자가 offset 0 에서 화면 너비 984 만큼 보는 중 → 오른쪽이 잘림
+    expect(chipRevealOffset({ chipX: 796, chipWidth: 306, viewportWidth: 984, contentWidth: 1400, currentOffset: 0, margin: 16 })).toBe(796 + 306 + 16 - 984)
+  })
+  it('reveals a selected chip cut off at the left edge', () => {
+    expect(chipRevealOffset({ chipX: 300, chipWidth: 200, viewportWidth: 984, contentWidth: 1400, currentOffset: 380, margin: 16 })).toBe(284)
+  })
+  it('leaves the manual scroll position alone when the selected chip is fully visible', () => {
+    expect(chipRevealOffset({ chipX: 500, chipWidth: 200, viewportWidth: 984, contentWidth: 1400, currentOffset: 120, margin: 16 })).toBeNull()
+  })
+})
