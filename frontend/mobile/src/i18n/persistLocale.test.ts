@@ -1,8 +1,8 @@
 import { detectDeviceLocale, PRIMARY_LOCALES } from './runtime'
 
 describe('native locale persistence contract', () => {
-  it('keeps only ko/en/mn as profile-switchable locales', () => {
-    expect(PRIMARY_LOCALES).toEqual(['ko', 'en', 'mn'])
+  it('keeps ko/en/mn/km/uz as switchable locales', () => {
+    expect(PRIMARY_LOCALES).toEqual(['ko', 'en', 'mn', 'km', 'uz'])
   })
 
   it('detects device mn and falls back to en otherwise', () => {

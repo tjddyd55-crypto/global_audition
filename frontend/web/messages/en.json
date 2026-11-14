@@ -735,7 +735,9 @@
     "zh": "中文",
     "es": "Español",
     "fr": "Français",
-    "de": "Deutsch"
+    "de": "Deutsch",
+    "km": "ខ្មែរ",
+    "uz": "Oʻzbekcha"
   },
   "editor": {
     "title": "Title",
@@ -913,7 +915,9 @@
     "SG": "Singapore",
     "MY": "Malaysia",
     "TW": "Taiwan",
-    "HK": "Hong Kong"
+    "HK": "Hong Kong",
+    "KH": "Cambodia",
+    "UZ": "Uzbekistan"
   },
   "agency": {
     "applicants": "Applicant management",
@@ -1585,7 +1589,9 @@
     "pt": "Português",
     "ru": "Русский",
     "th": "ไทย",
-    "vi": "Tiếng Việt"
+    "vi": "Tiếng Việt",
+    "km": "ខ្មែរ",
+    "uz": "Oʻzbekcha"
   },
   "device": {
     "viewPc": "View desktop version",

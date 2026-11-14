@@ -23,6 +23,7 @@ import {
   type ApplicationPublicDetail,
   type ApplicationRecommendItem,
 } from '@/shared/api/applicationPublicVideo'
+import { intlTagForUiLocale } from '@/shared/i18n/uiLocales'
 
 const ACCENT = '#7c3aed'
 const DESC_PREVIEW_CHARS = 140
@@ -78,7 +79,7 @@ export function ApplicationVideoDetailClient() {
   const tCommon = useTranslations('common')
   const tVote = useTranslations('vote')
   const tRelative = useTranslations('relative')
-  const numberLocale = locale.startsWith('ko') ? 'ko-KR' : locale.startsWith('mn') ? 'mn-MN' : 'en-US'
+  const numberLocale = intlTagForUiLocale(locale)
 
   const [isLoading, setIsLoading] = useState(true)
   const [detail, setDetail] = useState<ApplicationPublicDetail | null>(null)

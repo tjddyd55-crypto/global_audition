@@ -1,18 +1,18 @@
 import localesMeta from '../../../messages/locales.json'
 
-const OFFICIAL_UI_LOCALES = ['ko', 'en', 'mn'] as const
+const OFFICIAL_UI_LOCALES = ['ko', 'en', 'mn', 'km', 'uz'] as const
 
-function readUiLocales(primary: readonly string[]): readonly ['ko', 'en', 'mn'] {
+function readUiLocales(primary: readonly string[]): typeof OFFICIAL_UI_LOCALES {
   const matches =
     primary.length === OFFICIAL_UI_LOCALES.length &&
     primary.every((locale, index) => locale === OFFICIAL_UI_LOCALES[index])
   if (!matches) {
-    throw new Error('messages/locales.json primary must stay ko, en, mn')
+    throw new Error('messages/locales.json primary must stay ko, en, mn, km, uz')
   }
   return OFFICIAL_UI_LOCALES
 }
 
-/** 공식 UI 로케일. 카탈로그 primary(ko/en/mn)가 SSOT다. */
+/** 공식 UI 로케일. 카탈로그 primary(ko/en/mn/km/uz)가 SSOT다. km=크메르어, uz=우즈베크어(라틴). */
 export const UI_LOCALES = readUiLocales(localesMeta.primary)
 export type UiLocale = (typeof UI_LOCALES)[number]
 
@@ -21,7 +21,7 @@ function readSelector(values: readonly string[] | undefined, fallback: UiLocale)
   return selected.length > 0 ? selected : [fallback]
 }
 
-/** 1차 공개 서비스에서 고를 수 있는 UI 언어. 카탈로그 자체는 ko/en/mn 을 유지한다. */
+/** 공개 서비스에서 고를 수 있는 UI 언어. */
 export const PUBLIC_SELECTOR = readSelector(localesMeta.publicSelector, 'en')
 
 export const AGENCY_UI_LOCALE: UiLocale = isUiLocale(localesMeta.agencyUiLocale)
@@ -109,4 +109,28 @@ function unprefixedPathname(pathname: string | null | undefined): string {
   if (!prefixed) return href
   const rest = href.split('/').slice(2).filter((segment) => segment.length > 0).join('/')
   return rest ? `/${rest}` : '/'
+}
+
+/** 언어 선택 메뉴에 보이는 자국어 이름. 번역 카탈로그와 무관하게 항상 해당 언어로 표시한다. */
+export const UI_LOCALE_NATIVE_NAMES: Record<UiLocale, string> = {
+  ko: '한국어',
+  en: 'English',
+  mn: 'Монгол',
+  km: 'ខ្មែរ',
+  uz: 'Oʻzbekcha',
+}
+
+/** Intl/number/date 포맷용 BCP-47 태그. */
+export const UI_LOCALE_INTL_TAGS: Record<UiLocale, string> = {
+  ko: 'ko-KR',
+  en: 'en-US',
+  mn: 'mn-MN',
+  km: 'km-KH',
+  uz: 'uz-Latn-UZ',
+}
+
+/** 화면 로케일 → Intl 태그. 알 수 없으면 en-US. */
+export function intlTagForUiLocale(locale: string | null | undefined): string {
+  const language = (locale ?? '').trim().toLowerCase().split(/[-_]/)[0]
+  return isUiLocale(language) ? UI_LOCALE_INTL_TAGS[language] : 'en-US'
 }

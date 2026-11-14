@@ -200,6 +200,8 @@ public class GoogleCloudTranslationProvider implements TranslationProvider {
             view.setKoreanSupported(supports(codes, "ko"));
             view.setEnglishSupported(supports(codes, "en"));
             view.setMongolianSupported(supports(codes, "mn"));
+            view.setKhmerSupported(supports(codes, "km"));
+            view.setUzbekSupported(supports(codes, "uz"));
         } catch (TranslationProviderException ex) {
             view.setCalledProvider(true);
             view.setState(AuditionTranslation.STATUS_FAILED);

@@ -8,6 +8,7 @@ import { dashboardApi } from '@/shared/api/dashboard'
 import { AgencyDashboardShell } from '@/components/agency/AgencyDashboardShell'
 import { useAuthStore } from '@/shared/auth/authStore'
 import { PAGE_CONTAINER, TEXT_SUB } from '@/shared/ui/specClasses'
+import { intlTagForUiLocale } from '@/shared/i18n/uiLocales'
 
 export default function MyAgencyStatsPage() {
   const t = useTranslations('common')
@@ -19,7 +20,7 @@ export default function MyAgencyStatsPage() {
   const accessToken = useAuthStore((s) => s.accessToken)
   const role = useAuthStore((s) => s.role)
   const [hydrated, setHydrated] = useState(false)
-  const numberLocale = locale.startsWith('ko') ? 'ko-KR' : locale.startsWith('mn') ? 'mn-MN' : 'en-US'
+  const numberLocale = intlTagForUiLocale(locale)
 
   useEffect(() => {
     useAuthStore.getState().syncFromStorage()

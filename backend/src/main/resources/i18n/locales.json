@@ -1,13 +1,13 @@
 {
-  "supported": ["ko", "en", "mn", "ja", "zh", "es", "fr", "de"],
-  "primary": ["ko", "en", "mn"],
+  "supported": ["ko", "en", "mn", "km", "uz", "ja", "zh", "es", "fr", "de"],
+  "primary": ["ko", "en", "mn", "km", "uz"],
   "defaultLocale": "en",
   "deviceFallback": "en",
-  "publicSelector": ["ko", "en", "mn"],
+  "publicSelector": ["ko", "en", "mn", "km", "uz"],
   "agencyUiLocale": "ko",
   "superAdminUiLocale": "ko",
-  "activeTranslationTargets": ["en", "ko", "mn"],
+  "activeTranslationTargets": ["en", "ko", "mn", "km", "uz"],
   "settlementCurrency": "USD",
-  "contentLocales": ["ko", "en", "mn", "ja", "zh", "es", "fr", "de"],
-  "providerLocales": ["ko", "en", "mn", "ja", "zh", "es", "fr", "de"]
+  "contentLocales": ["ko", "en", "mn", "km", "uz", "ja", "zh", "es", "fr", "de"],
+  "providerLocales": ["ko", "en", "mn", "km", "uz", "ja", "zh", "es", "fr", "de"]
 }

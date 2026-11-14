@@ -18,6 +18,13 @@ class ContentLocalesTest {
         assertEquals("zh", ContentLocales.normalize("zh-Hant"));
         assertEquals("en", ContentLocales.normalize("pt-BR"));
         assertTrue(ContentLocales.PRIMARY.contains("mn"));
+        assertTrue(ContentLocales.PRIMARY.contains("km"));
+        assertTrue(ContentLocales.PRIMARY.contains("uz"));
+        assertEquals("km", ContentLocales.normalize("km-KH"));
+        assertEquals("uz", ContentLocales.normalize("uz-Latn-UZ"));
+        assertEquals("uz", ContentLocales.normalize("uz_UZ"));
+        assertTrue(ContentLocales.isSupported("km"));
+        assertFalse(ContentLocales.isSupported("kh"));
         assertFalse(ContentLocales.isSupported("xx"));
     }
 

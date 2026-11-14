@@ -31,10 +31,18 @@ class Bcp47TagsTest {
         assertFalse(registry.providerSupports("pt-BR"));
         assertTrue(registry.uiLocale("mn"));
         assertFalse(registry.uiLocale("ja"));
-        assertEquals(java.util.List.of("ko", "en", "mn"), registry.publicSelector());
+        assertEquals(java.util.List.of("ko", "en", "mn", "km", "uz"), registry.publicSelector());
+        assertTrue(registry.uiLocale("km"));
+        assertTrue(registry.uiLocale("uz"));
+        // 국가 코드(KH, UZ)는 언어 코드가 아니다.
+        assertFalse(registry.uiLocale("kh"));
+        assertFalse(registry.providerSupports("kh"));
         assertEquals("ko", registry.agencyUiLocale());
         assertEquals("ko", registry.superAdminUiLocale());
-        assertEquals(java.util.List.of("en", "ko", "mn"), registry.activeTargets());
+        assertEquals(java.util.List.of("en", "ko", "mn", "km", "uz"), registry.activeTargets());
+        assertTrue(registry.activeTarget("km"));
+        assertTrue(registry.activeTarget("uz"));
+        assertTrue(registry.activeTarget("uz-Latn"));
         assertTrue(registry.activeTarget("en"));
         assertTrue(registry.activeTarget("mn"));
         assertFalse(registry.activeTarget("ja"));

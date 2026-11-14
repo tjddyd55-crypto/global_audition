@@ -34,10 +34,23 @@ export function resolveInitialLocale(stored?: string | null): string {
   return DEFAULT_LOCALE
 }
 
-/** 기기 언어는 1급 로케일(ko/en/mn)만 채택. 그 외는 en. 첫 실행 기본값으로는 쓰지 않는다. */
+/** 기기 언어는 1급 로케일(ko/en/mn/km/uz)만 채택. 그 외는 en. 첫 실행 기본값으로는 쓰지 않는다. */
 export function detectDeviceLocale(tag?: string | null): string {
   if (!tag) return DEVICE_FALLBACK
   const language = tag.trim().toLowerCase().replace('_', '-').split('-')[0]
   if (PRIMARY_LOCALES.includes(language)) return language
   return DEVICE_FALLBACK
+}
+
+/** 언어 메뉴에 보이는 자국어 이름. 카탈로그 번역과 무관하게 항상 그 언어로 표시한다. */
+export const LOCALE_NATIVE_NAMES: Record<string, string> = {
+  ko: '한국어',
+  en: 'English',
+  mn: 'Монгол',
+  km: 'ខ្មែរ',
+  uz: 'Oʻzbekcha',
+}
+
+export function nativeLanguageName(code: string): string {
+  return LOCALE_NATIVE_NAMES[code] ?? code.toUpperCase()
 }

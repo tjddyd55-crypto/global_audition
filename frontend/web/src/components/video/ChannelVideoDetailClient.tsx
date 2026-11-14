@@ -24,6 +24,7 @@ import {
   type ChannelVideoPublicDetail,
   type ChannelVideoRecommendItem,
 } from '@/shared/api/channelVideoPublic'
+import { intlTagForUiLocale } from '@/shared/i18n/uiLocales'
 
 const ACCENT = '#7c3aed'
 const DESC_PREVIEW_CHARS = 140
@@ -82,7 +83,7 @@ export function ChannelVideoDetailClient({ videoId, initialDetail }: Props) {
   const tChannel = useTranslations('channel')
   const tCommon = useTranslations('common')
   const tRelative = useTranslations('relative')
-  const numberLocale = locale.startsWith('ko') ? 'ko-KR' : locale.startsWith('mn') ? 'mn-MN' : 'en-US'
+  const numberLocale = intlTagForUiLocale(locale)
 
   const [isLoading, setIsLoading] = useState(true)
   const [detail, setDetail] = useState<ChannelVideoPublicDetail>(() => initialDetail)

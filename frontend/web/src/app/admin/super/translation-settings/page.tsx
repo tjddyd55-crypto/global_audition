@@ -98,7 +98,9 @@ export default function TranslationSettingsPage() {
       setProbe(
         `언어 조회 ${data.state}. ko ${data.koreanSupported ? '지원' : '없음'}, en ${
           data.englishSupported ? '지원' : '없음'
-        }, mn ${data.mongolianSupported ? '지원' : '없음'}.`,
+        }, mn ${data.mongolianSupported ? '지원' : '없음'}, km ${data.khmerSupported ? '지원' : '없음'}, uz ${
+          data.uzbekSupported ? '지원' : '없음'
+        }.`,
       )
     },
     onError: (err) => setProbe(errorMessage(err)),

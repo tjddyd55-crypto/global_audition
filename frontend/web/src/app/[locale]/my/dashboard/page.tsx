@@ -18,10 +18,11 @@ import {
 } from '@/shared/ui/specClasses'
 import { AgencyDashboardShell } from '@/components/agency/AgencyDashboardShell'
 import { applicationStatusMessageKey } from '@/shared/i18n/applicationStatusKey'
+import { intlTagForUiLocale } from '@/shared/i18n/uiLocales'
 
 function formatLocaleDate(iso: string | undefined, locale: string): string {
   if (!iso) return ''
-  const tag = locale.startsWith('ko') ? 'ko-KR' : locale.startsWith('mn') ? 'mn-MN' : 'en-US'
+  const tag = intlTagForUiLocale(locale)
   return new Date(iso).toLocaleDateString(tag)
 }
 

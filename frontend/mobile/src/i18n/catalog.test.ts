@@ -1,6 +1,8 @@
 import ko from '../../../web/messages/ko.json'
 import en from '../../../web/messages/en.json'
 import mn from '../../../web/messages/mn.json'
+import km from '../../../web/messages/km.json'
+import uz from '../../../web/messages/uz.json'
 import locales from '../../../web/messages/locales.json'
 import { DEFAULT_LOCALE, PRIMARY_LOCALES, detectDeviceLocale, normalizeLocale, resolveInitialLocale } from './runtime'
 
@@ -17,9 +19,11 @@ function keys(tree: Tree, prefix = ''): string[] {
 }
 
 describe('native i18n catalogs', () => {
-  it('shares the same ko/en/mn keys as web', () => {
+  it('shares the same ko/en/mn/km/uz keys as web', () => {
     expect(keys(en as Tree)).toEqual(keys(ko as Tree))
     expect(keys(mn as Tree)).toEqual(keys(ko as Tree))
+    expect(keys(km as Tree)).toEqual(keys(ko as Tree))
+    expect(keys(uz as Tree)).toEqual(keys(ko as Tree))
   })
 
   it('includes native shell copy on the shared catalog', () => {
@@ -31,9 +35,9 @@ describe('native i18n catalogs', () => {
   it('uses the same active locale list as web', () => {
     expect([...PRIMARY_LOCALES]).toEqual(locales.primary)
     expect(locales.defaultLocale).toBe('en')
-    expect(locales.publicSelector).toEqual(['ko', 'en', 'mn'])
+    expect(locales.publicSelector).toEqual(['ko', 'en', 'mn', 'km', 'uz'])
     expect(locales.agencyUiLocale).toBe('ko')
-    expect(locales.activeTranslationTargets).toEqual(['en', 'ko', 'mn'])
+    expect(locales.activeTranslationTargets).toEqual(['en', 'ko', 'mn', 'km', 'uz'])
     expect(locales.contentLocales).toEqual(locales.providerLocales)
   })
 
@@ -41,6 +45,9 @@ describe('native i18n catalogs', () => {
     expect(detectDeviceLocale('mn-MN')).toBe('mn')
     expect(detectDeviceLocale('ko-KR')).toBe('ko')
     expect(detectDeviceLocale('fr-FR')).toBe('en')
+    expect(detectDeviceLocale('km-KH')).toBe('km')
+    expect(detectDeviceLocale('uz-Latn-UZ')).toBe('uz')
+    expect(detectDeviceLocale('uz_UZ')).toBe('uz')
     expect(normalizeLocale('xx-YY')).toBe('en')
     expect(DEFAULT_LOCALE).toBe('en')
   })
@@ -50,6 +57,11 @@ describe('native i18n catalogs', () => {
     expect(resolveInitialLocale(undefined)).toBe('en')
     expect(resolveInitialLocale('ko')).toBe('ko')
     expect(resolveInitialLocale('mn')).toBe('mn')
+    expect(resolveInitialLocale('km')).toBe('km')
+    expect(resolveInitialLocale('uz')).toBe('uz')
+    // 국가 코드가 저장값으로 들어와도 언어로 오인하지 않는다.
+    expect(resolveInitialLocale('KH')).toBe('en')
+    expect(resolveInitialLocale('UZ')).toBe('en')
     expect(resolveInitialLocale('ja')).toBe('en')
   })
 })
