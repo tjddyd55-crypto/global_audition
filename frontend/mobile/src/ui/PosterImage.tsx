@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react'
 import { Image, StyleSheet, Text, View } from 'react-native'
 import { colors, radius } from '../theme/tokens'
-import { POSTER_ASPECT } from '../domain/auditionImages'
+import { isRenderablePosterUri, POSTER_ASPECT } from '../domain/auditionImages'
 
 /** Never show a silent blank frame for missing or broken Development poster URLs. */
 export function PosterImage({ uri, compact }: { uri?: string | null; compact?: boolean }) {
   const [failed, setFailed] = useState(false)
   const source = uri?.trim() || ''
   useEffect(() => setFailed(false), [source])
-  const showImage = source.length > 0 && !failed
+  // 상대 경로·SVG 는 RN Image 가 못 그려 빈 회색 칸이 되므로 바로 placeholder.
+  const showImage = isRenderablePosterUri(source) && !failed
 
   return (
     <View style={[styles.frame, compact && styles.compact]}>
