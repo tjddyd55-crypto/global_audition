@@ -81,6 +81,7 @@ export function AudienceFilter() {
     <View style={styles.wrap}>
       <View style={styles.clip}>
         <ScrollView
+          ref={scrollRef}
           horizontal={COUNTRY_FILTER_AXIS === 'horizontal'}
           nestedScrollEnabled
           showsHorizontalScrollIndicator={false}
