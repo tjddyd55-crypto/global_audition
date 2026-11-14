@@ -120,3 +120,13 @@ describe('official UI locales', () => {
     expect(redirectPathForSavedLocale('/ja/auditions', 'mn')).toBeNull()
   })
 })
+
+describe('signup countries stay independent of UI languages', () => {
+  it('does not offer KH/UZ as residence countries until the backend provisions them', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { COUNTRY_CODES } = require('../../utils/countries')
+    expect(COUNTRY_CODES).not.toContain('KH')
+    expect(COUNTRY_CODES).not.toContain('UZ')
+    expect(COUNTRY_CODES).toContain('MN')
+  })
+})
