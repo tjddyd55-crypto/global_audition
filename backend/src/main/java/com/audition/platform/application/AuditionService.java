@@ -150,18 +150,20 @@ public class AuditionService {
     }
 
     /**
-     * 모집 대상은 {@code country_code} (KR, MN, GLOBAL, JP, OTHER).
+     * 모집 대상은 {@code country_code} (KR, MN, GLOBAL, JP, KH, UZ, OTHER).
      * 개최 국가는 {@code host_country}. 매출 귀속은 기획사 지점 국가이며 여기 넣지 않는다.
      */
-    private static String normalizeCountryCode(String raw) {
+    static String normalizeCountryCode(String raw) {
         if (raw == null || raw.isBlank()) {
             return null;
         }
         String code = raw.trim().toUpperCase();
         return switch (code) {
-            case "KR", "MN", "GLOBAL", "JP", "OTHER" -> code;
+            case "KR", "MN", "GLOBAL", "JP", "KH", "UZ", "OTHER" -> code;
             case "KOREA", "KOR" -> "KR";
             case "MONGOLIA", "MNG" -> "MN";
+            case "CAMBODIA", "KHM" -> "KH";
+            case "UZBEKISTAN", "UZB" -> "UZ";
             case "WORLD", "ALL", "WW" -> "GLOBAL";
             default -> code.length() <= 16 ? code : code.substring(0, 16);
         };

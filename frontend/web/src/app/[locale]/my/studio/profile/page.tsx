@@ -6,9 +6,10 @@ import { useTranslations } from 'next-intl'
 import { meProfileApi } from '@/shared/api/meProfile'
 import { uploadAuditionImage } from '@/shared/api/uploads'
 import { COUNTRY_CODES, timezones } from '@/shared/utils/countries'
+import { nationalityOptionValues } from '@/shared/i18n/nationalityOptions'
 import { INPUT_BASE, TEXT_SUB, TITLE_PAGE } from '@/shared/ui/specClasses'
 
-const NATIONALITIES = ['', 'KR', 'MN', 'JP', 'OTHER'] as const
+const NATIONALITIES = nationalityOptionValues()
 
 export default function StudioProfilePage() {
   const t = useTranslations('studio')

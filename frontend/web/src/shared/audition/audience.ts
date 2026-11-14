@@ -1,5 +1,8 @@
-/** 기존 auditions.country_code 재사용. 새 컬럼을 만들지 않는다. */
-export const AUDITION_TARGET_COUNTRIES = ['KR', 'MN', 'GLOBAL', 'JP', 'OTHER'] as const
+/**
+ * 기존 auditions.country_code 재사용. 새 컬럼을 만들지 않는다.
+ * KH(캄보디아)·UZ(우즈베키스탄)는 국가 코드다. 언어 코드 km·uz 와 섞지 않는다.
+ */
+export const AUDITION_TARGET_COUNTRIES = ['KR', 'MN', 'GLOBAL', 'JP', 'KH', 'UZ', 'OTHER'] as const
 
 /**
  * 로케일을 국가 코드로 가리키는 힌트.
@@ -42,6 +45,8 @@ export function normalizeTargetCountry(raw?: string | null): AuditionTargetCount
   }
   if (code === 'KOR' || code === 'KOREA') return 'KR'
   if (code === 'MNG' || code === 'MONGOLIA') return 'MN'
+  if (code === 'KHM' || code === 'CAMBODIA') return 'KH'
+  if (code === 'UZB' || code === 'UZBEKISTAN') return 'UZ'
   if (code === 'WORLD' || code === 'ALL' || code === 'WW') return 'GLOBAL'
   return ''
 }

@@ -13,7 +13,7 @@ import FlagIcon from '../../components/FlagIcon'
 import { M_CARD_GAP, M_PAGE_X, M_SECTION_HEAD, M_SECTION_TITLE, M_SECTION_TOP } from '../../ui/mobileTokens'
 
 /** 모집 국가 타일. 값은 기존 오디션 국가 필터(AUDIENCE_FILTER_OPTIONS)와 같다. UI 언어와 무관하다. */
-const COUNTRY_TILES: Array<Exclude<AudienceFilterOption, 'ALL'>> = ['KR', 'MN', 'JP', 'OTHER']
+const COUNTRY_TILES: Array<Exclude<AudienceFilterOption, 'ALL'>> = ['KR', 'MN', 'JP', 'KH', 'UZ', 'OTHER']
 
 export default function MobileHomePage() {
   const t = useTranslations('home')
@@ -65,7 +65,7 @@ export default function MobileHomePage() {
         <div className={M_SECTION_HEAD}>
           <h2 className={M_SECTION_TITLE}>{t('recruitCountries')}</h2>
         </div>
-        <div className="grid grid-cols-4 gap-2" role="group" aria-label={t('recruitCountries')}>
+        <div className="grid grid-cols-3 gap-2" role="group" aria-label={t('recruitCountries')}>
           {COUNTRY_TILES.map((code) => {
             const active = country === code
             return (

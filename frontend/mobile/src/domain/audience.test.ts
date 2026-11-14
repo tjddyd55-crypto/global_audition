@@ -1,4 +1,4 @@
-import { normalizeAudienceCountry, openAuditionListParams } from './audience'
+import { AUDIENCE_FILTER_OPTIONS, normalizeAudienceCountry, openAuditionListParams } from './audience'
 
 describe('native audience scope', () => {
   it('does not derive the default country from the UI language', () => {
@@ -9,5 +9,13 @@ describe('native audience scope', () => {
     expect(openAuditionListParams('uz').country).toBe('ALL')
     expect(normalizeAudienceCountry('KR')).toBe('KR')
     expect(normalizeAudienceCountry('GLOBAL')).toBe('ALL')
+  })
+})
+
+describe('KH/UZ country filter', () => {
+  it('offers Cambodia and Uzbekistan as filter chips independent of language', () => {
+    expect(AUDIENCE_FILTER_OPTIONS).toEqual(['ALL', 'KR', 'MN', 'JP', 'KH', 'UZ', 'OTHER'])
+    expect(normalizeAudienceCountry('kh')).toBe('KH')
+    expect(normalizeAudienceCountry('UZ')).toBe('UZ')
   })
 })

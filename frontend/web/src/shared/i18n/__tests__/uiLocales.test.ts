@@ -123,9 +123,12 @@ describe('official UI locales', () => {
 })
 
 describe('signup countries stay independent of UI languages', () => {
-  it('does not offer KH/UZ as residence countries until the backend provisions them', () => {
-    expect(COUNTRY_CODES).not.toContain('KH')
-    expect(COUNTRY_CODES).not.toContain('UZ')
+  it('offers KH/UZ as residence countries (V66) while km/uz stay UI languages', () => {
+    expect(COUNTRY_CODES).toContain('KH')
+    expect(COUNTRY_CODES).toContain('UZ')
     expect(COUNTRY_CODES).toContain('MN')
+    expect(COUNTRY_CODES).not.toContain('km')
+    expect(isUiLocale('km')).toBe(true)
+    expect(isUiLocale('KH')).toBe(false)
   })
 })

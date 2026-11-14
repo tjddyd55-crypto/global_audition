@@ -35,7 +35,7 @@ public class PatchMeProfileRequest {
     @Size(max = 32)
     private String birthDate;
 
-    /** KR | MN | JP | OTHER. 빈 문자열이면 삭제. */
+    /** KR | MN | JP | KH | UZ | OTHER. 빈 문자열이면 삭제. */
     @Size(max = 16)
     private String nationality;
 

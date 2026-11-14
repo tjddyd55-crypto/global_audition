@@ -66,6 +66,8 @@ export function nationalityLabel(code: string | null | undefined, label: Labeler
   if (code === 'KR') return label('nationality.KR')
   if (code === 'MN') return label('nationality.MN')
   if (code === 'JP') return label('nationality.JP')
+  if (code === 'KH') return label('nationality.KH')
+  if (code === 'UZ') return label('nationality.UZ')
   if (code === 'OTHER') return label('nationality.OTHER')
   return code ?? ''
 }
@@ -81,4 +83,4 @@ export function snsPlatformLabel(platform: string, label: Labeler = t): string {
 }
 
 export const ALLOWED_SNS_PLATFORMS = ['instagram', 'tiktok', 'youtube', 'twitter', 'facebook', 'other'] as const
-export const ALLOWED_NATIONALITIES = ['KR', 'MN', 'JP', 'OTHER'] as const
+export const ALLOWED_NATIONALITIES = ['KR', 'MN', 'JP', 'KH', 'UZ', 'OTHER'] as const

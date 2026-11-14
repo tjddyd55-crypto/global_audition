@@ -199,6 +199,24 @@ export const superAdminApi = {
     return data
   },
 
+  translationQueue: async () => {
+    const { data } = await apiClient.get<{
+      byStatus: Record<string, number>
+      deferredPending: number
+      deferredBy: Record<string, number>
+      oldestActiveCreatedAt: string | null
+      recentFailed: { id: string; contentType: string; contentId: string; locale: string; errorCode?: string | null; attemptCount: number; maxAttempts: number; finishedAt?: string | null }[]
+    }>('/admin/translation-settings/queue')
+    return data
+  },
+
+  retryFailedTranslations: async (limit = 50) => {
+    const { data } = await apiClient.post<{ requeued: number }>('/admin/translation-settings/queue/retry-failed', null, {
+      params: { limit },
+    })
+    return data
+  },
+
   translationUsage: async (month?: string) => {
     const { data } = await apiClient.get<{
       month: string

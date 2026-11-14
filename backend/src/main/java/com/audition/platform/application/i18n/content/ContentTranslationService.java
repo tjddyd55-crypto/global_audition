@@ -161,8 +161,42 @@ public class ContentTranslationService {
             if (sameLocale(snapshot, target) || !locales.providerSupports(target)) {
                 continue;
             }
-            enqueue(loaded, target, hash, false, false, actor);
+            enqueueForPublish(loaded, target, hash, actor);
         }
+    }
+
+    /**
+     * 게시 시점 작업. 작업량·예산 제한에 걸려도 버리지 않고 run_after 를 뒤로 미뤄 PENDING 으로 넣는다.
+     * 같은 콘텐츠·로케일의 활성 작업은 하나뿐이다(부분 유니크 인덱스). 수동 번역은 덮지 않는다.
+     * 공급자는 여기서 부르지 않는다. 미룬 작업도 워커가 실행 직전에 예산을 다시 본다.
+     */
+    private Optional<UUID> enqueueForPublish(Loaded loaded, String locale, String hash, UUID actor) {
+        ContentSnapshot snapshot = loaded.snapshot();
+        String fieldHashes = SourceFieldHashes.ofContentFields(snapshot.fields());
+        StoredTranslation current = store.findTranslation(snapshot.contentType(), snapshot.contentId(), locale).orElse(null);
+        if (completedForSource(current, hash, fieldHashes) || protectedRow(current)) {
+            return Optional.empty();
+        }
+        Optional<StoredJob> active = store.findActiveJob(snapshot.contentType(), snapshot.contentId(), locale);
+        if (active.isPresent()) {
+            return Optional.of(active.get().id());
+        }
+        java.time.Instant runAfter = null;
+        String deferredBy = null;
+        try {
+            quota.check(actor, snapshot.agencyUserId());
+        } catch (ContentTranslationLimitException ex) {
+            deferredBy = ex.getCode();
+            runAfter = quota.deferUntil(deferredBy);
+        }
+        NewJob job = new NewJob(
+                UUID.randomUUID(), snapshot.contentType(), snapshot.contentId(), locale, hash,
+                actor, snapshot.agencyUserId(), properties.getMaxAttempts(), false, runAfter, deferredBy);
+        Optional<UUID> inserted = store.insertPendingJob(job);
+        if (inserted.isPresent()) {
+            return inserted;
+        }
+        return store.findActiveJob(snapshot.contentType(), snapshot.contentId(), locale).map(StoredJob::id);
     }
 
     private Optional<UUID> enqueue(Loaded loaded, String locale, String hash, boolean explicit, boolean force, UUID viewer) {

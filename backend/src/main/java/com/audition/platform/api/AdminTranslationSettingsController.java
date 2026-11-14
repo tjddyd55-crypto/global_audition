@@ -66,6 +66,16 @@ public class AdminTranslationSettingsController {
         return adminQuery.policy();
     }
 
+    @GetMapping("/queue")
+    public java.util.Map<String, Object> queue() {
+        return adminQuery.queueStatus();
+    }
+
+    @PostMapping("/queue/retry-failed")
+    public java.util.Map<String, Object> retryFailed(@RequestParam(defaultValue = "50") int limit) {
+        return adminQuery.retryFailed(limit);
+    }
+
     @GetMapping("/errors")
     public List<TranslationErrorView> errors() {
         return adminQuery.recentErrors();

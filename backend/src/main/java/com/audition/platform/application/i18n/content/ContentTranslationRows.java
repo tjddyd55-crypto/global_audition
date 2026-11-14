@@ -53,7 +53,15 @@ public final class ContentTranslationRows {
             UUID requestedBy,
             UUID agencyId,
             int maxAttempts,
-            boolean force) {
+            boolean force,
+            Instant runAfter,
+            String errorCode) {
+
+        /** 바로 실행할 작업. */
+        public NewJob(UUID id, String contentType, UUID contentId, String locale, String sourceHash,
+                      UUID requestedBy, UUID agencyId, int maxAttempts, boolean force) {
+            this(id, contentType, contentId, locale, sourceHash, requestedBy, agencyId, maxAttempts, force, null, null);
+        }
     }
 
     public record NewAttempt(

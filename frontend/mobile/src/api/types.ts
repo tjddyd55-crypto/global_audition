@@ -9,7 +9,7 @@ export type AuditionStatus = 'DRAFT' | 'OPEN' | 'CLOSED'
 export type ApplicationStatus = 'SUBMITTED' | 'REVIEWING' | 'REVIEWED' | 'ACCEPTED' | 'REJECTED'
 export type AgencyBoardStatus = 'PENDING' | 'REVIEWING' | 'APPROVED' | 'REJECTED'
 export type ProcessMode = 'SINGLE' | 'MULTI_ROUND'
-export type NationalityCode = 'KR' | 'MN' | 'JP' | 'OTHER'
+export type NationalityCode = 'KR' | 'MN' | 'JP' | 'KH' | 'UZ' | 'OTHER'
 
 export type AuthResponse = {
   token: string

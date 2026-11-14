@@ -93,6 +93,34 @@ class ProfileResidenceIT {
         assertEquals("KR", jdbc.queryForObject("SELECT nationality FROM users WHERE id = ?", String.class, userId));
     }
 
+    @Test
+    void cambodiaAndUzbekistanComeFromTheMigrationAndWorkAsResidenceAndNationality() throws Exception {
+        // V66 이 넣은 행이다. 이 테스트는 KH/UZ 를 직접 넣지 않는다.
+        assertEquals(2, jdbc.queryForObject(
+                "SELECT COUNT(*) FROM countries WHERE code IN ('KH', 'UZ')", Integer.class));
+        assertEquals(0, jdbc.queryForObject(
+                "SELECT COUNT(*) FROM country_admin_appointments WHERE country_code IN ('KH', 'UZ')", Integer.class));
+        String token = signup();
+        UUID userId = userId();
+        mvc.perform(patch("/api/me/profile").header("Authorization", token).contentType(APPLICATION_JSON)
+                        .content("{\"nationality\":\"kh\",\"countryCode\":\"uz\",\"timezone\":\"Asia/Tashkent\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.countryCode").value("UZ"))
+                .andExpect(jsonPath("$.data.nationality").value("KH"));
+        assertEquals("UZ", jdbc.queryForObject("SELECT country_code FROM users WHERE id = ?", String.class, userId));
+        assertEquals("KH", jdbc.queryForObject("SELECT nationality FROM users WHERE id = ?", String.class, userId));
+        mvc.perform(patch("/api/me/profile").header("Authorization", token).contentType(APPLICATION_JSON)
+                        .content("{\"nationality\":\"UZ\",\"countryCode\":\"KH\"}"))
+                .andExpect(status().isOk());
+        assertEquals("KH", jdbc.queryForObject("SELECT country_code FROM users WHERE id = ?", String.class, userId));
+        assertEquals("UZ", jdbc.queryForObject("SELECT nationality FROM users WHERE id = ?", String.class, userId));
+        // 언어 코드는 국가 코드가 아니다.
+        mvc.perform(patch("/api/me/profile").header("Authorization", token).contentType(APPLICATION_JSON)
+                        .content("{\"nationality\":\"km\"}"))
+                .andExpect(status().is4xxClientError());
+        assertEquals("UZ", jdbc.queryForObject("SELECT nationality FROM users WHERE id = ?", String.class, userId));
+    }
+
     private String signup() throws Exception {
         String nickname = "pr" + UUID.randomUUID().toString().replace("-", "").substring(0, 8);
         String created = mvc.perform(post("/api/auth/signup").contentType(APPLICATION_JSON)

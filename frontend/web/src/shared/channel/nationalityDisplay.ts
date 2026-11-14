@@ -1,18 +1,17 @@
-﻿import type { NationalityCode } from '@/shared/i18n/nationalityOptions'
+﻿import { isNationalityCode, type NationalityCode } from '@/shared/i18n/nationalityOptions'
 
 const NATIONALITY_FLAGS: Record<NationalityCode, string> = {
   KR: '🇰🇷',
   MN: '🇲🇳',
   JP: '🇯🇵',
+  KH: '🇰🇭',
+  UZ: '🇺🇿',
   OTHER: '',
 }
 
 export function knownNationalityCode(code: string | null | undefined): NationalityCode | null {
   const normalized = (code ?? '').trim().toUpperCase()
-  if (normalized === 'KR' || normalized === 'MN' || normalized === 'JP' || normalized === 'OTHER') {
-    return normalized
-  }
-  return null
+  return isNationalityCode(normalized) ? normalized : null
 }
 
 export function nationalityFlag(code: NationalityCode): string {

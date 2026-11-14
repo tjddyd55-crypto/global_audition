@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useTranslations } from 'next-intl'
 import { calculateAge } from '@/shared/audition/calculateAge'
+import { NATIONALITY_CODES, normalizeNationalityCode } from '@/shared/i18n/nationalityOptions'
 import type { MeProfileForApply } from '@/shared/api/meProfile'
 import ApplyFormAlerts from './applyForm/ApplyFormAlerts'
 import ApplyBasicInfoSection from './applyForm/ApplyBasicInfoSection'
@@ -19,7 +20,7 @@ function createApplySchema(videoRequired: string, birthFormat: string) {
     .object({
       name: z.string().max(120),
       birthDate: z.string(),
-      nationality: z.enum(['', 'KR', 'MN', 'JP', 'OTHER']),
+      nationality: z.enum(['', ...NATIONALITY_CODES]),
       videoUrl: z.string().min(1, videoRequired),
       introText: z.string().max(10000),
     })
@@ -93,9 +94,7 @@ export function AuditionApplyForm({ auditionId, disabled, meProfile, meProfileRe
     const name = meProfile.name?.trim() ?? ''
     const nickname = meProfile.nickname?.trim() ?? ''
     const birthDate = meProfile.birthDate?.trim() ?? ''
-    const rawNat = meProfile.nationality?.trim().toUpperCase() ?? ''
-    const nationality =
-      rawNat === 'KR' || rawNat === 'MN' || rawNat === 'JP' || rawNat === 'OTHER' ? rawNat : ''
+    const nationality = normalizeNationalityCode(meProfile.nationality)
     const introText = meProfile.introText?.trim() ?? ''
     const links = (meProfile.snsLinks ?? [])
       .filter((l) => l && l.platform?.trim() && l.url?.trim())

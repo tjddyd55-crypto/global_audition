@@ -1,8 +1,7 @@
 ﻿/**
  * 지원자 가입 국가. UI 언어(ko/en/mn/km/uz)와 따로 고른다.
  * 국가 코드(KH 캄보디아, UZ 우즈베키스탄)와 언어 코드(km, uz)는 서로 다른 값이다.
- * KH/UZ 는 백엔드 countries 테이블에 행이 생기기 전까지 가입 국가로 고를 수 없다
- * (COUNTRY_NOT_FOUND). 국가 개설은 운영 정책 결정 후 별도로 한다.
+ * KH/UZ 는 V66 마이그레이션이 countries 테이블에 행을 넣어 가입·거주 국가로 고를 수 있다.
  */
 export const COUNTRY_CODES = [
   'KR',
@@ -29,6 +28,8 @@ export const COUNTRY_CODES = [
   'MY',
   'TW',
   'HK',
+  'KH',
+  'UZ',
 ] as const
 
 export type CountryCode = (typeof COUNTRY_CODES)[number]
