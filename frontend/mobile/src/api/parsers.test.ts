@@ -138,6 +138,14 @@ describe('per-round voting fields', () => {
     expect(a.votingRounds).toEqual([3])
     expect(parseVotePage({ votingEnabled: false, items: [] }).votingEnabled).toBe(false)
     expect(parseVotePage({ items: [] }).votingEnabled).toBe(true)
-    expect(parseRankingPage({ votingEnabled: false, items: [] })).toEqual({ votingEnabled: false, items: [] })
+    expect(parseRankingPage({ votingEnabled: false, items: [] })).toEqual({
+      votingEnabled: false,
+      roundNumber: 1,
+      manageView: false,
+      items: [],
+    })
+    const pub = parseRankingPage({ roundNumber: 3, items: [{ applicationId: 'x', userName: 'A', avatarUrl: ' ', voteCount: 2, rank: 1, isVoted: true }] })
+    expect(pub.roundNumber).toBe(3)
+    expect(pub.items[0]).toMatchObject({ avatarUrl: null, voteCount: 2, rank: 1, isVoted: true, status: '' })
   })
 })

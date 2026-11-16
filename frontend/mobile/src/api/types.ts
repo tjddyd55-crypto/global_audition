@@ -258,11 +258,23 @@ export type ApplicantDashboard = {
 export type RankingItem = {
   applicationId: string
   userName: string
+  /** 공개 프로필 이미지(없으면 null) */
+  avatarUrl: string | null
   category: string
   voteCount: number
   viewCount: number
   status: string
   rank: number
+  /** 현재 회차 내 표 */
+  isVoted: boolean
+}
+
+/** 회차 랭킹 응답. 공개 응답은 득표·순위만, manageView(공고 기획사·관리자)일 때만 분류·상태 등이 채워진다. */
+export type RankingPage = {
+  votingEnabled: boolean
+  roundNumber: number
+  manageView: boolean
+  items: RankingItem[]
 }
 
 export type MeRoundEligibility = {

@@ -1,4 +1,4 @@
-import { canShowVoting, canViewRanking, isRankingAccessDenied, rankingViewState } from './ranking'
+import { canShowVoting, canViewRanking, isRankingAccessDenied, rankingAvatar, rankingViewState } from './ranking'
 
 const apiError = (status: number) => Object.assign(new Error('x'), { status })
 
@@ -24,12 +24,18 @@ describe('rankingViewState', () => {
 })
 
 describe('canViewRanking', () => {
-  it('only the owning agency sees the ranking entry', () => {
-    expect(canViewRanking({ role: 'AGENCY', userId: 'owner' }, 'owner')).toBe(true)
-    expect(canViewRanking({ role: 'AGENCY', userId: 'other' }, 'owner')).toBe(false)
-    expect(canViewRanking({ role: 'APPLICANT', userId: 'owner' }, 'owner')).toBe(false)
-    expect(canViewRanking(null, 'owner')).toBe(false)
-    expect(canViewRanking({ role: 'AGENCY', userId: '' }, '')).toBe(false)
+  it('ranking entry is public for voting rounds (no owner check)', () => {
+    expect(canViewRanking({ votingEnabled: true })).toBe(true)
+    expect(canViewRanking({})).toBe(true)
+    expect(canViewRanking({ votingEnabled: false })).toBe(false)
+  })
+})
+
+describe('rankingAvatar', () => {
+  it('uses absolute non-svg image, else initial', () => {
+    expect(rankingAvatar({ avatarUrl: 'https://cdn/x.jpg', userName: 'kim' })).toEqual({ uri: 'https://cdn/x.jpg', initial: 'K' })
+    expect(rankingAvatar({ avatarUrl: 'https://cdn/x.svg', userName: '박' }).uri).toBeNull()
+    expect(rankingAvatar({ avatarUrl: '/uploads/a.png', userName: '' })).toEqual({ uri: null, initial: '?' })
   })
 })
 
@@ -41,7 +47,6 @@ describe('per-round voting plan', () => {
   it('hides vote/ranking entry when voting is off for the current round', () => {
     expect(canShowVoting({ votingEnabled: false })).toBe(false)
     expect(canShowVoting({})).toBe(true)
-    expect(canViewRanking({ role: 'AGENCY', userId: 'owner' }, 'owner', false)).toBe(false)
-    expect(canViewRanking({ role: 'AGENCY', userId: 'owner' }, 'owner', true)).toBe(true)
+    expect(canViewRanking({ votingEnabled: false })).toBe(false)
   })
 })

@@ -1,6 +1,6 @@
 /**
- * 랭킹 API(GET /auditions/{id}/ranking)는 백엔드 정책상 해당 공고의 기획사(소유자)·관리자만 조회할 수 있다.
- * 지원자·비로그인 사용자는 401/403 을 받으므로 "불러오지 못함" 오류가 아니라 안내(restricted)로 보여 준다.
+ * 랭킹 API(GET /auditions/{id}/ranking): 투표를 켠 회차는 누구나(비로그인 포함) 볼 수 있고 공개 필드만 온다.
+ * 투표 없는 회차는 votingEnabled=false(비활성 안내). 401/403 은 이제 정상 흐름에서 오지 않지만 안내로 처리한다.
  */
 export type RankingViewState = 'loading' | 'restricted' | 'error' | 'disabled' | 'empty' | 'list'
 
@@ -28,14 +28,17 @@ export function canShowVoting(audition: { votingEnabled?: boolean } | null | und
   return audition?.votingEnabled !== false
 }
 
-/** 랭킹 진입 버튼은 공고 소유 기획사에게만 노출(앱에는 관리자 역할이 없다). 투표 없는 회차는 숨긴다. */
-export function canViewRanking(
-  session: { role?: string | null; userId?: string | null } | null | undefined,
-  ownerId: string | null | undefined,
-  votingEnabled: boolean = true,
-): boolean {
-  if (!votingEnabled) return false
-  if (!session || session.role !== 'AGENCY') return false
-  const owner = ownerId?.trim()
-  return Boolean(owner) && session.userId === owner
+/** 랭킹 진입 버튼: 투표를 켠 회차면 누구에게나 보인다(PR #124 의 소유 기획사 전용 노출을 되돌림). */
+export function canViewRanking(audition: { votingEnabled?: boolean } | null | undefined): boolean {
+  return canShowVoting(audition)
+}
+
+/** 공개 프로필 이미지가 RN 에서 그릴 수 있는 형식인지(아니면 이니셜). */
+export function rankingAvatar(item: { avatarUrl?: string | null; userName?: string }): { uri: string | null; initial: string } {
+  const url = item.avatarUrl?.trim() ?? ''
+  const name = item.userName?.trim() || '?'
+  return {
+    uri: /^https?:\/\//i.test(url) && !/\.svg(\?|#|$)/i.test(url) ? url : null,
+    initial: Array.from(name)[0]?.toUpperCase() ?? '?',
+  }
 }

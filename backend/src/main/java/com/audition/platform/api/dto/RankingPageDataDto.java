@@ -12,6 +12,11 @@ public class RankingPageDataDto {
     /** 현재 회차 투표(랭킹) 사용 여부. false 면 items 는 비어 있다. */
     private boolean votingEnabled = true;
     private int roundNumber = 1;
+    /** 공고 소유 기획사·관리자 응답이면 true(추가 필드 포함) */
+    private boolean manageView;
+
+    public boolean isManageView() { return manageView; }
+    public void setManageView(boolean manageView) { this.manageView = manageView; }
 
     public boolean isVotingEnabled() { return votingEnabled; }
     public void setVotingEnabled(boolean votingEnabled) { this.votingEnabled = votingEnabled; }

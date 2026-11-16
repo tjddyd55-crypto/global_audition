@@ -9,6 +9,11 @@ public class AdminAuditionRoundResponse {
     private int roundNumber;
     private String roundName;
     private String reviewMethod;
+    /** 공고 투표 설정 기준 이 회차 공개 투표 여부(단일 기준) */
+    private boolean votingEnabled;
+
+    public boolean isVotingEnabled() { return votingEnabled; }
+    public void setVotingEnabled(boolean votingEnabled) { this.votingEnabled = votingEnabled; }
     private String requiredSubmissionType;
     private Instant startAt;
     private Instant endAt;

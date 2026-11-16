@@ -1,11 +1,10 @@
 package com.audition.platform.application.ranking;
 
-import com.audition.platform.application.vote.VotingRoundPlan;
-
 import com.audition.platform.api.dto.RankingItemDto;
 import com.audition.platform.api.dto.RankingPageDataDto;
 import com.audition.platform.application.audition.ApplicantCardMetricsLoader;
 import com.audition.platform.application.me.MeApiMapping;
+import com.audition.platform.application.vote.VotingRoundPlan;
 import com.audition.platform.domain.audition.Application;
 import com.audition.platform.domain.audition.ApplicationRepository;
 import com.audition.platform.domain.audition.Audition;
@@ -14,6 +13,7 @@ import com.audition.platform.domain.score.ApplicationScore;
 import com.audition.platform.domain.score.ApplicationScoreRepository;
 import com.audition.platform.domain.user.User;
 import com.audition.platform.domain.user.UserRepository;
+import com.audition.platform.domain.vote.VoteRepository;
 import com.audition.platform.infra.SecurityUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -22,10 +22,22 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
+/**
+ * 회차 랭킹 = 현재 회차 득표 순위. 투표를 켠 회차는 누구나(비로그인 포함) 볼 수 있고, 투표 없는 회차는 비활성 상태를 돌려준다.
+ * <p>
+ * 공개 응답에는 공개 표시 이름·프로필 이미지·회차 득표·순위만 담는다(이메일·연락처·지원 상태·심사 점수 없음).
+ * 공고 소유 기획사·관리자는 같은 순위에 분류·조회수·지원 상태·추천 점수를 더 받는다({@code manageView=true}).
+ * </p>
+ */
 @Service
 public class AuditionRankingQueryService {
+
+    private static final List<String> LISTABLE_STATUSES = List.of("SUBMITTED", "REVIEWING", "ACCEPTED");
 
     private final AuditionRepository auditionRepository;
     private final ApplicationRepository applicationRepository;
@@ -33,6 +45,7 @@ public class AuditionRankingQueryService {
     private final UserRepository userRepository;
     private final ApplicationRankingService applicationRankingService;
     private final ApplicantCardMetricsLoader metricsLoader;
+    private final VoteRepository voteRepository;
 
     public AuditionRankingQueryService(
             AuditionRepository auditionRepository,
@@ -40,73 +53,103 @@ public class AuditionRankingQueryService {
             ApplicationScoreRepository applicationScoreRepository,
             UserRepository userRepository,
             ApplicationRankingService applicationRankingService,
-            ApplicantCardMetricsLoader metricsLoader) {
+            ApplicantCardMetricsLoader metricsLoader,
+            VoteRepository voteRepository) {
         this.auditionRepository = auditionRepository;
         this.applicationRepository = applicationRepository;
         this.applicationScoreRepository = applicationScoreRepository;
         this.userRepository = userRepository;
         this.applicationRankingService = applicationRankingService;
         this.metricsLoader = metricsLoader;
+        this.voteRepository = voteRepository;
     }
 
     public RankingPageDataDto getRanking(UUID auditionId) {
         Audition audition = auditionRepository.findById(auditionId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "오디션을 찾을 수 없습니다."));
-        assertAgencyOrAdminCanManageAudition(audition);
+        boolean manager = isOwnerOrAdmin(audition);
+        if (!manager && "DRAFT".equals(audition.getStatus())) {
+            // 게시 전 공고의 랭킹은 공개하지 않는다.
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "오디션을 찾을 수 없습니다.");
+        }
+        int round = VotingRoundPlan.activeRound(audition);
 
-        // 랭킹은 투표를 따른다. 이 회차가 투표 없음이면 오류가 아니라 비활성 상태로 돌려준다(데이터는 유지).
+        RankingPageDataDto out = new RankingPageDataDto();
+        out.setRoundNumber(round);
+        out.setManageView(manager);
+        // 랭킹은 투표를 따른다. 이 회차가 투표 없음이면 오류가 아니라 비활성 상태(데이터는 유지).
         if (!VotingRoundPlan.enabledNow(audition)) {
-            RankingPageDataDto disabled = new RankingPageDataDto();
-            disabled.setVotingEnabled(false);
-            disabled.setRoundNumber(VotingRoundPlan.activeRound(audition));
-            return disabled;
+            out.setVotingEnabled(false);
+            return out;
         }
 
-        if (applicationScoreRepository.countByAuditionId(auditionId) == 0) {
-            applicationRankingService.recalculateScores(auditionId);
+        List<Application> candidates = applicationRepository
+                .findByAuditionIdAndStatusInOrderByCreatedAtDesc(auditionId, LISTABLE_STATUSES).stream()
+                .filter(app -> VotingRoundPlan.isRoundCandidate(audition, app, round))
+                .sorted(Comparator.comparing(Application::getCreatedAt))
+                .collect(Collectors.toList());
+        Map<UUID, Long> votes = applicationRankingService.currentRoundVotes(auditionId);
+
+        UUID viewerId = SecurityUtils.getCurrentUserId();
+        UUID myVoteApp = viewerId == null ? null
+                : voteRepository.findByAuditionIdAndUserIdAndRoundNumber(auditionId, viewerId, round)
+                        .map(v -> v.getApplicationId()).orElse(null);
+
+        Map<UUID, ApplicationScore> scores = Map.of();
+        if (manager && !candidates.isEmpty()) {
+            if (applicationScoreRepository.countByAuditionId(auditionId) == 0) {
+                applicationRankingService.recalculateScores(auditionId);
+            }
+            scores = applicationScoreRepository.findByAuditionId(auditionId).stream()
+                    .collect(Collectors.toMap(ApplicationScore::getApplicationId, Function.identity(), (a, b) -> a));
         }
 
-        List<ApplicationScore> scores = new ArrayList<>(applicationScoreRepository.findByAuditionId(auditionId));
-        scores.sort(Comparator.comparingInt(s -> s.getRecommendedRank() != null ? s.getRecommendedRank() : Integer.MAX_VALUE));
+        // 득표 내림차순, 동률은 먼저 지원한 순. 같은 득표는 같은 순위(1,1,3).
+        List<Application> ordered = new ArrayList<>(candidates);
+        ordered.sort(Comparator.comparingLong((Application a) -> votes.getOrDefault(a.getId(), 0L)).reversed());
 
         List<RankingItemDto> items = new ArrayList<>();
-        for (ApplicationScore sc : scores) {
-            Application app = applicationRepository.findById(sc.getApplicationId()).orElse(null);
-            if (app == null) {
-                continue;
-            }
+        long prevVotes = -1;
+        int prevRank = 0;
+        for (int i = 0; i < ordered.size(); i++) {
+            Application app = ordered.get(i);
+            long v = votes.getOrDefault(app.getId(), 0L);
+            int rank = v == prevVotes ? prevRank : i + 1;
+            prevVotes = v;
+            prevRank = rank;
+
             User u = userRepository.findById(app.getApplicantId()).orElse(null);
-            var m = metricsLoader.resolve(app);
             RankingItemDto dto = new RankingItemDto();
             dto.setApplicationId(app.getId().toString());
             dto.setUserName(u != null ? u.getPublicDisplayLabel() : "");
-            dto.setCategory(m.category());
-            dto.setVoteCount(sc.getVoteCount());
-            dto.setViewCount(sc.getTotalViewCount());
-            dto.setStatus(MeApiMapping.applicationStatusToApi(app.getStatus()));
-            dto.setScore(sc.getWeightedScore());
-            dto.setRank(sc.getRecommendedRank() != null ? sc.getRecommendedRank() : 0);
-            dto.setRecommended(sc.isRecommended());
-            dto.setVoted(false);
+            dto.setAvatarUrl(u != null ? blankToNull(u.getProfileImageUrl()) : null);
+            dto.setVoteCount(v);
+            dto.setRank(rank);
+            dto.setVoted(app.getId().equals(myVoteApp));
+            if (manager) {
+                var m = metricsLoader.resolve(app);
+                ApplicationScore sc = scores.get(app.getId());
+                dto.setCategory(m.category());
+                dto.setViewCount(m.viewCount());
+                dto.setStatus(MeApiMapping.applicationStatusToApi(app.getStatus()));
+                dto.setScore(sc != null ? sc.getWeightedScore() : 0.0);
+                dto.setRecommended(sc != null && sc.isRecommended());
+            }
             items.add(dto);
         }
-
-        RankingPageDataDto out = new RankingPageDataDto();
         out.setItems(items);
-        out.setRoundNumber(VotingRoundPlan.activeRound(audition));
         return out;
     }
 
-    private void assertAgencyOrAdminCanManageAudition(Audition audition) {
+    private static boolean isOwnerOrAdmin(Audition audition) {
         UUID currentUserId = SecurityUtils.getCurrentUserId();
-        if (currentUserId == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
+        if (currentUserId == null || SecurityUtils.hasRole("APPLICANT")) {
+            return false;
         }
-        if (SecurityUtils.hasRole("APPLICANT")) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "지원자는 이 작업을 수행할 수 없습니다.");
-        }
-        if (!audition.getOwnerId().equals(currentUserId) && !SecurityUtils.hasRole("ADMIN")) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "해당 오디션을 관리할 권한이 없습니다.");
-        }
+        return audition.getOwnerId().equals(currentUserId) || SecurityUtils.hasRole("ADMIN");
+    }
+
+    private static String blankToNull(String s) {
+        return s == null || s.isBlank() ? null : s;
     }
 }

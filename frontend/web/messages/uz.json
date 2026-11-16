@@ -532,7 +532,8 @@
     "votes": "Ovozlar",
     "recommend": "Tavsiya",
     "loading": "Yuklanmoqda…",
-    "disabledRound": "Bu bosqichda reyting yuritilmaydi."
+    "disabledRound": "Bu bosqichda reyting yuritilmaydi.",
+    "roundBasis": "{round}-bosqich ovozlari asosida"
   },
   "profile": {
     "title": "Profil",

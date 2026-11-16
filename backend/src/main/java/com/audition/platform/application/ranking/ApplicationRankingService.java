@@ -3,7 +3,10 @@ package com.audition.platform.application.ranking;
 import com.audition.platform.application.audition.ApplicantCardMetricsLoader;
 import com.audition.platform.application.audition.ApplicantCardMetricsLoader.ApplicantCardMetrics;
 import com.audition.platform.domain.audition.Application;
+import com.audition.platform.application.vote.VotingRoundPlan;
 import com.audition.platform.domain.audition.ApplicationRepository;
+import com.audition.platform.domain.audition.AuditionRepository;
+import com.audition.platform.domain.vote.VoteRepository;
 import com.audition.platform.domain.score.ApplicationScore;
 import com.audition.platform.domain.score.ApplicationScoreRepository;
 import org.springframework.stereotype.Service;
@@ -12,7 +15,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -35,14 +40,31 @@ public class ApplicationRankingService {
     private final ApplicationRepository applicationRepository;
     private final ApplicationScoreRepository applicationScoreRepository;
     private final ApplicantCardMetricsLoader metricsLoader;
+    private final AuditionRepository auditionRepository;
+    private final VoteRepository voteRepository;
 
     public ApplicationRankingService(
             ApplicationRepository applicationRepository,
             ApplicationScoreRepository applicationScoreRepository,
-            ApplicantCardMetricsLoader metricsLoader) {
+            ApplicantCardMetricsLoader metricsLoader,
+            AuditionRepository auditionRepository,
+            VoteRepository voteRepository) {
         this.applicationRepository = applicationRepository;
         this.applicationScoreRepository = applicationScoreRepository;
         this.metricsLoader = metricsLoader;
+        this.auditionRepository = auditionRepository;
+        this.voteRepository = voteRepository;
+    }
+
+    /** 현재 회차 득표(지원 ID → 표 수). 회차마다 새로 받으므로 점수·랭킹은 이 값을 쓴다. */
+    public Map<UUID, Long> currentRoundVotes(UUID auditionId) {
+        Map<UUID, Long> out = new HashMap<>();
+        auditionRepository.findById(auditionId).ifPresent(a -> {
+            for (Object[] r : voteRepository.countByApplicationForRound(auditionId, VotingRoundPlan.activeRound(a))) {
+                out.merge((UUID) r[0], ((Number) r[1]).longValue(), Long::sum);
+            }
+        });
+        return out;
     }
 
     /**
@@ -55,10 +77,11 @@ public class ApplicationRankingService {
             return;
         }
 
+        Map<UUID, Long> roundVotes = currentRoundVotes(auditionId);
         List<ScoreRow> rows = new ArrayList<>();
         for (Application app : apps) {
             ApplicantCardMetrics m = metricsLoader.resolve(app);
-            rows.add(new ScoreRow(app, m, app.getVoteCount()));
+            rows.add(new ScoreRow(app, m, roundVotes.getOrDefault(app.getId(), 0L)));
         }
 
         long maxVote = rows.stream().mapToLong(r -> r.voteCount).max().orElse(0);

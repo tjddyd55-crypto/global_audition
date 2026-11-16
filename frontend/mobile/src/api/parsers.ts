@@ -18,6 +18,7 @@ import type {
   PublicVoteItem,
   PublicVotesPage,
   RankingItem,
+  RankingPage,
   UserRole,
 } from './types'
 
@@ -399,9 +400,14 @@ export function parseInsufficientCredits(raw: unknown): InsufficientCredits | nu
 }
 
 /** 랭킹 응답 전체: votingEnabled=false 면 공고 설정상 이 회차는 랭킹 없음(오류 아님). */
-export function parseRankingPage(raw: unknown): { votingEnabled: boolean; items: RankingItem[] } {
+export function parseRankingPage(raw: unknown): RankingPage {
   const body = asRecord(raw)
-  return { votingEnabled: body.votingEnabled !== false, items: parseRankingItems(raw) }
+  return {
+    votingEnabled: body.votingEnabled !== false,
+    roundNumber: asNumber(body.roundNumber, 1) || 1,
+    manageView: body.manageView === true,
+    items: parseRankingItems(raw),
+  }
 }
 
 export function parseRankingItems(raw: unknown): RankingItem[] {
@@ -412,11 +418,13 @@ export function parseRankingItems(raw: unknown): RankingItem[] {
     return {
       applicationId: asString(r.applicationId),
       userName: asString(r.userName),
+      avatarUrl: asString(r.avatarUrl).trim() || null,
       category: asString(r.category),
       voteCount: asNumber(r.voteCount),
       viewCount: asNumber(r.viewCount),
       status: asString(r.status),
       rank: asNumber(r.rank),
+      isVoted: r.isVoted === true,
     }
   })
 }

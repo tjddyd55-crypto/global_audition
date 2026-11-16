@@ -232,7 +232,8 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback }: Props) {
                 <div className="p-4">
                   <p className="text-base font-bold text-gray-900">{item.userName || t('nameUnset')}</p>
                   <p className={`${TEXT_SUB} mt-1 line-clamp-2 text-sm`}>
-                    {item.description?.trim() ? item.description : item.userEmail}
+                    {/* 공개 화면: 이메일은 노출하지 않는다(서버도 비워서 보낸다). */}
+                    {item.description?.trim() ? item.description : ''}
                   </p>
                   <div
                     className={`mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-[#E5E7EB] pt-4 ${

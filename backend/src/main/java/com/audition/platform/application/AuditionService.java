@@ -660,6 +660,10 @@ public class AuditionService {
             auditionLocalizationService.onSourceWritten(audition, true);
         }
         Audition saved = auditionRepository.save(audition);
+        if (request.getVotingRounds() != null) {
+            // 회차 심사 방식(PUBLIC_VOTE)을 공고 투표 설정에 맞춘다. 공고 설정이 단일 기준이다.
+            auditionRoundService.syncReviewMethodsFromPlan(saved);
+        }
         if (originalChanged || enteredOpen(previousStatus, saved.getStatus())) {
             enqueuePostingTranslation(saved);
         }

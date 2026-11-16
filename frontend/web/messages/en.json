@@ -532,7 +532,8 @@
     "votes": "Votes",
     "recommend": "Featured",
     "loading": "Loading…",
-    "disabledRound": "This round has no ranking."
+    "disabledRound": "This round has no ranking.",
+    "roundBasis": "Based on round {round} votes"
   },
   "profile": {
     "title": "Profile",

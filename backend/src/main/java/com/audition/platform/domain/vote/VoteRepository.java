@@ -1,6 +1,8 @@
 package com.audition.platform.domain.vote;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -8,16 +10,16 @@ import java.util.UUID;
 
 public interface VoteRepository extends JpaRepository<Vote, UUID> {
 
-    Optional<Vote> findByAuditionIdAndUserId(UUID auditionId, UUID userId);
+    /** 회차 단위 내 표 (사용자는 오디션·회차마다 1표). */
+    Optional<Vote> findByAuditionIdAndUserIdAndRoundNumber(UUID auditionId, UUID userId, Integer roundNumber);
 
-    Optional<Vote> findByUserIdAndApplicationId(UUID userId, UUID applicationId);
+    long countByAuditionIdAndRoundNumber(UUID auditionId, Integer roundNumber);
 
-    void deleteByAuditionIdAndUserId(UUID auditionId, UUID userId);
+    long countByAuditionId(UUID auditionId);
 
-    /** 라운드 단위 투표 (round_id NOT NULL) */
-    Optional<Vote> findByRoundIdAndUserId(UUID roundId, UUID userId);
-
-    List<Vote> findByRoundId(UUID roundId);
-
-    long countByApplicationRoundSubmissionId(UUID applicationRoundSubmissionId);
+    /** [applicationId, count] — 해당 회차 득표 집계. */
+    @Query("select v.applicationId, count(v) from Vote v "
+            + "where v.auditionId = :auditionId and v.roundNumber = :roundNumber group by v.applicationId")
+    List<Object[]> countByApplicationForRound(
+            @Param("auditionId") UUID auditionId, @Param("roundNumber") Integer roundNumber);
 }

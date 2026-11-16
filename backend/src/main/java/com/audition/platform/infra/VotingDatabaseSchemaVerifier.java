@@ -61,8 +61,8 @@ public class VotingDatabaseSchemaVerifier implements ApplicationRunner {
         if (!columnExists("applications", "vote_count")) {
             failures.add("컬럼 applications.vote_count 없음");
         }
-        if (!uniqueVotesUserAuditionLegacyExists()) {
-            failures.add("투표 유일성: uq_votes_user_audition 제약 또는 uq_votes_user_audition_legacy 인덱스 없음");
+        if (!uniqueVotesPerRoundExists()) {
+            failures.add("투표 유일성: uq_votes_user_audition_round 인덱스 없음(V68)");
         }
 
         if (failures.isEmpty()) {
@@ -95,22 +95,12 @@ public class VotingDatabaseSchemaVerifier implements ApplicationRunner {
         return n != null && n > 0;
     }
 
-    /** 레거시: (user_id, audition_id) 단일 투표 — V22 이후 partial unique 인덱스로 대체 가능 */
-    private boolean uniqueVotesUserAuditionLegacyExists() {
-        Integer con = jdbcTemplate.queryForObject(
-                """
-                SELECT COUNT(*) FROM pg_constraint
-                WHERE conname = 'uq_votes_user_audition'
-                  AND contype = 'u'
-                """,
-                Integer.class);
-        if (con != null && con > 0) {
-            return true;
-        }
+    /** V68: 사용자는 (오디션, 회차)마다 1표 — partial unique 인덱스. */
+    private boolean uniqueVotesPerRoundExists() {
         Integer idx = jdbcTemplate.queryForObject(
                 """
                 SELECT COUNT(*) FROM pg_indexes
-                WHERE schemaname = 'public' AND indexname = 'uq_votes_user_audition_legacy'
+                WHERE schemaname = 'public' AND indexname = 'uq_votes_user_audition_round'
                 """,
                 Integer.class);
         return idx != null && idx > 0;

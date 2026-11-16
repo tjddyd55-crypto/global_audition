@@ -16,7 +16,7 @@ import {
  */
 const COPY = {
   title: '투표·랭킹 설정',
-  hint: '회차별로 공개 투표와 랭킹을 쓸지 정합니다. 투표를 끈 회차에는 투표 보기·랭킹 버튼이 보이지 않습니다.',
+  hint: '회차별로 공개 투표와 랭킹을 쓸지 정합니다. 투표를 켠 회차는 회차마다 새로 투표를 받고(1인 1표), 랭킹은 누구나 볼 수 있습니다. 투표를 끈 회차에는 투표·랭킹 버튼이 보이지 않습니다.',
   roundCount: '총 회차 수',
   presets: { NONE: '투표 없음', FINAL: '마지막 회차만', ALL: '모든 회차' } as Record<Exclude<VotingPreset, 'CUSTOM'>, string>,
   custom: '직접 선택',
