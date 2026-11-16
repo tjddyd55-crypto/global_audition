@@ -38,7 +38,7 @@ export default function HomeScreen() {
         <Text style={styles.heroBody}>{t('home.heroBody')}</Text>
         <View style={styles.heroActions}>
           <Button label={t('home.browse')} onPress={() => router.push('/(tabs)/auditions')} />
-          <Button label={t('common.channels')} onPress={() => router.push('/channels')} />
+          <Button label={t('common.channels')} onPress={() => router.push('/(tabs)/channels')} />
           <Button label={t('common.videos')} onPress={() => router.push('/videos')} />
           <Button label={t('common.agencies')} onPress={() => router.push('/agencies')} />
         </View>
