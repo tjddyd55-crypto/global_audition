@@ -271,7 +271,6 @@ public class AuditionResponse {
         return seriesRound;
     }
 
-    @JsonProperty("round")
     public Integer getVotingRoundCount() { return votingRoundCount; }
     public void setVotingRoundCount(Integer votingRoundCount) { this.votingRoundCount = votingRoundCount; }
     public Integer[] getVotingRounds() { return votingRounds; }
@@ -281,6 +280,7 @@ public class AuditionResponse {
     public int getVotingRoundNumber() { return votingRoundNumber; }
     public void setVotingRoundNumber(int votingRoundNumber) { this.votingRoundNumber = votingRoundNumber; }
 
+    @JsonProperty("round")
     public void setSeriesRound(int seriesRound) {
         this.seriesRound = seriesRound;
     }
