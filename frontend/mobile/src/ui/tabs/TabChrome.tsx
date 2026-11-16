@@ -57,7 +57,6 @@ const GLYPHS: Record<NativeTabIcon, (color: string) => ReactNode> = {
   film: (color) => <FilmGlyph color={color} />,
   star: (color) => <VoteGlyph color={color} />,
   users: (color) => <ChannelsGlyph color={color} />,
-  list: (color) => <ListGlyph color={color} />,
   person: (color) => <ProfileGlyph color={color} />,
 }
 
@@ -93,16 +92,6 @@ function ChannelsGlyph({ color }: { color: string }) {
       <View style={{ width: 13, height: 6, borderTopLeftRadius: 7, borderTopRightRadius: 7, borderWidth: STROKE, borderBottomWidth: 0, borderColor: color }} />
       <View style={{ position: 'absolute', top: 4, left: 0, width: 5, height: 5, borderRadius: 3, borderWidth: 1.5, borderColor: color }} />
       <View style={{ position: 'absolute', top: 4, right: 0, width: 5, height: 5, borderRadius: 3, borderWidth: 1.5, borderColor: color }} />
-    </View>
-  )
-}
-
-function ListGlyph({ color }: { color: string }) {
-  return (
-    <View style={styles.list}>
-      <View style={[styles.listLine, styles.listLineLong, { backgroundColor: color }]} />
-      <View style={[styles.listLine, styles.listLineShort, { backgroundColor: color }]} />
-      <View style={[styles.listLine, styles.listLineLong, { backgroundColor: color }]} />
     </View>
   )
 }
