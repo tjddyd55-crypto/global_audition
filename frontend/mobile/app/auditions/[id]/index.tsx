@@ -74,11 +74,23 @@ export default function AuditionDetailScreen() {
             />
             <Text style={styles.title}>{auditionHeadlineTitle(audition)}</Text>
             <Text style={styles.meta}>{audition.agencyName}</Text>
+            <View style={styles.quickInfo}>
+              {audition.countryCode ? (
+                <Text style={styles.meta}>{t(`countries.${audition.countryCode}`, { defaultValue: audition.countryCode })}</Text>
+              ) : null}
+              {audition.deadlineAt || audition.endDate ? (
+                <Text style={styles.meta}>{t('auditionDetail.endDate')}: {audition.deadlineAt?.slice(0, 10) || audition.endDate.slice(0, 10)}</Text>
+              ) : null}
+              {audition.createdAt ? (
+                <Text style={styles.meta}>{t('auditionDetail.registeredAt')}: {audition.createdAt.slice(0, 10)}</Text>
+              ) : null}
+            </View>
             {audition.canApply === false ? (
               <Text style={styles.warn}>
                 {applyBlockedDisplayMessage(audition.applyBlockedCode, t('apply.prevRoundBlocked'), t('apply.failed'))}
               </Text>
             ) : null}
+            <Text style={styles.section}>{t('auditionDetail.description')}</Text>
             <Text style={styles.desc}>{audition.description}</Text>
             {audition.contentLocaleFallback ? <Text style={styles.warn}>{t('auditionDetail.contentFallback')}</Text> : null}
             {audition.translationStale ? <Text style={styles.warn}>{t('auditionDetail.translationStale')}</Text> : null}
@@ -108,6 +120,14 @@ export default function AuditionDetailScreen() {
               <Button label={t('auditionDetail.viewVote')} variant="secondary" onPress={() => router.push(`/auditions/${id}/vote`)} />
               <Button label={t('common.ranking')} variant="secondary" onPress={() => router.push(`/auditions/${id}/ranking`)} />
             </View>
+            {(audition.galleryImages ?? []).length > 0 ? (
+              <View style={styles.gallery}>
+                <Text style={styles.section}>{t('auditionDetail.imagesHeading')}</Text>
+                {audition.galleryImages.map((uri, index) => (
+                  <PosterImage key={uri + index} uri={uri} compact />
+                ))}
+              </View>
+            ) : null}
             {audition.videoUrl ? (
               <Button label={t('auditionDetail.introVideo')} variant="secondary" onPress={() => void Linking.openURL(audition.videoUrl ?? '')} />
             ) : null}
@@ -134,6 +154,8 @@ function Info({ label, items }: { label: string; items: string[] }) {
 
 const styles = StyleSheet.create({
   body: { padding: 16, gap: 10, paddingBottom: 24 },
+  quickInfo: { backgroundColor: colors.heroStart, borderRadius: 10, padding: 12, gap: 6 },
+  gallery: { gap: 10, marginTop: 8 },
   title: { fontSize: 24, fontWeight: '800', color: colors.text },
   meta: { color: colors.muted, fontSize: 14 },
   desc: { color: colors.muted, fontSize: 14, lineHeight: 22 },

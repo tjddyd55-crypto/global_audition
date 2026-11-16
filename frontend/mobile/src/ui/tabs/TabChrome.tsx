@@ -56,7 +56,7 @@ const GLYPHS: Record<NativeTabIcon, (color: string) => ReactNode> = {
   home: (color) => <HomeGlyph color={color} />,
   film: (color) => <FilmGlyph color={color} />,
   star: (color) => <VoteGlyph color={color} />,
-  list: (color) => <ListGlyph color={color} />,
+  users: (color) => <ChannelsGlyph color={color} />,
   person: (color) => <ProfileGlyph color={color} />,
 }
 
@@ -85,12 +85,13 @@ function VoteGlyph({ color }: { color: string }) {
   )
 }
 
-function ListGlyph({ color }: { color: string }) {
+function ChannelsGlyph({ color }: { color: string }) {
   return (
-    <View style={styles.list}>
-      <View style={[styles.listLine, styles.listLineLong, { backgroundColor: color }]} />
-      <View style={[styles.listLine, styles.listLineShort, { backgroundColor: color }]} />
-      <View style={[styles.listLine, styles.listLineLong, { backgroundColor: color }]} />
+    <View style={{ width: 20, height: 20, alignItems: 'center', justifyContent: 'center' }}>
+      <View style={{ width: 7, height: 7, borderRadius: 4, borderWidth: STROKE, borderColor: color, marginBottom: 1 }} />
+      <View style={{ width: 13, height: 6, borderTopLeftRadius: 7, borderTopRightRadius: 7, borderWidth: STROKE, borderBottomWidth: 0, borderColor: color }} />
+      <View style={{ position: 'absolute', top: 4, left: 0, width: 5, height: 5, borderRadius: 3, borderWidth: 1.5, borderColor: color }} />
+      <View style={{ position: 'absolute', top: 4, right: 0, width: 5, height: 5, borderRadius: 3, borderWidth: 1.5, borderColor: color }} />
     </View>
   )
 }

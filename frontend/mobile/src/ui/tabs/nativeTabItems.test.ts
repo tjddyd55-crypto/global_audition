@@ -29,7 +29,7 @@ const CATALOGS: ['ko' | 'en' | 'mn' | 'km' | 'uz', NavCatalog][] = [
 
 describe('native bottom tabs', () => {
   it('gives each route one label key and one icon', () => {
-    expect(ROUTES).toEqual(['index', 'auditions', 'vote', 'applications', 'profile'])
+    expect(ROUTES).toEqual(['index', 'auditions', 'channels', 'vote', 'profile'])
     const labelKeys = ROUTES.map((route) => tabChrome(route).labelKey)
     const icons = ROUTES.map((route) => tabChrome(route).icon)
     expect(new Set(labelKeys).size).toBe(ROUTES.length)
@@ -50,8 +50,8 @@ describe('native bottom tabs', () => {
   it('keeps ko/en/mn/km/uz tab names on a single line', () => {
     for (const [locale, messages] of CATALOGS) {
       const labels = ROUTES.map((route) => {
-        const key = NATIVE_TAB_ITEMS[route].labelKey.replace('nav.', '') as keyof NavCatalog['nav']
-        return messages.nav[key]
+        const key = NATIVE_TAB_ITEMS[route].labelKey
+        return key === 'common.channels' ? (messages as unknown as { common: { channels: string } }).common.channels : messages.nav[key.replace('nav.', '') as keyof NavCatalog['nav']]
       })
       expect(new Set(labels).size).toBe(labels.length)
       for (const label of labels) {
@@ -64,17 +64,11 @@ describe('native bottom tabs', () => {
     }
   })
 
-  it('shows the shorter applications translation at full size and keeps the full name for accessibility', () => {
-    expect(tabVisibleLabelKey('applications')).toBe('common.applications')
-    expect(tabAccessibleLabelKey('applications')).toBe('nav.applications')
-    expect(tabChrome('applications').labelSlots).toBe(1)
-    for (const [locale, messages] of CATALOGS) {
-      const visible = messages.common.applications
-      const accessible = messages.nav.applications
-      expect(isSingleLineLabel(visible)).toBe(true)
-      expect(isSingleLineLabel(accessible)).toBe(true)
-      expect(visible.length).toBeLessThan(accessible.length)
-      expect({ locale, readable: visible.length <= 12 }).toEqual({ locale, readable: true })
+  it('shows Channels instead of Applications in the bottom bar', () => {
+    expect(tabVisibleLabelKey('channels')).toBe('common.channels')
+    expect(ROUTES).not.toContain('applications')
+    for (const [, messages] of CATALOGS) {
+      expect(isSingleLineLabel((messages as unknown as { common: { channels: string } }).common.channels)).toBe(true)
     }
   })
 })

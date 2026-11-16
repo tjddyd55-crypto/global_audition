@@ -19,7 +19,7 @@ export default function ChannelsScreen() {
   })
   const rows = Array.isArray(query.data) ? (query.data as ChannelRow[]) : []
   return (
-    <Screen refreshing={query.isFetching} onRefresh={() => void query.refetch()}>
+    <Screen topInset={false} refreshing={query.isFetching} onRefresh={() => void query.refetch()}>
       <Text style={{ fontSize: 22, fontWeight: '700' }}>{t('common.channels')}</Text>
       <TextInput
         value={stageName}

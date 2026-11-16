@@ -48,8 +48,9 @@ export default function TabsLayout() {
     >
       <Tabs.Screen name="index" options={tabOptions('index', t(tabVisibleLabelKey('index')), t(tabAccessibleLabelKey('index')))} />
       <Tabs.Screen name="auditions" options={tabOptions('auditions', t(tabVisibleLabelKey('auditions')), t(tabAccessibleLabelKey('auditions')))} />
+      <Tabs.Screen name="channels" options={tabOptions('channels', t(tabVisibleLabelKey('channels')), t(tabAccessibleLabelKey('channels')))} />
       <Tabs.Screen name="vote" options={tabOptions('vote', t(tabVisibleLabelKey('vote')), t(tabAccessibleLabelKey('vote')))} />
-      <Tabs.Screen name="applications" options={tabOptions('applications', t(tabVisibleLabelKey('applications')), t(tabAccessibleLabelKey('applications')))} />
+      <Tabs.Screen name="applications" options={{ href: null }} />
       <Tabs.Screen name="profile" options={tabOptions('profile', t(tabVisibleLabelKey('profile')), t(tabAccessibleLabelKey('profile')))} />
     </Tabs>
   )
