@@ -105,6 +105,17 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback }: Props) {
   }
 
   const p = votesQuery.data
+  if (p && !p.votingEnabled) {
+    // 공고 투표 설정상 이 회차는 투표를 하지 않는다. 기존 투표 데이터는 서버에 남아 있다.
+    return (
+      <div className={`${PAGE_CONTAINER} py-12 text-center`} data-testid="vote-disabled">
+        <p className="text-sm text-neutral-600">{t('disabledRound')}</p>
+        <Link href={`/auditions/${auditionId}`} className="mt-4 inline-block text-sm font-medium text-violet-700 no-underline">
+          ← {t('backToAudition')}
+        </Link>
+      </div>
+    )
+  }
   const audition = p?.audition
   const summary = p?.summary
   const items = p?.items ?? []

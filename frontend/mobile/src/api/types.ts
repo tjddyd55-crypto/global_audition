@@ -78,6 +78,11 @@ export type AuditionDto = {
   roundSummaries?: RoundSummary[]
   groupId?: string
   round?: number
+  /** 공고 투표 설정(서버 VotingRoundPlan). votingEnabled=false 면 투표 보기·랭킹을 숨긴다 */
+  votingEnabled?: boolean
+  votingRoundNumber?: number
+  votingRoundCount?: number | null
+  votingRounds?: number[] | null
   displayTitle?: string
   recruitmentRoundLabel?: string
   canApply?: boolean
@@ -149,6 +154,8 @@ export type PublicVoteItem = {
 }
 
 export type PublicVotesPage = {
+  /** 현재 회차 투표 사용 여부(없으면 true) */
+  votingEnabled: boolean
   audition: {
     id: string
     title: string

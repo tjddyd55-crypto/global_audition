@@ -15,6 +15,11 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import com.audition.platform.application.ranking.AuditionRankingQueryService;
+import org.springframework.web.server.ResponseStatusException;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @TestPropertySource(properties = {
@@ -31,6 +36,8 @@ class VoteCastRegressionIT {
     private JdbcTemplate jdbc;
     @Autowired
     private PublicVoteService votes;
+    @Autowired
+    private AuditionRankingQueryService ranking;
 
     @AfterEach
     void cleanup() {
@@ -61,6 +68,61 @@ class VoteCastRegressionIT {
         votes.removeVote(second);
         assertEquals(0L, voteCount(second));
         assertEquals(0, count("SELECT COUNT(*) FROM votes WHERE user_id = '" + voter + "'"));
+    }
+
+    @Test
+    void roundWithVotingDisabledRejectsNewVotesKeepsOldOnesAndRankingIsDisabledNotError() {
+        UUID voter = user();
+        UUID owner = user();
+        UUID applicant = user();
+        UUID audition = audition(owner);
+        UUID app = application(audition, applicant);
+        asUser(voter);
+        votes.castVote(audition, app);
+        assertEquals(1L, voteCount(app));
+
+        // 3차만 투표: 현재(시리즈 1차)는 투표 없음으로 바꾼다. 기존 투표는 지우지 않는다.
+        jdbc.update("UPDATE auditions SET voting_round_count = 3, voting_rounds = '{3}' WHERE id = ?", audition);
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> votes.castVote(audition, app));
+        assertEquals(409, ex.getStatusCode().value());
+        assertEquals("VOTING_DISABLED_FOR_ROUND", ex.getReason());
+        assertEquals(1L, voteCount(app));
+        assertEquals(1, count("SELECT COUNT(*) FROM votes WHERE audition_id = '" + audition + "'"));
+
+        var page = votes.getPublicVotes(audition, null);
+        assertFalse(page.isVotingEnabled());
+        assertTrue(page.getItems().isEmpty());
+
+        asOwner(owner);
+        var board = ranking.getRanking(audition);
+        assertFalse(board.isVotingEnabled());
+        assertTrue(board.getItems().isEmpty());
+
+        // 다시 켜면 그대로 보인다.
+        jdbc.update("UPDATE auditions SET voting_rounds = '{1,2,3}' WHERE id = ?", audition);
+        assertTrue(ranking.getRanking(audition).isVotingEnabled());
+        asUser(voter);
+        assertTrue(votes.getPublicVotes(audition, null).isVotingEnabled());
+        assertEquals(1, votes.getPublicVotes(audition, null).getItems().size());
+    }
+
+    @Test
+    void legacyAuditionWithoutPlanStillVotes() {
+        UUID voter = user();
+        UUID owner = user();
+        UUID applicant = user();
+        UUID audition = audition(owner);
+        UUID app = application(audition, applicant);
+        Integer plan = jdbc.queryForObject("SELECT COUNT(*) FROM auditions WHERE id = ? AND voting_rounds IS NULL", Integer.class, audition);
+        assertEquals(1, plan);
+        asUser(voter);
+        votes.castVote(audition, app);
+        assertTrue(votes.getPublicVotes(audition, null).isVotingEnabled());
+    }
+
+    private static void asOwner(UUID id) {
+        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(
+                id, null, List.of(new SimpleGrantedAuthority("ROLE_AGENCY"))));
     }
 
     private UUID user() {

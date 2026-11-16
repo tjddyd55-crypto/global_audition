@@ -6,7 +6,7 @@ import { queryKeys } from '../../../src/api/queryKeys'
 import { useAuth } from '../../../src/auth/AuthProvider'
 import { auditionDetailImageUrl, auditionHeadlineTitle } from '../../../src/domain/auditionImages'
 import { auditionStatusLabel } from '../../../src/domain/statusLabels'
-import { canViewRanking } from '../../../src/domain/ranking'
+import { canShowVoting, canViewRanking } from '../../../src/domain/ranking'
 import { Button } from '../../../src/ui/Button'
 import { ErrorState } from '../../../src/ui/EmptyState'
 import { PosterImage } from '../../../src/ui/PosterImage'
@@ -118,9 +118,12 @@ export default function AuditionDetailScreen() {
               </Text>
             ) : null}
             <View style={styles.row}>
-              <Button label={t('auditionDetail.viewVote')} variant="secondary" onPress={() => router.push(`/auditions/${id}/vote`)} />
+              {/* 공고 투표 설정상 이 회차에 투표가 없으면 투표 보기·랭킹을 숨긴다. */}
+              {canShowVoting(audition) ? (
+                <Button label={t('auditionDetail.viewVote')} variant="secondary" onPress={() => router.push(`/auditions/${id}/vote`)} />
+              ) : null}
               {/* 랭킹 API 는 소유 기획사·관리자 전용 — 지원자/비로그인에게는 진입 버튼을 숨긴다(누르면 403). */}
-              {canViewRanking(session, audition.ownerId) ? (
+              {canViewRanking(session, audition.ownerId, canShowVoting(audition)) ? (
                 <Button label={t('common.ranking')} variant="secondary" onPress={() => router.push(`/auditions/${id}/ranking`)} />
               ) : null}
             </View>

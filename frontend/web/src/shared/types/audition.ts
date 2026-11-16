@@ -114,6 +114,14 @@ export type AuditionDto = {
   groupId?: string
   /** 시리즈 차수(1차·2차 독립 공고). MULTI_ROUND 의 myCurrentRoundNumber 와 별개 */
   round?: number
+  /** 공고 투표 설정: 총 회차 수(null = 미설정) */
+  votingRoundCount?: number | null
+  /** 투표 회차(null = 기존 동작: 모든 회차, [] = 투표 없음) */
+  votingRounds?: number[] | null
+  /** 현재 회차에서 투표·랭킹 사용(서버 계산, 없으면 true) */
+  votingEnabled?: boolean
+  /** 투표 기준 현재 회차 번호 */
+  votingRoundNumber?: number
   /** 표시용 제목 "기본 (2차)" */
   displayTitle?: string
   /** 예: "2차 모집 중" */
@@ -171,6 +179,9 @@ export type CreateAuditionPayload = {
   postingBranchId?: string
   defaultLocale?: string
   deadlineAt?: string
+  /** 공고 투표 설정. 생략하면 서버 기존 값 유지(생성 시 모든 회차) */
+  votingRoundCount?: number
+  votingRounds?: number[]
 }
 
 /** 폼 state → API `images` (빈 값이면 세 필드 모두 빈 문자열로 보내 대표 이미지 제거) */

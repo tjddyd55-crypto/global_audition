@@ -109,6 +109,16 @@ public class UpdateAuditionRequest {
     public void setDefaultLocale(String defaultLocale) { this.defaultLocale = defaultLocale; }
     public String getDeadlineAt() { return deadlineAt; }
     public void setDeadlineAt(String deadlineAt) { this.deadlineAt = deadlineAt; }
+    /** 총 회차 수(1~10). votingRounds 와 함께 보낸다. */
+    private Integer votingRoundCount;
+    /** 투표 회차 목록. 생략(null) = 생성 시 기존 동작(모든 회차), 수정 시 변경 없음. [] = 투표 없음. */
+    private java.util.List<Integer> votingRounds;
+
+    public Integer getVotingRoundCount() { return votingRoundCount; }
+    public void setVotingRoundCount(Integer votingRoundCount) { this.votingRoundCount = votingRoundCount; }
+    public java.util.List<Integer> getVotingRounds() { return votingRounds; }
+    public void setVotingRounds(java.util.List<Integer> votingRounds) { this.votingRounds = votingRounds; }
+
     public String getProcessMode() { return processMode; }
     public void setProcessMode(String processMode) { this.processMode = processMode; }
     public String getPostingBranchId() { return postingBranchId; }

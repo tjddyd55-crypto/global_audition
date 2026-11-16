@@ -24,6 +24,8 @@ import { editorStatusMessageKey } from '@/shared/audition/auditionEditorCopy'
 import { normalizeCustomTagNamesForPayload } from '@/shared/audition/auditionTags'
 import { auditionEditSource } from '@/shared/audition/auditionEditSource'
 import { AuditionTranslationPanel } from '@/components/audition/AuditionTranslationPanel'
+import { AuditionVotingRoundsField, type VotingRoundsValue } from '@/components/audition/AuditionVotingRoundsField'
+import { initialVotingForm, normalizeRounds } from '@/shared/audition/votingRounds'
 import {
   AUDITION_TARGET_COUNTRIES,
   CONTENT_AUTHORING_LOCALES,
@@ -230,6 +232,11 @@ function applyInitial(a: AuditionDto) {
     countryCode: normalizeTargetCountry(a.countryCode),
     defaultLocale: authoringLocaleOrFallback(a.defaultLocale),
     postingBranchId: a.postingBranchId ?? '',
+    // 설정 전 공고는 현재 회차 수(roundSummaries·시리즈 차수)를 기본 회차 수로 보여 준다.
+    voting: initialVotingForm({
+      votingRounds: a.votingRounds,
+      votingRoundCount: a.votingRoundCount ?? Math.max(a.roundSummaries?.length ?? 0, a.round ?? 1, 1),
+    }),
   }
 }
 
@@ -290,6 +297,9 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
   const [countryCode, setCountryCode] = useState('')
   const [postingBranchId, setPostingBranchId] = useState('')
   const [defaultLocale, setDefaultLocale] = useState('ko')
+  const [voting, setVoting] = useState<VotingRoundsValue>(() => initialVotingForm())
+  // 설정이 없던(null) 기존 공고는 기획사가 투표 설정을 건드릴 때만 저장한다(그 외 수정으로 동작이 바뀌지 않게).
+  const [votingTouched, setVotingTouched] = useState(false)
   const savedPostingBranch = useMemo(() => {
     if (mode !== 'edit' || !initialAudition?.postingBranchId) return null
     return {
@@ -334,6 +344,7 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
     setCountryCode(v.countryCode)
     setDefaultLocale(v.defaultLocale)
     setPostingBranchId(v.postingBranchId)
+    setVoting(v.voting)
   }, [mode, initialAudition])
 
   useEffect(() => {
@@ -415,6 +426,9 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
       countryCode: countryCode || undefined,
       postingBranchId: postingBranchIdForPayload(postingBranchState),
       defaultLocale,
+      ...(mode === 'create' || votingTouched || initialAudition?.votingRounds != null
+        ? { votingRoundCount: voting.count, votingRounds: normalizeRounds(voting.rounds, voting.count) }
+        : {}),
     }
   }
 
@@ -925,6 +939,13 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
           </label>
           <input type="datetime-local" value={endDate} onChange={(e) => setEndDate(e.target.value)} style={inputStyle} />
         </div>
+
+        <AuditionVotingRoundsField
+          value={voting}
+          onChange={(next) => {
+            setVoting(next)
+            setVotingTouched(true)
+          }} disabled={isLoading} showEditNote={mode === 'edit'} />
 
         <h2 style={sectionTitle}>{tEditor('sectionLists')}</h2>
         <RecruitFieldPicker values={recruitFields} onChange={setRecruitFields} />

@@ -516,7 +516,8 @@
     "playVideo": "영상 재생",
     "nameUnset": "이름 없음",
     "applicantVideo": "{name} 지원 영상",
-    "emptyApplicants": "표시할 지원자가 없습니다."
+    "emptyApplicants": "표시할 지원자가 없습니다.",
+    "disabledRound": "이 회차는 공개 투표를 진행하지 않습니다."
   },
   "ranking": {
     "title": "랭킹",
@@ -530,7 +531,8 @@
     "name": "이름",
     "votes": "투표",
     "recommend": "추천",
-    "loading": "불러오는 중…"
+    "loading": "불러오는 중…",
+    "disabledRound": "이 회차는 랭킹을 운영하지 않습니다."
   },
   "profile": {
     "title": "프로필",
@@ -1049,7 +1051,8 @@
     "POSTING_BRANCH_NONE": "승인된 활성 지점이 없어 게시할 수 없습니다. 지점을 등록하고 본사 승인을 받은 뒤 다시 게시하세요.",
     "POSTING_BRANCH_NOT_APPROVED": "승인되지 않았거나 활성 상태가 아닌 지점은 사용할 수 없습니다.",
     "POSTING_BRANCH_FORBIDDEN": "다른 기획사의 지점은 사용할 수 없습니다.",
-    "POSTING_BRANCH_INVALID": "게시 지점을 확인할 수 없습니다."
+    "POSTING_BRANCH_INVALID": "게시 지점을 확인할 수 없습니다.",
+    "VOTING_DISABLED_FOR_ROUND": "이 회차는 투표를 진행하지 않습니다."
   },
   "application": {
     "detailLoadFailed": "지원서를 불러오지 못했습니다.",

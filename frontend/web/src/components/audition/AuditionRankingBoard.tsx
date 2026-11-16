@@ -43,7 +43,19 @@ export function AuditionRankingBoard({ auditionId, auditionTitleFallback }: Prop
     )
   }
 
-  const rows: RankingItem[] = [...(q.data ?? [])].sort((a, b) => a.rank - b.rank)
+  if (q.data && !q.data.votingEnabled) {
+    // 공고 투표 설정상 이 회차는 투표·랭킹을 쓰지 않는다(오류 아님).
+    return (
+      <div className={`${PAGE_CONTAINER} py-12 text-center`} data-testid="ranking-disabled">
+        <p className="text-sm text-neutral-600">{t('disabledRound')}</p>
+        <Link href={`/auditions/${auditionId}`} className="mt-4 inline-block text-sm font-medium text-violet-700 no-underline">
+          ← {t('backToAudition')}
+        </Link>
+      </div>
+    )
+  }
+
+  const rows: RankingItem[] = [...(q.data?.items ?? [])].sort((a, b) => a.rank - b.rank)
 
   return (
     <div className="min-h-screen bg-gray-50 pb-10">

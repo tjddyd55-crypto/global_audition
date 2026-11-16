@@ -15,20 +15,26 @@ export default function RankingScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const query = useQuery({
     queryKey: queryKeys.ranking(id),
-    queryFn: () => rankingApi.list(id),
+    queryFn: () => rankingApi.page(id),
     enabled: Boolean(id),
     // 401/403(권한 없음)은 재시도해도 같으므로 바로 안내를 보여 준다.
     retry: (failureCount, error) => !isRankingAccessDenied(error) && failureCount < 2,
   })
-  const view = rankingViewState({ isLoading: query.isLoading, error: query.error, count: query.data?.length ?? 0 })
+  const view = rankingViewState({
+    isLoading: query.isLoading,
+    error: query.error,
+    count: query.data?.items.length ?? 0,
+    votingEnabled: query.data?.votingEnabled,
+  })
 
   return (
     <Screen loading={query.isLoading} refreshing={query.isFetching} onRefresh={() => void query.refetch()}>
       <Text style={styles.title}>{t('ranking.title')}</Text>
       {view === 'error' ? <ErrorState message={t('ranking.loadFailed')} onRetry={() => void query.refetch()} /> : null}
       {view === 'restricted' ? <EmptyState title={t('ranking.restricted')} /> : null}
+      {view === 'disabled' ? <EmptyState title={t('ranking.disabledRound')} /> : null}
       {view === 'empty' ? <EmptyState title={t('ranking.empty')} /> : null}
-      {(view === 'list' ? (query.data ?? []) : []).map((item) => (
+      {(view === 'list' ? (query.data?.items ?? []) : []).map((item) => (
         <View key={item.applicationId} style={styles.row}>
           <Text style={styles.rank}>{item.rank}</Text>
           <View style={{ flex: 1 }}>

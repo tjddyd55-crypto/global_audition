@@ -28,6 +28,8 @@ type AuditionDetailHeroSectionProps = {
   deadlineUrgent?: boolean
   /** 미리보기. 공유·투표·외부 이동을 막는다. */
   interactionsDisabled?: boolean
+  /** 공고 투표 설정상 현재 회차 투표 사용 여부(기본 true). false 면 투표 링크 숨김 */
+  votingEnabled?: boolean
 }
 
 function statusBadgeCopy(status: string, t: (key: 'statusOpenBadge' | 'statusClosedBadge' | 'statusDraftBadge') => string): string {
@@ -58,6 +60,7 @@ export function AuditionDetailHeroSection({
   subtitle,
   deadlineUrgent = false,
   interactionsDisabled = false,
+  votingEnabled = true,
 }: AuditionDetailHeroSectionProps) {
   const t = useTranslations('auditionDetail')
   const cover = safeStr(heroImageMediumUrl)
@@ -171,7 +174,7 @@ export function AuditionDetailHeroSection({
             >
               {shareHint === 'ok' ? t('copied') : shareHint === 'err' ? t('shareFailed') : t('share')}
             </button>
-            {interactionsDisabled ? (
+            {!votingEnabled ? null : interactionsDisabled ? (
               <button type="button" disabled className={contrast.link} style={{ borderRadius: HERO.buttonRadiusPx }}>
                 {t('vote')}
               </button>

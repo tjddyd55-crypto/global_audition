@@ -70,6 +70,14 @@ public class AuditionResponse {
      * 시리즈 차수(1차 공고=1, 2차=2). JSON 필드명 round — MULTI_ROUND 의 currentRoundNumber 와 별개.
      */
     private int seriesRound = 1;
+    /** 공고 투표 설정: 총 회차 수(NULL = 미설정) */
+    private Integer votingRoundCount;
+    /** 투표 회차 목록(NULL = 기존 동작: 모든 회차) */
+    private Integer[] votingRounds;
+    /** 현재 회차에서 투표·랭킹을 쓰는지 */
+    private boolean votingEnabled = true;
+    /** 투표 기준 현재 회차 번호 */
+    private int votingRoundNumber = 1;
 
     /** 표시용 제목(2차부터는 "기본 (N차)" 형태). */
     private String displayTitle;
@@ -264,6 +272,15 @@ public class AuditionResponse {
     }
 
     @JsonProperty("round")
+    public Integer getVotingRoundCount() { return votingRoundCount; }
+    public void setVotingRoundCount(Integer votingRoundCount) { this.votingRoundCount = votingRoundCount; }
+    public Integer[] getVotingRounds() { return votingRounds; }
+    public void setVotingRounds(Integer[] votingRounds) { this.votingRounds = votingRounds; }
+    public boolean isVotingEnabled() { return votingEnabled; }
+    public void setVotingEnabled(boolean votingEnabled) { this.votingEnabled = votingEnabled; }
+    public int getVotingRoundNumber() { return votingRoundNumber; }
+    public void setVotingRoundNumber(int votingRoundNumber) { this.votingRoundNumber = votingRoundNumber; }
+
     public void setSeriesRound(int seriesRound) {
         this.seriesRound = seriesRound;
     }

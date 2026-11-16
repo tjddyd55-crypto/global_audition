@@ -28,7 +28,8 @@ export default function VoteScreen() {
   return (
     <Screen loading={query.isLoading}>
       {query.isError ? <ErrorState message={t('vote.loadFailed')} onRetry={() => void query.refetch()} /> : null}
-      {page ? (
+      {page && !page.votingEnabled ? <EmptyState title={t('vote.disabledRound')} /> : null}
+      {page && page.votingEnabled ? (
         <View style={styles.head}>
           <Text style={styles.title}>{page.audition.title}</Text>
           <Text style={styles.meta}>
@@ -40,7 +41,7 @@ export default function VoteScreen() {
           </Text>
         </View>
       ) : null}
-      {(page?.items ?? []).map((item) => (
+      {(page?.votingEnabled ? page.items : []).map((item) => (
         <View key={item.applicationId} style={styles.card}>
           <Text style={styles.rank}>#{item.rank || '-'}</Text>
           <Text style={styles.name}>{item.userName || t('vote.applicantFallback')}</Text>
@@ -65,7 +66,9 @@ export default function VoteScreen() {
       {voteMutation.isError ? (
         <Text style={styles.error}>{voteMutation.error instanceof ApiError ? voteMutation.error.message : t('vote.failed')}</Text>
       ) : null}
-      {!query.isLoading && (page?.items.length ?? 0) === 0 ? <EmptyState title={t('vote.emptyBoard')} /> : null}
+      {!query.isLoading && page?.votingEnabled !== false && (page?.items.length ?? 0) === 0 ? (
+        <EmptyState title={t('vote.emptyBoard')} />
+      ) : null}
     </Screen>
   )
 }

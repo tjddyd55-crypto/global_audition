@@ -1,5 +1,7 @@
 package com.audition.platform.application;
 
+import com.audition.platform.application.vote.VotingRoundPlan;
+
 import com.audition.platform.api.dto.AuditionImagesDto;
 import com.audition.platform.api.dto.AuditionResponse;
 import com.audition.platform.api.dto.AuditionRoundSummaryDto;
@@ -284,6 +286,10 @@ public class AuditionService {
         r.setSelectionStatus(a.getSelectionStatus());
         r.setGroupId(a.getGroupId());
         r.setSeriesRound(a.getSeriesRound());
+        r.setVotingRoundCount(a.getVotingRoundCount());
+        r.setVotingRounds(a.getVotingRounds());
+        r.setVotingRoundNumber(VotingRoundPlan.activeRound(a));
+        r.setVotingEnabled(VotingRoundPlan.enabledNow(a));
         if (localize) {
             auditionLocalizationService.apply(a, r);
         } else {
@@ -338,6 +344,11 @@ public class AuditionService {
             a.setProcessMode(AuditionProcessModes.MULTI_ROUND);
         } else {
             a.setProcessMode(AuditionProcessModes.SINGLE);
+        }
+        if (req.getVotingRounds() != null) {
+            VotingRoundPlan.Normalized plan = VotingRoundPlan.normalize(req.getVotingRoundCount(), req.getVotingRounds());
+            a.setVotingRoundCount(plan.count());
+            a.setVotingRounds(plan.rounds());
         }
     }
 
@@ -596,6 +607,15 @@ public class AuditionService {
         if (request.getDeadlineAt() != null) {
             changed |= assign(parseInstantOrNull(request.getDeadlineAt()), audition.getDeadlineAt(), audition::setDeadlineAt);
         }
+        if (request.getVotingRounds() != null) {
+            // 이미 받은 투표는 지우지 않는다. 끈 회차는 새 투표만 막고 공개 화면에서 숨긴다.
+            VotingRoundPlan.Normalized plan = VotingRoundPlan.normalize(request.getVotingRoundCount(), request.getVotingRounds());
+            changed |= assign(plan.count(), audition.getVotingRoundCount(), audition::setVotingRoundCount);
+            if (!java.util.Arrays.equals(plan.rounds(), audition.getVotingRounds())) {
+                audition.setVotingRounds(plan.rounds());
+                changed = true;
+            }
+        }
         if (request.getImages() != null && imagesDiffer(audition, request.getImages())) {
             applyImagesToEntity(audition, request.getImages());
             changed = true;
@@ -809,6 +829,8 @@ public class AuditionService {
         n.setEndDate(source.getEndDate());
         n.setBenefits(source.getBenefits());
         n.setProcessMode(source.getProcessMode());
+        n.setVotingRoundCount(source.getVotingRoundCount());
+        n.setVotingRounds(source.getVotingRounds());
         if (source.getEndDate() != null) {
             n.setRemainingDays(computeRemainingDays(source.getEndDate()));
         } else {
