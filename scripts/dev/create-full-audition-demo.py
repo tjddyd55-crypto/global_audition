@@ -55,16 +55,16 @@ def main():
     payload = {
         "title": TITLE,
         "description": (
-            "[DEVELOPMENT SAMPLE / FICTIONAL AGENCY — NOT A REAL CASTING CALL]\\n\\n"
+            "[DEVELOPMENT SAMPLE / FICTIONAL AGENCY — NOT A REAL CASTING CALL]\n\n"
             "STUDIO NOVA is looking for rookie vocalists, dancers, rappers and actors to join a new global artist project. "
-            "This is a complete example of an agency-authored audition used to review the real mobile/web detail layout.\\n\\n"
-            "Project: global rookie artist showcase (fictional)\\n"
-            "Age range: approximately 15–28; minors must have guardian consent.\\n"
-            "Languages: any language; audition videos may be submitted in the applicant's native language.\\n"
-            "Application: online profile, a 60–120 second performance clip and a short self-introduction.\\n"
-            "Screening: round 1 video review → round 2 online interview → round 3 in-person stage assessment.\\n"
-            "Travel and accommodation for final candidates: conditions communicated individually by the fictional agency.\\n"
-            "Fees: the platform's configured application credit policy applies.\\n\\n"
+            "This is a complete example of an agency-authored audition used to review the real mobile/web detail layout.\n\n"
+            "Project: global rookie artist showcase (fictional)\n"
+            "Age range: approximately 15–28; minors must have guardian consent.\n"
+            "Languages: any language; audition videos may be submitted in the applicant's native language.\n"
+            "Application: online profile, a 60–120 second performance clip and a short self-introduction.\n"
+            "Screening: round 1 video review → round 2 online interview → round 3 in-person stage assessment.\n"
+            "Travel and accommodation for final candidates: conditions communicated individually by the fictional agency.\n"
+            "Fees: the platform's configured application credit policy applies.\n\n"
             "All names, dates, eligibility and benefits on this page are sample data only."
         ),
         "status": "OPEN",
