@@ -1,5 +1,7 @@
 package com.audition.platform.application.round;
 
+import com.audition.platform.application.vote.VotingRoundPlan;
+
 import com.audition.platform.application.i18n.Bcp47Tags;
 import com.audition.platform.domain.audition.ApplicationRoundSubmissionRepository;
 import com.audition.platform.domain.audition.Audition;
@@ -45,10 +47,56 @@ public class AuditionRoundService {
         r.setAuditionId(auditionId);
         r.setRoundNumber(1);
         r.setRoundName(""); // 기본 이름은 비워 두고 표시 문구는 프런트 i18n(roundReview.roundLabel)으로 만든다
-        r.setReviewMethod("INTERNAL_REVIEW");
+        // 공개 투표 여부는 공고 투표 설정(SSOT)에서 파생해 저장한다.
+        Integer[] plan = auditionRepository.findById(auditionId).map(Audition::getVotingRounds).orElse(null);
+        r.setReviewMethod(plan != null && VotingRoundPlan.enabledFor(plan, 1) ? "PUBLIC_VOTE" : "INTERNAL_REVIEW");
         r.setRequiredSubmissionType("VIDEO");
         r.setActive(auditionIsOpen);
         return roundRepository.save(r);
+    }
+
+    /**
+     * 회차 응답의 심사 방식: 공개 투표 여부는 공고 설정에서 파생한다(단일 기준).
+     */
+    @Transactional(readOnly = true)
+    public String effectiveReviewMethod(AuditionRound round) {
+        return VotingRoundPlan.effectiveReviewMethod(round.getReviewMethod(), roundVotingEnabled(round));
+    }
+
+    @Transactional(readOnly = true)
+    public boolean roundVotingEnabled(AuditionRound round) {
+        return auditionRepository.findById(round.getAuditionId())
+                .map(a -> VotingRoundPlan.enabledFor(a.getVotingRounds(), round.getRoundNumber()))
+                .orElse(false);
+    }
+
+    /**
+     * 공고 투표 설정이 바뀐 뒤 저장된 회차 심사 방식을 맞춘다(설정이 NULL 인 기존 공고는 건드리지 않는다).
+     * FINAL_SELECTION 은 그대로 둔다.
+     */
+    @Transactional
+    public void syncReviewMethodsFromPlan(Audition audition) {
+        if (audition.getVotingRounds() == null) {
+            return;
+        }
+        for (AuditionRound r : roundRepository.findByAuditionIdOrderByRoundNumberAsc(audition.getId())) {
+            String want = VotingRoundPlan.effectiveReviewMethod(
+                    r.getReviewMethod(), VotingRoundPlan.enabledFor(audition.getVotingRounds(), r.getRoundNumber()));
+            if (!want.equals(r.getReviewMethod())) {
+                r.setReviewMethod(want);
+                roundRepository.save(r);
+            }
+        }
+    }
+
+    /** 회차 API 의 심사 방식 지정(PUBLIC_VOTE 여부)을 공고 투표 설정에 반영한다. */
+    private void applyReviewMethodToPlan(Audition audition, int roundNumber, String reviewMethod, int knownRounds) {
+        if (reviewMethod == null) {
+            return;
+        }
+        if (VotingRoundPlan.setRoundEnabled(audition, roundNumber, "PUBLIC_VOTE".equals(reviewMethod), knownRounds)) {
+            auditionRepository.save(audition);
+        }
     }
 
     @Transactional(readOnly = true)
@@ -85,7 +133,15 @@ public class AuditionRoundService {
         r.setAuditionId(auditionId);
         r.setRoundNumber(nextNum);
         r.setRoundName(roundName != null && !roundName.isBlank() ? roundName.trim() : "");
-        r.setReviewMethod(reviewMethod != null ? reviewMethod : "INTERNAL_REVIEW");
+        // 설정 전(NULL = 모든 회차 투표) 공고에 기본값 INTERNAL_REVIEW 로 회차를 추가해도 기존 동작(투표 가능)을 바꾸지 않는다.
+        // 공개 투표를 명시하거나, 설정이 있는 공고에서만 공고 설정에 반영한다.
+        boolean legacyDefault = audition.getVotingRounds() == null && !"PUBLIC_VOTE".equals(reviewMethod);
+        if (!legacyDefault) {
+            applyReviewMethodToPlan(audition, nextNum, reviewMethod, nextNum);
+        }
+        boolean voting = VotingRoundPlan.enabledFor(audition.getVotingRounds(), nextNum);
+        String stored = reviewMethod != null ? reviewMethod : "INTERNAL_REVIEW";
+        r.setReviewMethod(audition.getVotingRounds() == null ? stored : VotingRoundPlan.effectiveReviewMethod(stored, voting));
         r.setRequiredSubmissionType(requiredSubmissionType != null ? requiredSubmissionType : "VIDEO");
         r.setStartAt(startAt);
         r.setEndAt(endAt);
@@ -128,6 +184,9 @@ public class AuditionRoundService {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 시작된 라운드는 심사 방식을 변경할 수 없습니다.");
             }
             round.setReviewMethod(reviewMethod);
+            Audition audition = auditionRepository.findById(auditionId).orElseThrow();
+            int known = roundRepository.findByAuditionIdOrderByRoundNumberAsc(auditionId).size();
+            applyReviewMethodToPlan(audition, round.getRoundNumber(), reviewMethod, known);
         }
         if (requiredSubmissionType != null && !requiredSubmissionType.equals(round.getRequiredSubmissionType())) {
             if (hasAnySubmissionRow) {

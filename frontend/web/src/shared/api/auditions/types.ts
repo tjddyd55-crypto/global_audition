@@ -127,6 +127,8 @@ export type ManageApplicationsPayload = {
 export type RankingItem = {
   applicationId: string
   userName: string
+  /** 공개 프로필 이미지(없으면 null) */
+  avatarUrl: string | null
   category: string
   voteCount: number
   viewCount: number

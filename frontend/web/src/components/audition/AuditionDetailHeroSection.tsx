@@ -187,6 +187,16 @@ export function AuditionDetailHeroSection({
                 {t('vote')}
               </Link>
             )}
+            {votingEnabled && !interactionsDisabled ? (
+              // 투표를 켠 회차의 랭킹은 누구나 볼 수 있다.
+              <Link
+                href={`/auditions/${auditionId}/ranking`}
+                className={contrast.link}
+                style={{ borderRadius: HERO.buttonRadiusPx }}
+              >
+                {t('viewRanking')}
+              </Link>
+            ) : null}
           </div>
         </div>
       </div>

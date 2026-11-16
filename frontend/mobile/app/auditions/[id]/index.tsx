@@ -24,7 +24,7 @@ export default function AuditionDetailScreen() {
   const { t } = useTranslation()
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()
-  const { isAuthenticated, session } = useAuth()
+  const { isAuthenticated } = useAuth()
   const locale = getRuntimeLocale()
   const query = useQuery({
     queryKey: queryKeys.audition(id, locale),
@@ -123,7 +123,7 @@ export default function AuditionDetailScreen() {
                 <Button label={t('auditionDetail.viewVote')} variant="secondary" onPress={() => router.push(`/auditions/${id}/vote`)} />
               ) : null}
               {/* 랭킹 API 는 소유 기획사·관리자 전용 — 지원자/비로그인에게는 진입 버튼을 숨긴다(누르면 403). */}
-              {canViewRanking(session, audition.ownerId, canShowVoting(audition)) ? (
+              {canViewRanking(audition) ? (
                 <Button label={t('common.ranking')} variant="secondary" onPress={() => router.push(`/auditions/${id}/ranking`)} />
               ) : null}
             </View>

@@ -182,6 +182,8 @@ export type CreateAuditionPayload = {
   /** 공고 투표 설정. 생략하면 서버 기존 값 유지(생성 시 모든 회차) */
   votingRoundCount?: number
   votingRounds?: number[]
+  /** 진행 방식. 수정 시 바꿀 때만 보낸다. */
+  processMode?: 'SINGLE' | 'MULTI_ROUND'
 }
 
 /** 폼 state → API `images` (빈 값이면 세 필드 모두 빈 문자열로 보내 대표 이미지 제거) */

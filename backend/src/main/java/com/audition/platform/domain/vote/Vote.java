@@ -31,6 +31,10 @@ public class Vote {
     @Column(name = "round_id")
     private UUID roundId;
 
+    /** 투표 회차(사용자는 오디션·회차마다 1표). NULL = 마이그레이션 중 미배정된 보존 행(집계 제외). */
+    @Column(name = "round_number")
+    private Integer roundNumber;
+
     @Column(name = "application_round_submission_id")
     private UUID applicationRoundSubmissionId;
 
@@ -75,6 +79,14 @@ public class Vote {
 
     public void setRoundId(UUID roundId) {
         this.roundId = roundId;
+    }
+
+    public Integer getRoundNumber() {
+        return roundNumber;
+    }
+
+    public void setRoundNumber(Integer roundNumber) {
+        this.roundNumber = roundNumber;
     }
 
     public UUID getApplicationRoundSubmissionId() {

@@ -532,7 +532,8 @@
     "votes": "Санал",
     "recommend": "Онцлох",
     "loading": "Ачаалж байна…",
-    "disabledRound": "Энэ шатанд чансаа гаргахгүй."
+    "disabledRound": "Энэ шатанд чансаа гаргахгүй.",
+    "roundBasis": "{round}-р шатны саналаар"
   },
   "profile": {
     "title": "Профайл",

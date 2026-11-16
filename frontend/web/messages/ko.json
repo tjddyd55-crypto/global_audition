@@ -532,7 +532,8 @@
     "votes": "투표",
     "recommend": "추천",
     "loading": "불러오는 중…",
-    "disabledRound": "이 회차는 랭킹을 운영하지 않습니다."
+    "disabledRound": "이 회차는 랭킹을 운영하지 않습니다.",
+    "roundBasis": "{round}차 투표 기준"
   },
   "profile": {
     "title": "프로필",

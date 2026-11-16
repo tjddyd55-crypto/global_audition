@@ -9,6 +9,7 @@ import { TranslationNotice, useContentTranslation } from '@/components/i18n/Tran
 import { overlayPosting } from '@/shared/i18n/postingTranslation'
 import MobileAuditionDetailSummary from './components/MobileAuditionDetailSummary'
 import MobileAuditionApplyBar from './components/MobileAuditionApplyBar'
+import { AuditionVoteRankingLinks } from '@/components/audition/AuditionVoteRankingLinks'
 
 export default function MobileAuditionDetailPage() {
   const params = useParams()
@@ -47,6 +48,7 @@ export default function MobileAuditionDetailPage() {
         alreadyApplied={alreadyApplied}
         applyBlocked={applyBlocked}
       />
+      <AuditionVoteRankingLinks auditionId={id} votingEnabled={audition.votingEnabled !== false} />
       <MobileAuditionApplyBar
         audition={audition}
         auditionId={id}

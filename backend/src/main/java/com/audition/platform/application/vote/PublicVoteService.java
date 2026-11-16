@@ -71,9 +71,14 @@ public class PublicVoteService {
         Audition audition = auditionRepository.findById(auditionId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "오디션을 찾을 수 없습니다."));
         boolean votingEnabled = VotingRoundPlan.enabledNow(audition);
+        int round = VotingRoundPlan.activeRound(audition);
 
         List<Application> apps = !votingEnabled ? List.<Application>of() : applicationRepository.findByAuditionIdAndStatusInOrderByCreatedAtDesc(
-                auditionId, LISTABLE_STATUSES);
+                auditionId, LISTABLE_STATUSES).stream()
+                .filter(app -> VotingRoundPlan.isRoundCandidate(audition, app, round))
+                .collect(Collectors.toList());
+        // 득표는 현재 회차 기준(회차마다 새로 받는다). applications.vote_count 는 전 회차 누계로 남는다.
+        Map<UUID, Long> roundVotes = votingEnabled ? roundVoteCounts(auditionId, round) : Map.of();
 
         ensureScoresIfMissing(auditionId, apps);
 
@@ -83,14 +88,14 @@ public class PublicVoteService {
         UUID voterId = SecurityUtils.getCurrentUserId();
         final String myVoteStr = voterId == null
                 ? null
-                : voteRepository.findByAuditionIdAndUserId(auditionId, voterId)
+                : voteRepository.findByAuditionIdAndUserIdAndRoundNumber(auditionId, voterId, round)
                         .map(v -> v.getApplicationId().toString())
                         .orElse(null);
 
-        long totalVotes = votingEnabled ? applicationRepository.sumVoteCountByAuditionId(auditionId) : 0L;
+        long totalVotes = votingEnabled ? voteRepository.countByAuditionIdAndRoundNumber(auditionId, round) : 0L;
 
         List<PublicVoteItemDto> allItems = apps.stream()
-                .map(app -> toVoteItem(app, myVoteStr, scoreByApp.get(app.getId())))
+                .map(app -> toVoteItem(app, myVoteStr, scoreByApp.get(app.getId()), roundVotes.getOrDefault(app.getId(), 0L)))
                 .collect(Collectors.toList());
 
         List<PublicVoteItemDto> visible = filterByCategory(allItems, categoryFilter);
@@ -117,9 +122,14 @@ public class PublicVoteService {
         out.setSummary(summary);
         out.setMyVoteApplicationId(votingEnabled ? myVoteStr : null);
         out.setVotingEnabled(votingEnabled);
-        out.setRoundNumber(VotingRoundPlan.activeRound(audition));
+        out.setRoundNumber(round);
         out.setItems(visible);
         return out;
+    }
+
+    private Map<UUID, Long> roundVoteCounts(UUID auditionId, int round) {
+        return voteRepository.countByApplicationForRound(auditionId, round).stream()
+                .collect(Collectors.toMap(r -> (UUID) r[0], r -> ((Number) r[1]).longValue(), Long::sum));
     }
 
     private void ensureScoresIfMissing(UUID auditionId, List<Application> listableApps) {
@@ -153,7 +163,8 @@ public class PublicVoteService {
         return tabs;
     }
 
-    private PublicVoteItemDto toVoteItem(Application app, String myVoteApplicationId, ApplicationScore score) {
+    private PublicVoteItemDto toVoteItem(
+            Application app, String myVoteApplicationId, ApplicationScore score, long roundVoteCount) {
         User applicant = userRepository.findById(app.getApplicantId()).orElse(null);
         var m = metricsLoader.resolve(app);
 
@@ -164,12 +175,13 @@ public class PublicVoteService {
         PublicVoteItemDto dto = new PublicVoteItemDto();
         dto.setApplicationId(appIdStr);
         dto.setUserName(applicant != null ? applicant.getPublicDisplayLabel() : "");
-        dto.setUserEmail(applicant != null ? applicant.getEmail() : "");
+        // 공개(비로그인) 목록이므로 이메일은 내보내지 않는다.
+        dto.setUserEmail("");
         dto.setDescription(applicant != null && applicant.getBio() != null ? applicant.getBio() : "");
         dto.setVideoUrl(m.videoUrl());
         dto.setThumbnailUrl(m.thumbnailUrl());
         dto.setCategory(m.category());
-        dto.setVoteCount(app.getVoteCount());
+        dto.setVoteCount(roundVoteCount);
         dto.setViewCount(m.viewCount());
         dto.setVoted(isVoted);
         dto.setRank(rank);
@@ -208,8 +220,13 @@ public class PublicVoteService {
         if (!VotingRoundPlan.enabledNow(audition)) {
             throw ReasonCode.VOTING_DISABLED_FOR_ROUND.toException();
         }
+        int round = VotingRoundPlan.activeRound(audition);
+        if (!VotingRoundPlan.isRoundCandidate(audition, app, round)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "이번 회차 투표 대상이 아닌 지원입니다.");
+        }
 
-        Optional<Vote> previous = voteRepository.findByAuditionIdAndUserId(audition.getId(), voterId);
+        // 사용자는 오디션·회차마다 1표. 같은 회차 안에서는 다른 지원으로 옮길 수 있다.
+        Optional<Vote> previous = voteRepository.findByAuditionIdAndUserIdAndRoundNumber(audition.getId(), voterId, round);
         boolean replaced = false;
         if (previous.isPresent()) {
             Vote pv = previous.get();
@@ -233,6 +250,7 @@ public class PublicVoteService {
         row.setAuditionId(audition.getId());
         row.setApplicationId(app.getId());
         row.setUserId(voterId);
+        row.setRoundNumber(round);
         voteRepository.save(row);
 
         applicationRankingService.recalculateScores(auditionId);
@@ -244,7 +262,14 @@ public class PublicVoteService {
         assertAuthenticatedMayVote();
         UUID voterId = requireUserId();
 
-        Vote vote = voteRepository.findByUserIdAndApplicationId(voterId, applicationId)
+        Application app = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 투표를 찾을 수 없습니다."));
+        Audition audition = auditionRepository.findById(app.getAuditionId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 투표를 찾을 수 없습니다."));
+        // 취소는 현재 회차의 내 표만. 지난 회차 표는 그대로 둔다(회차가 끝난 기록).
+        int round = VotingRoundPlan.activeRound(audition);
+        Vote vote = voteRepository.findByAuditionIdAndUserIdAndRoundNumber(audition.getId(), voterId, round)
+                .filter(v -> v.getApplicationId().equals(applicationId))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 투표를 찾을 수 없습니다."));
 
         UUID auditionId = vote.getAuditionId();

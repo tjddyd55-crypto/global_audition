@@ -1,6 +1,7 @@
 package com.audition.platform.application.vote;
 
 import com.audition.platform.application.round.AuditionProcessModes;
+import com.audition.platform.domain.audition.Application;
 import com.audition.platform.domain.audition.Audition;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
@@ -47,6 +48,21 @@ public final class VotingRoundPlan {
         return false;
     }
 
+    /**
+     * 이 회차 투표·랭킹 후보인지. MULTI_ROUND 는 해당 회차까지 올라왔고 탈락하지 않은 지원만.
+     * 단일·시리즈 공고는 공고 자체가 한 회차라 지원 전체가 후보다(상태 필터는 호출 측).
+     */
+    public static boolean isRoundCandidate(Audition a, Application app, int roundNumber) {
+        if (!AuditionProcessModes.isMultiRound(a.getProcessMode())) {
+            return true;
+        }
+        String fs = app.getFinalStatus();
+        if ("ELIMINATED".equals(fs) || "FINAL_FAILED".equals(fs)) {
+            return false;
+        }
+        return app.getCurrentRoundNumber() >= roundNumber;
+    }
+
     public static boolean enabledNow(Audition a) {
         return enabledFor(a.getVotingRounds(), activeRound(a));
     }
@@ -77,6 +93,61 @@ public final class VotingRoundPlan {
             throw invalid("votingRounds 에 총 회차 수(" + resolvedCount + ")보다 큰 회차가 있습니다.");
         }
         return new Normalized(resolvedCount, set.toArray(new Integer[0]));
+    }
+
+    /**
+     * 회차 관리 API(심사 방식 PUBLIC_VOTE)에서 온 변경을 공고 설정에 반영한다. 공고 설정이 투표의 단일 기준(SSOT)이다.
+     * 설정이 NULL(기존 공고 = 모든 회차 투표)이고 끄는 경우에는 알려진 회차 수까지 명시 목록으로 바꾼 뒤 그 회차만 뺀다.
+     *
+     * @return 설정이 바뀌었으면 true
+     */
+    public static boolean setRoundEnabled(Audition a, int roundNumber, boolean enabled, int knownRounds) {
+        if (roundNumber < 1 || roundNumber > MAX_ROUNDS) {
+            return false;
+        }
+        Integer[] cur = a.getVotingRounds();
+        if (cur == null) {
+            if (enabled) {
+                return false;
+            }
+            int count = Math.min(MAX_ROUNDS, Math.max(Math.max(knownRounds, roundNumber),
+                    a.getVotingRoundCount() != null ? a.getVotingRoundCount() : 1));
+            TreeSet<Integer> all = new TreeSet<>();
+            for (int i = 1; i <= count; i++) {
+                if (i != roundNumber) {
+                    all.add(i);
+                }
+            }
+            a.setVotingRoundCount(count);
+            a.setVotingRounds(all.toArray(new Integer[0]));
+            return true;
+        }
+        TreeSet<Integer> set = new TreeSet<>();
+        for (Integer r : cur) {
+            if (r != null) {
+                set.add(r);
+            }
+        }
+        boolean changed = enabled ? set.add(roundNumber) : set.remove(roundNumber);
+        int count = a.getVotingRoundCount() != null ? a.getVotingRoundCount() : 1;
+        if (enabled && roundNumber > count) {
+            a.setVotingRoundCount(roundNumber);
+            changed = true;
+        }
+        if (changed) {
+            a.setVotingRounds(set.toArray(new Integer[0]));
+        }
+        return changed;
+    }
+
+    /**
+     * 회차 응답의 심사 방식. 공개 투표 여부는 공고 설정에서 파생한다(FINAL_SELECTION 은 그대로 둔다).
+     */
+    public static String effectiveReviewMethod(String stored, boolean votingEnabled) {
+        if ("FINAL_SELECTION".equals(stored)) {
+            return stored;
+        }
+        return votingEnabled ? "PUBLIC_VOTE" : "INTERNAL_REVIEW";
     }
 
     private static ResponseStatusException invalid(String message) {

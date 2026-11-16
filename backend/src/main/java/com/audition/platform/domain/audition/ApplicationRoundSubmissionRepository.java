@@ -1,7 +1,6 @@
 package com.audition.platform.domain.audition;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -26,13 +25,4 @@ public interface ApplicationRoundSubmissionRepository extends JpaRepository<Appl
     long countByRoundId(UUID roundId);
 
     long countByRoundIdAndSubmissionStatus(UUID roundId, String submissionStatus);
-
-    /**
-     * 라운드 단위 공개 투표 캐시 — {@link com.audition.platform.application.round.PublicVoteRoundService} 에서만 호출.
-     * TODO: vote_count 정합성 검증 batch job 필요 (votes 집계와 대조).
-     */
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query(value = "UPDATE application_round_submissions SET vote_count = vote_count + :delta "
-            + "WHERE id = :id AND vote_count + :delta >= 0", nativeQuery = true)
-    int adjustVoteCount(@Param("id") UUID id, @Param("delta") long delta);
 }

@@ -157,7 +157,8 @@ public class AdminAuditionRoundController {
         dto.setId(r.getId());
         dto.setRoundNumber(r.getRoundNumber());
         dto.setRoundName(r.getRoundName());
-        dto.setReviewMethod(r.getReviewMethod());
+        dto.setReviewMethod(roundService.effectiveReviewMethod(r));
+        dto.setVotingEnabled(roundService.roundVotingEnabled(r));
         dto.setRequiredSubmissionType(r.getRequiredSubmissionType());
         dto.setStartAt(r.getStartAt());
         dto.setEndAt(r.getEndAt());

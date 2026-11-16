@@ -69,4 +69,29 @@ class VotingRoundPlanTest {
         assertEquals(2, VotingRoundPlan.activeRound(series));
         assertTrue(VotingRoundPlan.enabledNow(series));
     }
+
+    @Test
+    void roundApiWritesThroughToPlan() {
+        Audition legacy = new Audition();
+        assertFalse(VotingRoundPlan.setRoundEnabled(legacy, 2, true, 3), "NULL(모든 회차)에 켜기는 변화 없음");
+        assertTrue(VotingRoundPlan.setRoundEnabled(legacy, 2, false, 3));
+        assertArrayEquals(new Integer[] {1, 3}, legacy.getVotingRounds());
+        assertEquals(3, legacy.getVotingRoundCount());
+
+        Audition a = new Audition();
+        a.setVotingRoundCount(2);
+        a.setVotingRounds(new Integer[] {2});
+        assertTrue(VotingRoundPlan.setRoundEnabled(a, 4, true, 4));
+        assertArrayEquals(new Integer[] {2, 4}, a.getVotingRounds());
+        assertEquals(4, a.getVotingRoundCount());
+        assertTrue(VotingRoundPlan.setRoundEnabled(a, 2, false, 4));
+        assertArrayEquals(new Integer[] {4}, a.getVotingRounds());
+    }
+
+    @Test
+    void reviewMethodIsDerivedFromPlan() {
+        assertEquals("PUBLIC_VOTE", VotingRoundPlan.effectiveReviewMethod("INTERNAL_REVIEW", true));
+        assertEquals("INTERNAL_REVIEW", VotingRoundPlan.effectiveReviewMethod("PUBLIC_VOTE", false));
+        assertEquals("FINAL_SELECTION", VotingRoundPlan.effectiveReviewMethod("FINAL_SELECTION", true));
+    }
 }

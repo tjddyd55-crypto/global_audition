@@ -62,6 +62,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/auditions/*/translation-jobs", "/api/auditions/*/translation-provider").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/auditions", "/api/auditions/*").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/auditions/*/votes").permitAll()
+                // 투표를 켠 회차의 랭킹은 공개(공개 필드만). 서비스에서 게시 전 공고·투표 없는 회차를 처리한다.
+                .requestMatchers(HttpMethod.GET, "/api/auditions/*/ranking").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/agencies/public", "/api/agencies/public/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/channels", "/api/channels/*").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/videos").permitAll()

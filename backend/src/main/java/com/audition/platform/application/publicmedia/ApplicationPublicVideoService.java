@@ -3,10 +3,12 @@ package com.audition.platform.application.publicmedia;
 import com.audition.platform.api.dto.ApplicationPublicVideoDto;
 import com.audition.platform.api.dto.ApplicationRecommendItemDto;
 import com.audition.platform.application.audition.ApplicantCardMetricsLoader;
+import com.audition.platform.application.vote.VotingRoundPlan;
 import com.audition.platform.domain.audition.Application;
 import com.audition.platform.domain.audition.ApplicationRepository;
 import com.audition.platform.domain.audition.ApplicationVideo;
 import com.audition.platform.domain.audition.ApplicationVideoRepository;
+import com.audition.platform.domain.audition.AuditionRepository;
 import com.audition.platform.domain.like.ApplicationLikeRepository;
 import com.audition.platform.domain.user.User;
 import com.audition.platform.domain.user.UserRepository;
@@ -34,6 +36,7 @@ public class ApplicationPublicVideoService {
     private final ApplicationLikeRepository applicationLikeRepository;
     private final VoteRepository voteRepository;
     private final ApplicantCardMetricsLoader metricsLoader;
+    private final AuditionRepository auditionRepository;
 
     public ApplicationPublicVideoService(
             ApplicationRepository applicationRepository,
@@ -41,13 +44,15 @@ public class ApplicationPublicVideoService {
             UserRepository userRepository,
             ApplicationLikeRepository applicationLikeRepository,
             VoteRepository voteRepository,
-            ApplicantCardMetricsLoader metricsLoader) {
+            ApplicantCardMetricsLoader metricsLoader,
+            AuditionRepository auditionRepository) {
         this.applicationRepository = applicationRepository;
         this.applicationVideoRepository = applicationVideoRepository;
         this.userRepository = userRepository;
         this.applicationLikeRepository = applicationLikeRepository;
         this.voteRepository = voteRepository;
         this.metricsLoader = metricsLoader;
+        this.auditionRepository = auditionRepository;
     }
 
     public ApplicationPublicVideoDto getPublicDetail(UUID applicationId) {
@@ -66,7 +71,9 @@ public class ApplicationPublicVideoService {
                 && applicationLikeRepository.existsByApplicationIdAndUserId(applicationId, viewerId);
         boolean voted = false;
         if (viewerId != null) {
-            Optional<UUID> votedApp = voteRepository.findByAuditionIdAndUserId(app.getAuditionId(), viewerId)
+            Optional<UUID> votedApp = auditionRepository.findById(app.getAuditionId())
+                    .flatMap(a -> voteRepository.findByAuditionIdAndUserIdAndRoundNumber(
+                            a.getId(), viewerId, VotingRoundPlan.activeRound(a)))
                     .map(v -> v.getApplicationId());
             voted = votedApp.map(id -> id.equals(applicationId)).orElse(false);
         }
