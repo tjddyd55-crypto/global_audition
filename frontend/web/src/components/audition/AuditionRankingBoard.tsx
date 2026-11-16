@@ -1,12 +1,12 @@
 ﻿'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { isAxiosError } from 'axios'
 import { useLocale, useTranslations } from 'next-intl'
 import { Link } from '@/i18n.config'
 import { auditionApi, type RankingItem } from '@/shared/api/auditions'
 import { PAGE_CONTAINER, TEXT_SUB } from '@/shared/ui/specClasses'
 import { formatCount } from '@/shared/money/currency'
+import { isRankingAccessDenied } from '@/shared/audition/rankingAccess'
 
 type Props = {
   auditionId: string
@@ -15,7 +15,6 @@ type Props = {
 
 export function AuditionRankingBoard({ auditionId, auditionTitleFallback }: Props) {
   const t = useTranslations('ranking')
-  const tCommon = useTranslations('common')
   const locale = useLocale()
   const q = useQuery({
     queryKey: ['audition-ranking', auditionId],
@@ -31,10 +30,10 @@ export function AuditionRankingBoard({ auditionId, auditionTitleFallback }: Prop
   }
 
   if (q.isError) {
-    const forbidden = isAxiosError(q.error) && q.error.response?.status === 403
+    const forbidden = isRankingAccessDenied(q.error)
     return (
       <div className={`${PAGE_CONTAINER} py-12 text-center`}>
-        <p className="text-sm text-red-600">
+        <p className={forbidden ? 'text-sm text-neutral-600' : 'text-sm text-red-600'}>
           {forbidden ? t('restricted') : t('loadFailed')}
         </p>
         <Link href={`/auditions/${auditionId}`} className="mt-4 inline-block text-sm font-medium text-violet-700 no-underline">
@@ -60,7 +59,7 @@ export function AuditionRankingBoard({ auditionId, auditionTitleFallback }: Prop
 
       <div className={`${PAGE_CONTAINER} mt-6`}>
         {rows.length === 0 ? (
-          <p className={TEXT_SUB}>{tCommon('empty')}</p>
+          <p className={TEXT_SUB}>{t('empty')}</p>
         ) : (
           <div className="overflow-x-auto rounded-xl border border-[#E5E7EB] bg-white">
             <table className="min-w-full text-left text-sm">

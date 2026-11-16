@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { rankingApi } from '../../../src/api/endpoints'
 import { queryKeys } from '../../../src/api/queryKeys'
 import { applicationStatusLabel } from '../../../src/domain/statusLabels'
+import { isRankingAccessDenied, rankingViewState } from '../../../src/domain/ranking'
 import { EmptyState, ErrorState } from '../../../src/ui/EmptyState'
 import { Screen } from '../../../src/ui/Screen'
 import { colors, radius } from '../../../src/theme/tokens'
@@ -12,13 +13,22 @@ import { colors, radius } from '../../../src/theme/tokens'
 export default function RankingScreen() {
   const { t } = useTranslation()
   const { id } = useLocalSearchParams<{ id: string }>()
-  const query = useQuery({ queryKey: queryKeys.ranking(id), queryFn: () => rankingApi.list(id), enabled: Boolean(id) })
+  const query = useQuery({
+    queryKey: queryKeys.ranking(id),
+    queryFn: () => rankingApi.list(id),
+    enabled: Boolean(id),
+    // 401/403(권한 없음)은 재시도해도 같으므로 바로 안내를 보여 준다.
+    retry: (failureCount, error) => !isRankingAccessDenied(error) && failureCount < 2,
+  })
+  const view = rankingViewState({ isLoading: query.isLoading, error: query.error, count: query.data?.length ?? 0 })
 
   return (
     <Screen loading={query.isLoading} refreshing={query.isFetching} onRefresh={() => void query.refetch()}>
       <Text style={styles.title}>{t('ranking.title')}</Text>
-      {query.isError ? <ErrorState message={t('ranking.loadFailed')} onRetry={() => void query.refetch()} /> : null}
-      {(query.data ?? []).map((item) => (
+      {view === 'error' ? <ErrorState message={t('ranking.loadFailed')} onRetry={() => void query.refetch()} /> : null}
+      {view === 'restricted' ? <EmptyState title={t('ranking.restricted')} /> : null}
+      {view === 'empty' ? <EmptyState title={t('ranking.empty')} /> : null}
+      {(view === 'list' ? (query.data ?? []) : []).map((item) => (
         <View key={item.applicationId} style={styles.row}>
           <Text style={styles.rank}>{item.rank}</Text>
           <View style={{ flex: 1 }}>
@@ -29,7 +39,6 @@ export default function RankingScreen() {
           </View>
         </View>
       ))}
-      {!query.isLoading && (query.data?.length ?? 0) === 0 ? <EmptyState title={t('ranking.empty')} /> : null}
     </Screen>
   )
 }
