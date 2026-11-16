@@ -1,5 +1,7 @@
 package com.audition.platform.application.vote;
 
+import com.audition.platform.application.round.ReasonCode;
+
 import com.audition.platform.api.dto.CategoryCountDto;
 import com.audition.platform.api.dto.PublicVoteItemDto;
 import com.audition.platform.api.dto.PublicVotePageDataDto;
@@ -68,8 +70,9 @@ public class PublicVoteService {
     public PublicVotePageDataDto getPublicVotes(UUID auditionId, String categoryFilter) {
         Audition audition = auditionRepository.findById(auditionId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "오디션을 찾을 수 없습니다."));
+        boolean votingEnabled = VotingRoundPlan.enabledNow(audition);
 
-        List<Application> apps = applicationRepository.findByAuditionIdAndStatusInOrderByCreatedAtDesc(
+        List<Application> apps = !votingEnabled ? List.<Application>of() : applicationRepository.findByAuditionIdAndStatusInOrderByCreatedAtDesc(
                 auditionId, LISTABLE_STATUSES);
 
         ensureScoresIfMissing(auditionId, apps);
@@ -84,7 +87,7 @@ public class PublicVoteService {
                         .map(v -> v.getApplicationId().toString())
                         .orElse(null);
 
-        long totalVotes = applicationRepository.sumVoteCountByAuditionId(auditionId);
+        long totalVotes = votingEnabled ? applicationRepository.sumVoteCountByAuditionId(auditionId) : 0L;
 
         List<PublicVoteItemDto> allItems = apps.stream()
                 .map(app -> toVoteItem(app, myVoteStr, scoreByApp.get(app.getId())))
@@ -112,7 +115,9 @@ public class PublicVoteService {
         PublicVotePageDataDto out = new PublicVotePageDataDto();
         out.setAudition(auditionDto);
         out.setSummary(summary);
-        out.setMyVoteApplicationId(myVoteStr);
+        out.setMyVoteApplicationId(votingEnabled ? myVoteStr : null);
+        out.setVotingEnabled(votingEnabled);
+        out.setRoundNumber(VotingRoundPlan.activeRound(audition));
         out.setItems(visible);
         return out;
     }
@@ -199,6 +204,9 @@ public class PublicVoteService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "오디션을 찾을 수 없습니다."));
         if (!"OPEN".equals(audition.getStatus())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "모집 중인 오디션에서만 투표할 수 있습니다.");
+        }
+        if (!VotingRoundPlan.enabledNow(audition)) {
+            throw ReasonCode.VOTING_DISABLED_FOR_ROUND.toException();
         }
 
         Optional<Vote> previous = voteRepository.findByAuditionIdAndUserId(audition.getId(), voterId);

@@ -1,3 +1,4 @@
+import { parseAuditionVotingFields } from '../../../web/src/shared/audition/votingRounds'
 import type {
   ApplicantDashboard,
   CreditLedgerItem,
@@ -94,6 +95,7 @@ export function parseAuditionDto(raw: unknown): AuditionDto {
       : [],
     groupId: asString(row.groupId) || undefined,
     round: row.round != null ? asNumber(row.round, 1) : 1,
+    ...parseAuditionVotingFields(row),
     displayTitle: asString(row.displayTitle).trim() || undefined,
     recruitmentRoundLabel: asString(row.recruitmentRoundLabel).trim() || undefined,
     canApply: typeof row.canApply === 'boolean' ? row.canApply : undefined,
@@ -188,6 +190,7 @@ export function parseVotePage(raw: unknown): PublicVotesPage {
   const items = Array.isArray(body.items) ? body.items : []
   const categories = Array.isArray(audition.categories) ? audition.categories : []
   return {
+    votingEnabled: body.votingEnabled !== false,
     audition: {
       id: asString(audition.id),
       title: asString(audition.title),
@@ -393,6 +396,12 @@ export function parseInsufficientCredits(raw: unknown): InsufficientCredits | nu
     shortfallCredits: asNumber(row.shortfallCredits),
     message: asString(row.message, '크레딧이 부족합니다.'),
   }
+}
+
+/** 랭킹 응답 전체: votingEnabled=false 면 공고 설정상 이 회차는 랭킹 없음(오류 아님). */
+export function parseRankingPage(raw: unknown): { votingEnabled: boolean; items: RankingItem[] } {
+  const body = asRecord(raw)
+  return { votingEnabled: body.votingEnabled !== false, items: parseRankingItems(raw) }
 }
 
 export function parseRankingItems(raw: unknown): RankingItem[] {

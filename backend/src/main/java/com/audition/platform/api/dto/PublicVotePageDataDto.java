@@ -14,6 +14,14 @@ public class PublicVotePageDataDto {
     private VotePageAuditionDto audition;
     private VotePageSummaryDto summary;
     private String myVoteApplicationId;
+    /** 현재 회차 투표 사용 여부. false 면 목록·투표 버튼을 숨긴다(기존 투표 데이터는 유지). */
+    private boolean votingEnabled = true;
+    private int roundNumber = 1;
+
+    public boolean isVotingEnabled() { return votingEnabled; }
+    public void setVotingEnabled(boolean votingEnabled) { this.votingEnabled = votingEnabled; }
+    public int getRoundNumber() { return roundNumber; }
+    public void setRoundNumber(int roundNumber) { this.roundNumber = roundNumber; }
     private List<PublicVoteItemDto> items = new ArrayList<>();
 
     public VotePageAuditionDto getAudition() {

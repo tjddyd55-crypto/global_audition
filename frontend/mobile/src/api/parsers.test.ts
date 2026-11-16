@@ -5,6 +5,8 @@ import {
   parseInsufficientCredits,
   parseMyApplicationList,
   parsePreparePayment,
+  parseRankingPage,
+  parseVotePage,
 } from './parsers'
 
 describe('parsers', () => {
@@ -121,5 +123,21 @@ describe('parsers', () => {
     expect(prep.clientKey).toBe('test_ck_x')
     expect(prep.tossMethod).toBe('FOREIGN_EASY_PAY')
     expect(prep.foreignEasyPayProvider).toBe('PAYPAL')
+  })
+})
+
+describe('per-round voting fields', () => {
+  it('legacy payload without plan keeps voting enabled', () => {
+    const a = parseAuditionDto({ id: 'a1' })
+    expect(a.votingEnabled).toBe(true)
+    expect(a.votingRounds).toBeNull()
+  })
+  it('reads plan and disabled flags', () => {
+    const a = parseAuditionDto({ id: 'a1', votingRoundCount: 3, votingRounds: [3], votingEnabled: false, votingRoundNumber: 1 })
+    expect(a.votingEnabled).toBe(false)
+    expect(a.votingRounds).toEqual([3])
+    expect(parseVotePage({ votingEnabled: false, items: [] }).votingEnabled).toBe(false)
+    expect(parseVotePage({ items: [] }).votingEnabled).toBe(true)
+    expect(parseRankingPage({ votingEnabled: false, items: [] })).toEqual({ votingEnabled: false, items: [] })
   })
 })

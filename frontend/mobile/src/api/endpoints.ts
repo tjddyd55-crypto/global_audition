@@ -15,6 +15,7 @@ import {
   parseMyApplicationList,
   parseRankingItems,
   parseVotePage,
+  parseRankingPage,
 } from './parsers'
 import type {
   AgencyBoardStatus,
@@ -128,6 +129,8 @@ export const voteApi = {
 export const rankingApi = {
   list: async (auditionId: string): Promise<RankingItem[]> =>
     parseRankingItems(unwrapData(await apiRequest<unknown>(`/auditions/${auditionId}/ranking`))),
+  page: async (auditionId: string) =>
+    parseRankingPage(unwrapData(await apiRequest<unknown>(`/auditions/${auditionId}/ranking`))),
 }
 
 export const agencyApi = {

@@ -18,6 +18,8 @@ export const listAuditionVotes = async (
   const itemsRaw = Array.isArray(body.items) ? body.items : []
   const catRaw = Array.isArray(auditionRaw.categories) ? auditionRaw.categories : []
   return {
+    votingEnabled: body.votingEnabled !== false,
+    roundNumber: Number(body.roundNumber ?? 1) || 1,
     audition: {
       id: String(auditionRaw.id ?? ''),
       title: String(auditionRaw.title ?? ''),

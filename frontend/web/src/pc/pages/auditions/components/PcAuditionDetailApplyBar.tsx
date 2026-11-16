@@ -38,6 +38,8 @@ type PcAuditionDetailApplyBarProps = {
   applyPolicyError: boolean
   /** 게시 미리보기. 지원·충전 이동을 막는다. */
   interactionsDisabled?: boolean
+  /** 공고 투표 설정상 현재 회차 투표·랭킹 사용 여부(기본 true) */
+  votingEnabled?: boolean
 }
 
 const mainCtaClass =
@@ -70,6 +72,7 @@ export default function PcAuditionDetailApplyBar({
   hasEnoughCredits,
   applyPolicyError,
   interactionsDisabled = false,
+  votingEnabled = true,
 }: PcAuditionDetailApplyBarProps) {
   const tDetail = useTranslations('auditionDetail')
   const tApply = useTranslations('apply')
@@ -144,7 +147,7 @@ export default function PcAuditionDetailApplyBar({
           </button>
         )}
 
-        {(showApplySubmitCta && alreadyApplied) || !isOpen ? (
+        {votingEnabled && ((showApplySubmitCta && alreadyApplied) || !isOpen) ? (
           <div className="flex flex-wrap gap-2">
             {showApplySubmitCta && alreadyApplied ? (
               <Link href={`/auditions/${auditionId}/vote`} className={`${subCtaClass} no-underline`}>

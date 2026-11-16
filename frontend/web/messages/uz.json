@@ -516,7 +516,8 @@
     "playVideo": "Videoni ijro etish",
     "nameUnset": "Ism yoʻq",
     "applicantVideo": "{name} ning ariza videosi",
-    "emptyApplicants": "Koʻrsatiladigan nomzodlar yoʻq."
+    "emptyApplicants": "Koʻrsatiladigan nomzodlar yoʻq.",
+    "disabledRound": "Bu bosqichda ochiq ovoz berish oʻtkazilmaydi."
   },
   "ranking": {
     "title": "Reyting",
@@ -530,7 +531,8 @@
     "name": "Ism",
     "votes": "Ovozlar",
     "recommend": "Tavsiya",
-    "loading": "Yuklanmoqda…"
+    "loading": "Yuklanmoqda…",
+    "disabledRound": "Bu bosqichda reyting yuritilmaydi."
   },
   "profile": {
     "title": "Profil",
@@ -1049,7 +1051,8 @@
     "POSTING_BRANCH_NONE": "Tasdiqlangan faol filialsiz eʼlon qilib boʻlmaydi. Avval filialni roʻyxatdan oʻtkazing va bosh ofis tasdigʻini oling.",
     "POSTING_BRANCH_NOT_APPROVED": "Bu filial tasdiqlanmagan yoki faol emas.",
     "POSTING_BRANCH_FORBIDDEN": "Boshqa agentlikka tegishli filialdan foydalanib boʻlmaydi.",
-    "POSTING_BRANCH_INVALID": "Eʼlon filialini tasdiqlab boʻlmadi."
+    "POSTING_BRANCH_INVALID": "Eʼlon filialini tasdiqlab boʻlmadi.",
+    "VOTING_DISABLED_FOR_ROUND": "Bu bosqichda ovoz berish ochiq emas."
   },
   "application": {
     "detailLoadFailed": "Arizani yuklab boʻlmadi.",

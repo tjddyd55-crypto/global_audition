@@ -1,4 +1,4 @@
-import { canViewRanking, isRankingAccessDenied, rankingViewState } from './ranking'
+import { canShowVoting, canViewRanking, isRankingAccessDenied, rankingViewState } from './ranking'
 
 const apiError = (status: number) => Object.assign(new Error('x'), { status })
 
@@ -30,5 +30,18 @@ describe('canViewRanking', () => {
     expect(canViewRanking({ role: 'APPLICANT', userId: 'owner' }, 'owner')).toBe(false)
     expect(canViewRanking(null, 'owner')).toBe(false)
     expect(canViewRanking({ role: 'AGENCY', userId: '' }, '')).toBe(false)
+  })
+})
+
+describe('per-round voting plan', () => {
+  it('disabled round shows disabled state instead of an error', () => {
+    expect(rankingViewState({ isLoading: false, error: null, count: 0, votingEnabled: false })).toBe('disabled')
+    expect(rankingViewState({ isLoading: false, error: null, count: 2 })).toBe('list')
+  })
+  it('hides vote/ranking entry when voting is off for the current round', () => {
+    expect(canShowVoting({ votingEnabled: false })).toBe(false)
+    expect(canShowVoting({})).toBe(true)
+    expect(canViewRanking({ role: 'AGENCY', userId: 'owner' }, 'owner', false)).toBe(false)
+    expect(canViewRanking({ role: 'AGENCY', userId: 'owner' }, 'owner', true)).toBe(true)
   })
 })

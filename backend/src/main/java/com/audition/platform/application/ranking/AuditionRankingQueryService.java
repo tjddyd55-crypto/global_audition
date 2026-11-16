@@ -1,5 +1,7 @@
 package com.audition.platform.application.ranking;
 
+import com.audition.platform.application.vote.VotingRoundPlan;
+
 import com.audition.platform.api.dto.RankingItemDto;
 import com.audition.platform.api.dto.RankingPageDataDto;
 import com.audition.platform.application.audition.ApplicantCardMetricsLoader;
@@ -52,6 +54,14 @@ public class AuditionRankingQueryService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "오디션을 찾을 수 없습니다."));
         assertAgencyOrAdminCanManageAudition(audition);
 
+        // 랭킹은 투표를 따른다. 이 회차가 투표 없음이면 오류가 아니라 비활성 상태로 돌려준다(데이터는 유지).
+        if (!VotingRoundPlan.enabledNow(audition)) {
+            RankingPageDataDto disabled = new RankingPageDataDto();
+            disabled.setVotingEnabled(false);
+            disabled.setRoundNumber(VotingRoundPlan.activeRound(audition));
+            return disabled;
+        }
+
         if (applicationScoreRepository.countByAuditionId(auditionId) == 0) {
             applicationRankingService.recalculateScores(auditionId);
         }
@@ -83,6 +93,7 @@ public class AuditionRankingQueryService {
 
         RankingPageDataDto out = new RankingPageDataDto();
         out.setItems(items);
+        out.setRoundNumber(VotingRoundPlan.activeRound(audition));
         return out;
     }
 

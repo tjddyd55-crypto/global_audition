@@ -44,7 +44,9 @@ public enum ReasonCode {
     /** 공개 투표 — 라운드 review_method·제출 상태·vote_count 동기화 */
     VOTE_ROUND_NOT_PUBLIC,
     VOTE_SUBMISSION_NOT_VOTEABLE,
-    VOTE_COUNT_SYNC_ERROR;
+    VOTE_COUNT_SYNC_ERROR,
+    /** 공고 투표 설정상 현재 회차는 투표를 하지 않는다. */
+    VOTING_DISABLED_FOR_ROUND;
 
     /**
      * API 오류 응답({@link ResponseStatusException#getReason()} = {@link #name()}).
@@ -68,7 +70,7 @@ public enum ReasonCode {
             case AUDITION_ROUND_MISMATCH, NOT_MULTI_ROUND, AUDITION_NOT_OPEN, REVIEW_INVALID_FROM_STATUS,
                     REVIEW_INVALID_RESULT_STATUS, VOTE_ROUND_NOT_PUBLIC, VOTE_SUBMISSION_NOT_VOTEABLE ->
                     HttpStatus.BAD_REQUEST;
-            case VOTE_COUNT_SYNC_ERROR -> HttpStatus.CONFLICT;
+            case VOTE_COUNT_SYNC_ERROR, VOTING_DISABLED_FOR_ROUND -> HttpStatus.CONFLICT;
         };
     }
 

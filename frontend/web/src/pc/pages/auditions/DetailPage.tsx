@@ -149,6 +149,7 @@ export default function PcAuditionDetailPage() {
     <PageSurface background={AUDITION_DETAIL.pageBackgroundMuted}>
       <AuditionDetailHeroSection
         auditionId={id}
+        votingEnabled={audition.votingEnabled !== false}
         heroImageMediumUrl={heroMedium}
         heroImageOriginalUrl={heroOriginal}
         title={headlineTitle}
@@ -214,6 +215,7 @@ export default function PcAuditionDetailPage() {
 
       <PcAuditionDetailApplyBar
         auditionId={id}
+        votingEnabled={audition.votingEnabled !== false}
         isOpen={isOpen}
         alreadyApplied={alreadyApplied}
         showApplySubmitCta={showApplySubmitCta}

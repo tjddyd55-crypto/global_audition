@@ -119,6 +119,15 @@ public class Audition {
     @Column(name = "current_round_number")
     private Integer currentRoundNumber;
 
+    /** 공고 등록 시 계획한 총 회차 수(투표 설정 표시용). NULL = 미설정. */
+    @Column(name = "voting_round_count")
+    private Integer votingRoundCount;
+
+    /** 투표·랭킹을 쓰는 회차. NULL = 기존 동작(모든 회차), 빈 배열 = 투표 없음. {@link com.audition.platform.application.vote.VotingRoundPlan} */
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "voting_rounds", columnDefinition = "int[]")
+    private Integer[] votingRounds;
+
     @Column(name = "max_round_number")
     private Integer maxRoundNumber;
 
@@ -217,6 +226,10 @@ public class Audition {
     public void setSelectionStatus(String selectionStatus) { this.selectionStatus = selectionStatus; }
     public UUID getGroupId() { return groupId; }
     public void setGroupId(UUID groupId) { this.groupId = groupId; }
+    public Integer getVotingRoundCount() { return votingRoundCount; }
+    public void setVotingRoundCount(Integer votingRoundCount) { this.votingRoundCount = votingRoundCount; }
+    public Integer[] getVotingRounds() { return votingRounds; }
+    public void setVotingRounds(Integer[] votingRounds) { this.votingRounds = votingRounds; }
     public int getSeriesRound() { return seriesRound; }
     public void setSeriesRound(int seriesRound) { this.seriesRound = seriesRound; }
     public String getDefaultLocale() { return defaultLocale; }

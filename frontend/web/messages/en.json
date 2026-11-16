@@ -516,7 +516,8 @@
     "playVideo": "Play video",
     "nameUnset": "No name",
     "applicantVideo": "{name} application video",
-    "emptyApplicants": "No applicants to show."
+    "emptyApplicants": "No applicants to show.",
+    "disabledRound": "This round has no public voting."
   },
   "ranking": {
     "title": "Ranking",
@@ -530,7 +531,8 @@
     "name": "Name",
     "votes": "Votes",
     "recommend": "Featured",
-    "loading": "Loading…"
+    "loading": "Loading…",
+    "disabledRound": "This round has no ranking."
   },
   "profile": {
     "title": "Profile",
@@ -1049,7 +1051,8 @@
     "POSTING_BRANCH_NONE": "This cannot be published without an approved active branch. Register a branch and get headquarters approval first.",
     "POSTING_BRANCH_NOT_APPROVED": "That branch is not approved and active.",
     "POSTING_BRANCH_FORBIDDEN": "A branch owned by another agency cannot be used.",
-    "POSTING_BRANCH_INVALID": "The posting branch could not be verified."
+    "POSTING_BRANCH_INVALID": "The posting branch could not be verified.",
+    "VOTING_DISABLED_FOR_ROUND": "Voting is not open for this round."
   },
   "application": {
     "detailLoadFailed": "Could not load the application.",

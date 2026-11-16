@@ -9,6 +9,7 @@ import { Screen } from '../../src/ui/Screen'
 import { colors } from '../../src/theme/tokens'
 import { useTranslation } from 'react-i18next'
 import { useAudienceCountry } from '../../src/domain/AudienceCountryProvider'
+import { canShowVoting } from '../../src/domain/ranking'
 import { getRuntimeLocale } from '../../src/i18n/runtime'
 
 export default function VoteHubScreen() {
@@ -21,6 +22,9 @@ export default function VoteHubScreen() {
     queryFn: () => auditionApi.listOpen(country),
   })
 
+  // 공고 투표 설정상 현재 회차에 투표가 없는 공고는 투표 탭에서 뺀다.
+  const votable = (query.data ?? []).filter((a) => canShowVoting(a))
+
   return (
     <Screen topInset={false} loading={query.isLoading} refreshing={query.isFetching} onRefresh={() => void query.refetch()}>
       <Text style={{ fontSize: 22, fontWeight: '800', color: colors.text, marginBottom: 8 }}>{t('vote.hubTitle')}</Text>
@@ -28,12 +32,12 @@ export default function VoteHubScreen() {
         {t('vote.hubHint')}
       </Text>
       {query.isError ? <ErrorState message={t('vote.loadFailed')} onRetry={() => void query.refetch()} /> : null}
-      {(query.data ?? []).map((audition) => (
+      {votable.map((audition) => (
         <View key={audition.id} style={{ marginBottom: 12 }}>
           <AuditionCard audition={audition} onPress={() => router.push(`/auditions/${audition.id}/vote`)} />
         </View>
       ))}
-      {!query.isLoading && (query.data?.length ?? 0) === 0 ? (
+      {!query.isLoading && votable.length === 0 ? (
         <EmptyState title={t('vote.emptyHub')} />
       ) : null}
     </Screen>

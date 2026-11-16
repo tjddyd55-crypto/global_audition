@@ -1,5 +1,6 @@
 import type { AuditionDto, AuditionImages, AuditionTextContent } from '@/shared/types/audition'
 import { safeStringArr } from '@/shared/utils/safe'
+import { parseAuditionVotingFields } from '@/shared/audition/votingRounds'
 import type { PublicVoteItem } from './types'
 
 export function parsePublicVoteItem(raw: Record<string, unknown>): PublicVoteItem {
@@ -114,6 +115,7 @@ export function parseAuditionDto(raw: Record<string, unknown>): AuditionDto {
         : raw.seriesRound != null && Number.isFinite(Number(raw.seriesRound))
           ? Number(raw.seriesRound)
           : 1,
+    ...parseAuditionVotingFields(raw),
     displayTitle: raw.displayTitle != null ? String(raw.displayTitle).trim() || undefined : undefined,
     recruitmentRoundLabel:
       raw.recruitmentRoundLabel != null ? String(raw.recruitmentRoundLabel).trim() || undefined : undefined,
