@@ -157,7 +157,13 @@ class PerRoundVoteIT {
     @Test
     void roundApiReviewMethodAndPostingPlanAreOneSource() {
         UUID owner = user();
-        UUID audition = multiAudition(owner, 1, null, null);
+        // 설정 전 공고: 기본값(INTERNAL_REVIEW)으로 회차를 추가해도 투표 가능(기존 동작) 유지
+        UUID legacy = multiAudition(owner, 1, null, null);
+        var lr = rounds.createRound(legacy, "", "INTERNAL_REVIEW", null, null, null);
+        assertNull(auditions.findById(legacy).orElseThrow().getVotingRounds());
+        assertEquals("PUBLIC_VOTE", rounds.effectiveReviewMethod(lr));
+
+        UUID audition = multiAudition(owner, 1, "{}", 1);
         var r1 = rounds.createRound(audition, "", "INTERNAL_REVIEW", null, null, null);
         var r2 = rounds.createRound(audition, "", "PUBLIC_VOTE", null, null, null);
         var a = auditions.findById(audition).orElseThrow();

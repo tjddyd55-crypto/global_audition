@@ -133,7 +133,12 @@ public class AuditionRoundService {
         r.setAuditionId(auditionId);
         r.setRoundNumber(nextNum);
         r.setRoundName(roundName != null && !roundName.isBlank() ? roundName.trim() : "");
-        applyReviewMethodToPlan(audition, nextNum, reviewMethod, nextNum);
+        // 설정 전(NULL = 모든 회차 투표) 공고에 기본값 INTERNAL_REVIEW 로 회차를 추가해도 기존 동작(투표 가능)을 바꾸지 않는다.
+        // 공개 투표를 명시하거나, 설정이 있는 공고에서만 공고 설정에 반영한다.
+        boolean legacyDefault = audition.getVotingRounds() == null && !"PUBLIC_VOTE".equals(reviewMethod);
+        if (!legacyDefault) {
+            applyReviewMethodToPlan(audition, nextNum, reviewMethod, nextNum);
+        }
         boolean voting = VotingRoundPlan.enabledFor(audition.getVotingRounds(), nextNum);
         String stored = reviewMethod != null ? reviewMethod : "INTERNAL_REVIEW";
         r.setReviewMethod(audition.getVotingRounds() == null ? stored : VotingRoundPlan.effectiveReviewMethod(stored, voting));

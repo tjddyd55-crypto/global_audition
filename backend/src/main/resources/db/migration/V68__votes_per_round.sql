@@ -10,6 +10,9 @@
 
 ALTER TABLE public.votes ADD COLUMN IF NOT EXISTS round_number INT NULL;
 
+-- 재실행 안전: 매핑·중복 정리 뒤에 회차 단위 유일 인덱스를 (다시) 만든다.
+DROP INDEX IF EXISTS public.uq_votes_user_audition_round;
+
 UPDATE public.votes v
 SET round_number = r.round_number
 FROM public.audition_rounds r
