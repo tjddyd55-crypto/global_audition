@@ -1013,7 +1013,9 @@
     "applyVideo": "Application video",
     "noVideoLink": "No video link.",
     "noAuditionsHint": "No auditions yet. Create a posting in Audition management first.",
-    "pickAudition": "Select an audition."
+    "pickAudition": "Select an audition.",
+    "navTalents": "Talent search",
+    "navCasting": "Casting offers"
   },
   "errors": {
     "INSUFFICIENT_CREDITS": "Not enough credits",
@@ -1116,7 +1118,22 @@
     "multiStageOpenBody": "We will tell you when the next round opens.",
     "PENDING": "Pending",
     "SENT": "Sent",
-    "FAILED": "Delivery failed"
+    "FAILED": "Delivery failed",
+    "castingOfferNewTitle": "New casting offer",
+    "castingOfferNewBody": "{agency} sent you \"{title}\".",
+    "castingOfferDeadlineTitle": "Casting offer closing soon",
+    "castingOfferDeadlineBody": "\"{title}\" closes in 24 hours.",
+    "castingOfferWithdrawnTitle": "Casting offer withdrawn",
+    "castingOfferWithdrawnBody": "{agency} withdrew \"{title}\".",
+    "castingOfferReadTitle": "Offer read",
+    "castingOfferReadBody": "{talent} read \"{title}\".",
+    "castingOfferAcceptedTitle": "Offer accepted",
+    "castingOfferAcceptedBody": "{talent} is interested in \"{title}\".",
+    "castingOfferDeclinedTitle": "Offer declined",
+    "castingOfferDeclinedBody": "{talent} declined \"{title}\".",
+    "channelNewVideoTitle": "New video from a channel you follow",
+    "channelNewVideoBody": "{channel} posted \"{title}\".",
+    "open": "Open"
   },
   "vault": {
     "title": "Creative vault",
@@ -1314,7 +1331,8 @@
     },
     "loadMore": "Load more",
     "residenceShort": "Lives in {country}",
-    "noResults": "No channels match these filters."
+    "noResults": "No channels match these filters.",
+    "sendCastingOffer": "Send casting offer"
   },
   "native": {
     "otaTitle": "A new version is ready",
@@ -1701,7 +1719,8 @@
     "visibilityPrivate": "Private",
     "viewChannel": "View my channel",
     "unlistedNote": "Unlisted YouTube videos also play. If you make one public here, anyone can watch it.",
-    "identityHint": "Edit your photo, stage name, nationality and birth date (private) in your profile."
+    "identityHint": "Edit your photo, stage name, nationality and birth date (private) in your profile.",
+    "castingOffers": "Casting offers"
   },
   "languages": {
     "ko": "한국어",
@@ -1786,5 +1805,107 @@
     "failPending": "Processing failure callback…",
     "failBtn": "Payment failure (mock)",
     "toCheckout": "To payment review"
+  },
+  "casting": {
+    "title": "Casting offers",
+    "intro": "Offers from approved agencies. Accepting only shows interest — it creates no contract, application, payment or credit charge.",
+    "empty": "No casting offers yet.",
+    "loadFailed": "Could not load offers.",
+    "loading": "Loading…",
+    "back": "Back to list",
+    "openDetail": "View details",
+    "from": "Agency",
+    "project": "Project type",
+    "role": "Field",
+    "workPlace": "Location",
+    "schedule": "Schedule",
+    "compensation": "Compensation",
+    "deadline": "Reply by",
+    "daysLeft": "{days} days left",
+    "expired": "Past deadline",
+    "received": "Received",
+    "message": "Message",
+    "contactRequested": "The agency asked you to share your email (optional).",
+    "contactShared": "You shared your email with this agency.",
+    "status": {
+      "SENT": "New",
+      "READ": "Read",
+      "ACCEPTED": "Accepted",
+      "DECLINED": "Declined",
+      "EXPIRED": "Expired",
+      "WITHDRAWN": "Withdrawn"
+    },
+    "projectType": {
+      "AUDITION_INVITE": "Audition invite",
+      "TRAINEE": "Trainee offer",
+      "PROJECT": "Project",
+      "CONTENT_COLLAB": "Content collaboration",
+      "MODEL_SHOOT": "Model shoot",
+      "OTHER": "Other"
+    },
+    "compensationType": {
+      "PAID": "Paid",
+      "UNPAID": "Unpaid",
+      "NEGOTIABLE": "Negotiable",
+      "TBD": "TBD"
+    },
+    "declineReason": {
+      "NOT_INTERESTED": "Not interested",
+      "SCHEDULE": "Schedule conflict",
+      "FIELD_MISMATCH": "Field mismatch",
+      "LOCATION": "Location mismatch",
+      "OTHER": "Other"
+    },
+    "reportReason": {
+      "SPAM": "Spam",
+      "FRAUD": "Suspected fraud",
+      "EXTERNAL_PAYMENT": "External payment / upfront fee",
+      "HARASSMENT": "Harassment",
+      "INAPPROPRIATE": "Inappropriate content",
+      "OTHER": "Other"
+    },
+    "accept": "Interested (accept)",
+    "decline": "Decline",
+    "report": "Report",
+    "block": "Block agency",
+    "unblock": "Unblock",
+    "cancel": "Cancel",
+    "acceptTitle": "Reply as interested",
+    "acceptNotice": "Accepting creates no contract, application, payment or credit charge. Confirm next steps with the agency separately.",
+    "shareContact": "Share my email with this agency (optional)",
+    "noteLabel": "Message (optional)",
+    "confirmAccept": "Accept",
+    "accepted": "Accepted.",
+    "declineTitle": "Decline offer",
+    "declineReasonLabel": "Reason",
+    "confirmDecline": "Decline",
+    "declined": "Declined.",
+    "reportTitle": "Report offer",
+    "reportReasonLabel": "Reason",
+    "reportDetail": "Details (optional)",
+    "reportBlock": "Also block this agency",
+    "confirmReport": "Report",
+    "reported": "Report received. Our team will review it.",
+    "blockConfirm": "Block this agency? You will no longer receive its offers and will not appear in its talent search.",
+    "blocked": "Blocked.",
+    "blocksTitle": "Blocked agencies",
+    "noBlocks": "You have not blocked any agency.",
+    "safetyTip": "If anyone asks for an upfront fee, external payment or your private contact first, do not respond — report it.",
+    "history": "History",
+    "actor": {
+      "TALENT": "You",
+      "AGENCY": "Agency",
+      "SYSTEM": "System"
+    },
+    "error": {
+      "generic": "Something went wrong. Please try again.",
+      "OFFER_EXPIRED": "This offer is past its deadline.",
+      "OFFER_STATE_CONFLICT": "This offer has already been handled.",
+      "OFFER_NOT_FOUND": "Offer not found."
+    },
+    "withdrawnNotice": "The agency withdrew this offer.",
+    "responseLabel": "Your reply",
+    "agencyBlockedBadge": "Blocked",
+    "unread": "Unread"
   }
 }

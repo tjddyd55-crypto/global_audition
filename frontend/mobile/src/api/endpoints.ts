@@ -1,6 +1,8 @@
 import { normalizeAudienceCountry } from '../domain/audience'
 import { unwrapData } from './unwrap'
-import { apiRequest } from './http'
+import { ApiError, apiRequest } from './http'
+import { parseOffer, type CastingOffer, type CastingParty } from '../../../web/src/shared/casting/model'
+import type { ContentTranslationView } from '../../../web/src/shared/i18n/contentTranslation'
 import {
   parseAgencyDetail,
   parseCreditLedger,
@@ -200,6 +202,53 @@ export const channelApi = {
   recheckVideo: async (id: string) =>
     unwrapData(await apiRequest<unknown>(`/me/channel/videos/${id}/check`, { method: 'POST' })) as MyChannelVideoItem,
   deleteVideo: (id: string) => apiRequest<unknown>(`/me/channel/videos/${id}`, { method: 'DELETE' }),
+}
+
+/** 지원자: 받은 캐스팅 제안. 수락은 관심 표시일 뿐 계약·지원·결제·크레딧과 무관. */
+export const castingApi = {
+  offers: async (): Promise<CastingOffer[]> => {
+    const rows = unwrapData(await apiRequest<unknown>('/me/casting-offers'))
+    return Array.isArray(rows) ? rows.map(parseOffer) : []
+  },
+  offer: async (id: string): Promise<CastingOffer> => parseOffer(unwrapData(await apiRequest<unknown>(`/me/casting-offers/${id}`))),
+  accept: async (id: string, shareContact: boolean, note: string): Promise<CastingOffer> =>
+    parseOffer(unwrapData(await apiRequest<unknown>(`/me/casting-offers/${id}/accept`, { method: 'POST', body: { shareContact, note: note || null } }))),
+  decline: async (id: string, reason: string, note: string): Promise<CastingOffer> =>
+    parseOffer(unwrapData(await apiRequest<unknown>(`/me/casting-offers/${id}/decline`, { method: 'POST', body: { reason, note: note || null } }))),
+  report: async (id: string, reason: string, detail: string, blockAgency: boolean): Promise<void> => {
+    await apiRequest<unknown>(`/me/casting-offers/${id}/report`, { method: 'POST', body: { reason, detail, blockAgency } })
+  },
+  block: async (id: string): Promise<void> => {
+    await apiRequest<unknown>(`/me/casting-offers/${id}/block`, { method: 'POST', body: {} })
+  },
+  blocks: async (): Promise<CastingParty[]> => {
+    const rows = unwrapData(await apiRequest<unknown>('/me/casting-blocks'))
+    return Array.isArray(rows) ? (rows as CastingParty[]) : []
+  },
+  unblock: async (agencyUserId: string): Promise<void> => {
+    await apiRequest<unknown>(`/me/casting-blocks/${agencyUserId}`, { method: 'DELETE' })
+  },
+}
+
+/** 자유 입력 번역(비동기 큐). 404면 번역 없음. */
+export const contentTranslationApi = {
+  view: async (type: string, id: string, locale: string, original: boolean): Promise<ContentTranslationView | null> => {
+    try {
+      return (await apiRequest<unknown>(`/content-translations/${type}/${id}`, { query: { locale, original: String(original) } })) as ContentTranslationView
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 404) return null
+      throw e
+    }
+  },
+}
+
+/** 서버 오류 코드(예: OFFER_EXPIRED). 문장은 화면에 쓰지 않는다. */
+export function apiErrorCodeOf(e: unknown): string {
+  const body = e instanceof ApiError ? (e.body as { message?: unknown; code?: unknown } | null) : null
+  for (const v of [body?.code, body?.message]) {
+    if (typeof v === 'string' && /^[A-Z][A-Z0-9_]+$/.test(v.trim())) return v.trim()
+  }
+  return ''
 }
 
 export const notificationApi = {

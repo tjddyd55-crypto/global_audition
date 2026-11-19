@@ -130,6 +130,14 @@ export default function ChannelScreen() {
               />
             </View>
           )}
+          {!own && data?.canSendCastingOffer ? (
+            <View style={styles.flex}>
+              <Button
+                label={t('channel.sendCastingOffer')}
+                onPress={() => router.push({ pathname: '/web', params: { path: `/ko/my/casting/new?talent=${id}` } })}
+              />
+            </View>
+          ) : null}
           <View style={styles.flex}>
             <Button
               label={t('channel.share')}

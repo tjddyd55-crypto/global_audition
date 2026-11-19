@@ -1013,7 +1013,9 @@
     "applyVideo": "지원 영상",
     "noVideoLink": "영상 링크가 없습니다.",
     "noAuditionsHint": "등록된 오디션이 없습니다. 오디션 관리에서 공고를 만든 뒤 이용해 주세요.",
-    "pickAudition": "오디션을 선택해 주세요."
+    "pickAudition": "오디션을 선택해 주세요.",
+    "navTalents": "인재 검색",
+    "navCasting": "캐스팅 제안"
   },
   "errors": {
     "INSUFFICIENT_CREDITS": "크레딧이 부족합니다",
@@ -1116,7 +1118,22 @@
     "multiStageOpenBody": "다음 회차 심사가 열리면 안내합니다.",
     "PENDING": "대기",
     "SENT": "발송됨",
-    "FAILED": "전송 실패"
+    "FAILED": "전송 실패",
+    "castingOfferNewTitle": "새 캐스팅 제안",
+    "castingOfferNewBody": "{agency}에서 \"{title}\" 제안을 보냈습니다.",
+    "castingOfferDeadlineTitle": "캐스팅 제안 마감 임박",
+    "castingOfferDeadlineBody": "\"{title}\" 응답 기한이 24시간 남았습니다.",
+    "castingOfferWithdrawnTitle": "캐스팅 제안 철회",
+    "castingOfferWithdrawnBody": "{agency}가 \"{title}\" 제안을 철회했습니다.",
+    "castingOfferReadTitle": "제안 열람",
+    "castingOfferReadBody": "{talent} 님이 \"{title}\" 제안을 열람했습니다.",
+    "castingOfferAcceptedTitle": "제안 수락",
+    "castingOfferAcceptedBody": "{talent} 님이 \"{title}\" 제안에 관심 있음으로 응답했습니다.",
+    "castingOfferDeclinedTitle": "제안 거절",
+    "castingOfferDeclinedBody": "{talent} 님이 \"{title}\" 제안을 거절했습니다.",
+    "channelNewVideoTitle": "팔로우 채널 새 영상",
+    "channelNewVideoBody": "{channel} 채널에 새 영상 \"{title}\"이(가) 올라왔습니다.",
+    "open": "열기"
   },
   "vault": {
     "title": "창작물 보관소",
@@ -1314,7 +1331,8 @@
     },
     "loadMore": "더 보기",
     "residenceShort": "거주 {country}",
-    "noResults": "조건에 맞는 채널이 없습니다."
+    "noResults": "조건에 맞는 채널이 없습니다.",
+    "sendCastingOffer": "캐스팅 제안 보내기"
   },
   "native": {
     "otaTitle": "새 버전이 준비되었어요",
@@ -1701,7 +1719,8 @@
     "visibilityPrivate": "비공개",
     "viewChannel": "내 채널 보기",
     "unlistedNote": "YouTube에서 일부 공개(Unlisted)인 영상도 재생됩니다. 채널에서 공개하면 누구나 볼 수 있습니다.",
-    "identityHint": "프로필 사진·활동명·국적·생년월일(비공개)은 프로필에서 수정합니다."
+    "identityHint": "프로필 사진·활동명·국적·생년월일(비공개)은 프로필에서 수정합니다.",
+    "castingOffers": "캐스팅 제안"
   },
   "languages": {
     "ko": "한국어",
@@ -1786,5 +1805,107 @@
     "failPending": "실패 콜백 처리 중…",
     "failBtn": "결제 실패 (목)",
     "toCheckout": "결제 확인으로"
+  },
+  "casting": {
+    "title": "캐스팅 제안",
+    "intro": "승인된 기획사가 보낸 제안입니다. 수락은 관심 표시일 뿐 계약·지원서·결제·크레딧 차감이 생기지 않습니다.",
+    "empty": "받은 캐스팅 제안이 없습니다.",
+    "loadFailed": "제안을 불러오지 못했습니다.",
+    "loading": "불러오는 중…",
+    "back": "목록으로",
+    "openDetail": "자세히 보기",
+    "from": "보낸 기획사",
+    "project": "프로젝트 유형",
+    "role": "분야",
+    "workPlace": "활동 지역",
+    "schedule": "일정",
+    "compensation": "보수",
+    "deadline": "응답 기한",
+    "daysLeft": "{days}일 남음",
+    "expired": "기한 지남",
+    "received": "받은 날",
+    "message": "메시지",
+    "contactRequested": "기획사가 이메일 공유를 요청했습니다(선택).",
+    "contactShared": "내 이메일을 이 기획사와 공유했습니다.",
+    "status": {
+      "SENT": "새 제안",
+      "READ": "열람함",
+      "ACCEPTED": "수락함",
+      "DECLINED": "거절함",
+      "EXPIRED": "기한 만료",
+      "WITHDRAWN": "철회됨"
+    },
+    "projectType": {
+      "AUDITION_INVITE": "오디션 초대",
+      "TRAINEE": "연습생 제안",
+      "PROJECT": "프로젝트 참여",
+      "CONTENT_COLLAB": "콘텐츠 협업",
+      "MODEL_SHOOT": "모델 촬영",
+      "OTHER": "기타"
+    },
+    "compensationType": {
+      "PAID": "유급",
+      "UNPAID": "무급",
+      "NEGOTIABLE": "협의",
+      "TBD": "미정"
+    },
+    "declineReason": {
+      "NOT_INTERESTED": "관심 없음",
+      "SCHEDULE": "일정이 맞지 않음",
+      "FIELD_MISMATCH": "분야가 맞지 않음",
+      "LOCATION": "지역이 맞지 않음",
+      "OTHER": "기타"
+    },
+    "reportReason": {
+      "SPAM": "스팸",
+      "FRAUD": "사기 의심",
+      "EXTERNAL_PAYMENT": "외부 결제·선입금 요구",
+      "HARASSMENT": "괴롭힘",
+      "INAPPROPRIATE": "부적절한 내용",
+      "OTHER": "기타"
+    },
+    "accept": "관심 있음(수락)",
+    "decline": "거절",
+    "report": "신고",
+    "block": "기획사 차단",
+    "unblock": "차단 해제",
+    "cancel": "취소",
+    "acceptTitle": "관심 있음으로 응답",
+    "acceptNotice": "수락해도 계약·지원서·결제·크레딧 차감은 생기지 않습니다. 이후 진행은 기획사와 따로 확인하세요.",
+    "shareContact": "내 이메일을 이 기획사와 공유합니다(선택)",
+    "noteLabel": "메시지(선택)",
+    "confirmAccept": "수락하기",
+    "accepted": "수락했습니다.",
+    "declineTitle": "제안 거절",
+    "declineReasonLabel": "거절 사유",
+    "confirmDecline": "거절하기",
+    "declined": "거절했습니다.",
+    "reportTitle": "제안 신고",
+    "reportReasonLabel": "신고 사유",
+    "reportDetail": "자세한 내용(선택)",
+    "reportBlock": "이 기획사도 차단합니다",
+    "confirmReport": "신고하기",
+    "reported": "신고가 접수되었습니다. 운영팀이 확인합니다.",
+    "blockConfirm": "이 기획사를 차단할까요? 차단하면 더 이상 제안을 받지 않고 이 기획사의 인재 검색에도 나오지 않습니다.",
+    "blocked": "차단했습니다.",
+    "blocksTitle": "차단한 기획사",
+    "noBlocks": "차단한 기획사가 없습니다.",
+    "safetyTip": "선입금·외부 결제·개인 연락처를 먼저 요구하면 응하지 말고 신고해 주세요.",
+    "history": "진행 기록",
+    "actor": {
+      "TALENT": "나",
+      "AGENCY": "기획사",
+      "SYSTEM": "시스템"
+    },
+    "error": {
+      "generic": "처리하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+      "OFFER_EXPIRED": "응답 기한이 지난 제안입니다.",
+      "OFFER_STATE_CONFLICT": "이미 처리된 제안입니다.",
+      "OFFER_NOT_FOUND": "제안을 찾을 수 없습니다."
+    },
+    "withdrawnNotice": "기획사가 이 제안을 철회했습니다.",
+    "responseLabel": "내 응답",
+    "agencyBlockedBadge": "차단함",
+    "unread": "안 읽음"
   }
 }

@@ -251,6 +251,16 @@ export default function ChannelByUserIdPage() {
                 {!me ? t('loginToFollow') : data.subscribed ? t('following') : t('follow')}
               </button>
             )}
+            {!isOwnChannel && data.canSendCastingOffer ? (
+              <button
+                type="button"
+                data-testid="channel-send-offer"
+                className="h-10 rounded-full bg-violet-600 px-4 text-sm font-semibold text-white"
+                onClick={() => router.push(`/my/casting/new?talent=${userId}`)}
+              >
+                {t('sendCastingOffer')}
+              </button>
+            ) : null}
             <button
               type="button"
               onClick={() => void onShare()}
