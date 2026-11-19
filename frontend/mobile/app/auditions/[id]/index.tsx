@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useLocalSearchParams, useRouter } from 'expo-router'
-import { Linking, StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, Text, View } from 'react-native'
 import { auditionApi } from '../../../src/api/endpoints'
 import { queryKeys } from '../../../src/api/queryKeys'
 import { useAuth } from '../../../src/auth/AuthProvider'
@@ -18,6 +18,7 @@ import { useTranslation } from 'react-i18next'
 import { applyBlockedDisplayMessage } from '../../../src/domain/applyBlocked'
 import { recruitFieldLabels } from '../../../../web/src/shared/audition/recruitFields'
 import { displayAuditionTag } from '../../../../web/src/shared/audition/auditionTagLabels'
+import { NativeVideoPlayer } from '../../../src/features/media/NativeVideoPlayer'
 import { getRuntimeLocale } from '../../../src/i18n/runtime'
 
 export default function AuditionDetailScreen() {
@@ -136,7 +137,10 @@ export default function AuditionDetailScreen() {
               </View>
             ) : null}
             {audition.videoUrl ? (
-              <Button label={t('auditionDetail.introVideo')} variant="secondary" onPress={() => void Linking.openURL(audition.videoUrl ?? '')} />
+              <View>
+                <Text style={styles.section}>{t('auditionDetail.introVideo')}</Text>
+                <NativeVideoPlayer videoUrl={audition.videoUrl} />
+              </View>
             ) : null}
           </View>
         </View>

@@ -42,5 +42,5 @@ export function generateThumbnailUrl(videoId: string): string {
  * YouTube 영상 ID로 임베드 URL 생성
  */
 export function generateEmbedUrl(videoId: string): string {
-  return `https://www.youtube.com/embed/${videoId}`
+  return `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&playsinline=1`
 }

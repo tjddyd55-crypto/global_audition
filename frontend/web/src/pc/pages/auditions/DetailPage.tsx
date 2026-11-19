@@ -178,6 +178,7 @@ export default function PcAuditionDetailPage() {
           </h2>
           <div className="aspect-video w-full bg-black">
             <iframe
+            referrerPolicy="strict-origin-when-cross-origin"
               title="audition-video"
               src={embed}
               className="h-full w-full border-0"

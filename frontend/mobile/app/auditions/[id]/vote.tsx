@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useLocalSearchParams, useRouter } from 'expo-router'
-import { Linking, StyleSheet, Text, View } from 'react-native'
+import { useState } from 'react'
+import { StyleSheet, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { voteApi } from '../../../src/api/endpoints'
 import { queryKeys } from '../../../src/api/queryKeys'
@@ -9,10 +10,12 @@ import { ApiError } from '../../../src/api/http'
 import { Button } from '../../../src/ui/Button'
 import { EmptyState, ErrorState } from '../../../src/ui/EmptyState'
 import { Screen } from '../../../src/ui/Screen'
+import { NativeVideoPlayer } from '../../../src/features/media/NativeVideoPlayer'
 import { colors, radius } from '../../../src/theme/tokens'
 
 export default function VoteScreen() {
   const { t } = useTranslation()
+  const [playingId, setPlayingId] = useState<string | null>(null)
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()
   const queryClient = useQueryClient()
@@ -48,7 +51,11 @@ export default function VoteScreen() {
           <Text style={styles.meta}>{item.description}</Text>
           <Text style={styles.meta}>{t('vote.voteCount', { n: item.voteCount })}</Text>
           {item.videoUrl ? (
-            <Button label={t('vote.watchVideo')} variant="secondary" onPress={() => void Linking.openURL(item.videoUrl)} />
+            playingId === item.applicationId ? (
+              <NativeVideoPlayer videoUrl={item.videoUrl} autoplay />
+            ) : (
+              <Button label={t('vote.watchVideo')} variant="secondary" onPress={() => setPlayingId(item.applicationId)} />
+            )
           ) : null}
           <Button
             label={item.isVoted ? t('vote.myVote') : t('vote.castFor')}

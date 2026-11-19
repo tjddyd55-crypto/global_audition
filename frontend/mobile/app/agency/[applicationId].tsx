@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useLocalSearchParams } from 'expo-router'
 import { useState } from 'react'
-import { Linking, StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, Text, View } from 'react-native'
 import { agencyApi } from '../../src/api/endpoints'
 import { agencyCopy } from '../../src/i18n/agencyCopy'
 import { queryKeys } from '../../src/api/queryKeys'
@@ -12,6 +12,7 @@ import { ConfirmDialog } from '../../src/ui/ConfirmDialog'
 import { ErrorState } from '../../src/ui/EmptyState'
 import { Screen } from '../../src/ui/Screen'
 import { StatusPill, toneForApplicationStatus } from '../../src/ui/StatusPill'
+import { NativeVideoPlayer } from '../../src/features/media/NativeVideoPlayer'
 import { colors } from '../../src/theme/tokens'
 
 export default function AgencyApplicantDetailScreen() {
@@ -53,7 +54,7 @@ export default function AgencyApplicantDetailScreen() {
           </Text>
           {detail.introText ? <Text style={styles.body}>{detail.introText}</Text> : null}
           {detail.videoUrl ? (
-            <Button label={agencyCopy('agency.openVideo')} variant="secondary" onPress={() => void Linking.openURL(detail.videoUrl)} />
+            <NativeVideoPlayer videoUrl={detail.videoUrl} />
           ) : null}
           {detail.snsLinks.map((link) => (
             <Text key={`${link.platform}-${link.url}`} style={styles.meta}>

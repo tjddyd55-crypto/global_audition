@@ -15,10 +15,6 @@ type Props = {
   error?: boolean
 }
 
-function watchUrl(v: MyChannelVideoRow): string {
-  return v.youtubeVideoId ? `https://www.youtube.com/watch?v=${v.youtubeVideoId}` : v.videoUrl
-}
-
 function blockedMessageKey(v: MyChannelVideoRow): 'embedNotFound' | 'embedRestricted' | null {
   if (v.embedStatus === 'NOT_FOUND') return 'embedNotFound'
   if (v.embedStatus === 'RESTRICTED') return 'embedRestricted'
@@ -123,14 +119,6 @@ export function ChannelVideoTheater({ videos, featuredId, loading, error }: Prop
               <p className="mt-2 line-clamp-3 whitespace-pre-wrap break-words text-sm text-neutral-700">{selected.description}</p>
             ) : null}
           </div>
-          <a
-            href={watchUrl(selected)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="shrink-0 rounded-full border border-neutral-300 px-3 py-1.5 text-xs font-semibold text-neutral-800"
-          >
-            {t('openOnYoutube')}
-          </a>
         </div>
       </div>
       {ordered.length > 1 ? (

@@ -321,6 +321,7 @@ export function ChannelVideoDetailClient({ videoId, initialDetail }: Props) {
           <div className="w-full bg-black aspect-video">
             {embedSrc ? (
               <iframe
+            referrerPolicy="strict-origin-when-cross-origin"
                 title={titleText}
                 src={embedSrc}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
