@@ -264,7 +264,8 @@ export const publicPlatformApi = {
   },
   follow: (userId: string) => apiRequest<unknown>('/subscribe', { method: 'POST', body: { channelOwnerId: userId } }),
   unfollow: (userId: string) => apiRequest<unknown>('/subscribe', { method: 'DELETE', body: { channelOwnerId: userId } }),
-  bumpView: (videoId: string) => apiRequest<unknown>(`/videos/${videoId}/view`, { method: 'POST' }),
+  bumpView: async (videoId: string) =>
+    unwrapData(await apiRequest<unknown>(`/videos/${videoId}/view`, { method: 'POST' })) as { viewCount?: number } | null,
   agencies: async () => unwrapData(await apiRequest<unknown>('/agencies/public', { auth: false })),
   agency: async (id: string) => unwrapData(await apiRequest<unknown>(`/agencies/public/${id}`, { auth: false })),
 }

@@ -42,7 +42,8 @@ public class ChannelCareerSource implements ContentTranslationSource {
             return true;
         }
         User owner = users.findById(snapshot.ownerUserId()).orElse(null);
-        if (owner == null || !owner.isChannelPublic()) {
+        if (owner == null || !owner.isChannelPublic() || owner.isChannelModerationHidden()
+                || !"ACTIVE".equals(owner.getAccountStatus() == null ? "ACTIVE" : owner.getAccountStatus())) {
             return false;
         }
         return careers.find(snapshot.contentId()).map(ChannelCareerStore.Career::visible).orElse(false);

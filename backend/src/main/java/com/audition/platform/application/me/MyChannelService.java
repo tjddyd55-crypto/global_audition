@@ -468,6 +468,12 @@ public class MyChannelService {
                 throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "YOUTUBE_URL_REQUIRED");
             }
             if (!ytId.equals(v.getYoutubeVideoId())) {
+                for (ChannelVideo e : channelVideoRepository.findByOwnerIdOrderByCreatedAtDesc(ownerId)) {
+                    if (!e.getId().equals(v.getId()) && ytId.equals(e.getYoutubeVideoId() != null
+                            ? e.getYoutubeVideoId() : YoutubeVideoRef.idOf(e.getVideoUrl()))) {
+                        throw new ResponseStatusException(HttpStatus.CONFLICT, "CHANNEL_VIDEO_DUPLICATE");
+                    }
+                }
                 v.setYoutubeVideoId(ytId);
                 YoutubeEmbedChecker.Result check = embedChecker.check(ytId);
                 v.setEmbedStatus(check.status());
