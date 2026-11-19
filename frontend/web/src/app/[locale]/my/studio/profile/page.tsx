@@ -14,6 +14,7 @@ const NATIONALITIES = nationalityOptionValues()
 export default function StudioProfilePage() {
   const t = useTranslations('studio')
   const tCommon = useTranslations('common')
+  const tPrivacy = useTranslations('privacy')
   const tCountries = useTranslations('countries')
   const tNat = useTranslations('nationality')
   const tReg = useTranslations('register')
@@ -22,6 +23,7 @@ export default function StudioProfilePage() {
   const [name, setName] = useState('')
   const [nickname, setNickname] = useState('')
   const [birthDate, setBirthDate] = useState('')
+  const [birthLocked, setBirthLocked] = useState(false)
   const [nationality, setNationality] = useState('')
   const [countryCode, setCountryCode] = useState('')
   const [timezone, setTimezone] = useState('')
@@ -41,6 +43,7 @@ export default function StudioProfilePage() {
     setName(me.name ?? '')
     setNickname(me.nickname ?? '')
     setBirthDate(me.birthDate ?? '')
+    setBirthLocked(Boolean(me.birthDate))
     setNationality(me.nationality ?? me.country ?? '')
     setCountryCode((me.countryCode ?? '').trim().toUpperCase())
     setTimezone((me.timezone ?? '').trim())
@@ -59,7 +62,7 @@ export default function StudioProfilePage() {
       meProfileApi.patch({
         name,
         nickname: nickname.trim(),
-        birthDate,
+        ...(birthLocked ? {} : { birthDate }),
         nationality,
         countryCode,
         timezone,
@@ -120,7 +123,14 @@ export default function StudioProfilePage() {
       </label>
       <label className="text-sm font-medium">
         {t('birthDate')}
-        <input className={INPUT_BASE} type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
+        <input
+          className={INPUT_BASE}
+          type="date"
+          value={birthDate}
+          disabled={birthLocked}
+          onChange={(e) => setBirthDate(e.target.value)}
+        />
+        {birthLocked ? <span className="text-xs text-gray-500">{tPrivacy('birthDateLocked')}</span> : null}
       </label>
       <label className="text-sm font-medium">
         {t('nationality')}

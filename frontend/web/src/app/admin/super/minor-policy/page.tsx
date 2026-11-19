@@ -275,6 +275,8 @@ function UserLookup() {
   const [activity, setActivity] = useState<string>('FINAL_CONTRACT')
   const [appId, setAppId] = useState('')
   const [note, setNote] = useState('')
+  const [fixBirth, setFixBirth] = useState('')
+  const [fixReason, setFixReason] = useState('')
   const refresh = () => qc.invalidateQueries({ queryKey: ['admin', 'minor-policy'] })
   const u = q.data
   const minor = (u?.minor ?? {}) as Record<string, unknown>
@@ -306,6 +308,35 @@ function UserLookup() {
               지원 {minor.applyAllowed ? '가능' : '제한'} · 검색 노출 {minor.searchAllowed ? '가능' : '제한'} · 제안 수신{' '}
               {minor.offersAllowed ? '가능' : '제한'} · 연락처 공유 {minor.contactSharingAllowed ? '가능' : '제한'}
             </p>
+          </section>
+          <section className="rounded-lg border bg-white p-3" data-testid="birth-date-correction">
+            <h2 className="text-sm font-semibold">생년월일 정정</h2>
+            <p className="mt-1 text-xs text-gray-500">
+              회원은 생년월일을 직접 바꿀 수 없습니다. 본인 확인 후에만 정정하세요. 변경 전·후·사유·처리 관리자·일시가 감사 로그에 남고 연령 정책이 다시 적용됩니다.
+            </p>
+            <div className="mt-2 flex flex-wrap gap-2 text-sm">
+              <input type="date" className="h-9 rounded border px-2" value={fixBirth} onChange={(e) => setFixBirth(e.target.value)} />
+              <input className="h-9 w-72 rounded border px-2" placeholder="정정 사유 (필수)" value={fixReason} onChange={(e) => setFixReason(e.target.value)} />
+              <button
+                type="button"
+                className="rounded-md bg-[#3B82F6] px-3 py-1.5 text-white disabled:opacity-40"
+                disabled={!fixBirth || fixReason.trim().length < 2}
+                onClick={async () => {
+                  if (!window.confirm(`생년월일을 ${fixBirth} 로 정정할까요?`)) return
+                  try {
+                    const r = await adminMinorPolicyApi.correctBirthDate(u.userId, fixBirth, fixReason.trim())
+                    window.alert(`정정했습니다: ${r.before ?? '없음'} → ${r.after}`)
+                    setFixBirth('')
+                    setFixReason('')
+                    await refresh()
+                  } catch (e) {
+                    window.alert(errText(e))
+                  }
+                }}
+              >
+                정정
+              </button>
+            </div>
           </section>
           <section className="rounded-lg border bg-white p-3">
             <h2 className="text-sm font-semibold">동의 이력</h2>

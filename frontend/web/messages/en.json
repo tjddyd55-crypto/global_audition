@@ -1056,7 +1056,9 @@
     "POSTING_BRANCH_FORBIDDEN": "A branch owned by another agency cannot be used.",
     "POSTING_BRANCH_INVALID": "The posting branch could not be verified.",
     "VOTING_DISABLED_FOR_ROUND": "Voting is not open for this round.",
-    "GUARDIAN_CONSENT_REQUIRED": "You can apply after guardian confirmation. Send a guardian link from My profile > Privacy & visibility."
+    "GUARDIAN_CONSENT_REQUIRED": "You can apply after guardian confirmation. Send a guardian link from My profile > Privacy & visibility.",
+    "MINOR_PAYMENT_GUARDIAN_REQUIRED": "Payments by minors need a guardian check first. Send a guardian link from My Profile > Privacy & visibility.",
+    "BIRTH_DATE_LOCKED": "You cannot change your date of birth yourself. Please ask an admin to correct it."
   },
   "application": {
     "detailLoadFailed": "Could not load the application.",
@@ -1917,12 +1919,12 @@
     "agreeAll": "Agree to all (including optional)",
     "terms": "[Required] I agree to the Terms of Service",
     "privacyCollection": "[Required] I agree to the collection and use of personal data",
-    "privacyDisclosure": "[Required] I understand the disclosure scope (I choose what is public after sign-up)",
+    "privacyDisclosure": "[Optional] Consent to make profile information public (choose the fields after signing up)",
     "marketing": "[Optional] I agree to receive marketing messages",
     "birthDate": "Date of birth (e.g. 2008-03-15)",
     "birthDateHint": "Used only to check age and apply country protection rules. Never shown publicly.",
     "gender": "Gender (optional)",
-    "guardianNotice": "Minors can sign up, apply and run a channel. If your country requires guardian consent at your age, send a guardian link after sign-up. Your own checkbox does not count as guardian consent.",
+    "guardianNotice": "Minors can sign up, apply to auditions and run a channel. In Korea, only members under 14 need a guardian (legal representative) check after signing up; members 14 and older need no guardian step. Optional consents are not required to sign up.",
     "required": "Please accept all required items.",
     "birthDateRequired": "Please enter your date of birth.",
     "birthDateInvalid": "Invalid date of birth. (e.g. 2008-03-15)",
@@ -2007,8 +2009,12 @@
       "BIRTH_DATE_REQUIRED": "Please add your birth date first.",
       "GUARDIAN_NOT_NEEDED": "Adults do not need guardian confirmation.",
       "GUARDIAN_ALREADY_CONFIRMED": "Guardian already confirmed.",
-      "GENDER_INVALID": "Invalid gender value."
-    }
+      "GENDER_INVALID": "Invalid gender value.",
+      "BIRTH_DATE_LOCKED": "You cannot change your date of birth yourself. Please ask an admin to correct it.",
+      "MINOR_PAYMENT_GUARDIAN_REQUIRED": "Payments by minors need a guardian check first. Send a guardian link from My Profile > Privacy & visibility."
+    },
+    "birthDateLocked": "Your date of birth cannot be changed after signing up. If it is wrong, ask support (admin) to correct it.",
+    "paymentGuardian": "Paid purchases (credits) by minors need a guardian check, separate from signup consent. Send the guardian link below when needed."
   },
   "guardian": {
     "title": "Guardian confirmation",

@@ -1056,7 +1056,9 @@
     "POSTING_BRANCH_FORBIDDEN": "다른 기획사의 지점은 사용할 수 없습니다.",
     "POSTING_BRANCH_INVALID": "게시 지점을 확인할 수 없습니다.",
     "VOTING_DISABLED_FOR_ROUND": "이 회차는 투표를 진행하지 않습니다.",
-    "GUARDIAN_CONSENT_REQUIRED": "보호자 확인 후 지원할 수 있습니다. 마이프로필 > 개인정보 및 공개 설정에서 보호자 확인 링크를 보내 주세요."
+    "GUARDIAN_CONSENT_REQUIRED": "보호자 확인 후 지원할 수 있습니다. 마이프로필 > 개인정보 및 공개 설정에서 보호자 확인 링크를 보내 주세요.",
+    "MINOR_PAYMENT_GUARDIAN_REQUIRED": "미성년자 결제는 보호자 확인 후 가능합니다. 마이프로필 > 개인정보 및 공개 설정에서 보호자 확인 링크를 보내 주세요.",
+    "BIRTH_DATE_LOCKED": "생년월일은 직접 바꿀 수 없습니다. 관리자에게 정정을 요청해 주세요."
   },
   "application": {
     "detailLoadFailed": "지원서를 불러오지 못했습니다.",
@@ -1917,12 +1919,12 @@
     "agreeAll": "전체 동의 (선택 항목 포함)",
     "terms": "[필수] 서비스 이용약관 동의",
     "privacyCollection": "[필수] 개인정보 수집·이용 동의",
-    "privacyDisclosure": "[필수] 개인정보 공개 범위 안내 확인 (공개할 항목은 가입 후 직접 선택)",
+    "privacyDisclosure": "[선택] 개인정보 공개 동의 (공개할 항목은 가입 후 직접 선택)",
     "marketing": "[선택] 마케팅 정보 수신 동의",
     "birthDate": "생년월일 (예: 2008-03-15)",
     "birthDateHint": "나이 확인과 국가별 보호 정책 적용에만 쓰이며 공개되지 않습니다.",
     "gender": "성별 (선택)",
-    "guardianNotice": "미성년자도 가입·오디션 지원·채널 운영을 할 수 있습니다. 국가 기준상 보호자 동의가 필요한 나이라면 가입 후 보호자 확인 링크를 보내 주세요. 본인이 체크한 동의는 보호자 동의로 처리되지 않습니다.",
+    "guardianNotice": "미성년자도 가입·오디션 지원·채널 운영을 할 수 있습니다. 한국 기준 만 14세 미만만 가입 후 보호자(법정대리인) 확인이 필요하며, 만 14세 이상은 보호자 절차 없이 이용할 수 있습니다. 선택 동의를 하지 않아도 가입할 수 있습니다.",
     "required": "필수 동의 항목에 모두 동의해 주세요.",
     "birthDateRequired": "생년월일을 입력해 주세요.",
     "birthDateInvalid": "생년월일 형식이 올바르지 않습니다. (예: 2008-03-15)",
@@ -2007,8 +2009,12 @@
       "BIRTH_DATE_REQUIRED": "생년월일을 먼저 입력해 주세요.",
       "GUARDIAN_NOT_NEEDED": "성인 회원은 보호자 확인이 필요하지 않습니다.",
       "GUARDIAN_ALREADY_CONFIRMED": "이미 보호자 확인이 완료되었습니다.",
-      "GENDER_INVALID": "성별 값이 올바르지 않습니다."
-    }
+      "GENDER_INVALID": "성별 값이 올바르지 않습니다.",
+      "BIRTH_DATE_LOCKED": "생년월일은 직접 바꿀 수 없습니다. 관리자에게 정정을 요청해 주세요.",
+      "MINOR_PAYMENT_GUARDIAN_REQUIRED": "미성년자 결제는 보호자 확인 후 가능합니다. 마이프로필 > 개인정보 및 공개 설정에서 보호자 확인 링크를 보내 주세요."
+    },
+    "birthDateLocked": "생년월일은 가입 후 직접 바꿀 수 없습니다. 잘못 입력했다면 고객센터(관리자)에 정정을 요청해 주세요.",
+    "paymentGuardian": "미성년자의 유료 결제(크레딧 구매)는 가입 동의와 별도로 보호자 확인 후 가능합니다. 필요할 때 아래 보호자 확인 링크를 보내 주세요."
   },
   "guardian": {
     "title": "보호자 확인",

@@ -167,6 +167,7 @@ export default function PrivacyScreen() {
               ) : null}
               {!s.minor.offersAllowed ? <Text style={styles.warn}>{t('privacy.guardianRequiredOffers')}</Text> : null}
               {!s.minor.contactSharingAllowed ? <Text style={styles.hintSmall}>{t('privacy.contactRestricted')}</Text> : null}
+              {s.minor.minor && !s.minor.guardianConfirmed ? <Text style={styles.hintSmall}>{t('privacy.paymentGuardian')}</Text> : null}
               {!s.minor.guardianConfirmed ? (
                 <>
                   <TextField label={t('privacy.guardianName')} value={guardianName} onChangeText={setGuardianName} autoCapitalize="words" />

@@ -1056,7 +1056,9 @@
     "POSTING_BRANCH_FORBIDDEN": "Boshqa agentlikka tegishli filialdan foydalanib boʻlmaydi.",
     "POSTING_BRANCH_INVALID": "Eʼlon filialini tasdiqlab boʻlmadi.",
     "VOTING_DISABLED_FOR_ROUND": "Bu bosqichda ovoz berish ochiq emas.",
-    "GUARDIAN_CONSENT_REQUIRED": "Vasiy tasdigʻidan keyin ariza berish mumkin. Profilim > Maxfiylik va koʻrinish boʻlimidan havola yuboring."
+    "GUARDIAN_CONSENT_REQUIRED": "Vasiy tasdigʻidan keyin ariza berish mumkin. Profilim > Maxfiylik va koʻrinish boʻlimidan havola yuboring.",
+    "MINOR_PAYMENT_GUARDIAN_REQUIRED": "Voyaga yetmaganlar toʻlovi vasiy tasdigʻidan keyin mumkin.",
+    "BIRTH_DATE_LOCKED": "Tugʻilgan sanani oʻzingiz oʻzgartira olmaysiz."
   },
   "application": {
     "detailLoadFailed": "Arizani yuklab boʻlmadi.",
@@ -1917,12 +1919,12 @@
     "agreeAll": "Hammasiga roziman (ixtiyoriy bilan)",
     "terms": "[Majburiy] Xizmat shartlariga roziman",
     "privacyCollection": "[Majburiy] Shaxsiy maʼlumotlarni yigʻish va ishlatishga roziman",
-    "privacyDisclosure": "[Majburiy] Ochiqlik doirasini tushundim (ochiq maʼlumotni roʻyxatdan keyin oʻzim tanlayman)",
+    "privacyDisclosure": "[Ixtiyoriy] Profil ma'lumotlarini ochiq koʻrsatishga rozilik (maydonlarni roʻyxatdan keyin tanlaysiz)",
     "marketing": "[Ixtiyoriy] Marketing xabarlarini olishga roziman",
     "birthDate": "Tugʻilgan sana (masalan: 2008-03-15)",
     "birthDateHint": "Faqat yoshni tekshirish va mamlakat himoya qoidalari uchun ishlatiladi. Ochiq koʻrsatilmaydi.",
     "gender": "Jins (ixtiyoriy)",
-    "guardianNotice": "Voyaga yetmaganlar roʻyxatdan oʻtishi, ariza berishi va kanal yuritishi mumkin. Mamlakatingizda vasiy roziligi talab qilinsa, roʻyxatdan keyin vasiyga havola yuboring. Oʻzingiz belgilagan katakcha vasiy roziligi hisoblanmaydi.",
+    "guardianNotice": "Voyaga yetmaganlar roʻyxatdan oʻtishi, tanlovlarga ariza berishi va kanal yuritishi mumkin. Koreyada faqat 14 yoshgacha boʻlganlar uchun vasiy tasdigʻi kerak. Ixtiyoriy roziliklarsiz ham roʻyxatdan oʻtish mumkin.",
     "required": "Barcha majburiy bandlarga rozilik bering.",
     "birthDateRequired": "Tugʻilgan sanangizni kiriting.",
     "birthDateInvalid": "Tugʻilgan sana notoʻgʻri. (masalan: 2008-03-15)",
@@ -2007,8 +2009,12 @@
       "BIRTH_DATE_REQUIRED": "Avval tugʻilgan sanani kiriting.",
       "GUARDIAN_NOT_NEEDED": "Kattalar uchun vasiy tasdigʻi kerak emas.",
       "GUARDIAN_ALREADY_CONFIRMED": "Vasiy allaqachon tasdiqlagan.",
-      "GENDER_INVALID": "Jins qiymati notoʻgʻri."
-    }
+      "GENDER_INVALID": "Jins qiymati notoʻgʻri.",
+      "BIRTH_DATE_LOCKED": "Tugʻilgan sanani oʻzingiz oʻzgartira olmaysiz.",
+      "MINOR_PAYMENT_GUARDIAN_REQUIRED": "Voyaga yetmaganlar toʻlovi vasiy tasdigʻidan keyin mumkin."
+    },
+    "birthDateLocked": "Tugʻilgan sanani roʻyxatdan keyin oʻzingiz oʻzgartira olmaysiz. Xato boʻlsa, administratorga murojaat qiling.",
+    "paymentGuardian": "Voyaga yetmaganlarning pullik xaridlari (kredit) roʻyxat roziligidan alohida vasiy tasdigʻini talab qiladi."
   },
   "guardian": {
     "title": "Vasiy tasdigʻi",

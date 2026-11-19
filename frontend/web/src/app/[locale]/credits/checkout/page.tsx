@@ -46,6 +46,9 @@ function apiErrorCode(e: unknown): string | null {
 function CheckoutContent() {
   const t = useTranslations('payments')
   const tCommon = useTranslations('common')
+  const tErrors = useTranslations('errors')
+  const minorPaymentMessage = (e: unknown) =>
+    apiErrorCode(e) === 'MINOR_PAYMENT_GUARDIAN_REQUIRED' ? tErrors('MINOR_PAYMENT_GUARDIAN_REQUIRED') : null
   const router = useRouter()
   const searchParams = useSearchParams()
   const packageId = searchParams.get('packageId')?.trim() ?? ''
@@ -163,7 +166,7 @@ function CheckoutContent() {
           }
           setActionError(t('domesticUnavailable', { code: created.status }))
         } catch (e: unknown) {
-          setActionError(t('domesticUnavailable', { code: apiErrorCode(e) ?? 'UNKNOWN' }))
+          setActionError(minorPaymentMessage(e) ?? t('domesticUnavailable', { code: apiErrorCode(e) ?? 'UNKNOWN' }))
         }
         return
       }
@@ -177,7 +180,7 @@ function CheckoutContent() {
       }
       router.replace(`/credits/checkout?packageId=${encodeURIComponent(packageId)}&orderNo=${encodeURIComponent(res.orderNo)}`)
     } catch (e: unknown) {
-      setActionError(apiErrorCode(e) ?? t('createOrderFailed'))
+      setActionError(minorPaymentMessage(e) ?? apiErrorCode(e) ?? t('createOrderFailed'))
     } finally {
       setIsPreparing(false)
     }
