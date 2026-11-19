@@ -186,14 +186,6 @@ export function VideoEmbedOverlay({ videoUrl, play, onClose }: VideoEmbedOverlay
           </button>
           <p className="mb-4 pr-8 text-sm text-gray-700">{tVideo('cannotEmbed')}</p>
           <div className="flex flex-wrap gap-2">
-            <a
-              href={resolved.url}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex rounded-lg bg-[#3B82F6] px-4 py-2 text-sm font-semibold text-white no-underline"
-            >
-              {tVideo('openInNewWindow')}
-            </a>
             <button
               type="button"
               onClick={onClose}
@@ -288,6 +280,7 @@ export function VideoEmbedOverlay({ videoUrl, play, onClose }: VideoEmbedOverlay
             </div>
           ) : null}
           <iframe
+            referrerPolicy="strict-origin-when-cross-origin"
             title={iframeTitle}
             src={embedSrc}
             className={`absolute inset-0 z-[1] h-full w-full border-0 transition-opacity duration-200 ${iframeLoaded ? 'opacity-100' : 'opacity-0'}`}

@@ -1,46 +1,67 @@
-import { useState } from 'react'
-import { Linking, StyleSheet, Text, View } from 'react-native'
+import { useMemo, useState } from 'react'
+import { StyleSheet, Text, View } from 'react-native'
 import { WebView } from 'react-native-webview'
 import { useTranslation } from 'react-i18next'
-import { Button } from '../../ui/Button'
 import { colors, radius } from '../../theme/tokens'
-import { planVideoPlayback } from './videoPlayback'
+import { WEB_URL } from '../../config/env'
+import { isAllowedTopFrameUrl, planVideoPlayback, webOrigin, youtubeEmbedHtml } from './videoPlayback'
 
 /**
  * YouTube embed만 WebView로 재생한다.
- * 로드에 실패하거나 지원하지 않는 주소는 오류와 외부 열기만 보여 준다.
+ * embed URL 을 WebView 에 직접 열면 Referer 가 없어 YouTube 가 '오류 153'을 낸다.
+ * 그래서 웹 주소(baseUrl)에서 연 HTML 안의 iframe 으로 열어 Referer·origin 을 웹 주소로 보낸다.
+ * 영상은 앱 안에서만 재생한다. YouTube 앱·사이트로 이동하는 버튼·링크는 두지 않고,
+ * WebView 최상위가 embed 밖(YouTube 등)으로 이동하려 하면 막는다. 재생 불가 시 안내만 보여 준다.
  */
 export function NativeVideoPlayer({ videoUrl, autoplay, portrait }: { videoUrl: string; autoplay?: boolean; portrait?: boolean }) {
   const { t } = useTranslation()
-  const plan = planVideoPlayback(videoUrl, { autoplay })
+  const origin = webOrigin(WEB_URL)
+  const plan = planVideoPlayback(videoUrl, { autoplay, origin })
   const [failed, setFailed] = useState(false)
-  if (plan.kind === 'youtube' && !failed) {
+  const embedUrl = plan.kind === 'youtube' ? plan.embedUrl : ''
+  const title = t('video.playAria')
+  // source 객체가 렌더마다 바뀌면 WebView 가 다시 로드하므로 문자열 기준으로 고정한다.
+  const source = useMemo(
+    () => ({ html: embedUrl ? youtubeEmbedHtml(embedUrl, title) : '', baseUrl: `${origin ?? ''}/` }),
+    [embedUrl, title, origin],
+  )
+  if (plan.kind === 'youtube' && origin && !failed) {
     return (
-      <View style={[styles.stage, portrait && styles.portrait]} accessibilityLabel={t('video.playAria')}>
-        <WebView
-          source={{ uri: plan.embedUrl }}
-          style={styles.web}
-          originWhitelist={['https://*']}
-          javaScriptEnabled
-          domStorageEnabled
-          allowsFullscreenVideo
-          allowsInlineMediaPlayback
-          mediaPlaybackRequiresUserAction={false}
-          setSupportMultipleWindows={false}
-          onError={() => setFailed(true)}
-        />
+      <View style={styles.wrap}>
+        <View style={[styles.stage, portrait && styles.portrait]} accessibilityLabel={t('video.playAria')}>
+          <WebView
+            source={source}
+            style={styles.web}
+            originWhitelist={['*']}
+            javaScriptEnabled
+            domStorageEnabled
+            allowsFullscreenVideo
+            allowsInlineMediaPlayback
+            mediaPlaybackRequiresUserAction={false}
+            setSupportMultipleWindows={false}
+            onShouldStartLoadWithRequest={(req) => {
+              // iframe(embed) 안 로드는 허용하고, 최상위 화면이 YouTube 등 바깥으로 이동하는 것은 막는다.
+              if (req.isTopFrame === false) return true
+              return isAllowedTopFrameUrl(req.url, origin)
+            }}
+            onError={() => setFailed(true)}
+            onHttpError={(e) => {
+              if (e.nativeEvent.statusCode >= 400 && (e.nativeEvent.url || '').includes('youtube')) setFailed(true)
+            }}
+          />
+        </View>
       </View>
     )
   }
   return (
     <View style={styles.fallback}>
       <Text style={styles.message}>{t('video.cannotEmbed')}</Text>
-      <Button label={t('video.openInNewWindow')} variant="secondary" onPress={() => void Linking.openURL(videoUrl)} />
     </View>
   )
 }
 
 const styles = StyleSheet.create({
+  wrap: { marginBottom: 12 },
   stage: {
     width: '100%',
     aspectRatio: 16 / 9,
@@ -48,7 +69,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: '#111111',
     minHeight: 180,
-    marginBottom: 12,
   },
   portrait: { width: '62%', aspectRatio: 9 / 16, alignSelf: 'center' },
   web: { flex: 1, backgroundColor: '#111111' },

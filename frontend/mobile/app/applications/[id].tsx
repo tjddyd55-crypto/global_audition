@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useLocalSearchParams } from 'expo-router'
 import { useState } from 'react'
-import { Linking, StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { applicationApi, roundApi } from '../../src/api/endpoints'
 import { queryKeys } from '../../src/api/queryKeys'
@@ -13,6 +13,7 @@ import { ErrorState } from '../../src/ui/EmptyState'
 import { Screen } from '../../src/ui/Screen'
 import { StatusPill, toneForApplicationStatus } from '../../src/ui/StatusPill'
 import { TextField } from '../../src/ui/TextField'
+import { NativeVideoPlayer } from '../../src/features/media/NativeVideoPlayer'
 import { colors, radius } from '../../src/theme/tokens'
 
 export default function ApplicationDetailScreen() {
@@ -63,7 +64,7 @@ export default function ApplicationDetailScreen() {
           </Text>
           {app.introText ? <Text style={styles.body}>{app.introText}</Text> : null}
           {app.videoUrl ? (
-            <Button label={t('application.openSubmittedVideo')} variant="secondary" onPress={() => void Linking.openURL(app.videoUrl ?? '')} />
+            <NativeVideoPlayer videoUrl={app.videoUrl} />
           ) : null}
           {app.snsLinks.map((link) => (
             <Text key={`${link.platform}-${link.url}`} style={styles.meta}>

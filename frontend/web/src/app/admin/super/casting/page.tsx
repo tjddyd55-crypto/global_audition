@@ -340,11 +340,7 @@ function Moderation() {
                       {v.hidden ? <span className="ml-1 text-red-600">숨김</span> : null}
                     </span>
                     <span className="flex gap-2">
-                      {v.videoUrl ? (
-                        <a href={v.videoUrl} target="_blank" rel="noreferrer" className="underline">
-                          YouTube
-                        </a>
-                      ) : null}
+                      {v.videoUrl ? <span className="text-neutral-500">{v.videoUrl}</span> : null}
                       <button type="button" className="rounded border px-2 py-0.5" onClick={() => hideVideo.mutate({ id: v.videoId, hidden: !v.hidden })}>
                         {v.hidden ? '숨김 해제' : '숨김'}
                       </button>

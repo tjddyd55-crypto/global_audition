@@ -16,14 +16,15 @@ function appendQueryParam(embedUrl: string, key: string, value: string): string 
 
 function buildYoutubeEmbedPath(id: string, options?: VideoEmbedOptions): string | null {
   if (!id) return null
-  let url = `https://www.youtube.com/embed/${id}`
+  // 쿠키 없는 embed 도메인 + 관련 영상 최소화 + 인라인 재생(앱·모바일에서 YouTube 로 넘어가지 않게)
+  let url = `https://www.youtube-nocookie.com/embed/${id}`
   url = appendQueryParam(url, 'controls', '1')
   url = appendQueryParam(url, 'modestbranding', '1')
   url = appendQueryParam(url, 'rel', '0')
+  url = appendQueryParam(url, 'playsinline', '1')
   if (options?.autoplay) {
     // 모달은 사용자 클릭 직후 로드 → 음성 포함 자동재생이 허용되는 경우가 많음 (브라우저 정책에 따라 재생만 되고 소리는 막힐 수 있음)
     url = appendQueryParam(url, 'autoplay', '1')
-    url = appendQueryParam(url, 'playsinline', '1')
   }
   return url
 }

@@ -281,6 +281,7 @@ export function ApplicationVideoDetailClient() {
           <div className="aspect-video w-full bg-black">
             {embedSrc ? (
               <iframe
+            referrerPolicy="strict-origin-when-cross-origin"
                 title={titleText}
                 src={embedSrc}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

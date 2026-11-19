@@ -24,6 +24,7 @@ export default function ApplicantDetailVideoSection({
         {embedUrl ? (
           <div className="relative aspect-video w-full">
             <iframe
+            referrerPolicy="strict-origin-when-cross-origin"
               title="application-video"
               src={embedUrl}
               className="absolute inset-0 h-full w-full border-0"
@@ -32,28 +33,16 @@ export default function ApplicantDetailVideoSection({
             />
           </div>
         ) : thumbnailUrl && videoUrl ? (
-          <a
-            href={videoUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="relative block aspect-video w-full"
-          >
+          <div className="relative block aspect-video w-full">
             <Image src={thumbnailUrl} alt="" fill className="object-cover" unoptimized />
             <span className="absolute inset-0 flex items-center justify-center bg-black/35 text-4xl text-white">
               ▶
             </span>
-          </a>
+          </div>
         ) : (
           <div className="py-12 text-center">
             {videoUrl ? (
-              <a
-                href={videoUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="text-sm font-medium text-violet-200 underline"
-              >
-                {tDetail('openVideoNew')}
-              </a>
+              <span className="break-all text-sm font-medium text-violet-200">{videoUrl}</span>
             ) : (
               <span className="text-sm font-medium text-violet-200">{tAgency('noVideoLink')}</span>
             )}

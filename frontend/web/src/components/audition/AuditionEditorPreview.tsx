@@ -122,6 +122,7 @@ export function AuditionEditorPreview({
                 <p className="mb-1 text-xs font-medium text-gray-500">{tEditor('videoPreview')}</p>
                 <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-black">
                   <iframe
+            referrerPolicy="strict-origin-when-cross-origin"
                     key={embedSrc}
                     title={tEditor('youtubePreviewTitle')}
                     className="absolute inset-0 h-full w-full"

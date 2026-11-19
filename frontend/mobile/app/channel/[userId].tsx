@@ -91,7 +91,6 @@ export default function ChannelScreen() {
     }
   }
   const viewsOf = (v: MyChannelVideoItem) => views[v.videoId] ?? Number(v.viewCount ?? 0)
-  const watchUrl = (v: MyChannelVideoItem) => (v.youtubeVideoId ? `https://www.youtube.com/watch?v=${v.youtubeVideoId}` : v.videoUrl)
 
   return (
     <Screen loading={query.isLoading} padded={false} refreshing={query.isRefetching} onRefresh={() => void query.refetch()}>
@@ -187,7 +186,6 @@ export default function ChannelScreen() {
               <Text style={styles.videoTitle}>{selected.title}</Text>
               <Text style={styles.muted}>{t('channel.videoViews', { count: formatCount(viewsOf(selected), i18n.language) })}</Text>
               <Text style={styles.hint}>{t('channel.viewsInternalHint')}</Text>
-              <Button label={t('channel.openOnYoutube')} variant="secondary" onPress={() => void Linking.openURL(watchUrl(selected))} />
               {videos.length > 1 ? <Text style={styles.section}>{t('channel.allVideos')}</Text> : null}
               <View style={styles.grid}>
                 {videos.length > 1

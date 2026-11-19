@@ -87,7 +87,6 @@ export default function MobileAuditionDetailSummary({
   const posting = useContentTranslation('AUDITION_POSTING', audition.id)
   const locale = useLocale()
   const embed = getVideoEmbedSrc(safeStr(audition.videoUrl))
-  const videoHref = safeStr(audition.videoUrl).trim()
 
   const galleryRaw = safeArr(audition.galleryImages)
   const imgs = normalizeAuditionImages(audition.images)
@@ -233,6 +232,7 @@ export default function MobileAuditionDetailSummary({
           <h2 className="mb-2 text-lg font-semibold text-gray-900">{t('introVideoTitle')}</h2>
           <div className="aspect-video overflow-hidden rounded-2xl bg-black">
             <iframe
+            referrerPolicy="strict-origin-when-cross-origin"
               title="audition-video"
               src={embed}
               className="h-full w-full border-0"
@@ -240,18 +240,6 @@ export default function MobileAuditionDetailSummary({
               allowFullScreen
             />
           </div>
-        </section>
-      ) : videoHref.length > 0 && !readOnly ? (
-        <section className="mt-5 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-          <h2 className="mb-2 text-lg font-semibold text-gray-900">{t('introVideoTitle')}</h2>
-          <a
-            href={videoHref}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm font-medium text-violet-700 underline"
-          >
-            {t('openVideoNew')}
-          </a>
         </section>
       ) : null}
 

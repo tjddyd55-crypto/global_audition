@@ -35,6 +35,7 @@ export default function YouTubePlayer({
   return (
     <div className={`relative ${className}`} style={{ width, height }}>
       <iframe
+            referrerPolicy="strict-origin-when-cross-origin"
         src={finalEmbedUrl}
         width="100%"
         height="100%"
