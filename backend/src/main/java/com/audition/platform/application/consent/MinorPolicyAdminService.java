@@ -68,7 +68,9 @@ public class MinorPolicyAdminService {
         Map<String, Object> after = new LinkedHashMap<>();
         after.put("birthDate", next.toString());
         after.put("reason", reason);
-        audit.log(admin.id(), "BIRTH_DATE_CORRECTION", "USER", userId.toString(), before, after);
+        Map<String, Object> beforeMap = new LinkedHashMap<>();
+        beforeMap.put("birthDate", before);
+        audit.log(admin.id(), "BIRTH_DATE_CORRECTION", "USER", userId.toString(), beforeMap, after);
         guardians.reconcile(userId);
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("before", before);
@@ -192,7 +194,7 @@ public class MinorPolicyAdminService {
     public void revokeGuardian(UUID confirmationId) {
         OrgAccess.Actor admin = access.requireHq();
         guardians.revokeById(confirmationId, "ADMIN");
-        audit.log(admin.id(), "GUARDIAN_REVOKE", "GUARDIAN_CONFIRMATION", confirmationId.toString(), null, "REVOKED");
+        audit.log(admin.id(), "GUARDIAN_REVOKE", "GUARDIAN_CONFIRMATION", confirmationId.toString(), null, Map.of("status", "REVOKED"));
     }
 
     public record RequirementInput(UUID userId, UUID applicationId, UUID castingOfferId, String activityType,
@@ -231,7 +233,7 @@ public class MinorPolicyAdminService {
         if (n == 0) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "요건을 찾을 수 없습니다.");
         }
-        audit.log(admin.id(), "POST_SELECTION_REQUIREMENT_STATUS", "POST_SELECTION_REQUIREMENT", id.toString(), null, status);
+        audit.log(admin.id(), "POST_SELECTION_REQUIREMENT_STATUS", "POST_SELECTION_REQUIREMENT", id.toString(), null, Map.of("status", status));
     }
 
     public List<RequirementRow> requirements(UUID userId) {
