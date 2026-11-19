@@ -35,8 +35,9 @@ export default function NotificationsScreen() {
           <Text style={styles.type}>{copy.title}</Text>
           {copy.body ? <Text style={styles.body}>{copy.body}</Text> : null}
           <Text style={styles.meta}>
-            {notificationBadge(item, (key) => t(`notifications.${key}`))}
-            {item.readAt ? ` · ${t('studio.read')}` : ''}
+            {[notificationBadge(item, (key) => t(`notifications.${key}`)), item.readAt ? t('studio.read') : '']
+              .filter(Boolean)
+              .join(' · ')}
           </Text>
           {route ? (
             <Pressable
