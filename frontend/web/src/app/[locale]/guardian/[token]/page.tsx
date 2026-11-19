@@ -10,7 +10,8 @@ import { GUARDIAN_RELATIONSHIPS } from '@/shared/privacy/model'
 const codeOf = (e: unknown): string => {
   if (!axios.isAxiosError(e)) return ''
   const b = e.response?.data as { message?: unknown; code?: unknown } | undefined
-  for (const v of [b?.code, b?.message]) if (typeof v === 'string') return v
+  // 백엔드 오류 본문은 code 가 HTTP 상태("403"), message 가 오류 코드다.
+  for (const v of [b?.message, b?.code]) if (typeof v === 'string' && /^[A-Z][A-Z0-9_]+$/.test(v.trim())) return v.trim()
   return ''
 }
 
