@@ -20,6 +20,9 @@ public class MeNotificationItemResponse {
     /** 다단계 알림의 회차. 단일 심사 결과는 null. 저장된 타입은 바꾸지 않는다. */
     private String roundId;
 
+    private String link;
+    private java.util.Map<String, String> params;
+
     public String getId() {
         return id;
     }
@@ -122,5 +125,21 @@ public class MeNotificationItemResponse {
 
     public void setRoundId(String roundId) {
         this.roundId = roundId;
+    }
+
+    public String getLink() {
+        return link;
+    }
+
+    public void setLink(String link) {
+        this.link = link;
+    }
+
+    public java.util.Map<String, String> getParams() {
+        return params;
+    }
+
+    public void setParams(java.util.Map<String, String> params) {
+        this.params = params;
     }
 }

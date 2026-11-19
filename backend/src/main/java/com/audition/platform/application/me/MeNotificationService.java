@@ -1,6 +1,10 @@
 package com.audition.platform.application.me;
 
 import com.audition.platform.api.dto.me.MeNotificationItemResponse;
+import com.audition.platform.application.casting.UserNotificationService;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.audition.platform.domain.user.User;
 import com.audition.platform.domain.user.UserRepository;
 import com.audition.platform.infra.SecurityUtils;
@@ -12,7 +16,11 @@ import org.springframework.web.server.ResponseStatusException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -24,10 +32,15 @@ public class MeNotificationService {
 
     private final JdbcTemplate jdbcTemplate;
     private final UserRepository userRepository;
+    private final UserNotificationService userNotifications;
+    private final ObjectMapper objectMapper;
 
-    public MeNotificationService(JdbcTemplate jdbcTemplate, UserRepository userRepository) {
+    public MeNotificationService(JdbcTemplate jdbcTemplate, UserRepository userRepository,
+                                 UserNotificationService userNotifications, ObjectMapper objectMapper) {
         this.jdbcTemplate = jdbcTemplate;
         this.userRepository = userRepository;
+        this.userNotifications = userNotifications;
+        this.objectMapper = objectMapper;
     }
 
     public List<MeNotificationItemResponse> listMine() {
@@ -38,7 +51,7 @@ public class MeNotificationService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "사용자를 찾을 수 없습니다."));
         String email = user.getEmail() != null ? user.getEmail() : "";
-        return jdbcTemplate.query(
+        List<MeNotificationItemResponse> rounds = jdbcTemplate.query(
                 """
                 SELECT n.id::text AS id,
                        n.audition_id::text AS audition_id,
@@ -70,6 +83,37 @@ public class MeNotificationService {
                 """,
                 (rs, rowNum) -> mapRow(rs),
                 userId, email, userId);
+        List<MeNotificationItemResponse> merged = new ArrayList<>(rounds);
+        for (UserNotificationService.Row row : userNotifications.listFor(userId, 100)) {
+            merged.add(mapUserRow(row));
+        }
+        merged.sort(Comparator.comparing(MeNotificationItemResponse::getCreatedAt,
+                Comparator.nullsLast(Comparator.<Instant>naturalOrder())).reversed());
+        return merged.size() > 100 ? new ArrayList<>(merged.subList(0, 100)) : merged;
+    }
+
+    /** 캐스팅·구독 알림. 문구는 카탈로그 키 + params. */
+    private MeNotificationItemResponse mapUserRow(UserNotificationService.Row row) {
+        MeNotificationItemResponse item = new MeNotificationItemResponse();
+        item.setId(row.id().toString());
+        item.setType(row.type());
+        item.setStatus("SENT");
+        item.setChannel("IN_APP");
+        item.setCreatedAt(row.createdAt());
+        item.setReadAt(row.readAt());
+        item.setLink(row.link());
+        try {
+            JsonNode node = objectMapper.readTree(row.payload() == null ? "{}" : row.payload());
+            item.setTitleKey(node.path("titleKey").asText(null));
+            item.setBodyKey(node.path("bodyKey").asText(null));
+            JsonNode params = node.path("params");
+            if (params.isObject()) {
+                item.setParams(objectMapper.convertValue(params, new TypeReference<Map<String, String>>() { }));
+            }
+        } catch (Exception ignored) {
+            // 손상된 payload 는 타입 코드만 보인다.
+        }
+        return item;
     }
 
     public MeNotificationItemResponse markRead(UUID notificationId) {
@@ -80,6 +124,12 @@ public class MeNotificationService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "사용자를 찾을 수 없습니다."));
         String email = user.getEmail() != null ? user.getEmail() : "";
+        if (userNotifications.markRead(userId, notificationId)) {
+            return listMine().stream()
+                    .filter(item -> notificationId.toString().equals(item.getId()))
+                    .findFirst()
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "알림을 찾을 수 없습니다."));
+        }
         int updated = jdbcTemplate.update(
                 """
                 UPDATE audition_round_notifications n
