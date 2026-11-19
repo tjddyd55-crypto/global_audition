@@ -73,7 +73,8 @@ public class GuardianService {
         if (!st.ageKnown()) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "BIRTH_DATE_REQUIRED");
         }
-        if (!st.minor()) {
+        // 보호자 확인은 국가 기준 개인정보 보호자 동의 나이 미만(KR 14세 미만)에게만 제공한다.
+        if (!st.guardianLegallyRequired()) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "GUARDIAN_NOT_NEEDED");
         }
         if (st.guardianConfirmed()) {

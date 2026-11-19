@@ -161,8 +161,11 @@ class MinorPolicyConsentIT {
             assertFalse(p.get(f).asBoolean(), "신규 회원 선택 공개 기본 OFF: " + f);
         }
         UUID teenId = UUID.fromString(teen.get("userId").asText());
-        var ex = assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> paymentGuard.require(teenId));
-        assertEquals("MINOR_PAYMENT_GUARDIAN_REQUIRED", ex.getReason(), "미성년자 유료 결제는 가입 동의와 별개로 보호자 확인 필요");
+        paymentGuard.require(teenId); // KR 14세 이상 미성년자는 보호자 확인 없이 결제 가능
+        JsonNode child = signup(nick(), LocalDate.now().minusYears(13).toString(), "KR");
+        UUID childId = UUID.fromString(child.get("userId").asText());
+        var ex = assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> paymentGuard.require(childId));
+        assertEquals("MINOR_PAYMENT_GUARDIAN_REQUIRED", ex.getReason(), "KR 14세 미만은 보호자 확인 전 유료 결제 불가");
         // 생년월일 잠금: 회원 API 로 바꿀 수 없다(같은 값은 허용).
         mvc.perform(patch("/api/me").header("Authorization", "Bearer " + t).contentType(APPLICATION_JSON)
                 .content("{\"birthDate\":\"1990-01-01\"}")).andExpect(status().isConflict());

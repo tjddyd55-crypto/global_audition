@@ -188,8 +188,8 @@ export default function StudioPrivacyPage() {
           ) : null}
           {!s.minor.offersAllowed ? <p className="mt-1 text-sm text-red-700">{t('guardianRequiredOffers')}</p> : null}
           {!s.minor.contactSharingAllowed ? <p className="mt-1 text-xs text-gray-500">{t('contactRestricted')}</p> : null}
-          {s.minor.minor && !s.minor.guardianConfirmed ? <p className="mt-1 text-xs text-gray-500">{t('paymentGuardian')}</p> : null}
-          {!s.minor.guardianConfirmed ? (
+          {s.minor.guardianLegallyRequired && !s.minor.guardianConfirmed ? <p className="mt-1 text-xs text-gray-500">{t('paymentGuardian')}</p> : null}
+          {s.minor.guardianLegallyRequired && !s.minor.guardianConfirmed ? (
             <div className="mt-3 grid gap-2 md:max-w-md">
               <label className="grid gap-1 text-sm font-medium">
                 {t('guardianName')}

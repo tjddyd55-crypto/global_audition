@@ -1057,7 +1057,7 @@
     "POSTING_BRANCH_INVALID": "Eʼlon filialini tasdiqlab boʻlmadi.",
     "VOTING_DISABLED_FOR_ROUND": "Bu bosqichda ovoz berish ochiq emas.",
     "GUARDIAN_CONSENT_REQUIRED": "Vasiy tasdigʻidan keyin ariza berish mumkin. Profilim > Maxfiylik va koʻrinish boʻlimidan havola yuboring.",
-    "MINOR_PAYMENT_GUARDIAN_REQUIRED": "Voyaga yetmaganlar toʻlovi vasiy tasdigʻidan keyin mumkin.",
+    "MINOR_PAYMENT_GUARDIAN_REQUIRED": "Vasiy tasdiqlamaguncha toʻlov qilib boʻlmaydi.",
     "BIRTH_DATE_LOCKED": "Tugʻilgan sanani oʻzingiz oʻzgartira olmaysiz."
   },
   "application": {
@@ -2011,10 +2011,10 @@
       "GUARDIAN_ALREADY_CONFIRMED": "Vasiy allaqachon tasdiqlagan.",
       "GENDER_INVALID": "Jins qiymati notoʻgʻri.",
       "BIRTH_DATE_LOCKED": "Tugʻilgan sanani oʻzingiz oʻzgartira olmaysiz.",
-      "MINOR_PAYMENT_GUARDIAN_REQUIRED": "Voyaga yetmaganlar toʻlovi vasiy tasdigʻidan keyin mumkin."
+      "MINOR_PAYMENT_GUARDIAN_REQUIRED": "Vasiy tasdiqlamaguncha toʻlov qilib boʻlmaydi."
     },
     "birthDateLocked": "Tugʻilgan sanani roʻyxatdan keyin oʻzingiz oʻzgartira olmaysiz. Xato boʻlsa, administratorga murojaat qiling.",
-    "paymentGuardian": "Voyaga yetmaganlarning pullik xaridlari (kredit) roʻyxat roziligidan alohida vasiy tasdigʻini talab qiladi."
+    "paymentGuardian": "Vasiy tasdiqlamaguncha pullik xaridlar (kredit) mavjud emas. Quyidagi havolani yuboring."
   },
   "guardian": {
     "title": "Vasiy tasdigʻi",
