@@ -1057,7 +1057,7 @@
     "POSTING_BRANCH_INVALID": "The posting branch could not be verified.",
     "VOTING_DISABLED_FOR_ROUND": "Voting is not open for this round.",
     "GUARDIAN_CONSENT_REQUIRED": "You can apply after guardian confirmation. Send a guardian link from My profile > Privacy & visibility.",
-    "MINOR_PAYMENT_GUARDIAN_REQUIRED": "Payments by minors need a guardian check first. Send a guardian link from My Profile > Privacy & visibility.",
+    "MINOR_PAYMENT_GUARDIAN_REQUIRED": "Payment is not available until your guardian confirms. Send a guardian link from My Profile > Privacy & visibility.",
     "BIRTH_DATE_LOCKED": "You cannot change your date of birth yourself. Please ask an admin to correct it."
   },
   "application": {
@@ -2011,10 +2011,10 @@
       "GUARDIAN_ALREADY_CONFIRMED": "Guardian already confirmed.",
       "GENDER_INVALID": "Invalid gender value.",
       "BIRTH_DATE_LOCKED": "You cannot change your date of birth yourself. Please ask an admin to correct it.",
-      "MINOR_PAYMENT_GUARDIAN_REQUIRED": "Payments by minors need a guardian check first. Send a guardian link from My Profile > Privacy & visibility."
+      "MINOR_PAYMENT_GUARDIAN_REQUIRED": "Payment is not available until your guardian confirms. Send a guardian link from My Profile > Privacy & visibility."
     },
     "birthDateLocked": "Your date of birth cannot be changed after signing up. If it is wrong, ask support (admin) to correct it.",
-    "paymentGuardian": "Paid purchases (credits) by minors need a guardian check, separate from signup consent. Send the guardian link below when needed."
+    "paymentGuardian": "Paid purchases (credits) are not available until your guardian confirms. Send the guardian link below."
   },
   "guardian": {
     "title": "Guardian confirmation",

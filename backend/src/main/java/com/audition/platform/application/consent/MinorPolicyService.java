@@ -76,9 +76,12 @@ public class MinorPolicyService {
             return !minor || policy.minorContactSharingAllowed();
         }
 
-        /** 유료 결제(크레딧 구매 등): 미성년자는 보호자 확인이 있어야 한다. 가입 동의로 대신하지 않는다. */
+        /**
+         * 유료 결제(크레딧 구매 등): 국가 정책의 개인정보 보호자 동의 기준 나이 미만(KR 14세 미만)이고 보호자 확인 전이면 막는다.
+         * 그 이상 미성년자는 보호자 확인 없이 결제할 수 있다. 나이 기준은 country_minor_policies.guardian_consent_under_age 로 정한다.
+         */
         public boolean paymentAllowed() {
-            return !minor || guardianConfirmed;
+            return !guardianLegallyRequired || guardianConfirmed;
         }
 
         public String offersBlockReason() {
