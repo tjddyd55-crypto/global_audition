@@ -11,7 +11,16 @@ import { PAGE_CONTAINER } from '@/shared/ui/specClasses'
 export const AGENCY_ROLES = ['AGENCY', 'AGENCY_ADMIN', 'ADMIN']
 
 /** 기획사 로그인 확인 + 승인 여부 안내. 서버가 매 요청 권한을 다시 확인한다. */
-export function AgencyCastingGate({ children, title }: { children: ReactNode; title: string }) {
+export function AgencyCastingGate({
+  children,
+  title,
+  requireApproval = true,
+}: {
+  children: ReactNode
+  title: string
+  /** false: 승인 해제·정지 후에도 기존 제안 내역 확인·철회는 가능해야 한다. */
+  requireApproval?: boolean
+}) {
   const router = useRouter()
   const accessToken = useAuthStore((s) => s.accessToken)
   const role = useAuthStore((s) => s.role)
@@ -51,7 +60,7 @@ export function AgencyCastingGate({ children, title }: { children: ReactNode; ti
             운영 정책에 따라 캐스팅 제안이 제한되었습니다.{quota.data.restrictedReason ? ` (${quota.data.restrictedReason})` : ''}
           </p>
         ) : null}
-        {ok && quota.data?.approved ? children : null}
+        {ok && quota.data && (quota.data.approved || !requireApproval) ? children : null}
       </div>
     </AgencyDashboardShell>
   )

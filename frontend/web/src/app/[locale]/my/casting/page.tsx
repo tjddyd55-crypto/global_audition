@@ -15,7 +15,7 @@ export default function AgencyCastingListPage() {
   const [status, setStatus] = useState('')
   const offers = useQuery({ queryKey: ['agency', 'offers', status, talentId], queryFn: () => agencyCastingApi.offers(status || undefined, talentId) })
   return (
-    <AgencyCastingGate title="캐스팅 제안">
+    <AgencyCastingGate requireApproval={false} title="캐스팅 제안">
       <p className="text-sm text-neutral-600">
         보낸 제안과 응답 상태입니다. 수락은 지원자의 관심 표시이며 계약·지원·결제가 아닙니다. 새 제안은 인재 검색이나 지원자 채널에서 보냅니다.
       </p>

@@ -94,7 +94,8 @@ public class CastingService {
                 clean.roleField(), clean.message(), clean.workCountry(), clean.workLocation(), clean.scheduleText(),
                 clean.compensationType(), clean.compensationNote(), clean.auditionId(), clean.contactRequested(), false,
                 clean.sourceLocale(), clean.expiresAt(), null, null, null, null, null, Instant.now(), Instant.now());
-        return new CastingViews.Preview(view(draft, false, false), warnings);
+        // 발신 기획사 관점으로만 만든다(차단 여부 등 지원자 전용 값 노출 금지).
+        return new CastingViews.Preview(view(draft, true, false), warnings);
     }
 
     @Transactional
@@ -104,12 +105,14 @@ public class CastingService {
         UUID branch = branchFor(me, clean.branchId());
         User talent = users.findById(clean.talentUserId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "TALENT_NOT_FOUND"));
+        // 같은 기획사의 동시 발송을 트랜잭션 끝까지 직렬화해 한도·중복 검사를 원자적으로 만든다.
+        offers.lockAgency(me);
         checkSendable(me, talent, clean);
         UUID id = offers.insert(me, clean, branch);
         notifications.notify(talent.getId(), UserNotificationService.CASTING_OFFER_NEW,
                 Map.of("agency", agencyName(me, branch), "title", clean.title()),
                 "/my/studio/casting/" + id, "offer-new:" + id);
-        return view(offers.find(id).orElseThrow(), false, false);
+        return view(offers.find(id).orElseThrow(), true, false);
     }
 
     void checkSendable(UUID agencyId, User talent, CastingRules.CleanOffer clean) {

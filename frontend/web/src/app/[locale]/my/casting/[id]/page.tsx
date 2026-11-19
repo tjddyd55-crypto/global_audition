@@ -24,7 +24,7 @@ export default function AgencyCastingDetailPage() {
   })
   const o = offer.data
   return (
-    <AgencyCastingGate title="캐스팅 제안 상세">
+    <AgencyCastingGate requireApproval={false} title="캐스팅 제안 상세">
       <Link href="/my/casting" className="text-sm text-neutral-600 underline">
         ← 목록으로
       </Link>

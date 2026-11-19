@@ -74,6 +74,11 @@ public class CastingOfferStore {
             ts(rs, "read_at"), ts(rs, "responded_at"), rs.getString("response_reason"), rs.getString("response_note"),
             ts(rs, "withdrawn_at"), ts(rs, "created_at"), ts(rs, "updated_at"));
 
+    /** 기획사별 트랜잭션 범위 advisory lock. 호출 트랜잭션이 끝날 때 풀린다. */
+    public void lockAgency(UUID agencyUserId) {
+        jdbc.query("select pg_advisory_xact_lock(hashtextextended(?, 147))", rs -> { }, "casting-send:" + agencyUserId);
+    }
+
     public UUID insert(UUID agencyUserId, CastingRules.CleanOffer o, UUID branchId) {
         UUID id = UUID.randomUUID();
         jdbc.update("""
