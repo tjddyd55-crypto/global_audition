@@ -97,6 +97,9 @@ export function parseMyChannelVideoRow(raw: Record<string, unknown>): MyChannelV
     thumbnailUrl: raw.thumbnailUrl != null ? String(raw.thumbnailUrl) : null,
     visibility: String(raw.visibility ?? 'PUBLIC'),
     viewCount: Number(raw.viewCount ?? 0) || 0,
+    youtubeVideoId: raw.youtubeVideoId != null ? String(raw.youtubeVideoId) : null,
+    embedStatus: raw.embedStatus != null ? String(raw.embedStatus) : null,
+    shorts: raw.shorts === true,
     likeCount: Number(raw.likeCount ?? 0) || 0,
     createdAt,
   }

@@ -14,6 +14,7 @@ import com.audition.platform.application.recovery.AuthRecoveryService;
 import com.audition.platform.domain.user.User;
 import com.audition.platform.domain.user.UserRepository;
 import com.audition.platform.infra.SecurityUtils;
+import com.audition.platform.application.channel.ChannelCareerService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import jakarta.validation.Valid;
@@ -37,6 +38,7 @@ public class MeController {
     private final AuthRecoveryService authRecoveryService;
     private final UserRepository userRepository;
     private final MeNotificationService meNotificationService;
+    private final ChannelCareerService channelCareerService;
 
     public MeController(MeProfileService meProfileService,
                         MeDashboardService meDashboardService,
@@ -46,7 +48,9 @@ public class MeController {
                         MeApplicationRoundService meApplicationRoundService,
                         AuthRecoveryService authRecoveryService,
                         UserRepository userRepository,
-                        MeNotificationService meNotificationService) {
+                        MeNotificationService meNotificationService,
+                        ChannelCareerService channelCareerService) {
+        this.channelCareerService = channelCareerService;
         this.meProfileService = meProfileService;
         this.meDashboardService = meDashboardService;
         this.meApplicationService = meApplicationService;
@@ -186,6 +190,33 @@ public class MeController {
     public ApiEnvelope<Boolean> deleteChannelVideo(@PathVariable UUID videoId) {
         myChannelService.deleteVideo(videoId);
         return ApiEnvelope.ok(true);
+    }
+
+    @PostMapping("/channel/videos/{videoId}/check")
+    public ApiEnvelope<MyChannelVideoDto> recheckVideo(@PathVariable UUID videoId) {
+        return ApiEnvelope.ok(myChannelService.recheckVideo(videoId));
+    }
+
+    @GetMapping("/channel/careers")
+    public ApiEnvelope<java.util.List<ChannelCareerService.CareerView>> myCareers() {
+        return ApiEnvelope.ok(channelCareerService.mine());
+    }
+
+    @PostMapping("/channel/careers")
+    public ApiEnvelope<ChannelCareerService.CareerView> createCareer(@RequestBody ChannelCareerService.CareerInput body) {
+        return ApiEnvelope.ok(channelCareerService.create(body));
+    }
+
+    @PatchMapping("/channel/careers/{careerId}")
+    public ApiEnvelope<ChannelCareerService.CareerView> updateCareer(@PathVariable UUID careerId,
+                                                                    @RequestBody ChannelCareerService.CareerInput body) {
+        return ApiEnvelope.ok(channelCareerService.update(careerId, body));
+    }
+
+    @DeleteMapping("/channel/careers/{careerId}")
+    public ApiEnvelope<Void> deleteCareer(@PathVariable UUID careerId) {
+        channelCareerService.delete(careerId);
+        return ApiEnvelope.ok(null);
     }
 
     @GetMapping("/vault")

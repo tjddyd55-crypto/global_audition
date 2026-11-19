@@ -3,7 +3,7 @@
  * 표시 문구는 i18n 카탈로그 `recruitField.<CODE>` 에서 만든다.
  * 알려진 한글/영문/몽골어 레거시 값은 코드로 정규화, 알 수 없는 자유 텍스트는 그대로 표시.
  */
-export const RECRUIT_FIELD_CODES = ['VOCAL', 'DANCE', 'RAP', 'PRODUCING', 'ACTING', 'MODEL', 'TEAM'] as const
+export const RECRUIT_FIELD_CODES = ['VOCAL', 'DANCE', 'RAP', 'PRODUCING', 'ACTING', 'MODEL', 'TEAM', 'INFLUENCER'] as const
 export type RecruitFieldCode = (typeof RECRUIT_FIELD_CODES)[number]
 
 const ALIASES: Record<string, RecruitFieldCode> = {
@@ -14,6 +14,7 @@ const ALIASES: Record<string, RecruitFieldCode> = {
   acting: 'ACTING', actor: 'ACTING', actress: 'ACTING', 연기: 'ACTING', 배우: 'ACTING', жүжиглэх: 'ACTING', жүжигчин: 'ACTING',
   model: 'MODEL', modeling: 'MODEL', 모델: 'MODEL', 'загвар өмсөгч': 'MODEL',
   team: 'TEAM', group: 'TEAM', 팀: 'TEAM', баг: 'TEAM',
+  influencer: 'INFLUENCER', creator: 'INFLUENCER', 인플루언서: 'INFLUENCER', 크리에이터: 'INFLUENCER', инфлюенсер: 'INFLUENCER',
 }
 
 export function toRecruitFieldCode(raw: string): RecruitFieldCode | null {

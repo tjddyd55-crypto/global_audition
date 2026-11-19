@@ -41,7 +41,34 @@ export type MyChannelSummary = {
   activityFields?: string[]
   shownFields?: string[]
   selectionCustomized?: boolean
+  userId?: string
+  residenceCountry?: string | null
+  languages?: string[]
+  talents?: string | null
+  talentSearchVisible?: boolean
+  castingOffersEnabled?: boolean
+  /** U18 · 18_19 · 20_24 … (생년월일은 내려오지 않는다) */
+  ageBand?: string | null
+  adultConfirmed?: boolean
+  birthDateSet?: boolean
+  maxVideos?: number
 }
+
+export type ChannelCareerCategory = 'PERFORMANCE' | 'TRAINING' | 'DANCE_VOCAL' | 'ACTING_MODEL' | 'CONTEST_AWARD' | 'OTHER'
+
+export type ChannelCareer = {
+  id: string
+  category: ChannelCareerCategory
+  title: string
+  organization?: string | null
+  periodStart?: string | null
+  periodEnd?: string | null
+  description?: string | null
+  visible: boolean
+  sortOrder: number
+}
+
+export type ChannelCareerInput = Partial<Omit<ChannelCareer, 'id'>> & { sourceLocale?: string }
 
 export type PatchMyChannelBody = {
   nickname?: string
@@ -64,6 +91,11 @@ export type PatchMyChannelBody = {
   categories?: string[]
   featuredVideoId?: string | null
   shownFields?: string[]
+  residenceCountry?: string | null
+  languages?: string[]
+  talents?: string | null
+  talentSearchVisible?: boolean
+  castingOffersEnabled?: boolean
 }
 
 /**
@@ -152,6 +184,13 @@ export function sanitizePatchMyChannelBody(body: PatchMyChannelBody): Record<str
   if (body.shownFields !== undefined) {
     out.shownFields = body.shownFields
   }
+  if (body.residenceCountry !== undefined) {
+    out.residenceCountry = body.residenceCountry === null ? '' : body.residenceCountry.trim().toUpperCase()
+  }
+  if (body.languages !== undefined) out.languages = body.languages
+  if (body.talents !== undefined) out.talents = body.talents === null ? '' : body.talents
+  if (body.talentSearchVisible !== undefined) out.talentSearchVisible = body.talentSearchVisible
+  if (body.castingOffersEnabled !== undefined) out.castingOffersEnabled = body.castingOffersEnabled
 
   return out
 }
@@ -210,6 +249,34 @@ function normalizeChannel(raw: Record<string, unknown>): MyChannelSummary {
       : [],
     shownFields: Array.isArray(raw.shownFields) ? (raw.shownFields as unknown[]).map((item) => String(item)) : [],
     selectionCustomized: raw.selectionCustomized === true,
+    userId: raw.userId != null ? String(raw.userId) : undefined,
+    residenceCountry: raw.residenceCountry != null ? String(raw.residenceCountry) : null,
+    languages: strList(raw.languages),
+    talents: raw.talents != null ? String(raw.talents) : null,
+    talentSearchVisible: raw.talentSearchVisible === true,
+    castingOffersEnabled: raw.castingOffersEnabled === true,
+    ageBand: raw.ageBand != null ? String(raw.ageBand) : null,
+    adultConfirmed: raw.adultConfirmed === true,
+    birthDateSet: raw.birthDateSet === true,
+    maxVideos: Number(raw.maxVideos ?? 50) || 50,
+  }
+}
+
+function strList(v: unknown): string[] {
+  return Array.isArray(v) ? v.map((x) => String(x ?? '').trim()).filter((x) => x.length > 0) : []
+}
+
+export function parseCareer(raw: Record<string, unknown>): ChannelCareer {
+  return {
+    id: String(raw.id ?? ''),
+    category: String(raw.category ?? 'OTHER') as ChannelCareerCategory,
+    title: String(raw.title ?? ''),
+    organization: raw.organization != null ? String(raw.organization) : null,
+    periodStart: raw.periodStart != null ? String(raw.periodStart) : null,
+    periodEnd: raw.periodEnd != null ? String(raw.periodEnd) : null,
+    description: raw.description != null ? String(raw.description) : null,
+    visible: raw.visible !== false,
+    sortOrder: Number(raw.sortOrder ?? 0) || 0,
   }
 }
 
@@ -225,6 +292,27 @@ export type PublicChannelListItem = {
   videoCount: number
   nationality?: string | null
   categories?: string[]
+  shortBio?: string | null
+  residenceCountry?: string | null
+  mainField?: string | null
+  totalViews?: number
+  createdAt?: string | null
+  lastActiveAt?: string | null
+  featuredVideoId?: string | null
+  featuredThumbnailUrl?: string | null
+}
+
+export type { ChannelListSort } from '../channel/discovery'
+import type { ChannelListSort } from '../channel/discovery'
+
+export type ChannelListParams = {
+  q?: string
+  country?: string
+  category?: string
+  field?: string
+  sort?: ChannelListSort
+  limit?: number
+  offset?: number
 }
 
 export type PublicChannelResponse = {
@@ -253,6 +341,15 @@ export type PublicChannelResponse = {
   viewCount?: number
   videos: PublicChannelVideo[]
   snsLinks?: SnsLinkRow[]
+  residenceCountry?: string | null
+  ageBand?: string | null
+  languages?: string[]
+  talents?: string | null
+  mainField?: string | null
+  careers?: ChannelCareer[]
+  acceptsCastingOffers?: boolean
+  canSendCastingOffer?: boolean
+  lastActiveAt?: string | null
 }
 
 function parsePublicChannelListItem(raw: Record<string, unknown>): PublicChannelListItem {
@@ -269,15 +366,46 @@ function parsePublicChannelListItem(raw: Record<string, unknown>): PublicChannel
     videoCount: Number(raw.videoCount ?? 0) || 0,
     nationality: raw.nationality != null ? String(raw.nationality) : null,
     categories: Array.isArray(raw.categories) ? raw.categories.map((item) => String(item)) : [],
+    shortBio: raw.shortBio != null ? String(raw.shortBio) : null,
+    residenceCountry: raw.residenceCountry != null ? String(raw.residenceCountry) : null,
+    mainField: raw.mainField != null ? String(raw.mainField) : null,
+    totalViews: Number(raw.totalViews ?? 0) || 0,
+    createdAt: raw.createdAt != null ? String(raw.createdAt) : null,
+    lastActiveAt: raw.lastActiveAt != null ? String(raw.lastActiveAt) : null,
+    featuredVideoId: raw.featuredVideoId != null ? String(raw.featuredVideoId) : null,
+    featuredThumbnailUrl: raw.featuredThumbnailUrl != null ? String(raw.featuredThumbnailUrl) : null,
   }
 }
 
 export const channelApi = {
-  listPublic: async (params?: { q?: string; country?: string; category?: string }): Promise<PublicChannelListItem[]> => {
-    const { data } = await apiClient.get<unknown>('/channels/public', { params })
+  listPublic: async (params?: ChannelListParams): Promise<PublicChannelListItem[]> => {
+    const clean = Object.fromEntries(
+      Object.entries(params ?? {}).filter(([, v]) => v !== undefined && v !== null && v !== '' && v !== 'ALL'),
+    )
+    const { data } = await apiClient.get<unknown>('/channels/public', { params: clean })
     const unwrapped = unwrapData(data)
     if (!Array.isArray(unwrapped)) return []
     return unwrapped.map((x) => parsePublicChannelListItem(x as Record<string, unknown>))
+  },
+
+  listMyCareers: async (): Promise<ChannelCareer[]> => {
+    const { data } = await apiClient.get<unknown>('/me/channel/careers')
+    const rows = unwrapData(data)
+    return Array.isArray(rows) ? rows.map((r) => parseCareer(r as Record<string, unknown>)) : []
+  },
+
+  createCareer: async (body: ChannelCareerInput): Promise<ChannelCareer> => {
+    const { data } = await apiClient.post<unknown>('/me/channel/careers', body)
+    return parseCareer(unwrapData(data) as Record<string, unknown>)
+  },
+
+  updateCareer: async (id: string, body: ChannelCareerInput): Promise<ChannelCareer> => {
+    const { data } = await apiClient.patch<unknown>(`/me/channel/careers/${id}`, body)
+    return parseCareer(unwrapData(data) as Record<string, unknown>)
+  },
+
+  deleteCareer: async (id: string): Promise<void> => {
+    await apiClient.delete(`/me/channel/careers/${id}`)
   },
 
   getMine: async (): Promise<MyChannelSummary> => {
@@ -337,6 +465,15 @@ export const channelApi = {
       viewCount: raw.viewCount != null ? Number(raw.viewCount) : undefined,
       videos,
       snsLinks,
+      residenceCountry: raw.residenceCountry != null ? String(raw.residenceCountry) : null,
+      ageBand: raw.ageBand != null ? String(raw.ageBand) : null,
+      languages: strList(raw.languages),
+      talents: raw.talents != null ? String(raw.talents) : null,
+      mainField: raw.mainField != null ? String(raw.mainField) : null,
+      careers: Array.isArray(raw.careers) ? raw.careers.map((c) => parseCareer(c as Record<string, unknown>)) : [],
+      acceptsCastingOffers: raw.acceptsCastingOffers === true,
+      canSendCastingOffer: raw.canSendCastingOffer === true,
+      lastActiveAt: raw.lastActiveAt != null ? String(raw.lastActiveAt) : null,
     }
   },
 }

@@ -39,6 +39,8 @@ public interface ChannelVideoRepository extends JpaRepository<ChannelVideo, UUID
             SELECT v FROM ChannelVideo v
             JOIN User u ON u.id = v.ownerId
             WHERE v.visibility = 'PUBLIC'
+              AND v.moderationHidden = false
+              AND u.channelModerationHidden = false
               AND u.channelPublic = true
               AND (u.role = 'APPLICANT' OR u.role = 'ADMIN')
               AND v.category IS NOT NULL
@@ -56,6 +58,8 @@ public interface ChannelVideoRepository extends JpaRepository<ChannelVideo, UUID
             SELECT v FROM ChannelVideo v
             JOIN User u ON u.id = v.ownerId
             WHERE v.visibility = 'PUBLIC'
+              AND v.moderationHidden = false
+              AND u.channelModerationHidden = false
               AND u.channelPublic = true
               AND (u.role = 'APPLICANT' OR u.role = 'ADMIN')
               AND u.accountStatus = 'ACTIVE'

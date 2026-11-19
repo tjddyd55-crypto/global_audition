@@ -2,10 +2,14 @@
 export const PROFILE_SHOWN_FIELDS = [
   'NAME',
   'NATIONALITY',
+  'RESIDENCE',
+  'AGE',
+  'LANGUAGES',
   'SHORT_BIO',
   'BIO',
   'INTRO',
   'SPECIALTIES',
+  'TALENTS',
   'CAREER',
   'ACTIVITY',
   'SNS',
@@ -13,16 +17,11 @@ export const PROFILE_SHOWN_FIELDS = [
 
 export type ProfileShownField = (typeof PROFILE_SHOWN_FIELDS)[number]
 
-/** 선택 저장 전 공개 읽기가 유지하는 항목. 경력·활동은 제외. */
-export const LEGACY_PUBLIC_FIELDS: ProfileShownField[] = [
-  'NAME',
-  'NATIONALITY',
-  'SHORT_BIO',
-  'BIO',
-  'INTRO',
-  'SPECIALTIES',
-  'SNS',
-]
+/**
+ * 선택 저장 전 공개 읽기가 유지하는 항목.
+ * 실명(NAME)·경력 메모·활동·거주국·연령대·언어·특기는 본인이 고를 때까지 비공개다.
+ */
+export const LEGACY_PUBLIC_FIELDS: ProfileShownField[] = ['NATIONALITY', 'SHORT_BIO', 'BIO', 'INTRO', 'SPECIALTIES', 'SNS']
 
 export function initialShownSelection(stored: string[] | undefined, customized: boolean): ProfileShownField[] {
   if (!customized) return [...LEGACY_PUBLIC_FIELDS]

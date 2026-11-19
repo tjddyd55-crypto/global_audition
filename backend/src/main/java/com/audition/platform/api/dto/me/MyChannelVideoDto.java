@@ -15,6 +15,10 @@ public class MyChannelVideoDto {
     private long likeCount;
     private Instant createdAt;
 
+    private String youtubeVideoId;
+    private String embedStatus;
+    private boolean shorts;
+
     public String getVideoId() {
         return videoId;
     }
@@ -93,5 +97,29 @@ public class MyChannelVideoDto {
 
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getYoutubeVideoId() {
+        return youtubeVideoId;
+    }
+
+    public void setYoutubeVideoId(String youtubeVideoId) {
+        this.youtubeVideoId = youtubeVideoId;
+    }
+
+    public String getEmbedStatus() {
+        return embedStatus;
+    }
+
+    public void setEmbedStatus(String embedStatus) {
+        this.embedStatus = embedStatus;
+    }
+
+    public boolean isShorts() {
+        return shorts;
+    }
+
+    public void setShorts(boolean shorts) {
+        this.shorts = shorts;
     }
 }

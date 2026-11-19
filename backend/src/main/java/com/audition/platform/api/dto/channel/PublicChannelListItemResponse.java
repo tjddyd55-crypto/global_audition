@@ -21,6 +21,15 @@ public class PublicChannelListItemResponse {
     private String nationality;
     private List<String> categories;
 
+    private String shortBio;
+    private String residenceCountry;
+    private String mainField;
+    private long totalViews;
+    private java.time.Instant createdAt;
+    private java.time.Instant lastActiveAt;
+    private String featuredVideoId;
+    private String featuredThumbnailUrl;
+
     public String getUserId() {
         return userId;
     }
@@ -83,5 +92,69 @@ public class PublicChannelListItemResponse {
 
     public void setCategories(List<String> categories) {
         this.categories = categories;
+    }
+
+    public String getShortBio() {
+        return shortBio;
+    }
+
+    public void setShortBio(String shortBio) {
+        this.shortBio = shortBio;
+    }
+
+    public String getResidenceCountry() {
+        return residenceCountry;
+    }
+
+    public void setResidenceCountry(String residenceCountry) {
+        this.residenceCountry = residenceCountry;
+    }
+
+    public String getMainField() {
+        return mainField;
+    }
+
+    public void setMainField(String mainField) {
+        this.mainField = mainField;
+    }
+
+    public long getTotalViews() {
+        return totalViews;
+    }
+
+    public void setTotalViews(long totalViews) {
+        this.totalViews = totalViews;
+    }
+
+    public java.time.Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(java.time.Instant createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public java.time.Instant getLastActiveAt() {
+        return lastActiveAt;
+    }
+
+    public void setLastActiveAt(java.time.Instant lastActiveAt) {
+        this.lastActiveAt = lastActiveAt;
+    }
+
+    public String getFeaturedVideoId() {
+        return featuredVideoId;
+    }
+
+    public void setFeaturedVideoId(String featuredVideoId) {
+        this.featuredVideoId = featuredVideoId;
+    }
+
+    public String getFeaturedThumbnailUrl() {
+        return featuredThumbnailUrl;
+    }
+
+    public void setFeaturedThumbnailUrl(String featuredThumbnailUrl) {
+        this.featuredThumbnailUrl = featuredThumbnailUrl;
     }
 }

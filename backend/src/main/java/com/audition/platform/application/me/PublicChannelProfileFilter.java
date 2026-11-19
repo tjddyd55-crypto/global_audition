@@ -37,6 +37,18 @@ public final class PublicChannelProfileFilter {
         if (!ChannelShownFields.visible(shown, ChannelShownFields.SNS)) {
             out.setSnsLinks(List.of());
         }
+        if (!ChannelShownFields.visible(shown, ChannelShownFields.RESIDENCE)) {
+            out.setResidenceCountry(null);
+        }
+        if (!ChannelShownFields.visible(shown, ChannelShownFields.AGE)) {
+            out.setAgeBand(null);
+        }
+        if (!ChannelShownFields.visible(shown, ChannelShownFields.LANGUAGES)) {
+            out.setLanguages(List.of());
+        }
+        if (!ChannelShownFields.visible(shown, ChannelShownFields.TALENTS)) {
+            out.setTalents(null);
+        }
         if (ChannelShownFields.visible(shown, ChannelShownFields.CAREER)) {
             out.setCareerText(trimToNull(user.getCareerText()));
         } else {

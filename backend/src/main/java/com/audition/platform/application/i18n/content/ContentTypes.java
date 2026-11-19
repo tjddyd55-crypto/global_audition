@@ -10,6 +10,8 @@ public final class ContentTypes {
     public static final String APPLICATION_VIDEO = "APPLICATION_VIDEO";
     public static final String AUDITION_ROUND = "AUDITION_ROUND";
     public static final String AUDITION_POSTING = "AUDITION_POSTING";
+    public static final String CHANNEL_CAREER = "CHANNEL_CAREER";
+    public static final String CASTING_OFFER = "CASTING_OFFER";
 
     public static final String NOT_CONFIGURED = "NOT_CONFIGURED";
     public static final String BLOCKED = "BLOCKED";

@@ -61,6 +61,28 @@ public class ChannelVideo {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt = Instant.now();
 
+    @Column(name = "youtube_video_id", columnDefinition = "TEXT")
+    private String youtubeVideoId;
+
+    @Column(name = "embed_status", columnDefinition = "TEXT")
+    private String embedStatus;
+
+    @Column(name = "embed_checked_at")
+    private Instant embedCheckedAt;
+
+    @Column(name = "moderation_hidden", nullable = false)
+    private boolean moderationHidden = false;
+
+    public boolean isModerationHidden() { return moderationHidden; }
+    public void setModerationHidden(boolean v) { this.moderationHidden = v; }
+
+    public String getYoutubeVideoId() { return youtubeVideoId; }
+    public void setYoutubeVideoId(String youtubeVideoId) { this.youtubeVideoId = youtubeVideoId; }
+    public String getEmbedStatus() { return embedStatus; }
+    public void setEmbedStatus(String embedStatus) { this.embedStatus = embedStatus; }
+    public Instant getEmbedCheckedAt() { return embedCheckedAt; }
+    public void setEmbedCheckedAt(Instant embedCheckedAt) { this.embedCheckedAt = embedCheckedAt; }
+
     public UUID getId() {
         return id;
     }

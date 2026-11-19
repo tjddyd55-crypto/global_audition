@@ -22,6 +22,37 @@ class ChannelShownFieldsTest {
     }
 
     @Test
+    void realNameAndNewPortfolioFieldsAreHiddenByDefault() {
+        assertFalse(ChannelShownFields.visible(null, ChannelShownFields.NAME), "실명 기본 비공개");
+        for (String k : List.of(ChannelShownFields.RESIDENCE, ChannelShownFields.AGE,
+                ChannelShownFields.LANGUAGES, ChannelShownFields.TALENTS)) {
+            assertFalse(ChannelShownFields.visible(null, k), k);
+        }
+        PublicChannelResponse out = new PublicChannelResponse();
+        out.setName("홍길동");
+        out.setResidenceCountry("KR");
+        out.setAgeBand("20_24");
+        out.setLanguages(List.of("ko"));
+        out.setTalents("탭댄스");
+        User user = new User();
+        PublicChannelProfileFilter.apply(out, user);
+        assertEquals(null, out.getName());
+        assertEquals(null, out.getResidenceCountry());
+        assertEquals(null, out.getAgeBand());
+        assertEquals(List.of(), out.getLanguages());
+        assertEquals(null, out.getTalents());
+        user.setChannelShownFields(new String[]{"RESIDENCE", "AGE", "LANGUAGES", "TALENTS"});
+        out.setResidenceCountry("KR");
+        out.setAgeBand("20_24");
+        out.setLanguages(List.of("ko"));
+        out.setTalents("탭댄스");
+        PublicChannelProfileFilter.apply(out, user);
+        assertEquals("KR", out.getResidenceCountry());
+        assertEquals("20_24", out.getAgeBand());
+        assertEquals("탭댄스", out.getTalents());
+    }
+
+    @Test
     void emptySelectionPublishesNoProfileFields() {
         assertFalse(ChannelShownFields.visible(new String[0], ChannelShownFields.BIO));
         assertEquals(List.of(), ChannelShownFields.effective(new String[0]));

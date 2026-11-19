@@ -113,6 +113,30 @@ public class User {
     @Column(name = "channel_shown_fields", columnDefinition = "text[]")
     private String[] channelShownFields;
 
+    @Column(name = "residence_country", columnDefinition = "TEXT")
+    private String residenceCountry;
+
+    @Column(name = "languages", columnDefinition = "text[]", nullable = false)
+    private String[] languages = new String[0];
+
+    @Column(name = "talents", columnDefinition = "TEXT")
+    private String talents;
+
+    @Column(name = "talent_search_visible", nullable = false)
+    private boolean talentSearchVisible = false;
+
+    @Column(name = "casting_offers_enabled", nullable = false)
+    private boolean castingOffersEnabled = false;
+
+    @Column(name = "last_active_at")
+    private Instant lastActiveAt;
+
+    @Column(name = "channel_moderation_hidden", nullable = false)
+    private boolean channelModerationHidden = false;
+
+    public boolean isChannelModerationHidden() { return channelModerationHidden; }
+    public void setChannelModerationHidden(boolean v) { this.channelModerationHidden = v; }
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
@@ -139,6 +163,19 @@ public class User {
     void syncDenormalizedDisplayName() {
         this.displayName = UserPublicNames.computePublicDisplay(nickname, name, email);
     }
+
+    public String getResidenceCountry() { return residenceCountry; }
+    public void setResidenceCountry(String residenceCountry) { this.residenceCountry = residenceCountry; }
+    public String[] getLanguages() { return languages; }
+    public void setLanguages(String[] languages) { this.languages = languages != null ? languages : new String[0]; }
+    public String getTalents() { return talents; }
+    public void setTalents(String talents) { this.talents = talents; }
+    public boolean isTalentSearchVisible() { return talentSearchVisible; }
+    public void setTalentSearchVisible(boolean talentSearchVisible) { this.talentSearchVisible = talentSearchVisible; }
+    public boolean isCastingOffersEnabled() { return castingOffersEnabled; }
+    public void setCastingOffersEnabled(boolean castingOffersEnabled) { this.castingOffersEnabled = castingOffersEnabled; }
+    public Instant getLastActiveAt() { return lastActiveAt; }
+    public void setLastActiveAt(Instant lastActiveAt) { this.lastActiveAt = lastActiveAt; }
 
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
