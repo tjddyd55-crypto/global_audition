@@ -207,6 +207,8 @@ class OrgScenarioIT {
         UUID ambiguousAudition = insertAudition(agencyUser, null, "PH");
         insertApplication(januaryAudition, applicant);
         insertApplication(februaryAudition, applicant);
+        // 다른 IT 가 같은 CI DB 에 남긴 미귀속 사용 기록을 먼저 정리해, 아래 3건만 집계되도록 격리한다.
+        attributions.reconcileApplyUses();
         UUID januaryCredit = insertUse(applicant, januaryAudition, "2026-01-15T00:00:00Z", 100);
         UUID februaryCredit = insertUse(applicant, februaryAudition, "2026-02-15T00:00:00Z", 100);
         insertUse(applicant, ambiguousAudition, "2026-01-20T00:00:00Z", 10);
