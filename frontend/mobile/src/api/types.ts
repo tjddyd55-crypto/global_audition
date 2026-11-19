@@ -315,6 +315,8 @@ export type MeNotificationItem = {
   readAt?: string | null
   auditionId?: string | null
   applicationId?: string | null
+  link?: string | null
+  params?: Record<string, string> | null
 }
 
 export type MyChannelMine = {
@@ -404,6 +406,8 @@ export type PublicChannelDetail = {
   videoCount?: number
   subscriberCount?: number
   viewCount?: number
+  acceptsCastingOffers?: boolean
+  canSendCastingOffer?: boolean
 }
 
 export type CreditPackageItem = {

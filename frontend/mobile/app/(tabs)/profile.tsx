@@ -160,8 +160,25 @@ export default function ProfileScreen() {
         <Button label={t('studio.channel')} variant="secondary" onPress={() => router.push('/studio/channel')} />
         <Button label={t('nav.credits')} variant="secondary" onPress={() => router.push('/credits')} />
         <Button label={t('profile.notifications')} variant="secondary" onPress={() => router.push('/notifications')} />
+        {!isAgencyRole(session?.role) ? (
+          <Button label={t('studio.castingOffers')} variant="secondary" onPress={() => router.push('/casting')} />
+        ) : null}
         {isAgencyRole(session?.role) ? (
           <Button label={t('profile.manageApplicants')} variant="secondary" onPress={() => router.push('/agency/applicants')} />
+        ) : null}
+        {isAgencyRole(session?.role) ? (
+          <Button
+            label={t('agency.navTalents')}
+            variant="secondary"
+            onPress={() => router.push({ pathname: '/web', params: { path: '/ko/my/talents' } })}
+          />
+        ) : null}
+        {isAgencyRole(session?.role) ? (
+          <Button
+            label={t('agency.navCasting')}
+            variant="secondary"
+            onPress={() => router.push({ pathname: '/web', params: { path: '/ko/my/casting' } })}
+          />
         ) : null}
         <Button
           label={t('profile.createAuditionWeb')}
