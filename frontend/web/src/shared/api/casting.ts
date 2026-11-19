@@ -24,6 +24,8 @@ export type TalentCard = {
   savedGroup: string | null
   lastOfferStatus: string | null
   available: boolean
+  /** 성별 공개를 켠 회원만. */
+  gender?: string | null
 }
 
 export type TalentSearchParams = {
@@ -36,6 +38,7 @@ export type TalentSearchParams = {
   hasCareer?: boolean
   activeWithinDays?: number
   acceptsOffers?: boolean
+  gender?: string
   sort?: string
   limit?: number
   offset?: number

@@ -26,8 +26,6 @@ public final class ChannelPortfolioRules {
     public static final List<String> FIELD_FILTERS = List.of("VOCAL", "DANCE", "RAP", "ACTING", "MODEL", "INFLUENCER", "OTHER");
     private static final Set<String> NAMED_FIELDS = Set.of("VOCAL", "DANCE", "RAP", "ACTING", "MODEL", "INFLUENCER");
 
-    public static final int ADULT_AGE = 18;
-
     private ChannelPortfolioRules() {
     }
 
@@ -74,16 +72,7 @@ public final class ChannelPortfolioRules {
         return Period.between(birthDate, today).getYears();
     }
 
-    /** 생년월일이 없으면 미확인(null). 미확인은 성인으로 보지 않는다. */
-    public static boolean confirmedAdult(LocalDate birthDate, LocalDate today) {
-        Integer a = age(birthDate, today);
-        return a != null && a >= ADULT_AGE;
-    }
-
-    public static boolean minor(LocalDate birthDate, LocalDate today) {
-        Integer a = age(birthDate, today);
-        return a != null && a < ADULT_AGE;
-    }
+    // 성인·미성년 판정은 국가별 정책(consent.MinorPolicyService)에서 한다. 여기에는 연령 기준을 두지 않는다.
 
     /** 공개 연령대. 생년월일·정확한 나이는 내보내지 않는다. */
     public static String ageBand(LocalDate birthDate, LocalDate today) {

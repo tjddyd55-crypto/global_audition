@@ -41,6 +41,7 @@ class AuthServiceTest {
     private AuthService authService;
     private AgencySignupService agencySignupService;
     private BCryptPasswordEncoder encoder;
+    private com.audition.platform.application.consent.ConsentService consentService;
 
     @BeforeEach
     void setUp() {
@@ -53,7 +54,9 @@ class AuthServiceTest {
         JwtService jwtService = new JwtService(TestJwtSecrets.ACCEPTABLE, 86_400_000L);
         authService = new AuthService(
                 userRepository, encoder, jwtService, userNicknameService, authRecoveryService, creditService, agencySignupService,
-                mock(com.audition.platform.application.user.ApplicantSignupProfileService.class));
+                mock(com.audition.platform.application.user.ApplicantSignupProfileService.class),
+                consentService = mock(com.audition.platform.application.consent.ConsentService.class),
+                mock(com.audition.platform.application.consent.MinorPolicyService.class));
         when(userRepository.existsByUsername(any())).thenReturn(false);
         when(userRepository.save(any(User.class))).thenAnswer(inv -> {
             User user = inv.getArgument(0);
@@ -71,6 +74,8 @@ class AuthServiceTest {
         req.setPassword("secret1");
         req.setRole("APPLICANT");
         req.setNickname("새닉네임");
+        req.setBirthDate("2000-01-15");
+        agreeAll(req);
         when(userRepository.existsByEmail("new@example.com")).thenReturn(false);
         when(userNicknameService.prepareNicknameOrThrow(eq("새닉네임"), isNull())).thenReturn("새닉네임");
         when(authRecoveryService.issueNewCode(any(User.class))).thenReturn("ABCD-2345-EFGH");
@@ -99,6 +104,8 @@ class AuthServiceTest {
         req.setContactPhone("010-1234-5678");
         req.setBusinessCity("Seoul");
         req.setCountryCode("JP");
+        req.setAgreeTerms(true);
+        req.setAgreePrivacyCollection(true);
         when(userRepository.existsByEmail("agency@example.com")).thenReturn(false);
         when(userNicknameService.prepareNicknameOrThrow(eq("기획사닉"), isNull())).thenReturn("기획사닉");
         when(authRecoveryService.issueNewCode(any(User.class))).thenReturn("CODE-2345-WXYZ");
@@ -124,6 +131,41 @@ class AuthServiceTest {
         assertEquals("AGENCY", saved.getValue().getSignupIntent());
         assertNotNull(res.getToken());
         assertEquals("agency@example.com", res.getEmail());
+    }
+
+    private static void agreeAll(SignupRequest req) {
+        req.setAgreeTerms(true);
+        req.setAgreePrivacyCollection(true);
+        req.setAgreePrivacyDisclosure(true);
+    }
+
+    @Test
+    void signupRequiresSeparatedConsentsAndBirthDateButNotAdulthood() {
+        SignupRequest req = new SignupRequest();
+        req.setEmail("minor@example.com");
+        req.setPassword("secret1");
+        req.setRole("APPLICANT");
+        req.setNickname("미성년닉");
+        when(userRepository.existsByEmail("minor@example.com")).thenReturn(false);
+        when(userNicknameService.prepareNicknameOrThrow(eq("미성년닉"), isNull())).thenReturn("미성년닉");
+        org.springframework.web.server.ResponseStatusException noConsent = org.junit.jupiter.api.Assertions.assertThrows(
+                org.springframework.web.server.ResponseStatusException.class, () -> authService.signup(req));
+        assertEquals("CONSENT_REQUIRED", noConsent.getReason());
+        agreeAll(req);
+        org.springframework.web.server.ResponseStatusException noBirth = org.junit.jupiter.api.Assertions.assertThrows(
+                org.springframework.web.server.ResponseStatusException.class, () -> authService.signup(req));
+        assertEquals("BIRTH_DATE_REQUIRED", noBirth.getReason());
+        req.setBirthDate(java.time.LocalDate.now().minusYears(12).toString());
+        req.setGender("female");
+        AuthResponse res = authService.signup(req);
+        assertNotNull(res.getToken(), "미성년자도 가입할 수 있다");
+        org.mockito.ArgumentCaptor<com.audition.platform.application.consent.ConsentService.SignupConsents> c =
+                org.mockito.ArgumentCaptor.forClass(com.audition.platform.application.consent.ConsentService.SignupConsents.class);
+        verify(consentService).recordSignup(any(UUID.class), c.capture());
+        assertEquals(true, c.getValue().terms());
+        assertEquals(false, c.getValue().marketing());
+        // 가입 경로는 보호자 동의(GUARDIAN_CONSENT)를 기록하지 않는다.
+        verify(consentService, never()).insert(any(), eq("GUARDIAN_CONSENT"), any(), any(), any());
     }
 
     @Test

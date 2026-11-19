@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from 'next-intl'
 import { Link } from '@/i18n.config'
 import { myCastingApi } from '@/shared/api/casting'
 import { OfferDeadline, OfferStatusBadge } from '@/components/casting/OfferFacts'
+import { displayStatus } from '@/shared/casting/model'
 import { TEXT_SUB, TITLE_PAGE } from '@/shared/ui/specClasses'
 
 export default function StudioCastingInboxPage() {
@@ -37,7 +38,7 @@ export default function StudioCastingInboxPage() {
                 <span className={`min-w-0 break-words font-semibold text-neutral-900 ${o.status === 'SENT' ? '' : 'font-medium'}`}>
                   {o.title}
                 </span>
-                <OfferStatusBadge status={o.status} />
+                <OfferStatusBadge status={displayStatus(o)} />
               </div>
               <span className="truncate text-sm text-neutral-600">
                 {o.agency?.name ?? '—'}

@@ -9,6 +9,8 @@ import { AgencyCastingGate } from '@/components/casting/AgencyGate'
 import { koAgeBand, koCountry, koField, koLanguage, koStatus } from '@/components/casting/agencyKo'
 
 const COUNTRIES = ['KR', 'MN', 'JP', 'KH', 'UZ', 'OTHER']
+const GENDERS = ['FEMALE', 'MALE', 'NON_BINARY'] as const
+const KO_GENDER: Record<string, string> = { FEMALE: '여성', MALE: '남성', NON_BINARY: '논바이너리', UNDISCLOSED: '밝히지 않음' }
 const ACTIVE = [
   { v: 0, label: '전체 기간' },
   { v: 7, label: '7일 이내' },
@@ -79,6 +81,12 @@ function SearchTab() {
           <Select label="분야" value={f.field ?? ''} onChange={(v) => set({ field: v || undefined })} options={CHANNEL_FIELD_FILTERS.filter((x) => x !== 'ALL').map((c) => [c, koField(c)])} />
           <Select label="사용 언어" value={f.language ?? ''} onChange={(v) => set({ language: v || undefined })} options={CHANNEL_LANGUAGE_CODES.map((c) => [c, koLanguage(c)])} />
           <Select
+            label="성별(공개 동의자만)"
+            value={f.gender ?? ''}
+            onChange={(v) => set({ gender: v || undefined })}
+            options={GENDERS.map((g) => [g, KO_GENDER[g]])}
+          />
+          <Select
             label="최근 활동"
             value={String(f.activeWithinDays ?? 0)}
             onChange={(v) => set({ activeWithinDays: Number(v) || undefined })}
@@ -99,7 +107,7 @@ function SearchTab() {
         </div>
         <div className="flex flex-wrap items-center gap-1.5 text-xs">
           <span className="text-neutral-500">연령대</span>
-          {AGE_BANDS.filter((b) => b !== 'U18').map((b) => (
+          {AGE_BANDS.map((b) => (
             <button
               key={b}
               type="button"
@@ -122,7 +130,8 @@ function SearchTab() {
           </label>
         </div>
         <p className="text-xs text-neutral-500">
-          지원자가 공개로 고른 항목으로만 검색됩니다. 성별은 동의 항목이 없어 검색 조건에 없습니다. 미성년자는 검색과 제안 대상에서 제외됩니다.
+          지원자가 공개로 고른 항목으로만 검색됩니다(성별·연령대·국적 등은 공개에 동의한 회원만 조건에 걸립니다). 실명·생년월일·연락처는 표시되지 않습니다.
+          미성년자는 국가 기준과 보호자 확인 상태에 따라 검색·제안이 허용되며, 미성년자에게는 연락처 공유 요청이 붙지 않고 본문에 URL·이메일·전화번호를 넣을 수 없습니다.
         </p>
       </section>
 
@@ -160,7 +169,7 @@ function TalentItem({ t }: { t: TalentCard }) {
     mutationFn: () => (t.saved ? agencyCastingApi.unsave(t.userId) : agencyCastingApi.save(t.userId, null, null).then(() => undefined)),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['agency'] }),
   })
-  const meta = [koCountry(t.nationality), t.residenceCountry ? `거주 ${koCountry(t.residenceCountry)}` : '', koAgeBand(t.ageBand)].filter(Boolean).join(' · ')
+  const meta = [koCountry(t.nationality), t.residenceCountry ? `거주 ${koCountry(t.residenceCountry)}` : '', koAgeBand(t.ageBand), t.gender ? KO_GENDER[t.gender] ?? '' : ''].filter(Boolean).join(' · ')
   return (
     <li className="flex min-w-0 flex-col gap-2 rounded-xl border border-neutral-200 bg-white p-3" data-testid="talent-card">
       <div className="flex min-w-0 items-center gap-3">

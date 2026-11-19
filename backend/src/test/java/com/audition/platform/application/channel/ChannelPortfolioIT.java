@@ -80,7 +80,7 @@ class ChannelPortfolioIT {
     }
 
     @Test
-    void castingOptInRequiresConfirmedAdult() {
+    void castingOptInRequiresBirthDateAndGuardianForMinor() {
         UUID me = applicant("optin");
         as(me, "ROLE_APPLICANT");
         PatchMyChannelRequest on = new PatchMyChannelRequest();
@@ -88,8 +88,9 @@ class ChannelPortfolioIT {
         assertEquals("CASTING_BIRTH_DATE_REQUIRED",
                 assertThrows(ResponseStatusException.class, () -> channels.patchChannel(on)).getReason());
         jdbc.update("UPDATE users SET birth_date = CURRENT_DATE - INTERVAL '15 years' WHERE id = ?", me);
-        assertEquals("CASTING_MINOR_RESTRICTED",
-                assertThrows(ResponseStatusException.class, () -> channels.patchChannel(on)).getReason());
+        assertEquals("CASTING_GUARDIAN_REQUIRED",
+                assertThrows(ResponseStatusException.class, () -> channels.patchChannel(on)).getReason(),
+                "미성년자는 차단이 아니라 보호자 확인이 필요하다");
         jdbc.update("UPDATE users SET birth_date = CURRENT_DATE - INTERVAL '25 years' WHERE id = ?", me);
         on.setLanguages(List.of("ko", "en"));
         on.setResidenceCountry("MN");

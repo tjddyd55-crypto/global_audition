@@ -49,6 +49,8 @@ public class PublicChannelResponse {
 
     private String residenceCountry;
     private String ageBand;
+    /** 성별 공개(GENDER)를 켠 회원만 채운다. */
+    private String gender;
     private java.util.List<String> languages;
     private String talents;
     private String mainField;
@@ -341,4 +343,7 @@ public class PublicChannelResponse {
     public void setLastActiveAt(java.time.Instant lastActiveAt) {
         this.lastActiveAt = lastActiveAt;
     }
+
+    public String getGender() { return gender; }
+    public void setGender(String gender) { this.gender = gender; }
 }

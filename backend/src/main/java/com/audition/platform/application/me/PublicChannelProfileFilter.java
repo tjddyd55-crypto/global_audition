@@ -43,6 +43,9 @@ public final class PublicChannelProfileFilter {
         if (!ChannelShownFields.visible(shown, ChannelShownFields.AGE)) {
             out.setAgeBand(null);
         }
+        if (!ChannelShownFields.visible(shown, ChannelShownFields.GENDER)) {
+            out.setGender(null);
+        }
         if (!ChannelShownFields.visible(shown, ChannelShownFields.LANGUAGES)) {
             out.setLanguages(List.of());
         }

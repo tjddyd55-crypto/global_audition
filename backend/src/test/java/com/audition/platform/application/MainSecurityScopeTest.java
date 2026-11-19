@@ -51,7 +51,9 @@ class MainSecurityScopeTest {
         });
         auth = new AuthService(users, encoder, new JwtService(TestJwtSecrets.ACCEPTABLE, 60_000L), nicknames,
                 mock(AuthRecoveryService.class), mock(CreditService.class), agencySignup,
-                mock(com.audition.platform.application.user.ApplicantSignupProfileService.class));
+                mock(com.audition.platform.application.user.ApplicantSignupProfileService.class),
+                mock(com.audition.platform.application.consent.ConsentService.class),
+                mock(com.audition.platform.application.consent.MinorPolicyService.class));
     }
 
     /**
@@ -66,6 +68,8 @@ class MainSecurityScopeTest {
         request.setRole("AGENCY");
         request.setNickname("hotfan");
         request.setCountryCode("KR");
+        request.setAgreeTerms(true);
+        request.setAgreePrivacyCollection(true);
         com.audition.platform.api.dto.AuthResponse res = auth.signup(request);
         assertEquals("APPLICANT", res.getRole());
         org.mockito.Mockito.verify(users).save(org.mockito.ArgumentMatchers.argThat(user ->
@@ -81,6 +85,10 @@ class MainSecurityScopeTest {
         request.setPassword("Localtest1!");
         request.setRole("applicant");
         request.setNickname("hotfan");
+        request.setBirthDate("1999-03-01");
+        request.setAgreeTerms(true);
+        request.setAgreePrivacyCollection(true);
+        request.setAgreePrivacyDisclosure(true);
         auth.signup(request);
         org.mockito.Mockito.verify(users).save(org.mockito.ArgumentMatchers.argThat(user -> "APPLICANT".equals(user.getRole())));
     }

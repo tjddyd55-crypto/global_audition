@@ -112,7 +112,8 @@ class CastingOfferIT {
 
         as(agency, "ROLE_AGENCY");
         List<String> found = talents.search(filter("casttal")).items().stream().map(TalentSearchService.TalentCard::nickname).toList();
-        assertFalse(found.contains("casttalMinor"), "확인된 미성년자는 검색 제외");
+        assertTrue(found.contains("casttalMinor"), "미성년자라는 이유만으로 검색에서 빼지 않는다(KR 14세 이상은 본인 설정)");
+        assertFalse(talents.search(filter("casttalMinor")).items().get(0).acceptsOffers(), "보호자 확인 전 제안 수신 불가");
         assertEquals("TALENT_NOT_ACCEPTING",
                 assertThrows(ResponseStatusException.class, () -> casting.send(offer(minor))).getReason());
         assertEquals("TALENT_NOT_ACCEPTING",
@@ -140,6 +141,66 @@ class CastingOfferIT {
         assertEquals(1, casting.myBlocks().size());
         as(agency, "ROLE_AGENCY");
         assertFalse(talents.search(filter("casttal")).items().stream().anyMatch(t -> t.nickname().equals("casttalB")));
+    }
+
+    @Test
+    void minorWithGuardianGetsOfficialOfferWithoutContactExchange() {
+        UUID agency = agency("castagE", "APPROVED");
+        UUID minor = talent("casttalGuard", LocalDate.now().minusYears(16).toString(), true);
+        jdbc.update("""
+                INSERT INTO guardian_confirmations (id, user_id, guardian_name, token_hash, status, terms_version, expires_at, confirmed_at)
+                VALUES (?, ?, '[IT] 보호자', ?, 'CONFIRMED', 'it', NOW() + INTERVAL '7 days', NOW())
+                """, UUID.randomUUID(), minor, "it-" + UUID.randomUUID());
+        as(agency, "ROLE_AGENCY");
+        assertTrue(talents.search(filter("casttalGuard")).items().get(0).acceptsOffers());
+        CastingRules.OfferInput withPhone = new CastingRules.OfferInput(minor, null, "[IT] 제안", "PROJECT", "VOCAL",
+                "연락 주세요 010-1234-5678", "KR", "Seoul", null, "NEGOTIABLE", null, null, null, true, "ko");
+        assertEquals("OFFER_MINOR_CONTACT_TEXT",
+                assertThrows(ResponseStatusException.class, () -> casting.send(withPhone)).getReason());
+        CastingRules.OfferInput withUrl = new CastingRules.OfferInput(minor, null, "[IT] 제안", "PROJECT", "VOCAL",
+                "자세한 건 https://example.com 참고", "KR", "Seoul", null, "NEGOTIABLE", null, null, null, true, "ko");
+        assertEquals("OFFER_MINOR_CONTACT_TEXT",
+                assertThrows(ResponseStatusException.class, () -> casting.send(withUrl)).getReason());
+        var sent = casting.send(offer(minor));
+        assertFalse(sent.contactRequested(), "미성년자에게는 연락처 공유 요청을 붙이지 않는다");
+
+        as(minor, "ROLE_APPLICANT");
+        var accepted = casting.accept(UUID.fromString(sent.id()), true, null);
+        assertEquals("ACCEPTED", accepted.status());
+        assertFalse(accepted.contactShared(), "가입 동의만으로 연락처를 공유하지 않는다");
+        as(agency, "ROLE_AGENCY");
+        assertNull(casting.agencyOffer(UUID.fromString(sent.id())).contact());
+    }
+
+    @Test
+    void offerPastDeadlineIsExpiredImmediatelyInListDetailAndApi() {
+        UUID agency = agency("castagF", "APPROVED");
+        UUID adult = talent("casttalExp", "1991-01-01", true);
+        as(agency, "ROLE_AGENCY");
+        var sent = casting.send(offer(adult));
+        UUID id = UUID.fromString(sent.id());
+        // 정기 정리(sweep) 전: DB 상태는 아직 SENT.
+        jdbc.update("UPDATE casting_offers SET expires_at = NOW() - INTERVAL '1 second' WHERE id = ?", id);
+        assertEquals("EXPIRED", casting.agencyOffers(null, null).stream().filter(o -> o.id().equals(sent.id()))
+                .findFirst().orElseThrow().status());
+        assertTrue(casting.agencyOffers("EXPIRED", null).stream().anyMatch(o -> o.id().equals(sent.id())));
+        assertFalse(casting.agencyOffers("SENT", null).stream().anyMatch(o -> o.id().equals(sent.id())));
+
+        as(adult, "ROLE_APPLICANT");
+        var listed = casting.myOffers().stream().filter(o -> o.id().equals(sent.id())).findFirst().orElseThrow();
+        assertEquals("EXPIRED", listed.status());
+        assertTrue(listed.expired());
+        assertFalse(listed.respondable());
+        assertNotNull(listed.serverNow());
+        var detail = casting.myOffer(id);
+        assertEquals("EXPIRED", detail.status());
+        assertFalse(detail.respondable());
+        assertEquals("SENT", jdbc.queryForObject("SELECT status FROM casting_offers WHERE id = ?", String.class, id),
+                "열람해도 마감 지난 제안은 READ 로 바꾸지 않는다");
+        assertEquals("OFFER_EXPIRED",
+                assertThrows(ResponseStatusException.class, () -> casting.accept(id, false, null)).getReason());
+        assertEquals("OFFER_EXPIRED",
+                assertThrows(ResponseStatusException.class, () -> casting.decline(id, "OTHER", null)).getReason());
     }
 
     @Test

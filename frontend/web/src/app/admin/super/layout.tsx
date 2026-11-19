@@ -26,6 +26,7 @@ const MENU = [
   { name: '국가 조직', path: '/admin/super/countries' },
   { name: '글로벌 기획사', path: '/admin/super/agencies' },
   { name: '채널·캐스팅 운영', path: '/admin/super/casting' },
+  { name: '미성년자 정책·동의', path: '/admin/super/minor-policy' },
   { name: '계약', path: '/admin/super/contracts' },
   { name: '매출 통계', path: '/admin/super/revenue' },
   { name: '월 정산', path: '/admin/super/settlements' },

@@ -23,6 +23,7 @@ import com.audition.platform.domain.user.User;
 import com.audition.platform.domain.user.UserRepository;
 import com.audition.platform.infra.SecurityUtils;
 import org.springframework.dao.DataIntegrityViolationException;
+import com.audition.platform.application.consent.MinorPolicyService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,6 +44,8 @@ public class ApplicationSubmitService {
 
     /** 중복 지원. ko/en/mn `errors.ALREADY_APPLIED` 와 같은 키. */
     public static final String ALREADY_APPLIED = "ALREADY_APPLIED";
+    /** 법정대리인(보호자) 확인 전 지원. ko/en/mn/km/uz `errors.GUARDIAN_CONSENT_REQUIRED`. */
+    public static final String GUARDIAN_CONSENT_REQUIRED = "GUARDIAN_CONSENT_REQUIRED";
 
     private final ApplicationService applicationService;
     private final ApplicationRepository applicationRepository;
@@ -54,6 +57,7 @@ public class ApplicationSubmitService {
     private final ApplicationRoundSubmissionService applicationRoundSubmissionService;
     private final AuditionSeriesEligibilityService auditionSeriesEligibilityService;
     private final ApplicationValidationService applicationValidationService;
+    private final MinorPolicyService minorPolicy;
 
     public ApplicationSubmitService(
             ApplicationService applicationService,
@@ -65,7 +69,9 @@ public class ApplicationSubmitService {
             CreditService creditService,
             ApplicationRoundSubmissionService applicationRoundSubmissionService,
             AuditionSeriesEligibilityService auditionSeriesEligibilityService,
-            ApplicationValidationService applicationValidationService) {
+            ApplicationValidationService applicationValidationService,
+            MinorPolicyService minorPolicy) {
+        this.minorPolicy = minorPolicy;
         this.applicationService = applicationService;
         this.applicationRepository = applicationRepository;
         this.auditionRepository = auditionRepository;
@@ -104,6 +110,12 @@ public class ApplicationSubmitService {
         }
         if (applicationRepository.existsByAuditionIdAndApplicantId(auditionId, applicantId)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, ALREADY_APPLIED);
+        }
+        // 미성년자라는 이유로 막지 않는다. 국가 정책상 법정대리인 동의가 필요한 나이인데 보호자 확인 전일 때만 막는다.
+        // 공고별 연령 제한 등 기존 지원 자격은 아래 검증에서 그대로 적용한다. 가입 동의를 다시 받지 않는다.
+        if (SecurityUtils.hasRole("APPLICANT")
+                && !minorPolicy.status(userRepository.findById(applicantId).orElse(null)).applyAllowed()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, GUARDIAN_CONSENT_REQUIRED);
         }
 
         String applicantName = body.getName() != null ? body.getName().trim() : "";

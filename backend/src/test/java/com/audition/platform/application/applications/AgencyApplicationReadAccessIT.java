@@ -443,7 +443,7 @@ class AgencyApplicationReadAccessIT {
         String nick = "az" + UUID.randomUUID().toString().replace("-", "").substring(0, 8);
         String email = nick + "@local.test";
         String body = mvc.perform(post("/api/auth/signup").contentType(APPLICATION_JSON)
-                        .content("{\"email\":\"" + email + "\",\"password\":\"Localtest1!\",\"role\":\"" + role
+                        .content("{\"email\":\"" + email + "\",\"password\":\"Localtest1!\",\"agreeTerms\":true,\"agreePrivacyCollection\":true,\"agreePrivacyDisclosure\":true,\"birthDate\":\"1995-05-05\",\"role\":\"" + role
                                 + "\",\"nickname\":\"" + nick + "\"}"))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();

@@ -45,7 +45,13 @@ public final class CastingViews {
             Party talent,
             SharedContact contact,
             List<EventView> history,
-            boolean agencyBlocked) {
+            boolean agencyBlocked,
+            /** 서버 시각 기준 마감 경과(상태가 아직 SENT/READ 로 남아 있어도 즉시 true). */
+            boolean expired,
+            /** 아직 열린 제안인지(지원자 수락·거절, 기획사 철회 가능). 서버 시각 판정이며 클라이언트 시계를 믿지 않는다. */
+            boolean respondable,
+            /** 응답 시각(UTC). 클라이언트 시계 차이 보정용. */
+            Instant serverNow) {
     }
 
     public record Quota(int sentToday, int dailyLimit, boolean restricted, String restrictedReason, boolean approved) {

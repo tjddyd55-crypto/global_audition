@@ -158,6 +158,9 @@ export default function ProfileScreen() {
         <Button label={t('profile.findAccount')} variant="secondary" onPress={() => router.push('/(auth)/recover')} />
         <Button label={t('nav.applications')} variant="secondary" onPress={() => router.push('/(tabs)/applications')} />
         <Button label={t('studio.channel')} variant="secondary" onPress={() => router.push('/studio/channel')} />
+        {!isAgencyRole(session?.role) ? (
+          <Button label={t('privacy.menu')} variant="secondary" onPress={() => router.push('/privacy')} />
+        ) : null}
         <Button label={t('nav.credits')} variant="secondary" onPress={() => router.push('/credits')} />
         <Button label={t('profile.notifications')} variant="secondary" onPress={() => router.push('/notifications')} />
         {!isAgencyRole(session?.role) ? (

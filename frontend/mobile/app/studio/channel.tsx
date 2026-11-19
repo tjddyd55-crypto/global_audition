@@ -37,11 +37,14 @@ const FIELD_LABEL: Record<string, string> = {
   CAREER: 'fieldCareer',
   ACTIVITY: 'fieldActivity',
   SNS: 'fieldSns',
+  GENDER: 'fieldGender',
 }
 
 const ERROR_KEY: Record<string, string> = {
   CASTING_BIRTH_DATE_REQUIRED: 'studio.castingNeedsBirthDate',
   CASTING_MINOR_RESTRICTED: 'studio.castingMinor',
+  CASTING_GUARDIAN_REQUIRED: 'studio.castingMinor',
+  SEARCH_GUARDIAN_REQUIRED: 'privacy.errors.SEARCH_GUARDIAN_REQUIRED',
   YOUTUBE_URL_REQUIRED: 'studio.errYoutube',
   CHANNEL_VIDEO_DUPLICATE: 'studio.errDuplicate',
   CHANNEL_VIDEO_LIMIT: 'studio.errLimit',

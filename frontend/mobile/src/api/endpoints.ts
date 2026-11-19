@@ -2,6 +2,7 @@ import { normalizeAudienceCountry } from '../domain/audience'
 import { unwrapData } from './unwrap'
 import { ApiError, apiRequest } from './http'
 import { parseOffer, type CastingOffer, type CastingParty } from '../../../web/src/shared/casting/model'
+import { parsePrivacySettings, type PrivacySettings } from '../../../web/src/shared/privacy/model'
 import type { ContentTranslationView } from '../../../web/src/shared/i18n/contentTranslation'
 import {
   parseAgencyDetail,
@@ -65,6 +66,12 @@ export const authApi = {
     contactPhone?: string
     businessCity?: string
     timezone?: string
+    birthDate?: string
+    gender?: string
+    agreeTerms?: boolean
+    agreePrivacyCollection?: boolean
+    agreePrivacyDisclosure?: boolean
+    agreeMarketing?: boolean
   }) =>
     apiRequest<AuthResponse>('/auth/signup', { method: 'POST', body, auth: false }),
   me: async (): Promise<AuthMe> => parseAuthMe(unwrapData(await apiRequest<unknown>('/auth/me'))),
@@ -227,6 +234,19 @@ export const castingApi = {
   },
   unblock: async (agencyUserId: string): Promise<void> => {
     await apiRequest<unknown>(`/me/casting-blocks/${agencyUserId}`, { method: 'DELETE' })
+  },
+}
+
+/** 마이프로필 '개인정보 및 공개 설정' + 동의 + 보호자 확인 링크. 미성년자 판정은 서버가 국가 정책으로 한다. */
+export const privacyApi = {
+  get: async (): Promise<PrivacySettings> => parsePrivacySettings(unwrapData(await apiRequest<unknown>('/me/privacy'))),
+  save: async (patch: Record<string, unknown>): Promise<PrivacySettings> =>
+    parsePrivacySettings(unwrapData(await apiRequest<unknown>('/me/privacy', { method: 'PUT', body: patch }))),
+  consent: async (type: string, agree: boolean): Promise<PrivacySettings> =>
+    parsePrivacySettings(unwrapData(await apiRequest<unknown>('/me/consents', { method: 'POST', body: { type, agree } }))),
+  requestGuardian: async (body: { guardianName?: string; relationship?: string }): Promise<{ token: string; expiresAt: string | null }> => {
+    const r = unwrapData(await apiRequest<unknown>('/me/guardian/request', { method: 'POST', body })) as Record<string, unknown>
+    return { token: String(r?.token ?? ''), expiresAt: typeof r?.expiresAt === 'string' ? r.expiresAt : null }
   },
 }
 

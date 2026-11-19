@@ -28,6 +28,8 @@ export const KO_ERRORS: Record<string, string> = {
   TALENT_NOT_ACCEPTING: '이 지원자는 현재 캐스팅 제안을 받을 수 없습니다.',
   CASTING_DAILY_LIMIT: '오늘 보낼 수 있는 제안 수를 모두 썼습니다.',
   OFFER_ALREADY_OPEN: '이 지원자에게 아직 응답 대기 중인 제안이 있습니다.',
+  OFFER_MINOR_CONTACT_TEXT: '미성년자에게 보내는 제안에는 URL·이메일·전화번호 등 외부 연락 수단을 넣을 수 없습니다. 플랫폼 안에서만 소통해 주세요.',
+  OFFER_EXPIRED: '응답 기한이 지난 제안입니다.',
   OFFER_COOLDOWN: '지원자가 최근 거절해 30일 동안 다시 제안할 수 없습니다.',
   OFFER_PAIR_LIMIT: '같은 지원자에게는 90일에 최대 3건까지 보낼 수 있습니다.',
   OFFER_AUDITION_INVALID: '내 오디션만 연결할 수 있습니다.',

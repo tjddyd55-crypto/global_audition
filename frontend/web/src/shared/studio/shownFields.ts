@@ -13,6 +13,7 @@ export const PROFILE_SHOWN_FIELDS = [
   'CAREER',
   'ACTIVITY',
   'SNS',
+  'GENDER',
 ] as const
 
 export type ProfileShownField = (typeof PROFILE_SHOWN_FIELDS)[number]

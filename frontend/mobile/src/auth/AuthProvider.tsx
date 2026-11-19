@@ -19,6 +19,12 @@ type SignupInput = {
   contactPhone?: string
   businessCity?: string
   timezone?: string
+  birthDate?: string
+  gender?: string
+  agreeTerms?: boolean
+  agreePrivacyCollection?: boolean
+  agreePrivacyDisclosure?: boolean
+  agreeMarketing?: boolean
 }
 
 type AuthContextValue = {
@@ -26,7 +32,7 @@ type AuthContextValue = {
   session: AuthMe | null
   isAuthenticated: boolean
   login: (email: string, password: string) => Promise<void>
-  signup: (input: SignupInput) => Promise<{ recoveryCode: string | null }>
+  signup: (input: SignupInput) => Promise<{ recoveryCode: string | null; guardianRequired: boolean }>
   logout: () => Promise<void>
 }
 
@@ -95,7 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (input: SignupInput) => {
       const response = await authApi.signup(input)
       await persist(response)
-      return { recoveryCode: response.recoveryCode ?? null }
+      return { recoveryCode: response.recoveryCode ?? null, guardianRequired: response.guardianRequired === true }
     },
     [persist],
   )

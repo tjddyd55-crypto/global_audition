@@ -9,6 +9,8 @@ import { z } from 'zod'
 import { authApi } from '@/shared/api/auth'
 import { buildAgencySignupPayload } from '@/shared/auth/buildAgencySignupPayload'
 import { buildApplicantSignupPayload } from '@/shared/auth/buildApplicantSignupPayload'
+import { EMPTY_SIGNUP_EXTRAS, SignupConsentFields, signupExtrasErrorKey, type SignupExtras } from '@/components/auth/SignupConsentFields'
+import { GENDER_CODES } from '@/shared/privacy/model'
 import { RecoveryCodeNotice } from '@/components/auth/RecoveryCodeNotice'
 import { countries, languages, timezones } from '@/shared/utils/countries'
 import { createNicknameZodField } from '@/shared/user/nicknameZod'
@@ -78,6 +80,15 @@ export default function MobileRegisterPage() {
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([])
   const [issuedCode, setIssuedCode] = useState<string | null>(null)
   const [issuedRole, setIssuedRole] = useState<string>('APPLICANT')
+  const [extras, setExtras] = useState<SignupExtras>(EMPTY_SIGNUP_EXTRAS)
+  const [guardianNext, setGuardianNext] = useState(false)
+  const tConsent = useTranslations('consent')
+  const tPrivacy = useTranslations('privacy')
+  const goHome = (role: string | null | undefined, needsGuardian: boolean) => {
+    if (role === 'AGENCY') window.location.href = `/${locale}/my/studio/agency-application`
+    else if (needsGuardian) window.location.href = `/${locale}/my/studio/privacy?guardian=1`
+    else window.location.href = `/${locale}`
+  }
   const registerSchema = useMemo(() => createMobileRegisterSchema(tReg, tVal, tAuth), [tAuth, tReg, tVal])
 
   const {
@@ -187,6 +198,13 @@ export default function MobileRegisterPage() {
         }
       }
 
+      const extrasError = signupExtrasErrorKey(extras, submitData.userType !== 'BUSINESS', false)
+      if (extrasError) {
+        setError(tConsent(extrasError))
+        setIsLoading(false)
+        return
+      }
+
       const response = await authApi.signup(
         submitData.userType === 'BUSINESS'
           ? buildAgencySignupPayload({
@@ -207,6 +225,7 @@ export default function MobileRegisterPage() {
               businessAddress: submitData.businessAddress,
               establishedYear: submitData.establishedYear,
               businessLicenseDocumentUrl: submitData.businessLicenseDocumentUrl,
+              consents: { ...extras.consents, privacyDisclosure: false },
             })
           : buildApplicantSignupPayload({
               email: submitData.email,
@@ -215,19 +234,19 @@ export default function MobileRegisterPage() {
               name: submitData.name,
               countryCode: submitData.country,
               timezone: submitData.timezone,
+              birthDate: submitData.birthday,
+              gender: submitData.gender || undefined,
+              consents: extras.consents,
             }),
       )
       queryClient.invalidateQueries({ queryKey: ['currentUser'] })
+      setGuardianNext(response.guardianRequired === true)
       if (response.recoveryCode) {
         setIssuedRole(response.signupIntent ?? 'APPLICANT')
         setIssuedCode(response.recoveryCode)
         return
       }
-      if (response.signupIntent === 'AGENCY') {
-        window.location.href = `/${locale}/my/studio/agency-application`
-      } else {
-        window.location.href = `/${locale}`
-      }
+      goHome(response.signupIntent, response.guardianRequired === true)
     } catch (err: any) {
       console.error('signup failed', err)
       console.error('signup response', err.response?.data)
@@ -270,10 +289,7 @@ export default function MobileRegisterPage() {
         <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-lg">
           <RecoveryCodeNotice
             recoveryCode={issuedCode}
-            onAcknowledged={() => {
-              if (issuedRole === 'AGENCY') window.location.href = `/${locale}/my/studio/agency-application`
-              else window.location.href = `/${locale}`
-            }}
+            onAcknowledged={() => goHome(issuedRole, guardianNext)}
           />
         </div>
       </div>
@@ -462,9 +478,11 @@ export default function MobileRegisterPage() {
                   className="w-full px-4 py-2 border rounded-lg"
                 >
                   <option value="">{tAuth('selectOptional')}</option>
-                  <option value="MALE">{tReg('male')}</option>
-                  <option value="FEMALE">{tReg('female')}</option>
-                  <option value="OTHER">{tReg('other')}</option>
+                  {GENDER_CODES.map((g) => (
+                    <option key={g} value={g}>
+                      {tPrivacy(`gender_${g}`)}
+                    </option>
+                  ))}
                 </select>
               </div>
             </>
@@ -649,6 +667,13 @@ export default function MobileRegisterPage() {
               </div>
             </>
           )}
+
+          <SignupConsentFields
+            value={extras}
+            onChange={setExtras}
+            applicant={userType !== 'BUSINESS'}
+            askPersonal={false}
+          />
 
           <button
             type="submit"

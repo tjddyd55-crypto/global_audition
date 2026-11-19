@@ -3,6 +3,8 @@ package com.audition.platform.application.casting;
 import com.audition.platform.application.channel.CastingOfferEligibility;
 import com.audition.platform.application.channel.ChannelPortfolioRules;
 import com.audition.platform.application.channel.PublicChannelDiscoveryService;
+import com.audition.platform.application.consent.ConsentService;
+import com.audition.platform.application.consent.MinorPolicyService;
 import com.audition.platform.application.me.ChannelShownFields;
 import com.audition.platform.infra.SecurityUtils;
 import org.springframework.http.HttpStatus;
@@ -30,9 +32,10 @@ import java.util.UUID;
 
 /**
  * 승인 기획사 전용 인재 검색 + 저장 인재(그룹·내부 메모).
- * 대상: 공개 채널 + '기획사 인재 검색 노출'을 켠 활성 지원자. 본인이 차단한 기획사와 확인된 미성년자는 제외.
- * 각 항목은 지원자가 공개로 고른 값만 보이고, 비공개 값으로는 필터링도 하지 않는다.
- * 성별 필터는 동의 항목이 없어 제공하지 않는다.
+ * 대상: 공개 채널 + '기획사 인재 검색 노출'을 켠 활성 지원자 + 국가별 정책상 필요한 보호자 확인 완료
+ * + 개인정보 공개 범위 동의를 철회하지 않은 회원. 본인이 차단한 기획사는 제외. 미성년자라는 이유만으로 빼지 않는다.
+ * 각 항목은 지원자가 공개로 고른 값만 보이고, 비공개 값(성별·연령대·국적 등)으로는 필터링도 하지 않는다.
+ * 실명·생년월일·전화번호·이메일·주소는 검색 결과에 넣지 않는다.
  */
 @Service
 public class TalentSearchService {
@@ -42,18 +45,30 @@ public class TalentSearchService {
     private final CastingService casting;
     private final CastingOfferEligibility eligibility;
     private final PublicChannelDiscoveryService discovery;
+    private final MinorPolicyService minorPolicy;
+    private final ConsentService consents;
 
     public TalentSearchService(JdbcTemplate jdbc, CastingService casting, CastingOfferEligibility eligibility,
-                               PublicChannelDiscoveryService discovery) {
+                               PublicChannelDiscoveryService discovery, MinorPolicyService minorPolicy,
+                               ConsentService consents) {
         this.jdbc = jdbc;
         this.casting = casting;
         this.eligibility = eligibility;
         this.discovery = discovery;
+        this.minorPolicy = minorPolicy;
+        this.consents = consents;
     }
 
     public record Filter(String q, String nationality, String residence, List<String> ageBands, String field,
                          String language, Boolean hasCareer, Integer activeWithinDays, Boolean acceptsOffers,
-                         String sort, Integer limit, Integer offset) {
+                         String sort, Integer limit, Integer offset, String gender) {
+
+        public Filter(String q, String nationality, String residence, List<String> ageBands, String field,
+                      String language, Boolean hasCareer, Integer activeWithinDays, Boolean acceptsOffers,
+                      String sort, Integer limit, Integer offset) {
+            this(q, nationality, residence, ageBands, field, language, hasCareer, activeWithinDays, acceptsOffers,
+                    sort, limit, offset, null);
+        }
     }
 
     public record TalentCard(String userId, String nickname, String realName, String profileImageUrl,
@@ -61,7 +76,7 @@ public class TalentSearchService {
                              List<String> fields, List<String> languages, String shortBio, int careerCount,
                              long videoCount, long followers, Instant lastActiveAt, boolean acceptsOffers,
                              String featuredThumbnailUrl, boolean saved, String savedGroup, String lastOfferStatus,
-                             boolean available) {
+                             boolean available, String gender) {
     }
 
     public record Page(List<TalentCard> items, int total) {
@@ -70,7 +85,12 @@ public class TalentSearchService {
     record Row(UUID id, String nickname, String name, String img, String nationality, String residence,
                LocalDate birthDate, String[] categories, String[] languages, String[] shown, String shortBio,
                boolean casting, String role, int careers, long videos, long followers, Instant created,
-               Instant lastActive, Instant lastVideo) {
+               Instant lastActive, Instant lastVideo, String country, String gender, MinorPolicyService.Status policy) {
+
+        Row withPolicy(MinorPolicyService.Status p) {
+            return new Row(id, nickname, name, img, nationality, residence, birthDate, categories, languages, shown,
+                    shortBio, casting, role, careers, videos, followers, created, lastActive, lastVideo, country, gender, p);
+        }
 
         boolean visible(String key) {
             return ChannelShownFields.visible(shown, key);
@@ -99,8 +119,9 @@ public class TalentSearchService {
         Instant activeSince = f.activeWithinDays() != null && f.activeWithinDays() > 0
                 ? Instant.now().minus(Duration.ofDays(f.activeWithinDays())) : null;
         List<Row> hits = new ArrayList<>();
+        String gender = up(f.gender());
         for (Row r : rows) {
-            if (ChannelPortfolioRules.minor(r.birthDate(), today)) {
+            if (gender != null && !(r.visible(ChannelShownFields.GENDER) && gender.equals(up(r.gender())))) {
                 continue;
             }
             if (needle != null && !nameMatches(r, needle)) {
@@ -234,6 +255,7 @@ public class TalentSearchService {
                 SELECT u.id, u.nickname, u.name, COALESCE(NULLIF(trim(u.profile_image_url), ''), NULLIF(trim(c.profile_image_url), '')) AS img,
                        u.nationality, u.residence_country, u.birth_date, u.channel_categories, u.languages,
                        u.channel_shown_fields, u.short_bio, u.casting_offers_enabled, u.role, u.created_at, u.last_active_at,
+                       u.country_code, u.gender,
                        COALESCE(c.subscriber_count, 0) AS subs,
                        (SELECT COUNT(*) FROM channel_careers cc WHERE cc.user_id = u.id AND cc.visible = TRUE) AS careers,
                        COALESCE(v.cnt, 0) AS cnt, v.last_at
@@ -254,12 +276,37 @@ public class TalentSearchService {
             if (only.isEmpty()) {
                 return List.of();
             }
-            return jdbc.query(sql + " AND u.id = ANY (?)", ps -> {
+            return withPolicy(jdbc.query(sql + " AND u.id = ANY (?)", ps -> {
                 ps.setObject(1, agency);
                 ps.setArray(2, ps.getConnection().createArrayOf("uuid", only.toArray()));
-            }, (rs, i) -> map(rs));
+            }, (rs, i) -> map(rs)));
         }
-        return jdbc.query(sql, (rs, i) -> map(rs), agency);
+        return withPolicy(jdbc.query(sql, (rs, i) -> map(rs), agency));
+    }
+
+    /** 국가별 미성년자 정책 + 동의 상태로 검색 대상만 남긴다(서버 검증). */
+    private List<Row> withPolicy(List<Row> raw) {
+        if (raw.isEmpty()) {
+            return raw;
+        }
+        List<UUID> ids = raw.stream().map(Row::id).toList();
+        Set<UUID> guardian = minorPolicy.guardianConfirmedAmong(ids);
+        Set<UUID> withdrawn = consents.withdrawnAmong(ids, ConsentService.PRIVACY_DISCLOSURE);
+        Map<String, MinorPolicyService.Policy> policies = minorPolicy.byCountry();
+        List<Row> out = new ArrayList<>();
+        for (Row r : raw) {
+            if (withdrawn.contains(r.id())) {
+                continue;
+            }
+            MinorPolicyService.Status st = MinorPolicyService.evaluate(r.birthDate(),
+                    MinorPolicyService.resolvePolicy(policies, MinorPolicyService.policyCountry(r.country(), r.residence(), r.nationality())),
+                    guardian.contains(r.id()));
+            if (!st.searchAllowed()) {
+                continue;
+            }
+            out.add(r.withPolicy(st));
+        }
+        return out;
     }
 
     private List<TalentCard> cards(UUID agency, List<Row> page, LocalDate today) {
@@ -291,7 +338,7 @@ public class TalentSearchService {
             String[] s = saved.get(r.id());
             PublicChannelDiscoveryService.Featured fe = feat.get(r.id());
             out.add(new TalentCard(r.id().toString(), r.nickname(),
-                    r.visible(ChannelShownFields.NAME) ? r.name() : null, r.img(),
+                    null, r.img(),
                     r.visible(ChannelShownFields.NATIONALITY) ? r.nationality() : null,
                     r.visible(ChannelShownFields.RESIDENCE) ? r.residence() : null,
                     r.visible(ChannelShownFields.AGE) ? ChannelPortfolioRules.ageBand(r.birthDate(), today) : null,
@@ -300,7 +347,8 @@ public class TalentSearchService {
                     r.visible(ChannelShownFields.LANGUAGES) && r.languages() != null ? List.of(r.languages()) : List.of(),
                     r.visible(ChannelShownFields.SHORT_BIO) ? r.shortBio() : null,
                     r.careers(), r.videos(), r.followers(), r.activity(), accepts(r, today),
-                    fe == null ? null : fe.thumbnailUrl(), s != null, s == null ? null : s[0], lastOffer.get(r.id()), true));
+                    fe == null ? null : fe.thumbnailUrl(), s != null, s == null ? null : s[0], lastOffer.get(r.id()), true,
+                    r.visible(ChannelShownFields.GENDER) ? r.gender() : null));
         }
         return out;
     }
@@ -309,18 +357,16 @@ public class TalentSearchService {
         String nick = jdbc.query("SELECT nickname FROM users WHERE id = ?", (rs, i) -> rs.getString(1), talent)
                 .stream().findFirst().orElse(null);
         return new TalentCard(talent.toString(), nick, null, null, null, null, null, null, List.of(), List.of(), null,
-                0, 0, 0, null, false, null, true, null, null, false);
+                0, 0, 0, null, false, null, true, null, null, false, null);
     }
 
     private boolean accepts(Row r, LocalDate today) {
-        return r.casting() && ChannelPortfolioRules.confirmedAdult(r.birthDate(), today);
+        return r.casting() && r.policy() != null && r.policy().offersAllowed();
     }
 
     static boolean nameMatches(Row r, String needle) {
-        if (r.nickname() != null && r.nickname().toLowerCase(Locale.ROOT).contains(needle)) {
-            return true;
-        }
-        return r.visible(ChannelShownFields.NAME) && r.name() != null && r.name().toLowerCase(Locale.ROOT).contains(needle);
+        // 실명은 검색 결과·검색어 매칭에 쓰지 않는다.
+        return r.nickname() != null && r.nickname().toLowerCase(Locale.ROOT).contains(needle);
     }
 
     static boolean countryMatches(String value, String wanted) {
@@ -368,7 +414,8 @@ public class TalentSearchService {
                 rs.getArray("channel_shown_fields") == null ? null : arr(rs.getArray("channel_shown_fields")),
                 rs.getString("short_bio"), rs.getBoolean("casting_offers_enabled"), rs.getString("role"),
                 rs.getInt("careers"), rs.getLong("cnt"), rs.getLong("subs"), ts(rs.getTimestamp("created_at")),
-                ts(rs.getTimestamp("last_active_at")), ts(rs.getTimestamp("last_at")));
+                ts(rs.getTimestamp("last_active_at")), ts(rs.getTimestamp("last_at")), rs.getString("country_code"),
+                rs.getString("gender"), null);
     }
 
     private static String[] arr(Array a) throws SQLException {

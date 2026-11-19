@@ -7,6 +7,7 @@ import com.audition.platform.application.casting.CastingViews.Party;
 import com.audition.platform.application.casting.CastingViews.Quota;
 import com.audition.platform.application.casting.CastingViews.SharedContact;
 import com.audition.platform.application.channel.CastingOfferEligibility;
+import com.audition.platform.application.consent.MinorPolicyService;
 import com.audition.platform.application.org.JdbcCrmStore;
 import com.audition.platform.application.org.JdbcCrmStore.AgencyRow;
 import com.audition.platform.domain.audition.AuditionRepository;
@@ -41,10 +42,12 @@ public class CastingService {
     private final JdbcCrmStore crm;
     private final AuditionRepository auditions;
     private final UserNotificationService notifications;
+    private final MinorPolicyService minorPolicy;
 
     public CastingService(CastingOfferStore offers, CastingSafetyStore safety, CastingOfferEligibility eligibility,
                           UserRepository users, JdbcCrmStore crm, AuditionRepository auditions,
-                          UserNotificationService notifications) {
+                          UserNotificationService notifications, MinorPolicyService minorPolicy) {
+        this.minorPolicy = minorPolicy;
         this.offers = offers;
         this.safety = safety;
         this.eligibility = eligibility;
@@ -80,12 +83,14 @@ public class CastingService {
 
     public CastingViews.Preview preview(CastingRules.OfferInput in) {
         UUID me = requireApprovedAgency();
-        CastingRules.CleanOffer clean = CastingRules.clean(in, today());
+        java.time.ZoneId zone = agencyZone(me);
+        CastingRules.CleanOffer clean = CastingRules.clean(in, LocalDate.now(zone), zone);
         UUID branch = branchFor(me, clean.branchId());
         User talent = users.findById(clean.talentUserId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "TALENT_NOT_FOUND"));
         List<String> warnings = new ArrayList<>();
         try {
+            clean = protectMinor(talent, clean);
             checkSendable(me, talent, clean);
         } catch (ResponseStatusException e) {
             warnings.add(e.getReason());
@@ -101,18 +106,35 @@ public class CastingService {
     @Transactional
     public OfferView send(CastingRules.OfferInput in) {
         UUID me = requireApprovedAgency();
-        CastingRules.CleanOffer clean = CastingRules.clean(in, today());
+        java.time.ZoneId zone = agencyZone(me);
+        CastingRules.CleanOffer clean = CastingRules.clean(in, LocalDate.now(zone), zone);
         UUID branch = branchFor(me, clean.branchId());
         User talent = users.findById(clean.talentUserId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "TALENT_NOT_FOUND"));
         // 같은 기획사의 동시 발송을 트랜잭션 끝까지 직렬화해 한도·중복 검사를 원자적으로 만든다.
         offers.lockAgency(me);
+        clean = protectMinor(talent, clean);
         checkSendable(me, talent, clean);
         UUID id = offers.insert(me, clean, branch);
         notifications.notify(talent.getId(), UserNotificationService.CASTING_OFFER_NEW,
                 Map.of("agency", agencyName(me, branch), "title", clean.title()),
                 "/my/studio/casting/" + id, "offer-new:" + id);
         return view(offers.find(id).orElseThrow(), true, false);
+    }
+
+    /**
+     * 미성년자 보호(국가 정책이 연락처 공유를 허용하지 않을 때): 연락처 공유 요청을 붙이지 않고,
+     * 본문·장소·일정·보상 메모에 URL·이메일·전화번호를 넣으면 거절한다.
+     */
+    CastingRules.CleanOffer protectMinor(User talent, CastingRules.CleanOffer clean) {
+        MinorPolicyService.Status st = minorPolicy.status(talent);
+        if (st.contactSharingAllowed()) {
+            return clean;
+        }
+        if (CastingRules.containsContact(clean)) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "OFFER_MINOR_CONTACT_TEXT");
+        }
+        return clean.contactRequested() ? CastingRules.withoutContactRequest(clean) : clean;
     }
 
     void checkSendable(UUID agencyId, User talent, CastingRules.CleanOffer clean) {
@@ -153,7 +175,9 @@ public class CastingService {
         if (s != null && !CastingOfferStatus.ALL.contains(s)) {
             throw CastingRules.bad("OFFER_STATUS_INVALID");
         }
-        return offers.forAgency(me, s, talentId).stream().map(o -> view(o, true, false)).toList();
+        // 상태 필터도 서버 시각 기준 실제 상태로 맞춘다(정기 정리 전이라도 마감 지난 제안은 EXPIRED).
+        return offers.forAgency(me, null, talentId).stream().map(o -> view(o, true, false))
+                .filter(v -> s == null || s.equals(v.status())).toList();
     }
 
     public OfferView agencyOffer(UUID id) {
@@ -200,7 +224,7 @@ public class CastingService {
     public OfferView myOffer(UUID id) {
         UUID me = requireUser();
         Offer o = mine(id, me);
-        if (CastingOfferStatus.SENT.equals(o.status()) && o.expiresAt().isAfter(Instant.now())) {
+        if (CastingOfferStatus.SENT.equals(o.status()) && !expiredNow(o)) {
             if (offers.transition(id, CastingOfferStatus.SENT, CastingOfferStatus.READ, me, CastingOfferStatus.ACTOR_TALENT,
                     null, null, null)) {
                 notifications.notify(o.agencyUserId(), UserNotificationService.CASTING_OFFER_READ,
@@ -217,7 +241,9 @@ public class CastingService {
         UUID me = requireUser();
         Offer o = mine(id, me);
         expireIfDue(o);
-        boolean share = shareContact && o.contactRequested();
+        // 미성년자는 가입 동의만으로 연락처를 공유하지 않는다(국가 정책이 허용할 때만).
+        boolean share = shareContact && o.contactRequested()
+                && minorPolicy.status(users.findById(me).orElse(null)).contactSharingAllowed();
         move(o, CastingOfferStatus.ACCEPTED, me, CastingOfferStatus.ACTOR_TALENT, CastingRules.text(note, 500), null, share);
         notifications.notify(o.agencyUserId(), UserNotificationService.CASTING_OFFER_ACCEPTED,
                 Map.of("talent", talentName(me), "title", o.title()), "/my/casting/" + id, "offer-accepted:" + id);
@@ -287,7 +313,7 @@ public class CastingService {
     // ───────────────────────── 내부 ─────────────────────────
 
     private void expireIfDue(Offer o) {
-        if (CastingOfferStatus.open(o.status()) && o.expiresAt().isBefore(Instant.now())) {
+        if (expiredNow(o)) {
             offers.transition(o.id(), o.status(), CastingOfferStatus.EXPIRED, null, CastingOfferStatus.ACTOR_SYSTEM,
                     null, null, null);
             throw new ResponseStatusException(HttpStatus.CONFLICT, "OFFER_EXPIRED");
@@ -328,6 +354,15 @@ public class CastingService {
         return c != null && c.dailyLimit() != null && c.dailyLimit() >= 0 ? c.dailyLimit() : CastingRules.DEFAULT_DAILY_LIMIT;
     }
 
+    /** 서버 현재 시각이 마감(포함)을 지난 열린 제안. 정기 작업과 무관하게 즉시 만료로 본다. */
+    static boolean expiredNow(Offer o) {
+        return CastingOfferStatus.open(o.status()) && o.expiresAt() != null && !o.expiresAt().isAfter(Instant.now());
+    }
+
+    static String effectiveStatus(Offer o) {
+        return expiredNow(o) ? CastingOfferStatus.EXPIRED : o.status();
+    }
+
     OfferView view(Offer o, boolean forAgency, boolean withHistory) {
         SharedContact contact = null;
         if (forAgency && o.contactShared() && CastingOfferStatus.ACCEPTED.equals(o.status())) {
@@ -339,12 +374,15 @@ public class CastingService {
                         .map(e -> new EventView(e.fromStatus(), e.toStatus(), e.actorKind(), e.createdAt())).toList()
                 : List.of();
         boolean blocked = !forAgency && o.agencyUserId() != null && safety.blocked(o.talentUserId(), o.agencyUserId());
-        return new OfferView(o.id() == null ? null : o.id().toString(), o.status(), o.title(), o.projectType(),
+        String status = "DRAFT".equals(o.status()) ? o.status() : effectiveStatus(o);
+        boolean respondable = CastingOfferStatus.open(status);
+        return new OfferView(o.id() == null ? null : o.id().toString(), status, o.title(), o.projectType(),
                 o.roleField(), o.message(), o.workCountry(), o.workLocation(), o.scheduleText(), o.compensationType(),
                 o.compensationNote(), o.auditionId() == null ? null : o.auditionId().toString(), o.contactRequested(),
                 o.contactShared(), o.sourceLocale(), o.expiresAt(), o.readAt(), o.respondedAt(), o.responseReason(),
                 forAgency || o.responseNote() != null ? o.responseNote() : null, o.createdAt(),
-                agencyParty(o.agencyUserId(), o.branchId()), talentParty(o.talentUserId()), contact, history, blocked);
+                agencyParty(o.agencyUserId(), o.branchId()), talentParty(o.talentUserId()), contact, history, blocked,
+                CastingOfferStatus.EXPIRED.equals(status), respondable, Instant.now());
     }
 
     private Party agencyParty(UUID agencyId, UUID branchId) {
@@ -377,6 +415,18 @@ public class CastingService {
             }
         }
         return "";
+    }
+
+    private java.time.ZoneId agencyZone(UUID agencyId) {
+        String tz = users.findById(agencyId).map(User::getTimezone).orElse(null);
+        if (tz != null && !tz.isBlank()) {
+            try {
+                return java.time.ZoneId.of(tz.trim());
+            } catch (java.time.DateTimeException ignored) {
+                // 잘못 저장된 값은 UTC 로 본다.
+            }
+        }
+        return ZoneOffset.UTC;
     }
 
     static LocalDate today() {

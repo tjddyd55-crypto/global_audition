@@ -23,6 +23,13 @@ export interface SignupRequest {
   businessAddress?: string | null
   establishedYear?: number | null
   businessLicenseDocumentUrl?: string | null
+  /** YYYY-MM-DD. 지원자 필수. */
+  birthDate?: string | null
+  gender?: string | null
+  agreeTerms?: boolean
+  agreePrivacyCollection?: boolean
+  agreePrivacyDisclosure?: boolean
+  agreeMarketing?: boolean
 }
 
 export interface LoginRequest {
@@ -40,6 +47,8 @@ export interface AuthResponse {
   profileImageUrl?: string | null
   /** 회원가입 응답에만 한 번 포함. 이후 API는 평문을 돌려주지 않는다. */
   recoveryCode?: string | null
+  /** 가입 응답: 국가 기준상 보호자 확인이 필요한 나이. */
+  guardianRequired?: boolean
 }
 
 export interface AuthMeResponse {

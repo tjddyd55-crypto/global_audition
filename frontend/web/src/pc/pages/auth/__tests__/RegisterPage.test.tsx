@@ -22,19 +22,36 @@ describe('PcRegisterPage applicant signup', () => {
     signup.mockResolvedValue({ token: 't', role: 'APPLICANT', userId: 'u' })
   })
 
-  it('sends ISO country and IANA timezone with the applicant payload', async () => {
+  const fillBase = () => {
     render(
       <NextIntlClientProvider locale="en" messages={en}>
         <PcRegisterPage />
       </NextIntlClientProvider>,
     )
-
     fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'singer@example.com' } })
     fireEvent.change(screen.getByLabelText('Nickname *'), { target: { value: 'singer' } })
     fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'secret1' } })
     fireEvent.change(screen.getByLabelText('Confirm password'), { target: { value: 'secret1' } })
     fireEvent.change(screen.getByRole('combobox', { name: 'Country' }), { target: { value: 'MN' } })
     fireEvent.change(screen.getByRole('combobox', { name: 'Timezone' }), { target: { value: 'Asia/Ulaanbaatar' } })
+  }
+
+  it('blocks signup until birth date and the required consents are given', async () => {
+    fillBase()
+    fireEvent.click(screen.getByRole('button', { name: 'Register' }))
+    expect(await screen.findByText(en.consent.birthDateRequired)).toBeTruthy()
+    fireEvent.change(document.getElementById('birthDate')!, { target: { value: '2010-05-01' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Register' }))
+    expect(await screen.findByText(en.consent.required)).toBeTruthy()
+    expect(signup).not.toHaveBeenCalled()
+  })
+
+  it('sends ISO country, IANA timezone, birth date and separated consents with the applicant payload', async () => {
+    fillBase()
+    fireEvent.change(document.getElementById('birthDate')!, { target: { value: '2010-05-01' } })
+    fireEvent.click(screen.getByTestId('consent-terms'))
+    fireEvent.click(screen.getByTestId('consent-privacyCollection'))
+    fireEvent.click(screen.getByTestId('consent-privacyDisclosure'))
     fireEvent.click(screen.getByRole('button', { name: 'Register' }))
 
     await waitFor(() => expect(signup).toHaveBeenCalled())
@@ -46,6 +63,12 @@ describe('PcRegisterPage applicant signup', () => {
       name: undefined,
       countryCode: 'MN',
       timezone: 'Asia/Ulaanbaatar',
+      birthDate: '2010-05-01',
+      gender: undefined,
+      agreeTerms: true,
+      agreePrivacyCollection: true,
+      agreePrivacyDisclosure: true,
+      agreeMarketing: false,
     })
   })
 })

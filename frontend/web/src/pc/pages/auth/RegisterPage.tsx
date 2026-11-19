@@ -12,6 +12,7 @@ import { Link, useRouter } from '@/i18n.config'
 import RoleSelectCard from '@/components/auth/RoleSelectCard'
 import AuthCardLayout from '@/components/auth/AuthCardLayout'
 import { RecoveryCodeNotice } from '@/components/auth/RecoveryCodeNotice'
+import { EMPTY_SIGNUP_EXTRAS, SignupConsentFields, signupExtrasErrorKey, type SignupExtras } from '@/components/auth/SignupConsentFields'
 import { SIGNUP } from '@/shared/design-tokens'
 import { createNicknameZodField } from '@/shared/user/nicknameZod'
 import { countries, timezones } from '@/shared/utils/countries'
@@ -97,6 +98,14 @@ export default function PcRegisterPage() {
   const [countryCode, setCountryCode] = useState('')
   const [issuedCode, setIssuedCode] = useState<string | null>(null)
   const [issuedIntent, setIssuedIntent] = useState<string | null>(null)
+  const [extras, setExtras] = useState<SignupExtras>(EMPTY_SIGNUP_EXTRAS)
+  const [guardianNext, setGuardianNext] = useState(false)
+  const tConsent = useTranslations('consent')
+  const goHome = (intent: string | null | undefined, needsGuardian: boolean) => {
+    if (intent === 'AGENCY') router.push('/my/studio/agency-application')
+    else if (needsGuardian) router.push('/my/studio/privacy?guardian=1')
+    else router.push('/auditions')
+  }
   const registerSchema = useMemo(() => createRegisterSchema(tAuth, tReg), [tAuth, tReg])
 
   const { register, handleSubmit, formState: { errors } } = useForm<RegisterFormData>({
@@ -149,6 +158,12 @@ export default function PcRegisterPage() {
         return
       }
     }
+    const extrasError = signupExtrasErrorKey(extras, role === 'APPLICANT')
+    if (extrasError) {
+      setError(tConsent(extrasError))
+      setIsLoading(false)
+      return
+    }
     try {
       const res = await authApi.signup(
         role === 'AGENCY'
@@ -163,6 +178,7 @@ export default function PcRegisterPage() {
               representativeName: data.representativeName!.trim(),
               contactPhone: data.contactPhone,
               businessCity: data.businessCity!.trim(),
+              consents: { ...extras.consents, privacyDisclosure: false },
             })
           : buildApplicantSignupPayload({
               email: data.email,
@@ -171,15 +187,18 @@ export default function PcRegisterPage() {
               name: data.legalName?.trim() ? data.legalName.trim() : undefined,
               countryCode: applicantCountry,
               timezone: applicantTimezone,
+              birthDate: extras.birthDate,
+              gender: extras.gender,
+              consents: extras.consents,
             }),
       )
+      setGuardianNext(res.guardianRequired === true)
       if (res.recoveryCode) {
         setIssuedIntent(res.signupIntent ?? role)
         setIssuedCode(res.recoveryCode)
         return
       }
-      if (res.signupIntent === 'AGENCY') router.push('/my/studio/agency-application')
-      else router.push('/auditions')
+      goHome(res.signupIntent, res.guardianRequired === true)
     } catch (err: unknown) {
       const ax = err as { response?: { status?: number; data?: { message?: string } } }
       if (!ax.response) setError(tAuth('serverUnreachable'))
@@ -196,10 +215,7 @@ export default function PcRegisterPage() {
       <AuthCardLayout title={tAuth('recoveryCode')}>
         <RecoveryCodeNotice
           recoveryCode={issuedCode}
-          onAcknowledged={() => {
-            if (issuedIntent === 'AGENCY') router.push('/my/studio/agency-application')
-            else router.push('/auditions')
-          }}
+          onAcknowledged={() => goHome(issuedIntent, guardianNext)}
         />
       </AuthCardLayout>
     )
@@ -286,6 +302,8 @@ export default function PcRegisterPage() {
         <Field id="confirmPassword" label={tAuth('confirmPassword')} error={errors.confirmPassword?.message}>
           <input id="confirmPassword" type="password" autoComplete="new-password" {...register('confirmPassword')} placeholder={tAuth('confirmPasswordPlaceholder')} style={inputStyle} />
         </Field>
+
+        <SignupConsentFields value={extras} onChange={setExtras} applicant={role === 'APPLICANT'} />
 
         <button
           type="submit"
