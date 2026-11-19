@@ -8,8 +8,10 @@ import { useRouter } from '@/i18n.config'
 import { channelApi } from '@/shared/api/channel'
 import { listPublicVideosForChannel, postChannelSubscribe, deleteChannelSubscribe } from '@/shared/api/channelVideoPublic'
 import { channelVideoKeys } from '@/shared/query/channelVideoQuery'
-import { ChannelPublicVideoList } from '@/components/channel/ChannelPublicVideoList'
-import { getVideoEmbedSrc } from '@/shared/utils/videoEmbed'
+import { ChannelVideoTheater } from '@/components/channel/ChannelVideoTheater'
+import { ChannelCareerList } from '@/components/channel/ChannelCareerList'
+import { ChannelMetaLine } from '@/components/channel/ChannelMeta'
+import { recruitFieldLabel } from '@/shared/audition/recruitFields'
 import { formatNationalityLabel, knownNationalityCode } from '@/shared/channel/nationalityDisplay'
 import { useLocale, useTranslations } from 'next-intl'
 import { formatCount } from '@/shared/money/currency'
@@ -18,7 +20,7 @@ import { authApi } from '@/shared/api/auth'
 import { DEFAULT_IMAGES } from '@/shared/constants/fallbacks'
 import { TranslationNotice, translatedText, useContentTranslation } from '@/components/i18n/TranslatedField'
 
-type TabId = 'videos' | 'info'
+type TabId = 'videos' | 'profile' | 'career'
 
 async function shareOrCopyChannelPage(url: string, title: string): Promise<'shared' | 'copied' | 'noop'> {
   if (typeof window === 'undefined') return 'noop'
@@ -42,6 +44,8 @@ async function shareOrCopyChannelPage(url: string, title: string): Promise<'shar
 export default function ChannelByUserIdPage() {
   const t = useTranslations('channel')
   const tNat = useTranslations('nationality')
+  const tField = useTranslations('recruitField')
+  const tLang = useTranslations('languages')
   const locale = useLocale()
   const params = useParams()
   const userId = typeof params.userId === 'string' ? params.userId : ''
@@ -83,27 +87,12 @@ export default function ChannelByUserIdPage() {
   const userCopy = useContentTranslation('USER_INTRO', userId)
   const channelCopy = useContentTranslation('CHANNEL_DESCRIPTION', data?.channelId)
 
-  const featuredId = data?.featuredVideo?.videoId ?? null
+  const featuredId = data?.featuredVideo?.videoId ?? data?.featuredVideoId ?? null
 
-  const displayVideos = useMemo(() => {
-    const raw = publicVideosFromApi.length > 0 ? publicVideosFromApi : embeddedVideos
-    if (!featuredId) return raw
-    return raw.filter((v) => v.videoId !== featuredId)
-  }, [publicVideosFromApi, embeddedVideos, featuredId])
-
-  const embedSrc = useMemo(() => {
-    const url = data?.featuredVideo?.videoUrl
-    if (!url) return null
-    return getVideoEmbedSrc(url)
-  }, [data?.featuredVideo?.videoUrl])
-
-  const stats = useMemo(() => {
-    if (!data) return { videos: 0, subs: 0 }
-    return {
-      videos: data.videoCount ?? 0,
-      subs: data.subscriberCount ?? 0,
-    }
-  }, [data])
+  const displayVideos = useMemo(
+    () => (publicVideosFromApi.length > 0 ? publicVideosFromApi : embeddedVideos),
+    [publicVideosFromApi, embeddedVideos],
+  )
 
   const isOwnChannel = Boolean(me?.userId && userId && me.userId === userId)
 
@@ -165,189 +154,202 @@ export default function ChannelByUserIdPage() {
   }
 
   const nickname = data.nickname?.trim() || data.displayName
-  const nat = (data.nationality ?? data.country ?? '').trim()
-  const natCode = knownNationalityCode(nat || null)
-  const natLabel = natCode ? formatNationalityLabel(natCode, tNat(natCode)) : null
+  const nat = (data.nationality ?? data.country ?? '').trim() || null
   const shortBio = data.shortBio?.trim() ?? ''
   const longBio = agencyCopy.view
     ? translatedText(data.bio, agencyCopy.view, 'bio', agencyCopy.showOriginal)
     : (data.bio?.trim() ?? '')
-  const categories = (data.categories ?? []).slice(0, 3)
+  const categories = data.categories ?? []
   const introSource = agencyCopy.view ? agencyCopy : userCopy
   const intro = translatedText(data.introText, introSource.view, 'introText', introSource.showOriginal).trim()
+  const channelDesc = translatedText(data.channelDescription, channelCopy.view, 'description', channelCopy.showOriginal).trim()
   const profileSrc = data.profileImageUrl?.trim() || DEFAULT_IMAGES.avatar
+  const banner = data.bannerImageUrl?.trim() || ''
+  const natCode = knownNationalityCode(nat)
+  const resCode = knownNationalityCode(data.residenceCountry ?? null)
+  const facts: Array<[string, string]> = []
+  if (natCode) facts.push([t('profileNationality'), formatNationalityLabel(natCode, tNat(natCode))])
+  if (resCode) facts.push([t('profileResidence'), formatNationalityLabel(resCode, tNat(resCode))])
+  if (data.ageBand) facts.push([t('profileAge'), t(`ageBand.${data.ageBand}`)])
+  if ((data.languages ?? []).length) facts.push([t('profileLanguages'), (data.languages ?? []).map((l) => tLang(l)).join(', ')])
+  if (categories.length) facts.push([t('profileSpecialties'), categories.map((c) => recruitFieldLabel(c, (k) => tField(k))).join(', ')])
+  if ((data.activityFields ?? []).length) facts.push([t('category'), (data.activityFields ?? []).join(', ')])
+  const talents = data.talents?.trim() ?? ''
+  const hasProfile = facts.length > 0 || !!longBio || !!intro || !!channelDesc || !!talents || (data.snsLinks ?? []).length > 0
+
+  const section = (title: string, text: string, notice?: React.ReactNode) => (
+    <section className="border-b border-neutral-100 py-4 last:border-b-0">
+      <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{title}</h2>
+      <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed text-neutral-800">{text}</p>
+      {notice}
+    </section>
+  )
 
   return (
-    <div className="min-h-screen w-full bg-white">
-      <div className="flex items-start gap-3 px-4 py-3">
-        <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full bg-neutral-200">
-          <Image src={profileSrc} alt="" fill className="object-cover" sizes="64px" unoptimized />
+    <div className="min-h-screen w-full bg-white" data-testid="channel-detail">
+      <div className="mx-auto w-full max-w-[1100px]">
+        <div className="relative h-28 w-full overflow-hidden bg-gradient-to-r from-violet-200 via-fuchsia-100 to-amber-100 sm:h-44 md:rounded-b-2xl">
+          {banner ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={banner} alt="" className="h-full w-full object-cover" data-testid="channel-banner" />
+          ) : null}
         </div>
-        <div className="min-w-0 flex-1">
-          {/* 좁은 화면(<640)에서는 버튼을 이름 아래 줄로 내려 긴 번역 문구가 이름을 가리지 않게 한다. */}
-          <div className="flex flex-wrap items-start justify-between gap-2 sm:flex-nowrap">
-            <div className="min-w-0 flex-1 basis-full sm:basis-0">
-              <div className="break-words text-lg font-bold text-neutral-900">{nickname}</div>
-              {natLabel ? <div className="mt-1 text-sm text-gray-500">{natLabel}</div> : null}
-              {shortBio ? (
-                <div className="mt-2 truncate text-sm text-gray-700" title={shortBio}>
-                  {shortBio}
-                </div>
-              ) : null}
-              {categories.length > 0 ? (
-                <div className="mt-1 text-sm text-gray-700">{categories.join(' · ')}</div>
-              ) : null}
-              {data.careerText?.trim() ? <div className="mt-1 text-sm text-gray-700">{data.careerText}</div> : null}
-              {(data.activityFields ?? []).length > 0 ? (
-                <div className="mt-1 text-sm text-gray-700">{data.activityFields?.join(' · ')}</div>
-              ) : null}
-              <div className="mt-2 text-sm text-gray-500">
-                {t('subscribersVideos', { subs: formatCount(stats.subs, locale), videos: formatCount(stats.videos, locale) })}
+        <div className="flex flex-col gap-3 px-4 pb-3 sm:flex-row sm:items-end">
+          <div className="relative -mt-10 h-20 w-20 shrink-0 overflow-hidden rounded-full border-4 border-white bg-neutral-200 sm:-mt-12 sm:h-28 sm:w-28">
+            <Image src={profileSrc} alt="" fill className="object-cover" sizes="112px" unoptimized />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h1 className="break-words text-xl font-bold text-neutral-900 sm:text-2xl">{nickname}</h1>
+            <ChannelMetaLine
+              nationality={nat}
+              residence={data.residenceCountry}
+              mainField={data.mainField}
+              className="mt-1 text-sm text-neutral-600"
+            />
+            {shortBio ? <p className="mt-1 break-words text-sm text-neutral-700">{shortBio}</p> : null}
+            <dl className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-neutral-600" data-testid="channel-stats">
+              <div className="flex gap-1">
+                <dt>{t('statVideos')}</dt>
+                <dd className="font-semibold text-neutral-900">{formatCount(data.videoCount ?? 0, locale)}</dd>
               </div>
-            </div>
-            <div className="flex w-full min-w-0 flex-wrap gap-2 sm:ml-3 sm:w-auto sm:shrink-0">
-              {isOwnChannel ? (
-                <button
-                  type="button"
-                  className="rounded-full border border-neutral-900 bg-black px-3 py-1 text-sm text-white"
-                  onClick={() => router.push('/my/studio')}
-                >
-                  {t('manage')}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  disabled={!me || subMutation.isPending}
-                  onClick={() => {
-                    if (!me) {
-                      router.push('/login')
-                      return
-                    }
-                    subMutation.mutate()
-                  }}
-                  className="max-w-full rounded-full bg-black px-3 py-1 text-sm text-white disabled:opacity-50"
-                >
-                  {!me ? t('loginToSubscribe') : data.subscribed ? t('unsubscribe') : t('subscribe')}
-                </button>
-              )}
+              <div className="flex gap-1">
+                <dt>{t('statFollowers')}</dt>
+                <dd className="font-semibold text-neutral-900">{formatCount(data.subscriberCount ?? 0, locale)}</dd>
+              </div>
+              <div className="flex gap-1" title={t('viewsInternalHint')}>
+                <dt>{t('statViews')}</dt>
+                <dd className="font-semibold text-neutral-900">{formatCount(data.viewCount ?? 0, locale)}</dd>
+              </div>
+            </dl>
+          </div>
+          <div className="flex w-full min-w-0 flex-wrap gap-2 sm:w-auto sm:shrink-0">
+            {isOwnChannel ? (
               <button
                 type="button"
-                onClick={() => void onShare()}
-                className="rounded-full border border-neutral-300 px-3 py-1 text-sm text-neutral-900"
+                className="h-10 rounded-full bg-neutral-900 px-4 text-sm font-semibold text-white"
+                onClick={() => router.push('/my/studio/channel')}
+                data-testid="channel-manage"
               >
-                {t('share')}
+                {t('manage')}
               </button>
-            </div>
+            ) : (
+              <button
+                type="button"
+                disabled={subMutation.isPending}
+                data-testid="channel-follow"
+                onClick={() => {
+                  if (!me) {
+                    router.push('/login')
+                    return
+                  }
+                  subMutation.mutate()
+                }}
+                className={`h-10 max-w-full rounded-full px-4 text-sm font-semibold disabled:opacity-50 ${
+                  data.subscribed ? 'border border-neutral-300 bg-white text-neutral-900' : 'bg-neutral-900 text-white'
+                }`}
+              >
+                {!me ? t('loginToFollow') : data.subscribed ? t('following') : t('follow')}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => void onShare()}
+              className="h-10 rounded-full border border-neutral-300 px-4 text-sm font-semibold text-neutral-900"
+            >
+              {t('share')}
+            </button>
           </div>
-          {shareHint ? <p className="mt-2 text-xs text-neutral-600">{shareHint}</p> : null}
         </div>
-      </div>
+        {shareHint ? <p className="px-4 pb-2 text-xs text-neutral-600">{shareHint}</p> : null}
 
-      {embedSrc ? (
-        <div className="aspect-video w-full bg-black">
-          <iframe
-            title={t('featuredTitle')}
-            src={embedSrc}
-            className="h-full w-full"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowFullScreen
-          />
+        <div className="flex w-full gap-1 border-b border-neutral-200 px-2" role="tablist">
+          {(
+            [
+              ['videos', t('tabVideos')],
+              ['profile', t('tabProfile')],
+              ['career', t('tabCareer')],
+            ] as const
+          ).map(([id, label]) => (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={tab === id}
+              data-testid={`channel-tab-${id}`}
+              onClick={() => setTab(id)}
+              className={`relative -mb-px min-w-0 flex-1 rounded-t-lg border px-2 py-2.5 text-sm font-semibold sm:flex-none sm:px-6 ${
+                tab === id
+                  ? 'border-neutral-200 border-b-white bg-white text-neutral-900'
+                  : 'border-transparent bg-neutral-50 text-neutral-500 hover:text-neutral-800'
+              }`}
+            >
+              <span className="block truncate">{label}</span>
+            </button>
+          ))}
         </div>
-      ) : null}
 
-      <div className="flex w-full border-b border-neutral-200 px-1">
-        {(
-          [
-            ['videos', t('tabVideos')],
-            ['info', t('tabInfo')],
-          ] as const
-        ).map(([id, label]) => (
-          <button
-            key={id}
-            type="button"
-            role="tab"
-            aria-selected={tab === id}
-            onClick={() => setTab(id)}
-            className={`relative flex-1 px-2 py-2.5 text-sm font-medium ${
-              tab === id ? 'text-neutral-900' : 'text-neutral-500 hover:text-neutral-800'
-            }`}
-          >
-            {label}
-            {tab === id ? <span className="absolute inset-x-1 bottom-0 h-0.5 bg-neutral-900" /> : null}
-          </button>
-        ))}
-      </div>
-
-      <div className="w-full bg-white">
-        {tab === 'info' ? (
-          <div className="w-full space-y-0 px-3 py-4">
-            {longBio ? (
-              <section className="border-b border-neutral-100 py-4">
-                <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{t('intro')}</h2>
-                <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-neutral-800">{longBio}</p>
-                <TranslationNotice
-                  view={agencyCopy.view}
-                  showOriginal={agencyCopy.showOriginal}
-                  onToggle={agencyCopy.setShowOriginal}
-                />
-              </section>
-            ) : null}
-            {intro ? (
-              <section className="border-b border-neutral-100 py-4">
-                <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{t('extraIntroTab')}</h2>
-                <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-neutral-800">{intro}</p>
-                <TranslationNotice
-                  view={introSource.view}
-                  showOriginal={introSource.showOriginal}
-                  onToggle={introSource.setShowOriginal}
-                />
-              </section>
-            ) : null}
-            {translatedText(data.channelDescription, channelCopy.view, 'description', channelCopy.showOriginal).trim() ? (
-              <section className="border-b border-neutral-100 py-4">
-                <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{t('description')}</h2>
-                <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-neutral-800">
-                  {translatedText(data.channelDescription, channelCopy.view, 'description', channelCopy.showOriginal)}
-                </p>
-                <TranslationNotice
-                  view={channelCopy.view}
-                  showOriginal={channelCopy.showOriginal}
-                  onToggle={channelCopy.setShowOriginal}
-                />
-              </section>
-            ) : null}
-            {data.snsLinks && data.snsLinks.length > 0 ? (
-              <section className="border-b border-neutral-100 py-4">
-                <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{t('sns')}</h2>
-                <ul className="mt-2 flex flex-col gap-2">
-                  {data.snsLinks.map((l, i) => (
-                    <li key={`${l.platform}-${i}`}>
-                      <a
-                        href={l.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm font-medium text-blue-700 underline-offset-2 hover:underline"
-                      >
-                        {l.platform}
-                      </a>
-                    </li>
+        <div className="w-full bg-white pb-10">
+          {tab === 'videos' ? (
+            <ChannelVideoTheater videos={displayVideos} featuredId={featuredId} loading={videosLoading} error={videosError} />
+          ) : tab === 'career' ? (
+            <ChannelCareerList careers={data.careers ?? []} legacyText={data.careerText} />
+          ) : (
+            <div className="px-3 py-2" data-testid="channel-profile-tab">
+              {facts.length ? (
+                <dl className="grid grid-cols-1 gap-x-6 gap-y-3 border-b border-neutral-100 py-4 sm:grid-cols-2">
+                  {facts.map(([k, v]) => (
+                    <div key={k} className="min-w-0">
+                      <dt className="text-xs font-semibold text-neutral-500">{k}</dt>
+                      <dd className="break-words text-sm text-neutral-900">{v}</dd>
+                    </div>
                   ))}
-                </ul>
-              </section>
-            ) : null}
-            {!longBio && !intro && !data.channelDescription?.trim() && (!data.snsLinks || data.snsLinks.length === 0) ? (
-              <p className="py-2 text-sm text-neutral-500">{t('emptyInfo')}</p>
-            ) : null}
-          </div>
-        ) : (
-          <ChannelPublicVideoList
-            videosLoading={videosLoading}
-            videosError={videosError}
-            displayVideos={displayVideos}
-            channelDisplayName={nickname}
-            channelProfileImageUrl={data.profileImageUrl ?? null}
-          />
-        )}
+                </dl>
+              ) : null}
+              {longBio
+                ? section(
+                    t('profileIntro'),
+                    longBio,
+                    <TranslationNotice view={agencyCopy.view} showOriginal={agencyCopy.showOriginal} onToggle={agencyCopy.setShowOriginal} />,
+                  )
+                : null}
+              {intro
+                ? section(
+                    t('extraIntroTab'),
+                    intro,
+                    <TranslationNotice view={introSource.view} showOriginal={introSource.showOriginal} onToggle={introSource.setShowOriginal} />,
+                  )
+                : null}
+              {channelDesc
+                ? section(
+                    t('description'),
+                    channelDesc,
+                    <TranslationNotice view={channelCopy.view} showOriginal={channelCopy.showOriginal} onToggle={channelCopy.setShowOriginal} />,
+                  )
+                : null}
+              {talents ? section(t('profileTalents'), talents) : null}
+              {data.snsLinks && data.snsLinks.length > 0 ? (
+                <section className="py-4">
+                  <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{t('profileSns')}</h2>
+                  <ul className="mt-2 flex flex-wrap gap-2">
+                    {data.snsLinks.map((l, i) => (
+                      <li key={`${l.platform}-${i}`}>
+                        <a
+                          href={l.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex h-9 items-center rounded-full border border-neutral-300 px-3 text-sm font-medium text-neutral-800"
+                        >
+                          {l.platform}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              ) : null}
+              {!hasProfile ? <p className="py-6 text-sm text-neutral-500">{t('profileEmpty')}</p> : null}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

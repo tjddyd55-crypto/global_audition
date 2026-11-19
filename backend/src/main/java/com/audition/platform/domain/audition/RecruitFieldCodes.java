@@ -13,7 +13,7 @@ import java.util.Set;
 public final class RecruitFieldCodes {
 
     public static final List<String> CODES =
-            List.of("VOCAL", "DANCE", "RAP", "PRODUCING", "ACTING", "MODEL", "TEAM");
+            List.of("VOCAL", "DANCE", "RAP", "PRODUCING", "ACTING", "MODEL", "TEAM", "INFLUENCER");
 
     private static final Map<String, String> ALIASES = Map.ofEntries(
             Map.entry("vocal", "VOCAL"), Map.entry("vocals", "VOCAL"), Map.entry("vocalist", "VOCAL"),
@@ -26,6 +26,8 @@ public final class RecruitFieldCodes {
             Map.entry("acting", "ACTING"), Map.entry("actor", "ACTING"), Map.entry("actress", "ACTING"),
             Map.entry("연기", "ACTING"), Map.entry("배우", "ACTING"), Map.entry("жүжиглэх", "ACTING"), Map.entry("жүжигчин", "ACTING"),
             Map.entry("model", "MODEL"), Map.entry("modeling", "MODEL"), Map.entry("모델", "MODEL"), Map.entry("загвар өмсөгч", "MODEL"),
+            Map.entry("influencer", "INFLUENCER"), Map.entry("creator", "INFLUENCER"), Map.entry("인플루언서", "INFLUENCER"),
+            Map.entry("크리에이터", "INFLUENCER"), Map.entry("инфлюенсер", "INFLUENCER"),
             Map.entry("team", "TEAM"), Map.entry("group", "TEAM"), Map.entry("팀", "TEAM"), Map.entry("баг", "TEAM"));
 
     private RecruitFieldCodes() {

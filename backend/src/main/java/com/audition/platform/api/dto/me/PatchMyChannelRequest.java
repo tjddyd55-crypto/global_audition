@@ -65,6 +65,12 @@ public class PatchMyChannelRequest {
     @Size(max = 9)
     private List<@Size(max = 32) String> shownFields;
 
+    private String residenceCountry;
+    private java.util.List<String> languages;
+    private String talents;
+    private Boolean talentSearchVisible;
+    private Boolean castingOffersEnabled;
+
     public String getChannelName() {
         return channelName;
     }
@@ -206,5 +212,45 @@ public class PatchMyChannelRequest {
             return isChannelPublic;
         }
         return isPublic;
+    }
+
+    public String getResidenceCountry() {
+        return residenceCountry;
+    }
+
+    public void setResidenceCountry(String residenceCountry) {
+        this.residenceCountry = residenceCountry;
+    }
+
+    public java.util.List<String> getLanguages() {
+        return languages;
+    }
+
+    public void setLanguages(java.util.List<String> languages) {
+        this.languages = languages;
+    }
+
+    public String getTalents() {
+        return talents;
+    }
+
+    public void setTalents(String talents) {
+        this.talents = talents;
+    }
+
+    public Boolean getTalentSearchVisible() {
+        return talentSearchVisible;
+    }
+
+    public void setTalentSearchVisible(Boolean talentSearchVisible) {
+        this.talentSearchVisible = talentSearchVisible;
+    }
+
+    public Boolean getCastingOffersEnabled() {
+        return castingOffersEnabled;
+    }
+
+    public void setCastingOffersEnabled(Boolean castingOffersEnabled) {
+        this.castingOffersEnabled = castingOffersEnabled;
     }
 }

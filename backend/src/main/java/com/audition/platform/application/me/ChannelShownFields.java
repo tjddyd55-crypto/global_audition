@@ -20,13 +20,21 @@ public final class ChannelShownFields {
     public static final String CAREER = "CAREER";
     public static final String ACTIVITY = "ACTIVITY";
     public static final String SNS = "SNS";
+    public static final String RESIDENCE = "RESIDENCE";
+    public static final String AGE = "AGE";
+    public static final String LANGUAGES = "LANGUAGES";
+    public static final String TALENTS = "TALENTS";
 
     public static final List<String> KEYS = List.of(
-            NAME, NATIONALITY, SHORT_BIO, BIO, INTRO, SPECIALTIES, CAREER, ACTIVITY, SNS);
+            NAME, NATIONALITY, SHORT_BIO, BIO, INTRO, SPECIALTIES, CAREER, ACTIVITY, SNS,
+            RESIDENCE, AGE, LANGUAGES, TALENTS);
 
-    /** 선택 저장 전 공개 채널이 이미 내려주던 항목. 경력·활동은 새 필드라 포함하지 않는다. */
+    /**
+     * 선택 저장 전 기본 공개 항목. 실명(NAME)은 기본 비공개로 바꿨다(본인이 직접 켜야 공개).
+     * 경력·활동·거주·연령대·언어·특기는 새 필드라 본인이 켜야 공개된다.
+     */
     public static final List<String> LEGACY_PUBLIC = List.of(
-            NAME, NATIONALITY, SHORT_BIO, BIO, INTRO, SPECIALTIES, SNS);
+            NATIONALITY, SHORT_BIO, BIO, INTRO, SPECIALTIES, SNS);
 
     private static final Set<String> KEY_SET = new LinkedHashSet<>(KEYS);
 

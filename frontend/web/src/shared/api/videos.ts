@@ -14,6 +14,11 @@ export type MyChannelVideoRow = {
   viewCount: number
   likeCount: number
   createdAt: string
+  /** 11자 YouTube ID (등록 시 서버 검증) */
+  youtubeVideoId?: string | null
+  /** OK | NOT_FOUND | RESTRICTED | UNKNOWN | null(미확인) */
+  embedStatus?: string | null
+  shorts?: boolean
 }
 
 export interface VideoContent {
@@ -34,6 +39,9 @@ export interface VideoContent {
   visibility?: 'PUBLIC' | 'PRIVATE'
   createdAt: string
   updatedAt: string
+  youtubeVideoId?: string | null
+  embedStatus?: string | null
+  shorts?: boolean
 }
 
 function mapMeChannelVideoRow(v: MyChannelVideoRow): VideoContent {
@@ -55,6 +63,9 @@ function mapMeChannelVideoRow(v: MyChannelVideoRow): VideoContent {
     visibility: pub ? 'PUBLIC' : 'PRIVATE',
     createdAt: created,
     updatedAt: created,
+    youtubeVideoId: v.youtubeVideoId ?? null,
+    embedStatus: v.embedStatus ?? null,
+    shorts: v.shorts === true,
   }
 }
 
@@ -150,6 +161,12 @@ export const videoApi = {
     const { data } = await apiClient.patch<unknown>(`/me/channel/videos/${id}`, body)
     const row = unwrapData<MyChannelVideoRow>(data)
     return mapMeChannelVideoRow(row)
+  },
+
+  /** 소유자 요청 시에만 YouTube 재생 가능 여부 재확인(서버 10분 제한). */
+  recheckVideo: async (id: string): Promise<VideoContent> => {
+    const { data } = await apiClient.post<unknown>(`/me/channel/videos/${id}/check`)
+    return mapMeChannelVideoRow(unwrapData<MyChannelVideoRow>(data))
   },
 
   deleteVideo: async (id: string): Promise<void> => {

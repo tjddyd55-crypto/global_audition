@@ -25,3 +25,24 @@ describe('channelCardView', () => {
     expect(channelCardView({ userId: 'u5', nickname: '노바' }, fb).initial).toBe('노')
   })
 })
+
+describe('channelCardView portfolio fields', () => {
+  it('prefers the one-line intro and keeps only public meta the server returned', () => {
+    const v = channelCardView(
+      {
+        userId: 'u3',
+        nickname: 'Sora',
+        shortBio: 'Dancer from Ulaanbaatar',
+        introText: 'long intro',
+        nationality: 'MN',
+        residenceCountry: 'KR',
+        mainField: 'DANCE',
+        featuredThumbnailUrl: 'https://i.ytimg.com/vi/aqz-KE-bpKQ/hqdefault.jpg',
+      },
+      fb,
+    )
+    expect(v).toMatchObject({ intro: 'Dancer from Ulaanbaatar', nationality: 'MN', residence: 'KR', mainField: 'DANCE' })
+    expect(v.thumbUri).toContain('i.ytimg.com')
+    expect(channelCardView({ userId: 'u4' }, fb)).toMatchObject({ nationality: null, residence: null, mainField: null, thumbUri: null })
+  })
+})

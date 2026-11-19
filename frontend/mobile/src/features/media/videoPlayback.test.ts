@@ -23,3 +23,12 @@ describe('native video playback', () => {
     expect(planVideoPlayback(null).kind).toBe('unsupported')
   })
 })
+
+describe('planVideoPlayback autoplay', () => {
+  it('adds autoplay only when the viewer tapped play', () => {
+    const tapped = planVideoPlayback('https://youtube.com/shorts/aqz-KE-bpKQ', { autoplay: true })
+    expect(tapped.kind === 'youtube' && tapped.embedUrl).toContain('autoplay=1')
+    const idle = planVideoPlayback('https://youtu.be/aqz-KE-bpKQ')
+    expect(idle.kind === 'youtube' && idle.embedUrl).not.toContain('autoplay')
+  })
+})

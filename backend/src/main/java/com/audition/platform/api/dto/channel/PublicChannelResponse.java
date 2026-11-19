@@ -47,6 +47,16 @@ public class PublicChannelResponse {
     private List<String> shownFields = new ArrayList<>();
     private boolean selectionCustomized;
 
+    private String residenceCountry;
+    private String ageBand;
+    private java.util.List<String> languages;
+    private String talents;
+    private String mainField;
+    private java.util.List<com.audition.platform.application.channel.ChannelCareerService.CareerView> careers;
+    private boolean acceptsCastingOffers;
+    private boolean canSendCastingOffer;
+    private java.time.Instant lastActiveAt;
+
     public String getUserId() {
         return userId;
     }
@@ -258,5 +268,77 @@ public class PublicChannelResponse {
 
     public void setSelectionCustomized(boolean selectionCustomized) {
         this.selectionCustomized = selectionCustomized;
+    }
+
+    public String getResidenceCountry() {
+        return residenceCountry;
+    }
+
+    public void setResidenceCountry(String residenceCountry) {
+        this.residenceCountry = residenceCountry;
+    }
+
+    public String getAgeBand() {
+        return ageBand;
+    }
+
+    public void setAgeBand(String ageBand) {
+        this.ageBand = ageBand;
+    }
+
+    public java.util.List<String> getLanguages() {
+        return languages;
+    }
+
+    public void setLanguages(java.util.List<String> languages) {
+        this.languages = languages;
+    }
+
+    public String getTalents() {
+        return talents;
+    }
+
+    public void setTalents(String talents) {
+        this.talents = talents;
+    }
+
+    public String getMainField() {
+        return mainField;
+    }
+
+    public void setMainField(String mainField) {
+        this.mainField = mainField;
+    }
+
+    public java.util.List<com.audition.platform.application.channel.ChannelCareerService.CareerView> getCareers() {
+        return careers;
+    }
+
+    public void setCareers(java.util.List<com.audition.platform.application.channel.ChannelCareerService.CareerView> careers) {
+        this.careers = careers;
+    }
+
+    public boolean isAcceptsCastingOffers() {
+        return acceptsCastingOffers;
+    }
+
+    public void setAcceptsCastingOffers(boolean acceptsCastingOffers) {
+        this.acceptsCastingOffers = acceptsCastingOffers;
+    }
+
+    public boolean isCanSendCastingOffer() {
+        return canSendCastingOffer;
+    }
+
+    public void setCanSendCastingOffer(boolean canSendCastingOffer) {
+        this.canSendCastingOffer = canSendCastingOffer;
+    }
+
+    public java.time.Instant getLastActiveAt() {
+        return lastActiveAt;
+    }
+
+    public void setLastActiveAt(java.time.Instant lastActiveAt) {
+        this.lastActiveAt = lastActiveAt;
     }
 }

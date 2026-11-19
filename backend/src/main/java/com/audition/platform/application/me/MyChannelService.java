@@ -3,7 +3,13 @@ package com.audition.platform.application.me;
 import com.audition.platform.api.dto.channel.PublicChannelListItemResponse;
 import com.audition.platform.api.dto.channel.PublicChannelResponse;
 import com.audition.platform.api.dto.me.*;
-import com.audition.platform.application.publicview.PublicChannelDirectory;
+import com.audition.platform.application.channel.CastingOfferEligibility;
+import com.audition.platform.application.channel.ChannelCareerService;
+import com.audition.platform.application.channel.ChannelVideoEvents;
+import com.audition.platform.application.channel.ChannelPortfolioRules;
+import com.audition.platform.application.channel.PublicChannelDiscoveryService;
+import com.audition.platform.application.channel.YoutubeEmbedChecker;
+import com.audition.platform.application.channel.YoutubeVideoRef;
 import com.audition.platform.domain.channel.Channel;
 import com.audition.platform.domain.channel.ChannelRepository;
 import com.audition.platform.domain.channel.ChannelSubscriptionRepository;
@@ -38,12 +44,27 @@ public class MyChannelService {
     private final UserRepository userRepository;
     private final UserSnsLinkRepository userSnsLinkRepository;
     private final ChannelSubscriptionRepository channelSubscriptionRepository;
+    private final PublicChannelDiscoveryService discovery;
+    private final ChannelCareerService careers;
+    private final YoutubeEmbedChecker embedChecker;
+    private final CastingOfferEligibility castingEligibility;
+    private final ChannelVideoEvents videoEvents;
 
     public MyChannelService(ChannelRepository channelRepository,
                             ChannelVideoRepository channelVideoRepository,
                             UserRepository userRepository,
                             UserSnsLinkRepository userSnsLinkRepository,
-                            ChannelSubscriptionRepository channelSubscriptionRepository) {
+                            ChannelSubscriptionRepository channelSubscriptionRepository,
+                            PublicChannelDiscoveryService discovery,
+                            ChannelCareerService careers,
+                            YoutubeEmbedChecker embedChecker,
+                            CastingOfferEligibility castingEligibility,
+                            ChannelVideoEvents videoEvents) {
+        this.discovery = discovery;
+        this.careers = careers;
+        this.embedChecker = embedChecker;
+        this.castingEligibility = castingEligibility;
+        this.videoEvents = videoEvents;
         this.channelRepository = channelRepository;
         this.channelVideoRepository = channelVideoRepository;
         this.userRepository = userRepository;
@@ -87,6 +108,7 @@ public class MyChannelService {
         long viewSum = channelVideoRepository.sumViewCountByChannelId(ch.getId());
         MyChannelResponse r = new MyChannelResponse();
         r.setChannelId(ch.getId().toString());
+        r.setUserId(ownerId.toString());
         r.setChannelName(ch.getName() != null ? ch.getName() : "");
         r.setChannelDescription(ch.getDescription() != null ? ch.getDescription() : "");
         r.setProfileImageUrl(ch.getProfileImageUrl());
@@ -119,6 +141,16 @@ public class MyChannelService {
         String[] shown = user.getChannelShownFields();
         r.setSelectionCustomized(shown != null);
         r.setShownFields(shown == null ? List.of() : Arrays.asList(shown));
+        r.setResidenceCountry(user.getResidenceCountry());
+        r.setLanguages(user.getLanguages() == null ? List.of() : Arrays.asList(user.getLanguages()));
+        r.setTalents(trimToNull(user.getTalents()));
+        r.setTalentSearchVisible(user.isTalentSearchVisible());
+        r.setCastingOffersEnabled(user.isCastingOffersEnabled());
+        java.time.LocalDate today = java.time.LocalDate.now(java.time.ZoneOffset.UTC);
+        r.setAgeBand(ChannelPortfolioRules.ageBand(user.getBirthDate(), today));
+        r.setAdultConfirmed(ChannelPortfolioRules.confirmedAdult(user.getBirthDate(), today));
+        r.setBirthDateSet(user.getBirthDate() != null);
+        r.setMaxVideos(ChannelPortfolioRules.MAX_CHANNEL_VIDEOS);
         return r;
     }
 
@@ -135,65 +167,20 @@ public class MyChannelService {
 
     @Transactional(readOnly = true)
     public List<PublicChannelListItemResponse> listPublicChannelsForDiscovery(String stageName, String country, String category) {
-        List<User> owners = userRepository.findByChannelPublicTrueAndRoleIn(List.of("APPLICANT", "ADMIN"));
-        Map<UUID, User> users = owners.stream().collect(Collectors.toMap(User::getId, u -> u));
-        List<PublicChannelListItemResponse> rows = new ArrayList<>();
-        for (User u : owners) {
-            UUID ownerId = u.getId();
-            if (!u.isChannelPublic()) {
-                continue;
-            }
-            long pubCount = channelVideoRepository.countByOwnerIdAndVisibility(ownerId,
-                    ChannelVideoVisibility.PUBLIC);
-            var ch = channelRepository.findByOwnerId(ownerId);
-            long sub = ch.map(Channel::getSubscriberCount).orElse(0L);
-            String profile = firstNonBlankTrimmed(u.getProfileImageUrl(),
-                    ch.map(Channel::getProfileImageUrl).orElse(null));
-            PublicChannelListItemResponse row = new PublicChannelListItemResponse();
-            row.setUserId(ownerId.toString());
-            row.setNickname(u.getNickname());
-            row.setProfileImage(profile);
-            row.setIntroText(ChannelShownFields.visible(u.getChannelShownFields(), ChannelShownFields.INTRO)
-                    ? trimToNull(u.getIntroText())
-                    : null);
-            boolean nationalityPublic = ChannelShownFields.visible(u.getChannelShownFields(), ChannelShownFields.NATIONALITY);
-            boolean categoriesPublic = ChannelShownFields.visible(u.getChannelShownFields(), ChannelShownFields.SPECIALTIES);
-            String[] cats = u.getChannelCategories();
-            List<String> categories = cats != null && cats.length > 0 ? Arrays.asList(cats) : List.of();
-            if (nationalityPublic) {
-                row.setNationality(trimToNull(u.getNationality()));
-            }
-            if (categoriesPublic) {
-                row.setCategories(categories);
-            }
-            if (!PublicChannelDirectory.matches(
-                    u.getNickname(),
-                    u.getNationality(),
-                    nationalityPublic,
-                    categories,
-                    categoriesPublic,
-                    stageName,
-                    country,
-                    category)) {
-                continue;
-            }
-            row.setSubscriberCount(sub);
-            row.setVideoCount(pubCount);
-            rows.add(row);
-        }
-        rows.sort(Comparator.comparing(
-                r -> {
-                    User ux = users.get(UUID.fromString(r.getUserId()));
-                    return ux != null ? ux.getDisplayName() : "";
-                },
-                String.CASE_INSENSITIVE_ORDER));
-        return rows;
+        return discovery.list(stageName, country, null, category, null, null, null);
+    }
+
+    @Transactional(readOnly = true)
+    public List<PublicChannelListItemResponse> listPublicChannels(String q, String country, String field, String category,
+                                                                  String sort, Integer limit, Integer offset) {
+        return discovery.list(q, country, field, category, sort, limit, offset);
     }
 
     public PublicChannelResponse getPublicChannelByUserId(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "채널을 찾을 수 없습니다."));
-        if (!user.isChannelPublic()) {
+        if (!user.isChannelPublic() || user.isChannelModerationHidden()
+                || !"ACTIVE".equals(user.getAccountStatus() == null ? "ACTIVE" : user.getAccountStatus())) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "채널을 찾을 수 없습니다.");
         }
         if (!"APPLICANT".equals(user.getRole()) && !"ADMIN".equals(user.getRole())) {
@@ -222,7 +209,7 @@ public class MyChannelService {
 
         channelRepository.findByOwnerId(userId).ifPresentOrElse(ch -> {
             List<ChannelVideo> pub = channelVideoRepository.findByChannelIdAndVisibilityOrderByCreatedAtDesc(
-                    ch.getId(), ChannelVideoVisibility.PUBLIC);
+                    ch.getId(), ChannelVideoVisibility.PUBLIC).stream().filter(v -> !v.isModerationHidden()).toList();
             MyChannelVideoDto featuredDto = pickFeaturedVideo(user, pub);
             List<MyChannelVideoDto> allDtos = pub.stream().map(this::toVideoDto).collect(Collectors.toList());
             List<MyChannelVideoDto> rest = featuredDto == null
@@ -249,7 +236,17 @@ public class MyChannelService {
             out.setSubscriberCount(0);
         });
 
+        out.setResidenceCountry(user.getResidenceCountry());
+        out.setAgeBand(ChannelPortfolioRules.ageBand(user.getBirthDate(), java.time.LocalDate.now(java.time.ZoneOffset.UTC)));
+        out.setLanguages(user.getLanguages() == null ? List.of() : Arrays.asList(user.getLanguages()));
+        out.setTalents(trimToNull(user.getTalents()));
+        out.setCareers(careers.publicFor(userId));
         PublicChannelProfileFilter.apply(out, user);
+        if (ChannelShownFields.visible(user.getChannelShownFields(), ChannelShownFields.SPECIALTIES)) {
+            out.setMainField(ChannelPortfolioRules.mainField(user.getChannelCategories()));
+        }
+        out.setLastActiveAt(user.getLastActiveAt());
+        out.setAcceptsCastingOffers(castingEligibility.receivable(user));
 
         UUID viewerId = SecurityUtils.getCurrentUserId();
         boolean sub = false;
@@ -257,6 +254,7 @@ public class MyChannelService {
             sub = channelSubscriptionRepository.existsBySubscriberIdAndChannelOwnerId(viewerId, userId);
         }
         out.setSubscribed(sub);
+        out.setCanSendCastingOffer(viewerId != null && !viewerId.equals(userId) && castingEligibility.canSendTo(viewerId, user));
         return out;
     }
 
@@ -316,6 +314,29 @@ public class MyChannelService {
             }
         }
         UserChannelProfilePatchSupport.applyFeaturedVideo(user, ownerId, channelVideoRepository, req.getFeaturedVideoId());
+        String residence = ChannelPortfolioRules.residence(req.getResidenceCountry());
+        if (residence != null) {
+            user.setResidenceCountry(residence.isEmpty() ? null : residence);
+        }
+        String[] langs = ChannelPortfolioRules.languages(req.getLanguages());
+        if (langs != null) {
+            user.setLanguages(langs);
+        }
+        if (req.getTalents() != null) {
+            String t = req.getTalents().trim();
+            user.setTalents(t.isEmpty() ? null : t.length() > ChannelPortfolioRules.TALENTS_MAX
+                    ? t.substring(0, ChannelPortfolioRules.TALENTS_MAX) : t);
+        }
+        if (req.getTalentSearchVisible() != null) {
+            user.setTalentSearchVisible(req.getTalentSearchVisible());
+        }
+        if (req.getCastingOffersEnabled() != null) {
+            if (Boolean.TRUE.equals(req.getCastingOffersEnabled())) {
+                castingEligibility.requireCanEnable(user);
+            }
+            user.setCastingOffersEnabled(req.getCastingOffersEnabled());
+        }
+        user.setLastActiveAt(Instant.now());
 
         ch.setUpdatedAt(Instant.now());
         user.setUpdatedAt(Instant.now());
@@ -346,6 +367,13 @@ public class MyChannelService {
         dto.setViewCount(v.getViewCount());
         dto.setLikeCount(v.getLikeCount());
         dto.setCreatedAt(v.getCreatedAt());
+        String yt = v.getYoutubeVideoId() != null ? v.getYoutubeVideoId() : YoutubeVideoRef.idOf(v.getVideoUrl());
+        dto.setYoutubeVideoId(yt);
+        dto.setEmbedStatus(v.getEmbedStatus());
+        dto.setShorts(YoutubeVideoRef.isShorts(v.getVideoUrl()));
+        if ((dto.getThumbnailUrl() == null || dto.getThumbnailUrl().isBlank()) && yt != null) {
+            dto.setThumbnailUrl(YoutubeVideoRef.thumbnailUrl(yt));
+        }
         return dto;
     }
 
@@ -353,8 +381,25 @@ public class MyChannelService {
     public MyChannelVideoDto createVideo(CreateMyChannelVideoRequest req) {
         UUID ownerId = requireApplicant();
         Channel ch = getOrCreateChannel(ownerId);
+        String ytId = YoutubeVideoRef.idOf(req.getVideoUrl());
+        if (ytId == null) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "YOUTUBE_URL_REQUIRED");
+        }
+        List<ChannelVideo> existing = channelVideoRepository.findByOwnerIdOrderByCreatedAtDesc(ownerId);
+        if (existing.size() >= ChannelPortfolioRules.MAX_CHANNEL_VIDEOS) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "CHANNEL_VIDEO_LIMIT");
+        }
+        for (ChannelVideo e : existing) {
+            if (ytId.equals(e.getYoutubeVideoId() != null ? e.getYoutubeVideoId() : YoutubeVideoRef.idOf(e.getVideoUrl()))) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "CHANNEL_VIDEO_DUPLICATE");
+            }
+        }
         ChannelVideo v = new ChannelVideo();
         v.setOwnerId(ownerId);
+        v.setYoutubeVideoId(ytId);
+        YoutubeEmbedChecker.Result check = embedChecker.check(ytId);
+        v.setEmbedStatus(check.status());
+        v.setEmbedCheckedAt(Instant.now());
         v.setChannelId(ch.getId());
         v.setTitle(req.getTitle().trim());
         v.setDescription(req.getDescription() != null ? req.getDescription().trim() : null);
@@ -376,7 +421,14 @@ public class MyChannelService {
         v.setDislikeCount(0);
         v.setCreatedAt(Instant.now());
         v.setUpdatedAt(Instant.now());
+        if (req.getCategory() != null && !req.getCategory().isBlank()) {
+            v.setCategory(req.getCategory().trim());
+        }
         v = channelVideoRepository.save(v);
+        touch(ownerId);
+        if (ChannelVideoVisibility.PUBLIC.equals(v.getVisibility())) {
+            videoEvents.publishedNewPublicVideo(ownerId, v.getId(), v.getTitle());
+        }
         return toVideoDto(v);
     }
 
@@ -385,6 +437,7 @@ public class MyChannelService {
         UUID ownerId = requireApplicant();
         ChannelVideo v = channelVideoRepository.findByIdAndOwnerId(videoId, ownerId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "영상을 찾을 수 없습니다."));
+        String wasVisibility = v.getVisibility();
         if (req.getTitle() != null) {
             v.setTitle(req.getTitle().trim());
         }
@@ -410,10 +463,33 @@ public class MyChannelService {
             if (!url.startsWith("http://") && !url.startsWith("https://")) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "videoUrl must be a valid URL");
             }
+            String ytId = YoutubeVideoRef.idOf(url);
+            if (ytId == null) {
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "YOUTUBE_URL_REQUIRED");
+            }
+            if (!ytId.equals(v.getYoutubeVideoId())) {
+                for (ChannelVideo e : channelVideoRepository.findByOwnerIdOrderByCreatedAtDesc(ownerId)) {
+                    if (!e.getId().equals(v.getId()) && ytId.equals(e.getYoutubeVideoId() != null
+                            ? e.getYoutubeVideoId() : YoutubeVideoRef.idOf(e.getVideoUrl()))) {
+                        throw new ResponseStatusException(HttpStatus.CONFLICT, "CHANNEL_VIDEO_DUPLICATE");
+                    }
+                }
+                v.setYoutubeVideoId(ytId);
+                YoutubeEmbedChecker.Result check = embedChecker.check(ytId);
+                v.setEmbedStatus(check.status());
+                v.setEmbedCheckedAt(Instant.now());
+            }
             v.setVideoUrl(url);
         }
+        boolean becamePublic = !ChannelVideoVisibility.PUBLIC.equals(wasVisibility)
+                && ChannelVideoVisibility.PUBLIC.equals(v.getVisibility());
         v.setUpdatedAt(Instant.now());
-        return toVideoDto(channelVideoRepository.save(v));
+        ChannelVideo saved = channelVideoRepository.save(v);
+        touch(ownerId);
+        if (becamePublic) {
+            videoEvents.publishedNewPublicVideo(ownerId, saved.getId(), saved.getTitle());
+        }
+        return toVideoDto(saved);
     }
 
     @Transactional
@@ -421,6 +497,39 @@ public class MyChannelService {
         UUID ownerId = requireApplicant();
         ChannelVideo v = channelVideoRepository.findByIdAndOwnerId(videoId, ownerId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "영상을 찾을 수 없습니다."));
+        if (v.getId().equals(userRepository.findById(ownerId).map(User::getFeaturedVideoId).orElse(null))) {
+            userRepository.findById(ownerId).ifPresent(u -> {
+                u.setFeaturedVideoId(null);
+                userRepository.save(u);
+            });
+        }
         channelVideoRepository.delete(v);
+        touch(ownerId);
+    }
+
+    /** 소유자가 요청할 때만 YouTube 재생 가능 여부를 다시 확인한다(10분에 한 번). */
+    @Transactional
+    public MyChannelVideoDto recheckVideo(UUID videoId) {
+        UUID ownerId = requireApplicant();
+        ChannelVideo v = channelVideoRepository.findByIdAndOwnerId(videoId, ownerId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "영상을 찾을 수 없습니다."));
+        String ytId = v.getYoutubeVideoId() != null ? v.getYoutubeVideoId() : YoutubeVideoRef.idOf(v.getVideoUrl());
+        if (ytId == null) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "YOUTUBE_URL_REQUIRED");
+        }
+        if (v.getEmbedCheckedAt() == null || v.getEmbedCheckedAt().isBefore(Instant.now().minusSeconds(600))) {
+            v.setYoutubeVideoId(ytId);
+            v.setEmbedStatus(embedChecker.check(ytId).status());
+            v.setEmbedCheckedAt(Instant.now());
+            v = channelVideoRepository.save(v);
+        }
+        return toVideoDto(v);
+    }
+
+    private void touch(UUID ownerId) {
+        userRepository.findById(ownerId).ifPresent(u -> {
+            u.setLastActiveAt(Instant.now());
+            userRepository.save(u);
+        });
     }
 }

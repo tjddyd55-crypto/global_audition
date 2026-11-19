@@ -7,6 +7,9 @@ spring:
 
 # 단위 테스트: R2 플레이스홀더(실 연결 없음). r2S3Client는 엔드포인트 등 비어 있으면 미등록.
 app:
+  youtube:
+    oembed-check:
+      enabled: false
   r2:
     endpoint: https://00000000000000000000000000000000.r2.cloudflarestorage.com
     access-key: test-r2-access

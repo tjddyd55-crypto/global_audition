@@ -36,6 +36,9 @@ import type {
   MeNotificationItem,
   MeProfile,
   MyChannelMine,
+  ChannelCareerRow,
+  MyChannelVideoItem,
+  PublicChannelDetail,
   MeRoundEligibility,
   MyApplicationListItem,
   PublicVotesPage,
@@ -162,7 +165,41 @@ export const channelApi = {
     isChannelPublic?: boolean
     shownFields?: string[]
     featuredVideoId?: string
+    residenceCountry?: string
+    languages?: string[]
+    talents?: string
+    talentSearchVisible?: boolean
+    castingOffersEnabled?: boolean
   }): Promise<MyChannelMine> => unwrapData(await apiRequest<unknown>('/me/channel', { method: 'PATCH', body })) as MyChannelMine,
+  /** 기존 이미지 업로드 API(R2 이미지) 재사용. 영상 파일은 올리지 않는다. */
+  uploadImage: async (file: { uri: string; name: string; type: string }, dir: 'profile' | 'thumbnail' = 'profile'): Promise<string> => {
+    const form = new FormData()
+    form.append('file', file as unknown as Blob)
+    const data = (await apiRequest<unknown>('/uploads/image', { method: 'POST', query: { dir }, formData: form })) as { url?: unknown }
+    const url = typeof data?.url === 'string' ? data.url.trim() : ''
+    if (!url) throw new Error('UPLOAD_NO_URL')
+    return url
+  },
+  careers: async (): Promise<ChannelCareerRow[]> => {
+    const rows = unwrapData(await apiRequest<unknown>('/me/channel/careers'))
+    return Array.isArray(rows) ? (rows as ChannelCareerRow[]) : []
+  },
+  createCareer: async (body: Partial<ChannelCareerRow> & { sourceLocale?: string }): Promise<ChannelCareerRow> =>
+    unwrapData(await apiRequest<unknown>('/me/channel/careers', { method: 'POST', body })) as ChannelCareerRow,
+  updateCareer: async (id: string, body: Partial<ChannelCareerRow> & { sourceLocale?: string }): Promise<ChannelCareerRow> =>
+    unwrapData(await apiRequest<unknown>(`/me/channel/careers/${id}`, { method: 'PATCH', body })) as ChannelCareerRow,
+  deleteCareer: (id: string) => apiRequest<unknown>(`/me/channel/careers/${id}`, { method: 'DELETE' }),
+  videos: async (): Promise<MyChannelVideoItem[]> => {
+    const p = unwrapData(await apiRequest<unknown>('/me/channel/videos')) as { items?: MyChannelVideoItem[] } | MyChannelVideoItem[]
+    return Array.isArray(p) ? p : Array.isArray(p?.items) ? p.items : []
+  },
+  createVideo: async (body: { title: string; videoUrl: string; description?: string; category?: string; visibility: 'PUBLIC' | 'PRIVATE' }) =>
+    unwrapData(await apiRequest<unknown>('/me/channel/videos', { method: 'POST', body })) as MyChannelVideoItem,
+  updateVideo: async (id: string, body: { title?: string; videoUrl?: string; visibility?: 'PUBLIC' | 'PRIVATE' }) =>
+    unwrapData(await apiRequest<unknown>(`/me/channel/videos/${id}`, { method: 'PATCH', body })) as MyChannelVideoItem,
+  recheckVideo: async (id: string) =>
+    unwrapData(await apiRequest<unknown>(`/me/channel/videos/${id}/check`, { method: 'POST' })) as MyChannelVideoItem,
+  deleteVideo: (id: string) => apiRequest<unknown>(`/me/channel/videos/${id}`, { method: 'DELETE' }),
 }
 
 export const notificationApi = {
@@ -217,6 +254,18 @@ export const publicPlatformApi = {
   videos: async (category?: string) =>
     unwrapData(await apiRequest<unknown>('/videos/browse', { query: category ? { category } : undefined, auth: false })),
   video: async (id: string) => unwrapData(await apiRequest<unknown>(`/videos/${id}/public`, { auth: false })),
+  /** 로그인 시 토큰을 붙여 subscribed 여부를 받는다(비로그인도 허용). */
+  channel: async (userId: string) => unwrapData(await apiRequest<unknown>(`/channels/${userId}`)) as PublicChannelDetail,
+  channelVideos: async (userId: string): Promise<MyChannelVideoItem[]> => {
+    const body = unwrapData(await apiRequest<unknown>('/videos/public', { query: { channelOwnerId: userId }, auth: false }))
+    if (Array.isArray(body)) return body as MyChannelVideoItem[]
+    const items = (body as { items?: unknown })?.items
+    return Array.isArray(items) ? (items as MyChannelVideoItem[]) : []
+  },
+  follow: (userId: string) => apiRequest<unknown>('/subscribe', { method: 'POST', body: { channelOwnerId: userId } }),
+  unfollow: (userId: string) => apiRequest<unknown>('/subscribe', { method: 'DELETE', body: { channelOwnerId: userId } }),
+  bumpView: async (videoId: string) =>
+    unwrapData(await apiRequest<unknown>(`/videos/${videoId}/view`, { method: 'POST' })) as { viewCount?: number } | null,
   agencies: async () => unwrapData(await apiRequest<unknown>('/agencies/public', { auth: false })),
   agency: async (id: string) => unwrapData(await apiRequest<unknown>(`/agencies/public/${id}`, { auth: false })),
 }

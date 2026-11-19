@@ -222,7 +222,7 @@ public class ChannelVideoPublicService {
     public List<MyChannelVideoDto> listPublicVideosForChannelOwner(UUID channelOwnerId) {
         User user = userRepository.findById(channelOwnerId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "채널을 찾을 수 없습니다."));
-        if (!user.isChannelPublic()) {
+        if (!user.isChannelPublic() || user.isChannelModerationHidden()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "채널을 찾을 수 없습니다.");
         }
         if (!"APPLICANT".equals(user.getRole()) && !"ADMIN".equals(user.getRole())) {
@@ -232,7 +232,9 @@ public class ChannelVideoPublicService {
                 channelOwnerId, ChannelVideoVisibility.PUBLIC);
         List<MyChannelVideoDto> out = new ArrayList<>();
         for (ChannelVideo v : list) {
-            out.add(toMyChannelListDto(v));
+            if (!v.isModerationHidden()) {
+                out.add(toMyChannelListDto(v));
+            }
         }
         return out;
     }
@@ -244,11 +246,18 @@ public class ChannelVideoPublicService {
         dto.setVideoUrl(v.getVideoUrl());
         dto.setDescription(v.getDescription());
         dto.setCategory(v.getCategory());
-        dto.setThumbnailUrl(v.getThumbnailUrl());
+        dto.setThumbnailUrl(thumbOf(v));
         dto.setVisibility(v.getVisibility());
         dto.setViewCount(v.getViewCount());
         dto.setLikeCount(v.getLikeCount());
         dto.setCreatedAt(v.getCreatedAt());
+        String yt = v.getYoutubeVideoId() != null ? v.getYoutubeVideoId() : YoutubeVideoRef.idOf(v.getVideoUrl());
+        dto.setYoutubeVideoId(yt);
+        dto.setEmbedStatus(v.getEmbedStatus());
+        dto.setShorts(YoutubeVideoRef.isShorts(v.getVideoUrl()));
+        if ((dto.getThumbnailUrl() == null || dto.getThumbnailUrl().isBlank()) && yt != null) {
+            dto.setThumbnailUrl(YoutubeVideoRef.thumbnailUrl(yt));
+        }
         return dto;
     }
 
@@ -295,6 +304,9 @@ public class ChannelVideoPublicService {
         User owner = userRepository.findById(v.getOwnerId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "영상을 찾을 수 없습니다."));
         if (!"APPLICANT".equals(owner.getRole()) && !"ADMIN".equals(owner.getRole())) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "영상을 찾을 수 없습니다.");
+        }
+        if (v.isModerationHidden() || owner.isChannelModerationHidden()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "영상을 찾을 수 없습니다.");
         }
         if (!owner.isChannelPublic()) {
@@ -350,7 +362,7 @@ public class ChannelVideoPublicService {
         dto.setVideoId(v.getId().toString());
         dto.setTitle(v.getTitle());
         dto.setVideoUrl(v.getVideoUrl());
-        dto.setThumbnailUrl(v.getThumbnailUrl());
+        dto.setThumbnailUrl(thumbOf(v));
         dto.setDescription(v.getDescription());
         dto.setCategory(v.getCategory());
         dto.setViewCount(v.getViewCount());
@@ -381,7 +393,7 @@ public class ChannelVideoPublicService {
         dto.setVideoId(v.getId().toString());
         dto.setTitle(v.getTitle());
         dto.setVideoUrl(v.getVideoUrl());
-        dto.setThumbnailUrl(v.getThumbnailUrl());
+        dto.setThumbnailUrl(thumbOf(v));
         dto.setCategory(v.getCategory());
         dto.setChannelOwnerId(v.getOwnerId() != null ? v.getOwnerId().toString() : null);
         dto.setChannelDisplayName(displayName != null ? displayName : "");
@@ -441,5 +453,13 @@ public class ChannelVideoPublicService {
             return b.trim();
         }
         return null;
+    }
+
+    private static String thumbOf(ChannelVideo v) {
+        if (v.getThumbnailUrl() != null && !v.getThumbnailUrl().isBlank()) {
+            return v.getThumbnailUrl();
+        }
+        String yt = v.getYoutubeVideoId() != null ? v.getYoutubeVideoId() : YoutubeVideoRef.idOf(v.getVideoUrl());
+        return yt == null ? null : YoutubeVideoRef.thumbnailUrl(yt);
     }
 }

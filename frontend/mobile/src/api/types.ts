@@ -337,6 +337,73 @@ export type MyChannelMine = {
   videoCount?: number
   subscriberCount?: number
   viewCount?: number
+  userId?: string
+  featuredVideoId?: string | null
+  residenceCountry?: string | null
+  languages?: string[]
+  talents?: string | null
+  talentSearchVisible?: boolean
+  castingOffersEnabled?: boolean
+  ageBand?: string | null
+  adultConfirmed?: boolean
+  birthDateSet?: boolean
+  maxVideos?: number
+}
+
+export type ChannelCareerRow = {
+  id: string
+  category: string
+  title: string
+  organization?: string | null
+  periodStart?: string | null
+  periodEnd?: string | null
+  description?: string | null
+  visible: boolean
+  sortOrder?: number
+}
+
+export type MyChannelVideoItem = {
+  videoId: string
+  title: string
+  videoUrl: string
+  description?: string | null
+  category?: string | null
+  thumbnailUrl?: string | null
+  visibility: string
+  viewCount: number
+  youtubeVideoId?: string | null
+  embedStatus?: string | null
+  shorts?: boolean
+}
+
+export type PublicChannelDetail = {
+  userId: string
+  displayName?: string
+  nickname?: string | null
+  profileImageUrl?: string | null
+  bannerImageUrl?: string | null
+  nationality?: string | null
+  country?: string | null
+  residenceCountry?: string | null
+  ageBand?: string | null
+  languages?: string[]
+  talents?: string | null
+  mainField?: string | null
+  shortBio?: string | null
+  bio?: string | null
+  introText?: string | null
+  channelDescription?: string | null
+  careerText?: string | null
+  categories?: string[]
+  activityFields?: string[]
+  snsLinks?: { platform: string; url: string }[]
+  careers?: ChannelCareerRow[]
+  featuredVideoId?: string | null
+  featuredVideo?: { videoId?: string } | null
+  subscribed?: boolean
+  videoCount?: number
+  subscriberCount?: number
+  viewCount?: number
 }
 
 export type CreditPackageItem = {

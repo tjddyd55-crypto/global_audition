@@ -10,13 +10,13 @@ import { planVideoPlayback } from './videoPlayback'
  * YouTube embed만 WebView로 재생한다.
  * 로드에 실패하거나 지원하지 않는 주소는 오류와 외부 열기만 보여 준다.
  */
-export function NativeVideoPlayer({ videoUrl }: { videoUrl: string }) {
+export function NativeVideoPlayer({ videoUrl, autoplay, portrait }: { videoUrl: string; autoplay?: boolean; portrait?: boolean }) {
   const { t } = useTranslation()
-  const plan = planVideoPlayback(videoUrl)
+  const plan = planVideoPlayback(videoUrl, { autoplay })
   const [failed, setFailed] = useState(false)
   if (plan.kind === 'youtube' && !failed) {
     return (
-      <View style={styles.stage} accessibilityLabel={t('video.playAria')}>
+      <View style={[styles.stage, portrait && styles.portrait]} accessibilityLabel={t('video.playAria')}>
         <WebView
           source={{ uri: plan.embedUrl }}
           style={styles.web}
@@ -50,6 +50,7 @@ const styles = StyleSheet.create({
     minHeight: 180,
     marginBottom: 12,
   },
+  portrait: { width: '62%', aspectRatio: 9 / 16, alignSelf: 'center' },
   web: { flex: 1, backgroundColor: '#111111' },
   fallback: { gap: 8, marginBottom: 12 },
   message: { color: colors.muted, fontSize: 14, lineHeight: 20 },

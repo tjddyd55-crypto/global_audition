@@ -27,8 +27,12 @@ public class PublicChannelController {
     public ApiEnvelope<List<PublicChannelListItemResponse>> listPublicChannels(
             @RequestParam(required = false) String q,
             @RequestParam(required = false) String country,
-            @RequestParam(required = false) String category) {
-        return ApiEnvelope.ok(myChannelService.listPublicChannelsForDiscovery(q, country, category));
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String field,
+            @RequestParam(required = false) String sort,
+            @RequestParam(required = false) Integer limit,
+            @RequestParam(required = false) Integer offset) {
+        return ApiEnvelope.ok(myChannelService.listPublicChannels(q, country, field, category, sort, limit, offset));
     }
 
     @GetMapping("/{userId}")

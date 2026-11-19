@@ -37,6 +37,18 @@ public class MyChannelResponse {
     private List<String> shownFields = new ArrayList<>();
     private boolean selectionCustomized;
 
+    private String residenceCountry;
+    private java.util.List<String> languages;
+    private String talents;
+    private boolean talentSearchVisible;
+    private boolean castingOffersEnabled;
+    private String ageBand;
+    private boolean adultConfirmed;
+    private boolean birthDateSet;
+    private int maxVideos;
+
+    private String userId;
+
     public String getChannelId() {
         return channelId;
     }
@@ -229,5 +241,85 @@ public class MyChannelResponse {
     @JsonProperty("is_channel_public")
     public boolean getIsChannelPublicField() {
         return channelPublic;
+    }
+
+    public String getResidenceCountry() {
+        return residenceCountry;
+    }
+
+    public void setResidenceCountry(String residenceCountry) {
+        this.residenceCountry = residenceCountry;
+    }
+
+    public java.util.List<String> getLanguages() {
+        return languages;
+    }
+
+    public void setLanguages(java.util.List<String> languages) {
+        this.languages = languages;
+    }
+
+    public String getTalents() {
+        return talents;
+    }
+
+    public void setTalents(String talents) {
+        this.talents = talents;
+    }
+
+    public boolean isTalentSearchVisible() {
+        return talentSearchVisible;
+    }
+
+    public void setTalentSearchVisible(boolean talentSearchVisible) {
+        this.talentSearchVisible = talentSearchVisible;
+    }
+
+    public boolean isCastingOffersEnabled() {
+        return castingOffersEnabled;
+    }
+
+    public void setCastingOffersEnabled(boolean castingOffersEnabled) {
+        this.castingOffersEnabled = castingOffersEnabled;
+    }
+
+    public String getAgeBand() {
+        return ageBand;
+    }
+
+    public void setAgeBand(String ageBand) {
+        this.ageBand = ageBand;
+    }
+
+    public boolean isAdultConfirmed() {
+        return adultConfirmed;
+    }
+
+    public void setAdultConfirmed(boolean adultConfirmed) {
+        this.adultConfirmed = adultConfirmed;
+    }
+
+    public boolean isBirthDateSet() {
+        return birthDateSet;
+    }
+
+    public void setBirthDateSet(boolean birthDateSet) {
+        this.birthDateSet = birthDateSet;
+    }
+
+    public int getMaxVideos() {
+        return maxVideos;
+    }
+
+    public void setMaxVideos(int maxVideos) {
+        this.maxVideos = maxVideos;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 }
