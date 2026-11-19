@@ -74,8 +74,14 @@ public class PaymentOrderService {
         return TossPaymentProvider.CODE.equals(code) || TossPaymentProvider.LEGACY_CODE.equals(code);
     }
 
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.audition.platform.application.consent.MinorPaymentGuard minorPaymentGuard;
+
     @Transactional
     public PreparePaymentResponse preparePayment(UUID userId, UUID packageId, String providerCode) {
+        if (minorPaymentGuard != null) {
+            minorPaymentGuard.require(userId);
+        }
         String code = (providerCode == null || providerCode.isBlank())
                 ? MockPaymentProvider.CODE
                 : providerCode.trim().toUpperCase(Locale.ROOT);

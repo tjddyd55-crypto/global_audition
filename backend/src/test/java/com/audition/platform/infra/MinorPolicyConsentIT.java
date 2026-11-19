@@ -21,9 +21,11 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -51,6 +53,7 @@ class MinorPolicyConsentIT {
     }
 
     @Autowired private MockMvc mvc;
+    @Autowired private com.audition.platform.application.consent.MinorPaymentGuard paymentGuard;
     @Autowired private JdbcTemplate jdbc;
     @Autowired private ObjectMapper json;
 
@@ -143,19 +146,55 @@ class MinorPolicyConsentIT {
     }
 
     @Test
-    void krTeenNeedsGuardianOnlyForOffersAndAdultNeedsNone() throws Exception {
+    void krTeenNeedsNoGuardianForSignupApplySearchOrOffersButPaymentIsProtected() throws Exception {
         JsonNode teen = signup(nick(), LocalDate.now().minusYears(16).toString(), "KR");
         String t = teen.get("token").asText();
-        assertFalse(teen.get("guardianRequired").asBoolean(), "KR 14~18세는 가입·지원에 보호자 확인 불필요(Dev 기본값)");
+        assertFalse(teen.get("guardianRequired").asBoolean(), "KR 14~18세는 가입·지원·검색·제안에 보호자 확인 불필요");
         mvc.perform(put("/api/me/privacy").header("Authorization", "Bearer " + t).contentType(APPLICATION_JSON)
-                .content("{\"talentSearchVisible\":true}")).andExpect(status().isOk());
-        mvc.perform(put("/api/me/privacy").header("Authorization", "Bearer " + t).contentType(APPLICATION_JSON)
-                .content("{\"castingOffersEnabled\":true}")).andExpect(status().isUnprocessableEntity());
+                .content("{\"talentSearchVisible\":true,\"castingOffersEnabled\":true}")).andExpect(status().isOk());
         JsonNode p = getPrivacy(t);
         assertTrue(p.get("minor").get("minor").asBoolean());
         assertTrue(p.get("minor").get("applyAllowed").asBoolean());
-        assertEquals("CASTING_GUARDIAN_REQUIRED", p.get("minor").get("offersBlockReason").asText());
+        assertTrue(p.get("minor").get("offersAllowed").asBoolean());
+        assertFalse(p.get("minor").get("contactSharingAllowed").asBoolean(), "미성년자 연락처 공유는 계속 차단");
+        UUID teenId = UUID.fromString(teen.get("userId").asText());
+        var ex = assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> paymentGuard.require(teenId));
+        assertEquals("MINOR_PAYMENT_GUARDIAN_REQUIRED", ex.getReason(), "미성년자 유료 결제는 가입 동의와 별개로 보호자 확인 필요");
+        // 생년월일 잠금: 회원 API 로 바꿀 수 없다(같은 값은 허용).
+        mvc.perform(patch("/api/me").header("Authorization", "Bearer " + t).contentType(APPLICATION_JSON)
+                .content("{\"birthDate\":\"1990-01-01\"}")).andExpect(status().isConflict());
+        mvc.perform(patch("/api/me").header("Authorization", "Bearer " + t).contentType(APPLICATION_JSON)
+                .content("{\"birthDate\":\"\"}")).andExpect(status().isConflict());
 
+        LocalDate today = com.audition.platform.application.consent.MinorPolicyService.today();
+        JsonNode b14 = signup(nick(), today.minusYears(14).toString(), "KR");
+        assertFalse(b14.get("guardianRequired").asBoolean(), "만 14세 생일 당일은 보호자 동의 불필요");
+        JsonNode d14 = signup(nick(), today.minusYears(14).plusDays(1).toString(), "KR");
+        assertTrue(d14.get("guardianRequired").asBoolean(), "만 14세 생일 전날은 보호자 동의 필요");
+        JsonNode b19 = signup(nick(), today.minusYears(19).toString(), "KR");
+        assertFalse(getPrivacy(b19.get("token").asText()).get("minor").get("minor").asBoolean(), "만 19세 생일 당일 성인");
+        JsonNode d19 = signup(nick(), today.minusYears(19).plusDays(1).toString(), "KR");
+        assertTrue(getPrivacy(d19.get("token").asText()).get("minor").get("minor").asBoolean(), "만 19세 생일 전날 미성년");
+    }
+
+    @Test
+    void optionalConsentsDoNotBlockSignupAndOldAppsAreToldToUpdate() throws Exception {
+        String n = nick();
+        var r = mvc.perform(post("/api/auth/signup").contentType(APPLICATION_JSON).content(
+                "{\"email\":\"" + n + DOMAIN + "\",\"password\":\"Localtest1!\",\"role\":\"APPLICANT\",\"nickname\":\"" + n
+                        + "\",\"countryCode\":\"KR\",\"birthDate\":\"2000-01-01\",\"agreeTerms\":true,"
+                        + "\"agreePrivacyCollection\":true,\"agreePrivacyDisclosure\":false,\"agreeMarketing\":false}"))
+                .andReturn().getResponse();
+        assertEquals(200, r.getStatus(), "선택 동의 거부로 가입을 막지 않는다");
+        String o = nick();
+        mvc.perform(post("/api/auth/signup").contentType(APPLICATION_JSON).content(
+                "{\"email\":\"" + o + DOMAIN + "\",\"password\":\"Localtest1!\",\"role\":\"APPLICANT\",\"nickname\":\"" + o
+                        + "\",\"countryCode\":\"KR\"}"))
+                .andExpect(status().is(426));
+    }
+
+    @Test
+    void adultNeedsNoGuardianAndDisclosureWithdrawalTurnsOffOffers() throws Exception {
         JsonNode adult = signup(nick(), "1990-02-02", "KR");
         String a = adult.get("token").asText();
         mvc.perform(post("/api/me/guardian/request").header("Authorization", "Bearer " + a)

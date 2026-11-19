@@ -36,6 +36,12 @@ public class SuperAdminMinorPolicyController {
         return admin.upsert(countryCode, body);
     }
 
+    @PostMapping("/users/{userId}/birth-date")
+    public Map<String, Object> correctBirthDate(@PathVariable UUID userId,
+                                                @RequestBody MinorPolicyAdminService.BirthDateCorrection body) {
+        return admin.correctBirthDate(userId, body);
+    }
+
     @GetMapping("/summary")
     public MinorPolicyAdminService.Summary summary() {
         return admin.summary();

@@ -106,14 +106,16 @@ class CastingOfferIT {
     @Test
     void minorsUnknownAgeBlocksDeclineCooldownAndWithdraw() {
         UUID agency = agency("castagC", "APPROVED");
-        UUID minor = talent("casttalMinor", LocalDate.now().minusYears(15).toString(), true);
+        UUID minor = talent("casttalMinor", LocalDate.now().minusYears(13).toString(), true);
+        UUID teen = talent("casttalTeen", LocalDate.now().minusYears(15).toString(), true);
         UUID unknown = talent("casttalUnknown", null, true);
         UUID adult = talent("casttalB", "1990-01-01", true);
 
         as(agency, "ROLE_AGENCY");
         List<String> found = talents.search(filter("casttal")).items().stream().map(TalentSearchService.TalentCard::nickname).toList();
-        assertTrue(found.contains("casttalMinor"), "미성년자라는 이유만으로 검색에서 빼지 않는다(KR 14세 이상은 본인 설정)");
-        assertFalse(talents.search(filter("casttalMinor")).items().get(0).acceptsOffers(), "보호자 확인 전 제안 수신 불가");
+        assertTrue(found.contains("casttalTeen"), "미성년자라는 이유만으로 검색에서 빼지 않는다(KR 14세 이상은 본인 설정)");
+        assertFalse(found.contains("casttalMinor"), "KR 14세 미만은 보호자 확인 전 검색 노출 안 됨");
+        assertTrue(talents.search(filter("casttalTeen")).items().get(0).acceptsOffers(), "KR 14세 이상은 보호자 확인 없이 제안 수신");
         assertEquals("TALENT_NOT_ACCEPTING",
                 assertThrows(ResponseStatusException.class, () -> casting.send(offer(minor))).getReason());
         assertEquals("TALENT_NOT_ACCEPTING",

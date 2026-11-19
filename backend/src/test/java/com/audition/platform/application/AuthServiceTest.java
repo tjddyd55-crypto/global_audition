@@ -148,6 +148,11 @@ class AuthServiceTest {
         req.setNickname("미성년닉");
         when(userRepository.existsByEmail("minor@example.com")).thenReturn(false);
         when(userNicknameService.prepareNicknameOrThrow(eq("미성년닉"), isNull())).thenReturn("미성년닉");
+        org.springframework.web.server.ResponseStatusException oldApp = org.junit.jupiter.api.Assertions.assertThrows(
+                org.springframework.web.server.ResponseStatusException.class, () -> authService.signup(req));
+        assertEquals(426, oldApp.getStatusCode().value(), "동의 필드가 없는 예전 앱은 업데이트 안내");
+        req.setAgreeTerms(false);
+        req.setAgreePrivacyCollection(true);
         org.springframework.web.server.ResponseStatusException noConsent = org.junit.jupiter.api.Assertions.assertThrows(
                 org.springframework.web.server.ResponseStatusException.class, () -> authService.signup(req));
         assertEquals("CONSENT_REQUIRED", noConsent.getReason());

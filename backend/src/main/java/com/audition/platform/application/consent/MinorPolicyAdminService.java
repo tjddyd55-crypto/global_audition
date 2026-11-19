@@ -42,6 +42,40 @@ public class MinorPolicyAdminService {
         this.audit = audit;
     }
 
+    public record BirthDateCorrection(String birthDate, String reason) {
+    }
+
+    /**
+     * 생년월일 정정(본사 관리자만). 회원은 직접 바꿀 수 없다. 변경 전·후·사유·관리자·일시를 감사 로그에 남기고 연령 정책을 다시 판정한다.
+     */
+    @Transactional
+    public Map<String, Object> correctBirthDate(UUID userId, BirthDateCorrection in) {
+        var admin = access.requireHq();
+        java.time.LocalDate next = ProfileCodes.birthDate(in == null ? null : in.birthDate());
+        String reason = in == null || in.reason() == null ? "" : in.reason().trim();
+        if (next == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "정정할 생년월일을 입력해 주세요.");
+        }
+        if (reason.length() < 2) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "정정 사유를 입력해 주세요.");
+        }
+        List<java.sql.Date> cur = jdbc.queryForList("SELECT birth_date FROM users WHERE id = ?", java.sql.Date.class, userId);
+        if (cur.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "회원을 찾을 수 없습니다.");
+        }
+        String before = cur.get(0) == null ? null : cur.get(0).toLocalDate().toString();
+        jdbc.update("UPDATE users SET birth_date = ?, updated_at = NOW() WHERE id = ?", java.sql.Date.valueOf(next), userId);
+        Map<String, Object> after = new LinkedHashMap<>();
+        after.put("birthDate", next.toString());
+        after.put("reason", reason);
+        audit.log(admin.id(), "BIRTH_DATE_CORRECTION", "USER", userId.toString(), before, after);
+        guardians.reconcile(userId);
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("before", before);
+        out.put("after", next.toString());
+        return out;
+    }
+
     public List<MinorPolicyService.Policy> list() {
         access.requireHq();
         return policies.all();

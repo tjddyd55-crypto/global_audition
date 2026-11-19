@@ -76,6 +76,11 @@ public class AuthService {
         }
         agencySignupService.requireAgencyCountry(requested, req.getCountryCode());
         boolean applicant = "APPLICANT".equals(requested);
+        if (req.getAgreeTerms() == null && req.getAgreePrivacyCollection() == null) {
+            // 동의 필드를 모르는 예전 앱/화면. 사용자에게 그대로 보이는 문장으로 업데이트를 안내한다.
+            throw new ResponseStatusException(HttpStatus.UPGRADE_REQUIRED,
+                    "앱을 최신 버전으로 업데이트해 주세요. Please update the app to the latest version.");
+        }
         ConsentService.SignupConsents signupConsents = new ConsentService.SignupConsents(
                 Boolean.TRUE.equals(req.getAgreeTerms()), Boolean.TRUE.equals(req.getAgreePrivacyCollection()),
                 Boolean.TRUE.equals(req.getAgreePrivacyDisclosure()), Boolean.TRUE.equals(req.getAgreeMarketing()));
