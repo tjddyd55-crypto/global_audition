@@ -10,6 +10,8 @@ export type StudioNotification = {
   titleKey?: string | null
   bodyKey?: string | null
   roundId?: string | null
+  link?: string | null
+  params?: Record<string, string> | null
   createdAt: string | null
   readAt: string | null
   auditionId: string | null

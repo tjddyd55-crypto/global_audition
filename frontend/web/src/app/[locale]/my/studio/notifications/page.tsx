@@ -3,7 +3,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useLocale, useTranslations } from 'next-intl'
 import { studioApi } from '@/shared/api/studio'
-import { notificationBadge, notificationCopy } from '@/shared/studio/notificationCopy'
+import { notificationBadge, notificationCopy, notificationLink } from '@/shared/studio/notificationCopy'
+import { Link } from '@/i18n.config'
 import { TEXT_SUB, TITLE_PAGE } from '@/shared/ui/specClasses'
 
 export default function StudioNotificationsPage() {
@@ -31,7 +32,8 @@ export default function StudioNotificationsPage() {
       {query.data && query.data.length === 0 ? <p className={TEXT_SUB}>{tNotice('empty')}</p> : null}
       <ul className="flex flex-col gap-2">
         {(query.data ?? []).map((item) => {
-          const copy = notificationCopy(item, (key) => tNotice(key))
+          const copy = notificationCopy(item, (key, params) => tNotice(key, params))
+          const href = notificationLink(item)
           return (
           <li key={item.id} className="rounded-lg border border-neutral-200 p-3">
             <div className="font-medium text-gray-900">{copy.title}</div>
@@ -41,6 +43,17 @@ export default function StudioNotificationsPage() {
               {item.readAt ? ` · ${t('read')}` : ''}
               {item.createdAt ? ` · ${new Date(item.createdAt).toLocaleString(locale)}` : ''}
             </div>
+            {href ? (
+              <Link
+                href={href}
+                className="mt-2 mr-3 inline-block text-sm font-medium text-violet-700 underline"
+                onClick={() => {
+                  if (!item.readAt) markRead.mutate(item.id)
+                }}
+              >
+                {tNotice('open')}
+              </Link>
+            ) : null}
             {!item.readAt ? (
               <button
                 type="button"

@@ -25,6 +25,7 @@ const MENU = [
   { name: '대량 지급', path: '/admin/super/bulk-grant' },
   { name: '국가 조직', path: '/admin/super/countries' },
   { name: '글로벌 기획사', path: '/admin/super/agencies' },
+  { name: '채널·캐스팅 운영', path: '/admin/super/casting' },
   { name: '계약', path: '/admin/super/contracts' },
   { name: '매출 통계', path: '/admin/super/revenue' },
   { name: '월 정산', path: '/admin/super/settlements' },

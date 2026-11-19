@@ -1013,7 +1013,9 @@
     "applyVideo": "វីដេអូពាក្យស្នើសុំ",
     "noVideoLink": "គ្មានតំណវីដេអូ។",
     "noAuditionsHint": "មិនទាន់មានការប្រឡងជម្រើសទេ។ សូមបង្កើតការប្រកាសក្នុងការគ្រប់គ្រងការប្រឡងជម្រើសជាមុន។",
-    "pickAudition": "សូមជ្រើសរើសការប្រឡងជម្រើស។"
+    "pickAudition": "សូមជ្រើសរើសការប្រឡងជម្រើស។",
+    "navTalents": "ស្វែងរកទេពកោសល្យ",
+    "navCasting": "សំណើ Casting"
   },
   "errors": {
     "INSUFFICIENT_CREDITS": "ក្រេឌីតមិនគ្រប់គ្រាន់",
@@ -1116,7 +1118,22 @@
     "multiStageOpenBody": "យើងនឹងប្រាប់អ្នកនៅពេលជុំបន្ទាប់បើក។",
     "PENDING": "កំពុងរង់ចាំ",
     "SENT": "បានផ្ញើ",
-    "FAILED": "ការផ្ញើបរាជ័យ"
+    "FAILED": "ការផ្ញើបរាជ័យ",
+    "castingOfferNewTitle": "សំណើ Casting ថ្មី",
+    "castingOfferNewBody": "{agency} បានផ្ញើ \"{title}\" មកអ្នក។",
+    "castingOfferDeadlineTitle": "សំណើ Casting ជិតផុតកំណត់",
+    "castingOfferDeadlineBody": "\"{title}\" នឹងបិទក្នុង 24 ម៉ោង។",
+    "castingOfferWithdrawnTitle": "សំណើ Casting ត្រូវបានដកវិញ",
+    "castingOfferWithdrawnBody": "{agency} បានដក \"{title}\" វិញ។",
+    "castingOfferReadTitle": "សំណើត្រូវបានអាន",
+    "castingOfferReadBody": "{talent} បានអាន \"{title}\"។",
+    "castingOfferAcceptedTitle": "សំណើត្រូវបានទទួលយក",
+    "castingOfferAcceptedBody": "{talent} ចាប់អារម្មណ៍នឹង \"{title}\"។",
+    "castingOfferDeclinedTitle": "សំណើត្រូវបានបដិសេធ",
+    "castingOfferDeclinedBody": "{talent} បានបដិសេធ \"{title}\"។",
+    "channelNewVideoTitle": "វីដេអូថ្មីពីប៉ុស្តិ៍ដែលអ្នកតាម",
+    "channelNewVideoBody": "{channel} បានបង្ហោះ \"{title}\"។",
+    "open": "បើក"
   },
   "vault": {
     "title": "ឃ្លាំងស្នាដៃ",
@@ -1314,7 +1331,8 @@
     },
     "loadMore": "មើលបន្ថែម",
     "residenceShort": "រស់នៅ {country}",
-    "noResults": "មិនមានឆានែលត្រូវនឹងលក្ខខណ្ឌទេ។"
+    "noResults": "មិនមានឆានែលត្រូវនឹងលក្ខខណ្ឌទេ។",
+    "sendCastingOffer": "ផ្ញើសំណើ Casting"
   },
   "native": {
     "otaTitle": "កំណែថ្មីរួចរាល់ហើយ",
@@ -1701,7 +1719,8 @@
     "visibilityPrivate": "ឯកជន",
     "viewChannel": "មើលឆានែលរបស់ខ្ញុំ",
     "unlistedNote": "វីដេអូ Unlisted លើ YouTube ក៏អាចចាក់បាន។ ប្រសិនបើអ្នកធ្វើជាសាធារណៈនៅទីនេះ អ្នកណាក៏អាចមើលបាន។",
-    "identityHint": "កែរូបភាព ឈ្មោះសិល្បៈ សញ្ជាតិ និងថ្ងៃខែឆ្នាំកំណើត (ឯកជន) នៅក្នុងប្រវត្តិរូប។"
+    "identityHint": "កែរូបភាព ឈ្មោះសិល្បៈ សញ្ជាតិ និងថ្ងៃខែឆ្នាំកំណើត (ឯកជន) នៅក្នុងប្រវត្តិរូប។",
+    "castingOffers": "សំណើ Casting"
   },
   "languages": {
     "ko": "한국어",
@@ -1786,5 +1805,107 @@
     "failPending": "កំពុងដំណើរការ callback បរាជ័យ…",
     "failBtn": "ការទូទាត់បរាជ័យ (សាកល្បង)",
     "toCheckout": "ទៅពិនិត្យការទូទាត់"
+  },
+  "casting": {
+    "title": "សំណើ Casting",
+    "intro": "សំណើពីភ្នាក់ងារដែលបានអនុម័ត។ ការទទួលយកគ្រាន់តែបង្ហាញចំណាប់អារម្មណ៍ មិនបង្កើតកិច្ចសន្យា ពាក្យដាក់ ការទូទាត់ ឬការកាត់ក្រេឌីតទេ។",
+    "empty": "មិនទាន់មានសំណើ Casting ទេ។",
+    "loadFailed": "មិនអាចផ្ទុកសំណើបានទេ។",
+    "loading": "កំពុងផ្ទុក…",
+    "back": "ត្រឡប់ទៅបញ្ជី",
+    "openDetail": "មើលលម្អិត",
+    "from": "ភ្នាក់ងារ",
+    "project": "ប្រភេទគម្រោង",
+    "role": "វិស័យ",
+    "workPlace": "ទីតាំង",
+    "schedule": "កាលវិភាគ",
+    "compensation": "ប្រាក់តបស្នង",
+    "deadline": "ឆ្លើយតបមុន",
+    "daysLeft": "នៅសល់ {days} ថ្ងៃ",
+    "expired": "ហួសកាលកំណត់",
+    "received": "ទទួលបាន",
+    "message": "សារ",
+    "contactRequested": "ភ្នាក់ងារស្នើសុំឱ្យអ្នកចែករំលែកអ៊ីមែល (ស្រេចចិត្ត)។",
+    "contactShared": "អ្នកបានចែករំលែកអ៊ីមែលជាមួយភ្នាក់ងារនេះ។",
+    "status": {
+      "SENT": "ថ្មី",
+      "READ": "បានអាន",
+      "ACCEPTED": "បានទទួលយក",
+      "DECLINED": "បានបដិសេធ",
+      "EXPIRED": "ផុតកំណត់",
+      "WITHDRAWN": "បានដកវិញ"
+    },
+    "projectType": {
+      "AUDITION_INVITE": "ការអញ្ជើញ Audition",
+      "TRAINEE": "សំណើកម្មសិក្សា",
+      "PROJECT": "គម្រោង",
+      "CONTENT_COLLAB": "សហការមាតិកា",
+      "MODEL_SHOOT": "ថតម៉ូដែល",
+      "OTHER": "ផ្សេងៗ"
+    },
+    "compensationType": {
+      "PAID": "មានប្រាក់ឈ្នួល",
+      "UNPAID": "គ្មានប្រាក់ឈ្នួល",
+      "NEGOTIABLE": "ចរចា",
+      "TBD": "មិនទាន់កំណត់"
+    },
+    "declineReason": {
+      "NOT_INTERESTED": "មិនចាប់អារម្មណ៍",
+      "SCHEDULE": "កាលវិភាគមិនត្រូវគ្នា",
+      "FIELD_MISMATCH": "វិស័យមិនត្រូវគ្នា",
+      "LOCATION": "ទីតាំងមិនត្រូវគ្នា",
+      "OTHER": "ផ្សេងៗ"
+    },
+    "reportReason": {
+      "SPAM": "សារឥតបានការ",
+      "FRAUD": "សង្ស័យការបោកប្រាស់",
+      "EXTERNAL_PAYMENT": "ទាមទារការទូទាត់ខាងក្រៅ / ប្រាក់កក់",
+      "HARASSMENT": "ការបៀតបៀន",
+      "INAPPROPRIATE": "មាតិកាមិនសមរម្យ",
+      "OTHER": "ផ្សេងៗ"
+    },
+    "accept": "ចាប់អារម្មណ៍ (ទទួលយក)",
+    "decline": "បដិសេធ",
+    "report": "រាយការណ៍",
+    "block": "ទប់ស្កាត់ភ្នាក់ងារ",
+    "unblock": "ឈប់ទប់ស្កាត់",
+    "cancel": "បោះបង់",
+    "acceptTitle": "ឆ្លើយតបថាចាប់អារម្មណ៍",
+    "acceptNotice": "ការទទួលយកមិនបង្កើតកិច្ចសន្យា ពាក្យដាក់ ការទូទាត់ ឬការកាត់ក្រេឌីតទេ។ សូមបញ្ជាក់ជំហានបន្ទាប់ជាមួយភ្នាក់ងារដោយឡែក។",
+    "shareContact": "ចែករំលែកអ៊ីមែលរបស់ខ្ញុំជាមួយភ្នាក់ងារនេះ (ស្រេចចិត្ត)",
+    "noteLabel": "សារ (ស្រេចចិត្ត)",
+    "confirmAccept": "ទទួលយក",
+    "accepted": "បានទទួលយក។",
+    "declineTitle": "បដិសេធសំណើ",
+    "declineReasonLabel": "មូលហេតុ",
+    "confirmDecline": "បដិសេធ",
+    "declined": "បានបដិសេធ។",
+    "reportTitle": "រាយការណ៍សំណើ",
+    "reportReasonLabel": "មូលហេតុ",
+    "reportDetail": "ព័ត៌មានលម្អិត (ស្រេចចិត្ត)",
+    "reportBlock": "ទប់ស្កាត់ភ្នាក់ងារនេះផងដែរ",
+    "confirmReport": "រាយការណ៍",
+    "reported": "បានទទួលរបាយការណ៍។ ក្រុមការងារនឹងពិនិត្យ។",
+    "blockConfirm": "ទប់ស្កាត់ភ្នាក់ងារនេះ? អ្នកនឹងមិនទទួលសំណើរបស់វាទៀតទេ ហើយនឹងមិនបង្ហាញក្នុងការស្វែងរកទេពកោសល្យរបស់វាទេ។",
+    "blocked": "បានទប់ស្កាត់។",
+    "blocksTitle": "ភ្នាក់ងារដែលបានទប់ស្កាត់",
+    "noBlocks": "អ្នកមិនទាន់ទប់ស្កាត់ភ្នាក់ងារណាទេ។",
+    "safetyTip": "ប្រសិនបើនរណាម្នាក់ទាមទារប្រាក់កក់ ការទូទាត់ខាងក្រៅ ឬទំនាក់ទំនងឯកជនមុន សូមកុំឆ្លើយតប ហើយរាយការណ៍។",
+    "history": "ប្រវត្តិ",
+    "actor": {
+      "TALENT": "អ្នក",
+      "AGENCY": "ភ្នាក់ងារ",
+      "SYSTEM": "ប្រព័ន្ធ"
+    },
+    "error": {
+      "generic": "មានបញ្ហា។ សូមព្យាយាមម្តងទៀត។",
+      "OFFER_EXPIRED": "សំណើនេះហួសកាលកំណត់ហើយ។",
+      "OFFER_STATE_CONFLICT": "សំណើនេះត្រូវបានដោះស្រាយរួចហើយ។",
+      "OFFER_NOT_FOUND": "រកមិនឃើញសំណើ។"
+    },
+    "withdrawnNotice": "ភ្នាក់ងារបានដកសំណើនេះវិញ។",
+    "responseLabel": "ចម្លើយរបស់អ្នក",
+    "agencyBlockedBadge": "បានទប់ស្កាត់",
+    "unread": "មិនទាន់អាន"
   }
 }

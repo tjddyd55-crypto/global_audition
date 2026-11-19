@@ -13,6 +13,7 @@ const LINKS = [
   { href: '/my/studio/channel', key: 'channel' },
   { href: '/my/studio/content', key: 'content' },
   { href: '/my/studio/applications', key: 'applications' },
+  { href: '/my/studio/casting', key: 'castingOffers' },
   { href: '/my/studio/credits', key: 'credits' },
   { href: '/my/studio/notifications', key: 'notifications' },
   { href: '/my/studio/agency-application', key: 'agencyApplication' },

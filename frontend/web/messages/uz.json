@@ -1013,7 +1013,9 @@
     "applyVideo": "Ariza videosi",
     "noVideoLink": "Video havolasi yoʻq.",
     "noAuditionsHint": "Hozircha kastinglar yoʻq. Avval kastinglarni boshqarish boʻlimida eʼlon yarating.",
-    "pickAudition": "Kastingni tanlang."
+    "pickAudition": "Kastingni tanlang.",
+    "navTalents": "Isteʼdod qidiruvi",
+    "navCasting": "Kasting takliflari"
   },
   "errors": {
     "INSUFFICIENT_CREDITS": "Kredit yetarli emas",
@@ -1116,7 +1118,22 @@
     "multiStageOpenBody": "Keyingi bosqich ochilganda sizga xabar beramiz.",
     "PENDING": "Kutilmoqda",
     "SENT": "Yuborildi",
-    "FAILED": "Yetkazib boʻlmadi"
+    "FAILED": "Yetkazib boʻlmadi",
+    "castingOfferNewTitle": "Yangi kasting taklifi",
+    "castingOfferNewBody": "{agency} sizga \"{title}\" taklifini yubordi.",
+    "castingOfferDeadlineTitle": "Kasting taklifi muddati yaqin",
+    "castingOfferDeadlineBody": "\"{title}\" 24 soatdan keyin yopiladi.",
+    "castingOfferWithdrawnTitle": "Kasting taklifi qaytarib olindi",
+    "castingOfferWithdrawnBody": "{agency} \"{title}\" taklifini qaytarib oldi.",
+    "castingOfferReadTitle": "Taklif oʻqildi",
+    "castingOfferReadBody": "{talent} \"{title}\" taklifini oʻqidi.",
+    "castingOfferAcceptedTitle": "Taklif qabul qilindi",
+    "castingOfferAcceptedBody": "{talent} \"{title}\" taklifiga qiziqdi.",
+    "castingOfferDeclinedTitle": "Taklif rad etildi",
+    "castingOfferDeclinedBody": "{talent} \"{title}\" taklifini rad etdi.",
+    "channelNewVideoTitle": "Kuzatilayotgan kanalda yangi video",
+    "channelNewVideoBody": "{channel} kanaliga \"{title}\" yangi video joylandi.",
+    "open": "Ochish"
   },
   "vault": {
     "title": "Ijodiy ombor",
@@ -1314,7 +1331,8 @@
     },
     "loadMore": "Yana koʻrsatish",
     "residenceShort": "{country}da yashaydi",
-    "noResults": "Mos kanal topilmadi."
+    "noResults": "Mos kanal topilmadi.",
+    "sendCastingOffer": "Kasting taklifi yuborish"
   },
   "native": {
     "otaTitle": "Yangi versiya tayyor",
@@ -1701,7 +1719,8 @@
     "visibilityPrivate": "Yopiq",
     "viewChannel": "Kanalimni koʻrish",
     "unlistedNote": "YouTube’dagi Unlisted videolar ham ijro etiladi. Bu yerda ochiq qilsangiz, hamma koʻra oladi.",
-    "identityHint": "Rasm, sahna nomi, fuqarolik va tugʻilgan sanani (maxfiy) profilda tahrirlang."
+    "identityHint": "Rasm, sahna nomi, fuqarolik va tugʻilgan sanani (maxfiy) profilda tahrirlang.",
+    "castingOffers": "Kasting takliflari"
   },
   "languages": {
     "ko": "한국어",
@@ -1786,5 +1805,107 @@
     "failPending": "Muvaffaqiyatsizlik callbacki qayta ishlanmoqda…",
     "failBtn": "Toʻlov muvaffaqiyatsiz (sinov)",
     "toCheckout": "Toʻlovni koʻrib chiqishga"
+  },
+  "casting": {
+    "title": "Kasting takliflari",
+    "intro": "Tasdiqlangan agentliklardan kelgan takliflar. Qabul qilish faqat qiziqish bildiradi — shartnoma, ariza, toʻlov yoki kredit yechilishi boʻlmaydi.",
+    "empty": "Hozircha kasting takliflari yoʻq.",
+    "loadFailed": "Takliflarni yuklab boʻlmadi.",
+    "loading": "Yuklanmoqda…",
+    "back": "Roʻyxatga qaytish",
+    "openDetail": "Batafsil",
+    "from": "Agentlik",
+    "project": "Loyiha turi",
+    "role": "Yoʻnalish",
+    "workPlace": "Joylashuv",
+    "schedule": "Jadval",
+    "compensation": "Haq",
+    "deadline": "Javob muddati",
+    "daysLeft": "{days} kun qoldi",
+    "expired": "Muddat oʻtgan",
+    "received": "Qabul qilingan",
+    "message": "Xabar",
+    "contactRequested": "Agentlik emailingizni ulashishni soʻradi (ixtiyoriy).",
+    "contactShared": "Emailingizni bu agentlik bilan ulashdingiz.",
+    "status": {
+      "SENT": "Yangi",
+      "READ": "Oʻqilgan",
+      "ACCEPTED": "Qabul qilingan",
+      "DECLINED": "Rad etilgan",
+      "EXPIRED": "Muddati tugagan",
+      "WITHDRAWN": "Qaytarib olingan"
+    },
+    "projectType": {
+      "AUDITION_INVITE": "Kastingga taklif",
+      "TRAINEE": "Stajyorlik taklifi",
+      "PROJECT": "Loyiha",
+      "CONTENT_COLLAB": "Kontent hamkorligi",
+      "MODEL_SHOOT": "Model suratga olish",
+      "OTHER": "Boshqa"
+    },
+    "compensationType": {
+      "PAID": "Pullik",
+      "UNPAID": "Bepul",
+      "NEGOTIABLE": "Kelishiladi",
+      "TBD": "Aniqlanmagan"
+    },
+    "declineReason": {
+      "NOT_INTERESTED": "Qiziq emas",
+      "SCHEDULE": "Jadval mos emas",
+      "FIELD_MISMATCH": "Yoʻnalish mos emas",
+      "LOCATION": "Joylashuv mos emas",
+      "OTHER": "Boshqa"
+    },
+    "reportReason": {
+      "SPAM": "Spam",
+      "FRAUD": "Firibgarlik shubhasi",
+      "EXTERNAL_PAYMENT": "Tashqi toʻlov / oldindan toʻlov talabi",
+      "HARASSMENT": "Bezovta qilish",
+      "INAPPROPRIATE": "Nomaqbul kontent",
+      "OTHER": "Boshqa"
+    },
+    "accept": "Qiziqaman (qabul)",
+    "decline": "Rad etish",
+    "report": "Shikoyat",
+    "block": "Agentlikni bloklash",
+    "unblock": "Blokdan chiqarish",
+    "cancel": "Bekor qilish",
+    "acceptTitle": "Qiziqaman deb javob berish",
+    "acceptNotice": "Qabul qilish shartnoma, ariza, toʻlov yoki kredit yechilishini yaratmaydi. Keyingi qadamlarni agentlik bilan alohida aniqlang.",
+    "shareContact": "Emailimni bu agentlik bilan ulashish (ixtiyoriy)",
+    "noteLabel": "Xabar (ixtiyoriy)",
+    "confirmAccept": "Qabul qilish",
+    "accepted": "Qabul qilindi.",
+    "declineTitle": "Taklifni rad etish",
+    "declineReasonLabel": "Sabab",
+    "confirmDecline": "Rad etish",
+    "declined": "Rad etildi.",
+    "reportTitle": "Taklif ustidan shikoyat",
+    "reportReasonLabel": "Sabab",
+    "reportDetail": "Tafsilotlar (ixtiyoriy)",
+    "reportBlock": "Bu agentlikni ham bloklash",
+    "confirmReport": "Shikoyat yuborish",
+    "reported": "Shikoyat qabul qilindi. Jamoamiz koʻrib chiqadi.",
+    "blockConfirm": "Bu agentlikni bloklaysizmi? Undan boshqa taklif kelmaydi va uning isteʼdod qidiruvida koʻrinmaysiz.",
+    "blocked": "Bloklandi.",
+    "blocksTitle": "Bloklangan agentliklar",
+    "noBlocks": "Bloklangan agentlik yoʻq.",
+    "safetyTip": "Kimdir oldindan toʻlov, tashqi toʻlov yoki shaxsiy kontaktni birinchi boʻlib soʻrasa, javob bermang — shikoyat qiling.",
+    "history": "Tarix",
+    "actor": {
+      "TALENT": "Siz",
+      "AGENCY": "Agentlik",
+      "SYSTEM": "Tizim"
+    },
+    "error": {
+      "generic": "Xatolik yuz berdi. Qayta urinib koʻring.",
+      "OFFER_EXPIRED": "Bu taklifning muddati oʻtgan.",
+      "OFFER_STATE_CONFLICT": "Bu taklif allaqachon koʻrib chiqilgan.",
+      "OFFER_NOT_FOUND": "Taklif topilmadi."
+    },
+    "withdrawnNotice": "Agentlik bu taklifni qaytarib oldi.",
+    "responseLabel": "Sizning javobingiz",
+    "agencyBlockedBadge": "Bloklangan",
+    "unread": "Oʻqilmagan"
   }
 }

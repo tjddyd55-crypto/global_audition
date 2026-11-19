@@ -9,6 +9,8 @@ const NAV_HREFS = [
   { href: '/my/dashboard', key: 'navSummary' as const, match: (p: string) => p === '/my/dashboard' },
   { href: '/my/auditions', key: 'navAuditions' as const, match: (p: string) => p.startsWith('/my/auditions') },
   { href: '/my/applicants', key: 'navApplicants' as const, match: (p: string) => p.startsWith('/my/applicants') },
+  { href: '/my/talents', key: 'navTalents' as const, match: (p: string) => p.startsWith('/my/talents') },
+  { href: '/my/casting', key: 'navCasting' as const, match: (p: string) => p.startsWith('/my/casting') },
   { href: '/my/stats', key: 'navStats' as const, match: (p: string) => p === '/my/stats' },
   { href: '/my/profile', key: 'navSettings' as const, match: (p: string) => p === '/my/profile' },
 ]
@@ -18,7 +20,7 @@ export function AgencyDashboardShell({ children }: { children: ReactNode }) {
   const role = useAuthStore((s) => s.role)
   const pathname = usePathname() ?? ''
 
-  if (role !== 'AGENCY' && role !== 'ADMIN') {
+  if (role !== 'AGENCY' && role !== 'AGENCY_ADMIN' && role !== 'ADMIN') {
     return <>{children}</>
   }
 

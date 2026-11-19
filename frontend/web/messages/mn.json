@@ -1013,7 +1013,9 @@
     "applyVideo": "Өргөдлийн видео",
     "noVideoLink": "Видео холбоос алга.",
     "noAuditionsHint": "Аудишн алга. Эхлээд аудишн удирдлагаас зар үүсгэнэ үү.",
-    "pickAudition": "Аудишн сонгоно уу."
+    "pickAudition": "Аудишн сонгоно уу.",
+    "navTalents": "Авъяастан хайх",
+    "navCasting": "Кастингийн санал"
   },
   "errors": {
     "INSUFFICIENT_CREDITS": "Кредит хүрэлцэхгүй байна",
@@ -1116,7 +1118,22 @@
     "multiStageOpenBody": "Дараагийн шат нээгдэхэд мэдэгдэнэ.",
     "PENDING": "Хүлээгдэж буй",
     "SENT": "Илгээсэн",
-    "FAILED": "Илгээлт амжилтгүй"
+    "FAILED": "Илгээлт амжилтгүй",
+    "castingOfferNewTitle": "Шинэ кастингийн санал",
+    "castingOfferNewBody": "{agency} танд \"{title}\" санал илгээлээ.",
+    "castingOfferDeadlineTitle": "Кастингийн саналын хугацаа дуусах гэж байна",
+    "castingOfferDeadlineBody": "\"{title}\" 24 цагийн дараа хаагдана.",
+    "castingOfferWithdrawnTitle": "Кастингийн санал цуцлагдсан",
+    "castingOfferWithdrawnBody": "{agency} \"{title}\" саналыг цуцаллаа.",
+    "castingOfferReadTitle": "Санал уншсан",
+    "castingOfferReadBody": "{talent} \"{title}\" саналыг уншлаа.",
+    "castingOfferAcceptedTitle": "Санал зөвшөөрсөн",
+    "castingOfferAcceptedBody": "{talent} \"{title}\" саналыг сонирхож байна.",
+    "castingOfferDeclinedTitle": "Санал татгалзсан",
+    "castingOfferDeclinedBody": "{talent} \"{title}\" саналаас татгалзлаа.",
+    "channelNewVideoTitle": "Дагасан сувгийн шинэ видео",
+    "channelNewVideoBody": "{channel} сувагт \"{title}\" шинэ видео нэмэгдлээ.",
+    "open": "Нээх"
   },
   "vault": {
     "title": "Бүтээлийн агуулах",
@@ -1314,7 +1331,8 @@
     },
     "loadMore": "Цааш үзэх",
     "residenceShort": "{country}-д амьдардаг",
-    "noResults": "Тохирох суваг алга."
+    "noResults": "Тохирох суваг алга.",
+    "sendCastingOffer": "Кастингийн санал илгээх"
   },
   "native": {
     "otaTitle": "Шинэ хувилбар бэлэн",
@@ -1701,7 +1719,8 @@
     "visibilityPrivate": "Хаалттай",
     "viewChannel": "Миний суваг",
     "unlistedNote": "YouTube-ийн Unlisted видео ч тоглоно. Энд нээлттэй болговол хэн ч үзэх боломжтой.",
-    "identityHint": "Зураг, тайзны нэр, иргэншил, төрсөн огноог (нууц) профайлаас засна."
+    "identityHint": "Зураг, тайзны нэр, иргэншил, төрсөн огноог (нууц) профайлаас засна.",
+    "castingOffers": "Кастингийн санал"
   },
   "languages": {
     "ko": "한국어",
@@ -1786,5 +1805,107 @@
     "failPending": "Алдааны callback боловсруулж байна…",
     "failBtn": "Төлбөр амжилтгүй (туршилт)",
     "toCheckout": "Төлбөр шалгах руу"
+  },
+  "casting": {
+    "title": "Кастингийн санал",
+    "intro": "Батлагдсан агентлагаас ирсэн санал. Зөвшөөрөх нь зөвхөн сонирхлоо илэрхийлэх бөгөөд гэрээ, өргөдөл, төлбөр, кредит хасалт үүсгэхгүй.",
+    "empty": "Кастингийн санал алга.",
+    "loadFailed": "Саналыг ачаалж чадсангүй.",
+    "loading": "Ачаалж байна…",
+    "back": "Жагсаалт руу",
+    "openDetail": "Дэлгэрэнгүй",
+    "from": "Агентлаг",
+    "project": "Төслийн төрөл",
+    "role": "Чиглэл",
+    "workPlace": "Байршил",
+    "schedule": "Хуваарь",
+    "compensation": "Цалин",
+    "deadline": "Хариу өгөх хугацаа",
+    "daysLeft": "{days} хоног үлдсэн",
+    "expired": "Хугацаа дууссан",
+    "received": "Хүлээн авсан",
+    "message": "Зурвас",
+    "contactRequested": "Агентлаг таны имэйлийг хуваалцахыг хүссэн (сонголтоор).",
+    "contactShared": "Та энэ агентлагтай имэйлээ хуваалцсан.",
+    "status": {
+      "SENT": "Шинэ",
+      "READ": "Уншсан",
+      "ACCEPTED": "Зөвшөөрсөн",
+      "DECLINED": "Татгалзсан",
+      "EXPIRED": "Хугацаа дууссан",
+      "WITHDRAWN": "Цуцлагдсан"
+    },
+    "projectType": {
+      "AUDITION_INVITE": "Шалгаруулалтын урилга",
+      "TRAINEE": "Дадлагажигчийн санал",
+      "PROJECT": "Төсөл",
+      "CONTENT_COLLAB": "Контент хамтын ажиллагаа",
+      "MODEL_SHOOT": "Загвар өмсөгчийн зураг авалт",
+      "OTHER": "Бусад"
+    },
+    "compensationType": {
+      "PAID": "Цалинтай",
+      "UNPAID": "Цалингүй",
+      "NEGOTIABLE": "Тохиролцоно",
+      "TBD": "Тодорхойгүй"
+    },
+    "declineReason": {
+      "NOT_INTERESTED": "Сонирхолгүй",
+      "SCHEDULE": "Хуваарь таарахгүй",
+      "FIELD_MISMATCH": "Чиглэл таарахгүй",
+      "LOCATION": "Байршил таарахгүй",
+      "OTHER": "Бусад"
+    },
+    "reportReason": {
+      "SPAM": "Спам",
+      "FRAUD": "Залилангийн сэжиг",
+      "EXTERNAL_PAYMENT": "Гадны төлбөр / урьдчилгаа шаардсан",
+      "HARASSMENT": "Дарамт",
+      "INAPPROPRIATE": "Зохисгүй агуулга",
+      "OTHER": "Бусад"
+    },
+    "accept": "Сонирхож байна (зөвшөөрөх)",
+    "decline": "Татгалзах",
+    "report": "Мэдээлэх",
+    "block": "Агентлагийг хаах",
+    "unblock": "Хаалт цуцлах",
+    "cancel": "Болих",
+    "acceptTitle": "Сонирхож байна гэж хариулах",
+    "acceptNotice": "Зөвшөөрөхөд гэрээ, өргөдөл, төлбөр, кредит хасалт үүсэхгүй. Дараагийн алхмыг агентлагтай тусад нь тохиролцоно уу.",
+    "shareContact": "Имэйлээ энэ агентлагтай хуваалцах (сонголтоор)",
+    "noteLabel": "Зурвас (сонголтоор)",
+    "confirmAccept": "Зөвшөөрөх",
+    "accepted": "Зөвшөөрлөө.",
+    "declineTitle": "Санал татгалзах",
+    "declineReasonLabel": "Шалтгаан",
+    "confirmDecline": "Татгалзах",
+    "declined": "Татгалзлаа.",
+    "reportTitle": "Санал мэдээлэх",
+    "reportReasonLabel": "Шалтгаан",
+    "reportDetail": "Дэлгэрэнгүй (сонголтоор)",
+    "reportBlock": "Энэ агентлагийг бас хаах",
+    "confirmReport": "Мэдээлэх",
+    "reported": "Мэдээлэл хүлээн авлаа. Манай баг шалгана.",
+    "blockConfirm": "Энэ агентлагийг хаах уу? Хаавал цаашид санал ирэхгүй бөгөөд түүний авъяастан хайлтад харагдахгүй.",
+    "blocked": "Хаалаа.",
+    "blocksTitle": "Хаасан агентлагууд",
+    "noBlocks": "Хаасан агентлаг алга.",
+    "safetyTip": "Хэн нэгэн урьдчилгаа төлбөр, гадны төлбөр эсвэл хувийн холбоо барих мэдээллийг эхэлж шаардвал хариулахгүйгээр мэдээлнэ үү.",
+    "history": "Түүх",
+    "actor": {
+      "TALENT": "Та",
+      "AGENCY": "Агентлаг",
+      "SYSTEM": "Систем"
+    },
+    "error": {
+      "generic": "Алдаа гарлаа. Дахин оролдоно уу.",
+      "OFFER_EXPIRED": "Энэ саналын хугацаа дууссан.",
+      "OFFER_STATE_CONFLICT": "Энэ санал аль хэдийн шийдэгдсэн.",
+      "OFFER_NOT_FOUND": "Санал олдсонгүй."
+    },
+    "withdrawnNotice": "Агентлаг энэ саналыг цуцалсан.",
+    "responseLabel": "Таны хариу",
+    "agencyBlockedBadge": "Хаасан",
+    "unread": "Уншаагүй"
   }
 }

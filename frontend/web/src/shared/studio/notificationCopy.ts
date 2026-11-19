@@ -17,6 +17,24 @@ const CATALOG_KEYS = new Set([
   'FAILED',
 ])
 
+/** user_notifications(캐스팅·팔로우 채널 새 영상). 서버가 titleKey/bodyKey + params 를 준다. */
+export const USER_NOTIFICATION_KEYS = new Set([
+  'castingOfferNewTitle',
+  'castingOfferNewBody',
+  'castingOfferDeadlineTitle',
+  'castingOfferDeadlineBody',
+  'castingOfferWithdrawnTitle',
+  'castingOfferWithdrawnBody',
+  'castingOfferReadTitle',
+  'castingOfferReadBody',
+  'castingOfferAcceptedTitle',
+  'castingOfferAcceptedBody',
+  'castingOfferDeclinedTitle',
+  'castingOfferDeclinedBody',
+  'channelNewVideoTitle',
+  'channelNewVideoBody',
+])
+
 const SINGLE_STAGE_TITLE_KEYS = new Set([
   'singleStageResultTitle',
   'singleStagePassTitle',
@@ -32,7 +50,11 @@ export type NotificationCopySource = {
   titleKey?: string | null
   bodyKey?: string | null
   roundId?: string | null
+  link?: string | null
+  params?: Record<string, string> | null
 }
+
+export type NotificationTranslate = (key: string, params?: Record<string, string>) => string
 
 /**
  * 제목은 단일 심사와 회차 심사를 나누고, 안내 문구는 기존 알림 타입을 따른다.
@@ -40,8 +62,15 @@ export type NotificationCopySource = {
  */
 export function notificationCopy(
   item: NotificationCopySource,
-  translate: (key: string) => string,
+  translate: NotificationTranslate,
 ): { title: string; body: string } {
+  if (item.titleKey && USER_NOTIFICATION_KEYS.has(item.titleKey)) {
+    const params = safeParams(item.params)
+    const title = text(translate(item.titleKey, params)) || text(item.title) || text(item.type)
+    const body =
+      item.bodyKey && USER_NOTIFICATION_KEYS.has(item.bodyKey) ? text(translate(item.bodyKey, params)) : text(item.body)
+    return { title, body }
+  }
   const single = isSingleStage(item)
   const title =
     translated(single ? 'singleStageResultTitle' : multiTitleKey(item.type), translate) ||
@@ -54,6 +83,22 @@ export function notificationCopy(
     translated(guidanceKey(item.type, single), translate) ||
     text(item.body)
   return { title, body }
+}
+
+function safeParams(raw: Record<string, string> | null | undefined): Record<string, string> {
+  const out: Record<string, string> = {}
+  if (!raw || typeof raw !== 'object') return out
+  for (const [k, v] of Object.entries(raw)) {
+    if (/^[a-zA-Z]+$/.test(k)) out[k] = typeof v === 'string' ? v.slice(0, 120) : String(v ?? '')
+  }
+  return out
+}
+
+/** 앱 내부 경로만 허용(외부 URL·스킴 차단). */
+export function notificationLink(item: NotificationCopySource): string | null {
+  const link = text(item.link)
+  if (!link.startsWith('/') || link.startsWith('//')) return null
+  return /^\/[A-Za-z0-9/_-]*$/.test(link) ? link : null
 }
 
 function isSingleStage(item: NotificationCopySource): boolean {
@@ -98,6 +143,7 @@ export function notificationBadge(
   item: NotificationCopySource,
   translate: (key: string) => string,
 ): string {
+  if (item.titleKey && USER_NOTIFICATION_KEYS.has(item.titleKey)) return ''
   const decided = singleStageDecisionLabel(item, translate)
   if (decided) return decided
   return [notificationCodeLabel(item.type, translate), notificationCodeLabel(item.status, translate)]
