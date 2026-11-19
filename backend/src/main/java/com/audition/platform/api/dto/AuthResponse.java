@@ -61,4 +61,10 @@ public class AuthResponse {
     public void setRecoveryCode(String recoveryCode) {
         this.recoveryCode = recoveryCode;
     }
+
+    /** 가입 직후: 국가 정책상 보호자 확인이 필요한 나이(지원 전 보호자 링크 안내). 로그인 응답에는 없다. */
+    private Boolean guardianRequired;
+
+    public Boolean getGuardianRequired() { return guardianRequired; }
+    public void setGuardianRequired(Boolean guardianRequired) { this.guardianRequired = guardianRequired; }
 }

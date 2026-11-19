@@ -24,10 +24,12 @@ public final class ChannelShownFields {
     public static final String AGE = "AGE";
     public static final String LANGUAGES = "LANGUAGES";
     public static final String TALENTS = "TALENTS";
+    /** 성별(선택 입력). 켠 회원만 공개·검색 필터에 쓴다. */
+    public static final String GENDER = "GENDER";
 
     public static final List<String> KEYS = List.of(
             NAME, NATIONALITY, SHORT_BIO, BIO, INTRO, SPECIALTIES, CAREER, ACTIVITY, SNS,
-            RESIDENCE, AGE, LANGUAGES, TALENTS);
+            RESIDENCE, AGE, LANGUAGES, TALENTS, GENDER);
 
     /**
      * 선택 저장 전 기본 공개 항목. 실명(NAME)은 기본 비공개로 바꿨다(본인이 직접 켜야 공개).

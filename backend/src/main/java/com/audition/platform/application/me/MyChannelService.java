@@ -49,6 +49,8 @@ public class MyChannelService {
     private final YoutubeEmbedChecker embedChecker;
     private final CastingOfferEligibility castingEligibility;
     private final ChannelVideoEvents videoEvents;
+    private final com.audition.platform.application.consent.PrivacySettingsService privacySettings;
+    private final com.audition.platform.application.consent.MinorPolicyService minorPolicy;
 
     public MyChannelService(ChannelRepository channelRepository,
                             ChannelVideoRepository channelVideoRepository,
@@ -59,7 +61,11 @@ public class MyChannelService {
                             ChannelCareerService careers,
                             YoutubeEmbedChecker embedChecker,
                             CastingOfferEligibility castingEligibility,
-                            ChannelVideoEvents videoEvents) {
+                            ChannelVideoEvents videoEvents,
+                            com.audition.platform.application.consent.PrivacySettingsService privacySettings,
+                            com.audition.platform.application.consent.MinorPolicyService minorPolicy) {
+        this.privacySettings = privacySettings;
+        this.minorPolicy = minorPolicy;
         this.discovery = discovery;
         this.careers = careers;
         this.embedChecker = embedChecker;
@@ -148,7 +154,8 @@ public class MyChannelService {
         r.setCastingOffersEnabled(user.isCastingOffersEnabled());
         java.time.LocalDate today = java.time.LocalDate.now(java.time.ZoneOffset.UTC);
         r.setAgeBand(ChannelPortfolioRules.ageBand(user.getBirthDate(), today));
-        r.setAdultConfirmed(ChannelPortfolioRules.confirmedAdult(user.getBirthDate(), today));
+        // 예전 필드명 유지: 이제 '국가 정책상 캐스팅 제안 수신 가능'을 뜻한다(성인 또는 보호자 확인된 미성년자).
+        r.setAdultConfirmed(minorPolicy.status(user).offersAllowed());
         r.setBirthDateSet(user.getBirthDate() != null);
         r.setMaxVideos(ChannelPortfolioRules.MAX_CHANNEL_VIDEOS);
         return r;
@@ -238,6 +245,7 @@ public class MyChannelService {
 
         out.setResidenceCountry(user.getResidenceCountry());
         out.setAgeBand(ChannelPortfolioRules.ageBand(user.getBirthDate(), java.time.LocalDate.now(java.time.ZoneOffset.UTC)));
+        out.setGender(user.getGender());
         out.setLanguages(user.getLanguages() == null ? List.of() : Arrays.asList(user.getLanguages()));
         out.setTalents(trimToNull(user.getTalents()));
         out.setCareers(careers.publicFor(userId));
@@ -328,13 +336,10 @@ public class MyChannelService {
                     ? t.substring(0, ChannelPortfolioRules.TALENTS_MAX) : t);
         }
         if (req.getTalentSearchVisible() != null) {
-            user.setTalentSearchVisible(req.getTalentSearchVisible());
+            privacySettings.applySearchVisible(user, req.getTalentSearchVisible());
         }
         if (req.getCastingOffersEnabled() != null) {
-            if (Boolean.TRUE.equals(req.getCastingOffersEnabled())) {
-                castingEligibility.requireCanEnable(user);
-            }
-            user.setCastingOffersEnabled(req.getCastingOffersEnabled());
+            privacySettings.applyOffers(user, req.getCastingOffersEnabled());
         }
         user.setLastActiveAt(Instant.now());
 

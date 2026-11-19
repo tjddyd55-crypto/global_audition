@@ -37,3 +37,28 @@ describe('buildApplicantSignupPayload', () => {
     expect(payload.role).toBe('APPLICANT')
   })
 })
+
+describe('buildApplicantSignupPayload consents', () => {
+  it('sends birth date, gender and each consent separately (no guardian consent from the minor)', () => {
+    const { buildApplicantSignupPayload } = jest.requireActual('../buildApplicantSignupPayload')
+    const body = buildApplicantSignupPayload({
+      email: 'a@b.c',
+      password: 'secret1',
+      nickname: 'kid',
+      countryCode: 'kr',
+      birthDate: ' 2012-01-02 ',
+      gender: 'FEMALE',
+      consents: { terms: true, privacyCollection: true, privacyDisclosure: true, marketing: false },
+    })
+    expect(body).toMatchObject({
+      countryCode: 'KR',
+      birthDate: '2012-01-02',
+      gender: 'FEMALE',
+      agreeTerms: true,
+      agreePrivacyCollection: true,
+      agreePrivacyDisclosure: true,
+      agreeMarketing: false,
+    })
+    expect(body).not.toHaveProperty('agreeGuardian')
+  })
+})

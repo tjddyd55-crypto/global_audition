@@ -1,4 +1,5 @@
 import type { SignupRequest } from '@/shared/api/auth'
+import { signupConsentBody, type SignupConsentState } from '../privacy/model'
 
 export type AgencySignupFormFields = {
   email: string
@@ -19,6 +20,8 @@ export type AgencySignupFormFields = {
   businessAddress?: string | null
   establishedYear?: number | null
   businessLicenseDocumentUrl?: string | null
+  /** 약관·개인정보 수집 동의(필수). 기획사는 공개 범위 안내 동의 대상이 아니다. */
+  consents?: SignupConsentState
 }
 
 function trimOrUndefined(value?: string | null): string | undefined {
@@ -48,5 +51,6 @@ export function buildAgencySignupPayload(fields: AgencySignupFormFields): Signup
     businessAddress: trimOrUndefined(fields.businessAddress),
     establishedYear: fields.establishedYear ?? undefined,
     businessLicenseDocumentUrl: trimOrUndefined(fields.businessLicenseDocumentUrl),
+    ...(fields.consents ? signupConsentBody(fields.consents) : {}),
   }
 }

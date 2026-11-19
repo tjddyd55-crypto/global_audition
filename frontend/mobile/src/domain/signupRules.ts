@@ -35,6 +35,12 @@ export type SignupDraft = {
   contactPhone?: string
   businessCity?: string
   timezone?: string
+  birthDate?: string
+  gender?: string
+  agreeTerms?: boolean
+  agreePrivacyCollection?: boolean
+  agreePrivacyDisclosure?: boolean
+  agreeMarketing?: boolean
 }
 
 export function validateSignupDraft(input: SignupDraft): string | null {

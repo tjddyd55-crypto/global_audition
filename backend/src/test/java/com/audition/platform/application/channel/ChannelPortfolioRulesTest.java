@@ -42,10 +42,9 @@ class ChannelPortfolioRulesTest {
         assertEquals("18_19", ChannelPortfolioRules.ageBand(LocalDate.of(2008, 11, 19), TODAY));
         assertEquals("20_24", ChannelPortfolioRules.ageBand(LocalDate.of(2003, 5, 1), TODAY));
         assertEquals("40_PLUS", ChannelPortfolioRules.ageBand(LocalDate.of(1980, 5, 1), TODAY));
-        assertFalse(ChannelPortfolioRules.confirmedAdult(null, TODAY), "생년월일 없으면 성인으로 보지 않는다");
-        assertFalse(ChannelPortfolioRules.confirmedAdult(LocalDate.of(2008, 11, 20), TODAY));
-        assertTrue(ChannelPortfolioRules.confirmedAdult(LocalDate.of(2008, 11, 19), TODAY));
-        assertTrue(ChannelPortfolioRules.minor(LocalDate.of(2012, 1, 1), TODAY));
+        assertNull(ChannelPortfolioRules.age(null, TODAY), "생년월일 없으면 나이 미확인");
+        assertEquals(17, ChannelPortfolioRules.age(LocalDate.of(2008, 11, 20), TODAY));
+        assertEquals(18, ChannelPortfolioRules.age(LocalDate.of(2008, 11, 19), TODAY));
     }
 
     @Test

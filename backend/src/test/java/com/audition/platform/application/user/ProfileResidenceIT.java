@@ -124,7 +124,7 @@ class ProfileResidenceIT {
     private String signup() throws Exception {
         String nickname = "pr" + UUID.randomUUID().toString().replace("-", "").substring(0, 8);
         String created = mvc.perform(post("/api/auth/signup").contentType(APPLICATION_JSON)
-                        .content("{\"email\":\"" + nickname + "@profile.residence.test\",\"password\":\"Localtest1!\","
+                        .content("{\"email\":\"" + nickname + "@profile.residence.test\",\"password\":\"Localtest1!\",\"agreeTerms\":true,\"agreePrivacyCollection\":true,\"agreePrivacyDisclosure\":true,\"birthDate\":\"1995-05-05\","
                                 + "\"role\":\"APPLICANT\",\"nickname\":\"" + nickname + "\",\"countryCode\":\"MN\","
                                 + "\"timezone\":\"Asia/Ulaanbaatar\"}"))
                 .andExpect(status().isOk())

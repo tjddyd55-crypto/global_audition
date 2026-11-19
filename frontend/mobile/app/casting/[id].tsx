@@ -4,7 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router'
 import { Pressable, StyleSheet, Switch, Text, TextInput, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { apiErrorCodeOf, castingApi } from '../../src/api/endpoints'
-import { DECLINE_REASONS, REPORT_REASONS, daysLeft, isOpenOffer } from '../../../web/src/shared/casting/model'
+import { DECLINE_REASONS, REPORT_REASONS, daysLeft, displayStatus, isOpenOffer } from '../../../web/src/shared/casting/model'
 import { useOfferTranslation } from '../../src/features/casting/useOfferTranslation'
 import { Button } from '../../src/ui/Button'
 import { ConfirmDialog } from '../../src/ui/ConfirmDialog'
@@ -65,7 +65,7 @@ export default function CastingDetailScreen() {
       {o ? (
         <View style={styles.gap}>
           <View style={styles.row}>
-            <Text style={styles.pill}>{label('status', o.status)}</Text>
+            <Text style={styles.pill}>{label('status', displayStatus(o))}</Text>
             <Text style={[styles.meta, styles.flex]} numberOfLines={2}>
               {t('casting.from')}: {o.agency?.name ?? '—'}
               {o.agencyBlocked ? ` · ${t('casting.agencyBlockedBadge')}` : ''}

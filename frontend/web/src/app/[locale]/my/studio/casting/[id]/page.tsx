@@ -6,7 +6,7 @@ import { useParams } from 'next/navigation'
 import { useState } from 'react'
 import { Link } from '@/i18n.config'
 import { myCastingApi } from '@/shared/api/casting'
-import { DECLINE_REASONS, REPORT_REASONS, isOpenOffer } from '@/shared/casting/model'
+import { DECLINE_REASONS, REPORT_REASONS, displayStatus, isOpenOffer } from '@/shared/casting/model'
 import { apiErrorCode } from '@/shared/channel/apiErrorCode'
 import { OfferFacts, OfferStatusBadge } from '@/components/casting/OfferFacts'
 import { TEXT_SUB } from '@/shared/ui/specClasses'
@@ -65,7 +65,7 @@ export default function StudioCastingDetailPage() {
       {o ? (
         <>
           <div className="flex flex-wrap items-center gap-2 text-sm text-neutral-700">
-            <OfferStatusBadge status={o.status} />
+            <OfferStatusBadge status={displayStatus(o)} />
             <span className="min-w-0 break-words">
               {t('from')}: <strong>{o.agency?.name ?? '—'}</strong>
             </span>

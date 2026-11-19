@@ -70,6 +70,10 @@ public class User {
     @Column(name = "birth_date")
     private LocalDate birthDate;
 
+    /** FEMALE | MALE | NON_BINARY | UNDISCLOSED (선택). 공개는 channel_shown_fields GENDER. */
+    @Column(name = "gender", columnDefinition = "TEXT")
+    private String gender;
+
     /** 지원서와 동일 코드: KR | MN | JP | KH | UZ | OTHER */
     @Column(columnDefinition = "TEXT")
     private String nationality;
@@ -219,6 +223,8 @@ public class User {
 
     public String getProfileImageUrl() { return profileImageUrl; }
     public void setProfileImageUrl(String profileImageUrl) { this.profileImageUrl = profileImageUrl; }
+    public String getGender() { return gender; }
+    public void setGender(String gender) { this.gender = gender; }
     public String getCountryCode() { return countryCode; }
     public void setCountryCode(String countryCode) { this.countryCode = countryCode; }
     public String getTimezone() { return timezone; }

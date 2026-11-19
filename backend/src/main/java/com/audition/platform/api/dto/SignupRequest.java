@@ -234,4 +234,37 @@ public class SignupRequest {
     public void setBusinessLicenseDocumentUrl(String businessLicenseDocumentUrl) {
         this.businessLicenseDocumentUrl = businessLicenseDocumentUrl;
     }
+
+    /** 생년월일(YYYY-MM-DD). 지원자 가입 필수(국가별 미성년자 정책 판정). 공개 응답에 내보내지 않는다. */
+    @Size(max = 10)
+    private String birthDate;
+
+    /** 성별(선택): FEMALE | MALE | NON_BINARY | UNDISCLOSED. 공개는 회원이 따로 켠다. */
+    @Size(max = 20)
+    private String gender;
+
+    /** 서비스 이용약관(필수). */
+    private Boolean agreeTerms;
+
+    /** 개인정보 수집·이용(필수). */
+    private Boolean agreePrivacyCollection;
+
+    /** 개인정보 공개 범위 안내(지원자 필수). 실제 공개 항목은 회원이 설정에서 고른다. */
+    private Boolean agreePrivacyDisclosure;
+
+    /** 마케팅 수신(선택). */
+    private Boolean agreeMarketing;
+
+    public String getBirthDate() { return birthDate; }
+    public void setBirthDate(String birthDate) { this.birthDate = birthDate; }
+    public String getGender() { return gender; }
+    public void setGender(String gender) { this.gender = gender; }
+    public Boolean getAgreeTerms() { return agreeTerms; }
+    public void setAgreeTerms(Boolean agreeTerms) { this.agreeTerms = agreeTerms; }
+    public Boolean getAgreePrivacyCollection() { return agreePrivacyCollection; }
+    public void setAgreePrivacyCollection(Boolean agreePrivacyCollection) { this.agreePrivacyCollection = agreePrivacyCollection; }
+    public Boolean getAgreePrivacyDisclosure() { return agreePrivacyDisclosure; }
+    public void setAgreePrivacyDisclosure(Boolean agreePrivacyDisclosure) { this.agreePrivacyDisclosure = agreePrivacyDisclosure; }
+    public Boolean getAgreeMarketing() { return agreeMarketing; }
+    public void setAgreeMarketing(Boolean agreeMarketing) { this.agreeMarketing = agreeMarketing; }
 }

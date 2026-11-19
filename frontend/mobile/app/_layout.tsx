@@ -80,6 +80,7 @@ function LocalizedStack() {
         <Stack.Screen name="payments/cancel" />
         <Stack.Screen name="notifications" />
         <Stack.Screen name="studio/channel" />
+        <Stack.Screen name="privacy" />
         <Stack.Screen name="web" />
       </Stack>
     </>

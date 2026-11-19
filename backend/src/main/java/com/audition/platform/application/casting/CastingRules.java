@@ -76,6 +76,14 @@ public final class CastingRules {
     }
 
     public static CleanOffer clean(OfferInput in, LocalDate today) {
+        return clean(in, today, ZoneOffset.UTC);
+    }
+
+    /**
+     * 마감일은 발송 기획사 시간대의 그날 23:59:59 까지다(시간대 미설정이면 UTC).
+     * 저장·비교는 항상 절대 시각(Instant)으로 하므로 서버·클라이언트 시간대 차이와 무관하다.
+     */
+    public static CleanOffer clean(OfferInput in, LocalDate today, java.time.ZoneId zone) {
         if (in == null || in.talentUserId() == null) {
             throw bad("OFFER_TALENT_REQUIRED");
         }
@@ -110,7 +118,7 @@ public final class CastingRules {
         if (deadline.isBefore(today.plusDays(MIN_DEADLINE_DAYS)) || deadline.isAfter(today.plusDays(MAX_DEADLINE_DAYS))) {
             throw bad("OFFER_DEADLINE_INVALID");
         }
-        Instant expires = deadline.plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant().minusSeconds(1);
+        Instant expires = deadline.plusDays(1).atStartOfDay(zone == null ? ZoneOffset.UTC : zone).toInstant().minusSeconds(1);
         return new CleanOffer(in.talentUserId(), in.branchId(), title, project, field, message, country,
                 text(in.workLocation(), 120), text(in.scheduleText(), 200), comp, text(in.compensationNote(), 200),
                 in.auditionId(), expires, Boolean.TRUE.equals(in.contactRequested()), locale(in.sourceLocale()));
@@ -163,5 +171,47 @@ public final class CastingRules {
 
     static ResponseStatusException bad(String code) {
         return new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, code);
+    }
+
+    // ───── 미성년자 보호: 제안 본문에 외부 연락 수단을 넣지 않는다 ─────
+    private static final java.util.regex.Pattern URL = java.util.regex.Pattern.compile(
+            "(?i)(https?://|www\\.|\\b[a-z0-9-]+\\.(com|net|org|kr|io|me|ly|gg|co|app|link|mn|kh|uz|jp)\\b|t\\.me/|wa\\.me/|kakao|instagram\\.com|telegram)");
+    private static final java.util.regex.Pattern EMAIL = java.util.regex.Pattern.compile(
+            "(?i)[a-z0-9._%+-]+\\s*(@|\\[at\\]|\\(at\\))\\s*[a-z0-9.-]+\\.[a-z]{2,}");
+    private static final java.util.regex.Pattern PHONE = java.util.regex.Pattern.compile(
+            "(\\+?\\d[\\d\\s().-]{7,}\\d)");
+
+    /** URL·이메일·전화번호처럼 보이는 문자열이 있으면 true. */
+    public static boolean containsContact(String text) {
+        if (text == null || text.isBlank()) {
+            return false;
+        }
+        if (URL.matcher(text).find() || EMAIL.matcher(text).find()) {
+            return true;
+        }
+        java.util.regex.Matcher m = PHONE.matcher(text);
+        while (m.find()) {
+            long digits = m.group(1).chars().filter(Character::isDigit).count();
+            if (digits >= 9) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean containsContact(CleanOffer c) {
+        for (String t : new String[]{c.title(), c.message(), c.workLocation(), c.scheduleText(), c.compensationNote()}) {
+            if (containsContact(t)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** 미성년자에게는 연락처 공유 요청을 붙이지 않는다. */
+    public static CleanOffer withoutContactRequest(CleanOffer c) {
+        return new CleanOffer(c.talentUserId(), c.branchId(), c.title(), c.projectType(), c.roleField(), c.message(),
+                c.workCountry(), c.workLocation(), c.scheduleText(), c.compensationType(), c.compensationNote(),
+                c.auditionId(), c.expiresAt(), false, c.sourceLocale());
     }
 }

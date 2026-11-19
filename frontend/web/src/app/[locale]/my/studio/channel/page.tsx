@@ -29,11 +29,13 @@ const FIELD_LABEL: Record<ProfileShownField, string> = {
   CAREER: 'fieldCareer',
   ACTIVITY: 'fieldActivity',
   SNS: 'fieldSns',
+  GENDER: 'fieldGender',
 }
 
 const ERROR_KEY: Record<string, string> = {
   CASTING_BIRTH_DATE_REQUIRED: 'castingNeedsBirthDate',
   CASTING_MINOR_RESTRICTED: 'castingMinor',
+  CASTING_GUARDIAN_REQUIRED: 'castingMinor',
 }
 
 export default function StudioChannelPage() {
@@ -130,6 +132,7 @@ export default function StudioChannelPage() {
     CAREER: data.careerText ?? '',
     ACTIVITY: (data.activityFields ?? []).join(', '),
     SNS: (data.snsLinks ?? []).map((row) => `${row.platform} ${row.url}`).join(', '),
+    GENDER: '',
   }
 
   return (

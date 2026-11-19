@@ -11,6 +11,7 @@ const LINKS = [
   { href: '/my/studio', key: 'dashboard' },
   { href: '/my/studio/profile', key: 'profile' },
   { href: '/my/studio/channel', key: 'channel' },
+  { href: '/my/studio/privacy', key: 'privacy' },
   { href: '/my/studio/content', key: 'content' },
   { href: '/my/studio/applications', key: 'applications' },
   { href: '/my/studio/casting', key: 'castingOffers' },

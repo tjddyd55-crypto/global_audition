@@ -43,9 +43,10 @@ public class AgencyCastingController {
                                            @RequestParam(required = false) Boolean acceptsOffers,
                                            @RequestParam(required = false) String sort,
                                            @RequestParam(required = false) Integer limit,
-                                           @RequestParam(required = false) Integer offset) {
+                                           @RequestParam(required = false) Integer offset,
+                                           @RequestParam(required = false) String gender) {
         return talents.search(new TalentSearchService.Filter(q, nationality, residence, ageBand, field, language,
-                hasCareer, activeWithinDays, acceptsOffers, sort, limit, offset));
+                hasCareer, activeWithinDays, acceptsOffers, sort, limit, offset, gender));
     }
 
     public record SaveBody(String group, String memo) {

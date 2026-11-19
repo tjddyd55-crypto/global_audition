@@ -4,6 +4,9 @@ import com.audition.platform.api.dto.AuthMeDataDto;
 import com.audition.platform.api.dto.AuthResponse;
 import com.audition.platform.api.dto.LoginRequest;
 import com.audition.platform.api.dto.SignupRequest;
+import com.audition.platform.application.consent.ConsentService;
+import com.audition.platform.application.consent.MinorPolicyService;
+import com.audition.platform.application.consent.ProfileCodes;
 import com.audition.platform.application.me.MeApiMapping;
 import com.audition.platform.application.credit.CreditService;
 import com.audition.platform.application.org.AgencySignupProfile;
@@ -22,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
@@ -38,6 +42,8 @@ public class AuthService {
     private final CreditService creditService;
     private final AgencySignupService agencySignupService;
     private final ApplicantSignupProfileService applicantSignupProfileService;
+    private final ConsentService consentService;
+    private final MinorPolicyService minorPolicyService;
 
     public AuthService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
@@ -46,7 +52,11 @@ public class AuthService {
                        AuthRecoveryService authRecoveryService,
                        CreditService creditService,
                        AgencySignupService agencySignupService,
-                       ApplicantSignupProfileService applicantSignupProfileService) {
+                       ApplicantSignupProfileService applicantSignupProfileService,
+                       ConsentService consentService,
+                       MinorPolicyService minorPolicyService) {
+        this.consentService = consentService;
+        this.minorPolicyService = minorPolicyService;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
@@ -65,6 +75,17 @@ public class AuthService {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Role must be APPLICANT or AGENCY");
         }
         agencySignupService.requireAgencyCountry(requested, req.getCountryCode());
+        boolean applicant = "APPLICANT".equals(requested);
+        ConsentService.SignupConsents signupConsents = new ConsentService.SignupConsents(
+                Boolean.TRUE.equals(req.getAgreeTerms()), Boolean.TRUE.equals(req.getAgreePrivacyCollection()),
+                Boolean.TRUE.equals(req.getAgreePrivacyDisclosure()), Boolean.TRUE.equals(req.getAgreeMarketing()));
+        ConsentService.requireSignup(signupConsents, applicant);
+        LocalDate birthDate = ProfileCodes.birthDate(req.getBirthDate());
+        if (applicant && birthDate == null) {
+            // 국가별 미성년자 정책 판정에 필요하다. 미성년자라는 이유로 가입을 막지는 않는다.
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "BIRTH_DATE_REQUIRED");
+        }
+        String gender = ProfileCodes.gender(req.getGender());
         if (userRepository.existsByEmail(email)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already registered");
         }
@@ -83,7 +104,15 @@ public class AuthService {
             user.setName(req.getName().trim());
         }
         applicantSignupProfileService.apply(user, requested, req.getCountryCode(), req.getTimezone());
+        user.setBirthDate(birthDate);
+        if (gender != null && !gender.isEmpty()) {
+            user.setGender(gender);
+        }
+        // 신규 회원: 인재 검색 노출·캐스팅 제안 수신은 기본 OFF(엔티티 기본값). 회원이 설정에서 켠다.
         user = userRepository.save(user);
+        // 동의 기록은 JDBC 로 쓰므로 회원 행을 먼저 반영한다(FK).
+        userRepository.flush();
+        consentService.recordSignup(user.getId(), signupConsents);
         agencySignupService.openApplication(user, requested, AgencySignupProfile.fromSignup(
                 req.getCountryCode(),
                 req.getCompanyName(),
@@ -104,6 +133,8 @@ public class AuthService {
         String token = jwtService.createToken(user.getId(), user.getEmail(), user.getRole());
         AuthResponse res = authResponse(token, user);
         res.setRecoveryCode(recoveryCode);
+        MinorPolicyService.Status minor = applicant ? minorPolicyService.status(user) : null;
+        res.setGuardianRequired(minor != null && minor.guardianLegallyRequired());
         return res;
     }
 

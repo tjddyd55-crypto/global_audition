@@ -20,6 +20,8 @@ export type AuthResponse = {
   profileImageUrl?: string | null
   /** 회원가입·재발급 응답에만 한 번. 로그인은 포함하지 않는다. */
   recoveryCode?: string | null
+  /** 가입 응답: 국가 기준상 보호자 확인이 필요한 나이. */
+  guardianRequired?: boolean
 }
 
 export type AuthMe = {

@@ -16,8 +16,9 @@ describe('channel shown fields', () => {
       'CAREER',
       'ACTIVITY',
       'SNS',
+      'GENDER',
     ])
-    for (const privateByDefault of ['NAME', 'CAREER', 'ACTIVITY', 'RESIDENCE', 'AGE', 'LANGUAGES', 'TALENTS']) {
+    for (const privateByDefault of ['NAME', 'CAREER', 'ACTIVITY', 'RESIDENCE', 'AGE', 'LANGUAGES', 'TALENTS', 'GENDER']) {
       expect(LEGACY_PUBLIC_FIELDS).not.toContain(privateByDefault)
     }
   })

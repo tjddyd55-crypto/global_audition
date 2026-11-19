@@ -58,6 +58,12 @@ export type CastingOffer = {
   contact: { email: string | null; phone: string | null } | null
   history: CastingEvent[]
   agencyBlocked: boolean
+  /** 서버 시각 기준 마감 경과. DB 상태가 아직 SENT/READ 여도 true 일 수 있다. */
+  expired: boolean
+  /** 서버가 판정한 수락·거절 가능 여부. 예전 응답에는 없다(null). */
+  respondable: boolean | null
+  /** serverNow - 수신 시각(ms). 기기 시계가 틀려도 마감 판정이 서버 시각을 따르게 한다. */
+  clockSkewMs: number
 }
 
 export type OfferDraft = {
@@ -121,13 +127,39 @@ export function parseOffer(raw: unknown): CastingOffer {
         }))
       : [],
     agencyBlocked: r.agencyBlocked === true,
+    expired: r.expired === true,
+    respondable: typeof r.respondable === 'boolean' ? r.respondable : null,
+    clockSkewMs: skew(r.serverNow),
   }
 }
 
-export function isOpenOffer(o: Pick<CastingOffer, 'status' | 'expiresAt'>, now: number = Date.now()): boolean {
+function skew(serverNow: unknown): number {
+  if (typeof serverNow !== 'string') return 0
+  const t = Date.parse(serverNow)
+  return Number.isNaN(t) ? 0 : t - Date.now()
+}
+
+/**
+ * 수락·거절 가능 여부. 서버 판정(respondable/expired)을 먼저 따르고, 화면을 열어 둔 사이 마감이 지나면
+ * 서버 시각(clockSkewMs 보정) 기준으로 바로 닫는다.
+ */
+export function isOpenOffer(
+  o: Pick<CastingOffer, 'status' | 'expiresAt'> & Partial<Pick<CastingOffer, 'expired' | 'respondable' | 'clockSkewMs'>>,
+  now: number = Date.now(),
+): boolean {
   if (!OPEN_STATUSES.includes(o.status)) return false
+  if (o.expired === true || o.respondable === false) return false
   const exp = o.expiresAt ? Date.parse(o.expiresAt) : NaN
-  return Number.isNaN(exp) || exp > now
+  return Number.isNaN(exp) || exp > now + (o.clockSkewMs ?? 0)
+}
+
+/** 목록·상세 배지용 상태. 마감이 지난 열린 제안은 EXPIRED 로 보여준다. */
+export function displayStatus(
+  o: Pick<CastingOffer, 'status' | 'expiresAt'> & Partial<Pick<CastingOffer, 'expired' | 'respondable' | 'clockSkewMs'>>,
+  now: number = Date.now(),
+): string {
+  if (OPEN_STATUSES.includes(o.status) && !isOpenOffer(o, now)) return 'EXPIRED'
+  return o.status
 }
 
 /** 마감까지 남은 일수(올림). 지났으면 0. */

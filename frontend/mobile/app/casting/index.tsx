@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { castingApi } from '../../src/api/endpoints'
-import { daysLeft, isOpenOffer } from '../../../web/src/shared/casting/model'
+import { daysLeft, displayStatus, isOpenOffer } from '../../../web/src/shared/casting/model'
 import { Button } from '../../src/ui/Button'
 import { Screen } from '../../src/ui/Screen'
 import { colors, radius } from '../../src/theme/tokens'
@@ -38,7 +38,7 @@ export default function CastingInboxScreen() {
               <Text style={[styles.cardTitle, o.status === 'SENT' && styles.unread]} numberOfLines={2}>
                 {o.title}
               </Text>
-              <Text style={styles.pill}>{t(`casting.status.${o.status}`, { defaultValue: o.status })}</Text>
+              <Text style={styles.pill}>{t(`casting.status.${displayStatus(o)}`, { defaultValue: displayStatus(o) })}</Text>
             </View>
             <Text style={styles.meta} numberOfLines={1}>
               {o.agency?.name ?? '—'}
