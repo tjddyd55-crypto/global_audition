@@ -157,6 +157,9 @@ class MinorPolicyConsentIT {
         assertTrue(p.get("minor").get("applyAllowed").asBoolean());
         assertTrue(p.get("minor").get("offersAllowed").asBoolean());
         assertFalse(p.get("minor").get("contactSharingAllowed").asBoolean(), "미성년자 연락처 공유는 계속 차단");
+        for (String f : new String[]{"showAge", "showGender", "showNationality", "showResidence", "showBio", "showCareer", "showSns"}) {
+            assertFalse(p.get(f).asBoolean(), "신규 회원 선택 공개 기본 OFF: " + f);
+        }
         UUID teenId = UUID.fromString(teen.get("userId").asText());
         var ex = assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> paymentGuard.require(teenId));
         assertEquals("MINOR_PAYMENT_GUARDIAN_REQUIRED", ex.getReason(), "미성년자 유료 결제는 가입 동의와 별개로 보호자 확인 필요");

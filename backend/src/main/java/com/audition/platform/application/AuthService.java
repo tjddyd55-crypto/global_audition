@@ -110,6 +110,8 @@ public class AuthService {
         }
         applicantSignupProfileService.apply(user, requested, req.getCountryCode(), req.getTimezone());
         user.setBirthDate(birthDate);
+        // 신규 회원: 선택 공개 항목은 모두 비공개(기본 OFF)로 시작한다. 기존 회원의 예전 기본값은 건드리지 않는다.
+        user.setChannelShownFields(new String[0]);
         if (gender != null && !gender.isEmpty()) {
             user.setGender(gender);
         }
