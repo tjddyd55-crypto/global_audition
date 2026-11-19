@@ -93,6 +93,11 @@ export const adminMinorPolicyApi = {
     unwrapData((await apiClient.get<unknown>('/admin/minor-policy/summary')).data) as MinorPolicySummary,
   user: async (userId: string): Promise<AdminUserConsents> =>
     unwrapData((await apiClient.get<unknown>(`/admin/minor-policy/users/${encodeURIComponent(userId)}`)).data) as AdminUserConsents,
+  correctBirthDate: async (userId: string, birthDate: string, reason: string): Promise<{ before: string | null; after: string }> =>
+    unwrapData((await apiClient.post<unknown>(`/admin/minor-policy/users/${encodeURIComponent(userId)}/birth-date`, { birthDate, reason })).data) as {
+      before: string | null
+      after: string
+    },
   revokeGuardian: async (id: string): Promise<void> => {
     await apiClient.post(`/admin/minor-policy/guardians/${encodeURIComponent(id)}/revoke`)
   },

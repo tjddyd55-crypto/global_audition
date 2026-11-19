@@ -76,6 +76,11 @@ public class MinorPolicyService {
             return !minor || policy.minorContactSharingAllowed();
         }
 
+        /** 유료 결제(크레딧 구매 등): 미성년자는 보호자 확인이 있어야 한다. 가입 동의로 대신하지 않는다. */
+        public boolean paymentAllowed() {
+            return !minor || guardianConfirmed;
+        }
+
         public String offersBlockReason() {
             if (offersAllowed()) {
                 return null;

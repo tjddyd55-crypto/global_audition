@@ -123,9 +123,15 @@ public class PaymentService {
         return body;
     }
 
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.audition.platform.application.consent.MinorPaymentGuard minorPaymentGuard;
+
     @Transactional
     public Map<String, Object> createOrder(
             UUID userId, UUID packageId, String paymentCountry, String providerId, String methodCode, String idempotencyKey) {
+        if (minorPaymentGuard != null) {
+            minorPaymentGuard.require(userId);
+        }
         if (idempotencyKey != null && !idempotencyKey.isBlank()) {
             PaymentOrder existing = orders.findByUserIdAndIdempotencyKey(userId, idempotencyKey.trim()).orElse(null);
             if (existing != null) {

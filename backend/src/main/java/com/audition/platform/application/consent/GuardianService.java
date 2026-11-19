@@ -177,22 +177,31 @@ public class GuardianService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "GUARDIAN_NOT_CONFIRMED");
         }
         consents.insert(r.userId(), ConsentService.GUARDIAN, ConsentService.WITHDRAWN, ConsentService.SRC_GUARDIAN, r.id());
-        User u = users.findById(r.userId()).orElse(null);
-        if (u != null) {
-            MinorPolicyService.Status st = policies.status(u);
-            boolean changed = false;
-            if (u.isCastingOffersEnabled() && !st.offersAllowed()) {
-                u.setCastingOffersEnabled(false);
-                changed = true;
-            }
-            if (u.isTalentSearchVisible() && !st.searchAllowed()) {
-                u.setTalentSearchVisible(false);
-                changed = true;
-            }
-            if (changed) {
-                u.setUpdatedAt(Instant.now());
-                users.save(u);
-            }
+        reconcile(r.userId());
+    }
+
+    /**
+     * 생년월일·적용 국가·보호자 상태가 바뀐 뒤 다시 판정한다. 지금 허용되지 않는 검색 노출·제안 수신만 끈다(켜지는 않는다).
+     */
+    @Transactional
+    public void reconcile(UUID userId) {
+        User u = userId == null ? null : users.findById(userId).orElse(null);
+        if (u == null) {
+            return;
+        }
+        MinorPolicyService.Status st = policies.status(u);
+        boolean changed = false;
+        if (u.isCastingOffersEnabled() && !st.offersAllowed()) {
+            u.setCastingOffersEnabled(false);
+            changed = true;
+        }
+        if (u.isTalentSearchVisible() && !st.searchAllowed()) {
+            u.setTalentSearchVisible(false);
+            changed = true;
+        }
+        if (changed) {
+            u.setUpdatedAt(Instant.now());
+            users.save(u);
         }
     }
 

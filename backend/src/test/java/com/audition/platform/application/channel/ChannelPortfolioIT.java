@@ -87,7 +87,7 @@ class ChannelPortfolioIT {
         on.setCastingOffersEnabled(true);
         assertEquals("CASTING_BIRTH_DATE_REQUIRED",
                 assertThrows(ResponseStatusException.class, () -> channels.patchChannel(on)).getReason());
-        jdbc.update("UPDATE users SET birth_date = CURRENT_DATE - INTERVAL '15 years' WHERE id = ?", me);
+        jdbc.update("UPDATE users SET birth_date = CURRENT_DATE - INTERVAL '13 years' WHERE id = ?", me);
         assertEquals("CASTING_GUARDIAN_REQUIRED",
                 assertThrows(ResponseStatusException.class, () -> channels.patchChannel(on)).getReason(),
                 "미성년자는 차단이 아니라 보호자 확인이 필요하다");

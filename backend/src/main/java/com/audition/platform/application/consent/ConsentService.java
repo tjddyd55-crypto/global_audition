@@ -61,7 +61,8 @@ public class ConsentService {
 
     /** 가입 필수 동의 확인. 지원자는 공개 범위 안내 동의까지 필수, 기획사 신청은 약관·수집만 필수. */
     public static void requireSignup(SignupConsents c, boolean applicant) {
-        if (c == null || !c.terms() || !c.privacyCollection() || (applicant && !c.privacyDisclosure())) {
+        // 공개 범위 동의·마케팅은 선택. 선택 동의를 안 했다고 가입을 막지 않는다.
+        if (c == null || !c.terms() || !c.privacyCollection()) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "CONSENT_REQUIRED");
         }
     }

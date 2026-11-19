@@ -41,6 +41,9 @@ public class MeProfileService {
     private final ChannelRepository channelRepository;
     private final ApplicantSignupProfileService applicantSignupProfileService;
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.audition.platform.application.consent.GuardianService guardianService;
+
     public MeProfileService(
             UserRepository userRepository,
             UserNicknameService userNicknameService,
@@ -108,15 +111,23 @@ public class MeProfileService {
             UserChannelProfilePatchSupport.applyChannelLongBio(user, req.getBio());
         }
         if (req.getBirthDate() != null) {
+            // 생년월일은 한 번 저장하면 회원이 바꿀 수 없다(관리자 정정만). 기존 회원 중 생년월일이 없는 경우만 처음 입력 허용.
             String raw = req.getBirthDate().trim();
-            if (raw.isEmpty()) {
-                user.setBirthDate(null);
-            } else {
-                try {
-                    user.setBirthDate(LocalDate.parse(raw));
-                } catch (DateTimeParseException e) {
+            LocalDate next;
+            try {
+                next = raw.isEmpty() ? null : LocalDate.parse(raw);
+            } catch (DateTimeParseException e) {
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "생년월일 형식이 올바르지 않습니다.");
+            }
+            if (user.getBirthDate() != null) {
+                if (!user.getBirthDate().equals(next)) {
+                    throw new ResponseStatusException(HttpStatus.CONFLICT, "BIRTH_DATE_LOCKED");
+                }
+            } else if (next != null) {
+                if (next.isAfter(LocalDate.now()) || next.isBefore(LocalDate.now().minusYears(120))) {
                     throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "생년월일 형식이 올바르지 않습니다.");
                 }
+                user.setBirthDate(next);
             }
         }
         if (req.resolveNationalityInput() != null) {
@@ -149,7 +160,12 @@ public class MeProfileService {
         }
 
         user.setUpdatedAt(Instant.now());
-        return toResponse(userRepository.save(user));
+        User saved = userRepository.save(user);
+        if (guardianService != null) {
+            // 국적·거주국(적용 국가)이나 생년월일이 바뀌면 연령 정책을 다시 판정한다.
+            guardianService.reconcile(userId);
+        }
+        return toResponse(saved);
     }
 
     @Transactional

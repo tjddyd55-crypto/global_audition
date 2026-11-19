@@ -154,6 +154,8 @@ export const PRIVACY_ERROR_CODES = [
   'GUARDIAN_NOT_NEEDED',
   'GUARDIAN_ALREADY_CONFIRMED',
   'GENDER_INVALID',
+  'BIRTH_DATE_LOCKED',
+  'MINOR_PAYMENT_GUARDIAN_REQUIRED',
 ] as const
 
 export function privacyErrorCode(body: unknown): string | null {
@@ -182,7 +184,8 @@ export const EMPTY_SIGNUP_CONSENTS: SignupConsentState = {
 
 /** 필수 동의 누락 여부. 지원자는 공개 범위 안내까지 필수. 보호자 동의는 가입 화면에서 받지 않는다. */
 export function signupConsentMissing(c: SignupConsentState, applicant: boolean): boolean {
-  return !c.terms || !c.privacyCollection || (applicant && !c.privacyDisclosure)
+  void applicant // 공개 범위·마케팅은 선택. 선택 동의 미체크로 가입을 막지 않는다.
+  return !c.terms || !c.privacyCollection
 }
 
 export function signupConsentBody(c: SignupConsentState): Record<string, boolean> {

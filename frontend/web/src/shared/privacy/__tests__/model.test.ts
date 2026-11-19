@@ -30,7 +30,8 @@ describe('privacy model', () => {
 
   it('signup consents are separated and the minor never gives guardian consent', () => {
     const c = { terms: true, privacyCollection: true, privacyDisclosure: false, marketing: false }
-    expect(signupConsentMissing(c, true)).toBe(true)
+    expect(signupConsentMissing(c, true)).toBe(false) // 공개 범위 동의는 선택
+    expect(signupConsentMissing({ ...c, terms: false }, true)).toBe(true)
     expect(signupConsentMissing(c, false)).toBe(false)
     expect(Object.keys(signupConsentBody(c))).not.toContain('agreeGuardian')
   })
