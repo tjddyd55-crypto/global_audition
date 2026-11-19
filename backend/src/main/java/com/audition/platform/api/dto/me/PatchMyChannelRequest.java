@@ -62,7 +62,7 @@ public class PatchMyChannelRequest {
     private List<MeUserSnsLinkDto> snsLinks;
 
     /** 전송 시 공개 프로필 키를 이 목록으로 바꾼다. 빈 배열은 프로필 항목 비공개. */
-    @Size(max = 9)
+    @Size(max = 16) // ChannelShownFields.KEYS(13개) 전부 공개할 수 있어야 한다.
     private List<@Size(max = 32) String> shownFields;
 
     private String residenceCountry;
