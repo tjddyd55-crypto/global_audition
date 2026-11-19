@@ -39,9 +39,13 @@ export default function StudioNotificationsPage() {
             <div className="font-medium text-gray-900">{copy.title}</div>
             <p className={`mt-1 ${TEXT_SUB}`}>{copy.body}</p>
             <div className={`mt-2 ${TEXT_SUB}`}>
-              {notificationBadge(item, (key) => tNotice(key))}
-              {item.readAt ? ` · ${t('read')}` : ''}
-              {item.createdAt ? ` · ${new Date(item.createdAt).toLocaleString(locale)}` : ''}
+              {[
+                notificationBadge(item, (key) => tNotice(key)),
+                item.readAt ? t('read') : '',
+                item.createdAt ? new Date(item.createdAt).toLocaleString(locale) : '',
+              ]
+                .filter(Boolean)
+                .join(' · ')}
             </div>
             {href ? (
               <Link
