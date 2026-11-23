@@ -251,7 +251,11 @@
     "recruitCountries": "Qabul mamlakatlari",
     "recruitingNow": "Hozir qabul qilinmoqda",
     "seeAll": "Hammasi",
-    "recommendedBadge": "Tavsiya"
+    "recommendedBadge": "Tavsiya",
+    "brandName": "GLOBAL AUDITION",
+    "brandTagline": "Sizga mos kastinglarni toping va saqlang",
+    "dDay": "D-{n}",
+    "dDayToday": "D-Day"
   },
   "auditions": {
     "title": "Kastinglar",

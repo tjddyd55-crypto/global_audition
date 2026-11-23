@@ -251,7 +251,11 @@
     "recruitCountries": "ប្រទេសជ្រើសរើស",
     "recruitingNow": "កំពុងជ្រើសរើស",
     "seeAll": "មើលទាំងអស់",
-    "recommendedBadge": "ពិសេស"
+    "recommendedBadge": "ពិសេស",
+    "brandName": "GLOBAL AUDITION",
+    "brandTagline": "ការប្រឡងជម្រើសដែលសមនឹងអ្នក សូមស្វែងរក ហើយរក្សាទុក",
+    "dDay": "D-{n}",
+    "dDayToday": "D-Day"
   },
   "auditions": {
     "title": "ការប្រឡងជម្រើស",

@@ -1,104 +1,174 @@
+import { type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useRouter } from 'expo-router'
-import { StyleSheet, Text, View } from 'react-native'
-import { auditionApi, dashboardApi } from '../../src/api/endpoints'
+import { Pressable, StyleSheet, Text, View } from 'react-native'
+import { useTranslation } from 'react-i18next'
+import { auditionApi, auditionRecommendationsApi, publicPlatformApi } from '../../src/api/endpoints'
 import { queryKeys } from '../../src/api/queryKeys'
+import type { AuditionDto } from '../../src/api/types'
 import { useAuth } from '../../src/auth/AuthProvider'
+import type { PublicChannelRow } from '../../src/domain/channelCard'
+import { useAudienceCountry } from '../../src/domain/AudienceCountryProvider'
+import { HomeChannelCard } from '../../src/features/home/HomeChannelCard'
+import { scriptLineHeight } from '../../src/i18n/typography'
+import { AudienceFilter } from '../../src/ui/AudienceFilter'
 import { AuditionCard } from '../../src/ui/AuditionCard'
-import { Button } from '../../src/ui/Button'
 import { EmptyState, ErrorState } from '../../src/ui/EmptyState'
 import { Screen } from '../../src/ui/Screen'
-import { colors } from '../../src/theme/tokens'
-import { useTranslation } from 'react-i18next'
-import { AudienceFilter } from '../../src/ui/AudienceFilter'
-import { useAudienceCountry } from '../../src/domain/AudienceCountryProvider'
-import { getRuntimeLocale } from '../../src/i18n/runtime'
+import { colors, radius } from '../../src/theme/tokens'
+
+const HOME_LIMIT = 6
 
 export default function HomeScreen() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const router = useRouter()
-  const { isAuthenticated, session } = useAuth()
-  const locale = getRuntimeLocale()
   const { country } = useAudienceCountry()
-  const auditionsQuery = useQuery({
-    queryKey: queryKeys.auditionsOpen(country, locale),
+  const { isAuthenticated, session } = useAuth()
+
+  const recommended = useQuery({
+    queryKey: queryKeys.recommendations(country, HOME_LIMIT, session?.userId ?? null),
+    queryFn: () => auditionRecommendationsApi.list(country, HOME_LIMIT),
+  })
+  const closingSoon = useQuery({
+    queryKey: queryKeys.closingSoon(country, HOME_LIMIT),
+    queryFn: () => auditionRecommendationsApi.closingSoon(country, HOME_LIMIT),
+  })
+  const latest = useQuery({
+    queryKey: [...queryKeys.auditionsOpen(country, i18n.language), 'home-latest'],
     queryFn: () => auditionApi.listOpen(country),
   })
-  const dashQuery = useQuery({
-    queryKey: queryKeys.dashboard,
-    queryFn: dashboardApi.applicant,
-    enabled: isAuthenticated,
+  const channels = useQuery({
+    queryKey: ['home-channels', country],
+    queryFn: async () => {
+      const data = await publicPlatformApi.channels({
+        country: country === 'ALL' ? undefined : country,
+        sort: 'RECENT_ACTIVITY',
+        limit: String(HOME_LIMIT),
+        offset: '0',
+      })
+      return Array.isArray(data) ? (data as PublicChannelRow[]) : []
+    },
   })
 
+  const recItems = recommended.data?.items ?? []
+  const closingItems = closingSoon.data ?? []
+  const shownIds = new Set([...recItems.map((item) => item.audition.id), ...closingItems.map((row) => row.id)])
+  const latestItems = (latest.data ?? []).filter((row) => !shownIds.has(row.id)).slice(0, HOME_LIMIT)
+  const channelRows = (channels.data ?? []).filter((row) => row.userId).slice(0, HOME_LIMIT)
+  const failed = recommended.isError && closingSoon.isError && latest.isError
+  const recoTitle =
+    isAuthenticated && recommended.data?.personalized ? t('recommend.title') : t('recommend.guestTitle')
+
   return (
-    <Screen topInset={false} refreshing={auditionsQuery.isFetching} onRefresh={() => void auditionsQuery.refetch()}>
-      <View style={styles.hero}>
-        <Text style={styles.kicker}>{t('home.kicker')}</Text>
-        <Text style={styles.heroTitle}>{t('home.heroTitle')}</Text>
-        <Text style={styles.heroBody}>{t('home.heroBody')}</Text>
-        <View style={styles.heroActions}>
-          <Button label={t('home.browse')} onPress={() => router.push('/(tabs)/auditions')} />
-          <Button label={t('common.channels')} onPress={() => router.push('/(tabs)/channels')} />
-          <Button label={t('common.videos')} onPress={() => router.push('/videos')} />
-          <Button label={t('common.agencies')} onPress={() => router.push('/agencies')} />
-        </View>
+    <Screen
+      topInset={false}
+      refreshing={recommended.isRefetching || closingSoon.isRefetching || latest.isRefetching || channels.isRefetching}
+      onRefresh={() => {
+        void recommended.refetch()
+        void closingSoon.refetch()
+        void latest.refetch()
+        void channels.refetch()
+      }}
+    >
+      <View style={styles.banner} testID="home-brand-banner">
+        <Text style={styles.brand}>{t('home.brandName')}</Text>
+        <Text style={[styles.tagline, { lineHeight: scriptLineHeight(i18n.language, 14, 20) }]}>{t('home.brandTagline')}</Text>
       </View>
-
-      {isAuthenticated && dashQuery.data ? (
-        <View style={styles.stats}>
-          <Stat label={t('home.applied')} value={dashQuery.data.applied} />
-          <Stat label={t('home.reviewing')} value={dashQuery.data.reviewed} />
-          <Stat label={t('home.accepted')} value={dashQuery.data.accepted} />
-          <Stat label={t('home.rejected')} value={dashQuery.data.rejected} />
-        </View>
-      ) : null}
-
-      <Text style={styles.section}>{t('home.openAuditions')}</Text>
       <AudienceFilter />
-      {auditionsQuery.isError ? (
-        <ErrorState message={t('home.loadFailed')} onRetry={() => void auditionsQuery.refetch()} />
-      ) : null}
-      {(auditionsQuery.data ?? []).slice(0, 5).map((audition) => (
-        <View key={audition.id} style={styles.gap}>
-          <AuditionCard audition={audition} onPress={() => router.push(`/auditions/${audition.id}`)} />
-        </View>
-      ))}
-      {!auditionsQuery.isLoading && (auditionsQuery.data?.length ?? 0) === 0 ? (
-        <EmptyState title={t('auditions.empty')} body={t('home.emptyBody')} />
+      {failed ? <ErrorState message={t('errors.generic')} onRetry={() => void recommended.refetch()} /> : null}
+
+      <Section title={recoTitle} onSeeAll={() => router.push('/auditions')} seeAllLabel={t('home.seeAll')}>
+        {recommended.isError ? <ErrorState message={t('errors.generic')} onRetry={() => void recommended.refetch()} /> : null}
+        {recItems.length === 0 && !recommended.isPending ? <EmptyState title={t('auditions.empty')} /> : null}
+        {recItems.map((item) => (
+          <AuditionCard
+            key={item.audition.id}
+            audition={item.audition}
+            variant="home"
+            reasons={item.reasons}
+            eligibility={item.eligibility}
+            onPress={() => router.push(`/auditions/${item.audition.id}`)}
+          />
+        ))}
+      </Section>
+
+      {closingItems.length > 0 || closingSoon.isPending ? (
+        <Section title={t('recommend.closingSoonTitle')} onSeeAll={() => router.push('/auditions')} seeAllLabel={t('home.seeAll')}>
+          {closingItems.map((audition) => (
+            <AuditionCard
+              key={audition.id}
+              audition={audition}
+              variant="home"
+              onPress={() => router.push(`/auditions/${audition.id}`)}
+            />
+          ))}
+        </Section>
       ) : null}
 
-      {!isAuthenticated ? (
-        <View style={styles.authCue}>
-          <Text style={styles.meta}>{session?.nickname ?? t('home.loginCue')}</Text>
-          <Button label={t('common.login')} variant="secondary" onPress={() => router.push('/(auth)/login')} />
-        </View>
+      {channelRows.length > 0 || channels.isPending ? (
+        <Section title={t('recommend.channelsTitle')} onSeeAll={() => router.push('/channels')} seeAllLabel={t('home.seeAll')}>
+          {channelRows.map((row) => (
+            <HomeChannelCard key={row.userId} row={row} onOpen={() => router.push(`/channel/${row.userId}`)} />
+          ))}
+        </Section>
       ) : null}
+
+      <Section title={t('recommend.latestTitle')} onSeeAll={() => router.push('/auditions')} seeAllLabel={t('home.seeAll')}>
+        {latestItems.length === 0 && !latest.isPending ? <EmptyState title={t('auditions.empty')} /> : null}
+        {latestItems.map((audition: AuditionDto) => (
+          <AuditionCard
+            key={audition.id}
+            audition={audition}
+            variant="home"
+            onPress={() => router.push(`/auditions/${audition.id}`)}
+          />
+        ))}
+      </Section>
     </Screen>
   )
 }
 
-function Stat({ label, value }: { label: string; value: number }) {
+function Section({
+  title,
+  seeAllLabel,
+  onSeeAll,
+  children,
+}: {
+  title: string
+  seeAllLabel: string
+  onSeeAll: () => void
+  children: ReactNode
+}) {
+  const { i18n } = useTranslation()
   return (
-    <View style={styles.stat}>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
+    <View style={styles.section}>
+      <View style={styles.sectionHead}>
+        <Text style={[styles.sectionTitle, { lineHeight: scriptLineHeight(i18n.language, 18, 24) }]}>{title}</Text>
+        <Pressable onPress={onSeeAll} accessibilityRole="link" accessibilityLabel={seeAllLabel}>
+          <Text style={styles.seeAll}>{seeAllLabel}</Text>
+        </Pressable>
+      </View>
+      <View style={styles.sectionBody}>{children}</View>
     </View>
   )
 }
 
 const styles = StyleSheet.create({
-  // The home content sits directly on the screen; only individual audition cards have a card frame.
-  hero: { width: '100%', alignSelf: 'stretch', gap: 10, marginBottom: 24 },
-  heroActions: { width: '100%', alignSelf: 'stretch', gap: 12, marginTop: 6 },
-  kicker: { color: colors.purple, fontWeight: '800', letterSpacing: 0.6 },
-  heroTitle: { fontSize: 24, fontWeight: '800', color: colors.text, lineHeight: 32 },
-  heroBody: { fontSize: 14, color: colors.muted, lineHeight: 22 },
-  stats: { flexDirection: 'row', gap: 8, marginBottom: 20 },
-  stat: { flex: 1, backgroundColor: colors.surface, borderRadius: 10, padding: 10, borderWidth: 1, borderColor: colors.border },
-  statValue: { fontSize: 18, fontWeight: '800', color: colors.text },
-  statLabel: { fontSize: 11, color: colors.muted, marginTop: 2 },
-  section: { fontSize: 18, fontWeight: '700', marginBottom: 12, color: colors.text },
-  gap: { marginBottom: 12 },
-  authCue: { marginTop: 16, gap: 10 },
-  meta: { color: colors.muted, fontSize: 14 },
+  banner: {
+    backgroundColor: colors.heroStart,
+    borderRadius: radius.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    marginBottom: 12,
+    gap: 4,
+  },
+  brand: { fontSize: 20, fontWeight: '800', color: colors.purple, letterSpacing: 0.4 },
+  tagline: { fontSize: 14, color: colors.text },
+  section: { marginTop: 8, marginBottom: 16, gap: 10 },
+  sectionHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  sectionTitle: { flex: 1, fontSize: 18, fontWeight: '700', color: colors.text },
+  seeAll: { fontSize: 13, fontWeight: '600', color: colors.purple },
+  sectionBody: { gap: 12 },
 })

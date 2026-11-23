@@ -251,7 +251,11 @@
     "recruitCountries": "Recruiting countries",
     "recruitingNow": "Now recruiting",
     "seeAll": "See all",
-    "recommendedBadge": "Featured"
+    "recommendedBadge": "Featured",
+    "brandName": "GLOBAL AUDITION",
+    "brandTagline": "Find and save auditions that fit you",
+    "dDay": "D-{n}",
+    "dDayToday": "D-Day"
   },
   "auditions": {
     "title": "Auditions",
