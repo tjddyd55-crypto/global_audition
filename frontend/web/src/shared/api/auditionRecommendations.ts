@@ -25,7 +25,7 @@ function asRecord(value: unknown): Record<string, unknown> | null {
 function parseItem(raw: unknown): RecommendedAuditionItem | null {
   const row = asRecord(raw)
   if (!row) return null
-  const auditionRaw = row.audition ?? row
+  const auditionRaw = asRecord(row.audition) ?? row
   try {
     const audition = parseAuditionDto(auditionRaw)
     const reasons = Array.isArray(row.reasons) ? row.reasons.map(String) : []

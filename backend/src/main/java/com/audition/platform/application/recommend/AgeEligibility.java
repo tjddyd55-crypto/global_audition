@@ -57,9 +57,6 @@ public final class AgeEligibility {
     }
 
     public static Status evaluate(String[] qualifications, Integer ageYears) {
-        if (!mentionsAge(qualifications)) {
-            return Status.UNKNOWN;
-        }
         Range range = parse(qualifications);
         if (range.minInclusive() == null && range.maxInclusive() == null) {
             return Status.UNKNOWN;
