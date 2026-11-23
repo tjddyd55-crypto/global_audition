@@ -271,6 +271,13 @@ export function apiErrorCodeOf(e: unknown): string {
   return ''
 }
 
+export type NotificationSettings = {
+  savedDeadline: boolean
+  newMatch: boolean
+  results: boolean
+  offers: boolean
+}
+
 export const notificationApi = {
   list: async (): Promise<MeNotificationItem[]> => {
     const rows = unwrapData(await apiRequest<unknown>('/me/notifications'))
@@ -278,6 +285,10 @@ export const notificationApi = {
   },
   markRead: async (id: string): Promise<MeNotificationItem> =>
     unwrapData(await apiRequest<unknown>(`/me/notifications/${id}/read`, { method: 'POST' })) as MeNotificationItem,
+  settings: async (): Promise<NotificationSettings> =>
+    unwrapData(await apiRequest<unknown>('/me/notification-settings')) as NotificationSettings,
+  updateSettings: async (body: NotificationSettings): Promise<NotificationSettings> =>
+    unwrapData(await apiRequest<unknown>('/me/notification-settings', { method: 'PUT', body })) as NotificationSettings,
 }
 
 export const dashboardApi = {

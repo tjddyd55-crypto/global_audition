@@ -2,6 +2,8 @@ package com.audition.platform.application.me;
 
 import com.audition.platform.api.dto.me.MeNotificationItemResponse;
 import com.audition.platform.application.casting.UserNotificationService;
+import com.audition.platform.application.notifications.NotificationSettings;
+import com.audition.platform.application.notifications.NotificationSettingsService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,13 +36,16 @@ public class MeNotificationService {
     private final UserRepository userRepository;
     private final UserNotificationService userNotifications;
     private final ObjectMapper objectMapper;
+    private final NotificationSettingsService settings;
 
     public MeNotificationService(JdbcTemplate jdbcTemplate, UserRepository userRepository,
-                                 UserNotificationService userNotifications, ObjectMapper objectMapper) {
+                                 UserNotificationService userNotifications, ObjectMapper objectMapper,
+                                 NotificationSettingsService settings) {
         this.jdbcTemplate = jdbcTemplate;
         this.userRepository = userRepository;
         this.userNotifications = userNotifications;
         this.objectMapper = objectMapper;
+        this.settings = settings;
     }
 
     public List<MeNotificationItemResponse> listMine() {
@@ -87,6 +92,8 @@ public class MeNotificationService {
         for (UserNotificationService.Row row : userNotifications.listFor(userId, 100)) {
             merged.add(mapUserRow(row));
         }
+        NotificationSettings pref = settings.get(userId);
+        merged.removeIf(item -> !pref.allows(item.getType()));
         merged.sort(Comparator.comparing(MeNotificationItemResponse::getCreatedAt,
                 Comparator.nullsLast(Comparator.<Instant>naturalOrder())).reversed());
         return merged.size() > 100 ? new ArrayList<>(merged.subList(0, 100)) : merged;
@@ -109,6 +116,10 @@ public class MeNotificationService {
             JsonNode params = node.path("params");
             if (params.isObject()) {
                 item.setParams(objectMapper.convertValue(params, new TypeReference<Map<String, String>>() { }));
+                String auditionId = item.getParams() == null ? null : item.getParams().get("auditionId");
+                if (auditionId != null && !auditionId.isBlank()) {
+                    item.setAuditionId(auditionId);
+                }
             }
         } catch (Exception ignored) {
             // 손상된 payload 는 타입 코드만 보인다.
@@ -180,6 +191,10 @@ public class MeNotificationService {
         item.setTitleKey(NotificationPayloadText.text(payload, "titleKey"));
         item.setBodyKey(NotificationPayloadText.text(payload, "bodyKey"));
         item.setRoundId(rs.getString("round_id"));
+        String auditionId = item.getAuditionId();
+        if (auditionId != null && !auditionId.isBlank()) {
+            item.setLink("/auditions/" + auditionId);
+        }
         return item;
     }
 }
