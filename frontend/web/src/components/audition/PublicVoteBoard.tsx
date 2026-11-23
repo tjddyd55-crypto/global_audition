@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 import { auditionApi, type PublicVoteItem } from '@/shared/api/auditions'
@@ -73,16 +73,28 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback, shareRound,
     [auditionId, invalidate]
   )
 
+  // 연타·중복 클릭으로 요청이 겹치지 않게 한다(isPending 은 다음 렌더에서야 바뀐다).
+  const castInFlight = useRef(false)
   const castMutation = useMutation({
-    mutationFn: ({ applicationId }: { applicationId: string; name?: string }) =>
-      auditionApi.vote(auditionId, applicationId),
+    mutationFn: async ({ applicationId }: { applicationId: string; name?: string }) => {
+      if (castInFlight.current) throw new Error('VOTE_IN_FLIGHT')
+      castInFlight.current = true
+      try {
+        return await auditionApi.vote(auditionId, applicationId)
+      } finally {
+        castInFlight.current = false
+      }
+    },
     onSuccess: (res, vars) => {
       invalidate()
       toast.success(
         res.replaced ? t('changed') : vars.name ? ts('votedFor', { name: vars.name }) : t('castSuccess')
       )
     },
-    onError: () => toast.error(t('failed')),
+    onError: (e) => {
+      if ((e as Error)?.message === 'VOTE_IN_FLIGHT') return
+      toast.error(t('failed'))
+    },
   })
 
   const removeMutation = useMutation({
