@@ -2054,5 +2054,19 @@
     "saveAria": "Bu kastingni saqlash",
     "unsaveAria": "Saqlanganlardan olib tashlash",
     "deadline": "Muddat {date}"
+  },
+  "recommend": {
+    "title": "Siz uchun tavsiya",
+    "guestTitle": "Tavsiya etilgan kastinglar",
+    "closingSoonTitle": "Tez orada yopiladi",
+    "latestTitle": "Eng yangi kastinglar",
+    "channelsTitle": "Tavsiya etilgan isteʼdod kanallari",
+    "fieldMatch": "Qiziqish yoʻnalishingizga mos",
+    "countryResidence": "Yashash mamlakatingizda ishtirok etish mumkin",
+    "countryResidenceTarget": "Yashash mamlakatingizga moʻljallangan",
+    "countryNationality": "Fuqaroligingizga moʻljallangan",
+    "closingSoon": "Tez orada yopiladi",
+    "savedAffinity": "Saqlangan kastinglarga oʻxshash",
+    "emptyFallback": "Mos kasting topilmagani uchun eng yangi ochiq kastinglar koʻrsatilmoqda."
   }
 }
