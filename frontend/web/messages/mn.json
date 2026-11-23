@@ -2054,5 +2054,19 @@
     "saveAria": "Энэ аудишныг хадгалах",
     "unsaveAria": "Хадгалсанаас хасах",
     "deadline": "Дуусах {date}"
+  },
+  "recommend": {
+    "title": "Танд тохирох аудишн",
+    "guestTitle": "Санал болгох аудишн",
+    "closingSoonTitle": "Удахгүй хаагдах",
+    "latestTitle": "Шинэ аудишн",
+    "channelsTitle": "Санал болгох суваг",
+    "fieldMatch": "Таны чиглэлтэй таарна",
+    "countryResidence": "Оршин суугаа улсад оролцох боломжтой",
+    "countryResidenceTarget": "Оршин суугаа улсыг хамарна",
+    "countryNationality": "Таны харьяалалд зориулсан",
+    "closingSoon": "Удахгүй хаагдана",
+    "savedAffinity": "Хадгалсан аудишнтай төстэй",
+    "emptyFallback": "Тохирох зар байхгүй тул хамгийн шинэ нээлттэй аудишныг харуулж байна."
   }
 }

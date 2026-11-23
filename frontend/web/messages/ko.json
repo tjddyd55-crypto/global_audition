@@ -2054,5 +2054,19 @@
     "saveAria": "관심 오디션으로 저장",
     "unsaveAria": "관심 오디션에서 제거",
     "deadline": "마감 {date}"
+  },
+  "recommend": {
+    "title": "맞춤 오디션",
+    "guestTitle": "추천 오디션",
+    "closingSoonTitle": "마감 임박 오디션",
+    "latestTitle": "최신 오디션",
+    "channelsTitle": "추천 인재 채널",
+    "fieldMatch": "관심 분야와 일치",
+    "countryResidence": "거주 국가에서 지원 가능",
+    "countryResidenceTarget": "거주 국가 대상",
+    "countryNationality": "국적 대상 공고",
+    "closingSoon": "마감 임박",
+    "savedAffinity": "관심 공고와 비슷함",
+    "emptyFallback": "조건에 맞는 공고가 없어 최신 모집 공고를 보여 드립니다."
   }
 }

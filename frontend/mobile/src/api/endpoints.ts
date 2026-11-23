@@ -373,6 +373,52 @@ export const auditionSavesApi = {
   },
 }
 
+
+export type RecommendedAuditionItem = {
+  audition: AuditionDto
+  reasons: string[]
+  eligibility: 'ELIGIBLE' | 'INELIGIBLE' | 'UNKNOWN'
+  score: number
+}
+
+export type AuditionRecommendationPage = {
+  items: RecommendedAuditionItem[]
+  fallback: boolean
+  personalized: boolean
+}
+
+export const auditionRecommendationsApi = {
+  list: async (country?: string, limit = 6): Promise<AuditionRecommendationPage> => {
+    const data = await apiRequest<unknown>('/auditions/recommendations', {
+      query: { country: normalizeAudienceCountry(country), limit: String(limit) },
+    })
+    const body = data && typeof data === 'object' && !Array.isArray(data) ? (data as Record<string, unknown>) : {}
+    const list = Array.isArray(body.items) ? body.items : Array.isArray(data) ? data : []
+    const items: RecommendedAuditionItem[] = []
+    for (const raw of list) {
+      const row = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : null
+      if (!row) continue
+      const auditionRaw = (row.audition ?? row) as Record<string, unknown>
+      const eligibilityRaw = String(row.eligibility ?? 'UNKNOWN').toUpperCase()
+      items.push({
+        audition: parseAuditionDto(auditionRaw),
+        reasons: Array.isArray(row.reasons) ? row.reasons.map(String) : [],
+        eligibility: eligibilityRaw === 'ELIGIBLE' || eligibilityRaw === 'INELIGIBLE' ? eligibilityRaw : 'UNKNOWN',
+        score: Number(row.score ?? 0),
+      })
+    }
+    return { items, fallback: Boolean(body.fallback), personalized: Boolean(body.personalized) }
+  },
+  closingSoon: async (country?: string, limit = 6): Promise<AuditionDto[]> => {
+    const data = await apiRequest<unknown>('/auditions/closing-soon', {
+      query: { country: normalizeAudienceCountry(country), limit: String(limit) },
+      auth: false,
+    })
+    const rows = Array.isArray(data) ? data : []
+    return rows.map((row) => parseAuditionDto(row as Record<string, unknown>))
+  },
+}
+
 export function isAgencyRole(role: UserRole | string | null | undefined): boolean {
   return role === 'AGENCY' || role === 'ADMIN' || role === 'SUPER_ADMIN'
 }
