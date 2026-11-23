@@ -1,0 +1,47 @@
+﻿'use client'
+
+import { useQuery } from '@tanstack/react-query'
+import { useParams } from 'next/navigation'
+import { useLocale, useTranslations } from 'next-intl'
+import { auditionApi } from '@/shared/api/auditions'
+import { PublicVoteBoard } from '@/components/audition/PublicVoteBoard'
+
+type Props = { shareRound: number | null; shareCandidate: string | null }
+
+export function AuditionPublicVoteClient({ shareRound, shareCandidate }: Props) {
+  const params = useParams()
+  const t = useTranslations('common')
+  const locale = useLocale()
+  const auditionId = params.id as string
+
+  const { data: audition, isLoading, error } = useQuery({
+    queryKey: ['audition', auditionId, locale],
+    queryFn: () => auditionApi.getById(auditionId, locale),
+    enabled: !!auditionId,
+  })
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-xl">{t('loading')}</div>
+      </div>
+    )
+  }
+
+  if (error || !audition) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-xl text-red-600">{t('error')}</div>
+      </div>
+    )
+  }
+
+  return (
+    <PublicVoteBoard
+      auditionId={auditionId}
+      auditionTitleFallback={audition.title}
+      shareRound={shareRound}
+      shareCandidate={shareCandidate}
+    />
+  )
+}

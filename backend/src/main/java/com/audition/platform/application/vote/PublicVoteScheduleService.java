@@ -1,5 +1,6 @@
 package com.audition.platform.application.vote;
 
+import com.audition.platform.api.dto.MyVoteShareDto;
 import com.audition.platform.api.dto.StartVoteRequest;
 import com.audition.platform.api.dto.VoteScheduleDto;
 import com.audition.platform.application.round.AuditionManageAccess;
@@ -9,6 +10,7 @@ import com.audition.platform.domain.audition.Audition;
 import com.audition.platform.domain.audition.AuditionRepository;
 import com.audition.platform.domain.vote.AuditionVoteCandidate;
 import com.audition.platform.domain.vote.AuditionVoteCandidateRepository;
+import com.audition.platform.infra.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -129,6 +131,41 @@ public class PublicVoteScheduleService {
         auditionRepository.save(audition);
         List<UUID> ids = chosen.stream().map(Application::getId).toList();
         return toDto(audition, VoteWindow.phase(audition, now), ids);
+    }
+
+    /**
+     * 지원자 본인 공유 정보. 현재 시작된 회차 확정 명단에 있을 때만 candidate=true.
+     * 지원만 했거나 시작 전 확정이 없으면 공유 링크를 주지 않는다.
+     */
+    @Transactional(readOnly = true)
+    public MyVoteShareDto myVoteShare(UUID applicationId) {
+        UUID me = SecurityUtils.getCurrentUserId();
+        if (me == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
+        }
+        Application app = applicationRepository.findById(applicationId)
+                .filter(a -> me.equals(a.getApplicantId()))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "지원을 찾을 수 없습니다."));
+        MyVoteShareDto dto = new MyVoteShareDto();
+        Audition audition = auditionRepository.findById(app.getAuditionId()).orElse(null);
+        if (audition == null || audition.getVoteRoundNumber() == null) {
+            return dto;
+        }
+        int round = audition.getVoteRoundNumber();
+        VoteWindow.Phase phase = VoteWindow.phase(audition, clock.instant());
+        if (!VoteWindow.hasStarted(phase)
+                || !candidates.existsByAuditionIdAndRoundNumberAndApplicationId(audition.getId(), round, app.getId())) {
+            return dto;
+        }
+        dto.setCandidate(true);
+        dto.setAuditionId(audition.getId().toString());
+        dto.setAuditionTitle(audition.getTitle());
+        dto.setApplicationId(app.getId().toString());
+        dto.setRoundNumber(round);
+        dto.setVoteStatus(phase.name());
+        dto.setVoteStartAt(audition.getVoteStartAt());
+        dto.setVoteEndAt(audition.getVoteEndAt());
+        return dto;
     }
 
     private List<Application> resolveCandidates(Audition audition, int round, List<String> requested) {

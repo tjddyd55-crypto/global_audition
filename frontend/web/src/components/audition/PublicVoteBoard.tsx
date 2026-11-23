@@ -15,14 +15,21 @@ import { CARD_BASE, PAGE_CONTAINER, TEXT_SUB } from '@/shared/ui/specClasses'
 import { isAllCategoryName } from '@/shared/audition/allCategorySentinel'
 import { recruitFieldLabel } from '@/shared/audition/recruitFields'
 import { formatCount } from '@/shared/money/currency'
+import { VoteShareSheet } from '@/components/vote/VoteShareSheet'
+import { voteSharePath } from '@/shared/vote/voteShare'
 
 type Props = {
   auditionId: string
   auditionTitleFallback: string
+  /** 공유 링크에 고정된 회차 */
+  shareRound?: number | null
+  /** 공유 링크의 후보(지원 ID). 표시 순서만 바꾸고 순위는 그대로 */
+  shareCandidate?: string | null
 }
 
-export function PublicVoteBoard({ auditionId, auditionTitleFallback }: Props) {
+export function PublicVoteBoard({ auditionId, auditionTitleFallback, shareRound, shareCandidate }: Props) {
   const t = useTranslations('vote')
+  const ts = useTranslations('voteShare')
   const tField = useTranslations('recruitField')
   const locale = useLocale()
   const queryClient = useQueryClient()
@@ -30,13 +37,14 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback }: Props) {
   const accessToken = useAuthStore((s) => s.accessToken)
   const [category, setCategory] = useState<string | null>(null)
   const [playItem, setPlayItem] = useState<PublicVoteItem | null>(null)
+  const [shareItem, setShareItem] = useState<PublicVoteItem | null>(null)
   const allLabel = t('allCategories')
 
-  const qk = ['audition-votes', auditionId, category ?? allLabel] as const
+  const qk = ['audition-votes', auditionId, category ?? allLabel, shareRound ?? null, shareCandidate ?? null] as const
 
   const votesQuery = useQuery({
     queryKey: qk,
-    queryFn: () => auditionApi.listVotes(auditionId, category),
+    queryFn: () => auditionApi.listVotes(auditionId, category, { round: shareRound, candidate: shareCandidate }),
     enabled: !!auditionId,
   })
 
@@ -66,11 +74,13 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback }: Props) {
   )
 
   const castMutation = useMutation({
-    mutationFn: ({ applicationId }: { applicationId: string }) =>
+    mutationFn: ({ applicationId }: { applicationId: string; name?: string }) =>
       auditionApi.vote(auditionId, applicationId),
-    onSuccess: (res) => {
+    onSuccess: (res, vars) => {
       invalidate()
-      toast.success(res.replaced ? t('changed') : t('castSuccess'))
+      toast.success(
+        res.replaced ? t('changed') : vars.name ? ts('votedFor', { name: vars.name }) : t('castSuccess')
+      )
     },
     onError: () => toast.error(t('failed')),
   })
@@ -86,11 +96,15 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback }: Props) {
 
   const requireAuth = useCallback(() => {
     if (!accessToken) {
-      router.push(`/login?next=${encodeURIComponent(`/auditions/${auditionId}/vote`)}`)
+      // 로그인·가입 후 같은 후보 화면으로 돌아온다. 돌아와도 자동 투표는 하지 않는다.
+      const back = shareCandidate && shareRound
+        ? voteSharePath(auditionId, shareRound, shareCandidate)
+        : `/auditions/${auditionId}/vote`
+      router.push(`/login?next=${encodeURIComponent(back)}`)
       return false
     }
     return true
-  }, [accessToken, router, auditionId])
+  }, [accessToken, router, auditionId, shareCandidate, shareRound])
 
   const voteMutationBusy = castMutation.isPending || removeMutation.isPending
 
@@ -114,7 +128,8 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback }: Props) {
   const planOff = p && p.votingPlanEnabled === false
   const phase = p?.voteStatus
   const showClosedResults = Boolean(p && phase === 'CLOSED' && (p.items?.length ?? 0) > 0)
-  if (p && !p.votingEnabled && !showClosedResults) {
+  const shared = p?.sharedCandidate ?? null
+  if (p && !p.votingEnabled && !showClosedResults && !shared) {
     const message = planOff
       ? t('disabledRound')
       : phase === 'SCHEDULED'
@@ -142,6 +157,25 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback }: Props) {
   const title = audition?.title || auditionTitleFallback
   const canCast = Boolean(p?.votingEnabled)
   const subCopy = phase === 'CLOSED' ? t('closedResults') : t('cheerHint')
+  const linkRound = p?.roundNumber ?? 1
+  const shareUrlFor = (item: PublicVoteItem) =>
+    typeof window === 'undefined'
+      ? ''
+      : `${window.location.origin}/${locale}${voteSharePath(auditionId, linkRound, item.applicationId)}`
+  const statusLabel =
+    phase === 'OPEN' ? t('statusOpen') : phase === 'SCHEDULED' ? t('statusScheduled') : phase === 'CLOSED' ? t('statusClosed') : t('notStarted')
+  const windowNotice = canCast
+    ? null
+    : phase === 'SCHEDULED'
+      ? t('scheduled', { start: formatWhen(p?.voteStartAt) })
+      : phase === 'CLOSED'
+        ? t('closedResults')
+        : planOff
+          ? t('disabledRound')
+          : t('notStarted')
+  const sharedName = shared ? shared.userName || t('nameUnset') : ''
+  const sharedThumb = shared ? resolveVideoThumbnailUrl(shared.videoUrl, shared.thumbnailUrl) : null
+  const sharedVoted = Boolean(shared && canCast && p?.myVoteApplicationId === shared.applicationId)
 
   return (
     <div className="min-h-screen bg-gray-50 pb-8">
@@ -168,6 +202,83 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback }: Props) {
       </div>
 
       <div className={`${PAGE_CONTAINER} mt-6 flex flex-col gap-6`}>
+        {p?.voteRoundNumber && p.roundNumber !== p.voteRoundNumber ? (
+          <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800" data-testid="vote-other-round">
+            {ts('otherRound', { round: p.roundNumber })}
+          </p>
+        ) : null}
+        {shared ? (
+          <section
+            className="overflow-hidden rounded-2xl border-2 border-violet-300 bg-white shadow-md"
+            data-testid="vote-shared-candidate"
+            data-application-id={shared.applicationId}
+          >
+            <div
+              className={`relative aspect-video bg-gray-900${getVideoEmbedSrc(shared.videoUrl) ? ' cursor-pointer' : ''}`}
+              role={getVideoEmbedSrc(shared.videoUrl) ? 'button' : undefined}
+              aria-label={getVideoEmbedSrc(shared.videoUrl) ? t('playVideo') : undefined}
+              onClick={() => {
+                if (getVideoEmbedSrc(shared.videoUrl)) openVideoWithViewBump(shared)
+              }}
+            >
+              {sharedThumb ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={sharedThumb} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <div className="h-full w-full bg-gray-800" />
+              )}
+              <span className="absolute left-3 top-3 rounded-full bg-violet-600 px-3 py-1 text-xs font-semibold text-white">
+                {ts('sharedBadge')}
+              </span>
+              {getVideoEmbedSrc(shared.videoUrl) ? (
+                <div className="pointer-events-none absolute left-1/2 top-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-3xl text-white" aria-hidden>
+                  ▶
+                </div>
+              ) : null}
+            </div>
+            <div className="p-5">
+              <p className="text-xs font-semibold text-violet-700">{ts('roundLabel', { round: linkRound })} · {statusLabel}</p>
+              <h2 className="mt-1 text-2xl font-bold text-gray-900">{sharedName}</h2>
+              {shared.category ? (
+                <p className="mt-1 text-sm font-medium text-gray-700">{recruitFieldLabel(shared.category, tField)}</p>
+              ) : null}
+              {shared.description?.trim() ? <p className={`${TEXT_SUB} mt-2 text-sm`}>{shared.description}</p> : null}
+              {windowNotice ? (
+                <p className="mt-3 rounded-lg bg-gray-100 px-3 py-2 text-sm text-gray-700" data-testid="vote-window-notice">{windowNotice}</p>
+              ) : p?.voteEndAt ? (
+                <p className="mt-3 text-sm text-gray-600">{ts('endsAt', { end: formatWhen(p.voteEndAt) })}</p>
+              ) : null}
+              <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                <button
+                  type="button"
+                  data-testid="vote-shared-cast"
+                  disabled={!canCast || voteMutationBusy || sharedVoted}
+                  onClick={() => {
+                    if (!requireAuth()) return
+                    castMutation.mutate({ applicationId: shared.applicationId, name: sharedName })
+                  }}
+                  className="min-h-11 flex-1 rounded-lg bg-gradient-to-r from-violet-600 to-pink-500 px-4 py-2 text-base font-semibold text-white hover:opacity-95 disabled:opacity-50"
+                >
+                  {sharedVoted ? ts('alreadyVoted') : ts('voteFor', { name: sharedName })}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShareItem(shared)}
+                  className="min-h-11 rounded-lg border border-[#E5E7EB] bg-white px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50"
+                  data-testid="vote-shared-share"
+                >
+                  {ts('share')}
+                </button>
+                <a
+                  href="#vote-all-candidates"
+                  className="flex min-h-11 items-center justify-center rounded-lg border border-violet-200 px-4 py-2 text-sm font-semibold text-violet-700 no-underline"
+                >
+                  {ts('viewAll')}
+                </a>
+              </div>
+            </div>
+          </section>
+        ) : null}
         {/* 카테고리 탭 */}
         {audition?.categories && audition.categories.length > 0 && (
           <div className="flex flex-wrap gap-2">
@@ -199,10 +310,13 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback }: Props) {
         </div>
 
         {/* 그리드 */}
+        {!shared && windowNotice && items.length > 0 ? (
+          <p className="rounded-lg bg-gray-100 px-3 py-2 text-sm text-gray-700">{windowNotice}</p>
+        ) : null}
         {items.length === 0 ? (
-          <p className={`${TEXT_SUB} text-center`}>{t('emptyApplicants')}</p>
+          shared ? null : <p className={`${TEXT_SUB} text-center`}>{t('emptyApplicants')}</p>
         ) : (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div id="vote-all-candidates" className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {items.map((item) => {
               const cardThumb = resolveVideoThumbnailUrl(item.videoUrl, item.thumbnailUrl)
               const canEmbed = Boolean(getVideoEmbedSrc(item.videoUrl))
@@ -282,7 +396,7 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback }: Props) {
                         disabled={voteMutationBusy}
                         onClick={() => {
                           if (!requireAuth()) return
-                          castMutation.mutate({ applicationId: item.applicationId })
+                          castMutation.mutate({ applicationId: item.applicationId, name: item.userName || undefined })
                         }}
                         className="rounded-lg bg-gradient-to-r from-violet-600 to-pink-500 px-4 py-2 text-sm font-semibold text-white hover:opacity-95 disabled:opacity-50"
                       >
@@ -290,6 +404,14 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback }: Props) {
                       </button>
                     ) : null}
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => setShareItem(item)}
+                    className="mt-3 w-full rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50"
+                    data-testid="vote-card-share"
+                  >
+                    {ts('share')}
+                  </button>
                 </div>
               </article>
               )
@@ -310,6 +432,15 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback }: Props) {
         }
         onClose={() => setPlayItem(null)}
       />
+      {shareItem ? (
+        <VoteShareSheet
+          open
+          onClose={() => setShareItem(null)}
+          url={shareUrlFor(shareItem)}
+          title={ts('shareTitle', { name: shareItem.userName || t('nameUnset') })}
+          defaultText={ts('candidateText', { name: shareItem.userName || t('nameUnset') })}
+        />
+      ) : null}
     </div>
   )
 }

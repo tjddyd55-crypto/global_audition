@@ -8,11 +8,14 @@ import { parseVoteStatus } from '@/shared/audition/votingRounds'
 /** 공개 투표 목록 (비로그인 조회 가능) */
 export const listAuditionVotes = async (
   auditionId: string,
-  category?: string | null
+  category?: string | null,
+  share?: { round?: number | null; candidate?: string | null }
 ): Promise<PublicVotesPagePayload> => {
-  const { data } = await apiClient.get<unknown>(`/auditions/${auditionId}/votes`, {
-    params: category && !isAllCategoryName(category) ? { category } : {},
-  })
+  const params: Record<string, string> = {}
+  if (category && !isAllCategoryName(category)) params.category = category
+  if (share?.round) params.round = String(share.round)
+  if (share?.candidate) params.candidate = share.candidate
+  const { data } = await apiClient.get<unknown>(`/auditions/${auditionId}/votes`, { params })
   const body = unwrapData<Record<string, unknown>>(data)
   const auditionRaw = (body.audition ?? {}) as Record<string, unknown>
   const summaryRaw = (body.summary ?? {}) as Record<string, unknown>
@@ -47,7 +50,39 @@ export const listAuditionVotes = async (
       body.myVoteApplicationId != null && String(body.myVoteApplicationId).length > 0
         ? String(body.myVoteApplicationId)
         : null,
+    sharedCandidate:
+      body.sharedCandidate && typeof body.sharedCandidate === 'object'
+        ? parsePublicVoteItem(body.sharedCandidate as Record<string, unknown>)
+        : null,
     items: itemsRaw.map((x) => parsePublicVoteItem(x as Record<string, unknown>)),
+  }
+}
+
+export type MyVoteSharePayload = {
+  candidate: boolean
+  auditionId: string | null
+  auditionTitle: string | null
+  applicationId: string | null
+  roundNumber: number | null
+  voteStatus?: 'NOT_STARTED' | 'SCHEDULED' | 'OPEN' | 'CLOSED'
+  voteStartAt: string | null
+  voteEndAt: string | null
+}
+
+/** 지원자 본인: 확정 후보일 때만 공유 링크 정보를 준다. */
+export const getMyVoteShare = async (applicationId: string): Promise<MyVoteSharePayload> => {
+  const { data } = await apiClient.get<unknown>(`/me/applications/${applicationId}/vote-share`)
+  const b = unwrapData<Record<string, unknown>>(data) ?? {}
+  const s = (k: string) => (b[k] != null ? String(b[k]) : null)
+  return {
+    candidate: b.candidate === true,
+    auditionId: s('auditionId'),
+    auditionTitle: s('auditionTitle'),
+    applicationId: s('applicationId'),
+    roundNumber: b.roundNumber != null ? Number(b.roundNumber) : null,
+    voteStatus: parseVoteStatus(b.voteStatus),
+    voteStartAt: s('voteStartAt'),
+    voteEndAt: s('voteEndAt'),
   }
 }
 

@@ -1,6 +1,7 @@
 import { parseAuditionVotingFields, parseVoteStatus } from '../../../web/src/shared/audition/votingRounds'
 import type {
   ApplicantDashboard,
+  MyVoteShare,
   CreditLedgerItem,
   CreditLedgerPage,
   CreditPackageItem,
@@ -216,6 +217,8 @@ export function parseVotePage(raw: unknown): PublicVotesPage {
       myVoteCount: asNumber(summary.myVoteCount),
     },
     myVoteApplicationId: asString(body.myVoteApplicationId) || null,
+    sharedCandidate:
+      body.sharedCandidate && typeof body.sharedCandidate === 'object' ? parseVoteItem(body.sharedCandidate) : null,
     items: items.map((item) => parseVoteItem(item)),
   }
 }
@@ -433,4 +436,19 @@ export function parseRankingItems(raw: unknown): RankingItem[] {
       isVoted: r.isVoted === true,
     }
   })
+}
+
+export function parseMyVoteShare(raw: unknown): MyVoteShare {
+  const b = asRecord(raw)
+  const s = (k: string) => (b[k] != null && String(b[k]).length > 0 ? String(b[k]) : null)
+  return {
+    candidate: b.candidate === true,
+    auditionId: s('auditionId'),
+    auditionTitle: s('auditionTitle'),
+    applicationId: s('applicationId'),
+    roundNumber: b.roundNumber != null ? Number(b.roundNumber) : null,
+    voteStatus: parseVoteStatus(b.voteStatus),
+    voteStartAt: s('voteStartAt'),
+    voteEndAt: s('voteEndAt'),
+  }
 }

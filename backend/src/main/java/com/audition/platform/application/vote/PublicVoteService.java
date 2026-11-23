@@ -74,19 +74,46 @@ public class PublicVoteService {
     }
 
     public PublicVotePageDataDto getPublicVotes(UUID auditionId, String categoryFilter) {
+        return getPublicVotes(auditionId, categoryFilter, null, null);
+    }
+
+    /**
+     * 공유 링크용: {@code requestedRound} 는 링크에 고정된 회차, {@code sharedCandidate} 는 링크의 후보 지원 ID.
+     * 후보는 그 회차 확정 명단에 있을 때만 맨 위에 보여 준다(표시 순서만, 순위·득표는 그대로).
+     * 지난 회차 링크는 종료로 보고, 아직 없는 회차 링크는 시작 전으로 본다(다음 회차로 바꿔 읽지 않는다).
+     */
+    public PublicVotePageDataDto getPublicVotes(UUID auditionId, String categoryFilter,
+                                                Integer requestedRound, UUID sharedCandidate) {
         Audition audition = auditionRepository.findById(auditionId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "오디션을 찾을 수 없습니다."));
+        if ("DRAFT".equals(audition.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "오디션을 찾을 수 없습니다.");
+        }
         Instant now = Instant.now();
-        VoteWindow.Phase phase = VoteWindow.phase(audition, now);
-        int round = audition.getVoteRoundNumber() != null
+        int currentRound = audition.getVoteRoundNumber() != null
                 ? audition.getVoteRoundNumber()
                 : VotingRoundPlan.activeRound(audition);
+        int round = requestedRound != null && requestedRound > 0 ? requestedRound : currentRound;
+        VoteWindow.Phase phase;
+        if (round == currentRound) {
+            phase = VoteWindow.phase(audition, now);
+        } else if (audition.getVoteRoundNumber() != null && round < currentRound
+                && voteCandidates.countByAuditionIdAndRoundNumber(auditionId, round) > 0) {
+            phase = VoteWindow.Phase.CLOSED;
+        } else {
+            phase = VoteWindow.Phase.NOT_STARTED;
+        }
         boolean planEnabled = VotingRoundPlan.enabledFor(audition.getVotingRounds(), round);
         // 공개 투표는 기획사가 시작을 누르고, 시작·종료 시각 안에 있을 때만 받는다.
         boolean votingEnabled = planEnabled && phase == VoteWindow.Phase.OPEN;
         boolean showItems = planEnabled && (phase == VoteWindow.Phase.OPEN || phase == VoteWindow.Phase.CLOSED);
 
         List<Application> apps = !showItems ? List.<Application>of() : loadVoteApplications(audition, round, phase);
+        Application shared = null;
+        if (sharedCandidate != null && planEnabled && VoteWindow.hasStarted(phase)
+                && voteCandidates.existsByAuditionIdAndRoundNumberAndApplicationId(auditionId, round, sharedCandidate)) {
+            shared = applicationRepository.findById(sharedCandidate).orElse(null);
+        }
         // 득표는 현재 회차 기준(회차마다 새로 받는다). applications.vote_count 는 전 회차 누계로 남는다.
         Map<UUID, Long> roundVotes = votingEnabled ? roundVoteCounts(auditionId, round) : Map.of();
 
@@ -108,7 +135,18 @@ public class PublicVoteService {
                 .map(app -> toVoteItem(app, myVoteStr, scoreByApp.get(app.getId()), roundVotes.getOrDefault(app.getId(), 0L)))
                 .collect(Collectors.toList());
 
-        List<PublicVoteItemDto> visible = filterByCategory(allItems, categoryFilter);
+        List<PublicVoteItemDto> visible = new ArrayList<>(filterByCategory(allItems, categoryFilter));
+        PublicVoteItemDto sharedDto = null;
+        if (shared != null) {
+            final String sharedId = shared.getId().toString();
+            sharedDto = allItems.stream().filter(i -> sharedId.equals(i.getApplicationId())).findFirst()
+                    .orElse(toVoteItem(shared, votingEnabled ? myVoteStr : null, scoreByApp.get(shared.getId()), 0L));
+            // 공유 링크로 들어오면 해당 후보를 맨 위에 둔다. 순위(rank)·득표는 바꾸지 않는다.
+            visible.removeIf(i -> sharedId.equals(i.getApplicationId()));
+            if (showItems) {
+                visible.add(0, sharedDto);
+            }
+        }
 
         long totalViews = allItems.stream().mapToLong(PublicVoteItemDto::getViewCount).sum();
         int myVoteCount = myVoteStr != null && !myVoteStr.isBlank() ? 1 : 0;
@@ -135,9 +173,11 @@ public class PublicVoteService {
         out.setVotingPlanEnabled(planEnabled);
         out.setRoundNumber(round);
         out.setVoteStatus(phase.name());
-        out.setVoteStartAt(audition.getVoteStartAt());
-        out.setVoteEndAt(audition.getVoteEndAt());
+        boolean currentWindow = round == currentRound;
+        out.setVoteStartAt(currentWindow ? audition.getVoteStartAt() : null);
+        out.setVoteEndAt(currentWindow ? audition.getVoteEndAt() : null);
         out.setVoteRoundNumber(audition.getVoteRoundNumber());
+        out.setSharedCandidate(sharedDto);
         out.setItems(visible);
         return out;
     }

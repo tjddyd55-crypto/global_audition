@@ -183,7 +183,20 @@ export type PublicVotesPage = {
     myVoteCount: number
   }
   myVoteApplicationId: string | null
+  /** 공유 링크 후보(그 회차 확정 명단에 있을 때만) */
+  sharedCandidate?: PublicVoteItem | null
   items: PublicVoteItem[]
+}
+
+export type MyVoteShare = {
+  candidate: boolean
+  auditionId: string | null
+  auditionTitle: string | null
+  applicationId: string | null
+  roundNumber: number | null
+  voteStatus?: 'NOT_STARTED' | 'SCHEDULED' | 'OPEN' | 'CLOSED'
+  voteStartAt: string | null
+  voteEndAt: string | null
 }
 
 export type ManageApplicantItem = {

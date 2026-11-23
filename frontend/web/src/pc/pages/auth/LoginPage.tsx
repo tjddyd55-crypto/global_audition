@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { withNext } from '@/shared/auth/safeNext'
 import { useRouter } from '@/i18n.config'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -186,7 +187,7 @@ export default function PcLoginPage() {
       <div className="mt-5 text-center text-sm">
         <p className="text-gray-600">
           {t('noAccount')}{' '}
-          <Link href="/register" className="font-semibold text-purple-600 hover:underline">
+          <Link href={withNext('/register', searchParams.get('next') && isSafeInternalNextPath(searchParams.get('next') ?? '') ? searchParams.get('next') : null)} className="font-semibold text-purple-600 hover:underline">
             {t('registerButton')}
           </Link>
         </p>

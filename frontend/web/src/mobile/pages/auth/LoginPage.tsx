@@ -6,7 +6,9 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQueryClient } from '@tanstack/react-query'
 import { z } from 'zod'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
+import { useSearchParams } from 'next/navigation'
+import { safeNextPath, withNext } from '@/shared/auth/safeNext'
 import { authApi } from '@/shared/api/auth'
 import { useLoginSubmitGuard } from '@/shared/auth/loginSubmitGuard'
 import { isAdminConsolePath, pathAfterLogin } from '@/shared/auth/roleHome'
@@ -22,6 +24,9 @@ type LoginFormData = z.infer<ReturnType<typeof createMobileLoginSchema>>
 
 export default function MobileLoginPage() {
   const router = useRouter()
+  const locale = useLocale()
+  const searchParams = useSearchParams()
+  const nextPath = safeNextPath(searchParams?.get('next'))
   const queryClient = useQueryClient()
   const t = useTranslations('auth')
   const tValidation = useTranslations('validation')
@@ -70,7 +75,10 @@ export default function MobileLoginPage() {
       await authApi.me()
 
       const home = pathAfterLogin(userRole)
-      if (isAdminConsolePath(home)) {
+      if (nextPath && !isAdminConsolePath(nextPath)) {
+        // 공유 링크 등에서 왔으면 같은 화면으로 돌아간다(자동 투표 없음).
+        window.location.assign(`/${locale}${nextPath}`)
+      } else if (isAdminConsolePath(home)) {
         window.location.assign(home)
       } else if (userRole === 'BUSINESS' || userRole === 'AGENCY') {
         router.push('/my/dashboard')
@@ -140,7 +148,7 @@ export default function MobileLoginPage() {
         <div className="mt-6 space-y-2 text-center">
           <p className="text-gray-600">
             {t('noAccount')}{' '}
-            <Link href="/register" className="text-primary-600 hover:underline">
+            <Link href={withNext('/register', nextPath)} className="text-primary-600 hover:underline">
               {t('registerButton')}
             </Link>
           </p>
