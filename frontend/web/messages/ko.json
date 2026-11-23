@@ -521,7 +521,15 @@
     "nameUnset": "이름 없음",
     "applicantVideo": "{name} 지원 영상",
     "emptyApplicants": "표시할 지원자가 없습니다.",
-    "disabledRound": "이 회차는 공개 투표를 진행하지 않습니다."
+    "disabledRound": "이 회차는 공개 투표를 진행하지 않습니다.",
+    "notStarted": "투표가 아직 시작되지 않았습니다.",
+    "scheduled": "투표가 {start}에 시작됩니다.",
+    "closed": "투표가 종료되었습니다.",
+    "closedResults": "투표가 종료되었습니다. 결과는 랭킹에서 확인할 수 있습니다.",
+    "viewResults": "결과 보기",
+    "statusScheduled": "예정",
+    "statusOpen": "진행 중",
+    "statusClosed": "종료"
   },
   "ranking": {
     "title": "랭킹",

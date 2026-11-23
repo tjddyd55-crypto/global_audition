@@ -1,5 +1,6 @@
 package com.audition.platform.application.vote;
 
+import com.audition.platform.api.dto.StartVoteRequest;
 import com.audition.platform.application.ranking.AuditionRankingQueryService;
 import com.audition.platform.application.round.AuditionRoundService;
 import com.audition.platform.domain.audition.AuditionRepository;
@@ -52,6 +53,7 @@ class PerRoundVoteIT {
     @Autowired private AuditionRankingQueryService ranking;
     @Autowired private AuditionRoundService rounds;
     @Autowired private AuditionRepository auditions;
+    @Autowired private PublicVoteScheduleService schedule;
 
     @AfterEach
     void cleanup() {
@@ -59,6 +61,7 @@ class PerRoundVoteIT {
         String a = "(SELECT id FROM auditions WHERE title = '" + TITLE + "')";
         jdbc.update("DELETE FROM votes WHERE audition_id IN " + a);
         jdbc.update("DELETE FROM application_scores WHERE application_id IN (SELECT id FROM applications WHERE audition_id IN " + a + ")");
+        jdbc.update("DELETE FROM audition_vote_candidates WHERE audition_id IN " + a);
         jdbc.update("DELETE FROM applications WHERE audition_id IN " + a);
         jdbc.update("DELETE FROM audition_rounds WHERE audition_id IN " + a);
         jdbc.update("DELETE FROM auditions WHERE title = '" + TITLE + "'");
@@ -75,6 +78,11 @@ class PerRoundVoteIT {
         jdbc.update("UPDATE applications SET final_status = 'ELIMINATED' WHERE id = ?", out);
 
         asRole(voter, "ROLE_USER");
+        assertEquals("NOT_STARTED", votes.getPublicVotes(audition, null).getVoteStatus());
+        assertFalse(votes.getPublicVotes(audition, null).isVotingEnabled());
+        assertTrue(votes.getPublicVotes(audition, null).getItems().isEmpty());
+        startOpen(owner, audition);
+        asRole(voter, "ROLE_USER");
         assertEquals(2, votes.getPublicVotes(audition, null).getItems().size(), "탈락 지원은 후보가 아니다");
         assertThrows(ResponseStatusException.class, () -> votes.castVote(audition, out));
         votes.castVote(audition, a1);
@@ -84,6 +92,8 @@ class PerRoundVoteIT {
         // 2차로 진행: 같은 사용자가 새 회차에 다시 투표할 수 있다.
         jdbc.update("UPDATE auditions SET current_round_number = 2 WHERE id = ?", audition);
         jdbc.update("UPDATE applications SET current_round_number = 2 WHERE id IN (?, ?)", a1, a2);
+        startOpen(owner, audition, a1, a2);
+        asRole(voter, "ROLE_USER");
         var page = votes.getPublicVotes(audition, null);
         assertNull(page.getMyVoteApplicationId());
         assertEquals(0L, page.getSummary().getTotalVotes());
@@ -121,6 +131,7 @@ class PerRoundVoteIT {
         UUID owner = user(), voter = user();
         UUID audition = multiAudition(owner, 1, "{1}", 1);
         UUID app = application(audition, user());
+        startOpen(owner, audition, app);
         asRole(voter, "ROLE_USER");
         votes.castVote(audition, app);
 
@@ -240,6 +251,18 @@ class PerRoundVoteIT {
         jdbc.update("INSERT INTO audition_rounds (id, audition_id, round_number, review_method, start_at) VALUES (?, ?, ?, 'INTERNAL_REVIEW', ?)",
                 id, audition, n, Timestamp.from(startAt));
         return id;
+    }
+
+    private void startOpen(UUID owner, UUID auditionId, UUID... apps) {
+        asRole(owner, "ROLE_AGENCY");
+        StartVoteRequest req = new StartVoteRequest();
+        Instant now = Instant.now();
+        req.setStartAt(now.minusSeconds(30).toString());
+        req.setEndAt(now.plus(2, ChronoUnit.HOURS).toString());
+        if (apps != null && apps.length > 0) {
+            req.setApplicationIds(java.util.Arrays.stream(apps).map(UUID::toString).toList());
+        }
+        schedule.start(auditionId, req);
     }
 
     private static void asRole(UUID id, String role) {

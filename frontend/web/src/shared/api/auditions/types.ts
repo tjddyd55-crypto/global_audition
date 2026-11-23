@@ -22,7 +22,12 @@ export type PublicVoteItem = {
 export type PublicVotesPagePayload = {
   /** 현재 회차 투표 사용 여부(없으면 true). false 면 목록·투표 버튼을 숨긴다 */
   votingEnabled: boolean
+  votingPlanEnabled?: boolean
   roundNumber: number
+  voteStatus?: 'NOT_STARTED' | 'SCHEDULED' | 'OPEN' | 'CLOSED'
+  voteStartAt?: string | null
+  voteEndAt?: string | null
+  voteRoundNumber?: number | null
   audition: {
     id: string
     title: string

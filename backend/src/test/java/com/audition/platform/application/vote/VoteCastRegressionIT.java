@@ -10,6 +10,11 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.TestPropertySource;
 
+import com.audition.platform.api.dto.StartVoteRequest;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -38,12 +43,15 @@ class VoteCastRegressionIT {
     private PublicVoteService votes;
     @Autowired
     private AuditionRankingQueryService ranking;
+    @Autowired
+    private PublicVoteScheduleService schedule;
 
     @AfterEach
     void cleanup() {
         SecurityContextHolder.clearContext();
         jdbc.update("DELETE FROM votes WHERE audition_id IN (SELECT id FROM auditions WHERE title = 'vote-regression')");
         jdbc.update("DELETE FROM application_scores WHERE application_id IN (SELECT id FROM applications WHERE audition_id IN (SELECT id FROM auditions WHERE title = 'vote-regression'))");
+        jdbc.update("DELETE FROM audition_vote_candidates WHERE audition_id IN (SELECT id FROM auditions WHERE title = 'vote-regression')");
         jdbc.update("DELETE FROM applications WHERE audition_id IN (SELECT id FROM auditions WHERE title = 'vote-regression')");
         jdbc.update("DELETE FROM auditions WHERE title = 'vote-regression'");
         jdbc.update("DELETE FROM users WHERE email LIKE '%@vote.regression.test'");
@@ -58,6 +66,7 @@ class VoteCastRegressionIT {
         UUID audition = audition(owner);
         UUID first = application(audition, firstApplicant);
         UUID second = application(audition, secondApplicant);
+        startOpen(owner, audition, first, second);
         asUser(voter);
         assertFalse(votes.castVote(audition, first).isReplaced());
         assertEquals(1L, voteCount(first));
@@ -77,6 +86,7 @@ class VoteCastRegressionIT {
         UUID applicant = user();
         UUID audition = audition(owner);
         UUID app = application(audition, applicant);
+        startOpen(owner, audition, app);
         asUser(voter);
         votes.castVote(audition, app);
         assertEquals(1L, voteCount(app));
@@ -115,9 +125,20 @@ class VoteCastRegressionIT {
         UUID app = application(audition, applicant);
         Integer plan = jdbc.queryForObject("SELECT COUNT(*) FROM auditions WHERE id = ? AND voting_rounds IS NULL", Integer.class, audition);
         assertEquals(1, plan);
+        startOpen(owner, audition, app);
         asUser(voter);
         votes.castVote(audition, app);
         assertTrue(votes.getPublicVotes(audition, null).isVotingEnabled());
+    }
+
+    private void startOpen(UUID owner, UUID audition, UUID... apps) {
+        asOwner(owner);
+        StartVoteRequest req = new StartVoteRequest();
+        Instant now = Instant.now();
+        req.setStartAt(now.minusSeconds(30).toString());
+        req.setEndAt(now.plus(2, ChronoUnit.HOURS).toString());
+        req.setApplicationIds(Arrays.stream(apps).map(UUID::toString).toList());
+        schedule.start(audition, req);
     }
 
     private static void asOwner(UUID id) {

@@ -128,6 +128,18 @@ public class Audition {
     @Column(name = "voting_rounds", columnDefinition = "int[]")
     private Integer[] votingRounds;
 
+    @Column(name = "vote_start_at")
+    private java.time.Instant voteStartAt;
+
+    @Column(name = "vote_end_at")
+    private java.time.Instant voteEndAt;
+
+    @Column(name = "vote_started_at")
+    private java.time.Instant voteStartedAt;
+
+    @Column(name = "vote_round_number")
+    private Integer voteRoundNumber;
+
     @Column(name = "max_round_number")
     private Integer maxRoundNumber;
 
@@ -230,6 +242,14 @@ public class Audition {
     public void setVotingRoundCount(Integer votingRoundCount) { this.votingRoundCount = votingRoundCount; }
     public Integer[] getVotingRounds() { return votingRounds; }
     public void setVotingRounds(Integer[] votingRounds) { this.votingRounds = votingRounds; }
+    public java.time.Instant getVoteStartAt() { return voteStartAt; }
+    public void setVoteStartAt(java.time.Instant voteStartAt) { this.voteStartAt = voteStartAt; }
+    public java.time.Instant getVoteEndAt() { return voteEndAt; }
+    public void setVoteEndAt(java.time.Instant voteEndAt) { this.voteEndAt = voteEndAt; }
+    public java.time.Instant getVoteStartedAt() { return voteStartedAt; }
+    public void setVoteStartedAt(java.time.Instant voteStartedAt) { this.voteStartedAt = voteStartedAt; }
+    public Integer getVoteRoundNumber() { return voteRoundNumber; }
+    public void setVoteRoundNumber(Integer voteRoundNumber) { this.voteRoundNumber = voteRoundNumber; }
     public int getSeriesRound() { return seriesRound; }
     public void setSeriesRound(int seriesRound) { this.seriesRound = seriesRound; }
     public String getDefaultLocale() { return defaultLocale; }

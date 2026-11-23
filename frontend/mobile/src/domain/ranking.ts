@@ -23,13 +23,20 @@ export function isRankingAccessDenied(error: unknown): boolean {
   return status === 401 || status === 403
 }
 
-/** 공고 투표 설정상 현재 회차에 투표 보기 버튼을 보일지(값이 없으면 기존 동작 = 보임). */
-export function canShowVoting(audition: { votingEnabled?: boolean } | null | undefined): boolean {
+/** 지금 표를 받을 수 있을 때만 투표 보기 버튼(값이 없으면 기존 동작 = 보임). */
+export function canShowVoting(
+  audition: { votingEnabled?: boolean; voteStatus?: string | null } | null | undefined,
+): boolean {
+  if (audition?.voteStatus && audition.voteStatus !== 'OPEN') return false
   return audition?.votingEnabled !== false
 }
 
-/** 랭킹 진입 버튼: 투표를 켠 회차면 누구에게나 보인다(PR #124 의 소유 기획사 전용 노출을 되돌림). */
-export function canViewRanking(audition: { votingEnabled?: boolean } | null | undefined): boolean {
+/** 공개 랭킹은 투표가 시작된 뒤(진행 중·종료) 보여 준다. 값이 없으면 기존 동작. */
+export function canViewRanking(
+  audition: { votingEnabled?: boolean; voteStatus?: string | null } | null | undefined,
+): boolean {
+  if (audition?.voteStatus === 'OPEN' || audition?.voteStatus === 'CLOSED') return true
+  if (audition?.voteStatus === 'SCHEDULED' || audition?.voteStatus === 'NOT_STARTED') return false
   return canShowVoting(audition)
 }
 

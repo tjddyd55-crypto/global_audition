@@ -9,7 +9,6 @@ import { Screen } from '../../src/ui/Screen'
 import { colors } from '../../src/theme/tokens'
 import { useTranslation } from 'react-i18next'
 import { useAudienceCountry } from '../../src/domain/AudienceCountryProvider'
-import { canShowVoting } from '../../src/domain/ranking'
 import { getRuntimeLocale } from '../../src/i18n/runtime'
 
 export default function VoteHubScreen() {
@@ -18,12 +17,11 @@ export default function VoteHubScreen() {
   const locale = getRuntimeLocale()
   const { country } = useAudienceCountry()
   const query = useQuery({
-    queryKey: queryKeys.auditionsOpen(country, locale),
-    queryFn: () => auditionApi.listOpen(country),
+    queryKey: queryKeys.auditionsVoting(country, locale),
+    queryFn: () => auditionApi.listOpenVotes(country),
   })
 
-  // 공고 투표 설정상 현재 회차에 투표가 없는 공고는 투표 탭에서 뺀다.
-  const votable = (query.data ?? []).filter((a) => canShowVoting(a))
+  const votable = query.data ?? []
 
   return (
     <Screen topInset={false} loading={query.isLoading} refreshing={query.isFetching} onRefresh={() => void query.refetch()}>

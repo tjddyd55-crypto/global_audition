@@ -1,11 +1,13 @@
 export * from './types'
 export { parseAuditionDto, parsePublicVoteItem } from './parsers'
-export { listOpenAuditions, getAuditionById, getAuditionPreview } from './public'
+export { listOpenAuditions, listOpenVotes, getAuditionById, getAuditionPreview } from './public'
 export {
   listAuditionVotes,
   voteAudition,
   cancelAuditionVote,
   bumpAuditionApplicationView,
+  getVoteSchedule,
+  startAuditionVote,
 } from './votes'
 export { getAuditionRanking } from './ranking'
 export { createNextSeriesRoundAudition } from './series'

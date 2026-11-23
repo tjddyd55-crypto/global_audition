@@ -4,6 +4,7 @@ import com.audition.platform.api.dto.RankingItemDto;
 import com.audition.platform.api.dto.RankingPageDataDto;
 import com.audition.platform.application.audition.ApplicantCardMetricsLoader;
 import com.audition.platform.application.me.MeApiMapping;
+import com.audition.platform.application.vote.VoteWindow;
 import com.audition.platform.application.vote.VotingRoundPlan;
 import com.audition.platform.domain.audition.Application;
 import com.audition.platform.domain.audition.ApplicationRepository;
@@ -19,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -72,13 +74,21 @@ public class AuditionRankingQueryService {
             // 게시 전 공고의 랭킹은 공개하지 않는다.
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "오디션을 찾을 수 없습니다.");
         }
-        int round = VotingRoundPlan.activeRound(audition);
+        Instant now = Instant.now();
+        VoteWindow.Phase phase = VoteWindow.phase(audition, now);
+        int round = audition.getVoteRoundNumber() != null
+                ? audition.getVoteRoundNumber()
+                : VotingRoundPlan.activeRound(audition);
 
         RankingPageDataDto out = new RankingPageDataDto();
         out.setRoundNumber(round);
         out.setManageView(manager);
-        // 랭킹은 투표를 따른다. 이 회차가 투표 없음이면 오류가 아니라 비활성 상태(데이터는 유지).
-        if (!VotingRoundPlan.enabledNow(audition)) {
+        // 랭킹은 투표를 따른다. 공개 결과는 투표가 시작된 뒤(진행 중·종료)만. 기획사는 시작 전에도 볼 수 있다.
+        boolean planEnabled = VotingRoundPlan.enabledNow(audition)
+                || (audition.getVoteRoundNumber() != null
+                    && VotingRoundPlan.enabledFor(audition.getVotingRounds(), audition.getVoteRoundNumber()));
+        boolean publicResults = phase == VoteWindow.Phase.OPEN || phase == VoteWindow.Phase.CLOSED;
+        if (!planEnabled || (!manager && !publicResults)) {
             out.setVotingEnabled(false);
             return out;
         }

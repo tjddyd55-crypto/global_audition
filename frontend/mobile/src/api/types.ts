@@ -85,6 +85,10 @@ export type AuditionDto = {
   votingRoundNumber?: number
   votingRoundCount?: number | null
   votingRounds?: number[] | null
+  voteStatus?: 'NOT_STARTED' | 'SCHEDULED' | 'OPEN' | 'CLOSED'
+  voteStartAt?: string | null
+  voteEndAt?: string | null
+  voteRoundNumber?: number | null
   displayTitle?: string
   recruitmentRoundLabel?: string
   canApply?: boolean
@@ -158,6 +162,12 @@ export type PublicVoteItem = {
 export type PublicVotesPage = {
   /** 현재 회차 투표 사용 여부(없으면 true) */
   votingEnabled: boolean
+  votingPlanEnabled?: boolean
+  roundNumber?: number
+  voteStatus?: 'NOT_STARTED' | 'SCHEDULED' | 'OPEN' | 'CLOSED'
+  voteStartAt?: string | null
+  voteEndAt?: string | null
+  voteRoundNumber?: number | null
   audition: {
     id: string
     title: string
