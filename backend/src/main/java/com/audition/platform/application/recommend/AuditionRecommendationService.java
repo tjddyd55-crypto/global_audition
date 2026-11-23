@@ -10,6 +10,7 @@ import com.audition.platform.domain.audition.RecruitFieldCodes;
 import com.audition.platform.domain.user.User;
 import com.audition.platform.domain.user.UserRepository;
 import com.audition.platform.infra.SecurityUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -40,6 +41,7 @@ public class AuditionRecommendationService {
     private final JdbcTemplate jdbc;
     private final Clock clock;
 
+    @Autowired
     public AuditionRecommendationService(
             AuditionService auditionService,
             UserRepository users,
