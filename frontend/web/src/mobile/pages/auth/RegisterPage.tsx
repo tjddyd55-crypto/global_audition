@@ -1,7 +1,8 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { safeNextPath, withNext } from '@/shared/auth/safeNext'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQueryClient } from '@tanstack/react-query'
@@ -80,6 +81,8 @@ export default function MobileRegisterPage() {
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([])
   const [issuedCode, setIssuedCode] = useState<string | null>(null)
   const [issuedRole, setIssuedRole] = useState<string>('APPLICANT')
+  const searchParams = useSearchParams()
+  const nextPath = safeNextPath(searchParams?.get('next'))
   const [extras, setExtras] = useState<SignupExtras>(EMPTY_SIGNUP_EXTRAS)
   const [guardianNext, setGuardianNext] = useState(false)
   const tConsent = useTranslations('consent')
@@ -87,6 +90,7 @@ export default function MobileRegisterPage() {
   const goHome = (role: string | null | undefined, needsGuardian: boolean) => {
     if (role === 'AGENCY') window.location.href = `/${locale}/my/studio/agency-application`
     else if (needsGuardian) window.location.href = `/${locale}/my/studio/privacy?guardian=1`
+    else if (nextPath) window.location.href = `/${locale}${nextPath}`
     else window.location.href = `/${locale}`
   }
   const registerSchema = useMemo(() => createMobileRegisterSchema(tReg, tVal, tAuth), [tAuth, tReg, tVal])
@@ -687,7 +691,7 @@ export default function MobileRegisterPage() {
         <div className="mt-6 text-center">
           <p className="text-gray-600">
             {tAuth('alreadyHaveAccount')}{' '}
-            <a href="/login" className="text-primary-600 hover:underline">
+            <a href={`/${locale}${withNext('/login', nextPath)}`} className="text-primary-600 hover:underline">
               {tAuth('loginButton')}
             </a>
           </p>

@@ -43,6 +43,8 @@ export type PublicVotesPagePayload = {
     myVoteCount: number
   }
   myVoteApplicationId: string | null
+  /** 공유 링크의 후보(그 회차 확정 명단에 있을 때만). 없거나 변조된 ID 면 null */
+  sharedCandidate?: PublicVoteItem | null
   items: PublicVoteItem[]
 }
 

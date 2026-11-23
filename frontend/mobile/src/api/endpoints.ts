@@ -18,6 +18,7 @@ import {
   parseMyApplicationList,
   parseRankingItems,
   parseVotePage,
+  parseMyVoteShare,
   parseRankingPage,
 } from './parsers'
 import type {
@@ -45,6 +46,7 @@ import type {
   MeRoundEligibility,
   MyApplicationListItem,
   PublicVotesPage,
+  MyVoteShare,
   RankingItem,
   UserRole,
 } from './types'
@@ -133,14 +135,26 @@ export const applicationApi = {
 }
 
 export const voteApi = {
-  list: async (auditionId: string, category?: string): Promise<PublicVotesPage> =>
-    parseVotePage(
+  list: async (
+    auditionId: string,
+    category?: string,
+    share?: { round?: number | null; candidate?: string | null },
+  ): Promise<PublicVotesPage> => {
+    const query: Record<string, string> = {}
+    if (category && category !== '전체') query.category = category
+    if (share?.round) query.round = String(share.round)
+    if (share?.candidate) query.candidate = share.candidate
+    return parseVotePage(
       unwrapData(
         await apiRequest<unknown>(`/auditions/${auditionId}/votes`, {
-          query: category && category !== '전체' ? { category } : undefined,
+          query: Object.keys(query).length ? query : undefined,
         }),
       ),
-    ),
+    )
+  },
+  /** 지원자 본인: 확정 후보일 때만 공유 정보 */
+  myShare: async (applicationId: string): Promise<MyVoteShare> =>
+    parseMyVoteShare(unwrapData(await apiRequest<unknown>(`/me/applications/${applicationId}/vote-share`))),
   cast: (auditionId: string, applicationId: string) =>
     apiRequest<unknown>('/votes', { method: 'POST', body: { auditionId, applicationId } }),
   cancel: (applicationId: string) => apiRequest<unknown>(`/votes/${applicationId}`, { method: 'DELETE' }),

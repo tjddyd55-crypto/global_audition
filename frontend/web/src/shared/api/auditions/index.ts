@@ -8,7 +8,9 @@ export {
   bumpAuditionApplicationView,
   getVoteSchedule,
   startAuditionVote,
+  getMyVoteShare,
 } from './votes'
+export type { MyVoteSharePayload } from './votes'
 export { getAuditionRanking } from './ranking'
 export { createNextSeriesRoundAudition } from './series'
 export {

@@ -9,6 +9,8 @@ import { authApi } from '@/shared/api/auth'
 import { buildAgencySignupPayload } from '@/shared/auth/buildAgencySignupPayload'
 import { buildApplicantSignupPayload } from '@/shared/auth/buildApplicantSignupPayload'
 import { Link, useRouter } from '@/i18n.config'
+import { useSearchParams } from 'next/navigation'
+import { safeNextPath, withNext } from '@/shared/auth/safeNext'
 import RoleSelectCard from '@/components/auth/RoleSelectCard'
 import AuthCardLayout from '@/components/auth/AuthCardLayout'
 import { RecoveryCodeNotice } from '@/components/auth/RecoveryCodeNotice'
@@ -100,10 +102,13 @@ export default function PcRegisterPage() {
   const [issuedIntent, setIssuedIntent] = useState<string | null>(null)
   const [extras, setExtras] = useState<SignupExtras>(EMPTY_SIGNUP_EXTRAS)
   const [guardianNext, setGuardianNext] = useState(false)
+  const searchParams = useSearchParams()
+  const nextPath = safeNextPath(searchParams?.get('next'))
   const tConsent = useTranslations('consent')
   const goHome = (intent: string | null | undefined, needsGuardian: boolean) => {
     if (intent === 'AGENCY') router.push('/my/studio/agency-application')
     else if (needsGuardian) router.push('/my/studio/privacy?guardian=1')
+    else if (nextPath) router.push(nextPath)
     else router.push('/auditions')
   }
   const registerSchema = useMemo(() => createRegisterSchema(tAuth, tReg), [tAuth, tReg])
@@ -327,7 +332,7 @@ export default function PcRegisterPage() {
 
       <p style={{ marginTop: 24, textAlign: 'center', fontSize: 14, color: '#666' }}>
         {tAuth('alreadyHaveAccount')}{' '}
-        <Link href="/login" style={{ color: '#7c3aed', fontWeight: 600, textDecoration: 'none' }}>
+        <Link href={withNext('/login', nextPath)} style={{ color: '#7c3aed', fontWeight: 600, textDecoration: 'none' }}>
           {tAuth('loginButton')}
         </Link>
       </p>

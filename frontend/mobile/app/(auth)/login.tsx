@@ -1,4 +1,5 @@
-import { useRouter } from 'expo-router'
+import { useLocalSearchParams, useRouter } from 'expo-router'
+import { safeNextPath } from '../../../web/src/shared/auth/safeNext'
 import { useState } from 'react'
 import { KeyboardAvoidingView, StyleSheet, Text } from 'react-native'
 import { useAuth } from '../../src/auth/AuthProvider'
@@ -14,6 +15,8 @@ export default function LoginScreen() {
   const { t } = useTranslation()
   const router = useRouter()
   const { login } = useAuth()
+  const { next } = useLocalSearchParams<{ next?: string }>()
+  const nextPath = safeNextPath(typeof next === 'string' ? next : null)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -39,7 +42,9 @@ export default function LoginScreen() {
             setLoading(true)
             try {
               await login(email.trim(), password)
-              router.replace('/(tabs)')
+              // 공유 링크 등에서 왔으면 같은 화면으로 돌아간다(자동 투표 없음).
+              if (nextPath) router.replace(nextPath as never)
+              else router.replace('/(tabs)')
             } catch (err) {
               setError(err instanceof ApiError ? err.message : t('auth.loginError'))
             } finally {

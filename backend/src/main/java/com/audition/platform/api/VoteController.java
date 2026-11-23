@@ -2,6 +2,7 @@ package com.audition.platform.api;
 
 import com.audition.platform.api.dto.ApiEnvelope;
 import com.audition.platform.api.dto.CastVoteRequest;
+import com.audition.platform.api.dto.MyVoteShareDto;
 import com.audition.platform.api.dto.PublicVotePageDataDto;
 import com.audition.platform.api.dto.StartVoteRequest;
 import com.audition.platform.api.dto.VoteMutationResultDto;
@@ -37,13 +38,28 @@ public class VoteController {
     @GetMapping("/auditions/{auditionId}/votes")
     public ApiEnvelope<PublicVotePageDataDto> listVotes(
             @PathVariable UUID auditionId,
-            @RequestParam(name = "category", required = false) String category) {
-        return ApiEnvelope.ok(publicVoteService.getPublicVotes(auditionId, category));
+            @RequestParam(name = "category", required = false) String category,
+            @RequestParam(name = "round", required = false) Integer round,
+            @RequestParam(name = "candidate", required = false) String candidate) {
+        UUID candidateId = null;
+        if (candidate != null && !candidate.isBlank()) {
+            try {
+                candidateId = UUID.fromString(candidate.trim());
+            } catch (IllegalArgumentException ignored) {
+                // 잘못된 후보 식별자는 무시하고 전체 화면만 보여 준다(다른 정보는 내보내지 않는다).
+            }
+        }
+        return ApiEnvelope.ok(publicVoteService.getPublicVotes(auditionId, category, round, candidateId));
     }
 
     @GetMapping("/auditions/{auditionId}/votes/schedule")
     public ApiEnvelope<VoteScheduleDto> getVoteSchedule(@PathVariable UUID auditionId) {
         return ApiEnvelope.ok(publicVoteScheduleService.getSchedule(auditionId));
+    }
+
+    @GetMapping("/me/applications/{applicationId}/vote-share")
+    public ApiEnvelope<MyVoteShareDto> myVoteShare(@PathVariable UUID applicationId) {
+        return ApiEnvelope.ok(publicVoteScheduleService.myVoteShare(applicationId));
     }
 
     @PostMapping("/auditions/{auditionId}/votes/start")

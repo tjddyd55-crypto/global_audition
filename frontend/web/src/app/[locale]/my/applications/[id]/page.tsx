@@ -23,6 +23,7 @@ import { SnsSection } from '@/components/my-application/SnsSection'
 import { IntroSection } from '@/components/my-application/IntroSection'
 import { applicationStatusMessageKey } from '@/shared/i18n/applicationStatusKey'
 import { intlTagForUiLocale } from '@/shared/i18n/uiLocales'
+import { MyVoteShareButton } from '@/components/vote/MyVoteShareButton'
 
 function statusBadgeClass(status: string) {
   if (status === 'REVIEWING' || status === 'REVIEWED') return 'rounded-full bg-blue-50 px-3 py-1 text-sm text-blue-700'
@@ -99,6 +100,8 @@ export default function MyApplicationDetailPage() {
             )}
           </div>
         </section>
+
+        <MyVoteShareButton applicationId={app.id} />
 
         {isMultiRound ? (
           <>

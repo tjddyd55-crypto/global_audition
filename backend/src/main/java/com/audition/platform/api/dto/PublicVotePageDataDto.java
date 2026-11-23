@@ -31,6 +31,8 @@ public class PublicVotePageDataDto {
     private java.time.Instant voteStartAt;
     private java.time.Instant voteEndAt;
     private Integer voteRoundNumber;
+    /** 공유 링크의 후보(그 회차 확정 명단에 있을 때만). */
+    private PublicVoteItemDto sharedCandidate;
     private List<PublicVoteItemDto> items = new ArrayList<>();
 
     public VotePageAuditionDto getAudition() {
@@ -65,6 +67,9 @@ public class PublicVotePageDataDto {
     public void setVoteEndAt(java.time.Instant voteEndAt) { this.voteEndAt = voteEndAt; }
     public Integer getVoteRoundNumber() { return voteRoundNumber; }
     public void setVoteRoundNumber(Integer voteRoundNumber) { this.voteRoundNumber = voteRoundNumber; }
+
+    public PublicVoteItemDto getSharedCandidate() { return sharedCandidate; }
+    public void setSharedCandidate(PublicVoteItemDto sharedCandidate) { this.sharedCandidate = sharedCandidate; }
 
     public List<PublicVoteItemDto> getItems() {
         return items;

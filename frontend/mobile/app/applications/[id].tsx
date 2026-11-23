@@ -14,6 +14,7 @@ import { Screen } from '../../src/ui/Screen'
 import { StatusPill, toneForApplicationStatus } from '../../src/ui/StatusPill'
 import { TextField } from '../../src/ui/TextField'
 import { NativeVideoPlayer } from '../../src/features/media/NativeVideoPlayer'
+import { MyVoteShareCard } from '../../src/features/vote/MyVoteShareCard'
 import { colors, radius } from '../../src/theme/tokens'
 
 export default function ApplicationDetailScreen() {
@@ -58,6 +59,7 @@ export default function ApplicationDetailScreen() {
           <StatusPill label={applicationStatusLabel(app.status)} tone={toneForApplicationStatus(app.status)} />
           <Text style={styles.title}>{app.auditionTitle}</Text>
           <Text style={styles.copy}>{applicationResultCopy(app.status)}</Text>
+          <MyVoteShareCard applicationId={app.id} />
           <Text style={styles.meta}>
             {app.name ?? t('application.nameUnset')} · {nationalityLabel(app.nationality)}{' '}
             {app.age != null ? `· ${t('application.ageYears', { age: app.age })}` : ''}

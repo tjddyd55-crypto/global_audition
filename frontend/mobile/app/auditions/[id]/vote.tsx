@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useState } from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import { Image, StyleSheet, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { voteApi } from '../../../src/api/endpoints'
 import { queryKeys } from '../../../src/api/queryKeys'
@@ -12,26 +12,95 @@ import { EmptyState, ErrorState } from '../../../src/ui/EmptyState'
 import { Screen } from '../../../src/ui/Screen'
 import { NativeVideoPlayer } from '../../../src/features/media/NativeVideoPlayer'
 import { colors, radius } from '../../../src/theme/tokens'
+import { WEB_URL } from '../../../src/config/env'
+import { VoteShareActions } from '../../../src/features/vote/VoteShareActions'
+import { parseShareParams, voteSharePath, voteShareUrl } from '../../../../web/src/shared/vote/voteShare'
+import { youtubeThumbnailUrl } from '../../../src/domain/videoUrl'
+import type { PublicVoteItem } from '../../../src/api/types'
 
 export default function VoteScreen() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [playingId, setPlayingId] = useState<string | null>(null)
-  const { id } = useLocalSearchParams<{ id: string }>()
+  const [shareOpenId, setShareOpenId] = useState<string | null>(null)
+  const [votedName, setVotedName] = useState<string | null>(null)
+  const params = useLocalSearchParams<{ id: string; round?: string; candidate?: string }>()
+  const id = params.id
+  // 공유 링크(웹·앱 딥링크)에서 온 회차·후보. 잘못된 값은 버린다.
+  const share = parseShareParams(params.round, params.candidate)
   const router = useRouter()
   const queryClient = useQueryClient()
   const { isAuthenticated } = useAuth()
-  const query = useQuery({ queryKey: queryKeys.votes(id), queryFn: () => voteApi.list(id), enabled: Boolean(id) })
+  const query = useQuery({
+    queryKey: [...queryKeys.votes(id), share.round, share.candidate],
+    queryFn: () => voteApi.list(id, undefined, share),
+    enabled: Boolean(id),
+  })
   const voteMutation = useMutation({
-    mutationFn: (applicationId: string) => voteApi.cast(id, applicationId),
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: queryKeys.votes(id) }),
+    mutationFn: ({ applicationId }: { applicationId: string; name: string }) => voteApi.cast(id, applicationId),
+    onSuccess: (_res, vars) => {
+      setVotedName(vars.name)
+      void queryClient.invalidateQueries({ queryKey: queryKeys.votes(id) })
+    },
   })
 
   const page = query.data
+  const shared = page?.sharedCandidate ?? null
+  const linkRound = page?.roundNumber ?? 1
+  const lang = (i18n.language || 'ko').split('-')[0]
+  const urlFor = (item: PublicVoteItem) => voteShareUrl(WEB_URL, lang, id, linkRound, item.applicationId)
+  const nameOf = (item: PublicVoteItem) => item.userName || t('vote.applicantFallback')
+  const castFor = (item: PublicVoteItem) => {
+    if (!isAuthenticated) {
+      // 로그인 뒤 같은 후보 화면으로 돌아온다. 돌아와도 자동 투표는 하지 않는다.
+      const back = share.candidate && share.round ? voteSharePath(id, share.round, share.candidate) : `/auditions/${id}/vote`
+      router.push({ pathname: '/(auth)/login', params: { next: back } })
+      return
+    }
+    voteMutation.mutate({ applicationId: item.applicationId, name: nameOf(item) })
+  }
+  const windowNotice = page?.votingEnabled
+    ? null
+    : page?.voteStatus === 'SCHEDULED'
+      ? t('vote.scheduled', { start: page.voteStartAt ?? '' })
+      : page?.voteStatus === 'CLOSED'
+        ? t('vote.closedResults')
+        : t('vote.notStarted')
 
   return (
     <Screen loading={query.isLoading}>
       {query.isError ? <ErrorState message={t('vote.loadFailed')} onRetry={() => void query.refetch()} /> : null}
-      {page && !page.votingEnabled && (page.voteStatus !== 'CLOSED' || page.items.length === 0) ? (
+      {shared ? (
+        <View style={styles.sharedCard} testID="vote-shared-candidate">
+          {shared.thumbnailUrl || youtubeThumbnailUrl(shared.videoUrl) ? (
+            <Image source={{ uri: (shared.thumbnailUrl || youtubeThumbnailUrl(shared.videoUrl)) as string }} style={styles.sharedThumb} />
+          ) : null}
+          <Text style={styles.badge}>{t('voteShare.sharedBadge')} · {t('voteShare.roundLabel', { round: linkRound })}</Text>
+          <Text style={styles.sharedName}>{nameOf(shared)}</Text>
+          {shared.category ? <Text style={styles.meta}>{shared.category}</Text> : null}
+          {shared.description ? <Text style={styles.meta}>{shared.description}</Text> : null}
+          {shared.videoUrl ? (
+            playingId === `shared-${shared.applicationId}` ? (
+              <NativeVideoPlayer videoUrl={shared.videoUrl} autoplay />
+            ) : (
+              <Button label={t('vote.watchVideo')} variant="secondary" onPress={() => setPlayingId(`shared-${shared.applicationId}`)} />
+            )
+          ) : null}
+          {windowNotice ? <Text style={styles.notice}>{windowNotice}</Text> : null}
+          <Button
+            label={
+              page?.votingEnabled && page.myVoteApplicationId === shared.applicationId
+                ? t('voteShare.alreadyVoted')
+                : t('voteShare.voteFor', { name: nameOf(shared) })
+            }
+            disabled={!page?.votingEnabled || voteMutation.isPending || page.myVoteApplicationId === shared.applicationId}
+            onPress={() => castFor(shared)}
+          />
+          <VoteShareActions url={urlFor(shared)} title={t('voteShare.shareTitle', { name: nameOf(shared) })} text={t('voteShare.candidateText', { name: nameOf(shared) })} />
+          <Text style={styles.viewAll}>{t('voteShare.viewAll')} ↓</Text>
+        </View>
+      ) : null}
+      {votedName ? <Text style={styles.success} testID="vote-success">{t('voteShare.votedFor', { name: votedName })}</Text> : null}
+      {page && !shared && !page.votingEnabled && (page.voteStatus !== 'CLOSED' || page.items.length === 0) ? (
         <EmptyState
           title={
             page.votingPlanEnabled === false
@@ -75,15 +144,14 @@ export default function VoteScreen() {
           <Button
             label={item.isVoted ? t('vote.myVote') : t('vote.castFor')}
             disabled={item.isVoted || voteMutation.isPending}
-            onPress={() => {
-              if (!isAuthenticated) {
-                router.push('/(auth)/login')
-                return
-              }
-              voteMutation.mutate(item.applicationId)
-            }}
+            onPress={() => castFor(item)}
           />
           ) : null}
+          {shareOpenId === item.applicationId ? (
+            <VoteShareActions url={urlFor(item)} title={t('voteShare.shareTitle', { name: nameOf(item) })} text={t('voteShare.candidateText', { name: nameOf(item) })} />
+          ) : (
+            <Button label={t('voteShare.share')} variant="secondary" onPress={() => setShareOpenId(item.applicationId)} />
+          )}
         </View>
       ))}
       {voteMutation.isError ? (
@@ -112,4 +180,19 @@ const styles = StyleSheet.create({
   rank: { color: colors.purple, fontWeight: '800' },
   name: { fontSize: 16, fontWeight: '700', color: colors.text },
   error: { color: colors.dangerText },
+  sharedCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.card,
+    borderWidth: 2,
+    borderColor: colors.purple,
+    padding: 16,
+    gap: 10,
+    marginBottom: 16,
+  },
+  sharedThumb: { width: '100%', aspectRatio: 16 / 9, borderRadius: 12, backgroundColor: '#111' },
+  badge: { color: colors.purple, fontWeight: '700', fontSize: 12 },
+  sharedName: { fontSize: 22, fontWeight: '800', color: colors.text },
+  notice: { color: colors.text, backgroundColor: '#F3F4F6', padding: 10, borderRadius: 8, fontSize: 13 },
+  viewAll: { color: colors.purple, fontWeight: '600', textAlign: 'center' },
+  success: { color: colors.purple, fontWeight: '700', marginBottom: 12 },
 })
