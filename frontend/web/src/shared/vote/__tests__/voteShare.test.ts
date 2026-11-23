@@ -1,4 +1,11 @@
-import { facebookShareUrl, parseShareParams, smsShareUrl, voteSharePath, voteShareUrl } from '../voteShare'
+import {
+  facebookShareUrl,
+  INSTAGRAM_WEB_URL,
+  parseShareParams,
+  shareMessage,
+  voteSharePath,
+  voteShareUrl,
+} from '../voteShare'
 
 const A = '4c715209-1111-2222-3333-444455556666'
 
@@ -10,9 +17,13 @@ describe('voteShare', () => {
     expect(voteShareUrl('https://x.app', 'en', 'aud-1', 3, A).replace('/en/', '/ko/')).toBe(voteShareUrl('https://x.app', 'ko', 'aud-1', 3, A))
   })
 
-  it('builds official sharer and sms urls', () => {
-    expect(facebookShareUrl('https://x.app/ko/a?b=1')).toBe('https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fx.app%2Fko%2Fa%3Fb%3D1')
-    expect(smsShareUrl('hi', 'https://x.app')).toBe('sms:?&body=hi%0Ahttps%3A%2F%2Fx.app')
+  it('builds the official Facebook sharer and copies text with the link', () => {
+    expect(facebookShareUrl('https://x.app/ko/a?b=1')).toBe(
+      'https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fx.app%2Fko%2Fa%3Fb%3D1',
+    )
+    expect(INSTAGRAM_WEB_URL).toBe('https://www.instagram.com/')
+    expect(shareMessage('hi', 'https://x.app')).toBe('hi\nhttps://x.app')
+    expect(shareMessage('  ', 'https://x.app')).toBe('https://x.app')
   })
 
   it('drops tampered params', () => {

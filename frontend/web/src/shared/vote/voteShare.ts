@@ -17,10 +17,9 @@ export function facebookShareUrl(url: string): string {
   return `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`
 }
 
-/** 문자 앱 열기. `sms:?&body=` 는 Android·iOS 모두 본문을 채운다. */
-export function smsShareUrl(text: string, url: string): string {
-  return `sms:?&body=${encodeURIComponent(`${text}\n${url}`)}`
-}
+/** Instagram 공식 웹 링크 공유 주소는 없다. 웹은 이 주소로 열고, 앱은 instagram:// 를 먼저 시도한다. */
+export const INSTAGRAM_WEB_URL = 'https://www.instagram.com/'
+export const INSTAGRAM_APP_URLS = ['instagram://app', 'instagram://'] as const
 
 export function shareMessage(text: string, url: string): string {
   const body = text.trim()
