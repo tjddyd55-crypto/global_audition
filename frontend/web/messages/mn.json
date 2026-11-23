@@ -251,7 +251,11 @@
     "recruitCountries": "Бүртгэж буй улс",
     "recruitingNow": "Бүртгэл явагдаж буй",
     "seeAll": "Бүгдийг үзэх",
-    "recommendedBadge": "Онцлох"
+    "recommendedBadge": "Онцлох",
+    "brandName": "GLOBAL AUDITION",
+    "brandTagline": "Танд тохирох аудишныг хайж хадгалаарай",
+    "dDay": "D-{n}",
+    "dDayToday": "D-Day"
   },
   "auditions": {
     "title": "Аудишн",

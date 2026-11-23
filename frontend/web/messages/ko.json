@@ -251,7 +251,11 @@
     "recruitCountries": "모집 국가",
     "recruitingNow": "모집 중인 공고",
     "seeAll": "전체보기",
-    "recommendedBadge": "추천"
+    "recommendedBadge": "추천",
+    "brandName": "GLOBAL AUDITION",
+    "brandTagline": "나에게 맞는 오디션을 찾고 저장하세요",
+    "dDay": "D-{n}",
+    "dDayToday": "D-Day"
   },
   "auditions": {
     "title": "오디션",

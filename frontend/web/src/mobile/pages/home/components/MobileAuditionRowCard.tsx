@@ -10,12 +10,17 @@ import { devAuditionThumbnail } from '../devAssets'
 import { auditionHeadlineTitle, auditionListImageUrl, type AuditionDto } from '@/shared/types/audition'
 import { roundStatusLabel } from '@/shared/audition/roundStatusLabel'
 import SaveAuditionButton from '@/components/saves/SaveAuditionButton'
+import { recruitFieldLabels } from '@/shared/audition/recruitFields'
+import { formatDday } from '@/shared/recommend/reasonLabels'
+import { RecommendationReasons } from '@/shared/home/RecommendationReasons'
 
 type Props = {
   audition: AuditionDto
   /** 추천 섹션에서는 상태 대신 '추천' 배지를 쓴다. */
   badge?: 'status' | 'recommended'
   showSave?: boolean
+  reasons?: string[]
+  eligibility?: string | null
 }
 
 function formatDay(value: string | null | undefined, locale: string): string | null {
@@ -26,10 +31,12 @@ function formatDay(value: string | null | undefined, locale: string): string | n
 }
 
 /** 모바일 메인 공고 카드: 한 줄 1개, 왼쪽 썸네일 / 오른쪽 정보. */
-export default function MobileAuditionRowCard({ audition, badge = 'status', showSave = true }: Props) {
+export default function MobileAuditionRowCard({ audition, badge = 'status', showSave = true, reasons, eligibility }: Props) {
   const tStatus = useTranslations('status')
   const tHome = useTranslations('home')
   const tFallback = useTranslations('fallback')
+  const tCountry = useTranslations('country')
+  const tField = useTranslations('recruitField')
   const locale = useLocale()
   const primary = auditionListImageUrl(audition.images)
   // 실제 썸네일이 없을 때만 DEV 더미 이미지(id 기반 결정적) 사용
@@ -49,13 +56,18 @@ roundStatusLabel(status, audition.round, tStatus)
   const dates = start && end ? `${start} ~ ${end}` : start || end
   const agency = audition.agencyName?.trim()
   const location = audition.location?.trim()
+  const fields = recruitFieldLabels(audition.recruitFields, tField).join(' · ')
+  const code = audition.countryCode?.trim()
+  const country = code ? (['KR', 'MN', 'GLOBAL', 'JP', 'KH', 'UZ', 'OTHER'].includes(code) ? tCountry(code as 'KR') : code) : ''
+  const dday = formatDday(audition.remainingDays, (key, values) => tHome(key.replace(/^home\./, '') as 'dDay', values))
+  const meta = [fields, country, dday].filter(Boolean).join(' · ')
 
   return (
     <div className="relative">
     <Link
       href={`/auditions/${audition.id}`}
       data-testid="mobile-audition-card"
-      className="flex h-[124px] min-w-0 items-stretch overflow-hidden rounded-xl border border-neutral-200 bg-white text-inherit no-underline shadow-sm"
+      className="flex min-h-[124px] min-w-0 items-stretch overflow-hidden rounded-xl border border-neutral-200 bg-white text-inherit no-underline shadow-sm"
     >
       <div className="relative w-[38%] max-w-[168px] shrink-0 bg-neutral-900">
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -77,8 +89,9 @@ roundStatusLabel(status, audition.round, tStatus)
         <div className="min-w-0 flex-1">
           <h3 className="line-clamp-2 break-words text-[15px] font-bold leading-snug text-neutral-900">{title}</h3>
           {agency ? <p className="mt-1 truncate text-xs text-neutral-500">{agency}</p> : null}
-          {location ? <p className="mt-0.5 truncate text-xs text-neutral-500">{location}</p> : null}
+          {meta ? <p className="mt-0.5 truncate text-xs text-neutral-500">{meta}</p> : location ? <p className="mt-0.5 truncate text-xs text-neutral-500">{location}</p> : null}
           {dates ? <p className="mt-0.5 truncate text-xs text-neutral-500">{dates}</p> : null}
+          <RecommendationReasons reasons={reasons} eligibility={eligibility} />
         </div>
         <svg aria-hidden className="h-4 w-4 shrink-0 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
