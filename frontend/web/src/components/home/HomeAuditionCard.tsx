@@ -5,7 +5,7 @@ import AuditionCard from '@/components/cards/AuditionCard'
 import type { AuditionDto } from '@/shared/types/audition'
 import { recruitFieldLabels } from '@/shared/audition/recruitFields'
 import { formatDday } from '@/shared/recommend/reasonLabels'
-import { AuditionMetaLine, RecommendationReasons } from './RecommendationReasons'
+import { AuditionMetaLine, RecommendationReasons } from '@/shared/home/RecommendationReasons'
 
 export function HomeAuditionCard({
   audition,

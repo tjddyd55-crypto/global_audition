@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n.config'
-import { useHomeFeed } from '@/shared/home/useHomeFeed'
+import { useHomeFeed } from '@/components/home/useHomeFeed'
 import { ALL_OPEN_AUDIENCES, type AudienceFilterOption } from '@/shared/audition/audienceSelection'
 import EmptyState from '@/components/ui/EmptyState'
 import type { AuditionDto } from '@/shared/types/audition'
