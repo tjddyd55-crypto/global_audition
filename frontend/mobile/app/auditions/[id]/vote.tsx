@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useLocalSearchParams, useRouter } from 'expo-router'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Image, StyleSheet, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { voteApi } from '../../../src/api/endpoints'
@@ -35,8 +35,18 @@ export default function VoteScreen() {
     queryFn: () => voteApi.list(id, undefined, share),
     enabled: Boolean(id),
   })
+  const castInFlight = useRef(false)
   const voteMutation = useMutation({
-    mutationFn: ({ applicationId }: { applicationId: string; name: string }) => voteApi.cast(id, applicationId),
+    mutationFn: async ({ applicationId }: { applicationId: string; name: string }) => {
+      // 연타로 요청이 겹치지 않게 막는다.
+      if (castInFlight.current) return null
+      castInFlight.current = true
+      try {
+        return await voteApi.cast(id, applicationId)
+      } finally {
+        castInFlight.current = false
+      }
+    },
     onSuccess: (_res, vars) => {
       setVotedName(vars.name)
       void queryClient.invalidateQueries({ queryKey: queryKeys.votes(id) })
