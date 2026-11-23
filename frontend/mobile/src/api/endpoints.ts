@@ -339,6 +339,40 @@ export const publicPlatformApi = {
   agency: async (id: string) => unwrapData(await apiRequest<unknown>(`/agencies/public/${id}`, { auth: false })),
 }
 
+
+export type SavedAuditionItem = {
+  auditionId: string
+  savedAt: string
+  available: boolean
+  recruitmentStatus: 'OPEN' | 'CLOSED' | 'UPCOMING' | 'UNAVAILABLE'
+  title?: string | null
+  agencyName?: string | null
+  coverImage?: string | null
+  countryCode?: string | null
+  hostCountry?: string | null
+  recruitFields?: string[]
+  deadlineAt?: string | null
+  startDate?: string | null
+  endDate?: string | null
+}
+
+export const auditionSavesApi = {
+  list: async (): Promise<SavedAuditionItem[]> => {
+    const rows = unwrapData(await apiRequest<unknown>('/me/audition-saves'))
+    return Array.isArray(rows) ? (rows as SavedAuditionItem[]) : []
+  },
+  ids: async (): Promise<string[]> => {
+    const body = unwrapData(await apiRequest<unknown>('/me/audition-saves/ids')) as { ids?: string[] } | string[] | null
+    if (Array.isArray(body)) return body.map(String)
+    return Array.isArray(body?.ids) ? body.ids.map(String) : []
+  },
+  save: async (auditionId: string): Promise<SavedAuditionItem> =>
+    unwrapData(await apiRequest<unknown>(`/me/audition-saves/${auditionId}`, { method: 'PUT' })) as SavedAuditionItem,
+  unsave: async (auditionId: string): Promise<void> => {
+    await apiRequest<unknown>(`/me/audition-saves/${auditionId}`, { method: 'DELETE' })
+  },
+}
+
 export function isAgencyRole(role: UserRole | string | null | undefined): boolean {
   return role === 'AGENCY' || role === 'ADMIN' || role === 'SUPER_ADMIN'
 }

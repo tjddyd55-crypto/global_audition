@@ -1576,6 +1576,7 @@
     "channel": "Mening kanalim",
     "content": "Kontent",
     "applications": "Arizalar",
+    "savedAuditions": "Saqlangan kastinglar",
     "credits": "Kreditlar",
     "notifications": "Bildirishnomalar",
     "settings": "Hisob sozlamalari",
@@ -2034,5 +2035,24 @@
     "nameRequired": "Vasiy ismini kiriting.",
     "method": "Usul: ulashilgan havola (email yoki SMS yoʻq)",
     "loading": "Yuklanmoqda…"
+  },
+  "savedAuditions": {
+    "menu": "Saqlangan kastinglar",
+    "title": "Saqlangan kastinglar",
+    "empty": "Hali saqlangan kastinglar yoʻq.",
+    "save": "Saqlash",
+    "unsave": "Olib tashlash",
+    "saved": "Saqlangan",
+    "loginRequired": "Kastingni saqlash uchun tizimga kiring.",
+    "loginAction": "Kirish",
+    "statusOpen": "Ochiq",
+    "statusClosed": "Yopilgan",
+    "statusUpcoming": "Tezda boshlanadi",
+    "unavailable": "Bu eʼlon oʻchirilgan yoki endi ochiq emas.",
+    "unavailableHint": "Maxfiy tafsilotlar koʻrsatilmaydi.",
+    "toggleFailed": "Saqlash holatini oʻzgartirib boʻlmadi.",
+    "saveAria": "Bu kastingni saqlash",
+    "unsaveAria": "Saqlanganlardan olib tashlash",
+    "deadline": "Muddat {date}"
   }
 }

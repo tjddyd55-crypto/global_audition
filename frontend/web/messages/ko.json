@@ -1576,6 +1576,7 @@
     "channel": "내 채널",
     "content": "콘텐츠 관리",
     "applications": "오디션 지원 현황",
+    "savedAuditions": "관심 오디션",
     "credits": "크레딧",
     "notifications": "알림",
     "settings": "계정 설정",
@@ -2034,5 +2035,24 @@
     "nameRequired": "보호자 이름을 입력해 주세요.",
     "method": "확인 방식: 공유 링크 (이메일·문자 발송 없음)",
     "loading": "불러오는 중…"
+  },
+  "savedAuditions": {
+    "menu": "관심 오디션",
+    "title": "관심 오디션",
+    "empty": "저장한 오디션이 없습니다.",
+    "save": "관심 저장",
+    "unsave": "관심 해제",
+    "saved": "저장됨",
+    "loginRequired": "관심 오디션을 저장하려면 로그인해 주세요.",
+    "loginAction": "로그인",
+    "statusOpen": "모집 중",
+    "statusClosed": "마감",
+    "statusUpcoming": "예정",
+    "unavailable": "이 공고는 삭제되었거나 비공개입니다.",
+    "unavailableHint": "민감한 내용은 표시되지 않습니다.",
+    "toggleFailed": "저장 상태를 바꾸지 못했습니다.",
+    "saveAria": "관심 오디션으로 저장",
+    "unsaveAria": "관심 오디션에서 제거",
+    "deadline": "마감 {date}"
   }
 }

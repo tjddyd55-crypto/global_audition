@@ -10,6 +10,7 @@ import { canShowVoting, canViewRanking } from '../../../src/domain/ranking'
 import { Button } from '../../../src/ui/Button'
 import { ErrorState } from '../../../src/ui/EmptyState'
 import { PosterImage } from '../../../src/ui/PosterImage'
+import { SaveAuditionButton } from '../../../src/features/saves/SaveAuditionButton'
 import { Screen } from '../../../src/ui/Screen'
 import { StatusPill, toneForApplicationStatus } from '../../../src/ui/StatusPill'
 import { StickyCta } from '../../../src/ui/StickyCta'
@@ -68,7 +69,14 @@ export default function AuditionDetailScreen() {
       {query.isError ? <ErrorState message={t('auditionDetail.loadFailed')} onRetry={() => void query.refetch()} /> : null}
       {audition ? (
         <View>
-          <PosterImage uri={auditionDetailImageUrl(audition.images)} />
+          <View style={styles.posterWrap}>
+            <PosterImage uri={auditionDetailImageUrl(audition.images)} />
+            {id ? (
+              <View style={styles.heart}>
+                <SaveAuditionButton auditionId={String(Array.isArray(id) ? id[0] : id)} />
+              </View>
+            ) : null}
+          </View>
           <View style={styles.body}>
             <StatusPill
               label={auditionStatusLabel(audition.status, audition.recruitmentRoundLabel)}
@@ -164,6 +172,8 @@ function Info({ label, items }: { label: string; items: string[] }) {
 }
 
 const styles = StyleSheet.create({
+  posterWrap: { position: 'relative' },
+  heart: { position: 'absolute', top: 12, right: 12, zIndex: 2 },
   body: { padding: 16, gap: 10, paddingBottom: 24 },
   quickInfo: { backgroundColor: colors.heroStart, borderRadius: 10, padding: 12, gap: 6 },
   gallery: { gap: 10, marginTop: 8 },

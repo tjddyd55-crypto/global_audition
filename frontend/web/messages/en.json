@@ -1576,6 +1576,7 @@
     "channel": "My Channel",
     "content": "Content",
     "applications": "Applications",
+    "savedAuditions": "Saved auditions",
     "credits": "Credits",
     "notifications": "Notifications",
     "settings": "Account settings",
@@ -2034,5 +2035,24 @@
     "nameRequired": "Please enter the guardian name.",
     "method": "Method: shared link (no email or SMS)",
     "loading": "Loading…"
+  },
+  "savedAuditions": {
+    "menu": "Saved auditions",
+    "title": "Saved auditions",
+    "empty": "You have not saved any auditions yet.",
+    "save": "Save",
+    "unsave": "Remove",
+    "saved": "Saved",
+    "loginRequired": "Please sign in to save auditions.",
+    "loginAction": "Log in",
+    "statusOpen": "Open",
+    "statusClosed": "Closed",
+    "statusUpcoming": "Upcoming",
+    "unavailable": "This posting was deleted or is no longer public.",
+    "unavailableHint": "Sensitive details are hidden.",
+    "toggleFailed": "Could not update the saved state.",
+    "saveAria": "Save this audition",
+    "unsaveAria": "Remove this audition from saved",
+    "deadline": "Deadline {date}"
   }
 }

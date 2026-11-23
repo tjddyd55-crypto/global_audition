@@ -7,6 +7,7 @@ import { safeStr } from '@/shared/utils/safe'
 import { AUDITION_COVER_PLACEHOLDER_SRC } from '@/components/audition/AuditionEditorPreview'
 import { heroContrast } from '@/components/audition/heroContrast'
 import { useTranslations } from 'next-intl'
+import SaveAuditionButton from '@/components/saves/SaveAuditionButton'
 
 type AuditionDetailHeroSectionProps = {
   auditionId: string
@@ -141,6 +142,11 @@ export function AuditionDetailHeroSection({
         >
           {pillLabel}
         </div>
+        {!interactionsDisabled ? (
+          <div className="absolute right-3 top-3 z-[3]">
+            <SaveAuditionButton auditionId={auditionId} />
+          </div>
+        ) : null}
 
         <div className={contrast.overlay}>
           <h1 className={contrast.title} style={{ fontWeight: AUDITION_DETAIL.heroTitleWeight }}>

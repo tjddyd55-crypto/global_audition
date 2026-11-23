@@ -14,6 +14,7 @@ const LINKS = [
   { href: '/my/studio/privacy', key: 'privacy' },
   { href: '/my/studio/content', key: 'content' },
   { href: '/my/studio/applications', key: 'applications' },
+  { href: '/my/studio/saved', key: 'savedAuditions' },
   { href: '/my/studio/casting', key: 'castingOffers' },
   { href: '/my/studio/credits', key: 'credits' },
   { href: '/my/studio/notifications', key: 'notifications' },

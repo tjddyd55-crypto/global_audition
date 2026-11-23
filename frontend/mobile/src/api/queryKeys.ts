@@ -18,5 +18,7 @@ export const queryKeys = {
   creditPackages: ['credits', 'packages'] as const,
   creditLedger: ['credits', 'ledger'] as const,
   notifications: ['me', 'notifications'] as const,
+  savedAuditionIds: ['me', 'audition-saves', 'ids'] as const,
+  savedAuditions: ['me', 'audition-saves', 'list'] as const,
   channel: ['me', 'channel'] as const,
 }

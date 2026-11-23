@@ -1,4 +1,5 @@
 ﻿import { render, screen } from '@testing-library/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { NextIntlClientProvider } from 'next-intl'
 import AuditionCard from '../audition/AuditionCard'
 import type { AuditionDto } from '@/shared/types/audition'
@@ -29,16 +30,29 @@ const mockAudition: AuditionDto = {
 }
 
 function renderAuditionCard(audition: AuditionDto) {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
-    <NextIntlClientProvider
-      locale="ko"
-      messages={{
-        status: { open: '모집중', closed: '마감', draft: '초안', roundOpen: '{n}차 모집 중', roundClosed: '{n}차 마감', roundDraft: '{n}차 · 초안' },
-        fallback: { videoTitle: '제목 없음', date: '날짜 없음' },
-      }}
-    >
-      <AuditionCard audition={audition} />
-    </NextIntlClientProvider>,
+    <QueryClientProvider client={client}>
+      <NextIntlClientProvider
+        locale="ko"
+        messages={{
+          status: { open: '모집중', closed: '마감', draft: '초안', roundOpen: '{n}차 모집 중', roundClosed: '{n}차 마감', roundDraft: '{n}차 · 초안' },
+          fallback: { videoTitle: '제목 없음', date: '날짜 없음' },
+          common: { close: '닫기' },
+          savedAuditions: {
+            save: '관심 저장',
+            unsave: '관심 해제',
+            saveAria: '관심 오디션으로 저장',
+            unsaveAria: '관심 오디션에서 제거',
+            loginRequired: '로그인해 주세요.',
+            loginAction: '로그인',
+            toggleFailed: '실패',
+          },
+        }}
+      >
+        <AuditionCard audition={audition} />
+      </NextIntlClientProvider>
+    </QueryClientProvider>,
   )
 }
 

@@ -29,6 +29,7 @@ export default function MainHeader() {
   const tAgency = useTranslations('agency')
   const tChannel = useTranslations('channel')
   const tVault = useTranslations('vault')
+  const tSaved = useTranslations('savedAuditions')
   const locale = useLocale()
   const router = useRouter()
   const pathname = usePathname()
@@ -243,6 +244,11 @@ export default function MainHeader() {
                       {tNav('applications')}
                     </Link>
                   ) : null}
+                  {accessToken ? (
+                    <Link href="/my/saved-auditions" className={DROPDOWN_ITEM} onClick={closeUserMenu}>
+                      {tSaved('menu')}
+                    </Link>
+                  ) : null}
                   <Link href="/channel" className={DROPDOWN_ITEM} onClick={closeUserMenu}>
                     {tChannel('manageMine')}
                   </Link>
@@ -393,6 +399,15 @@ export default function MainHeader() {
                     className="w-full rounded-lg border border-[#E5E7EB] py-3 text-center text-sm text-gray-900"
                   >
                     {tNav('applications')}
+                  </Link>
+                ) : null}
+                {accessToken ? (
+                  <Link
+                    href="/my/saved-auditions"
+                    onClick={() => setIsMobileOpen(false)}
+                    className="w-full rounded-lg border border-[#E5E7EB] py-3 text-center text-sm text-gray-900"
+                  >
+                    {tSaved('menu')}
                   </Link>
                 ) : null}
                 <Link
