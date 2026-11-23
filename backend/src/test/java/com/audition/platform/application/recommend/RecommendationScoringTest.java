@@ -58,6 +58,10 @@ class RecommendationScoringTest {
         assertFalse(RecommendationScoring.isClosingSoon(later, NOW));
         assertFalse(RecommendationScoring.isClosingSoon(closed, NOW));
         assertFalse(RecommendationScoring.isClosingSoon(past, NOW));
+        Instant midMorning = Instant.parse("2026-11-23T05:17:00Z");
+        RecommendationScoring.Candidate calendarD3 = candidate(
+                "d3", "OPEN", "KR", "KR", new String[] {}, new String[] {}, Instant.parse("2026-11-26T06:51:18Z"), 0);
+        assertTrue(RecommendationScoring.isClosingSoon(calendarD3, midMorning));
     }
 
     @Test

@@ -4,6 +4,8 @@ import com.audition.platform.application.AuditionService;
 import com.audition.platform.domain.audition.RecruitFieldCodes;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -79,7 +81,11 @@ public final class RecommendationScoring {
         if (due == null || now == null || due.isBefore(now)) {
             return false;
         }
-        return !due.isAfter(now.plus(CLOSING_SOON_DAYS, ChronoUnit.DAYS));
+        // 남은 일수는 공고 remainingDays와 같이 UTC 달력 기준. 72시간 창이면 D-3(날짜) 공고가 빠진다.
+        LocalDate today = now.atZone(ZoneOffset.UTC).toLocalDate();
+        LocalDate end = due.atZone(ZoneOffset.UTC).toLocalDate();
+        long days = ChronoUnit.DAYS.between(today, end);
+        return days >= 0 && days <= CLOSING_SOON_DAYS;
     }
 
     public static boolean matchesUserCountry(String audience, String host, String nationality, String residence) {
