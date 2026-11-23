@@ -31,20 +31,34 @@ export default function VoteScreen() {
   return (
     <Screen loading={query.isLoading}>
       {query.isError ? <ErrorState message={t('vote.loadFailed')} onRetry={() => void query.refetch()} /> : null}
-      {page && !page.votingEnabled ? <EmptyState title={t('vote.disabledRound')} /> : null}
-      {page && page.votingEnabled ? (
+      {page && !page.votingEnabled && (page.voteStatus !== 'CLOSED' || page.items.length === 0) ? (
+        <EmptyState
+          title={
+            page.votingPlanEnabled === false
+              ? t('vote.disabledRound')
+              : page.voteStatus === 'SCHEDULED'
+                ? t('vote.scheduled', { start: page.voteStartAt ?? '' })
+                : page.voteStatus === 'CLOSED'
+                  ? t('vote.closedResults')
+                  : t('vote.notStarted')
+          }
+        />
+      ) : null}
+      {page && (page.votingEnabled || (page.voteStatus === 'CLOSED' && page.items.length > 0)) ? (
         <View style={styles.head}>
           <Text style={styles.title}>{page.audition.title}</Text>
           <Text style={styles.meta}>
-            {t('vote.summary', {
-              applicants: page.summary.applicantCount,
-              votes: page.summary.totalVotes,
-              mine: page.summary.myVoteCount,
-            })}
+            {page.voteStatus === 'CLOSED'
+              ? t('vote.closedResults')
+              : t('vote.summary', {
+                  applicants: page.summary.applicantCount,
+                  votes: page.summary.totalVotes,
+                  mine: page.summary.myVoteCount,
+                })}
           </Text>
         </View>
       ) : null}
-      {(page?.votingEnabled ? page.items : []).map((item) => (
+      {(page && (page.votingEnabled || (page.voteStatus === 'CLOSED' && page.items.length > 0)) ? page.items : []).map((item) => (
         <View key={item.applicationId} style={styles.card}>
           <Text style={styles.rank}>#{item.rank || '-'}</Text>
           <Text style={styles.name}>{item.userName || t('vote.applicantFallback')}</Text>
@@ -57,6 +71,7 @@ export default function VoteScreen() {
               <Button label={t('vote.watchVideo')} variant="secondary" onPress={() => setPlayingId(item.applicationId)} />
             )
           ) : null}
+          {page?.votingEnabled ? (
           <Button
             label={item.isVoted ? t('vote.myVote') : t('vote.castFor')}
             disabled={item.isVoted || voteMutation.isPending}
@@ -68,12 +83,13 @@ export default function VoteScreen() {
               voteMutation.mutate(item.applicationId)
             }}
           />
+          ) : null}
         </View>
       ))}
       {voteMutation.isError ? (
         <Text style={styles.error}>{voteMutation.error instanceof ApiError ? voteMutation.error.message : t('vote.failed')}</Text>
       ) : null}
-      {!query.isLoading && page?.votingEnabled !== false && (page?.items.length ?? 0) === 0 ? (
+      {!query.isLoading && page?.votingEnabled && (page?.items.length ?? 0) === 0 ? (
         <EmptyState title={t('vote.emptyBoard')} />
       ) : null}
     </Screen>

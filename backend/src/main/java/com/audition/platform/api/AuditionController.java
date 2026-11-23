@@ -67,6 +67,13 @@ public class AuditionController {
         return auditionService.listByStatus(status);
     }
 
+    /** 지금 열려 있는 공개 투표만. 일반 모집 목록(/api/auditions)과는 별개다. */
+    @GetMapping("/voting")
+    public List<AuditionResponse> listOpenVotes(
+            @RequestParam(value = "country", required = false) String country) {
+        return auditionService.listOpenPublicVotes(country);
+    }
+
     @GetMapping("/browse")
     public ResponseEntity<List<AuditionResponse>> browse(
             @RequestParam(required = false) String recruitment,

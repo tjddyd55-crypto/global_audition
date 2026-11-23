@@ -78,6 +78,11 @@ public class AuditionResponse {
     private boolean votingEnabled = true;
     /** 투표 기준 현재 회차 번호 */
     private int votingRoundNumber = 1;
+    /** NOT_STARTED / SCHEDULED / OPEN / CLOSED */
+    private String voteStatus;
+    private java.time.Instant voteStartAt;
+    private java.time.Instant voteEndAt;
+    private Integer voteRoundNumber;
 
     /** 표시용 제목(2차부터는 "기본 (N차)" 형태). */
     private String displayTitle;
@@ -279,6 +284,14 @@ public class AuditionResponse {
     public void setVotingEnabled(boolean votingEnabled) { this.votingEnabled = votingEnabled; }
     public int getVotingRoundNumber() { return votingRoundNumber; }
     public void setVotingRoundNumber(int votingRoundNumber) { this.votingRoundNumber = votingRoundNumber; }
+    public String getVoteStatus() { return voteStatus; }
+    public void setVoteStatus(String voteStatus) { this.voteStatus = voteStatus; }
+    public java.time.Instant getVoteStartAt() { return voteStartAt; }
+    public void setVoteStartAt(java.time.Instant voteStartAt) { this.voteStartAt = voteStartAt; }
+    public java.time.Instant getVoteEndAt() { return voteEndAt; }
+    public void setVoteEndAt(java.time.Instant voteEndAt) { this.voteEndAt = voteEndAt; }
+    public Integer getVoteRoundNumber() { return voteRoundNumber; }
+    public void setVoteRoundNumber(Integer voteRoundNumber) { this.voteRoundNumber = voteRoundNumber; }
 
     @JsonProperty("round")
     public void setSeriesRound(int seriesRound) {

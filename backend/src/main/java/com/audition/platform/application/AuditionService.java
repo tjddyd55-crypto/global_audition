@@ -1,5 +1,7 @@
 package com.audition.platform.application;
 
+import com.audition.platform.application.vote.PublicVoteScheduleService;
+import com.audition.platform.application.vote.VoteWindow;
 import com.audition.platform.application.vote.VotingRoundPlan;
 
 import com.audition.platform.api.dto.AuditionImagesDto;
@@ -62,6 +64,7 @@ public class AuditionService {
     private final ContentTranslationService contentTranslations;
     private final JdbcCrmStore crm;
     private final PostingBranchPolicy postingBranchPolicy;
+    private final PublicVoteScheduleService publicVoteScheduleService;
 
     public AuditionService(AuditionRepository auditionRepository,
                            UserRepository userRepository,
@@ -72,7 +75,8 @@ public class AuditionService {
                            AuditionLocalizationService auditionLocalizationService,
                            ContentTranslationService contentTranslations,
                            JdbcCrmStore crm,
-                           PostingBranchPolicy postingBranchPolicy) {
+                           PostingBranchPolicy postingBranchPolicy,
+                           PublicVoteScheduleService publicVoteScheduleService) {
         this.auditionRepository = auditionRepository;
         this.userRepository = userRepository;
         this.applicationRepository = applicationRepository;
@@ -83,6 +87,7 @@ public class AuditionService {
         this.contentTranslations = contentTranslations;
         this.crm = crm;
         this.postingBranchPolicy = postingBranchPolicy;
+        this.publicVoteScheduleService = publicVoteScheduleService;
     }
 
     /** 연결된 기획사 심사가 끝나기 전에는 게시·마감을 막는다. 심사 행이 없으면 기존 권한을 유지한다. */
@@ -289,7 +294,15 @@ public class AuditionService {
         r.setVotingRoundCount(a.getVotingRoundCount());
         r.setVotingRounds(a.getVotingRounds());
         r.setVotingRoundNumber(VotingRoundPlan.activeRound(a));
-        r.setVotingEnabled(VotingRoundPlan.enabledNow(a));
+        java.time.Instant now = java.time.Instant.now();
+        VoteWindow.Phase phase = VoteWindow.phase(a, now);
+        r.setVoteStatus(phase.name());
+        r.setVoteStartAt(a.getVoteStartAt());
+        r.setVoteEndAt(a.getVoteEndAt());
+        r.setVoteRoundNumber(a.getVoteRoundNumber());
+        // votingEnabled 는 '지금 표를 받을 수 있는지'. 랭킹 공개는 voteStatus 가 OPEN/CLOSED 일 때.
+        int votePlanRound = a.getVoteRoundNumber() != null ? a.getVoteRoundNumber() : VotingRoundPlan.activeRound(a);
+        r.setVotingEnabled(VotingRoundPlan.enabledFor(a.getVotingRounds(), votePlanRound) && phase == VoteWindow.Phase.OPEN);
         if (localize) {
             auditionLocalizationService.apply(a, r);
         } else {
@@ -417,6 +430,14 @@ public class AuditionService {
 
     public List<AuditionResponse> listOpen(String country) {
         return auditionRepository.findByStatusOrderByCreatedAtDesc("OPEN").stream()
+                .filter(a -> matchesPublicCountry(a.getCountryCode(), a.getHostCountry(), country))
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    /** 지금 열려 있는 공개 투표만. 시작 전·후보 없는 공고는 빼서 빈 투표판이 목록에 나오지 않게 한다. */
+    public List<AuditionResponse> listOpenPublicVotes(String country) {
+        return publicVoteScheduleService.listOpenVotes().stream()
                 .filter(a -> matchesPublicCountry(a.getCountryCode(), a.getHostCountry(), country))
                 .map(this::toResponse)
                 .collect(Collectors.toList());

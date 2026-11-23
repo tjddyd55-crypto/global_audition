@@ -1,4 +1,4 @@
-import { parseAuditionVotingFields } from '../../../web/src/shared/audition/votingRounds'
+import { parseAuditionVotingFields, parseVoteStatus } from '../../../web/src/shared/audition/votingRounds'
 import type {
   ApplicantDashboard,
   CreditLedgerItem,
@@ -192,6 +192,12 @@ export function parseVotePage(raw: unknown): PublicVotesPage {
   const categories = Array.isArray(audition.categories) ? audition.categories : []
   return {
     votingEnabled: body.votingEnabled !== false,
+    votingPlanEnabled: body.votingPlanEnabled !== false,
+    roundNumber: Number(body.roundNumber ?? 1) || 1,
+    voteStatus: parseVoteStatus(body.voteStatus),
+    voteStartAt: body.voteStartAt != null ? String(body.voteStartAt) : null,
+    voteEndAt: body.voteEndAt != null ? String(body.voteEndAt) : null,
+    voteRoundNumber: body.voteRoundNumber != null ? Number(body.voteRoundNumber) : null,
     audition: {
       id: asString(audition.id),
       title: asString(audition.title),

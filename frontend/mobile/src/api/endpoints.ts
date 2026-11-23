@@ -102,6 +102,14 @@ export const auditionApi = {
     const rows = Array.isArray(data) ? data : []
     return rows.map((row) => parseAuditionDto(row))
   },
+  listOpenVotes: async (country?: string): Promise<AuditionDto[]> => {
+    const data = await apiRequest<unknown>('/auditions/voting', {
+      query: { country: normalizeAudienceCountry(country) },
+      auth: false,
+    })
+    const rows = Array.isArray(data) ? data : []
+    return rows.map((row) => parseAuditionDto(row))
+  },
   getById: async (id: string): Promise<AuditionDto> => parseAuditionDto(await apiRequest<unknown>(`/auditions/${id}`)),
   browse: async (query: Record<string, string | undefined>): Promise<AuditionDto[]> => {
     const data = await apiRequest<unknown>('/auditions/browse', { query, auth: false })

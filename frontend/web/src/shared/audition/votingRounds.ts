@@ -7,12 +7,25 @@ export const MAX_VOTING_ROUNDS = 10
 
 export type VotingPreset = 'NONE' | 'FINAL' | 'ALL' | 'CUSTOM'
 
+export type VoteStatus = 'NOT_STARTED' | 'SCHEDULED' | 'OPEN' | 'CLOSED'
+
 export type AuditionVotingFields = {
   votingRoundCount: number | null
   votingRounds: number[] | null
-  /** 현재 회차에서 투표·랭킹 사용 여부(서버 계산). 값이 없으면 기존 동작 = true */
+  /** 지금 표를 받을 수 있는지(서버 계산). 값이 없으면 기존 동작 = true */
   votingEnabled: boolean
   votingRoundNumber: number
+  voteStatus?: VoteStatus
+  voteStartAt?: string | null
+  voteEndAt?: string | null
+  voteRoundNumber?: number | null
+}
+
+const VOTE_STATUSES: VoteStatus[] = ['NOT_STARTED', 'SCHEDULED', 'OPEN', 'CLOSED']
+
+export function parseVoteStatus(raw: unknown): VoteStatus | undefined {
+  const v = typeof raw === 'string' ? raw.trim().toUpperCase() : ''
+  return (VOTE_STATUSES as string[]).includes(v) ? (v as VoteStatus) : undefined
 }
 
 export function parseAuditionVotingFields(raw: Record<string, unknown>): AuditionVotingFields {
@@ -21,11 +34,20 @@ export function parseAuditionVotingFields(raw: Record<string, unknown>): Auditio
     ? (raw.votingRounds as unknown[]).map((n) => Number(n)).filter((n) => Number.isInteger(n) && n >= 1)
     : null
   const roundNumber = Number(raw.votingRoundNumber)
+  const voteRound = Number(raw.voteRoundNumber)
+  const iso = (v: unknown): string | null => {
+    if (v == null || String(v).trim() === '') return null
+    return String(v)
+  }
   return {
     votingRoundCount: Number.isInteger(count) && count >= 1 ? count : null,
     votingRounds: rounds,
     votingEnabled: raw.votingEnabled === false ? false : true,
     votingRoundNumber: Number.isInteger(roundNumber) && roundNumber >= 1 ? roundNumber : 1,
+    voteStatus: parseVoteStatus(raw.voteStatus),
+    voteStartAt: iso(raw.voteStartAt),
+    voteEndAt: iso(raw.voteEndAt),
+    voteRoundNumber: Number.isInteger(voteRound) && voteRound >= 1 ? voteRound : null,
   }
 }
 

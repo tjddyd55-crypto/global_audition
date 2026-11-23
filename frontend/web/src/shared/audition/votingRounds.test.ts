@@ -26,12 +26,19 @@ describe('votingRounds', () => {
     expect(normalizeRounds([5, 2, 2, 0], 3)).toEqual([2])
   })
   it('parses API fields with legacy defaults', () => {
-    expect(parseAuditionVotingFields({})).toEqual({ votingRoundCount: null, votingRounds: null, votingEnabled: true, votingRoundNumber: 1 })
-    expect(parseAuditionVotingFields({ votingRoundCount: 3, votingRounds: [3], votingEnabled: false, votingRoundNumber: 1 })).toEqual({
+    expect(parseAuditionVotingFields({})).toEqual({
+      votingRoundCount: null, votingRounds: null, votingEnabled: true, votingRoundNumber: 1,
+      voteStatus: undefined, voteStartAt: null, voteEndAt: null, voteRoundNumber: null,
+    })
+    expect(parseAuditionVotingFields({ votingRoundCount: 3, votingRounds: [3], votingEnabled: false, votingRoundNumber: 1, voteStatus: 'OPEN', voteStartAt: '2026-11-23T00:00:00Z', voteEndAt: '2026-11-24T00:00:00Z', voteRoundNumber: 3 })).toEqual({
       votingRoundCount: 3,
       votingRounds: [3],
       votingEnabled: false,
       votingRoundNumber: 1,
+      voteStatus: 'OPEN',
+      voteStartAt: '2026-11-23T00:00:00Z',
+      voteEndAt: '2026-11-24T00:00:00Z',
+      voteRoundNumber: 3,
     })
   })
   it('edit form shows legacy (null) as all rounds', () => {

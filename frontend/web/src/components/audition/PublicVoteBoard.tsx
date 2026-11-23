@@ -105,11 +105,31 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback }: Props) {
   }
 
   const p = votesQuery.data
-  if (p && !p.votingEnabled) {
-    // 공고 투표 설정상 이 회차는 투표를 하지 않는다. 기존 투표 데이터는 서버에 남아 있다.
+  const formatWhen = (iso?: string | null) => {
+    if (!iso) return ''
+    const d = new Date(iso)
+    if (Number.isNaN(d.getTime())) return iso
+    return new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(d)
+  }
+  const planOff = p && p.votingPlanEnabled === false
+  const phase = p?.voteStatus
+  const showClosedResults = Boolean(p && phase === 'CLOSED' && (p.items?.length ?? 0) > 0)
+  if (p && !p.votingEnabled && !showClosedResults) {
+    const message = planOff
+      ? t('disabledRound')
+      : phase === 'SCHEDULED'
+        ? t('scheduled', { start: formatWhen(p.voteStartAt) })
+        : phase === 'CLOSED'
+          ? t('closedResults')
+          : t('notStarted')
     return (
       <div className={`${PAGE_CONTAINER} py-12 text-center`} data-testid="vote-disabled">
-        <p className="text-sm text-neutral-600">{t('disabledRound')}</p>
+        <p className="text-sm text-neutral-600">{message}</p>
+        {phase === 'CLOSED' || phase === 'OPEN' ? (
+          <Link href={`/auditions/${auditionId}/ranking`} className="mt-4 mr-3 inline-block text-sm font-medium text-violet-700 no-underline">
+            {t('viewResults')}
+          </Link>
+        ) : null}
         <Link href={`/auditions/${auditionId}`} className="mt-4 inline-block text-sm font-medium text-violet-700 no-underline">
           ← {t('backToAudition')}
         </Link>
@@ -120,7 +140,8 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback }: Props) {
   const summary = p?.summary
   const items = p?.items ?? []
   const title = audition?.title || auditionTitleFallback
-  const subCopy = t('cheerHint')
+  const canCast = Boolean(p?.votingEnabled)
+  const subCopy = phase === 'CLOSED' ? t('closedResults') : t('cheerHint')
 
   return (
     <div className="min-h-screen bg-gray-50 pb-8">
@@ -243,7 +264,7 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback }: Props) {
                     <span className="text-sm font-medium text-gray-800">
                       ♥ {formatCount(item.voteCount, locale)} <span className="text-gray-500">{t('votes')}</span>
                     </span>
-                    {item.isVoted ? (
+                    {canCast && item.isVoted ? (
                       <button
                         type="button"
                         disabled={voteMutationBusy}
@@ -255,7 +276,7 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback }: Props) {
                       >
                         {t('cancelVote')}
                       </button>
-                    ) : (
+                    ) : canCast ? (
                       <button
                         type="button"
                         disabled={voteMutationBusy}
@@ -267,7 +288,7 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback }: Props) {
                       >
                         {t('voteAction')}
                       </button>
-                    )}
+                    ) : null}
                   </div>
                 </div>
               </article>

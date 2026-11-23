@@ -118,10 +118,14 @@ export type AuditionDto = {
   votingRoundCount?: number | null
   /** 투표 회차(null = 기존 동작: 모든 회차, [] = 투표 없음) */
   votingRounds?: number[] | null
-  /** 현재 회차에서 투표·랭킹 사용(서버 계산, 없으면 true) */
+  /** 지금 표를 받을 수 있는지(서버 계산, 없으면 true) */
   votingEnabled?: boolean
   /** 투표 기준 현재 회차 번호 */
   votingRoundNumber?: number
+  voteStatus?: 'NOT_STARTED' | 'SCHEDULED' | 'OPEN' | 'CLOSED'
+  voteStartAt?: string | null
+  voteEndAt?: string | null
+  voteRoundNumber?: number | null
   /** 표시용 제목 "기본 (2차)" */
   displayTitle?: string
   /** 예: "2차 모집 중" */

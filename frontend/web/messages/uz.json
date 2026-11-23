@@ -521,7 +521,15 @@
     "nameUnset": "Ism yoʻq",
     "applicantVideo": "{name} ning ariza videosi",
     "emptyApplicants": "Koʻrsatiladigan nomzodlar yoʻq.",
-    "disabledRound": "Bu bosqichda ochiq ovoz berish oʻtkazilmaydi."
+    "disabledRound": "Bu bosqichda ochiq ovoz berish oʻtkazilmaydi.",
+    "notStarted": "Ovoz berish hali boshlanmagan.",
+    "scheduled": "Ovoz berish {start} da boshlanadi.",
+    "closed": "Ovoz berish yakunlandi.",
+    "closedResults": "Ovoz berish yakunlandi. Natijalarni reyting doskasida koʻrishingiz mumkin.",
+    "viewResults": "Natijalarni koʻrish",
+    "statusScheduled": "Rejalashtirilgan",
+    "statusOpen": "Davom etmoqda",
+    "statusClosed": "Yakunlangan"
   },
   "ranking": {
     "title": "Reyting",

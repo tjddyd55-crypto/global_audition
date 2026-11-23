@@ -10,6 +10,7 @@ import { auditionApi, getManageList, type ManageApplicantItem } from '@/shared/a
 import { ALL_CATEGORY_SENTINEL, isAllCategoryName } from '@/shared/audition/allCategorySentinel'
 import { recruitFieldLabel } from '@/shared/audition/recruitFields'
 import { BTN_SECONDARY, CARD_BASE, PAGE_CONTAINER, TEXT_SUB } from '@/shared/ui/specClasses'
+import { VoteStartPanel } from '@/components/audition/VoteStartPanel'
 
 type StatusBtn = 'REVIEWING' | 'APPROVED' | 'REJECTED'
 
@@ -137,6 +138,13 @@ export function AuditionManageList({
       </div>
 
       <div className={`${PAGE_CONTAINER} mt-6 flex flex-col gap-6`}>
+        <VoteStartPanel
+          auditionId={auditionId}
+          applicants={items.map((app) => ({
+            applicationId: app.applicationId,
+            name: app.name || app.userName || app.userEmail || app.applicationId,
+          }))}
+        />
         {stats ? (
           <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
             <StatCard label={t('all')} value={stats.total} />

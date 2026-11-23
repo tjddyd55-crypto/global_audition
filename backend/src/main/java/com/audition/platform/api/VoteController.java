@@ -3,7 +3,10 @@ package com.audition.platform.api;
 import com.audition.platform.api.dto.ApiEnvelope;
 import com.audition.platform.api.dto.CastVoteRequest;
 import com.audition.platform.api.dto.PublicVotePageDataDto;
+import com.audition.platform.api.dto.StartVoteRequest;
 import com.audition.platform.api.dto.VoteMutationResultDto;
+import com.audition.platform.api.dto.VoteScheduleDto;
+import com.audition.platform.application.vote.PublicVoteScheduleService;
 import com.audition.platform.application.vote.PublicVoteService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -24,9 +27,11 @@ import java.util.UUID;
 public class VoteController {
 
     private final PublicVoteService publicVoteService;
+    private final PublicVoteScheduleService publicVoteScheduleService;
 
-    public VoteController(PublicVoteService publicVoteService) {
+    public VoteController(PublicVoteService publicVoteService, PublicVoteScheduleService publicVoteScheduleService) {
         this.publicVoteService = publicVoteService;
+        this.publicVoteScheduleService = publicVoteScheduleService;
     }
 
     @GetMapping("/auditions/{auditionId}/votes")
@@ -34,6 +39,18 @@ public class VoteController {
             @PathVariable UUID auditionId,
             @RequestParam(name = "category", required = false) String category) {
         return ApiEnvelope.ok(publicVoteService.getPublicVotes(auditionId, category));
+    }
+
+    @GetMapping("/auditions/{auditionId}/votes/schedule")
+    public ApiEnvelope<VoteScheduleDto> getVoteSchedule(@PathVariable UUID auditionId) {
+        return ApiEnvelope.ok(publicVoteScheduleService.getSchedule(auditionId));
+    }
+
+    @PostMapping("/auditions/{auditionId}/votes/start")
+    public ApiEnvelope<VoteScheduleDto> startVote(
+            @PathVariable UUID auditionId,
+            @Valid @RequestBody StartVoteRequest body) {
+        return ApiEnvelope.ok(publicVoteScheduleService.start(auditionId, body));
     }
 
     @PostMapping("/votes")

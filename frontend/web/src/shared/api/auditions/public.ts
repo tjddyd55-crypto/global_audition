@@ -32,3 +32,14 @@ export const getAuditionById = async (id: string, locale?: string): Promise<Audi
   })
   return parseAuditionDto(data ?? {})
 }
+
+/** 지금 열려 있는 공개 투표만. 일반 모집 목록과 별개다. */
+export const listOpenVotes = async (
+  locale?: string,
+  country?: string,
+): Promise<AuditionDto[]> => {
+  const { data } = await apiClient.get<Record<string, unknown>[]>('/auditions/voting', {
+    params: openAuditionListParams(locale, country),
+  })
+  return (data ?? []).map((row) => parseAuditionDto(row))
+}

@@ -19,6 +19,8 @@ import com.audition.platform.domain.score.ApplicationScore;
 import com.audition.platform.domain.score.ApplicationScoreRepository;
 import com.audition.platform.domain.user.User;
 import com.audition.platform.domain.user.UserRepository;
+import com.audition.platform.domain.vote.AuditionVoteCandidate;
+import com.audition.platform.domain.vote.AuditionVoteCandidateRepository;
 import com.audition.platform.domain.vote.Vote;
 import com.audition.platform.domain.vote.VoteRepository;
 import com.audition.platform.infra.SecurityUtils;
@@ -28,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +52,7 @@ public class PublicVoteService {
     private final VoteRepository voteRepository;
     private final ApplicationScoreRepository applicationScoreRepository;
     private final ApplicationRankingService applicationRankingService;
+    private final AuditionVoteCandidateRepository voteCandidates;
 
     public PublicVoteService(
             AuditionRepository auditionRepository,
@@ -57,7 +61,8 @@ public class PublicVoteService {
             ApplicantCardMetricsLoader metricsLoader,
             VoteRepository voteRepository,
             ApplicationScoreRepository applicationScoreRepository,
-            ApplicationRankingService applicationRankingService) {
+            ApplicationRankingService applicationRankingService,
+            AuditionVoteCandidateRepository voteCandidates) {
         this.auditionRepository = auditionRepository;
         this.applicationRepository = applicationRepository;
         this.userRepository = userRepository;
@@ -65,18 +70,23 @@ public class PublicVoteService {
         this.voteRepository = voteRepository;
         this.applicationScoreRepository = applicationScoreRepository;
         this.applicationRankingService = applicationRankingService;
+        this.voteCandidates = voteCandidates;
     }
 
     public PublicVotePageDataDto getPublicVotes(UUID auditionId, String categoryFilter) {
         Audition audition = auditionRepository.findById(auditionId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "오디션을 찾을 수 없습니다."));
-        boolean votingEnabled = VotingRoundPlan.enabledNow(audition);
-        int round = VotingRoundPlan.activeRound(audition);
+        Instant now = Instant.now();
+        VoteWindow.Phase phase = VoteWindow.phase(audition, now);
+        int round = audition.getVoteRoundNumber() != null
+                ? audition.getVoteRoundNumber()
+                : VotingRoundPlan.activeRound(audition);
+        boolean planEnabled = VotingRoundPlan.enabledFor(audition.getVotingRounds(), round);
+        // 공개 투표는 기획사가 시작을 누르고, 시작·종료 시각 안에 있을 때만 받는다.
+        boolean votingEnabled = planEnabled && phase == VoteWindow.Phase.OPEN;
+        boolean showItems = planEnabled && (phase == VoteWindow.Phase.OPEN || phase == VoteWindow.Phase.CLOSED);
 
-        List<Application> apps = !votingEnabled ? List.<Application>of() : applicationRepository.findByAuditionIdAndStatusInOrderByCreatedAtDesc(
-                auditionId, LISTABLE_STATUSES).stream()
-                .filter(app -> VotingRoundPlan.isRoundCandidate(audition, app, round))
-                .collect(Collectors.toList());
+        List<Application> apps = !showItems ? List.<Application>of() : loadVoteApplications(audition, round, phase);
         // 득표는 현재 회차 기준(회차마다 새로 받는다). applications.vote_count 는 전 회차 누계로 남는다.
         Map<UUID, Long> roundVotes = votingEnabled ? roundVoteCounts(auditionId, round) : Map.of();
 
@@ -122,9 +132,39 @@ public class PublicVoteService {
         out.setSummary(summary);
         out.setMyVoteApplicationId(votingEnabled ? myVoteStr : null);
         out.setVotingEnabled(votingEnabled);
+        out.setVotingPlanEnabled(planEnabled);
         out.setRoundNumber(round);
+        out.setVoteStatus(phase.name());
+        out.setVoteStartAt(audition.getVoteStartAt());
+        out.setVoteEndAt(audition.getVoteEndAt());
+        out.setVoteRoundNumber(audition.getVoteRoundNumber());
         out.setItems(visible);
         return out;
+    }
+
+    private List<Application> loadVoteApplications(Audition audition, int round, VoteWindow.Phase phase) {
+        if (VoteWindow.hasStarted(phase)) {
+            List<java.util.UUID> ids = voteCandidates.findByAuditionIdAndRoundNumber(audition.getId(), round).stream()
+                    .map(AuditionVoteCandidate::getApplicationId)
+                    .toList();
+            if (ids.isEmpty()) {
+                return List.of();
+            }
+            Map<java.util.UUID, Application> byId = applicationRepository.findAllById(ids).stream()
+                    .collect(Collectors.toMap(Application::getId, Function.identity(), (a, b) -> a));
+            List<Application> ordered = new ArrayList<>();
+            for (java.util.UUID id : ids) {
+                Application app = byId.get(id);
+                if (app != null) {
+                    ordered.add(app);
+                }
+            }
+            return ordered;
+        }
+        return applicationRepository.findByAuditionIdAndStatusInOrderByCreatedAtDesc(
+                        audition.getId(), LISTABLE_STATUSES).stream()
+                .filter(app -> VotingRoundPlan.isRoundCandidate(audition, app, round))
+                .collect(Collectors.toList());
     }
 
     private Map<UUID, Long> roundVoteCounts(UUID auditionId, int round) {
@@ -214,14 +254,18 @@ public class PublicVoteService {
 
         Audition audition = auditionRepository.findById(app.getAuditionId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "오디션을 찾을 수 없습니다."));
-        if (!"OPEN".equals(audition.getStatus())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "모집 중인 오디션에서만 투표할 수 있습니다.");
-        }
-        if (!VotingRoundPlan.enabledNow(audition)) {
+        int round = audition.getVoteRoundNumber() != null
+                ? audition.getVoteRoundNumber()
+                : VotingRoundPlan.activeRound(audition);
+        if (!VotingRoundPlan.enabledFor(audition.getVotingRounds(), round)) {
             throw ReasonCode.VOTING_DISABLED_FOR_ROUND.toException();
         }
-        int round = VotingRoundPlan.activeRound(audition);
-        if (!VotingRoundPlan.isRoundCandidate(audition, app, round)) {
+        assertVoteWindowOpen(audition);
+        if (voteCandidates.countByAuditionIdAndRoundNumber(audition.getId(), round) > 0) {
+            if (!voteCandidates.existsByAuditionIdAndRoundNumberAndApplicationId(audition.getId(), round, app.getId())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "이번 회차 투표 대상이 아닌 지원입니다.");
+            }
+        } else if (!VotingRoundPlan.isRoundCandidate(audition, app, round)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "이번 회차 투표 대상이 아닌 지원입니다.");
         }
 
@@ -267,7 +311,10 @@ public class PublicVoteService {
         Audition audition = auditionRepository.findById(app.getAuditionId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 투표를 찾을 수 없습니다."));
         // 취소는 현재 회차의 내 표만. 지난 회차 표는 그대로 둔다(회차가 끝난 기록).
-        int round = VotingRoundPlan.activeRound(audition);
+        assertVoteWindowOpen(audition);
+        int round = audition.getVoteRoundNumber() != null
+                ? audition.getVoteRoundNumber()
+                : VotingRoundPlan.activeRound(audition);
         Vote vote = voteRepository.findByAuditionIdAndUserIdAndRoundNumber(audition.getId(), voterId, round)
                 .filter(v -> v.getApplicationId().equals(applicationId))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 투표를 찾을 수 없습니다."));
@@ -288,6 +335,20 @@ public class PublicVoteService {
         if (SecurityUtils.getCurrentUserId() == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
         }
+    }
+
+    private static void assertVoteWindowOpen(Audition audition) {
+        VoteWindow.Phase phase = VoteWindow.phase(audition, Instant.now());
+        if (phase == VoteWindow.Phase.OPEN) {
+            return;
+        }
+        if (phase == VoteWindow.Phase.SCHEDULED) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "투표가 아직 시작되지 않았습니다.");
+        }
+        if (phase == VoteWindow.Phase.CLOSED) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "투표 기간이 종료되었습니다.");
+        }
+        throw new ResponseStatusException(HttpStatus.CONFLICT, "투표가 아직 시작되지 않았습니다.");
     }
 
     private static UUID requireUserId() {

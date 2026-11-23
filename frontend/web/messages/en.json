@@ -521,7 +521,15 @@
     "nameUnset": "No name",
     "applicantVideo": "{name} application video",
     "emptyApplicants": "No applicants to show.",
-    "disabledRound": "This round has no public voting."
+    "disabledRound": "This round has no public voting.",
+    "notStarted": "Voting has not started yet.",
+    "scheduled": "Voting starts at {start}.",
+    "closed": "Voting has ended.",
+    "closedResults": "Voting has ended. You can see the results on the ranking board.",
+    "viewResults": "View results",
+    "statusScheduled": "Scheduled",
+    "statusOpen": "Open",
+    "statusClosed": "Closed"
   },
   "ranking": {
     "title": "Ranking",

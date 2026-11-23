@@ -47,6 +47,10 @@ describe('per-round voting plan', () => {
   it('hides vote/ranking entry when voting is off for the current round', () => {
     expect(canShowVoting({ votingEnabled: false })).toBe(false)
     expect(canShowVoting({})).toBe(true)
+    expect(canShowVoting({ votingEnabled: true, voteStatus: 'SCHEDULED' })).toBe(false)
+    expect(canShowVoting({ votingEnabled: true, voteStatus: 'OPEN' })).toBe(true)
+    expect(canViewRanking({ votingEnabled: false, voteStatus: 'CLOSED' })).toBe(true)
+    expect(canViewRanking({ votingEnabled: false, voteStatus: 'NOT_STARTED' })).toBe(false)
     expect(canViewRanking({ votingEnabled: false })).toBe(false)
   })
 })
