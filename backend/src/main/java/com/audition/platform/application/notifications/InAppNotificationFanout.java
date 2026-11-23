@@ -9,6 +9,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import java.sql.Date;
+import java.sql.Timestamp;
 import java.time.Clock;
 import java.time.Period;
 import java.time.Instant;
@@ -102,7 +103,7 @@ public class InAppNotificationFanout {
                 rs.getString("country_code"),
                 toArray(rs.getArray("recruit_fields")),
                 toArray(rs.getArray("qualifications")),
-                rs.getObject("owner_id", UUID.class)), since);
+                rs.getObject("owner_id", UUID.class)), Timestamp.from(since));
         for (MatchAudition audition : auditions) {
             count += notifyMatchingUsers(audition);
         }
