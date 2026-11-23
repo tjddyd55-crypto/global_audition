@@ -1140,7 +1140,18 @@
     "castingOfferDeclinedBody": "{talent} បានបដិសេធ \"{title}\"។",
     "channelNewVideoTitle": "វីដេអូថ្មីពីប៉ុស្តិ៍ដែលអ្នកតាម",
     "channelNewVideoBody": "{channel} បានបង្ហោះ \"{title}\"។",
-    "open": "បើក"
+    "open": "បើក",
+    "savedAuditionDeadlineTitle": "ការប្រឡងដែលបានរក្សាទុកជិតផុតកំណត់",
+    "savedAuditionDeadlineBody": "{title} នឹងផុតកំណត់ក្នុងរយៈពេល {days} ថ្ងៃ។",
+    "newMatchingAuditionTitle": "ការប្រឡងថ្មីដែលសមនឹងអ្នក",
+    "newMatchingAuditionBody": "{title} ត្រូវបានប្រកាសថ្មី។",
+    "applicationResultTitle": "លទ្ធផលការប្រឡង",
+    "applicationResultBody": "លទ្ធផលសម្រាប់ {title} បានមកដល់។",
+    "settingsTitle": "ការកំណត់ការជូនដំណឹង",
+    "savedDeadlineToggle": "ការផុតកំណត់ការប្រឡងដែលបានរក្សាទុក (៣ថ្ងៃ និង ១ថ្ងៃមុន)",
+    "newMatchToggle": "ការប្រកាសថ្មីដែលសមនឹងអ្នក",
+    "resultsToggle": "លទ្ធផលការប្រឡង",
+    "offersToggle": "ការស្នើសុំ Casting"
   },
   "vault": {
     "title": "ឃ្លាំងស្នាដៃ",

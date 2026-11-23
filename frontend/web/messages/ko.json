@@ -1140,7 +1140,18 @@
     "castingOfferDeclinedBody": "{talent} 님이 \"{title}\" 제안을 거절했습니다.",
     "channelNewVideoTitle": "팔로우 채널 새 영상",
     "channelNewVideoBody": "{channel} 채널에 새 영상 \"{title}\"이(가) 올라왔습니다.",
-    "open": "열기"
+    "open": "열기",
+    "savedAuditionDeadlineTitle": "관심 오디션 마감 임박",
+    "savedAuditionDeadlineBody": "{title} 마감이 {days}일 남았습니다.",
+    "newMatchingAuditionTitle": "조건에 맞는 새 오디션",
+    "newMatchingAuditionBody": "{title} 공고가 새로 등록되었습니다.",
+    "applicationResultTitle": "오디션 심사 결과",
+    "applicationResultBody": "{title} 심사 결과가 도착했습니다.",
+    "settingsTitle": "알림 설정",
+    "savedDeadlineToggle": "관심 오디션 마감 안내 (3일 전·1일 전)",
+    "newMatchToggle": "조건에 맞는 신규 공고",
+    "resultsToggle": "오디션 심사 결과",
+    "offersToggle": "캐스팅 제안"
   },
   "vault": {
     "title": "창작물 보관소",

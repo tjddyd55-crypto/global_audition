@@ -1140,7 +1140,18 @@
     "castingOfferDeclinedBody": "{talent} \"{title}\" taklifini rad etdi.",
     "channelNewVideoTitle": "Kuzatilayotgan kanalda yangi video",
     "channelNewVideoBody": "{channel} kanaliga \"{title}\" yangi video joylandi.",
-    "open": "Ochish"
+    "open": "Ochish",
+    "savedAuditionDeadlineTitle": "Saqlangan kasting muddati yaqin",
+    "savedAuditionDeadlineBody": "{title} {days} kundan soʻng yopiladi.",
+    "newMatchingAuditionTitle": "Sizga mos yangi kasting",
+    "newMatchingAuditionBody": "{title} yangi eʼlon qilindi.",
+    "applicationResultTitle": "Kasting natijasi",
+    "applicationResultBody": "{title} natijasi chiqdi.",
+    "settingsTitle": "Bildirishnoma sozlamalari",
+    "savedDeadlineToggle": "Saqlangan kasting muddati (3 kun va 1 kun oldin)",
+    "newMatchToggle": "Mos yangi eʼlonlar",
+    "resultsToggle": "Kasting natijalari",
+    "offersToggle": "Kasting takliflari"
   },
   "vault": {
     "title": "Ijodiy ombor",

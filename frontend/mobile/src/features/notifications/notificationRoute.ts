@@ -11,6 +11,8 @@ export function nativeRouteForNotification(item: NotificationCopySource, lang = 
   if (link === '/my/studio/casting') return '/casting'
   m = link.match(/^\/channel\/([A-Za-z0-9-]+)$/)
   if (m) return `/channel/${m[1]}`
+  m = link.match(/^\/auditions\/([A-Za-z0-9-]+)$/)
+  if (m) return `/auditions/${m[1]}`
   if (link.startsWith('/my/casting') || link.startsWith('/my/talents')) return { pathname: '/web', params: { path: `/${lang}${link}` } }
   return null
 }

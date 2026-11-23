@@ -1140,7 +1140,18 @@
     "castingOfferDeclinedBody": "{talent} \"{title}\" саналаас татгалзлаа.",
     "channelNewVideoTitle": "Дагасан сувгийн шинэ видео",
     "channelNewVideoBody": "{channel} сувагт \"{title}\" шинэ видео нэмэгдлээ.",
-    "open": "Нээх"
+    "open": "Нээх",
+    "savedAuditionDeadlineTitle": "Хадгалсан аудишны хугацаа ойртож байна",
+    "savedAuditionDeadlineBody": "{title} {days} өдрийн дараа хаагдана.",
+    "newMatchingAuditionTitle": "Танд тохирох шинэ аудишн",
+    "newMatchingAuditionBody": "{title} шинээр нийтлэгдлээ.",
+    "applicationResultTitle": "Аудишны дүн",
+    "applicationResultBody": "{title} дүн гарлаа.",
+    "settingsTitle": "Мэдэгдлийн тохиргоо",
+    "savedDeadlineToggle": "Хадгалсан аудишны хугацаа (3 хоног, 1 хоногийн өмнө)",
+    "newMatchToggle": "Тохирох шинэ зар",
+    "resultsToggle": "Аудишны дүн",
+    "offersToggle": "Кастинг санал"
   },
   "vault": {
     "title": "Бүтээлийн агуулах",

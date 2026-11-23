@@ -33,6 +33,12 @@ export const USER_NOTIFICATION_KEYS = new Set([
   'castingOfferDeclinedBody',
   'channelNewVideoTitle',
   'channelNewVideoBody',
+  'savedAuditionDeadlineTitle',
+  'savedAuditionDeadlineBody',
+  'newMatchingAuditionTitle',
+  'newMatchingAuditionBody',
+  'applicationResultTitle',
+  'applicationResultBody',
 ])
 
 const SINGLE_STAGE_TITLE_KEYS = new Set([
@@ -51,6 +57,7 @@ export type NotificationCopySource = {
   bodyKey?: string | null
   roundId?: string | null
   link?: string | null
+  auditionId?: string | null
   params?: Record<string, string> | null
 }
 
@@ -97,8 +104,10 @@ function safeParams(raw: Record<string, string> | null | undefined): Record<stri
 /** 앱 내부 경로만 허용(외부 URL·스킴 차단). */
 export function notificationLink(item: NotificationCopySource): string | null {
   const link = text(item.link)
-  if (!link.startsWith('/') || link.startsWith('//')) return null
-  return /^\/[A-Za-z0-9/_-]*$/.test(link) ? link : null
+  if (link.startsWith('/') && !link.startsWith('//') && /^\/[A-Za-z0-9/_-]*$/.test(link)) return link
+  const auditionId = text(item.auditionId) || text(item.params?.auditionId)
+  if (/^[A-Za-z0-9-]+$/.test(auditionId)) return `/auditions/${auditionId}`
+  return null
 }
 
 function isSingleStage(item: NotificationCopySource): boolean {

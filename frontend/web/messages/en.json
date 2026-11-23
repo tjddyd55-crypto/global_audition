@@ -1140,7 +1140,18 @@
     "castingOfferDeclinedBody": "{talent} declined \"{title}\".",
     "channelNewVideoTitle": "New video from a channel you follow",
     "channelNewVideoBody": "{channel} posted \"{title}\".",
-    "open": "Open"
+    "open": "Open",
+    "savedAuditionDeadlineTitle": "Saved audition closing soon",
+    "savedAuditionDeadlineBody": "{title} closes in {days} day(s).",
+    "newMatchingAuditionTitle": "New audition that matches you",
+    "newMatchingAuditionBody": "{title} has just been posted.",
+    "applicationResultTitle": "Audition result",
+    "applicationResultBody": "A result for {title} is available.",
+    "settingsTitle": "Notification settings",
+    "savedDeadlineToggle": "Saved audition deadlines (3 days and 1 day before)",
+    "newMatchToggle": "New matching postings",
+    "resultsToggle": "Audition results",
+    "offersToggle": "Casting offers"
   },
   "vault": {
     "title": "Creative vault",

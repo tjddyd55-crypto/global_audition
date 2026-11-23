@@ -2,6 +2,7 @@ package com.audition.platform.application.casting;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.audition.platform.application.notifications.NotificationSettingsService;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -30,10 +31,12 @@ public class UserNotificationService {
 
     private final JdbcTemplate jdbc;
     private final ObjectMapper json;
+    private final NotificationSettingsService settings;
 
-    public UserNotificationService(JdbcTemplate jdbc, ObjectMapper json) {
+    public UserNotificationService(JdbcTemplate jdbc, ObjectMapper json, NotificationSettingsService settings) {
         this.jdbc = jdbc;
         this.json = json;
+        this.settings = settings;
     }
 
     public record Row(UUID id, String type, String payload, String link, Instant createdAt, Instant readAt) {
@@ -41,6 +44,9 @@ public class UserNotificationService {
 
     public void notify(UUID userId, String type, Map<String, String> params, String link, String dedupeKey) {
         if (userId == null) {
+            return;
+        }
+        if (!settings.get(userId).allows(type)) {
             return;
         }
         jdbc.update("""
