@@ -49,7 +49,7 @@ export function StudioFrame({ children }: { children: ReactNode }) {
   return (
     <div className={`${PAGE_CONTAINER} py-6`}>
       <h1 className="text-lg font-semibold text-gray-900">{t('navLabel')}</h1>
-      <nav aria-label={t('navLabel')} className="mt-4 flex gap-2 overflow-x-auto pb-2">
+      <nav aria-label={t('navLabel')} className="mt-4 flex flex-wrap gap-2">
         {LINKS.map((item) => {
           const active = item.href === '/my/studio' ? pathname === '/my/studio' : pathname.startsWith(item.href)
           return (
@@ -57,7 +57,7 @@ export function StudioFrame({ children }: { children: ReactNode }) {
               key={item.href}
               href={item.href}
               locale={locale}
-              className={`shrink-0 rounded-full px-3 py-1.5 text-sm ${
+              className={`rounded-full px-3 py-1.5 text-sm leading-snug ${
                 active ? 'bg-neutral-900 text-white' : 'border border-neutral-200 text-neutral-800'
               }`}
             >

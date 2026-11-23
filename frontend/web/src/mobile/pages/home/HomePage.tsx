@@ -97,7 +97,7 @@ export default function MobileHomePage() {
         <section className={`${M_PAGE_X} ${M_SECTION_TOP}`} data-testid="mobile-channels">
           <div className={M_SECTION_HEAD}>
             <h2 className={M_SECTION_TITLE}>{tRec('channelsTitle')}</h2>
-            <Link href="/channels" className="inline-flex shrink-0 items-center text-sm font-medium leading-none text-violet-700 no-underline">
+            <Link href="/channels" className="inline-flex shrink-0 items-center py-0.5 text-sm font-medium leading-snug text-violet-700 no-underline">
               {t('seeAll')} ›
             </Link>
           </div>
@@ -148,7 +148,7 @@ function AuditionRowSection({
     <section className={`${M_PAGE_X} ${M_SECTION_TOP}`} data-testid={testId}>
       <div className={M_SECTION_HEAD}>
         <h2 className={M_SECTION_TITLE}>{heading}</h2>
-        <Link href={href} className="inline-flex shrink-0 items-center text-sm font-medium leading-none text-violet-700 no-underline">
+        <Link href={href} className="inline-flex shrink-0 items-center py-0.5 text-sm font-medium leading-snug text-violet-700 no-underline">
           {seeAll} ›
         </Link>
       </div>
