@@ -14,6 +14,7 @@ import {
   type AuditionDto,
 } from '@/shared/types/audition'
 import { useLocale, useTranslations } from 'next-intl'
+import SaveAuditionButton from '@/components/saves/SaveAuditionButton'
 import { recruitFieldLabels } from '@/shared/audition/recruitFields'
 import { displayAuditionTag } from '@/shared/audition/auditionTagLabels'
 import { useContentTranslation } from '@/components/i18n/TranslatedField'
@@ -172,7 +173,7 @@ export default function MobileAuditionDetailSummary({
 
   return (
     <div className="mx-auto max-w-3xl px-4 pb-4 pt-2">
-      <div className="overflow-hidden rounded-2xl bg-gray-100">
+      <div className="relative overflow-hidden rounded-2xl bg-gray-100">
         {posterLinkHref.length > 0 && !readOnly ? (
           <a href={posterLinkHref} target="_blank" rel="noopener noreferrer" className="block w-full">
             {PosterInner}
@@ -180,6 +181,11 @@ export default function MobileAuditionDetailSummary({
         ) : (
           <div className="w-full">{PosterInner}</div>
         )}
+        {!readOnly ? (
+          <div className="absolute right-3 top-3 z-[3]">
+            <SaveAuditionButton auditionId={String(audition.id)} />
+          </div>
+        ) : null}
       </div>
 
       <div className="mt-3 space-y-2">

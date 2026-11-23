@@ -9,11 +9,13 @@ import { DEFAULT_IMAGES } from '@/shared/constants/fallbacks'
 import { devAuditionThumbnail } from '../devAssets'
 import { auditionHeadlineTitle, auditionListImageUrl, type AuditionDto } from '@/shared/types/audition'
 import { roundStatusLabel } from '@/shared/audition/roundStatusLabel'
+import SaveAuditionButton from '@/components/saves/SaveAuditionButton'
 
 type Props = {
   audition: AuditionDto
   /** 추천 섹션에서는 상태 대신 '추천' 배지를 쓴다. */
   badge?: 'status' | 'recommended'
+  showSave?: boolean
 }
 
 function formatDay(value: string | null | undefined, locale: string): string | null {
@@ -24,7 +26,7 @@ function formatDay(value: string | null | undefined, locale: string): string | n
 }
 
 /** 모바일 메인 공고 카드: 한 줄 1개, 왼쪽 썸네일 / 오른쪽 정보. */
-export default function MobileAuditionRowCard({ audition, badge = 'status' }: Props) {
+export default function MobileAuditionRowCard({ audition, badge = 'status', showSave = true }: Props) {
   const tStatus = useTranslations('status')
   const tHome = useTranslations('home')
   const tFallback = useTranslations('fallback')
@@ -49,6 +51,7 @@ roundStatusLabel(status, audition.round, tStatus)
   const location = audition.location?.trim()
 
   return (
+    <div className="relative">
     <Link
       href={`/auditions/${audition.id}`}
       data-testid="mobile-audition-card"
@@ -82,5 +85,11 @@ roundStatusLabel(status, audition.round, tStatus)
         </svg>
       </div>
     </Link>
+    {showSave ? (
+      <div className="absolute right-2 top-2 z-[3]">
+        <SaveAuditionButton auditionId={audition.id} />
+      </div>
+    ) : null}
+    </div>
   )
 }

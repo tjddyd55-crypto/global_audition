@@ -44,6 +44,13 @@ jest.mock('@tanstack/react-query', () => ({
     error: null,
     refetch: jest.fn(),
   }),
+  useMutation: () => ({ mutate: jest.fn(), isPending: false, isError: false }),
+  useQueryClient: () => ({
+    cancelQueries: jest.fn(),
+    getQueryData: jest.fn(),
+    setQueryData: jest.fn(),
+    invalidateQueries: jest.fn(),
+  }),
 }))
 
 jest.mock('@/shared/audition/useAudienceCountrySelection', () => ({

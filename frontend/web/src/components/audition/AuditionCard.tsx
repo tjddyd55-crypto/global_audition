@@ -14,9 +14,11 @@ import { stripImageUrlResizeParams } from '@/shared/utils/imageDisplayUrl'
 import { DEFAULT_IMAGES } from '@/shared/constants/fallbacks'
 import { useLocale, useTranslations } from 'next-intl'
 import { roundStatusLabel } from '@/shared/audition/roundStatusLabel'
+import SaveAuditionButton from '@/components/saves/SaveAuditionButton'
 
 interface AuditionCardProps {
   audition: AuditionDto
+  showSave?: boolean
 }
 
 function statusBadgeClass(status: string): string {
@@ -25,7 +27,7 @@ function statusBadgeClass(status: string): string {
   return 'bg-amber-600 text-white'
 }
 
-export default function AuditionCard({ audition }: AuditionCardProps) {
+export default function AuditionCard({ audition, showSave = true }: AuditionCardProps) {
   const tStatus = useTranslations('status')
   const tFallback = useTranslations('fallback')
   const locale = useLocale()
@@ -90,6 +92,7 @@ export default function AuditionCard({ audition }: AuditionCardProps) {
   const metaLine = `${dateStr} · ${location}`
 
   return (
+    <div className="relative">
     <Link href={`/auditions/${id}`} className="block w-full text-inherit no-underline">
       <article className="relative w-full overflow-hidden bg-neutral-900">
         <div className="relative aspect-[16/9] max-h-52 w-full overflow-hidden sm:max-h-56">
@@ -118,5 +121,11 @@ export default function AuditionCard({ audition }: AuditionCardProps) {
         </div>
       </article>
     </Link>
+    {showSave ? (
+      <div className="absolute right-3 top-3 z-[3]">
+        <SaveAuditionButton auditionId={id} />
+      </div>
+    ) : null}
+    </div>
   )
 }

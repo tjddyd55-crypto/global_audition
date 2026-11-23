@@ -5,6 +5,7 @@ import { auditionHeadlineTitle, auditionListImageUrl } from '../domain/auditionI
 import { auditionStatusLabel } from '../domain/statusLabels'
 import { colors, radius } from '../theme/tokens'
 import { PosterImage } from './PosterImage'
+import { SaveAuditionButton } from '../features/saves/SaveAuditionButton'
 import { StatusPill, toneForApplicationStatus } from './StatusPill'
 
 export function AuditionCard({ audition, onPress }: { audition: AuditionDto; onPress: () => void }) {
@@ -12,6 +13,7 @@ export function AuditionCard({ audition, onPress }: { audition: AuditionDto; onP
   const title = auditionHeadlineTitle(audition)
   const label = auditionStatusLabel(audition.status, audition.recruitmentRoundLabel)
   return (
+    <View style={styles.wrap}>
     <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={title} style={({ pressed }) => [styles.card, pressed && styles.pressed]}>
       <PosterImage uri={auditionListImageUrl(audition.images)} />
       <View style={styles.body}>
@@ -26,10 +28,16 @@ export function AuditionCard({ audition, onPress }: { audition: AuditionDto; onP
         </Text>
       </View>
     </Pressable>
+    <View style={styles.heart} pointerEvents="box-none">
+      <SaveAuditionButton auditionId={audition.id} />
+    </View>
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
+  wrap: { position: 'relative' },
+  heart: { position: 'absolute', top: 10, right: 10, zIndex: 2 },
   card: {
     backgroundColor: colors.surface,
     borderRadius: radius.card,
