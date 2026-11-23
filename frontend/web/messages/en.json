@@ -2054,5 +2054,19 @@
     "saveAria": "Save this audition",
     "unsaveAria": "Remove this audition from saved",
     "deadline": "Deadline {date}"
+  },
+  "recommend": {
+    "title": "Recommended for you",
+    "guestTitle": "Recommended auditions",
+    "closingSoonTitle": "Closing soon",
+    "latestTitle": "Latest auditions",
+    "channelsTitle": "Featured talent channels",
+    "fieldMatch": "Matches your field",
+    "countryResidence": "Open in your country of residence",
+    "countryResidenceTarget": "Targets your country of residence",
+    "countryNationality": "Targets your nationality",
+    "closingSoon": "Closing soon",
+    "savedAffinity": "Similar to your saved auditions",
+    "emptyFallback": "No close matches, so here are the latest open auditions."
   }
 }

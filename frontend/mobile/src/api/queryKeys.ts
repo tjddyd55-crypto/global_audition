@@ -20,5 +20,7 @@ export const queryKeys = {
   notifications: ['me', 'notifications'] as const,
   savedAuditionIds: ['me', 'audition-saves', 'ids'] as const,
   savedAuditions: ['me', 'audition-saves', 'list'] as const,
+  recommendations: (country: string, limit: number, userId: string | null) => ['auditions', 'recommendations', country, limit, userId] as const,
+  closingSoon: (country: string, limit: number) => ['auditions', 'closing-soon', country, limit] as const,
   channel: ['me', 'channel'] as const,
 }
