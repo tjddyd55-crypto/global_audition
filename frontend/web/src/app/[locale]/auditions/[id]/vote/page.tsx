@@ -50,14 +50,36 @@ async function loadShareData(auditionId: string, round: number | null, candidate
   }
 }
 
+/** 공고 제목은 기존 자동 번역을 그대로 쓴다(locale 별 표시 제목). */
+async function loadLocalizedTitle(auditionId: string, locale: string, origin: string): Promise<string | null> {
+  const base = (process.env.BACKEND_PROXY_ORIGIN || origin).replace(/\/+$/, '')
+  if (!base) return null
+  try {
+    const res = await fetch(`${base}/api/auditions/${encodeURIComponent(auditionId)}?locale=${encodeURIComponent(locale)}`, {
+      cache: 'no-store',
+      headers: { Accept: 'application/json' },
+    })
+    if (!res.ok) return null
+    const json = (await res.json()) as { data?: Record<string, unknown> } & Record<string, unknown>
+    const d = (json.data ?? json) as Record<string, unknown>
+    const title = String(d.displayTitle ?? d.title ?? '').trim()
+    return title || null
+  } catch {
+    return null
+  }
+}
+
 export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
   const { locale, id } = await params
   const sp = await searchParams
   const { round, candidate } = parseShareParams(sp.round, sp.candidate)
   const t = await getTranslations({ locale, namespace: 'voteShare' })
   const origin = requestOrigin()
-  const data = await loadShareData(id, round, candidate, origin)
-  const auditionTitle = data?.audition?.title?.trim() || 'GLOBAL AUDITION'
+  const [data, localizedTitle] = await Promise.all([
+    loadShareData(id, round, candidate, origin),
+    loadLocalizedTitle(id, locale, origin),
+  ])
+  const auditionTitle = localizedTitle || data?.audition?.title?.trim() || 'GLOBAL AUDITION'
   const linkRound = data?.roundNumber ?? round ?? 1
   const shared = data?.sharedCandidate ?? null
   const name = shared?.userName?.trim() || ''
@@ -86,7 +108,8 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
       description,
       url: path,
       locale,
-      images: [{ url: image, width: 1200, height: 630, alt: title }],
+      // 기본 이미지만 크기를 안다. 후보 썸네일(YouTube 등)은 크기를 적지 않는다.
+      images: [image === DEFAULT_OG_IMAGE ? { url: image, width: 1200, height: 630, alt: title } : { url: image, alt: title }],
     },
     twitter: { card: 'summary_large_image', title, description, images: [image] },
   }
