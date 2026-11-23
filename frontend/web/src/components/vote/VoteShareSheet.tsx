@@ -72,7 +72,7 @@ export function VoteShareSheet({ open, onClose, url, title, defaultText, editabl
   }
 
   const btn =
-    'flex min-h-11 w-full items-center justify-center rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50'
+    'flex min-h-12 w-full items-center justify-center rounded-xl border border-[#E5E7EB] bg-white px-3 py-3 text-sm font-semibold text-gray-900 hover:bg-gray-50'
 
   return (
     <div
@@ -86,7 +86,7 @@ export function VoteShareSheet({ open, onClose, url, title, defaultText, editabl
       <div className="w-full max-w-md rounded-t-2xl bg-white p-5 shadow-xl sm:rounded-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between gap-3">
           <h2 className="text-lg font-bold text-gray-900">{title}</h2>
-          <button type="button" onClick={onClose} className="text-sm font-medium text-gray-500" aria-label={t('close')}>
+          <button type="button" onClick={onClose} className="flex min-h-11 min-w-11 items-center justify-center rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-100" aria-label={t('close')}>
             ✕
           </button>
         </div>

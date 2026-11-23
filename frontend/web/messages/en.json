@@ -2121,6 +2121,16 @@
     "ogDescription": "{audition} round {round} public vote. Vote for {name} now.",
     "ogDefaultTitle": "{audition} public vote",
     "ogDefaultDescription": "Join the GLOBAL AUDITION public vote.",
-    "notCandidateYet": "A share link appears once you are confirmed as a public vote candidate."
+    "notCandidateYet": "A share link appears once you are confirmed as a public vote candidate.",
+    "remainingDays": "{n} days left",
+    "remainingHours": "{n} hours left",
+    "remainingMinutes": "{n} min left",
+    "remainingEnded": "Ended",
+    "openWithRemaining": "Open · {remaining}",
+    "loginToVote": "Sign in to vote. You will return to this page after signing in.",
+    "loginAndVote": "Sign in to vote",
+    "shareAgain": "Share this to rally more support",
+    "ownVotes": "♥ {n} votes",
+    "retry": "Try again"
   }
 }

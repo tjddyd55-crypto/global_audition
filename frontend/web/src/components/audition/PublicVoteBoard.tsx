@@ -16,6 +16,7 @@ import { isAllCategoryName } from '@/shared/audition/allCategorySentinel'
 import { recruitFieldLabel } from '@/shared/audition/recruitFields'
 import { formatCount } from '@/shared/money/currency'
 import { VoteShareSheet } from '@/components/vote/VoteShareSheet'
+import { SharedCandidateLanding } from '@/components/vote/SharedCandidateLanding'
 import { voteSharePath } from '@/shared/vote/voteShare'
 
 type Props = {
@@ -23,7 +24,7 @@ type Props = {
   auditionTitleFallback: string
   /** 공유 링크에 고정된 회차 */
   shareRound?: number | null
-  /** 공유 링크의 후보(지원 ID). 표시 순서만 바꾸고 순위는 그대로 */
+  /** 공유 링크의 후보(지원 ID). 유효하면 해당 후보만 보여 준다. */
   shareCandidate?: string | null
 }
 
@@ -122,12 +123,21 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback, shareRound,
 
   if (votesQuery.isLoading) {
     return (
-      <div className="flex min-h-[40vh] items-center justify-center text-sm text-gray-600">{t('loading')}</div>
+      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-2 text-sm text-gray-600" data-testid="vote-loading">
+        {t('loading')}
+      </div>
     )
   }
 
   if (votesQuery.isError) {
-    return <div className="py-12 text-center text-sm text-red-600">{t('loadBoardFailed')}</div>
+    return (
+      <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 py-12 text-center" data-testid="vote-load-error">
+        <p className="text-sm text-red-600">{t('loadBoardFailed')}</p>
+        <button type="button" onClick={() => void votesQuery.refetch()} className="min-h-11 rounded-lg border border-[#E5E7EB] bg-white px-4 py-2 text-sm font-semibold text-gray-900">
+          {ts('retry')}
+        </button>
+      </div>
+    )
   }
 
   const p = votesQuery.data
@@ -186,8 +196,40 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback, shareRound,
           ? t('disabledRound')
           : t('notStarted')
   const sharedName = shared ? shared.userName || t('nameUnset') : ''
-  const sharedThumb = shared ? resolveVideoThumbnailUrl(shared.videoUrl, shared.thumbnailUrl) : null
   const sharedVoted = Boolean(shared && canCast && p?.myVoteApplicationId === shared.applicationId)
+
+  // 유효한 공유 링크면 해당 후보만 보여 준다. 잘못된 후보 파라미터는 shared 가 없어 전체 화면으로 넘어간다.
+  if (shared && p) {
+    return (
+      <>
+        <SharedCandidateLanding
+          auditionId={auditionId}
+          page={p}
+          shared={shared}
+          canCast={canCast}
+          voted={sharedVoted}
+          isGuest={!accessToken}
+          voteBusy={voteMutationBusy}
+          windowNotice={windowNotice}
+          otherRound={Boolean(p.voteRoundNumber && p.roundNumber !== p.voteRoundNumber)}
+          onVote={() => {
+            if (!requireAuth()) return
+            castMutation.mutate({ applicationId: shared.applicationId, name: sharedName })
+          }}
+          onShare={() => setShareItem(shared)}
+        />
+        {shareItem ? (
+          <VoteShareSheet
+            open
+            onClose={() => setShareItem(null)}
+            url={shareUrlFor(shareItem)}
+            title={ts('shareTitle', { name: shareItem.userName || t('nameUnset') })}
+            defaultText={ts('candidateText', { name: shareItem.userName || t('nameUnset') })}
+          />
+        ) : null}
+      </>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 pb-8">
@@ -218,78 +260,6 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback, shareRound,
           <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800" data-testid="vote-other-round">
             {ts('otherRound', { round: p.roundNumber })}
           </p>
-        ) : null}
-        {shared ? (
-          <section
-            className="overflow-hidden rounded-2xl border-2 border-violet-300 bg-white shadow-md"
-            data-testid="vote-shared-candidate"
-            data-application-id={shared.applicationId}
-          >
-            <div
-              className={`relative aspect-video bg-gray-900${getVideoEmbedSrc(shared.videoUrl) ? ' cursor-pointer' : ''}`}
-              role={getVideoEmbedSrc(shared.videoUrl) ? 'button' : undefined}
-              aria-label={getVideoEmbedSrc(shared.videoUrl) ? t('playVideo') : undefined}
-              onClick={() => {
-                if (getVideoEmbedSrc(shared.videoUrl)) openVideoWithViewBump(shared)
-              }}
-            >
-              {sharedThumb ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={sharedThumb} alt="" className="h-full w-full object-cover" />
-              ) : (
-                <div className="h-full w-full bg-gray-800" />
-              )}
-              <span className="absolute left-3 top-3 rounded-full bg-violet-600 px-3 py-1 text-xs font-semibold text-white">
-                {ts('sharedBadge')}
-              </span>
-              {getVideoEmbedSrc(shared.videoUrl) ? (
-                <div className="pointer-events-none absolute left-1/2 top-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-3xl text-white" aria-hidden>
-                  ▶
-                </div>
-              ) : null}
-            </div>
-            <div className="p-5">
-              <p className="text-xs font-semibold text-violet-700">{ts('roundLabel', { round: linkRound })} · {statusLabel}</p>
-              <h2 className="mt-1 text-2xl font-bold text-gray-900">{sharedName}</h2>
-              {shared.category ? (
-                <p className="mt-1 text-sm font-medium text-gray-700">{recruitFieldLabel(shared.category, tField)}</p>
-              ) : null}
-              {shared.description?.trim() ? <p className={`${TEXT_SUB} mt-2 text-sm`}>{shared.description}</p> : null}
-              {windowNotice ? (
-                <p className="mt-3 rounded-lg bg-gray-100 px-3 py-2 text-sm text-gray-700" data-testid="vote-window-notice">{windowNotice}</p>
-              ) : p?.voteEndAt ? (
-                <p className="mt-3 text-sm text-gray-600">{ts('endsAt', { end: formatWhen(p.voteEndAt) })}</p>
-              ) : null}
-              <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-                <button
-                  type="button"
-                  data-testid="vote-shared-cast"
-                  disabled={!canCast || voteMutationBusy || sharedVoted}
-                  onClick={() => {
-                    if (!requireAuth()) return
-                    castMutation.mutate({ applicationId: shared.applicationId, name: sharedName })
-                  }}
-                  className="min-h-11 flex-1 rounded-lg bg-gradient-to-r from-violet-600 to-pink-500 px-4 py-2 text-base font-semibold text-white hover:opacity-95 disabled:opacity-50"
-                >
-                  {sharedVoted ? ts('alreadyVoted') : ts('voteFor', { name: sharedName })}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShareItem(shared)}
-                  className="min-h-11 rounded-lg border border-[#E5E7EB] bg-white px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50"
-                  data-testid="vote-shared-share"
-                >
-                  {ts('share')}
-                </button>
-                <a
-                  href="#vote-all-candidates"
-                  className="flex min-h-11 items-center justify-center rounded-lg border border-violet-200 px-4 py-2 text-sm font-semibold text-violet-700 no-underline"
-                >
-                  {ts('viewAll')}
-                </a>
-              </div>
-            </div>
-          </section>
         ) : null}
         {/* 카테고리 탭 */}
         {audition?.categories && audition.categories.length > 0 && (
@@ -322,13 +292,13 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback, shareRound,
         </div>
 
         {/* 그리드 */}
-        {!shared && windowNotice && items.length > 0 ? (
+        {windowNotice && items.length > 0 ? (
           <p className="rounded-lg bg-gray-100 px-3 py-2 text-sm text-gray-700">{windowNotice}</p>
         ) : null}
         {items.length === 0 ? (
-          shared ? null : <p className={`${TEXT_SUB} text-center`}>{t('emptyApplicants')}</p>
+          <p className={`${TEXT_SUB} text-center`}>{t('emptyApplicants')}</p>
         ) : (
-          <div id="vote-all-candidates" className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {items.map((item) => {
               const cardThumb = resolveVideoThumbnailUrl(item.videoUrl, item.thumbnailUrl)
               const canEmbed = Boolean(getVideoEmbedSrc(item.videoUrl))

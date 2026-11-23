@@ -2121,6 +2121,16 @@
     "ogDescription": "{audition} {round}-bosqich ochiq ovoz berish. Hoziroq {name} uchun ovoz bering.",
     "ogDefaultTitle": "{audition} ochiq ovoz berish",
     "ogDefaultDescription": "GLOBAL AUDITION ochiq ovoz berishida qatnashing.",
-    "notCandidateYet": "Ochiq ovoz berish nomzodi sifatida tasdiqlangach, ulashish havolasi paydo boʻladi."
+    "notCandidateYet": "Ochiq ovoz berish nomzodi sifatida tasdiqlangach, ulashish havolasi paydo boʻladi.",
+    "remainingDays": "{n} kun qoldi",
+    "remainingHours": "{n} soat qoldi",
+    "remainingMinutes": "{n} daqiqa qoldi",
+    "remainingEnded": "Tugadi",
+    "openWithRemaining": "Davom etmoqda · {remaining}",
+    "loginToVote": "Ovoz berish uchun tizimga kiring. Kirgach, shu sahifaga qaytasiz.",
+    "loginAndVote": "Kirib ovoz berish",
+    "shareAgain": "Qoʻllab-quvvatlash uchun ulashing",
+    "ownVotes": "♥ {n} ovoz",
+    "retry": "Qayta urinib koʻrish"
   }
 }

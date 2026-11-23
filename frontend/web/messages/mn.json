@@ -2121,6 +2121,16 @@
     "ogDescription": "{audition} {round}-р шатны нээлттэй санал хураалт. Одоо {name}-д санал өгөөрэй.",
     "ogDefaultTitle": "{audition} нээлттэй санал хураалт",
     "ogDefaultDescription": "GLOBAL AUDITION-ий нээлттэй санал хураалтад оролцоорой.",
-    "notCandidateYet": "Нээлттэй санал хураалтын нэр дэвшигчээр батлагдсаны дараа хуваалцах холбоос гарна."
+    "notCandidateYet": "Нээлттэй санал хураалтын нэр дэвшигчээр батлагдсаны дараа хуваалцах холбоос гарна.",
+    "remainingDays": "{n} өдөр үлдлээ",
+    "remainingHours": "{n} цаг үлдлээ",
+    "remainingMinutes": "{n} мин үлдлээ",
+    "remainingEnded": "Дууссан",
+    "openWithRemaining": "Үргэлжилж байна · {remaining}",
+    "loginToVote": "Санал өгөхийн тулд нэвтэрнэ үү. Нэвтэрсний дараа энэ хуудас руу буцна.",
+    "loginAndVote": "Нэвтэрч санал өгөх",
+    "shareAgain": "Дэмжлэгээ хуваалцаарай",
+    "ownVotes": "♥ {n} санал",
+    "retry": "Дахин оролдох"
   }
 }
