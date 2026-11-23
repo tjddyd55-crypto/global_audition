@@ -8,6 +8,13 @@ export function voteSharePath(auditionId: string, round: number, applicationId: 
   return `/auditions/${encodeURIComponent(auditionId)}/vote?${q.toString()}`
 }
 
+/** 전체 후보 화면. 후보 파라미터는 넣지 않아 공유 전용 화면에서 벗어난다. */
+export function voteBoardPath(auditionId: string, round?: number | null): string {
+  const id = encodeURIComponent(auditionId)
+  if (round && round > 0) return `/auditions/${id}/vote?round=${round}`
+  return `/auditions/${id}/vote`
+}
+
 export function voteShareUrl(origin: string, locale: string, auditionId: string, round: number, applicationId: string): string {
   return `${origin.replace(/\/+$/, '')}/${locale}${voteSharePath(auditionId, round, applicationId)}`
 }

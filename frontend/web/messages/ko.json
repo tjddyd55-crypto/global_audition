@@ -2121,6 +2121,16 @@
     "ogDescription": "{audition} {round}차 공개 투표. 지금 {name}에게 투표해 주세요.",
     "ogDefaultTitle": "{audition} 공개 투표",
     "ogDefaultDescription": "GLOBAL AUDITION 공개 투표에 참여해 주세요.",
-    "notCandidateYet": "공개 투표 후보로 확정되면 공유 링크가 생깁니다."
+    "notCandidateYet": "공개 투표 후보로 확정되면 공유 링크가 생깁니다.",
+    "remainingDays": "{n}일 남음",
+    "remainingHours": "{n}시간 남음",
+    "remainingMinutes": "{n}분 남음",
+    "remainingEnded": "종료됨",
+    "openWithRemaining": "진행 중 · {remaining}",
+    "loginToVote": "투표하려면 로그인이 필요합니다. 로그인하면 이 화면으로 돌아옵니다.",
+    "loginAndVote": "로그인하고 투표하기",
+    "shareAgain": "응원 소식을 공유해 보세요",
+    "ownVotes": "♥ {n}표",
+    "retry": "다시 시도"
   }
 }

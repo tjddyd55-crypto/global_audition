@@ -3,6 +3,7 @@ import {
   INSTAGRAM_WEB_URL,
   parseShareParams,
   shareMessage,
+  voteBoardPath,
   voteSharePath,
   voteShareUrl,
 } from '../voteShare'
@@ -15,6 +16,9 @@ describe('voteShare', () => {
     expect(voteShareUrl('https://x.app/', 'ko', 'aud-1', 3, A)).toBe(`https://x.app/ko/auditions/aud-1/vote?round=3&candidate=${A}`)
     // 언어만 바뀌고 후보·회차는 그대로
     expect(voteShareUrl('https://x.app', 'en', 'aud-1', 3, A).replace('/en/', '/ko/')).toBe(voteShareUrl('https://x.app', 'ko', 'aud-1', 3, A))
+    // 전체 후보 보기는 후보 파라미터를 떼고 같은 회차만 남긴다
+    expect(voteBoardPath('aud-1', 3)).toBe('/auditions/aud-1/vote?round=3')
+    expect(voteBoardPath('aud-1')).toBe('/auditions/aud-1/vote')
   })
 
   it('builds the official Facebook sharer and copies text with the link', () => {

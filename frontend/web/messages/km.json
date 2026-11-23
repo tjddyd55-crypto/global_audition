@@ -2121,6 +2121,16 @@
     "ogDescription": "{audition} ការបោះឆ្នោតសាធារណៈជុំទី {round}។ បោះឆ្នោតឱ្យ {name} ឥឡូវនេះ។",
     "ogDefaultTitle": "ការបោះឆ្នោតសាធារណៈ {audition}",
     "ogDefaultDescription": "ចូលរួមការបោះឆ្នោតសាធារណៈ GLOBAL AUDITION។",
-    "notCandidateYet": "តំណចែករំលែកនឹងបង្ហាញនៅពេលអ្នកត្រូវបានបញ្ជាក់ជាបេក្ខជនបោះឆ្នោតសាធារណៈ។"
+    "notCandidateYet": "តំណចែករំលែកនឹងបង្ហាញនៅពេលអ្នកត្រូវបានបញ្ជាក់ជាបេក្ខជនបោះឆ្នោតសាធារណៈ។",
+    "remainingDays": "នៅសល់ {n} ថ្ងៃ",
+    "remainingHours": "នៅសល់ {n} ម៉ោង",
+    "remainingMinutes": "នៅសល់ {n} នាទី",
+    "remainingEnded": "បានបញ្ចប់",
+    "openWithRemaining": "កំពុងដំណើរការ · {remaining}",
+    "loginToVote": "ត្រូវចូលគណនីដើម្បីបោះឆ្នោត។ បន្ទាប់ពីចូល អ្នកនឹងត្រឡប់មកទំព័រនេះវិញ។",
+    "loginAndVote": "ចូល ហើយបោះឆ្នោត",
+    "shareAgain": "ចែករំលែកដើម្បីសុំការគាំទ្រ",
+    "ownVotes": "♥ {n} សំឡេង",
+    "retry": "ព្យាយាមម្ដងទៀត"
   }
 }
