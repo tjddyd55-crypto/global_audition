@@ -529,7 +529,8 @@
     "viewResults": "View results",
     "statusScheduled": "Scheduled",
     "statusOpen": "Open",
-    "statusClosed": "Closed"
+    "statusClosed": "Closed",
+    "voteCountOne": "{n} vote"
   },
   "ranking": {
     "title": "Ranking",
@@ -2131,6 +2132,7 @@
     "loginAndVote": "Sign in to vote",
     "shareAgain": "Share this to rally more support",
     "ownVotes": "♥ {n} votes",
-    "retry": "Try again"
+    "retry": "Try again",
+    "ownVotesOne": "♥ {n} vote"
   }
 }

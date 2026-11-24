@@ -3,10 +3,11 @@ import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import type { PublicVoteItem, PublicVotesPage } from '../../api/types'
 import { Button } from '../../ui/Button'
-import { NativeVideoPlayer } from '../media/NativeVideoPlayer'
+import { VoteInlineVideo } from './VoteInlineVideo'
 import { colors, radius } from '../../theme/tokens'
 import { VoteShareActions } from './VoteShareActions'
 import { canShowPublicVoteCount, remainingMessage, voteRemaining } from '../../../../web/src/shared/vote/voteRemaining'
+import { voteLabelKey } from '../../../../web/src/shared/vote/voteLabels'
 
 type Props = {
   page: PublicVotesPage
@@ -17,7 +18,6 @@ type Props = {
   voteBusy: boolean
   windowNotice: string | null
   onVote: () => void
-  votedName: string | null
   onViewAll: () => void
 }
 
@@ -32,7 +32,7 @@ function formatWhen(iso: string | null | undefined, lang: string): string {
   }
 }
 
-/** 공유 링크 전용: 해당 후보만. 전체 명단·집계는 보여 주지 않는다. */
+/** 공유 링크 전용: 해당 후보만. 영상 아래는 이름·득표·투표/공유만 둔다. */
 export function SharedCandidateLanding({
   page,
   shared,
@@ -42,12 +42,13 @@ export function SharedCandidateLanding({
   voteBusy,
   windowNotice,
   onVote,
-  votedName,
   onViewAll,
 }: Props) {
   const { t, i18n } = useTranslation()
   const lang = (i18n.language || 'ko').split('-')[0]
   const [now, setNow] = useState(() => new Date())
+  const [playing, setPlaying] = useState(false)
+  const [shareOpen, setShareOpen] = useState(false)
   const name = shared.userName || t('vote.applicantFallback')
   const linkRound = page.roundNumber ?? 1
   const phase = page.voteStatus
@@ -63,52 +64,62 @@ export function SharedCandidateLanding({
           : phase === 'CLOSED'
             ? t('vote.statusClosed')
             : t('vote.notStarted')
+  const voteLabel = voted
+    ? t('voteShare.alreadyVoted')
+    : isGuest && page.votingEnabled
+      ? t('voteShare.loginAndVote')
+      : t('voteShare.voteFor', { name })
+  const ownVotes = t(voteLabelKey(shared.voteCount, lang, 'voteShare.ownVotes', 'voteShare.ownVotesOne'), {
+    n: shared.voteCount,
+  })
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 30_000)
     return () => clearInterval(id)
   }, [])
 
-  const voteLabel = voted ? t('voteShare.alreadyVoted') : isGuest && page.votingEnabled ? t('voteShare.loginAndVote') : t('voteShare.voteFor', { name })
-
   return (
     <View style={styles.page} testID="vote-share-landing">
       <Text style={styles.round}>{t('voteShare.roundLabel', { round: linkRound })}</Text>
       <Text style={styles.audition} numberOfLines={2}>{page.audition.title}</Text>
+      <Text style={styles.status} testID="vote-status-line">
+        {statusLine}
+        {phase === 'OPEN' && page.voteEndAt ? ` · ${t('voteShare.endsAt', { end: formatWhen(page.voteEndAt, lang) })}` : ''}
+      </Text>
+      {phase === 'SCHEDULED' && page.voteStartAt ? (
+        <Text style={styles.meta}>{t('voteShare.startsAt', { start: formatWhen(page.voteStartAt, lang) })}</Text>
+      ) : null}
+      {windowNotice ? <Text style={styles.notice}>{windowNotice}</Text> : null}
 
       <View style={styles.card} testID="vote-shared-candidate">
-        {shared.videoUrl ? <NativeVideoPlayer videoUrl={shared.videoUrl} /> : null}
-        <Text style={styles.name}>{name}</Text>
-        {shared.category ? <Text style={styles.field}>{shared.category}</Text> : null}
-        {shared.description ? <Text style={styles.intro}>{shared.description}</Text> : null}
-
-        {showCount ? (
-          <Text style={styles.votes} testID="vote-own-count">
-            {t('voteShare.ownVotes', { n: shared.voteCount })}
-          </Text>
-        ) : null}
-
-        <Text style={styles.status} testID="vote-status-line">
-          {statusLine}
-          {phase === 'OPEN' && page.voteEndAt ? ` · ${t('voteShare.endsAt', { end: formatWhen(page.voteEndAt, lang) })}` : ''}
-        </Text>
-        {phase === 'SCHEDULED' && page.voteStartAt ? (
-          <Text style={styles.meta}>{t('voteShare.startsAt', { start: formatWhen(page.voteStartAt, lang) })}</Text>
-        ) : null}
-        {windowNotice ? <Text style={styles.notice}>{windowNotice}</Text> : null}
-
-        {voted || votedName ? (
-          <View style={styles.banner} testID="vote-voted-banner">
-            <Text style={styles.bannerTitle}>{t('voteShare.votedFor', { name: votedName || name })}</Text>
-            <Text style={styles.bannerBody}>{t('voteShare.shareAgain')}</Text>
+        <VoteInlineVideo
+          videoUrl={shared.videoUrl}
+          thumbnailUrl={shared.thumbnailUrl}
+          playing={playing}
+          onPlay={() => setPlaying(true)}
+        />
+        <View style={styles.metaRow}>
+          <View style={styles.nameBlock}>
+            <Text style={styles.name} numberOfLines={1}>{name}</Text>
+            {shared.category ? <Text style={styles.field} numberOfLines={1}>{shared.category}</Text> : null}
           </View>
-        ) : isGuest && page.votingEnabled ? (
-          <Text style={styles.hint} testID="vote-login-hint">{t('voteShare.loginToVote')}</Text>
+          {showCount ? (
+            <Text style={styles.votes} testID="vote-own-count">
+              {ownVotes}
+            </Text>
+          ) : null}
+        </View>
+        <View style={styles.actions}>
+          <View style={styles.cell}>
+            <Button label={voteLabel} disabled={!page.votingEnabled || voteBusy || voted} onPress={onVote} />
+          </View>
+          <View style={styles.cell}>
+            <Button label={t('voteShare.share')} variant="secondary" onPress={() => setShareOpen((v) => !v)} />
+          </View>
+        </View>
+        {shareOpen ? (
+          <VoteShareActions url={url} text={t('voteShare.candidateText', { name })} title={t('voteShare.shareTitle', { name })} />
         ) : null}
-
-        <Button label={voteLabel} disabled={!page.votingEnabled || voteBusy || voted} onPress={onVote} />
-        {voted ? <Text style={styles.sharePrompt}>{t('voteShare.shareAgain')}</Text> : null}
-        <VoteShareActions url={url} text={t('voteShare.candidateText', { name })} title={t('voteShare.shareTitle', { name })} />
 
         <Pressable
           accessibilityRole="link"
@@ -126,27 +137,26 @@ export function SharedCandidateLanding({
 const styles = StyleSheet.create({
   page: { gap: 8, paddingBottom: 24 },
   round: { color: colors.purple, fontWeight: '700', fontSize: 12, textTransform: 'uppercase' },
-  audition: { color: colors.muted, fontSize: 13, marginBottom: 8 },
+  audition: { color: colors.muted, fontSize: 13 },
+  status: { color: colors.text, fontWeight: '600', fontSize: 14 },
+  meta: { color: colors.muted, fontSize: 13 },
+  notice: { color: colors.text, backgroundColor: '#F3F4F6', padding: 10, borderRadius: 8, fontSize: 13 },
   card: {
     backgroundColor: colors.surface,
     borderRadius: radius.card,
     borderWidth: 1,
     borderColor: colors.border,
-    padding: 16,
+    overflow: 'hidden',
+    paddingBottom: 12,
     gap: 10,
   },
-  name: { fontSize: 28, fontWeight: '800', color: colors.text, lineHeight: 34 },
-  field: { color: colors.text, fontWeight: '600', fontSize: 14 },
-  intro: { color: colors.muted, fontSize: 15, lineHeight: 22 },
-  votes: { color: colors.purple, fontWeight: '800', fontSize: 28, marginTop: 4 },
-  status: { color: colors.text, fontWeight: '600', fontSize: 14 },
-  meta: { color: colors.muted, fontSize: 13 },
-  notice: { color: colors.text, backgroundColor: '#F3F4F6', padding: 10, borderRadius: 8, fontSize: 13 },
-  hint: { color: colors.muted, fontSize: 13, lineHeight: 20 },
-  banner: { backgroundColor: '#F5F3FF', borderRadius: 12, padding: 12, gap: 4 },
-  bannerTitle: { color: colors.purple, fontWeight: '700', fontSize: 15 },
-  bannerBody: { color: colors.purple, fontSize: 13 },
-  sharePrompt: { color: colors.purple, fontWeight: '600', textAlign: 'center' },
+  metaRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, paddingHorizontal: 16 },
+  nameBlock: { flex: 1, minWidth: 0 },
+  name: { fontSize: 22, fontWeight: '800', color: colors.text },
+  field: { color: colors.muted, fontWeight: '600', fontSize: 13, marginTop: 2 },
+  votes: { color: colors.purple, fontWeight: '800', fontSize: 22 },
+  actions: { flexDirection: 'row', gap: 8, paddingHorizontal: 16 },
+  cell: { flex: 1 },
   viewAllHit: { minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   viewAll: { color: colors.purple, fontWeight: '700', fontSize: 15 },
 })
