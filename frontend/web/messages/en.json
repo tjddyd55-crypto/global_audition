@@ -508,8 +508,6 @@
     "castSuccess": "Vote recorded.",
     "cancelSuccess": "Vote cancelled.",
     "cancelFailed": "Could not cancel the vote.",
-    "cheerHint": "Vote for an applicant you want to support.",
-    "allCategories": "All",
     "loading": "Loading…",
     "loadBoardFailed": "Could not load the vote board.",
     "backToAudition": "Audition detail",
