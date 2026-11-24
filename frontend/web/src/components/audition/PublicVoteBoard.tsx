@@ -1,13 +1,10 @@
 ﻿'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 import { auditionApi, type PublicVoteItem } from '@/shared/api/auditions'
-import { VideoEmbedOverlay } from '@/components/video/VideoEmbedOverlay'
-import { resolveVideoThumbnailUrl } from '@/shared/audition/videoThumbnail'
-import { getVideoEmbedSrc } from '@/shared/utils/videoEmbed'
 import { useAuthStore } from '@/shared/auth/authStore'
 import { Link, useRouter } from '@/i18n.config'
 import { HERO } from '@/shared/design-tokens'
@@ -17,7 +14,10 @@ import { recruitFieldLabel } from '@/shared/audition/recruitFields'
 import { formatCount } from '@/shared/money/currency'
 import { VoteShareSheet } from '@/components/vote/VoteShareSheet'
 import { SharedCandidateLanding } from '@/components/vote/SharedCandidateLanding'
+import { VoteInlineVideo } from '@/components/vote/VoteInlineVideo'
 import { voteSharePath } from '@/shared/vote/voteShare'
+import { canShowPublicVoteCount, remainingMessage, voteRemaining } from '@/shared/vote/voteRemaining'
+import { voteLabelKey } from '@/shared/vote/voteLabels'
 
 type Props = {
   auditionId: string
@@ -37,9 +37,16 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback, shareRound,
   const router = useRouter()
   const accessToken = useAuthStore((s) => s.accessToken)
   const [category, setCategory] = useState<string | null>(null)
-  const [playItem, setPlayItem] = useState<PublicVoteItem | null>(null)
+  const [playingId, setPlayingId] = useState<string | null>(null)
   const [shareItem, setShareItem] = useState<PublicVoteItem | null>(null)
+  const [now, setNow] = useState(() => new Date())
   const allLabel = t('allCategories')
+
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(new Date()), 30_000)
+    return () => window.clearInterval(id)
+  }, [])
+
 
   const qk = ['audition-votes', auditionId, category ?? allLabel, shareRound ?? null, shareCandidate ?? null] as const
 
@@ -57,7 +64,7 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback, shareRound,
 
   const openVideoWithViewBump = useCallback(
     (item: PublicVoteItem) => {
-      setPlayItem(item)
+      setPlayingId(item.applicationId)
       if (typeof window === 'undefined') return
       const k = `audition-view-${auditionId}-${item.applicationId}`
       if (sessionStorage.getItem(k)) return
@@ -184,8 +191,19 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback, shareRound,
     typeof window === 'undefined'
       ? ''
       : `${window.location.origin}/${locale}${voteSharePath(auditionId, linkRound, item.applicationId)}`
-  const statusLabel =
-    phase === 'OPEN' ? t('statusOpen') : phase === 'SCHEDULED' ? t('statusScheduled') : phase === 'CLOSED' ? t('statusClosed') : t('notStarted')
+  const remain = remainingMessage(voteRemaining(p?.voteEndAt, now), (key, values) => ts(key as 'remainingDays', values))
+  const statusLine =
+    phase === 'OPEN' && remain
+      ? ts('openWithRemaining', { remaining: remain })
+      : phase === 'OPEN'
+        ? t('statusOpen')
+        : phase === 'SCHEDULED'
+          ? t('statusScheduled')
+          : phase === 'CLOSED'
+            ? t('statusClosed')
+            : t('notStarted')
+  const ownVotesText = (n: number) =>
+    ts(voteLabelKey(n, locale, 'ownVotes', 'ownVotesOne') as 'ownVotes', { n: formatCount(n, locale) })
   const windowNotice = canCast
     ? null
     : phase === 'SCHEDULED'
@@ -248,6 +266,13 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback, shareRound,
           </Link>
           <h1 className="mt-4 text-2xl font-bold text-gray-900 md:text-3xl">{title}</h1>
           <p className={`${TEXT_SUB} mt-2 max-w-2xl text-base text-gray-700`}>{subCopy}</p>
+          <p className="mt-3 text-sm font-medium text-gray-800" data-testid="vote-status-line">
+            {statusLine}
+            {phase === 'OPEN' && p?.voteEndAt ? ` · ${ts('endsAt', { end: formatWhen(p.voteEndAt) })}` : null}
+          </p>
+          {phase === 'SCHEDULED' && p?.voteStartAt ? (
+            <p className="mt-1 text-sm text-gray-600">{ts('startsAt', { start: formatWhen(p.voteStartAt) })}</p>
+          ) : null}
           <div className="mt-4 flex flex-wrap gap-4 text-sm text-gray-600">
             <span>{t('applicantCount', { n: formatCount(audition?.applicantCount ?? summary?.applicantCount ?? 0, locale) })}</span>
             <span>{t('totalVotes', { n: formatCount(audition?.totalVotes ?? summary?.totalVotes ?? 0, locale) })}</span>
@@ -300,66 +325,36 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback, shareRound,
         ) : (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {items.map((item) => {
-              const cardThumb = resolveVideoThumbnailUrl(item.videoUrl, item.thumbnailUrl)
-              const canEmbed = Boolean(getVideoEmbedSrc(item.videoUrl))
-              const canOpenVideo = canEmbed && !voteMutationBusy
+              const name = item.userName || t('nameUnset')
               return (
-              <article key={item.applicationId} className="overflow-hidden rounded-xl border border-[#E5E7EB] bg-white shadow-sm">
-                <div
-                  className={`relative aspect-[16/10] bg-gray-900${canOpenVideo ? ' cursor-pointer' : ''}`}
-                  role={canOpenVideo ? 'button' : undefined}
-                  tabIndex={canOpenVideo ? 0 : undefined}
-                  aria-label={canOpenVideo ? t('playVideo') : undefined}
-                  onKeyDown={(e) => {
-                    if (!canOpenVideo) return
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault()
-                      openVideoWithViewBump(item)
-                    }
-                  }}
-                  onClick={() => {
-                    if (!canOpenVideo) return
-                    openVideoWithViewBump(item)
-                  }}
-                >
-                  {cardThumb ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={cardThumb} alt="" className="h-full w-full object-cover" />
-                  ) : (
-                    <div className="h-full w-full bg-gray-800" />
-                  )}
-                  <span className="pointer-events-none absolute left-2 top-2 rounded-full bg-black/60 px-2 py-0.5 text-xs font-medium text-white">
-                    👁 {formatCount(item.viewCount, locale)}
-                  </span>
-                  <div
-                    className={`pointer-events-none absolute left-1/2 top-1/2 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-2xl text-white ${
-                      canOpenVideo ? 'bg-black/50' : 'bg-black/35 opacity-40'
-                    }`}
-                    aria-hidden
-                  >
-                    ▶
+              <article
+                key={item.applicationId}
+                className={`overflow-hidden rounded-xl border border-[#E5E7EB] bg-white shadow-sm${item.isVoted ? ' ring-2 ring-violet-400' : ''}`}
+                data-application-id={item.applicationId}
+              >
+                <VoteInlineVideo
+                  videoUrl={item.videoUrl}
+                  thumbnailUrl={item.thumbnailUrl}
+                  title={t('applicantVideo', { name })}
+                  playing={playingId === item.applicationId}
+                  onPlay={() => openVideoWithViewBump(item)}
+                  compact
+                />
+                <div className="px-4 py-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h2 className="truncate text-lg font-extrabold text-gray-900">{name}</h2>
+                      {item.category ? (
+                        <p className="mt-0.5 truncate text-xs font-medium text-gray-600">{recruitFieldLabel(item.category, tField)}</p>
+                      ) : null}
+                    </div>
+                    {canShowPublicVoteCount(phase) ? (
+                      <p className="shrink-0 text-lg font-extrabold text-violet-700" data-testid="vote-own-count">
+                        {ownVotesText(item.voteCount)}
+                      </p>
+                    ) : null}
                   </div>
-                  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/80 to-transparent" />
-                  {item.category ? (
-                    <span className="absolute bottom-3 left-2 rounded-md bg-violet-600/90 px-2 py-0.5 text-xs font-semibold text-white">
-                      {item.category}
-                    </span>
-                  ) : null}
-                </div>
-                <div className="p-4">
-                  <p className="text-base font-bold text-gray-900">{item.userName || t('nameUnset')}</p>
-                  <p className={`${TEXT_SUB} mt-1 line-clamp-2 text-sm`}>
-                    {/* 공개 화면: 이메일은 노출하지 않는다(서버도 비워서 보낸다). */}
-                    {item.description?.trim() ? item.description : ''}
-                  </p>
-                  <div
-                    className={`mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-[#E5E7EB] pt-4 ${
-                      item.isVoted ? 'ring-2 ring-violet-400 ring-offset-2 rounded-lg -mx-2 px-2 pb-2' : ''
-                    }`}
-                  >
-                    <span className="text-sm font-medium text-gray-800">
-                      ♥ {formatCount(item.voteCount, locale)} <span className="text-gray-500">{t('votes')}</span>
-                    </span>
+                  <div className={`mt-3 grid gap-2 ${canCast ? 'grid-cols-2' : 'grid-cols-1'}`}>
                     {canCast && item.isVoted ? (
                       <button
                         type="button"
@@ -368,7 +363,7 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback, shareRound,
                           if (!requireAuth()) return
                           removeMutation.mutate(item.applicationId)
                         }}
-                        className="rounded-lg border border-[#E5E7EB] bg-white px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50 disabled:opacity-50"
+                        className="min-h-11 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50 disabled:opacity-50"
                       >
                         {t('cancelVote')}
                       </button>
@@ -380,20 +375,20 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback, shareRound,
                           if (!requireAuth()) return
                           castMutation.mutate({ applicationId: item.applicationId, name: item.userName || undefined })
                         }}
-                        className="rounded-lg bg-gradient-to-r from-violet-600 to-pink-500 px-4 py-2 text-sm font-semibold text-white hover:opacity-95 disabled:opacity-50"
+                        className="min-h-11 rounded-lg bg-gradient-to-r from-violet-600 to-pink-500 px-3 py-2 text-sm font-semibold text-white hover:opacity-95 disabled:opacity-50"
                       >
                         {t('voteAction')}
                       </button>
                     ) : null}
+                    <button
+                      type="button"
+                      onClick={() => setShareItem(item)}
+                      className="min-h-11 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-50"
+                      data-testid="vote-card-share"
+                    >
+                      {ts('share')}
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setShareItem(item)}
-                    className="mt-3 w-full rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50"
-                    data-testid="vote-card-share"
-                  >
-                    {ts('share')}
-                  </button>
                 </div>
               </article>
               )
@@ -402,18 +397,6 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback, shareRound,
         )}
       </div>
 
-      <VideoEmbedOverlay
-        play={
-          playItem
-            ? {
-                url: playItem.videoUrl,
-                title: t('applicantVideo', { name: playItem.userName || t('nameUnset') }),
-                thumbnail: playItem.thumbnailUrl ?? undefined,
-              }
-            : undefined
-        }
-        onClose={() => setPlayItem(null)}
-      />
       {shareItem ? (
         <VoteShareSheet
           open

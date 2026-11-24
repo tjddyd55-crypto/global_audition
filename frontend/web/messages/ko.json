@@ -529,7 +529,8 @@
     "viewResults": "결과 보기",
     "statusScheduled": "예정",
     "statusOpen": "진행 중",
-    "statusClosed": "종료"
+    "statusClosed": "종료",
+    "voteCountOne": "표 {n}"
   },
   "ranking": {
     "title": "랭킹",
@@ -2131,6 +2132,7 @@
     "loginAndVote": "로그인하고 투표하기",
     "shareAgain": "응원 소식을 공유해 보세요",
     "ownVotes": "♥ {n}표",
-    "retry": "다시 시도"
+    "retry": "다시 시도",
+    "ownVotesOne": "♥ {n}표"
   }
 }

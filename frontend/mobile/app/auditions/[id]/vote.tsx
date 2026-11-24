@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useLocalSearchParams, useRouter } from 'expo-router'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { voteApi } from '../../../src/api/endpoints'
@@ -10,12 +10,14 @@ import { ApiError } from '../../../src/api/http'
 import { Button } from '../../../src/ui/Button'
 import { EmptyState, ErrorState } from '../../../src/ui/EmptyState'
 import { Screen } from '../../../src/ui/Screen'
-import { NativeVideoPlayer } from '../../../src/features/media/NativeVideoPlayer'
+import { VoteInlineVideo } from '../../../src/features/vote/VoteInlineVideo'
 import { colors, radius } from '../../../src/theme/tokens'
 import { WEB_URL } from '../../../src/config/env'
 import { VoteShareActions } from '../../../src/features/vote/VoteShareActions'
 import { SharedCandidateLanding } from '../../../src/features/vote/SharedCandidateLanding'
 import { parseShareParams, voteSharePath, voteShareUrl } from '../../../../web/src/shared/vote/voteShare'
+import { canShowPublicVoteCount, remainingMessage, voteRemaining } from '../../../../web/src/shared/vote/voteRemaining'
+import { voteLabelKey } from '../../../../web/src/shared/vote/voteLabels'
 import type { PublicVoteItem } from '../../../src/api/types'
 
 export default function VoteScreen() {
@@ -23,6 +25,7 @@ export default function VoteScreen() {
   const [playingId, setPlayingId] = useState<string | null>(null)
   const [shareOpenId, setShareOpenId] = useState<string | null>(null)
   const [votedName, setVotedName] = useState<string | null>(null)
+  const [now, setNow] = useState(() => new Date())
   const params = useLocalSearchParams<{ id: string; round?: string; candidate?: string }>()
   const id = params.id
   // 공유 링크(웹·앱 딥링크)에서 온 회차·후보. 잘못된 값은 버린다.
@@ -53,6 +56,11 @@ export default function VoteScreen() {
     },
   })
 
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 30_000)
+    return () => clearInterval(id)
+  }, [])
+
   const page = query.data
   const shared = page?.sharedCandidate ?? null
   const linkRound = page?.roundNumber ?? 1
@@ -76,7 +84,26 @@ export default function VoteScreen() {
         ? t('vote.closedResults')
         : t('vote.notStarted')
 
+  const phase = page?.voteStatus
+  const remain = remainingMessage(voteRemaining(page?.voteEndAt, now), (key, values) => t(`voteShare.${key}`, values ?? { n: 0 }))
+  const listStatus =
+    phase === 'OPEN' && remain
+      ? t('voteShare.openWithRemaining', { remaining: remain })
+      : phase === 'OPEN'
+        ? t('vote.statusOpen')
+        : phase === 'SCHEDULED'
+          ? t('vote.statusScheduled')
+          : phase === 'CLOSED'
+            ? t('vote.statusClosed')
+            : t('vote.notStarted')
+  const listStatusLine =
+    phase === 'OPEN' && page?.voteEndAt
+      ? `${listStatus} · ${t('voteShare.endsAt', { end: new Date(page.voteEndAt).toLocaleString(lang) })}`
+      : listStatus
+  const ownVotesText = (n: number) => t(voteLabelKey(n, lang, 'voteShare.ownVotes', 'voteShare.ownVotesOne'), { n })
+
   const sharedVoted = Boolean(shared && page?.votingEnabled && page.myVoteApplicationId === shared.applicationId)
+
 
   // 유효한 공유 링크면 해당 후보만 보여 준다. 잘못된 후보 값은 shared 가 없어 전체 화면으로 간다.
   if (shared && page && !query.isError) {
@@ -91,7 +118,6 @@ export default function VoteScreen() {
           voteBusy={voteMutation.isPending}
           windowNotice={windowNotice}
           onVote={() => castFor(shared)}
-          votedName={votedName}
           onViewAll={() =>
             router.replace({
               pathname: '/auditions/[id]/vote',
@@ -127,6 +153,7 @@ export default function VoteScreen() {
       {page && (page.votingEnabled || (page.voteStatus === 'CLOSED' && page.items.length > 0)) ? (
         <View style={styles.head}>
           <Text style={styles.title}>{page.audition.title}</Text>
+          <Text style={styles.status} testID="vote-status-line">{listStatusLine}</Text>
           <Text style={styles.meta}>
             {page.voteStatus === 'CLOSED'
               ? t('vote.closedResults')
@@ -139,30 +166,44 @@ export default function VoteScreen() {
         </View>
       ) : null}
       {(page && (page.votingEnabled || (page.voteStatus === 'CLOSED' && page.items.length > 0)) ? page.items : []).map((item) => (
-        <View key={item.applicationId} style={styles.card}>
-          <Text style={styles.rank}>#{item.rank || '-'}</Text>
-          <Text style={styles.name}>{item.userName || t('vote.applicantFallback')}</Text>
-          <Text style={styles.meta}>{item.description}</Text>
-          <Text style={styles.meta}>{t('vote.voteCount', { n: item.voteCount })}</Text>
-          {item.videoUrl ? (
-            playingId === item.applicationId ? (
-              <NativeVideoPlayer videoUrl={item.videoUrl} autoplay />
-            ) : (
-              <Button label={t('vote.watchVideo')} variant="secondary" onPress={() => setPlayingId(item.applicationId)} />
-            )
-          ) : null}
-          {page?.votingEnabled ? (
-          <Button
-            label={item.isVoted ? t('vote.myVote') : t('vote.castFor')}
-            disabled={item.isVoted || voteMutation.isPending}
-            onPress={() => castFor(item)}
+        <View key={item.applicationId} style={[styles.card, item.isVoted ? styles.votedCard : null]}>
+          <VoteInlineVideo
+            videoUrl={item.videoUrl}
+            thumbnailUrl={item.thumbnailUrl}
+            playing={playingId === item.applicationId}
+            onPlay={() => setPlayingId(item.applicationId)}
+            compact
           />
-          ) : null}
+          <View style={styles.metaRow}>
+            <View style={styles.nameBlock}>
+              <Text style={styles.name} numberOfLines={1}>{item.userName || t('vote.applicantFallback')}</Text>
+              {item.category ? <Text style={styles.field} numberOfLines={1}>{item.category}</Text> : null}
+            </View>
+            {canShowPublicVoteCount(page?.voteStatus) ? (
+              <Text style={styles.votes}>{ownVotesText(item.voteCount)}</Text>
+            ) : null}
+          </View>
+          <View style={styles.actions}>
+            {page?.votingEnabled ? (
+              <View style={styles.cell}>
+                <Button
+                  label={item.isVoted ? t('vote.myVote') : t('vote.castFor')}
+                  disabled={item.isVoted || voteMutation.isPending}
+                  onPress={() => castFor(item)}
+                />
+              </View>
+            ) : null}
+            <View style={styles.cell}>
+              <Button
+                label={t('voteShare.share')}
+                variant="secondary"
+                onPress={() => setShareOpenId((id) => (id === item.applicationId ? null : item.applicationId))}
+              />
+            </View>
+          </View>
           {shareOpenId === item.applicationId ? (
             <VoteShareActions url={urlFor(item)} title={t('voteShare.shareTitle', { name: nameOf(item) })} text={t('voteShare.candidateText', { name: nameOf(item) })} />
-          ) : (
-            <Button label={t('voteShare.share')} variant="secondary" onPress={() => setShareOpenId(item.applicationId)} />
-          )}
+          ) : null}
         </View>
       ))}
       {voteMutation.isError ? (
@@ -178,18 +219,26 @@ export default function VoteScreen() {
 const styles = StyleSheet.create({
   head: { marginBottom: 16, gap: 6 },
   title: { fontSize: 22, fontWeight: '800', color: colors.text },
+  status: { color: colors.text, fontWeight: '600', fontSize: 14 },
   meta: { color: colors.muted, fontSize: 13, lineHeight: 20 },
   card: {
     backgroundColor: colors.surface,
     borderRadius: radius.card,
     borderWidth: 1,
     borderColor: colors.border,
-    padding: 16,
-    gap: 8,
+    overflow: 'hidden',
+    paddingBottom: 12,
+    gap: 10,
     marginBottom: 12,
   },
-  rank: { color: colors.purple, fontWeight: '800' },
-  name: { fontSize: 16, fontWeight: '700', color: colors.text },
+  votedCard: { borderColor: colors.purple, borderWidth: 2 },
+  metaRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, paddingHorizontal: 16 },
+  nameBlock: { flex: 1, minWidth: 0 },
+  name: { fontSize: 18, fontWeight: '800', color: colors.text },
+  field: { color: colors.muted, fontWeight: '600', fontSize: 13, marginTop: 2 },
+  votes: { color: colors.purple, fontWeight: '800', fontSize: 18 },
+  actions: { flexDirection: 'row', gap: 8, paddingHorizontal: 16 },
+  cell: { flex: 1 },
   error: { color: colors.dangerText },
   success: { color: colors.purple, fontWeight: '700', marginBottom: 12 },
 })
