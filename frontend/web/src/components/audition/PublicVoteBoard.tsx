@@ -9,7 +9,6 @@ import { useAuthStore } from '@/shared/auth/authStore'
 import { Link, useRouter } from '@/i18n.config'
 import { HERO } from '@/shared/design-tokens'
 import { CARD_BASE, PAGE_CONTAINER, TEXT_SUB } from '@/shared/ui/specClasses'
-import { isAllCategoryName } from '@/shared/audition/allCategorySentinel'
 import { recruitFieldLabel } from '@/shared/audition/recruitFields'
 import { formatCount } from '@/shared/money/currency'
 import { VoteShareSheet } from '@/components/vote/VoteShareSheet'
@@ -36,23 +35,20 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback, shareRound,
   const queryClient = useQueryClient()
   const router = useRouter()
   const accessToken = useAuthStore((s) => s.accessToken)
-  const [category, setCategory] = useState<string | null>(null)
   const [playingId, setPlayingId] = useState<string | null>(null)
   const [shareItem, setShareItem] = useState<PublicVoteItem | null>(null)
   const [now, setNow] = useState(() => new Date())
-  const allLabel = t('allCategories')
-
   useEffect(() => {
     const id = window.setInterval(() => setNow(new Date()), 30_000)
     return () => window.clearInterval(id)
   }, [])
 
 
-  const qk = ['audition-votes', auditionId, category ?? allLabel, shareRound ?? null, shareCandidate ?? null] as const
+  const qk = ['audition-votes', auditionId, shareRound ?? null, shareCandidate ?? null] as const
 
   const votesQuery = useQuery({
     queryKey: qk,
-    queryFn: () => auditionApi.listVotes(auditionId, category, { round: shareRound, candidate: shareCandidate }),
+    queryFn: () => auditionApi.listVotes(auditionId, undefined, { round: shareRound, candidate: shareCandidate }),
     enabled: !!auditionId,
   })
 
@@ -185,7 +181,6 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback, shareRound,
   const items = p?.items ?? []
   const title = audition?.title || auditionTitleFallback
   const canCast = Boolean(p?.votingEnabled)
-  const subCopy = phase === 'CLOSED' ? t('closedResults') : t('cheerHint')
   const linkRound = p?.roundNumber ?? 1
   const shareUrlFor = (item: PublicVoteItem) =>
     typeof window === 'undefined'
@@ -265,7 +260,6 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback, shareRound,
             ← {t('backToAudition')}
           </Link>
           <h1 className="mt-4 text-2xl font-bold text-gray-900 md:text-3xl">{title}</h1>
-          <p className={`${TEXT_SUB} mt-2 max-w-2xl text-base text-gray-700`}>{subCopy}</p>
           <p className="mt-3 text-sm font-medium text-gray-800" data-testid="vote-status-line">
             {statusLine}
             {phase === 'OPEN' && p?.voteEndAt ? ` · ${ts('endsAt', { end: formatWhen(p.voteEndAt) })}` : null}
@@ -286,28 +280,6 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback, shareRound,
             {ts('otherRound', { round: p.roundNumber })}
           </p>
         ) : null}
-        {/* 카테고리 탭 */}
-        {audition?.categories && audition.categories.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {audition.categories.map((c) => (
-              <button
-                key={c.name}
-                type="button"
-                disabled={voteMutationBusy}
-                onClick={() => setCategory(isAllCategoryName(c.name, allLabel) ? null : c.name)}
-                className={
-                  (isAllCategoryName(c.name, allLabel) && category === null) || c.name === category
-                    ? 'min-h-11 whitespace-normal break-words rounded-full bg-violet-600 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-60'
-                    : 'min-h-11 whitespace-normal break-words rounded-full border border-[#E5E7EB] bg-white px-3 py-1.5 text-sm font-medium text-gray-800 hover:bg-gray-50 disabled:opacity-50'
-                }
-              >
-                {isAllCategoryName(c.name) ? allLabel : recruitFieldLabel(c.name, tField)}
-                {isAllCategoryName(c.name, allLabel) ? '' : ` ${c.count}`}
-              </button>
-            ))}
-          </div>
-        )}
-
         {/* 요약 카드 4개 */}
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           <SummaryCard label={t('applicantFallback')} value={summary?.applicantCount ?? 0} locale={locale} />

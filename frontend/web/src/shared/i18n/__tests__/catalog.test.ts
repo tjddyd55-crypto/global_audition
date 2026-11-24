@@ -52,8 +52,7 @@ describe('i18n catalogs', () => {
     const required = [
       'apply.sectionBasic',
       'apply.vaultAttach',
-      'vote.cheerHint',
-      'vote.allCategories',
+      'vote.statusOpen',
       'agency.filter',
       'agency.manageTitle',
       'agency.dashboard',
@@ -110,7 +109,7 @@ describe('i18n catalogs', () => {
     for (const tree of [ko, en, mn] as const) {
       const root = tree as Record<string, Record<string, string>>
       expect(root.apply.sectionBasic).toBeTruthy()
-      expect(root.vote.cheerHint).toBeTruthy()
+      expect(root.vote.statusOpen).toBeTruthy()
       expect(root.vault.title).toBeTruthy()
       expect(root.channel.save).toBeTruthy()
       expect(root.editor.statusOpen).toBeTruthy()

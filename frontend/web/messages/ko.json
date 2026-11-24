@@ -508,8 +508,6 @@
     "castSuccess": "투표했습니다.",
     "cancelSuccess": "투표를 취소했습니다.",
     "cancelFailed": "취소에 실패했습니다.",
-    "cheerHint": "마음에 드는 지원자에게 투표하고 응원하세요.",
-    "allCategories": "전체",
     "loading": "불러오는 중…",
     "loadBoardFailed": "투표 정보를 불러오지 못했습니다.",
     "backToAudition": "오디션 상세",
