@@ -529,7 +529,8 @@
     "viewResults": "Үр дүн харах",
     "statusScheduled": "Товлосон",
     "statusOpen": "Явагдаж байна",
-    "statusClosed": "Дууссан"
+    "statusClosed": "Дууссан",
+    "voteCountOne": "{n} санал"
   },
   "ranking": {
     "title": "Чансаа",
@@ -2131,6 +2132,7 @@
     "loginAndVote": "Нэвтэрч санал өгөх",
     "shareAgain": "Дэмжлэгээ хуваалцаарай",
     "ownVotes": "♥ {n} санал",
-    "retry": "Дахин оролдох"
+    "retry": "Дахин оролдох",
+    "ownVotesOne": "♥ {n} санал"
   }
 }

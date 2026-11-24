@@ -529,7 +529,8 @@
     "viewResults": "មើលលទ្ធផល",
     "statusScheduled": "កំណត់ពេល",
     "statusOpen": "កំពុងដំណើរការ",
-    "statusClosed": "បានបញ្ចប់"
+    "statusClosed": "បានបញ្ចប់",
+    "voteCountOne": "{n} ឆ្នោត"
   },
   "ranking": {
     "title": "ចំណាត់ថ្នាក់",
@@ -2131,6 +2132,7 @@
     "loginAndVote": "ចូល ហើយបោះឆ្នោត",
     "shareAgain": "ចែករំលែកដើម្បីសុំការគាំទ្រ",
     "ownVotes": "♥ {n} សំឡេង",
-    "retry": "ព្យាយាមម្ដងទៀត"
+    "retry": "ព្យាយាមម្ដងទៀត",
+    "ownVotesOne": "♥ {n} សំឡេង"
   }
 }

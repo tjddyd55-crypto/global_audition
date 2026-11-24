@@ -529,7 +529,8 @@
     "viewResults": "Natijalarni koʻrish",
     "statusScheduled": "Rejalashtirilgan",
     "statusOpen": "Davom etmoqda",
-    "statusClosed": "Yakunlangan"
+    "statusClosed": "Yakunlangan",
+    "voteCountOne": "{n} ovoz"
   },
   "ranking": {
     "title": "Reyting",
@@ -2131,6 +2132,7 @@
     "loginAndVote": "Kirib ovoz berish",
     "shareAgain": "Qoʻllab-quvvatlash uchun ulashing",
     "ownVotes": "♥ {n} ovoz",
-    "retry": "Qayta urinib koʻrish"
+    "retry": "Qayta urinib koʻrish",
+    "ownVotesOne": "♥ {n} ovoz"
   }
 }
