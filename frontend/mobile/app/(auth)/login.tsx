@@ -52,7 +52,7 @@ export default function LoginScreen() {
             }
           }}
         />
-        <Button label={t('auth.registerButton')} variant="secondary" onPress={() => router.push('/(auth)/register')} />
+        <Button label={t('auth.registerButton')} variant="secondary" onPress={() => router.push({ pathname: '/(auth)/register', params: nextPath ? { next: nextPath } : {} })} />
         <Button label={t('auth.findAccount')} variant="secondary" onPress={() => router.push('/(auth)/recover')} />
       </KeyboardAvoidingView>
     </Screen>

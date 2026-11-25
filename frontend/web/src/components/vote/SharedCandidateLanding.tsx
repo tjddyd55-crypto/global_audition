@@ -12,6 +12,7 @@ import { PAGE_CONTAINER } from '@/shared/ui/specClasses'
 import { VoteInlineVideo } from '@/components/vote/VoteInlineVideo'
 import { voteBoardPath } from '@/shared/vote/voteShare'
 import { canShowPublicVoteCount, remainingMessage, voteRemaining } from '@/shared/vote/voteRemaining'
+import { formatVoteDate } from '@/shared/vote/voteDate'
 import { voteLabelKey } from '@/shared/vote/voteLabels'
 
 type Props = {
@@ -26,13 +27,6 @@ type Props = {
   otherRound: boolean
   onVote: () => void
   onShare: () => void
-}
-
-function formatWhen(iso: string | null | undefined, locale: string): string {
-  if (!iso) return ''
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return iso
-  return new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(d)
 }
 
 /**
@@ -88,7 +82,7 @@ export function SharedCandidateLanding({
             ? t('statusClosed')
             : t('notStarted')
 
-  const voteLabel = voted ? ts('alreadyVoted') : isGuest && canCast ? ts('loginAndVote') : ts('voteFor', { name })
+  const voteLabel = voted ? ts('alreadyVoted') : t('voteAction')
 
   const onPrimary = () => {
     if (!canCast || voteBusy || voted) return
@@ -102,17 +96,19 @@ export function SharedCandidateLanding({
         <Link href={`/auditions/${auditionId}`} className="text-sm font-medium text-violet-700 no-underline hover:underline">
           ← {t('backToAudition')}
         </Link>
-        <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-violet-700">
-          {ts('roundLabel', { round: linkRound })}
-        </p>
-        <p className="mt-1 text-sm text-gray-600 line-clamp-2">{page.audition.title}</p>
-        <p className="mt-2 text-sm font-medium text-gray-800" data-testid="vote-status-line">
-          {statusLine}
-          {phase === 'OPEN' && page.voteEndAt ? ` · ${ts('endsAt', { end: formatWhen(page.voteEndAt, locale) })}` : null}
-        </p>
-        {phase === 'SCHEDULED' && page.voteStartAt ? (
-          <p className="mt-1 text-sm text-gray-600">{ts('startsAt', { start: formatWhen(page.voteStartAt, locale) })}</p>
-        ) : null}
+        <div className="mt-3 space-y-2 rounded-xl bg-violet-50 p-4">
+          <p className="text-[13px] font-semibold leading-relaxed text-violet-700">
+            {ts('roundLabel', { round: linkRound })}
+          </p>
+          <h1 className="break-words text-[22px] font-extrabold leading-snug text-gray-900">{page.audition.title}</h1>
+          <p className="mt-2 text-sm font-medium text-gray-800" data-testid="vote-status-line">
+            {statusLine}
+          </p>
+          {page.voteEndAt ? <p className="text-sm text-gray-600">{ts('endsAt', { end: formatVoteDate(page.voteEndAt, locale) })}</p> : null}
+          {phase === 'SCHEDULED' && page.voteStartAt ? (
+            <p className="mt-1 text-sm text-gray-600">{ts('startsAt', { start: formatVoteDate(page.voteStartAt, locale) })}</p>
+          ) : null}
+        </div>
         {otherRound ? (
           <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800" data-testid="vote-other-round">
             {ts('otherRound', { round: page.roundNumber })}
@@ -135,14 +131,14 @@ export function SharedCandidateLanding({
 
           <div className="px-4 py-4">
             <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <h1 className="truncate text-2xl font-extrabold leading-tight text-gray-900">{name}</h1>
+              <div className="min-w-0 flex-1">
+                <h2 className="truncate text-lg font-extrabold leading-tight text-gray-900">{name}</h2>
                 {shared.category ? (
                   <p className="mt-0.5 truncate text-sm font-medium text-gray-600">{recruitFieldLabel(shared.category, tField)}</p>
                 ) : null}
               </div>
               {showCount ? (
-                <p className="shrink-0 text-2xl font-extrabold tracking-tight text-violet-700" data-testid="vote-own-count">
+                <p className="shrink-0 text-lg font-extrabold tracking-tight text-violet-700" data-testid="vote-own-count">
                   {ts(voteLabelKey(shared.voteCount, locale, 'ownVotes', 'ownVotesOne') as 'ownVotes', { n: formatCount(shared.voteCount, locale) })}
                 </p>
               ) : null}
@@ -154,14 +150,14 @@ export function SharedCandidateLanding({
                 data-testid="vote-shared-cast"
                 disabled={!canCast || voteBusy || voted}
                 onClick={onPrimary}
-                className="min-h-12 rounded-xl bg-gradient-to-r from-violet-600 to-pink-500 px-3 py-3 text-sm font-semibold text-white hover:opacity-95 disabled:opacity-50"
+                className="min-h-12 min-w-0 whitespace-nowrap leading-6 rounded-xl bg-gradient-to-r from-violet-600 to-pink-500 px-3 py-3 text-sm font-semibold text-white hover:opacity-95 disabled:opacity-50"
               >
                 {voteLabel}
               </button>
               <button
                 type="button"
                 onClick={onShare}
-                className={`min-h-12 rounded-xl border px-3 py-3 text-sm font-semibold hover:bg-gray-50 ${
+                className={`min-h-12 min-w-0 whitespace-nowrap leading-6 rounded-xl border px-3 py-3 text-sm font-semibold hover:bg-gray-50 ${
                   voted ? 'border-violet-300 bg-white text-violet-800' : 'border-[#E5E7EB] bg-white text-gray-900'
                 }`}
                 data-testid="vote-shared-share"
