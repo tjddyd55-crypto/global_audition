@@ -33,7 +33,7 @@ public class ApplicationShortlistService {
     public void change(UUID auditionId, int round, List<UUID> applicationIds, boolean saved) {
         Audition audition = access.requireManagedAudition(auditionId);
         checkRound(round);
-        if (applicationIds == null || applicationIds.isEmpty() || applicationIds.size() > 100 || applicationIds.contains(null)) bad("지원자를 1~100명 선택해 주세요.");
+        if (applicationIds == null || applicationIds.isEmpty() || applicationIds.size() > 100 || applicationIds.stream().anyMatch(Objects::isNull)) bad("지원자를 1~100명 선택해 주세요.");
         // Validate the whole batch first: no partial writes and no cross-audition/stage bookmarks.
         for (UUID id : new LinkedHashSet<>(applicationIds)) {
             Integer count = jdbc.queryForObject("SELECT COUNT(*) FROM application_entry_numbers WHERE audition_id=? AND application_id=? AND round_number=?", Integer.class, auditionId, id, round);

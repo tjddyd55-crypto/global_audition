@@ -17,14 +17,15 @@ import type { AgencyBoardStatus } from '../../src/api/types'
 export default function AgencyApplicantsScreen() {
   const router = useRouter()
   const { session } = useAuth()
-  const params = useLocalSearchParams<{ auditionId?: string; status?: AgencyBoardStatus; round?: string; applicantNumber?: string }>()
+  const params = useLocalSearchParams<{ auditionId?: string; status?: AgencyBoardStatus; round?: string; applicantNumber?: string; page?: string }>()
+  const page = Math.max(0, Number(params.page) || 0)
   const round = parseEntryNumber(params.round)
   const applicantNumber = params.applicantNumber?.trim() ? Number(params.applicantNumber) || 0 : undefined
   const mineQuery = useQuery({ queryKey: queryKeys.myAuditions, queryFn: auditionApi.listMine, enabled: isAgencyRole(session?.role) })
   const auditionId = params.auditionId || mineQuery.data?.[0]?.id
   const manageQuery = useQuery({
-    queryKey: [...queryKeys.manage(auditionId ?? '', params.status), round ?? null, applicantNumber ?? null],
-    queryFn: () => agencyApi.listManage(auditionId!, params.status, round, applicantNumber),
+    queryKey: [...queryKeys.manage(auditionId ?? '', params.status), round ?? null, applicantNumber ?? null, page],
+    queryFn: () => agencyApi.listManage(auditionId!, params.status, round, applicantNumber, page),
     enabled: Boolean(auditionId),
   })
 
@@ -43,7 +44,7 @@ export default function AgencyApplicantsScreen() {
         {(mineQuery.data ?? []).map((audition) => (
           <Pressable
             key={audition.id}
-            onPress={() => router.setParams({ auditionId: audition.id })}
+            onPress={() => router.setParams({ auditionId: audition.id, page: '0' })}
             style={[styles.chip, auditionId === audition.id && styles.chipOn]}
           >
             <Text style={styles.chipText}>{audition.title}</Text>
@@ -64,9 +65,10 @@ export default function AgencyApplicantsScreen() {
             : ''}
         </Text>
       ) : null}
-      <TextField label={agencyCopy('agency.numberSearch')} value={params.applicantNumber ?? ''} onChangeText={(value) => router.setParams({ applicantNumber: value || undefined })} keyboardType="number-pad" />
+      {auditionId ? <Pressable accessibilityRole="button" style={styles.chip} onPress={() => router.push({ pathname: '/web', params: { path: `/ko/my/applicants?auditionId=${encodeURIComponent(auditionId)}` } })}><Text style={styles.name}>★ 관심 지원자·내부 메모 관리</Text><Text style={styles.meta}>기존 기획사 웹 관리 화면에서 검토합니다.</Text></Pressable> : null}
+      <TextField label={agencyCopy('agency.numberSearch')} value={params.applicantNumber ?? ''} onChangeText={(value) => router.setParams({ applicantNumber: value || undefined, page: '0' })} keyboardType="number-pad" />
       {manageQuery.data ? <View style={styles.chips}>
-        {[undefined, ...Array.from({ length: manageQuery.data.maxRound }, (_, i) => i + 1)].map((n) => <Pressable key={n ?? 'all'} accessibilityRole="button" onPress={() => router.setParams({ round: n ? String(n) : undefined })} style={[styles.chip, styles.roundChip, round === n && styles.chipOn]}>
+        {[undefined, ...Array.from({ length: manageQuery.data.maxRound }, (_, i) => i + 1)].map((n) => <Pressable key={n ?? 'all'} accessibilityRole="button" onPress={() => router.setParams({ round: n ? String(n) : undefined, page: '0' })} style={[styles.chip, styles.roundChip, round === n && styles.chipOn]}>
           <Text style={styles.chipText}>{n ? agencyCopy('agency.roundApply', { n }) : agencyCopy('agency.all')}</Text>
         </Pressable>)}
       </View> : null}
@@ -93,6 +95,11 @@ export default function AgencyApplicantsScreen() {
           </Text>
         </Pressable>
       ))}
+      <View style={styles.chips}>
+        <Pressable accessibilityRole="button" disabled={page === 0} style={styles.chip} onPress={() => router.setParams({ page: String(page - 1) })}><Text style={styles.chipText}>이전</Text></Pressable>
+        <Text style={styles.meta}>{page + 1} / {Math.max(1, manageQuery.data?.totalPages ?? 1)}</Text>
+        <Pressable accessibilityRole="button" disabled={page + 1 >= (manageQuery.data?.totalPages ?? 1)} style={styles.chip} onPress={() => router.setParams({ page: String(page + 1) })}><Text style={styles.chipText}>다음</Text></Pressable>
+      </View>
       {!manageQuery.isLoading && (manageQuery.data?.items.length ?? 0) === 0 ? <EmptyState title={agencyCopy('agency.empty')} /> : null}
     </Screen>
   )

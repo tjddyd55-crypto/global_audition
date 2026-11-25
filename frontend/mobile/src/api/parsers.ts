@@ -249,6 +249,9 @@ export function parseManageApplications(raw: unknown): ManageApplicationsPayload
   const stats = asRecord(body.stats)
   const items = Array.isArray(body.items) ? body.items : []
   return {
+    totalPages: asNumber(body.totalPages, 1),
+    totalElements: asNumber(body.totalElements, items.length),
+    page: asNumber(body.page),
     audition: {
       id: asString(audition.id),
       title: asString(audition.title),
