@@ -95,7 +95,7 @@ export function ApplicantManagementView({
   const shortlist = useApplicantShortlist(auditionId, scope)
   const requestFilters = { ...listFilters, savedOnly, name: nameFilter, sort, page, size: 50 }
   // Mutations keep the current page, filter, scroll and mounted video intact.
-  useEffect(() => { setPage(0); setSelected([]) }, [listFilters, savedOnly, nameFilter, sort])
+  useEffect(() => { setPage(0); setSelected([]) }, [auditionId, listFilters, savedOnly, nameFilter, sort])
   const [patchingId, setPatchingId] = useState<string | null>(null)
   const [panelAppId, setPanelAppId] = useState<string | null>(null)
 
@@ -106,6 +106,7 @@ export function ApplicantManagementView({
     queryKey: qk,
     queryFn: () => auditionApi.listManageApplications(auditionId, requestFilters),
     enabled: !!auditionId,
+    refetchInterval: savedOnly ? 15000 : false,
   })
 
   const detailQuery = useQuery({
