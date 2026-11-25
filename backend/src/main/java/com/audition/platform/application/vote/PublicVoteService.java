@@ -131,8 +131,14 @@ public class PublicVoteService {
 
         long totalVotes = votingEnabled ? voteRepository.countByAuditionIdAndRoundNumber(auditionId, round) : 0L;
 
+        Map<UUID, Integer> ballotNumbers = voteCandidates.findByAuditionIdAndRoundNumber(auditionId, round).stream()
+                .collect(Collectors.toMap(AuditionVoteCandidate::getApplicationId, AuditionVoteCandidate::getCandidateNumber));
         List<PublicVoteItemDto> allItems = apps.stream()
-                .map(app -> toVoteItem(app, myVoteStr, scoreByApp.get(app.getId()), roundVotes.getOrDefault(app.getId(), 0L)))
+                .map(app -> {
+                    PublicVoteItemDto item = toVoteItem(app, myVoteStr, scoreByApp.get(app.getId()), roundVotes.getOrDefault(app.getId(), 0L));
+                    item.setCandidateNumber(ballotNumbers.get(app.getId()));
+                    return item;
+                })
                 .collect(Collectors.toList());
 
         List<PublicVoteItemDto> visible = new ArrayList<>(filterByCategory(allItems, categoryFilter));
@@ -141,6 +147,7 @@ public class PublicVoteService {
             final String sharedId = shared.getId().toString();
             sharedDto = allItems.stream().filter(i -> sharedId.equals(i.getApplicationId())).findFirst()
                     .orElse(toVoteItem(shared, votingEnabled ? myVoteStr : null, scoreByApp.get(shared.getId()), 0L));
+            sharedDto.setCandidateNumber(ballotNumbers.get(shared.getId()));
             // 공유 링크로 들어오면 해당 후보를 맨 위에 둔다. 순위(rank)·득표는 바꾸지 않는다.
             visible.removeIf(i -> sharedId.equals(i.getApplicationId()));
             if (showItems) {
@@ -185,6 +192,7 @@ public class PublicVoteService {
     private List<Application> loadVoteApplications(Audition audition, int round, VoteWindow.Phase phase) {
         if (VoteWindow.hasStarted(phase)) {
             List<java.util.UUID> ids = voteCandidates.findByAuditionIdAndRoundNumber(audition.getId(), round).stream()
+                    .sorted(java.util.Comparator.comparingInt(AuditionVoteCandidate::getCandidateNumber))
                     .map(AuditionVoteCandidate::getApplicationId)
                     .toList();
             if (ids.isEmpty()) {

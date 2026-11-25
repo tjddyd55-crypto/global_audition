@@ -491,6 +491,7 @@
     "browseArrow": "Kastinglarni koʻrish →"
   },
   "vote": {
+    "candidateNumber": "{n}-raqam",
     "title": "Ovoz berish",
     "empty": "Ovoz berish uchun nomzodlar yoʻq",
     "voted": "Ovoz berildi",
@@ -943,6 +944,13 @@
     "UZ": "Oʻzbekiston"
   },
   "agency": {
+    "currentRoundNumber": "Hozirgi bosqich: {n}",
+    "receiptNumber": "Roʻyxat raqami: {n}",
+    "reviewNumber": "{round}-bosqich saralash raqami: {n}",
+    "voteNumberHistory": "{round}-bosqich ovoz berish raqami: {n}",
+    "applicantNumber": "Ishtirokchi raqami: {n}",
+    "numberSearch": "Raqam boʻyicha qidirish",
+    "numberHistory": "Raqamlar tarixi",
     "applicants": "Nomzodlarni boshqarish",
     "pass": "Oʻtdi",
     "reject": "Rad etildi",
@@ -2097,6 +2105,9 @@
     "emptyFallback": "Mos kasting topilmagani uchun eng yangi ochiq kastinglar koʻrsatilmoqda."
   },
   "voteShare": {
+    "numberedCandidateText": "{round}-bosqich ochiq ovoz berishda {number}-raqamli {name}ni qoʻllab-quvvatlang! Quyidagi havola orqali videoni koʻring va ovoz bering.",
+    "numberedShareTitle": "{number}-raqam | {name}",
+    "numberedMyShareText": "Men GLOBAL AUDITION {round}-bosqich ochiq ovoz berishida {number}-raqamli ishtirokchiman. Videomni koʻring va meni qoʻllab-quvvatlang!",
     "share": "Ulashish",
     "shareTitle": "{name} ni ulashish",
     "myShare": "Ovoz berish sahifamni ulashish",

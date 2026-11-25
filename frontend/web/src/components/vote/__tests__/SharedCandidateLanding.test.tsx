@@ -8,7 +8,7 @@ jest.mock('@/i18n.config', () => ({ Link: ({ children, ...props }: any) => <a {.
 jest.mock('../VoteInlineVideo', () => ({ VoteInlineVideo: () => <div>Video</div> }))
 jest.mock('sonner', () => ({ toast: { message: jest.fn() } }))
 
-const candidate = { applicationId: 'candidate-1', userName: 'Candidate', voteCount: 2 } as PublicVoteItem
+const candidate = { applicationId: 'candidate-1', candidateNumber: 3, userName: 'Candidate', voteCount: 2 } as PublicVoteItem
 const page = {
   audition: { title: 'Audition' }, roundNumber: 2, votingEnabled: true, voteStatus: 'OPEN',
   voteEndAt: '2026-11-30T13:38:08Z',
@@ -23,6 +23,7 @@ it.each(['ko', 'en', 'mn', 'km', 'uz'])('keeps guest vote intent and the shared 
   const props = { auditionId: 'audition-1', page, shared: candidate, canCast: true, voted: false,
     isGuest: true, voteBusy: false, windowNotice: null, otherRound: false, onVote, onShare }
   const view = render(<NextIntlClientProvider locale={locale} messages={messages}><SharedCandidateLanding {...props} /></NextIntlClientProvider>)
+  expect(screen.getByTestId('vote-candidate-number')).toHaveTextContent(messages.vote.candidateNumber.replace('{n}', '3'))
   expect(screen.getByTestId('vote-shared-cast')).toHaveTextContent(messages.vote.voteAction)
   expect(onVote).not.toHaveBeenCalled()
   fireEvent.click(screen.getByTestId('vote-shared-cast'))

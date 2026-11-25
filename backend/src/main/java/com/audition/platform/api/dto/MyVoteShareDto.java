@@ -7,6 +7,10 @@ import java.time.Instant;
 /** 지원자 본인 '내 투표 공유하기'. 확정 후보가 아니면 candidate=false 이고 링크 정보는 비운다. */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class MyVoteShareDto {
+    private Integer candidateNumber;
+    public Integer getCandidateNumber() { return candidateNumber; }
+    public void setCandidateNumber(Integer candidateNumber) { this.candidateNumber = candidateNumber; }
+
     private boolean candidate;
     private String auditionId;
     private String auditionTitle;

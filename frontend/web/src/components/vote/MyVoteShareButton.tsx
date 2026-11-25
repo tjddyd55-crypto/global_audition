@@ -32,6 +32,7 @@ export function MyVoteShareButton({ applicationId }: { applicationId: string }) 
       : `${window.location.origin}/${locale}${voteSharePath(s.auditionId, s.roundNumber, applicationId)}`
   const info = (
     <div className="flex flex-col gap-0.5" data-testid="my-vote-share-info">
+      {s.candidateNumber ? <span>{tv('candidateNumber', { n: s.candidateNumber })}</span> : null}
       <span>{ts('roundLabel', { round: s.roundNumber })}</span>
       <span>{ts('status', { status })}</span>
       {s.voteStatus === 'SCHEDULED' && s.voteStartAt ? <span>{ts('startsAt', { start: when(s.voteStartAt) })}</span> : null}
@@ -49,7 +50,7 @@ export function MyVoteShareButton({ applicationId }: { applicationId: string }) 
         onClose={() => setOpen(false)}
         url={url}
         title={ts('myShare')}
-        defaultText={ts('myShareText')}
+        defaultText={ts(s.candidateNumber ? 'numberedMyShareText' : 'myShareText', { number: s.candidateNumber ?? 0, round: s.roundNumber })}
         editable
         info={info}
       />

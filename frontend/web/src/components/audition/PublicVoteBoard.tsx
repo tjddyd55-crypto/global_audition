@@ -230,8 +230,8 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback, shareRound,
             open
             onClose={() => setShareItem(null)}
             url={shareUrlFor(shareItem)}
-            title={ts('shareTitle', { name: shareItem.userName || t('nameUnset') })}
-            defaultText={ts('candidateText', { name: shareItem.userName || t('nameUnset') })}
+            title={ts(shareItem.candidateNumber ? 'numberedShareTitle' : 'shareTitle', { name: shareItem.userName || t('nameUnset'), number: shareItem.candidateNumber ?? 0 })}
+            defaultText={ts(shareItem.candidateNumber ? 'numberedCandidateText' : 'candidateText', { name: shareItem.userName || t('nameUnset'), number: shareItem.candidateNumber ?? 0, round: linkRound })}
           />
         ) : null}
       </>
@@ -290,7 +290,7 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback, shareRound,
                 <div className="px-4 py-3">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
-                      <h2 className="truncate text-lg font-extrabold text-gray-900">{name}</h2>
+                      <h2 className="truncate text-lg font-extrabold text-gray-900">{item.candidateNumber ? <span className="mr-2 text-violet-700" data-testid="vote-candidate-number">{t('candidateNumber', { n: item.candidateNumber })}</span> : null}{name}</h2>
                       {item.category ? (
                         <p className="mt-0.5 truncate text-xs font-medium text-gray-600">{recruitFieldLabel(item.category, tField)}</p>
                       ) : null}
@@ -349,8 +349,8 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback, shareRound,
           open
           onClose={() => setShareItem(null)}
           url={shareUrlFor(shareItem)}
-          title={ts('shareTitle', { name: shareItem.userName || t('nameUnset') })}
-          defaultText={ts('candidateText', { name: shareItem.userName || t('nameUnset') })}
+          title={ts(shareItem.candidateNumber ? 'numberedShareTitle' : 'shareTitle', { name: shareItem.userName || t('nameUnset'), number: shareItem.candidateNumber ?? 0 })}
+          defaultText={ts(shareItem.candidateNumber ? 'numberedCandidateText' : 'candidateText', { name: shareItem.userName || t('nameUnset'), number: shareItem.candidateNumber ?? 0, round: linkRound })}
         />
       ) : null}
     </div>

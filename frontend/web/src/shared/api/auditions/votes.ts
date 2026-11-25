@@ -1,3 +1,4 @@
+import { parseEntryNumber } from '@/shared/audition/entryNumbers'
 import { apiClient } from '../client'
 import { unwrapData } from '../unwrap'
 import type { PublicVotesPagePayload } from './types'
@@ -59,6 +60,7 @@ export const listAuditionVotes = async (
 }
 
 export type MyVoteSharePayload = {
+  candidateNumber?: number
   candidate: boolean
   auditionId: string | null
   auditionTitle: string | null
@@ -75,6 +77,7 @@ export const getMyVoteShare = async (applicationId: string): Promise<MyVoteShare
   const b = unwrapData<Record<string, unknown>>(data) ?? {}
   const s = (k: string) => (b[k] != null ? String(b[k]) : null)
   return {
+    candidateNumber: parseEntryNumber(b.candidateNumber),
     candidate: b.candidate === true,
     auditionId: s('auditionId'),
     auditionTitle: s('auditionTitle'),

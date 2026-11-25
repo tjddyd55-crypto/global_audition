@@ -5,6 +5,7 @@ import type { AgencyBoardStatus, ManageListFilters } from '@/shared/api/audition
 import type { RoundTabValue } from '@/components/audition/manage'
 
 export function useApplicantManageFilters() {
+  const [numberFilter, setNumberFilter] = useState('')
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null)
   const [minAge, setMinAge] = useState<string>('')
   const [maxAge, setMaxAge] = useState<string>('')
@@ -15,6 +16,7 @@ export function useApplicantManageFilters() {
 
   const listFilters: ManageListFilters = useMemo(() => {
     const f: ManageListFilters = { category: categoryFilter }
+    if (numberFilter.trim()) f.applicantNumber = Number(numberFilter) || 0
     if (minAge.trim() !== '') {
       const n = Number(minAge)
       if (!Number.isNaN(n)) f.minAge = n
@@ -29,9 +31,10 @@ export function useApplicantManageFilters() {
     if (statusFilter) f.status = statusFilter as AgencyBoardStatus
     if (roundTab !== 'all') f.round = roundTab
     return f
-  }, [categoryFilter, minAge, maxAge, nationalityFilter, hasSnsFilter, statusFilter, roundTab])
+  }, [numberFilter, categoryFilter, minAge, maxAge, nationalityFilter, hasSnsFilter, statusFilter, roundTab])
 
   return {
+    numberFilter, setNumberFilter,
     categoryFilter,
     setCategoryFilter,
     minAge,

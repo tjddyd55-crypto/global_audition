@@ -42,6 +42,7 @@ public class ManageApplicationsQueryService {
 
     private static final List<String> STANDARD_MANAGE_CATEGORIES = List.of("보컬", "댄스", "랩", "프로듀싱");
 
+    private final ApplicationEntryNumbers entryNumbers;
     private final ApplicationRepository applicationRepository;
     private final UserRepository userRepository;
     private final ApplicantCardMetricsLoader metricsLoader;
@@ -59,7 +60,9 @@ public class ManageApplicationsQueryService {
             ApplicationRankingService applicationRankingService,
             ApplicationSnsLinkRepository applicationSnsLinkRepository,
             AuditionRoundRepository auditionRoundRepository,
-            AuditionManageAccess auditionManageAccess) {
+            AuditionManageAccess auditionManageAccess,
+            ApplicationEntryNumbers entryNumbers) {
+        this.entryNumbers = entryNumbers;
         this.applicationRepository = applicationRepository;
         this.userRepository = userRepository;
         this.metricsLoader = metricsLoader;
@@ -78,7 +81,7 @@ public class ManageApplicationsQueryService {
             String nationalityFilter,
             Boolean hasSns,
             String boardStatus,
-            Integer roundFilter) {
+            Integer roundFilter, Integer applicantNumber) {
         Audition audition = auditionManageAccess.requireApplicantList(auditionId);
 
         List<Application> all = applicationRepository.findByAuditionIdOrderByCreatedAtDesc(auditionId);
@@ -90,18 +93,32 @@ public class ManageApplicationsQueryService {
 
         List<AuditionRound> definedRounds = auditionRoundRepository.findByAuditionIdOrderByRoundNumberAsc(auditionId);
         int maxRound = resolveMaxRoundForManage(audition, all, definedRounds);
-        List<ManageRoundCountDto> roundCounts = buildRoundCountsForManage(all, maxRound);
+        Map<Integer, Long> countsByRound = entryNumbers.roundCounts(auditionId);
+        maxRound = Math.max(maxRound, countsByRound.keySet().stream().mapToInt(Integer::intValue).max().orElse(1));
+        List<ManageRoundCountDto> roundCounts = new ArrayList<>();
+        for (int n = 1; n <= maxRound; n++) roundCounts.add(new ManageRoundCountDto(n, countsByRound.getOrDefault(n, 0L)));
 
         Map<UUID, Long> snsMap = snsCountsByApplicationIds(all);
         List<AgencyApplicantItemDto> fullItems = all.stream()
                 .map(app -> toAgencyItem(app, scoreByApp.get(app.getId()), snsMap.getOrDefault(app.getId(), 0L)))
                 .collect(Collectors.toList());
 
+        Map<UUID, Integer> numbers = entryNumbers.forScope(auditionId, roundFilter != null && roundFilter > 0 ? roundFilter : 0);
+        fullItems.forEach(item -> {
+            item.setApplicantNumber(numbers.get(UUID.fromString(item.getApplicationId())));
+            item.setNumberScopeRound(roundFilter != null && roundFilter > 0 ? roundFilter : 0);
+        });
+
         List<AgencyApplicantItemDto> boardFiltered =
                 filterManageBoard(fullItems, minAge, maxAge, nationalityFilter, hasSns, boardStatus);
-        List<AgencyApplicantItemDto> roundFiltered = filterManageByRound(boardFiltered, roundFilter);
+        // A former round's roster still includes applicants who progressed later.
+        List<AgencyApplicantItemDto> roundFiltered = roundFilter == null || roundFilter < 1 ? boardFiltered
+                : boardFiltered.stream().filter(item -> numbers.containsKey(UUID.fromString(item.getApplicationId()))).collect(Collectors.toList());
         List<AgencyApplicantItemDto> visible = filterManageByCategory(roundFiltered, categoryFilter);
 
+        if (applicantNumber != null) {
+            visible = visible.stream().filter(item -> applicantNumber.equals(item.getApplicantNumber())).collect(Collectors.toList());
+        }
         ManageApplicationsPageDataDto dto = new ManageApplicationsPageDataDto();
         ManageAuditionHeaderDto header = new ManageAuditionHeaderDto();
         header.setId(audition.getId().toString());
@@ -131,33 +148,6 @@ public class ManageApplicationsQueryService {
             max = Math.max(max, r.getRoundNumber());
         }
         return Math.max(1, max);
-    }
-
-    private static List<ManageRoundCountDto> buildRoundCountsForManage(List<Application> apps, int maxRound) {
-        long[] counts = new long[maxRound + 1];
-        for (Application app : apps) {
-            int r = app.getCurrentRoundNumber();
-            if (r < 1) {
-                r = 1;
-            }
-            if (r > maxRound) {
-                r = maxRound;
-            }
-            counts[r]++;
-        }
-        List<ManageRoundCountDto> out = new ArrayList<>();
-        for (int i = 1; i <= maxRound; i++) {
-            out.add(new ManageRoundCountDto(i, counts[i]));
-        }
-        return out;
-    }
-
-    private static List<AgencyApplicantItemDto> filterManageByRound(List<AgencyApplicantItemDto> items, Integer round) {
-        if (round == null || round < 1) {
-            return items;
-        }
-        final int want = round;
-        return items.stream().filter(i -> i.getRound() == want).collect(Collectors.toList());
     }
 
     private Map<UUID, Long> snsCountsByApplicationIds(List<Application> apps) {

@@ -163,7 +163,7 @@ public class ApplicationService {
     /**
      * 기획사 지원자 관리 화면 (통계·카테고리·추천 점수 포함).
      * 보드 필터: minAge, maxAge, nationality, hasSns, boardStatus(PENDING|REVIEWING|APPROVED|REJECTED)
-     * @param roundFilter {@code null} 또는 1 미만이면 전체, 그렇지 않으면 {@code applications.current_round_number} 일치만
+     * @param roundFilter {@code null} 또는 1 미만이면 전체, 그렇지 않으면 해당 차수 심사 대상(진출 후에도 번호와 이력 보존)
      */
     @Deprecated
     public ManageApplicationsPageDataDto listManageApplications(

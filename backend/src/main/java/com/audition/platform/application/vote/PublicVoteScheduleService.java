@@ -115,12 +115,16 @@ public class PublicVoteScheduleService {
                     "투표할 후보가 없습니다. 지원자를 심사·선발한 뒤 다시 시도하세요.");
         }
         candidates.deleteByAuditionIdAndRoundNumber(auditionId, round);
+        // Hibernate queues entity deletes after inserts; free ballot numbers before scheduled replacements.
+        candidates.flush();
         Instant confirmed = now;
+        int candidateNumber = 1;
         for (Application app : chosen) {
             AuditionVoteCandidate row = new AuditionVoteCandidate();
             row.setAuditionId(auditionId);
             row.setRoundNumber(round);
             row.setApplicationId(app.getId());
+            row.setCandidateNumber(candidateNumber++);
             row.setConfirmedAt(confirmed);
             candidates.save(row);
         }
@@ -157,6 +161,8 @@ public class PublicVoteScheduleService {
                 || !candidates.existsByAuditionIdAndRoundNumberAndApplicationId(audition.getId(), round, app.getId())) {
             return dto;
         }
+        dto.setCandidateNumber(candidates.findByAuditionIdAndRoundNumber(audition.getId(), round).stream()
+                .filter(c -> c.getApplicationId().equals(app.getId())).map(AuditionVoteCandidate::getCandidateNumber).findFirst().orElse(null));
         dto.setCandidate(true);
         dto.setAuditionId(audition.getId().toString());
         dto.setAuditionTitle(audition.getTitle());

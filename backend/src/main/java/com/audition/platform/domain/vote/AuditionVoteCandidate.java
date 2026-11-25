@@ -28,6 +28,12 @@ public class AuditionVoteCandidate {
     @Column(name = "application_id", nullable = false)
     private UUID applicationId;
 
+    @Column(name = "candidate_number", nullable = false)
+    private int candidateNumber;
+
+    public int getCandidateNumber() { return candidateNumber; }
+    public void setCandidateNumber(int candidateNumber) { this.candidateNumber = candidateNumber; }
+
     @Column(name = "confirmed_at", nullable = false)
     private Instant confirmedAt = Instant.now();
 

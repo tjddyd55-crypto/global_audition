@@ -84,7 +84,7 @@ export function SharedCandidateLanding({
         />
         <View style={styles.metaRow}>
           <View style={styles.nameBlock}>
-            <Text style={styles.name} numberOfLines={1}>{name}</Text>
+            <Text style={styles.name} numberOfLines={1}>{shared.candidateNumber ? `${t('vote.candidateNumber', { n: shared.candidateNumber })} | ` : ''}{name}</Text>
             {shared.category ? <Text style={styles.field} numberOfLines={1}>{shared.category}</Text> : null}
           </View>
           {showCount ? (
@@ -102,7 +102,7 @@ export function SharedCandidateLanding({
           </View>
         </View>
         {shareOpen ? (
-          <VoteShareActions url={url} text={t('voteShare.candidateText', { name })} title={t('voteShare.shareTitle', { name })} />
+          <VoteShareActions url={url} text={t(shared.candidateNumber ? 'voteShare.numberedCandidateText' : 'voteShare.candidateText', { name, number: shared.candidateNumber ?? 0, round: linkRound })} title={t(shared.candidateNumber ? 'voteShare.numberedShareTitle' : 'voteShare.shareTitle', { name, number: shared.candidateNumber ?? 0 })} />
         ) : null}
 
         <Pressable

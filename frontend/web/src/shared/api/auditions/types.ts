@@ -1,7 +1,9 @@
+import type { NumberHistoryItem } from '@/shared/audition/entryNumbers'
 /** GET /auditions/:id/votes */
 export type VotePageCategory = { name: string; count: number }
 
 export type PublicVoteItem = {
+  candidateNumber?: number
   applicationId: string
   userName: string
   userEmail: string
@@ -60,6 +62,8 @@ export type ManageApplicationStats = {
 export type AgencyBoardStatus = 'PENDING' | 'REVIEWING' | 'APPROVED' | 'REJECTED'
 
 export type ManageApplicantItem = {
+  numberScopeRound?: number
+  applicantNumber?: number
   applicationId: string
   userName: string
   name: string
@@ -85,6 +89,7 @@ export type ManageApplicantItem = {
 }
 
 export type ManageListFilters = {
+  applicantNumber?: number | null
   category?: string | null
   minAge?: number | null
   maxAge?: number | null
@@ -96,6 +101,7 @@ export type ManageListFilters = {
 }
 
 export type ApplicationAgencyDetail = {
+  numberHistory?: NumberHistoryItem[]
   id: string
   auditionId: string
   name: string

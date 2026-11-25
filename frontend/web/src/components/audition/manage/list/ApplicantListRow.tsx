@@ -54,6 +54,7 @@ export default function ApplicantListRow({ app, onOpen }: ApplicantListRowProps)
         )}
       </div>
       <div className="min-w-0 flex-1">
+        {app.applicantNumber ? <p className="mb-1 text-sm font-bold text-violet-700" data-testid="applicant-number">{tAgency(app.numberScopeRound ? 'reviewNumber' : 'receiptNumber', { n: app.applicantNumber, round: app.numberScopeRound ?? 0 })}</p> : null}
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <span className="font-semibold text-gray-900">{app.name || app.userName || tVote('applicantFallback')}</span>
           <span className="text-sm text-gray-500">
@@ -63,7 +64,7 @@ export default function ApplicantListRow({ app, onOpen }: ApplicantListRowProps)
             {app.nationality ? tNat(nationalityCatalogKey(app.nationality)) : tAgency('nationalityUnknown')}
           </span>
         </div>
-        <p className="mt-0.5 text-xs font-semibold text-violet-700">{tAgency('roundApply', { n: app.round })}</p>
+        <p className="mt-0.5 text-xs font-semibold text-violet-700">{tAgency('currentRoundNumber', { n: app.round })}</p>
         <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-gray-500">
           <span>{tAgency('snsCount', { n: formatCount(app.snsCount, locale) })}</span>
           <span>·</span>

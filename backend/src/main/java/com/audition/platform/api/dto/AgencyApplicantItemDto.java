@@ -7,6 +7,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public class AgencyApplicantItemDto {
 
+    private int numberScopeRound;
+    public int getNumberScopeRound() { return numberScopeRound; }
+    public void setNumberScopeRound(int numberScopeRound) { this.numberScopeRound = numberScopeRound; }
+
+    private Integer applicantNumber;
+    public Integer getApplicantNumber() { return applicantNumber; }
+    public void setApplicantNumber(Integer applicantNumber) { this.applicantNumber = applicantNumber; }
+
     private String applicationId;
     private String userName;
     private String userEmail;

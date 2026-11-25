@@ -6,6 +6,7 @@ import com.audition.platform.api.dto.admin.AdminPatchAuditionRoundNoticesRequest
 import com.audition.platform.api.dto.admin.AdminPatchAuditionRoundRequest;
 import com.audition.platform.api.dto.admin.AdminRoundApplicationRowDto;
 import com.audition.platform.application.round.AuditionManageAccess;
+import com.audition.platform.application.applications.ApplicationEntryNumbers;
 import com.audition.platform.application.round.AuditionRoundService;
 import com.audition.platform.domain.audition.Application;
 import com.audition.platform.domain.audition.ApplicationRepository;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
@@ -35,6 +37,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/admin/auditions/{auditionId}/rounds")
 public class AdminAuditionRoundController {
 
+    private final ApplicationEntryNumbers entryNumbers;
     private final AuditionManageAccess manageAccess;
     private final AuditionRoundService roundService;
     private final ApplicationRoundSubmissionRepository submissionRepository;
@@ -46,7 +49,9 @@ public class AdminAuditionRoundController {
             AuditionRoundService roundService,
             ApplicationRoundSubmissionRepository submissionRepository,
             ApplicationRepository applicationRepository,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            ApplicationEntryNumbers entryNumbers) {
+        this.entryNumbers = entryNumbers;
         this.manageAccess = manageAccess;
         this.roundService = roundService;
         this.submissionRepository = submissionRepository;
@@ -126,11 +131,17 @@ public class AdminAuditionRoundController {
 
     @GetMapping("/{roundId}/applications")
     public List<AdminRoundApplicationRowDto> applications(
-            @PathVariable UUID auditionId, @PathVariable UUID roundId) {
+            @PathVariable UUID auditionId, @PathVariable UUID roundId,
+            @RequestParam(required = false) Integer applicantNumber) {
         manageAccess.requireReadableAudition(auditionId);
         AuditionRound round = roundService.requireRoundBelongsToAudition(auditionId, roundId);
         List<ApplicationRoundSubmission> subs = submissionRepository.findByRoundId(round.getId());
-        return subs.stream().map(this::toAppRow).collect(Collectors.toList());
+        var numbers = entryNumbers.forScope(auditionId, round.getRoundNumber());
+        return subs.stream().map(sub -> {
+            AdminRoundApplicationRowDto dto = toAppRow(sub);
+            dto.setApplicantNumber(numbers.get(sub.getApplicationId()));
+            return dto;
+        }).filter(row -> applicantNumber == null || applicantNumber.equals(row.getApplicantNumber())).collect(Collectors.toList());
     }
 
     private AdminRoundApplicationRowDto toAppRow(ApplicationRoundSubmission sub) {

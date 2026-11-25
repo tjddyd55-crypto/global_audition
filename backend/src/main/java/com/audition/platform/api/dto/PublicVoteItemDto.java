@@ -6,6 +6,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PublicVoteItemDto {
 
+    private Integer candidateNumber;
+    public Integer getCandidateNumber() { return candidateNumber; }
+    public void setCandidateNumber(Integer candidateNumber) { this.candidateNumber = candidateNumber; }
+
     private String applicationId;
     private String userName;
     private String userEmail;

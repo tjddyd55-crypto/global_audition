@@ -5,6 +5,10 @@ import java.util.UUID;
 
 public class AdminRoundApplicationRowDto {
 
+    private Integer applicantNumber;
+    public Integer getApplicantNumber() { return applicantNumber; }
+    public void setApplicantNumber(Integer applicantNumber) { this.applicantNumber = applicantNumber; }
+
     private UUID applicationId;
     private UUID roundSubmissionId;
     private String applicantEmail;

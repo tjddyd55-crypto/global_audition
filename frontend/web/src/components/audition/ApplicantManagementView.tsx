@@ -66,6 +66,7 @@ export function ApplicantManagementView({
   const t = useTranslations('agency')
   const queryClient = useQueryClient()
   const {
+    numberFilter, setNumberFilter,
     categoryFilter,
     setCategoryFilter,
     minAge,
@@ -206,6 +207,8 @@ export function ApplicantManagementView({
         <ApplicantStatsGrid stats={stats} />
 
         <ApplicantManagementFilterPanel
+          applicantNumber={numberFilter}
+          onApplicantNumberChange={setNumberFilter}
           minAge={minAge}
           maxAge={maxAge}
           nationality={nationalityFilter}

@@ -8,6 +8,8 @@ import { useAuth } from '../../src/auth/AuthProvider'
 import { agencyBoardStatusLabel } from '../../src/domain/statusLabels'
 import { EmptyState, ErrorState } from '../../src/ui/EmptyState'
 import { Screen } from '../../src/ui/Screen'
+import { parseEntryNumber } from '../../../web/src/shared/audition/entryNumbers'
+import { TextField } from '../../src/ui/TextField'
 import { StatusPill, toneForApplicationStatus } from '../../src/ui/StatusPill'
 import { colors, radius } from '../../src/theme/tokens'
 import type { AgencyBoardStatus } from '../../src/api/types'
@@ -15,12 +17,14 @@ import type { AgencyBoardStatus } from '../../src/api/types'
 export default function AgencyApplicantsScreen() {
   const router = useRouter()
   const { session } = useAuth()
-  const params = useLocalSearchParams<{ auditionId?: string; status?: AgencyBoardStatus }>()
+  const params = useLocalSearchParams<{ auditionId?: string; status?: AgencyBoardStatus; round?: string; applicantNumber?: string }>()
+  const round = parseEntryNumber(params.round)
+  const applicantNumber = params.applicantNumber?.trim() ? Number(params.applicantNumber) || 0 : undefined
   const mineQuery = useQuery({ queryKey: queryKeys.myAuditions, queryFn: auditionApi.listMine, enabled: isAgencyRole(session?.role) })
   const auditionId = params.auditionId || mineQuery.data?.[0]?.id
   const manageQuery = useQuery({
-    queryKey: queryKeys.manage(auditionId ?? '', params.status),
-    queryFn: () => agencyApi.listManage(auditionId!, params.status),
+    queryKey: [...queryKeys.manage(auditionId ?? '', params.status), round ?? null, applicantNumber ?? null],
+    queryFn: () => agencyApi.listManage(auditionId!, params.status, round, applicantNumber),
     enabled: Boolean(auditionId),
   })
 
@@ -60,6 +64,12 @@ export default function AgencyApplicantsScreen() {
             : ''}
         </Text>
       ) : null}
+      <TextField label={agencyCopy('agency.numberSearch')} value={params.applicantNumber ?? ''} onChangeText={(value) => router.setParams({ applicantNumber: value || undefined })} keyboardType="number-pad" />
+      {manageQuery.data ? <View style={styles.chips}>
+        {[undefined, ...Array.from({ length: manageQuery.data.maxRound }, (_, i) => i + 1)].map((n) => <Pressable key={n ?? 'all'} accessibilityRole="button" onPress={() => router.setParams({ round: n ? String(n) : undefined })} style={[styles.chip, styles.roundChip, round === n && styles.chipOn]}>
+          <Text style={styles.chipText}>{n ? agencyCopy('agency.roundApply', { n }) : agencyCopy('agency.all')}</Text>
+        </Pressable>)}
+      </View> : null}
       {manageQuery.isError ? (
         <ErrorState
           title={agencyCopy('common.loadFailedTitle')}
@@ -76,6 +86,7 @@ export default function AgencyApplicantsScreen() {
           accessibilityRole="button"
         >
           <StatusPill label={agencyBoardStatusLabel(item.status, agencyCopy)} tone={toneForApplicationStatus(item.status)} />
+          {item.applicantNumber ? <Text style={styles.number}>{agencyCopy(item.numberScopeRound ? 'agency.reviewNumber' : 'agency.receiptNumber', { n: item.applicantNumber, round: item.numberScopeRound ?? 0 })}</Text> : null}
           <Text style={styles.name}>{item.name || item.userName}</Text>
           <Text style={styles.meta}>
             {item.category} · {agencyCopy('agency.ageRoundVotes', { age: item.age ?? '-', round: item.round, votes: item.voteCount })}
@@ -103,5 +114,7 @@ const styles = StyleSheet.create({
     gap: 6,
     marginBottom: 10,
   },
+  roundChip: { minHeight: 44, justifyContent: 'center' },
+  number: { color: colors.purple, fontWeight: '800', fontSize: 14 },
   name: { fontWeight: '700', color: colors.text, fontSize: 16 },
 })

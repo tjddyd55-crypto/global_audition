@@ -174,7 +174,7 @@ export default function VoteScreen() {
           />
           <View style={styles.metaRow}>
             <View style={styles.nameBlock}>
-              <Text style={styles.name} numberOfLines={1}>{item.userName || t('vote.applicantFallback')}</Text>
+              <Text style={styles.name} numberOfLines={1}>{item.candidateNumber ? `${t('vote.candidateNumber', { n: item.candidateNumber })} | ` : ''}{item.userName || t('vote.applicantFallback')}</Text>
               {item.category ? <Text style={styles.field} numberOfLines={1}>{item.category}</Text> : null}
             </View>
             {canShowPublicVoteCount(page?.voteStatus) ? (
@@ -202,7 +202,7 @@ export default function VoteScreen() {
             </View>
           </View>
           {shareOpenId === item.applicationId ? (
-            <VoteShareActions url={urlFor(item)} title={t('voteShare.shareTitle', { name: nameOf(item) })} text={t('voteShare.candidateText', { name: nameOf(item) })} />
+            <VoteShareActions url={urlFor(item)} title={t(item.candidateNumber ? 'voteShare.numberedShareTitle' : 'voteShare.shareTitle', { name: nameOf(item), number: item.candidateNumber ?? 0 })} text={t(item.candidateNumber ? 'voteShare.numberedCandidateText' : 'voteShare.candidateText', { name: nameOf(item), number: item.candidateNumber ?? 0, round: linkRound })} />
           ) : null}
         </View>
       ))}

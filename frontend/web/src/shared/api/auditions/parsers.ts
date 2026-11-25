@@ -1,3 +1,4 @@
+import { parseEntryNumber } from '@/shared/audition/entryNumbers'
 import type { AuditionDto, AuditionImages, AuditionTextContent } from '@/shared/types/audition'
 import { safeStringArr } from '@/shared/utils/safe'
 import { parseAuditionVotingFields } from '@/shared/audition/votingRounds'
@@ -7,6 +8,7 @@ export function parsePublicVoteItem(raw: Record<string, unknown>): PublicVoteIte
   const recScore = raw.recommendedScore
   const recRank = raw.recommendedRank
   return {
+    candidateNumber: parseEntryNumber(raw.candidateNumber),
     applicationId: String(raw.applicationId ?? ''),
     userName: String(raw.userName ?? ''),
     userEmail: String(raw.userEmail ?? ''),

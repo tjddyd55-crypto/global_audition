@@ -491,6 +491,7 @@
     "browseArrow": "រកមើលការប្រឡងជម្រើស →"
   },
   "vote": {
+    "candidateNumber": "លេខ {n}",
     "title": "បោះឆ្នោត",
     "empty": "មិនមានបេក្ខជនសម្រាប់បោះឆ្នោតទេ",
     "voted": "បានបោះឆ្នោត",
@@ -943,6 +944,13 @@
     "UZ": "អ៊ូសបេគីស្ថាន"
   },
   "agency": {
+    "currentRoundNumber": "បច្ចុប្បន្នជុំទី {n}",
+    "receiptNumber": "លេខចុះឈ្មោះ {n}",
+    "reviewNumber": "លេខវាយតម្លៃ {n} ជុំទី {round}",
+    "voteNumberHistory": "លេខបោះឆ្នោត {n} ជុំទី {round}",
+    "applicantNumber": "បេក្ខជនលេខ {n}",
+    "numberSearch": "ស្វែងរកតាមលេខ",
+    "numberHistory": "ប្រវត្តិលេខ",
     "applicants": "គ្រប់គ្រងបេក្ខជន",
     "pass": "ជាប់",
     "reject": "មិនជាប់",
@@ -2097,6 +2105,9 @@
     "emptyFallback": "មិនមានការប្រឡងដែលត្រូវនឹងលក្ខខណ្ឌទេ ដូច្នេះយើងបង្ហាញការប្រឡងថ្មីៗដែលកំពុងទទួល។"
   },
   "voteShare": {
+    "numberedCandidateText": "សូមគាំទ្រ {name} លេខ {number} ក្នុងការបោះឆ្នោតសាធារណៈជុំទី {round}! មើលវីដេអូ និងបោះឆ្នោតតាមតំណខាងក្រោម។",
+    "numberedShareTitle": "លេខ {number} | {name}",
+    "numberedMyShareText": "ខ្ញុំជាបេក្ខជនលេខ {number} ក្នុងការបោះឆ្នោតសាធារណៈ GLOBAL AUDITION ជុំទី {round}។ សូមមើលវីដេអូ និងគាំទ្រខ្ញុំ!",
     "share": "ចែករំលែក",
     "shareTitle": "ចែករំលែក {name}",
     "myShare": "ចែករំលែកការបោះឆ្នោតរបស់ខ្ញុំ",

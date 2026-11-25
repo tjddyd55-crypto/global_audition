@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import { getTranslations } from 'next-intl/server'
+import { parseEntryNumber } from '@/shared/audition/entryNumbers'
 import { parseShareParams } from '@/shared/vote/voteShare'
 import { AuditionPublicVoteClient } from './VotePageClient'
 
@@ -14,7 +15,7 @@ const DEFAULT_OG_IMAGE = '/og/global-audition-vote.png'
 type ShareVotePayload = {
   roundNumber?: number
   audition?: { title?: string }
-  sharedCandidate?: { userName?: string; description?: string; videoUrl?: string; thumbnailUrl?: string } | null
+  sharedCandidate?: { candidateNumber?: number; userName?: string; description?: string; videoUrl?: string; thumbnailUrl?: string } | null
 }
 
 function requestOrigin(): string {
@@ -84,7 +85,8 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
   const shared = data?.sharedCandidate ?? null
   const name = shared?.userName?.trim() || ''
 
-  const title = shared && name ? t('ogTitle', { name }) : t('ogDefaultTitle', { audition: auditionTitle })
+  const candidateNumber = parseEntryNumber(shared?.candidateNumber)
+  const title = shared && name ? candidateNumber ? t('numberedShareTitle', { name, number: candidateNumber }) : t('ogTitle', { name }) : t('ogDefaultTitle', { audition: auditionTitle })
   const description =
     shared && name
       ? t('ogDescription', { audition: auditionTitle, round: linkRound, name })

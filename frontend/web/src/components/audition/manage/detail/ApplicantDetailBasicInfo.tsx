@@ -1,6 +1,7 @@
 ﻿'use client'
 
 import { useTranslations } from 'next-intl'
+import { numberHistoryLabelKey } from '@/shared/audition/entryNumbers'
 import type { ApplicationAgencyDetail } from '@/shared/api/auditions'
 import { nationalityCatalogKey } from './applicantDetailLabels'
 
@@ -10,6 +11,7 @@ type ApplicantDetailBasicInfoProps = {
 }
 
 export default function ApplicantDetailBasicInfo({ detail, birthLabel }: ApplicantDetailBasicInfoProps) {
+  const tAgency = useTranslations('agency')
   const tApply = useTranslations('apply')
   const tNat = useTranslations('nationality')
   const nationalityLabel = detail.nationality
@@ -18,6 +20,10 @@ export default function ApplicantDetailBasicInfo({ detail, birthLabel }: Applica
 
   return (
     <section className="space-y-2 text-sm">
+      {(detail.numberHistory?.length ?? 0) > 0 ? <div className="space-y-1 rounded-lg bg-violet-50 p-3" data-testid="applicant-number-history">
+        <h3 className="font-semibold text-violet-900">{tAgency('numberHistory')}</h3>
+        {detail.numberHistory!.map((item) => <p key={`${item.kind}-${item.roundNumber}`}>{tAgency(numberHistoryLabelKey(item.kind), { n: item.number, round: item.roundNumber })}</p>)}
+      </div> : null}
       <h3 className="text-sm font-semibold text-gray-900">{tApply('sectionBasic')}</h3>
       <p>
         <span className="text-gray-500">{tApply('name')} </span>
