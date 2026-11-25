@@ -69,11 +69,13 @@ class VoteShareIT {
         var plain = votes.getPublicVotes(audition, null);
         List<String> base = plain.getItems().stream().map(PublicVoteItemDto::getApplicationId).toList();
         assertEquals(5, base.size());
+        assertEquals(List.of(1, 2, 3, 4, 5), plain.getItems().stream().map(PublicVoteItemDto::getCandidateNumber).toList());
 
         for (UUID target : List.of(a, b, e)) {
             var page = votes.getPublicVotes(audition, null, 1, target);
             assertEquals(target.toString(), page.getItems().get(0).getApplicationId());
             assertEquals(target.toString(), page.getSharedCandidate().getApplicationId());
+            assertEquals(apps.indexOf(target) + 1, page.getSharedCandidate().getCandidateNumber());
             assertEquals(5, page.getItems().size(), "명단은 그대로");
             assertTrue(page.isVotingEnabled());
         }
@@ -86,6 +88,28 @@ class VoteShareIT {
         assertFalse(votes.castVote(audition, b).isReplaced(), "같은 후보 반복 요청은 1표로 유지");
         assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM votes WHERE audition_id = ?", Integer.class, audition));
         assertEquals(b.toString(), votes.getPublicVotes(audition, null, 1, a).getMyVoteApplicationId());
+        assertEquals(2, votes.getPublicVotes(audition, null, 1, b).getSharedCandidate().getCandidateNumber());
+    }
+
+    @Test
+    void subsetBallotNumbersAreIndependentAndRestartInANewRound() {
+        UUID owner = user();
+        UUID audition = audition(owner, "MULTI_ROUND", 1, "{1,2}");
+        List<UUID> apps = new ArrayList<>();
+        for (int i = 0; i < 5; i++) apps.add(application(audition, user(), 1));
+        UUID b = apps.get(1), e = apps.get(4);
+        start(owner, audition, Instant.now().minusSeconds(30), Instant.now().plus(1, ChronoUnit.HOURS), List.of(e, b));
+        SecurityContextHolder.clearContext();
+        var first = votes.getPublicVotes(audition, null, 1, b);
+        assertEquals(2, first.getSharedCandidate().getCandidateNumber());
+        assertEquals(1, votes.getPublicVotes(audition, null, 1, e).getSharedCandidate().getCandidateNumber());
+        assertEquals(5, jdbc.queryForObject("SELECT entry_number FROM application_entry_numbers WHERE application_id = ? AND round_number = 0", Integer.class, e));
+        jdbc.update("UPDATE auditions SET current_round_number = 2 WHERE id = ?", audition);
+        jdbc.update("UPDATE applications SET current_round_number = 2 WHERE id = ?", b);
+        start(owner, audition, Instant.now().minusSeconds(10), Instant.now().plus(1, ChronoUnit.HOURS), List.of(b));
+        SecurityContextHolder.clearContext();
+        assertEquals(1, votes.getPublicVotes(audition, null, 2, b).getSharedCandidate().getCandidateNumber());
+        assertEquals(2, votes.getPublicVotes(audition, null, 1, b).getSharedCandidate().getCandidateNumber());
     }
 
     @Test
@@ -118,6 +142,7 @@ class VoteShareIT {
         var r3 = votes.getPublicVotes(audition, null, 3, a);
         assertEquals("OPEN", r3.getVoteStatus());
         assertEquals(3, r3.getRoundNumber());
+        assertEquals(1, r3.getSharedCandidate().getCandidateNumber());
 
         // 4차로 진행: a 만 진출, 4차 투표 시작.
         jdbc.update("UPDATE auditions SET current_round_number = 4 WHERE id = ?", audition);
@@ -134,6 +159,7 @@ class VoteShareIT {
 
         var oldB = votes.getPublicVotes(audition, null, 3, b);
         assertEquals(b.toString(), oldB.getSharedCandidate().getApplicationId());
+        assertEquals(2, oldB.getSharedCandidate().getCandidateNumber());
         var newB = votes.getPublicVotes(audition, null, 4, b);
         assertNull(newB.getSharedCandidate(), "4차 비후보는 4차 링크에서 보이지 않는다");
         assertTrue(newB.getItems().stream().noneMatch(i -> i.getApplicationId().equals(b.toString())));
@@ -141,6 +167,7 @@ class VoteShareIT {
         var r4 = votes.getPublicVotes(audition, null, 4, a);
         assertEquals("OPEN", r4.getVoteStatus());
         assertTrue(r4.isVotingEnabled());
+        assertEquals(1, r4.getSharedCandidate().getCandidateNumber());
 
         var r5 = votes.getPublicVotes(audition, null, 5, a);
         assertEquals("NOT_STARTED", r5.getVoteStatus());
@@ -177,6 +204,7 @@ class VoteShareIT {
         asRole(applicantA, "ROLE_APPLICANT");
         var mine = schedule.myVoteShare(a);
         assertTrue(mine.isCandidate());
+        assertEquals(1, mine.getCandidateNumber());
         assertEquals(1, mine.getRoundNumber());
         assertEquals("OPEN", mine.getVoteStatus());
 

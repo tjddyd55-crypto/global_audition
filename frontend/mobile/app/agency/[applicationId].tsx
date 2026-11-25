@@ -13,6 +13,7 @@ import { ErrorState } from '../../src/ui/EmptyState'
 import { Screen } from '../../src/ui/Screen'
 import { StatusPill, toneForApplicationStatus } from '../../src/ui/StatusPill'
 import { NativeVideoPlayer } from '../../src/features/media/NativeVideoPlayer'
+import { numberHistoryLabelKey } from '../../../web/src/shared/audition/entryNumbers'
 import { colors } from '../../src/theme/tokens'
 
 export default function AgencyApplicantDetailScreen() {
@@ -52,6 +53,10 @@ export default function AgencyApplicantDetailScreen() {
             {nationalityLabel(detail.nationality, agencyCopy)}{' '}
             {detail.age != null ? `· ${agencyCopy('application.ageYears', { age: detail.age })}` : ''} · {agencyCopy('application.roundN', { n: detail.round })}
           </Text>
+          {(detail.numberHistory?.length ?? 0) > 0 ? <View style={styles.stack} testID="applicant-number-history">
+            <Text style={styles.title}>{agencyCopy('agency.numberHistory')}</Text>
+            {detail.numberHistory!.map((item) => <Text key={`${item.kind}-${item.roundNumber}`} style={styles.meta}>{agencyCopy(`agency.${numberHistoryLabelKey(item.kind)}`, { n: item.number, round: item.roundNumber })}</Text>)}
+          </View> : null}
           {detail.introText ? <Text style={styles.body}>{detail.introText}</Text> : null}
           {detail.videoUrl ? (
             <NativeVideoPlayer videoUrl={detail.videoUrl} />

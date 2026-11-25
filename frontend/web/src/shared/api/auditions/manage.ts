@@ -1,3 +1,4 @@
+import { parseEntryNumber, parseNumberHistory } from '@/shared/audition/entryNumbers'
 import { apiClient } from '../client'
 import { unwrapData } from '../unwrap'
 import type { AuditionDto, CreateAuditionPayload } from '@/shared/types/audition'
@@ -46,6 +47,7 @@ export const listManageApplications = async (
       ? { category: typeof filters === 'string' ? filters : null }
       : filters
   const params: Record<string, string | number | boolean> = {}
+  if (f.applicantNumber != null) params.applicantNumber = f.applicantNumber
   if (f.category && !isAllCategoryName(f.category)) params.category = f.category
   if (f.minAge != null) params.minAge = Number(f.minAge)
   if (f.maxAge != null) params.maxAge = Number(f.maxAge)
@@ -105,6 +107,8 @@ export const listManageApplications = async (
       const name = String(r.name ?? r.userName ?? '')
       const st = String(r.status ?? 'PENDING')
       return {
+        numberScopeRound: parseEntryNumber(r.numberScopeRound) ?? 0,
+        applicantNumber: parseEntryNumber(r.applicantNumber),
         applicationId: String(r.applicationId ?? ''),
         userName: String(r.userName ?? ''),
         name,
@@ -136,6 +140,7 @@ export const getApplicationAgencyDetail = async (applicationId: string): Promise
   const d = unwrapData<Record<string, unknown>>(data)
   const sns = Array.isArray(d.snsLinks) ? d.snsLinks : []
   return {
+    numberHistory: parseNumberHistory(d.numberHistory),
     id: String(d.id ?? ''),
     auditionId: String(d.auditionId ?? ''),
     name: String(d.name ?? ''),

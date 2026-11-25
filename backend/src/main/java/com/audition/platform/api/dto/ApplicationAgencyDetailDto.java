@@ -8,6 +8,11 @@ import java.util.List;
  */
 public class ApplicationAgencyDetailDto {
 
+    public record NumberHistoryItem(String kind, int roundNumber, int number) {}
+    private List<NumberHistoryItem> numberHistory = new ArrayList<>();
+    public List<NumberHistoryItem> getNumberHistory() { return numberHistory; }
+    public void setNumberHistory(List<NumberHistoryItem> value) { this.numberHistory = value; }
+
     private String id;
     private String auditionId;
     private String name;

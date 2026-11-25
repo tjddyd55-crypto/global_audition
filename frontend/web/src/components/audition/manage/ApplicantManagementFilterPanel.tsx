@@ -8,6 +8,8 @@ import { nationalityOptionValues } from '@/shared/i18n/nationalityOptions'
 type SnsFilterValue = 'all' | 'yes' | 'no'
 
 type ApplicantManagementFilterPanelProps = {
+  applicantNumber: string
+  onApplicantNumberChange: (value: string) => void
   minAge: string
   maxAge: string
   nationality: string
@@ -21,6 +23,7 @@ type ApplicantManagementFilterPanelProps = {
 }
 
 export default function ApplicantManagementFilterPanel({
+  applicantNumber, onApplicantNumberChange,
   minAge,
   maxAge,
   nationality,
@@ -40,6 +43,10 @@ export default function ApplicantManagementFilterPanel({
     <div className={`${CARD_BASE} flex flex-col gap-4`}>
       <p className={`${TEXT_SUB} font-semibold text-gray-900`}>{t('filter')}</p>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <label className="flex min-w-0 flex-col gap-1 text-sm">
+          <span className="text-gray-600">{t('numberSearch')}</span>
+          <input type="number" min={1} step={1} inputMode="numeric" value={applicantNumber} onChange={(e) => onApplicantNumberChange(e.target.value)} className="min-h-11 rounded-lg border border-gray-200 px-2 py-2" />
+        </label>
         <label className="flex min-w-0 flex-col gap-1 text-sm">
           <span className="whitespace-normal break-words text-gray-600">{t('minAge')}</span>
           <input

@@ -1,3 +1,4 @@
+import type { NumberHistoryItem } from '../../../web/src/shared/audition/entryNumbers'
 /**
  * 네이티브가 소비하는 API DTO.
  * 값은 백엔드/웹 SSOT와 동일하다. UI 편의를 위한 새 status enum을 만들지 않는다.
@@ -145,6 +146,7 @@ export type CreateApplicationPayload = {
 }
 
 export type PublicVoteItem = {
+  candidateNumber?: number
   applicationId: string
   userName: string
   userEmail: string
@@ -189,6 +191,7 @@ export type PublicVotesPage = {
 }
 
 export type MyVoteShare = {
+  candidateNumber?: number
   candidate: boolean
   auditionId: string | null
   auditionTitle: string | null
@@ -200,6 +203,8 @@ export type MyVoteShare = {
 }
 
 export type ManageApplicantItem = {
+  numberScopeRound?: number
+  applicantNumber?: number
   applicationId: string
   userName: string
   name: string
@@ -238,6 +243,7 @@ export type ManageApplicationsPayload = {
 }
 
 export type ApplicationAgencyDetail = {
+  numberHistory?: NumberHistoryItem[]
   id: string
   auditionId: string
   name: string

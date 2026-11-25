@@ -1,4 +1,5 @@
-﻿import { apiClient } from './client'
+import { parseEntryNumber } from '@/shared/audition/entryNumbers'
+import { apiClient } from './client'
 
 export type AdminAuditionRoundRow = {
   id: string
@@ -14,6 +15,7 @@ export type AdminAuditionRoundRow = {
 }
 
 export type AdminRoundApplicantRow = {
+  applicantNumber?: number
   applicationId: string
   roundSubmissionId: string
   applicantEmail: string | null
@@ -45,6 +47,7 @@ function parseApplicant(raw: Record<string, unknown>): AdminRoundApplicantRow {
     applicationId: String(raw.applicationId ?? ''),
     roundSubmissionId: String(raw.roundSubmissionId ?? ''),
     applicantEmail: raw.applicantEmail != null ? String(raw.applicantEmail) : null,
+    applicantNumber: parseEntryNumber(raw.applicantNumber),
     applicantDisplayName: raw.applicantDisplayName != null ? String(raw.applicantDisplayName) : null,
     applicationCurrentRoundNumber: Number(raw.applicationCurrentRoundNumber ?? 0) || 0,
     finalStatus: raw.finalStatus != null ? String(raw.finalStatus) : null,
@@ -74,9 +77,9 @@ export const adminAuditionRoundsApi = {
     return parseRound(data ?? {})
   },
 
-  listApplicants: async (auditionId: string, roundId: string): Promise<AdminRoundApplicantRow[]> => {
+  listApplicants: async (auditionId: string, roundId: string, applicantNumber?: number): Promise<AdminRoundApplicantRow[]> => {
     const { data } = await apiClient.get<unknown[]>(
-      `/admin/auditions/${encodeURIComponent(auditionId)}/rounds/${encodeURIComponent(roundId)}/applications`
+      `/admin/auditions/${encodeURIComponent(auditionId)}/rounds/${encodeURIComponent(roundId)}/applications`, { params: { applicantNumber } }
     )
     return Array.isArray(data) ? data.map((x) => parseApplicant(x as Record<string, unknown>)) : []
   },

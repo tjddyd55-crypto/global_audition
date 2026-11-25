@@ -32,6 +32,7 @@ export function AuditionRoundReviewPanel({
   const applicantsHref = applicantsHubHref ?? `/my/applicants?auditionId=${encodeURIComponent(auditionId)}`
   const manageHref = statusManageHref ?? `/my/auditions/${auditionId}/manage`
   const queryClient = useQueryClient()
+  const [numberSearch, setNumberSearch] = useState('')
   const [selectedRoundId, setSelectedRoundId] = useState<string | null>(null)
 
   const roundsQuery = useQuery({
@@ -52,8 +53,8 @@ export function AuditionRoundReviewPanel({
   }, [roundsSorted, selectedRoundId])
 
   const applicantsQuery = useQuery({
-    queryKey: ['admin-round-applicants', auditionId, selectedRoundId],
-    queryFn: () => adminAuditionRoundsApi.listApplicants(auditionId, selectedRoundId!),
+    queryKey: ['admin-round-applicants', auditionId, selectedRoundId, numberSearch],
+    queryFn: () => adminAuditionRoundsApi.listApplicants(auditionId, selectedRoundId!, numberSearch.trim() ? Number(numberSearch) || 0 : undefined),
     enabled: !!auditionId && !!selectedRoundId,
     retry: false,
   })
@@ -186,6 +187,9 @@ export function AuditionRoundReviewPanel({
         </div>
 
         <div className={CARD_BASE}>
+          <label className="mb-3 block text-sm text-gray-700">{tAgency('numberSearch')}
+            <input type="number" min={1} step={1} value={numberSearch} onChange={(e) => setNumberSearch(e.target.value)} className="ml-2 min-h-11 rounded-lg border px-3 py-2" />
+          </label>
           {!selectedRoundId ? (
             <p className="text-sm text-gray-600">{t('pickRound')}</p>
           ) : applicantsQuery.isLoading ? (
@@ -207,6 +211,7 @@ export function AuditionRoundReviewPanel({
                   {(applicantsQuery.data ?? []).map((row: AdminRoundApplicantRow) => (
                     <tr key={row.roundSubmissionId} className="border-b border-gray-100">
                       <td className="py-2 pr-3">
+                        {row.applicantNumber ? <div className="font-bold text-violet-700">{tAgency('applicantNumber', { n: row.applicantNumber })}</div> : null}
                         <div className="font-medium text-gray-900">{row.applicantDisplayName ?? '—'}</div>
                         <div className={`${TEXT_SUB} text-xs`}>{row.applicantEmail ?? ''}</div>
                       </td>

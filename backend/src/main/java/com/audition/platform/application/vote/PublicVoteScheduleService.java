@@ -116,11 +116,13 @@ public class PublicVoteScheduleService {
         }
         candidates.deleteByAuditionIdAndRoundNumber(auditionId, round);
         Instant confirmed = now;
+        int candidateNumber = 1;
         for (Application app : chosen) {
             AuditionVoteCandidate row = new AuditionVoteCandidate();
             row.setAuditionId(auditionId);
             row.setRoundNumber(round);
             row.setApplicationId(app.getId());
+            row.setCandidateNumber(candidateNumber++);
             row.setConfirmedAt(confirmed);
             candidates.save(row);
         }
@@ -157,6 +159,8 @@ public class PublicVoteScheduleService {
                 || !candidates.existsByAuditionIdAndRoundNumberAndApplicationId(audition.getId(), round, app.getId())) {
             return dto;
         }
+        dto.setCandidateNumber(candidates.findByAuditionIdAndRoundNumber(audition.getId(), round).stream()
+                .filter(c -> c.getApplicationId().equals(app.getId())).map(AuditionVoteCandidate::getCandidateNumber).findFirst().orElse(null));
         dto.setCandidate(true);
         dto.setAuditionId(audition.getId().toString());
         dto.setAuditionTitle(audition.getTitle());

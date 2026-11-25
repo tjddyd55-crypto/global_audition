@@ -1,3 +1,4 @@
+import { parseEntryNumber, parseNumberHistory } from '../../../web/src/shared/audition/entryNumbers'
 import { parseAuditionVotingFields, parseVoteStatus } from '../../../web/src/shared/audition/votingRounds'
 import type {
   ApplicantDashboard,
@@ -226,6 +227,7 @@ export function parseVotePage(raw: unknown): PublicVotesPage {
 export function parseVoteItem(raw: unknown): PublicVoteItem {
   const row = asRecord(raw)
   return {
+    candidateNumber: parseEntryNumber(row.candidateNumber),
     applicationId: asString(row.applicationId),
     userName: asString(row.userName),
     userEmail: asString(row.userEmail),
@@ -265,6 +267,8 @@ export function parseManageApplications(raw: unknown): ManageApplicationsPayload
     items: items.map((item) => {
       const r = asRecord(item)
       return {
+        numberScopeRound: parseEntryNumber(r.numberScopeRound) ?? 0,
+        applicantNumber: parseEntryNumber(r.applicantNumber),
         applicationId: asString(r.applicationId),
         userName: asString(r.userName),
         name: asString(r.name || r.userName),
@@ -290,6 +294,7 @@ export function parseAgencyDetail(raw: unknown): ApplicationAgencyDetail {
   const d = asRecord(raw)
   const sns = Array.isArray(d.snsLinks) ? d.snsLinks : []
   return {
+    numberHistory: parseNumberHistory(d.numberHistory),
     id: asString(d.id),
     auditionId: asString(d.auditionId),
     name: asString(d.name),
@@ -442,6 +447,7 @@ export function parseMyVoteShare(raw: unknown): MyVoteShare {
   const b = asRecord(raw)
   const s = (k: string) => (b[k] != null && String(b[k]).length > 0 ? String(b[k]) : null)
   return {
+    candidateNumber: parseEntryNumber(b.candidateNumber),
     candidate: b.candidate === true,
     auditionId: s('auditionId'),
     auditionTitle: s('auditionTitle'),

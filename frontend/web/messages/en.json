@@ -491,6 +491,7 @@
     "browseArrow": "Browse auditions →"
   },
   "vote": {
+    "candidateNumber": "No. {n}",
     "title": "Vote",
     "empty": "There are no applicants to vote for",
     "voted": "Voted",
@@ -943,6 +944,13 @@
     "UZ": "Uzbekistan"
   },
   "agency": {
+    "currentRoundNumber": "Currently round {n}",
+    "receiptNumber": "Registration No. {n}",
+    "reviewNumber": "Round {round} review No. {n}",
+    "voteNumberHistory": "Round {round} vote No. {n}",
+    "applicantNumber": "Applicant No. {n}",
+    "numberSearch": "Search by number",
+    "numberHistory": "Number history",
     "applicants": "Applicant management",
     "pass": "Pass",
     "reject": "Rejected",
@@ -2097,6 +2105,9 @@
     "emptyFallback": "No close matches, so here are the latest open auditions."
   },
   "voteShare": {
+    "numberedCandidateText": "Support {name}, No. {number} in round {round} public voting! Watch the video and vote using the link below.",
+    "numberedShareTitle": "No. {number} | {name}",
+    "numberedMyShareText": "I am No. {number} in round {round} of GLOBAL AUDITION public voting. Please watch my video and support me!",
     "share": "Share",
     "shareTitle": "Share {name}",
     "myShare": "Share my vote page",

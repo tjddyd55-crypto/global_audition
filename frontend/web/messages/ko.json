@@ -491,6 +491,7 @@
     "browseArrow": "오디션 보기 →"
   },
   "vote": {
+    "candidateNumber": "기호 {n}번",
     "title": "투표",
     "empty": "투표할 지원자가 없습니다",
     "voted": "투표 완료",
@@ -943,6 +944,13 @@
     "UZ": "우즈베키스탄"
   },
   "agency": {
+    "currentRoundNumber": "현재 {n}차",
+    "receiptNumber": "전체 접수번호 {n}번",
+    "reviewNumber": "{round}차 심사 번호 {n}번",
+    "voteNumberHistory": "{round}차 공개 투표 기호 {n}번",
+    "applicantNumber": "지원자 {n}번",
+    "numberSearch": "번호 검색",
+    "numberHistory": "번호 이력",
     "applicants": "지원자 관리",
     "pass": "합격",
     "reject": "불합격",
@@ -2097,6 +2105,9 @@
     "emptyFallback": "조건에 맞는 공고가 없어 최신 모집 공고를 보여 드립니다."
   },
   "voteShare": {
+    "numberedCandidateText": "{round}차 공개 투표 기호 {number}번 {name} 참가자를 응원해 주세요! 아래 링크에서 투표하실 수 있습니다.",
+    "numberedShareTitle": "기호 {number}번 | {name}",
+    "numberedMyShareText": "저는 글로벌 오디션 {round}차 공개 투표 기호 {number}번입니다. 제 영상을 보시고 응원해 주세요!",
     "share": "공유하기",
     "shareTitle": "{name} 참가자 공유하기",
     "myShare": "내 투표 공유하기",

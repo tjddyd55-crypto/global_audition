@@ -132,7 +132,7 @@ export function SharedCandidateLanding({
           <div className="px-4 py-4">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
-                <h2 className="truncate text-lg font-extrabold leading-tight text-gray-900">{name}</h2>
+                <h2 className="truncate text-lg font-extrabold leading-tight text-gray-900">{shared.candidateNumber ? <span className="mr-2 text-violet-700" data-testid="vote-candidate-number">{t('candidateNumber', { n: shared.candidateNumber })}</span> : null}{name}</h2>
                 {shared.category ? (
                   <p className="mt-0.5 truncate text-sm font-medium text-gray-600">{recruitFieldLabel(shared.category, tField)}</p>
                 ) : null}

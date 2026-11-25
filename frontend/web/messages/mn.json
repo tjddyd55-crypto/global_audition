@@ -491,6 +491,7 @@
     "browseArrow": "Аудишн үзэх →"
   },
   "vote": {
+    "candidateNumber": "№ {n}",
     "title": "Санал",
     "empty": "Санал өгөх өргөдөл гаргагч алга",
     "voted": "Санал өглөө",
@@ -943,6 +944,13 @@
     "UZ": "Узбекистан"
   },
   "agency": {
+    "currentRoundNumber": "Одоо {n}-р шат",
+    "receiptNumber": "Бүртгэлийн № {n}",
+    "reviewNumber": "{round}-р шатны шалгаруулалтын № {n}",
+    "voteNumberHistory": "{round}-р шатны санал хураалтын № {n}",
+    "applicantNumber": "Оролцогч № {n}",
+    "numberSearch": "Дугаараар хайх",
+    "numberHistory": "Дугаарын түүх",
     "applicants": "Өргөдөл удирдлага",
     "pass": "Тэнцсэн",
     "reject": "Тэнцээгүй",
@@ -2097,6 +2105,9 @@
     "emptyFallback": "Тохирох зар байхгүй тул хамгийн шинэ нээлттэй аудишныг харуулж байна."
   },
   "voteShare": {
+    "numberedCandidateText": "{round}-р шатны нээлттэй санал хураалтын № {number} {name}-г дэмжээрэй! Доорх холбоосоор видеог үзэж саналаа өгөөрэй.",
+    "numberedShareTitle": "№ {number} | {name}",
+    "numberedMyShareText": "Би GLOBAL AUDITION-ы {round}-р шатны нээлттэй санал хураалтын № {number}. Миний видеог үзэж дэмжээрэй!",
     "share": "Хуваалцах",
     "shareTitle": "{name}-г хуваалцах",
     "myShare": "Миний санал хураалтыг хуваалцах",

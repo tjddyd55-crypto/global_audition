@@ -32,8 +32,8 @@ export function MyVoteShareCard({ applicationId }: { applicationId: string }) {
   })
   const [text, setText] = useState('')
   useEffect(() => {
-    setText(t('voteShare.myShareText'))
-  }, [t])
+    setText(t(q.data?.candidateNumber ? 'voteShare.numberedMyShareText' : 'voteShare.myShareText', { number: q.data?.candidateNumber ?? 0, round: q.data?.roundNumber ?? 1 }))
+  }, [t, q.data?.candidateNumber, q.data?.roundNumber])
   const s = q.data
   if (!s?.candidate || !s.auditionId || !s.roundNumber) return null
   const status =
@@ -42,6 +42,7 @@ export function MyVoteShareCard({ applicationId }: { applicationId: string }) {
   return (
     <View style={styles.card} testID="my-vote-share">
       <Text style={styles.title}>{t('voteShare.myShare')}</Text>
+      {s.candidateNumber ? <Text style={styles.meta}>{t('vote.candidateNumber', { n: s.candidateNumber })}</Text> : null}
       <Text style={styles.meta}>{t('voteShare.roundLabel', { round: s.roundNumber })}</Text>
       <Text style={styles.meta}>{t('voteShare.status', { status })}</Text>
       {s.voteStatus === 'SCHEDULED' && s.voteStartAt ? (

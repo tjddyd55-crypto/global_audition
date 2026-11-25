@@ -35,6 +35,7 @@ import java.util.UUID;
 @Service
 public class AgencyApplicationManageService {
 
+    private final ApplicationEntryNumbers entryNumbers;
     private final ApplicationService applicationService;
     private final AgencyApplicantsListQueryService agencyApplicantsListQueryService;
     private final ManageApplicationsQueryService manageApplicationsQueryService;
@@ -54,7 +55,9 @@ public class AgencyApplicationManageService {
             UserRepository userRepository,
             ApplicantCardMetricsLoader metricsLoader,
             ApplicationSnsLinkRepository applicationSnsLinkRepository,
-            AuditionManageAccess auditionManageAccess) {
+            AuditionManageAccess auditionManageAccess,
+            ApplicationEntryNumbers entryNumbers) {
+        this.entryNumbers = entryNumbers;
         this.applicationService = applicationService;
         this.agencyApplicantsListQueryService = agencyApplicantsListQueryService;
         this.manageApplicationsQueryService = manageApplicationsQueryService;
@@ -78,9 +81,9 @@ public class AgencyApplicationManageService {
             String nationality,
             Boolean hasSns,
             String boardStatus,
-            Integer round) {
+            Integer round, Integer applicantNumber) {
         return manageApplicationsQueryService.listManageApplications(
-                auditionId, category, minAge, maxAge, nationality, hasSns, boardStatus, round);
+                auditionId, category, minAge, maxAge, nationality, hasSns, boardStatus, round, applicantNumber);
     }
 
     public ApplicationAgencyDetailDto getApplicationAgencyDetail(UUID id) {
@@ -102,6 +105,7 @@ public class AgencyApplicationManageService {
         }
 
         ApplicationAgencyDetailDto dto = new ApplicationAgencyDetailDto();
+        dto.setNumberHistory(entryNumbers.history(app.getId()));
         dto.setId(app.getId().toString());
         dto.setAuditionId(app.getAuditionId().toString());
         dto.setName(displayName);
