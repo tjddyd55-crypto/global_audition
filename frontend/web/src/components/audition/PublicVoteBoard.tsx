@@ -7,8 +7,7 @@ import { toast } from 'sonner'
 import { auditionApi, type PublicVoteItem } from '@/shared/api/auditions'
 import { useAuthStore } from '@/shared/auth/authStore'
 import { Link, useRouter } from '@/i18n.config'
-import { HERO } from '@/shared/design-tokens'
-import { CARD_BASE, PAGE_CONTAINER, TEXT_SUB } from '@/shared/ui/specClasses'
+import { PAGE_CONTAINER, TEXT_SUB } from '@/shared/ui/specClasses'
 import { recruitFieldLabel } from '@/shared/audition/recruitFields'
 import { formatCount } from '@/shared/money/currency'
 import { VoteShareSheet } from '@/components/vote/VoteShareSheet'
@@ -16,6 +15,7 @@ import { SharedCandidateLanding } from '@/components/vote/SharedCandidateLanding
 import { VoteInlineVideo } from '@/components/vote/VoteInlineVideo'
 import { voteSharePath } from '@/shared/vote/voteShare'
 import { canShowPublicVoteCount, remainingMessage, voteRemaining } from '@/shared/vote/voteRemaining'
+import { formatVoteDate } from '@/shared/vote/voteDate'
 import { voteLabelKey } from '@/shared/vote/voteLabels'
 
 type Props = {
@@ -136,7 +136,7 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback, shareRound,
     return (
       <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 py-12 text-center" data-testid="vote-load-error">
         <p className="text-sm text-red-600">{t('loadBoardFailed')}</p>
-        <button type="button" onClick={() => void votesQuery.refetch()} className="min-h-11 rounded-lg border border-[#E5E7EB] bg-white px-4 py-2 text-sm font-semibold text-gray-900">
+        <button type="button" onClick={() => void votesQuery.refetch()} className="min-h-12 min-w-0 whitespace-nowrap leading-6 rounded-xl border border-[#E5E7EB] bg-white px-4 py-2 text-sm font-semibold text-gray-900">
           {ts('retry')}
         </button>
       </div>
@@ -144,12 +144,7 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback, shareRound,
   }
 
   const p = votesQuery.data
-  const formatWhen = (iso?: string | null) => {
-    if (!iso) return ''
-    const d = new Date(iso)
-    if (Number.isNaN(d.getTime())) return iso
-    return new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(d)
-  }
+  const formatWhen = (iso?: string | null) => formatVoteDate(iso, locale)
   const planOff = p && p.votingPlanEnabled === false
   const phase = p?.voteStatus
   const showClosedResults = Boolean(p && phase === 'CLOSED' && (p.items?.length ?? 0) > 0)
@@ -176,10 +171,9 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback, shareRound,
       </div>
     )
   }
-  const audition = p?.audition
   const summary = p?.summary
   const items = p?.items ?? []
-  const title = audition?.title || auditionTitleFallback
+  const title = p?.audition?.title || auditionTitleFallback
   const canCast = Boolean(p?.votingEnabled)
   const linkRound = p?.roundNumber ?? 1
   const shareUrlFor = (item: PublicVoteItem) =>
@@ -246,48 +240,29 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback, shareRound,
 
   return (
     <div className="min-h-screen bg-gray-50 pb-8">
-      {/* Hero */}
-      <div
-        className="border-b border-violet-100"
-        style={{
-          background: `linear-gradient(135deg, ${HERO.primaryGradientStart}22, ${HERO.primaryGradientEnd}18, #fff)`,
-          paddingTop: 28,
-          paddingBottom: 32,
-        }}
-      >
-        <div className={PAGE_CONTAINER}>
-          <Link href={`/auditions/${auditionId}`} className="text-sm font-medium text-violet-700 no-underline hover:underline">
-            ← {t('backToAudition')}
-          </Link>
-          <h1 className="mt-4 text-2xl font-bold text-gray-900 md:text-3xl">{title}</h1>
-          <p className="mt-3 text-sm font-medium text-gray-800" data-testid="vote-status-line">
-            {statusLine}
-            {phase === 'OPEN' && p?.voteEndAt ? ` · ${ts('endsAt', { end: formatWhen(p.voteEndAt) })}` : null}
-          </p>
-          {phase === 'SCHEDULED' && p?.voteStartAt ? (
-            <p className="mt-1 text-sm text-gray-600">{ts('startsAt', { start: formatWhen(p.voteStartAt) })}</p>
-          ) : null}
-          <div className="mt-4 flex flex-wrap gap-4 text-sm text-gray-600">
-            <span>{t('applicantCount', { n: formatCount(audition?.applicantCount ?? summary?.applicantCount ?? 0, locale) })}</span>
-            <span>{t('totalVotes', { n: formatCount(audition?.totalVotes ?? summary?.totalVotes ?? 0, locale) })}</span>
-          </div>
+      <div className={`${PAGE_CONTAINER} py-4`}>
+        <Link href={`/auditions/${auditionId}`} className="text-sm font-medium text-violet-700 no-underline hover:underline">
+          ← {t('backToAudition')}
+        </Link>
+        <div className="mt-3 space-y-2 rounded-xl bg-violet-50 p-4">
+          <p className="text-[13px] font-semibold leading-relaxed text-violet-700">{ts('roundLabel', { round: linkRound })}</p>
+          <h1 className="break-words text-[22px] font-extrabold leading-snug text-gray-900">{title}</h1>
+          <p className="text-sm font-medium text-gray-800" data-testid="vote-status-line">{statusLine}</p>
+          {p?.voteEndAt ? <p className="text-sm text-gray-600">{ts('endsAt', { end: formatWhen(p.voteEndAt) })}</p> : null}
+          <p className="text-sm leading-relaxed text-gray-600">{t('summary', {
+            applicants: formatCount(summary?.applicantCount ?? 0, locale),
+            votes: formatCount(summary?.totalVotes ?? 0, locale),
+            mine: formatCount(summary?.myVoteCount ?? 0, locale),
+          })}</p>
         </div>
       </div>
 
-      <div className={`${PAGE_CONTAINER} mt-6 flex flex-col gap-6`}>
+      <div className={`${PAGE_CONTAINER} flex flex-col gap-4`}>
         {p?.voteRoundNumber && p.roundNumber !== p.voteRoundNumber ? (
           <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800" data-testid="vote-other-round">
             {ts('otherRound', { round: p.roundNumber })}
           </p>
         ) : null}
-        {/* 요약 카드 4개 */}
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          <SummaryCard label={t('applicantFallback')} value={summary?.applicantCount ?? 0} locale={locale} />
-          <SummaryCard label={t('votes')} value={summary?.totalVotes ?? 0} locale={locale} />
-          <SummaryCard label={t('totalViews')} value={summary?.totalViewCount ?? 0} locale={locale} />
-          <SummaryCard label={t('myVotes')} value={summary?.myVoteCount ?? 0} locale={locale} />
-        </div>
-
         {/* 그리드 */}
         {windowNotice && items.length > 0 ? (
           <p className="rounded-lg bg-gray-100 px-3 py-2 text-sm text-gray-700">{windowNotice}</p>
@@ -314,7 +289,7 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback, shareRound,
                 />
                 <div className="px-4 py-3">
                   <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <h2 className="truncate text-lg font-extrabold text-gray-900">{name}</h2>
                       {item.category ? (
                         <p className="mt-0.5 truncate text-xs font-medium text-gray-600">{recruitFieldLabel(item.category, tField)}</p>
@@ -335,7 +310,7 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback, shareRound,
                           if (!requireAuth()) return
                           removeMutation.mutate(item.applicationId)
                         }}
-                        className="min-h-11 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50 disabled:opacity-50"
+                        className="min-h-12 min-w-0 whitespace-nowrap leading-6 rounded-xl border border-[#E5E7EB] bg-white px-3 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50 disabled:opacity-50"
                       >
                         {t('cancelVote')}
                       </button>
@@ -347,7 +322,7 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback, shareRound,
                           if (!requireAuth()) return
                           castMutation.mutate({ applicationId: item.applicationId, name: item.userName || undefined })
                         }}
-                        className="min-h-11 rounded-lg bg-gradient-to-r from-violet-600 to-pink-500 px-3 py-2 text-sm font-semibold text-white hover:opacity-95 disabled:opacity-50"
+                        className="min-h-12 min-w-0 whitespace-nowrap leading-6 rounded-xl bg-gradient-to-r from-violet-600 to-pink-500 px-3 py-2 text-sm font-semibold text-white hover:opacity-95 disabled:opacity-50"
                       >
                         {t('voteAction')}
                       </button>
@@ -355,7 +330,7 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback, shareRound,
                     <button
                       type="button"
                       onClick={() => setShareItem(item)}
-                      className="min-h-11 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-50"
+                      className="min-h-12 min-w-0 whitespace-nowrap leading-6 rounded-xl border border-[#E5E7EB] bg-white px-3 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-50"
                       data-testid="vote-card-share"
                     >
                       {ts('share')}
@@ -378,15 +353,6 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback, shareRound,
           defaultText={ts('candidateText', { name: shareItem.userName || t('nameUnset') })}
         />
       ) : null}
-    </div>
-  )
-}
-
-function SummaryCard({ label, value, locale }: { label: string; value: number; locale: string }) {
-  return (
-    <div className={CARD_BASE + ' text-center'}>
-      <div className="text-xl font-bold text-violet-600">{formatCount(value, locale)}</div>
-      <div className={TEXT_SUB}>{label}</div>
     </div>
   )
 }

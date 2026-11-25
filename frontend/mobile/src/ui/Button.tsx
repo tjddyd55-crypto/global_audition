@@ -3,6 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { colors, radius, touch } from '../theme/tokens'
 
 type Props = {
+  fillHeight?: boolean
   label: string
   onPress: () => void
   disabled?: boolean
@@ -11,7 +12,7 @@ type Props = {
   accessibilityLabel?: string
 }
 
-export function Button({ label, onPress, disabled, loading, variant = 'primary', accessibilityLabel }: Props) {
+export function Button({ label, onPress, disabled, loading, variant = 'primary', accessibilityLabel, fillHeight = false }: Props) {
   const isDisabled = disabled || loading
   if (variant === 'primary') {
     return (
@@ -20,10 +21,10 @@ export function Button({ label, onPress, disabled, loading, variant = 'primary',
         disabled={isDisabled}
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel ?? label}
-        style={({ pressed }) => [styles.base, isDisabled && styles.disabled, pressed && styles.pressed]}
+        style={({ pressed }) => [styles.base, fillHeight && styles.fill, isDisabled && styles.disabled, pressed && styles.pressed]}
       >
-        <LinearGradient colors={[colors.purple, colors.pink]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.gradient}>
-          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.primaryText}>{label}</Text>}
+        <LinearGradient colors={[colors.purple, colors.pink]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[styles.gradient, fillHeight && styles.fill]}>
+          {loading ? <ActivityIndicator color="#fff" /> : <Text numberOfLines={fillHeight ? 1 : undefined} style={[styles.primaryText, fillHeight && styles.voteText]}>{label}</Text>}
         </LinearGradient>
       </Pressable>
     )
@@ -37,7 +38,9 @@ export function Button({ label, onPress, disabled, loading, variant = 'primary',
       accessibilityLabel={accessibilityLabel ?? label}
       style={({ pressed }) => [
         styles.base,
+        fillHeight && styles.fill,
         styles.outline,
+        fillHeight && styles.voteOutline,
         variant === 'danger' && styles.danger,
         isDisabled && styles.disabled,
         pressed && styles.pressed,
@@ -46,13 +49,16 @@ export function Button({ label, onPress, disabled, loading, variant = 'primary',
       {loading ? (
         <ActivityIndicator color={variant === 'danger' ? colors.dangerText : colors.text} />
       ) : (
-        <Text style={[styles.outlineText, variant === 'danger' && { color: colors.dangerText }]}>{label}</Text>
+        <Text numberOfLines={fillHeight ? 1 : undefined} style={[styles.outlineText, fillHeight && styles.voteText, variant === 'danger' && { color: colors.dangerText }]}>{label}</Text>
       )}
     </Pressable>
   )
 }
 
 const styles = StyleSheet.create({
+  fill: { flex: 1 },
+  voteText: { fontSize: 14, lineHeight: 24 },
+  voteOutline: { paddingHorizontal: 12, paddingVertical: 8 },
   base: {
     minHeight: touch.min,
     borderRadius: radius.button,

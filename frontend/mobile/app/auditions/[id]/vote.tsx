@@ -17,6 +17,7 @@ import { VoteShareActions } from '../../../src/features/vote/VoteShareActions'
 import { SharedCandidateLanding } from '../../../src/features/vote/SharedCandidateLanding'
 import { parseShareParams, voteSharePath, voteShareUrl } from '../../../../web/src/shared/vote/voteShare'
 import { canShowPublicVoteCount, remainingMessage, voteRemaining } from '../../../../web/src/shared/vote/voteRemaining'
+import { formatVoteDate } from '../../../../web/src/shared/vote/voteDate'
 import { voteLabelKey } from '../../../../web/src/shared/vote/voteLabels'
 import type { PublicVoteItem } from '../../../src/api/types'
 
@@ -79,7 +80,7 @@ export default function VoteScreen() {
   const windowNotice = page?.votingEnabled
     ? null
     : page?.voteStatus === 'SCHEDULED'
-      ? t('vote.scheduled', { start: page.voteStartAt ?? '' })
+      ? t('vote.scheduled', { start: formatVoteDate(page.voteStartAt, lang) })
       : page?.voteStatus === 'CLOSED'
         ? t('vote.closedResults')
         : t('vote.notStarted')
@@ -96,10 +97,6 @@ export default function VoteScreen() {
           : phase === 'CLOSED'
             ? t('vote.statusClosed')
             : t('vote.notStarted')
-  const listStatusLine =
-    phase === 'OPEN' && page?.voteEndAt
-      ? `${listStatus} · ${t('voteShare.endsAt', { end: new Date(page.voteEndAt).toLocaleString(lang) })}`
-      : listStatus
   const ownVotesText = (n: number) => t(voteLabelKey(n, lang, 'voteShare.ownVotes', 'voteShare.ownVotesOne'), { n })
 
   const sharedVoted = Boolean(shared && page?.votingEnabled && page.myVoteApplicationId === shared.applicationId)
@@ -108,13 +105,12 @@ export default function VoteScreen() {
   // 유효한 공유 링크면 해당 후보만 보여 준다. 잘못된 후보 값은 shared 가 없어 전체 화면으로 간다.
   if (shared && page && !query.isError) {
     return (
-      <Screen loading={query.isLoading}>
+      <Screen topInset={false} bottomInset loading={query.isLoading}>
         <SharedCandidateLanding
           page={page}
           shared={shared}
           url={urlFor(shared)}
           voted={sharedVoted}
-          isGuest={!isAuthenticated}
           voteBusy={voteMutation.isPending}
           windowNotice={windowNotice}
           onVote={() => castFor(shared)}
@@ -134,7 +130,7 @@ export default function VoteScreen() {
   }
 
   return (
-    <Screen loading={query.isLoading}>
+    <Screen topInset={false} bottomInset loading={query.isLoading}>
       {query.isError ? <ErrorState message={t('vote.loadFailed')} onRetry={() => void query.refetch()} retryLabel={t('voteShare.retry')} /> : null}
       {votedName ? <Text style={styles.success} testID="vote-success">{t('voteShare.votedFor', { name: votedName })}</Text> : null}
       {page && !page.votingEnabled && (page.voteStatus !== 'CLOSED' || page.items.length === 0) ? (
@@ -143,7 +139,7 @@ export default function VoteScreen() {
             page.votingPlanEnabled === false
               ? t('vote.disabledRound')
               : page.voteStatus === 'SCHEDULED'
-                ? t('vote.scheduled', { start: page.voteStartAt ?? '' })
+                ? t('vote.scheduled', { start: formatVoteDate(page.voteStartAt, lang) })
                 : page.voteStatus === 'CLOSED'
                   ? t('vote.closedResults')
                   : t('vote.notStarted')
@@ -152,8 +148,10 @@ export default function VoteScreen() {
       ) : null}
       {page && (page.votingEnabled || (page.voteStatus === 'CLOSED' && page.items.length > 0)) ? (
         <View style={styles.head}>
+          <Text style={styles.round}>{t('voteShare.roundLabel', { round: linkRound })}</Text>
           <Text style={styles.title}>{page.audition.title}</Text>
-          <Text style={styles.status} testID="vote-status-line">{listStatusLine}</Text>
+          <Text style={styles.status} testID="vote-status-line">{listStatus}</Text>
+          {page.voteEndAt ? <Text style={styles.meta}>{t('voteShare.endsAt', { end: formatVoteDate(page.voteEndAt, lang) })}</Text> : null}
           <Text style={styles.meta}>
             {page.voteStatus === 'CLOSED'
               ? t('vote.closedResults')
@@ -187,7 +185,8 @@ export default function VoteScreen() {
             {page?.votingEnabled ? (
               <View style={styles.cell}>
                 <Button
-                  label={item.isVoted ? t('vote.myVote') : t('vote.castFor')}
+                fillHeight
+                  label={item.isVoted ? t('vote.myVote') : t('vote.voteAction')}
                   disabled={item.isVoted || voteMutation.isPending}
                   onPress={() => castFor(item)}
                 />
@@ -195,6 +194,7 @@ export default function VoteScreen() {
             ) : null}
             <View style={styles.cell}>
               <Button
+                fillHeight
                 label={t('voteShare.share')}
                 variant="secondary"
                 onPress={() => setShareOpenId((id) => (id === item.applicationId ? null : item.applicationId))}
@@ -217,7 +217,8 @@ export default function VoteScreen() {
 }
 
 const styles = StyleSheet.create({
-  head: { marginBottom: 16, gap: 6 },
+  head: { marginBottom: 16, gap: 8, padding: 16, backgroundColor: colors.heroStart, borderRadius: radius.card },
+  round: { color: colors.purple, fontWeight: '700', fontSize: 13, lineHeight: 22 },
   title: { fontSize: 22, fontWeight: '800', color: colors.text },
   status: { color: colors.text, fontWeight: '600', fontSize: 14 },
   meta: { color: colors.muted, fontSize: 13, lineHeight: 20 },
@@ -238,7 +239,7 @@ const styles = StyleSheet.create({
   field: { color: colors.muted, fontWeight: '600', fontSize: 13, marginTop: 2 },
   votes: { color: colors.purple, fontWeight: '800', fontSize: 18 },
   actions: { flexDirection: 'row', gap: 8, paddingHorizontal: 16 },
-  cell: { flex: 1 },
+  cell: { flex: 1, minWidth: 0 },
   error: { color: colors.dangerText },
   success: { color: colors.purple, fontWeight: '700', marginBottom: 12 },
 })

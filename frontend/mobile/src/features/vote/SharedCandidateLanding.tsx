@@ -7,6 +7,7 @@ import { VoteInlineVideo } from './VoteInlineVideo'
 import { colors, radius } from '../../theme/tokens'
 import { VoteShareActions } from './VoteShareActions'
 import { canShowPublicVoteCount, remainingMessage, voteRemaining } from '../../../../web/src/shared/vote/voteRemaining'
+import { formatVoteDate } from '../../../../web/src/shared/vote/voteDate'
 import { voteLabelKey } from '../../../../web/src/shared/vote/voteLabels'
 
 type Props = {
@@ -14,22 +15,10 @@ type Props = {
   shared: PublicVoteItem
   url: string
   voted: boolean
-  isGuest: boolean
   voteBusy: boolean
   windowNotice: string | null
   onVote: () => void
   onViewAll: () => void
-}
-
-function formatWhen(iso: string | null | undefined, lang: string): string {
-  if (!iso) return ''
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return iso
-  try {
-    return new Intl.DateTimeFormat(lang, { dateStyle: 'medium', timeStyle: 'short' }).format(d)
-  } catch {
-    return d.toISOString()
-  }
 }
 
 /** 공유 링크 전용: 해당 후보만. 영상 아래는 이름·득표·투표/공유만 둔다. */
@@ -38,7 +27,6 @@ export function SharedCandidateLanding({
   shared,
   url,
   voted,
-  isGuest,
   voteBusy,
   windowNotice,
   onVote,
@@ -64,11 +52,7 @@ export function SharedCandidateLanding({
           : phase === 'CLOSED'
             ? t('vote.statusClosed')
             : t('vote.notStarted')
-  const voteLabel = voted
-    ? t('voteShare.alreadyVoted')
-    : isGuest && page.votingEnabled
-      ? t('voteShare.loginAndVote')
-      : t('voteShare.voteFor', { name })
+  const voteLabel = voted ? t('voteShare.alreadyVoted') : t('vote.voteAction')
   const ownVotes = t(voteLabelKey(shared.voteCount, lang, 'voteShare.ownVotes', 'voteShare.ownVotesOne'), {
     n: shared.voteCount,
   })
@@ -80,15 +64,18 @@ export function SharedCandidateLanding({
 
   return (
     <View style={styles.page} testID="vote-share-landing">
-      <Text style={styles.round}>{t('voteShare.roundLabel', { round: linkRound })}</Text>
-      <Text style={styles.audition} numberOfLines={2}>{page.audition.title}</Text>
-      <Text style={styles.status} testID="vote-status-line">
-        {statusLine}
-        {phase === 'OPEN' && page.voteEndAt ? ` · ${t('voteShare.endsAt', { end: formatWhen(page.voteEndAt, lang) })}` : ''}
-      </Text>
+      <View style={styles.info}>
+        <Text style={styles.round}>{t('voteShare.roundLabel', { round: linkRound })}</Text>
+        <Text style={styles.audition}>{page.audition.title}</Text>
+        <Text style={styles.status} testID="vote-status-line">
+          {statusLine}
+
+        </Text>
+      {page.voteEndAt ? <Text style={styles.meta}>{t('voteShare.endsAt', { end: formatVoteDate(page.voteEndAt, lang) })}</Text> : null}
       {phase === 'SCHEDULED' && page.voteStartAt ? (
-        <Text style={styles.meta}>{t('voteShare.startsAt', { start: formatWhen(page.voteStartAt, lang) })}</Text>
+        <Text style={styles.meta}>{t('voteShare.startsAt', { start: formatVoteDate(page.voteStartAt, lang) })}</Text>
       ) : null}
+      </View>
       {windowNotice ? <Text style={styles.notice}>{windowNotice}</Text> : null}
 
       <View style={styles.card} testID="vote-shared-candidate">
@@ -111,10 +98,10 @@ export function SharedCandidateLanding({
         </View>
         <View style={styles.actions}>
           <View style={styles.cell}>
-            <Button label={voteLabel} disabled={!page.votingEnabled || voteBusy || voted} onPress={onVote} />
+            <Button fillHeight label={voteLabel} disabled={!page.votingEnabled || voteBusy || voted} onPress={onVote} />
           </View>
           <View style={styles.cell}>
-            <Button label={t('voteShare.share')} variant="secondary" onPress={() => setShareOpen((v) => !v)} />
+            <Button fillHeight label={t('voteShare.share')} variant="secondary" onPress={() => setShareOpen((v) => !v)} />
           </View>
         </View>
         {shareOpen ? (
@@ -135,9 +122,10 @@ export function SharedCandidateLanding({
 }
 
 const styles = StyleSheet.create({
-  page: { gap: 8, paddingBottom: 24 },
-  round: { color: colors.purple, fontWeight: '700', fontSize: 12, textTransform: 'uppercase' },
-  audition: { color: colors.muted, fontSize: 13 },
+  page: { gap: 16 },
+  info: { gap: 8, padding: 16, backgroundColor: colors.heroStart, borderRadius: radius.card },
+  round: { color: colors.purple, fontWeight: '700', fontSize: 13, lineHeight: 22 },
+  audition: { color: colors.text, fontSize: 22, fontWeight: '800' },
   status: { color: colors.text, fontWeight: '600', fontSize: 14 },
   meta: { color: colors.muted, fontSize: 13 },
   notice: { color: colors.text, backgroundColor: '#F3F4F6', padding: 10, borderRadius: 8, fontSize: 13 },
@@ -152,11 +140,11 @@ const styles = StyleSheet.create({
   },
   metaRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, paddingHorizontal: 16 },
   nameBlock: { flex: 1, minWidth: 0 },
-  name: { fontSize: 22, fontWeight: '800', color: colors.text },
+  name: { fontSize: 18, fontWeight: '800', color: colors.text },
   field: { color: colors.muted, fontWeight: '600', fontSize: 13, marginTop: 2 },
-  votes: { color: colors.purple, fontWeight: '800', fontSize: 22 },
+  votes: { color: colors.purple, fontWeight: '800', fontSize: 18 },
   actions: { flexDirection: 'row', gap: 8, paddingHorizontal: 16 },
-  cell: { flex: 1 },
+  cell: { flex: 1, minWidth: 0 },
   viewAllHit: { minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   viewAll: { color: colors.purple, fontWeight: '700', fontSize: 15 },
 })
