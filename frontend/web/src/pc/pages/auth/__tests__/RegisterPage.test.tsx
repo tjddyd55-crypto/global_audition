@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { NextIntlClientProvider } from 'next-intl'
 import en from '../../../../../messages/en.json'
 import { authApi } from '@/shared/api/auth'
@@ -24,9 +25,11 @@ describe('PcRegisterPage applicant signup', () => {
 
   const fillBase = () => {
     render(
+      <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
       <NextIntlClientProvider locale="en" messages={en}>
         <PcRegisterPage />
-      </NextIntlClientProvider>,
+      </NextIntlClientProvider>
+      </QueryClientProvider>,
     )
     fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'singer@example.com' } })
     fireEvent.change(screen.getByLabelText('Nickname *'), { target: { value: 'singer' } })
