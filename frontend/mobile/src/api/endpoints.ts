@@ -139,12 +139,13 @@ export const voteApi = {
   list: async (
     auditionId: string,
     category?: string,
-    share?: { round?: number | null; candidate?: string | null },
+    share?: { round?: number | null; candidate?: string | null; locale?: string },
   ): Promise<PublicVotesPage> => {
     const query: Record<string, string> = {}
     if (category && category !== '전체') query.category = category
     if (share?.round) query.round = String(share.round)
     if (share?.candidate) query.candidate = share.candidate
+    if (share?.locale) query.locale = share.locale
     return parseVotePage(
       unwrapData(
         await apiRequest<unknown>(`/auditions/${auditionId}/votes`, {

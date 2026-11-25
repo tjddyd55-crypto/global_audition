@@ -44,11 +44,11 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback, shareRound,
   }, [])
 
 
-  const qk = ['audition-votes', auditionId, shareRound ?? null, shareCandidate ?? null] as const
+  const qk = ['audition-votes', auditionId, shareRound ?? null, shareCandidate ?? null, locale] as const
 
   const votesQuery = useQuery({
     queryKey: qk,
-    queryFn: () => auditionApi.listVotes(auditionId, undefined, { round: shareRound, candidate: shareCandidate }),
+    queryFn: () => auditionApi.listVotes(auditionId, undefined, { round: shareRound, candidate: shareCandidate, locale }),
     enabled: !!auditionId,
   })
 

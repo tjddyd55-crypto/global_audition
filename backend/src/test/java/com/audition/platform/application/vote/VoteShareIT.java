@@ -92,6 +92,31 @@ class VoteShareIT {
     }
 
     @Test
+    void requestedLocaleLocalizesBothPublicAndSharedBallotTitles() {
+        UUID owner = user();
+        UUID audition = audition(owner, "SINGLE", 1, null);
+        UUID candidate = application(audition, user(), 1);
+        start(owner, audition, Instant.now().minusSeconds(30), Instant.now().plusSeconds(600), List.of(candidate));
+        jdbc.update("UPDATE auditions SET default_locale='ko' WHERE id=?", audition);
+        jdbc.update("INSERT INTO audition_translations(audition_id,locale,title) VALUES (?, 'en', 'Public voting')", audition);
+        SecurityContextHolder.clearContext();
+        var request = new org.springframework.mock.web.MockHttpServletRequest();
+        request.addHeader("X-Content-Locale", "en");
+        org.springframework.web.context.request.RequestContextHolder.setRequestAttributes(
+                new org.springframework.web.context.request.ServletRequestAttributes(request));
+        try {
+            assertEquals("Public voting", votes.getPublicVotes(audition, null).getAudition().getTitle());
+            var shared = votes.getPublicVotes(audition, null, 1, candidate);
+            assertEquals("Public voting", shared.getAudition().getTitle());
+            assertEquals(1, shared.getSharedCandidate().getCandidateNumber());
+            request.setParameter("locale", "ko");
+            assertEquals(TITLE, votes.getPublicVotes(audition, null, 1, candidate).getAudition().getTitle());
+        } finally {
+            org.springframework.web.context.request.RequestContextHolder.resetRequestAttributes();
+        }
+    }
+
+    @Test
     void subsetBallotNumbersAreIndependentAndRestartInANewRound() {
         UUID owner = user();
         UUID audition = audition(owner, "MULTI_ROUND", 1, "{1,2}");
