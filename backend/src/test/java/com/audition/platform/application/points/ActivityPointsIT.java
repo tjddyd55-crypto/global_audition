@@ -59,6 +59,7 @@ class ActivityPointsIT {
 
     @AfterEach
     void cleanup() {
+        if (admin==null || original==null) return;
         actor(admin,"SUPER_ADMIN");
         for (Rule old : changedRules) {
             Rule now=policies.rules().stream().filter(r->r.id().equals(old.id())).findFirst().orElseThrow();
@@ -222,9 +223,9 @@ class ActivityPointsIT {
         UUID id=UUID.randomUUID();
         String username="p"+id.toString().replace("-","").substring(0,12);
         jdbc.update("""
-                INSERT INTO users(id,email,password_hash,role,username,nickname,country_code,birth_date)
-                VALUES(?,?,'x',?,?,?,?,'2000-01-01')
-                """,id,username+"@activity.points.it",role,username,username,country);
+                INSERT INTO users(id,email,password_hash,role,username,nickname,display_name,country_code,birth_date)
+                VALUES(?,?,'x',?,?,?,?,?,'2000-01-01')
+                """,id,username+"@activity.points.it",role,username,username,username,country);
         return id;
     }
 
