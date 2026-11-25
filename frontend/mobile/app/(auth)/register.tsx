@@ -1,4 +1,5 @@
-import { useRouter } from 'expo-router'
+import { useLocalSearchParams, useRouter } from 'expo-router'
+import { safeNextPath } from '../../../web/src/shared/auth/safeNext'
 import { useState } from 'react'
 import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, View } from 'react-native'
 import { useAuth } from '../../src/auth/AuthProvider'
@@ -24,6 +25,8 @@ import { useTranslation } from 'react-i18next'
 export default function RegisterScreen() {
   const { t } = useTranslation()
   const router = useRouter()
+  const { next } = useLocalSearchParams<{ next?: string }>()
+  const nextPath = safeNextPath(typeof next === 'string' ? next : null)
   const { signup } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -45,7 +48,7 @@ export default function RegisterScreen() {
   const [gender, setGender] = useState('')
   const [consents, setConsents] = useState<SignupConsentState>(EMPTY_SIGNUP_CONSENTS)
   const [guardianNext, setGuardianNext] = useState(false)
-  const afterSignup = (needsGuardian: boolean) => router.replace(needsGuardian ? '/privacy' : '/(tabs)')
+  const afterSignup = (needsGuardian: boolean) => router.replace((needsGuardian ? '/privacy' : nextPath || '/(tabs)') as never)
 
   if (issuedCode) {
     return (
@@ -195,7 +198,7 @@ export default function RegisterScreen() {
             }
           }}
         />
-        <Button label={t('common.login')} variant="secondary" onPress={() => router.push('/(auth)/login')} />
+        <Button label={t('common.login')} variant="secondary" onPress={() => router.push({ pathname: '/(auth)/login', params: nextPath ? { next: nextPath } : {} })} />
       </KeyboardAvoidingView>
     </Screen>
   )

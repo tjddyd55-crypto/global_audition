@@ -97,18 +97,17 @@ export function SharedCandidateLanding({
           ← {t('backToAudition')}
         </Link>
         <div className="mt-3 space-y-2 rounded-xl bg-violet-50 p-4">
-        <p className="text-[13px] font-semibold leading-relaxed text-violet-700">
-          {ts('roundLabel', { round: linkRound })}
-        </p>
-        <h1 className="break-words text-[22px] font-extrabold leading-snug text-gray-900">{page.audition.title}</h1>
-        <p className="mt-2 text-sm font-medium text-gray-800" data-testid="vote-status-line">
-          {statusLine}
-
-        </p>
-        {page.voteEndAt ? <p className="text-sm text-gray-600">{ts('endsAt', { end: formatVoteDate(page.voteEndAt, locale) })}</p> : null}
-        {phase === 'SCHEDULED' && page.voteStartAt ? (
-          <p className="mt-1 text-sm text-gray-600">{ts('startsAt', { start: formatVoteDate(page.voteStartAt, locale) })}</p>
-        ) : null}
+          <p className="text-[13px] font-semibold leading-relaxed text-violet-700">
+            {ts('roundLabel', { round: linkRound })}
+          </p>
+          <h1 className="break-words text-[22px] font-extrabold leading-snug text-gray-900">{page.audition.title}</h1>
+          <p className="mt-2 text-sm font-medium text-gray-800" data-testid="vote-status-line">
+            {statusLine}
+          </p>
+          {page.voteEndAt ? <p className="text-sm text-gray-600">{ts('endsAt', { end: formatVoteDate(page.voteEndAt, locale) })}</p> : null}
+          {phase === 'SCHEDULED' && page.voteStartAt ? (
+            <p className="mt-1 text-sm text-gray-600">{ts('startsAt', { start: formatVoteDate(page.voteStartAt, locale) })}</p>
+          ) : null}
         </div>
         {otherRound ? (
           <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800" data-testid="vote-other-round">

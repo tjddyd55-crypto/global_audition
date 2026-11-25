@@ -67,14 +67,11 @@ export function SharedCandidateLanding({
       <View style={styles.info}>
         <Text style={styles.round}>{t('voteShare.roundLabel', { round: linkRound })}</Text>
         <Text style={styles.audition}>{page.audition.title}</Text>
-        <Text style={styles.status} testID="vote-status-line">
-          {statusLine}
-
-        </Text>
-      {page.voteEndAt ? <Text style={styles.meta}>{t('voteShare.endsAt', { end: formatVoteDate(page.voteEndAt, lang) })}</Text> : null}
-      {phase === 'SCHEDULED' && page.voteStartAt ? (
-        <Text style={styles.meta}>{t('voteShare.startsAt', { start: formatVoteDate(page.voteStartAt, lang) })}</Text>
-      ) : null}
+        <Text style={styles.status} testID="vote-status-line">{statusLine}</Text>
+        {page.voteEndAt ? <Text style={styles.meta}>{t('voteShare.endsAt', { end: formatVoteDate(page.voteEndAt, lang) })}</Text> : null}
+        {phase === 'SCHEDULED' && page.voteStartAt ? (
+          <Text style={styles.meta}>{t('voteShare.startsAt', { start: formatVoteDate(page.voteStartAt, lang) })}</Text>
+        ) : null}
       </View>
       {windowNotice ? <Text style={styles.notice}>{windowNotice}</Text> : null}
 
