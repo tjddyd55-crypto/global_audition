@@ -7,6 +7,10 @@ import java.util.List;
  * GET /api/applications/{id}/agency-detail — 기획사/관리자용 지원서 상세
  */
 public class ApplicationAgencyDetailDto {
+    private String reviewRoundId;
+    public String getReviewRoundId() { return reviewRoundId; }
+    public void setReviewRoundId(String id) { reviewRoundId = id; }
+
 
     public record NumberHistoryItem(String kind, int roundNumber, int number) {}
     private List<NumberHistoryItem> numberHistory = new ArrayList<>();

@@ -1,5 +1,7 @@
 'use client'
 
+import { shortlistCopy } from '../shortlistCopy'
+import { ApplicantShortlistReview } from './ApplicantShortlistReview'
 import { useState } from 'react'
 import { format } from 'date-fns'
 import { dateFnsLocale } from '@/shared/datetime/dateFnsLocale'
@@ -19,6 +21,8 @@ import {
 } from '@/components/audition/manage/detail'
 
 type AgencyDetailPanelProps = {
+  canDecide: boolean
+  reviewRound: number
   applicationId: string
   detail: ApplicationAgencyDetail | undefined
   isLoading: boolean
@@ -29,6 +33,8 @@ type AgencyDetailPanelProps = {
 }
 
 export default function AgencyDetailPanel({
+  canDecide,
+  reviewRound,
   applicationId,
   detail,
   isLoading,
@@ -76,6 +82,7 @@ export default function AgencyDetailPanel({
           {isError ? <ApplicantDetailPanelState message={tAgency('detailLoadFailed')} tone="danger" /> : null}
           {detail && (
             <div className="flex flex-col gap-6">
+              <ApplicantShortlistReview auditionId={detail.auditionId} applicationId={applicationId} round={reviewRound} />
               <ApplicantDetailVideoSection
                 videoUrl={detail.videoUrl}
                 embedUrl={embed}
@@ -88,9 +95,10 @@ export default function AgencyDetailPanel({
           )}
         </div>
 
-        {detail ? (
+        {detail && canDecide ? (
           <ApplicantDetailActionBar
             currentStatus={detail.status}
+            isRoundDecision={!!detail.reviewRoundId}
             patching={patching}
             onRequestStatusChange={setConfirmStatus}
           />
@@ -99,6 +107,7 @@ export default function AgencyDetailPanel({
       {confirmStatus != null ? (
         <ApplicantStatusConfirmDialog
           status={confirmStatus}
+          messageOverride={detail?.reviewRoundId ? shortlistCopy.confirmRoundDecision(reviewRound, confirmStatus) : undefined}
           patching={patching}
           onCancel={() => setConfirmStatus(null)}
           onConfirm={() => {

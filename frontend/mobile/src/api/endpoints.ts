@@ -169,11 +169,11 @@ export const rankingApi = {
 }
 
 export const agencyApi = {
-  listManage: async (auditionId: string, status?: AgencyBoardStatus | '', round?: number, applicantNumber?: number): Promise<ManageApplicationsPayload> =>
+  listManage: async (auditionId: string, status?: AgencyBoardStatus | '', round?: number, applicantNumber?: number, page = 0): Promise<ManageApplicationsPayload> =>
     parseManageApplications(
       unwrapData(
         await apiRequest<unknown>(`/auditions/${auditionId}/applications/manage`, {
-          query: { status: status || undefined, round, applicantNumber },
+          query: { status: status || undefined, round, applicantNumber, page, size: 50 },
         }),
       ),
     ),

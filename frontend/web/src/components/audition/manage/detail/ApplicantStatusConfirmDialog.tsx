@@ -5,6 +5,7 @@ import type { AgencyBoardStatus } from '@/shared/api/auditions'
 import { BTN_PRIMARY, BTN_SECONDARY } from '@/shared/ui/specClasses'
 
 type ApplicantStatusConfirmDialogProps = {
+  messageOverride?: string
   status: AgencyBoardStatus
   patching: boolean
   onCancel: () => void
@@ -12,6 +13,7 @@ type ApplicantStatusConfirmDialogProps = {
 }
 
 export default function ApplicantStatusConfirmDialog({
+  messageOverride,
   status,
   patching,
   onCancel,
@@ -40,7 +42,7 @@ export default function ApplicantStatusConfirmDialog({
         aria-modal="true"
         onClick={(e) => e.stopPropagation()}
       >
-        <p className="whitespace-normal break-words text-sm leading-relaxed text-gray-900">{message}</p>
+        <p className="whitespace-normal break-words text-sm leading-relaxed text-gray-900">{messageOverride ?? message}</p>
         <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <button type="button" className={`${BTN_SECONDARY} sm:!w-auto`} onClick={onCancel}>
             {tCommon('cancel')}

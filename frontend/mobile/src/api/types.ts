@@ -224,6 +224,9 @@ export type ManageApplicantItem = {
 }
 
 export type ManageApplicationsPayload = {
+  totalPages?: number
+  totalElements?: number
+  page?: number
   audition: {
     id: string
     title: string
