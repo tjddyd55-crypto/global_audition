@@ -76,6 +76,10 @@ public class AuditionLocalizationService {
      * 지원서 목록의 공고 제목. 선택 로케일에 완료된 번역이 있으면 그 제목, 없으면 원문.
      * 공개 목록과 같은 오버레이이며 공급자를 호출하지 않는다.
      */
+    public String titleForViewer(Audition audition) {
+        return titleForViewer(audition, contentLocaleResolver.resolve());
+    }
+
     public String titleForViewer(Audition audition, String requestedRaw) {
         String original = audition.getTitle() != null ? audition.getTitle() : "";
         AuditionResponse response = new AuditionResponse();

@@ -2,6 +2,7 @@ package com.audition.platform.application.vote;
 
 import com.audition.platform.application.round.ReasonCode;
 
+import com.audition.platform.application.i18n.AuditionLocalizationService;
 import com.audition.platform.api.dto.CategoryCountDto;
 import com.audition.platform.api.dto.PublicVoteItemDto;
 import com.audition.platform.api.dto.PublicVotePageDataDto;
@@ -53,6 +54,7 @@ public class PublicVoteService {
     private final ApplicationScoreRepository applicationScoreRepository;
     private final ApplicationRankingService applicationRankingService;
     private final AuditionVoteCandidateRepository voteCandidates;
+    private final AuditionLocalizationService localization;
 
     public PublicVoteService(
             AuditionRepository auditionRepository,
@@ -62,7 +64,9 @@ public class PublicVoteService {
             VoteRepository voteRepository,
             ApplicationScoreRepository applicationScoreRepository,
             ApplicationRankingService applicationRankingService,
-            AuditionVoteCandidateRepository voteCandidates) {
+            AuditionVoteCandidateRepository voteCandidates,
+            AuditionLocalizationService localization) {
+        this.localization = localization;
         this.auditionRepository = auditionRepository;
         this.applicationRepository = applicationRepository;
         this.userRepository = userRepository;
@@ -166,7 +170,7 @@ public class PublicVoteService {
 
         VotePageAuditionDto auditionDto = new VotePageAuditionDto();
         auditionDto.setId(audition.getId().toString());
-        auditionDto.setTitle(audition.getTitle() != null ? audition.getTitle() : "");
+        auditionDto.setTitle(localization.titleForViewer(audition));
         auditionDto.setDescription(audition.getDescription() != null ? audition.getDescription() : "");
         auditionDto.setApplicantCount(allItems.size());
         auditionDto.setTotalVotes(totalVotes);

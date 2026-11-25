@@ -23,6 +23,7 @@ import type { PublicVoteItem } from '../../../src/api/types'
 
 export default function VoteScreen() {
   const { t, i18n } = useTranslation()
+  const lang = (i18n.language || 'ko').split('-')[0]
   const [playingId, setPlayingId] = useState<string | null>(null)
   const [shareOpenId, setShareOpenId] = useState<string | null>(null)
   const [votedName, setVotedName] = useState<string | null>(null)
@@ -35,8 +36,8 @@ export default function VoteScreen() {
   const queryClient = useQueryClient()
   const { isAuthenticated } = useAuth()
   const query = useQuery({
-    queryKey: [...queryKeys.votes(id), share.round, share.candidate],
-    queryFn: () => voteApi.list(id, undefined, share),
+    queryKey: [...queryKeys.votes(id), share.round, share.candidate, lang],
+    queryFn: () => voteApi.list(id, undefined, { ...share, locale: lang }),
     enabled: Boolean(id),
   })
   const castInFlight = useRef(false)
@@ -65,7 +66,6 @@ export default function VoteScreen() {
   const page = query.data
   const shared = page?.sharedCandidate ?? null
   const linkRound = page?.roundNumber ?? 1
-  const lang = (i18n.language || 'ko').split('-')[0]
   const urlFor = (item: PublicVoteItem) => voteShareUrl(WEB_URL, lang, id, linkRound, item.applicationId)
   const nameOf = (item: PublicVoteItem) => item.userName || t('vote.applicantFallback')
   const castFor = (item: PublicVoteItem) => {

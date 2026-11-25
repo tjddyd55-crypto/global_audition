@@ -10,12 +10,13 @@ import { parseVoteStatus } from '@/shared/audition/votingRounds'
 export const listAuditionVotes = async (
   auditionId: string,
   category?: string | null,
-  share?: { round?: number | null; candidate?: string | null }
+  share?: { round?: number | null; candidate?: string | null; locale?: string }
 ): Promise<PublicVotesPagePayload> => {
   const params: Record<string, string> = {}
   if (category && !isAllCategoryName(category)) params.category = category
   if (share?.round) params.round = String(share.round)
   if (share?.candidate) params.candidate = share.candidate
+  if (share?.locale) params.locale = share.locale
   const { data } = await apiClient.get<unknown>(`/auditions/${auditionId}/votes`, { params })
   const body = unwrapData<Record<string, unknown>>(data)
   const auditionRaw = (body.audition ?? {}) as Record<string, unknown>
