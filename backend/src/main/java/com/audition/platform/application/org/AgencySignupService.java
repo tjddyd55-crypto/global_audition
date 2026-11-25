@@ -1,6 +1,7 @@
 package com.audition.platform.application.org;
 
 import com.audition.platform.domain.user.User;
+import com.audition.platform.application.user.SignupCountries;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -29,10 +30,7 @@ public class AgencySignupService {
             return;
         }
         String country = CountryCodes.iso2(countryCode);
-        Integer count = jdbc.queryForObject("SELECT COUNT(*) FROM countries WHERE code = ?", Integer.class, country);
-        if (count == null || count == 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "COUNTRY_NOT_FOUND");
-        }
+        SignupCountries.ensureRegistered(jdbc, country);
     }
 
     public void openApplication(User user, String requestedRole, AgencySignupProfile profile) {

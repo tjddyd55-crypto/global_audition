@@ -69,3 +69,8 @@ export function validateSignupDraft(input: SignupDraft): string | null {
   }
   return null
 }
+
+export function signupPasswordConfirmationError(password: string, confirmation: string): string | null {
+  if (!confirmation) return i18n.t('auth.requiredValues')
+  return password === confirmation ? null : i18n.t('auth.passwordMismatch')
+}

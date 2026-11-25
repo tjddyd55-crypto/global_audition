@@ -52,6 +52,7 @@ import type {
 } from './types'
 
 export const authApi = {
+  signupCountries: (locale: string) => apiRequest<import('../../../web/src/shared/auth/signupCountries').SignupCountry[]>('/auth/countries', { query: { locale }, auth: false }),
   login: (email: string, password: string) =>
     apiRequest<AuthResponse>('/auth/login', { method: 'POST', body: { email, password }, auth: false }),
   signup: (body: {

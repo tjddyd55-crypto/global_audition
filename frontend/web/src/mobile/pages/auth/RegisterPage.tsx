@@ -12,8 +12,9 @@ import { buildAgencySignupPayload } from '@/shared/auth/buildAgencySignupPayload
 import { buildApplicantSignupPayload } from '@/shared/auth/buildApplicantSignupPayload'
 import { EMPTY_SIGNUP_EXTRAS, SignupConsentFields, signupExtrasErrorKey, type SignupExtras } from '@/components/auth/SignupConsentFields'
 import { GENDER_CODES } from '@/shared/privacy/model'
+import { SignupCountrySelect } from '@/components/auth/SignupCountrySelect'
 import { RecoveryCodeNotice } from '@/components/auth/RecoveryCodeNotice'
-import { countries, languages, timezones } from '@/shared/utils/countries'
+import { languages, timezones } from '@/shared/utils/countries'
 import { createNicknameZodField } from '@/shared/user/nicknameZod'
 import { useLocale, useTranslations } from 'next-intl'
 
@@ -30,6 +31,7 @@ function createMobileRegisterSchema(
   const applicantSchema = z.object({
     email: z.string().email(tReg('emailInvalid')),
     password: z.string().min(6, tReg('passwordMin6')),
+    confirmPassword: z.string().min(6, tReg('passwordMin6')),
     nickname,
     name: z.string().max(120).optional().or(z.literal('')),
     userType: z.literal('APPLICANT'),
@@ -45,6 +47,7 @@ function createMobileRegisterSchema(
   const businessSchema = z.object({
     email: z.string().email(tReg('emailInvalid')),
     password: z.string().min(6, tReg('passwordMin6')),
+    confirmPassword: z.string().min(6, tReg('passwordMin6')),
     nickname,
     name: z.string().max(120).optional().or(z.literal('')),
     userType: z.literal('BUSINESS'),
@@ -62,7 +65,7 @@ function createMobileRegisterSchema(
     contactPhone: z.string().optional(),
     establishedYear: z.number().int().min(1800).max(new Date().getFullYear()).optional(),
   })
-  return z.discriminatedUnion('userType', [applicantSchema, businessSchema])
+  return z.discriminatedUnion('userType', [applicantSchema, businessSchema]).refine((data) => data.password === data.confirmPassword, { message: tAuth('passwordMismatch'), path: ['confirmPassword'] })
 }
 
 type RegisterFormData = z.infer<ReturnType<typeof createMobileRegisterSchema>>
@@ -71,7 +74,6 @@ export default function MobileRegisterPage() {
   const tAuth = useTranslations('auth')
   const tReg = useTranslations('register')
   const tVal = useTranslations('validation')
-  const tCountries = useTranslations('countries')
   const tLanguages = useTranslations('languages')
   const router = useRouter()
   const locale = useLocale()
@@ -99,6 +101,7 @@ export default function MobileRegisterPage() {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -341,6 +344,12 @@ export default function MobileRegisterPage() {
           </div>
 
           <div>
+            <label htmlFor="confirmPassword" className="block text-sm font-medium mb-2">{tAuth('confirmPassword')} *</label>
+            <input id="confirmPassword" type="password" autoComplete="new-password" {...register('confirmPassword')} className="w-full px-4 py-2 border rounded-lg" placeholder={tAuth('confirmPasswordPlaceholder')} />
+            {errors.confirmPassword ? <p className="text-red-500 text-sm mt-1">{errors.confirmPassword.message}</p> : null}
+          </div>
+
+          <div>
             <label className="block text-sm font-medium mb-2">{tAuth('nickname')} *</label>
             <input
               type="text"
@@ -381,17 +390,7 @@ export default function MobileRegisterPage() {
             <>
               <div>
                 <label className="block text-sm font-medium mb-2">{tReg('country')} *</label>
-                <select
-                  {...register('country')}
-                  className="w-full px-4 py-2 border rounded-lg"
-                >
-                  <option value="">{tReg('selectCountry')}</option>
-                  {countries.map((country) => (
-                    <option key={country.code} value={country.code}>
-                      {tCountries(country.code)}
-                    </option>
-                  ))}
-                </select>
+                <SignupCountrySelect id="country" name="country" label={tReg('country')} value={watch('country') || ''} onChange={(code) => setValue('country', code, { shouldValidate: true, shouldDirty: true })} />
                 {'country' in errors && errors.country && (
                   <p className="text-red-500 text-sm mt-1">{errors.country.message}</p>
                 )}
@@ -496,17 +495,7 @@ export default function MobileRegisterPage() {
             <>
               <div>
                 <label className="block text-sm font-medium mb-2">{tReg('country')} *</label>
-                <select
-                  {...register('businessCountry')}
-                  className="w-full px-4 py-2 border rounded-lg"
-                >
-                  <option value="">{tReg('selectCountry')}</option>
-                  {countries.map((country) => (
-                    <option key={country.code} value={country.code}>
-                      {tCountries(country.code)}
-                    </option>
-                  ))}
-                </select>
+                <SignupCountrySelect id="businessCountry" name="businessCountry" label={tReg('country')} value={watch('businessCountry') || ''} onChange={(code) => setValue('businessCountry', code, { shouldValidate: true, shouldDirty: true })} />
                 {'businessCountry' in errors && errors.businessCountry && (
                   <p className="text-red-500 text-sm mt-1">{errors.businessCountry.message}</p>
                 )}

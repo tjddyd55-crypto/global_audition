@@ -12,12 +12,13 @@ import { Link, useRouter } from '@/i18n.config'
 import { useSearchParams } from 'next/navigation'
 import { safeNextPath, withNext } from '@/shared/auth/safeNext'
 import RoleSelectCard from '@/components/auth/RoleSelectCard'
+import { SignupCountrySelect } from '@/components/auth/SignupCountrySelect'
 import AuthCardLayout from '@/components/auth/AuthCardLayout'
 import { RecoveryCodeNotice } from '@/components/auth/RecoveryCodeNotice'
 import { EMPTY_SIGNUP_EXTRAS, SignupConsentFields, signupExtrasErrorKey, type SignupExtras } from '@/components/auth/SignupConsentFields'
 import { SIGNUP } from '@/shared/design-tokens'
 import { createNicknameZodField } from '@/shared/user/nicknameZod'
-import { countries, timezones } from '@/shared/utils/countries'
+import { timezones } from '@/shared/utils/countries'
 
 type RegisterFormData = {
   email: string
@@ -93,7 +94,6 @@ export default function PcRegisterPage() {
   const tAuth = useTranslations('auth')
   const tReg = useTranslations('register')
   const tVal = useTranslations('validation')
-  const tCountries = useTranslations('countries')
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [role, setRole] = useState<RegisterRole>('APPLICANT')
@@ -113,7 +113,7 @@ export default function PcRegisterPage() {
   }
   const registerSchema = useMemo(() => createRegisterSchema(tAuth, tReg), [tAuth, tReg])
 
-  const { register, handleSubmit, formState: { errors } } = useForm<RegisterFormData>({
+  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
   })
 
@@ -239,15 +239,7 @@ export default function PcRegisterPage() {
         {role === 'AGENCY' ? (
           <>
             <Field id="agency-country" label={tAuth('agencyCountry')}>
-              <input
-                id="agency-country"
-                aria-label={tAuth('agencyCountry')}
-                value={countryCode}
-                onChange={(event) => setCountryCode(event.target.value.toUpperCase())}
-                placeholder="JP"
-                maxLength={2}
-                style={inputStyle}
-              />
+              <SignupCountrySelect id="agency-country" label={tAuth('agencyCountry')} value={countryCode} onChange={setCountryCode} />
             </Field>
             <Field id="companyName" label={`${tReg('companyName')} *`} error={errors.companyName?.message}>
               <input id="companyName" type="text" {...register('companyName')} placeholder={tReg('companyName')} style={inputStyle} />
@@ -274,14 +266,7 @@ export default function PcRegisterPage() {
               <input id="legalName" type="text" {...register('legalName')} placeholder={tAuth('legalNamePlaceholder')} style={inputStyle} />
             </Field>
             <Field id="applicant-country" label={`${tReg('country')} *`}>
-              <select id="applicant-country" aria-label={tReg('country')} {...register('applicantCountry')} style={inputStyle}>
-                <option value="">{tReg('selectCountry')}</option>
-                {countries.map((country) => (
-                  <option key={country.code} value={country.code}>
-                    {tCountries(country.code)}
-                  </option>
-                ))}
-              </select>
+              <SignupCountrySelect id="applicant-country" name="applicantCountry" label={tReg('country')} value={watch('applicantCountry') || ''} onChange={(code) => setValue('applicantCountry', code, { shouldValidate: true, shouldDirty: true })} />
             </Field>
             <Field id="applicant-timezone" label={`${tReg('timezone')} *`}>
               <select id="applicant-timezone" aria-label={tReg('timezone')} {...register('applicantTimezone')} style={inputStyle}>

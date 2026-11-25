@@ -4,11 +4,12 @@ import { useState } from 'react'
 import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, View } from 'react-native'
 import { useAuth } from '../../src/auth/AuthProvider'
 import { ApiError } from '../../src/api/http'
-import { validateSignupDraft } from '../../src/domain/signupRules'
+import { signupPasswordConfirmationError, validateSignupDraft } from '../../src/domain/signupRules'
 import { buildApplicantSignupPayload } from '../../../web/src/shared/auth/buildApplicantSignupPayload'
 import { Button } from '../../src/ui/Button'
 import { RecoveryCodeNotice } from '../../src/ui/RecoveryCodeNotice'
 import { Screen } from '../../src/ui/Screen'
+import { SignupCountrySelect } from '../../src/features/auth/SignupCountrySelect'
 import { TextField } from '../../src/ui/TextField'
 import { ScrollChipRow } from '../../src/ui/ScrollChipRow'
 import {
@@ -30,6 +31,7 @@ export default function RegisterScreen() {
   const { signup } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [nickname, setNickname] = useState('')
   const [name, setName] = useState('')
   const [countryCode, setCountryCode] = useState('')
@@ -70,9 +72,10 @@ export default function RegisterScreen() {
         <TextField label={t('auth.nickname')} value={nickname} onChangeText={setNickname} />
         <TextField label={t('auth.email')} value={email} onChangeText={setEmail} keyboardType="email-address" />
         <TextField label={t('auth.passwordMin6')} value={password} onChangeText={setPassword} secureTextEntry />
+        <TextField label={t('auth.confirmPassword')} value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry error={confirmPassword && password !== confirmPassword ? t('auth.passwordMismatch') : undefined} />
         {role === 'AGENCY' ? (
           <>
-            <TextField label={t('auth.agencyCountry')} value={countryCode} onChangeText={(v) => setCountryCode(v.toUpperCase())} autoCapitalize="characters" />
+            <SignupCountrySelect label={t('auth.agencyCountry')} value={countryCode} onChange={setCountryCode} />
             <TextField label={t('register.companyName')} value={companyName} onChangeText={setCompanyName} />
             <TextField label={t('register.legalName')} value={legalName} onChangeText={setLegalName} />
             <TextField label={t('register.representativeName')} value={representativeName} onChangeText={setRepresentativeName} />
@@ -83,7 +86,7 @@ export default function RegisterScreen() {
         ) : (
           <>
             <TextField label={t('auth.legalNameOptional')} value={name} onChangeText={setName} autoCapitalize="words" />
-            <TextField label={t('register.country')} value={countryCode} onChangeText={(v) => setCountryCode(v.toUpperCase())} autoCapitalize="characters" />
+            <SignupCountrySelect label={t('register.country')} value={countryCode} onChange={setCountryCode} />
             <TextField label={t('register.timezone')} value={timezone} onChangeText={setTimezone} autoCapitalize="none" />
             <TextField
               label={t('consent.birthDate')}
@@ -108,6 +111,8 @@ export default function RegisterScreen() {
           label={t('auth.registerButton')}
           loading={loading}
           onPress={async () => {
+            const confirmationError = signupPasswordConfirmationError(password, confirmPassword)
+            if (confirmationError) { setError(confirmationError); return }
             const applicant = role === 'APPLICANT'
               ? buildApplicantSignupPayload({
                   email: email.trim(),
@@ -144,6 +149,7 @@ export default function RegisterScreen() {
               setError(localError)
               return
             }
+            if (!/^[A-Z]{2}$/.test(countryCode)) { setError(t('register.selectCountry')); return }
             if (role === 'APPLICANT') {
               const p = birthDateProblem(birthDate)
               if (p) {
