@@ -144,12 +144,13 @@ export const listManageApplications = async (
   }
 }
 
-export const getApplicationAgencyDetail = async (applicationId: string): Promise<ApplicationAgencyDetail> => {
-  const { data } = await apiClient.get<unknown>(`/applications/${applicationId}/agency-detail`)
+export const getApplicationAgencyDetail = async (applicationId: string, reviewRound?: number): Promise<ApplicationAgencyDetail> => {
+  const { data } = await apiClient.get<unknown>(`/applications/${applicationId}/agency-detail`, { params: { reviewRound } })
   const d = unwrapData<Record<string, unknown>>(data)
   const sns = Array.isArray(d.snsLinks) ? d.snsLinks : []
   return {
     numberHistory: parseNumberHistory(d.numberHistory),
+    reviewRoundId: typeof d.reviewRoundId === 'string' ? d.reviewRoundId : undefined,
     id: String(d.id ?? ''),
     auditionId: String(d.auditionId ?? ''),
     name: String(d.name ?? ''),

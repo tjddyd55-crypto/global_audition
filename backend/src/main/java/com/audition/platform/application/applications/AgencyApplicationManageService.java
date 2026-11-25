@@ -10,6 +10,7 @@ import com.audition.platform.application.me.MeApiMapping;
 import com.audition.platform.application.round.AuditionManageAccess;
 import com.audition.platform.domain.audition.Application;
 import com.audition.platform.domain.audition.ApplicationRepository;
+import com.audition.platform.domain.audition.ApplicationRoundSubmissionRepository;
 import com.audition.platform.domain.audition.ApplicationSnsLink;
 import com.audition.platform.domain.audition.ApplicationSnsLinkRepository;
 import com.audition.platform.domain.audition.Audition;
@@ -36,6 +37,7 @@ import java.util.UUID;
 public class AgencyApplicationManageService {
 
     private final ApplicationEntryNumbers entryNumbers;
+    private final ApplicationRoundSubmissionRepository roundSubmissions;
     private final ApplicationService applicationService;
     private final AgencyApplicantsListQueryService agencyApplicantsListQueryService;
     private final ManageApplicationsQueryService manageApplicationsQueryService;
@@ -56,7 +58,8 @@ public class AgencyApplicationManageService {
             ApplicantCardMetricsLoader metricsLoader,
             ApplicationSnsLinkRepository applicationSnsLinkRepository,
             AuditionManageAccess auditionManageAccess,
-            ApplicationEntryNumbers entryNumbers) {
+            ApplicationEntryNumbers entryNumbers, ApplicationRoundSubmissionRepository roundSubmissions) {
+        this.roundSubmissions = roundSubmissions;
         this.entryNumbers = entryNumbers;
         this.applicationService = applicationService;
         this.agencyApplicantsListQueryService = agencyApplicantsListQueryService;
@@ -91,6 +94,10 @@ public class AgencyApplicationManageService {
     }
 
     public ApplicationAgencyDetailDto getApplicationAgencyDetail(UUID id) {
+        return getApplicationAgencyDetail(id, null);
+    }
+
+    public ApplicationAgencyDetailDto getApplicationAgencyDetail(UUID id, Integer reviewRound) {
         UUID currentUserId = SecurityUtils.getCurrentUserId();
         if (currentUserId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
@@ -120,6 +127,18 @@ public class AgencyApplicationManageService {
         dto.setNationality(app.getNationality());
         dto.setVideoUrl(metrics.videoUrl());
         dto.setThumbnailUrl(metrics.thumbnailUrl());
+        if (reviewRound != null && reviewRound > 0 && "MULTI_ROUND".equals(audition.getProcessMode())) {
+            roundSubmissions.findByApplicationIdOrderByRoundNumberAsc(id).stream()
+                    .filter(submission -> submission.getRoundNumber() == reviewRound)
+                    .findFirst()
+                    .ifPresent(submission -> {
+                        dto.setReviewRoundId(submission.getRoundId().toString());
+                        if (StringUtils.hasText(submission.getVideoUrl()) || reviewRound > 1) {
+                            dto.setVideoUrl(submission.getVideoUrl());
+                            dto.setThumbnailUrl(null);
+                        }
+                    });
+        }
         dto.setIntroText(app.getIntroText());
         dto.setStatus(MeApiMapping.agencyBoardStatusToApi(app.getStatus()));
         dto.setRound(app.getCurrentRoundNumber());

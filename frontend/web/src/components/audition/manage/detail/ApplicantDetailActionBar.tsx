@@ -1,5 +1,6 @@
 ﻿'use client'
 
+import { shortlistCopy } from '../shortlistCopy'
 import { useTranslations } from 'next-intl'
 import type { AgencyBoardStatus } from '@/shared/api/auditions'
 import { BTN_PRIMARY, BTN_SECONDARY } from '@/shared/ui/specClasses'
@@ -9,12 +10,14 @@ import {
 } from './applicantDetailLabels'
 
 type ApplicantDetailActionBarProps = {
+  isRoundDecision?: boolean
   currentStatus: AgencyBoardStatus
   patching: boolean
   onRequestStatusChange: (status: AgencyBoardStatus) => void
 }
 
 export default function ApplicantDetailActionBar({
+  isRoundDecision,
   currentStatus,
   patching,
   onRequestStatusChange,
@@ -22,9 +25,9 @@ export default function ApplicantDetailActionBar({
   const tAgency = useTranslations('agency')
   const tStatus = useTranslations('status')
   const buttons: { target: AgencyBoardStatus; label: string; primaryClass: string }[] = [
-    { target: 'REVIEWING', label: tAgency('changeToReviewing'), primaryClass: 'bg-blue-600 hover:bg-blue-700' },
-    { target: 'APPROVED', label: tAgency('markPass'), primaryClass: 'bg-emerald-600 hover:bg-emerald-700' },
-    { target: 'REJECTED', label: tAgency('markReject'), primaryClass: 'bg-red-600 hover:bg-red-700' },
+    { target: 'REVIEWING', label: isRoundDecision ? shortlistCopy.hold : tAgency('changeToReviewing'), primaryClass: 'bg-blue-600 hover:bg-blue-700' },
+    { target: 'APPROVED', label: isRoundDecision ? shortlistCopy.roundPass : tAgency('markPass'), primaryClass: 'bg-emerald-600 hover:bg-emerald-700' },
+    { target: 'REJECTED', label: isRoundDecision ? shortlistCopy.roundFail : tAgency('markReject'), primaryClass: 'bg-red-600 hover:bg-red-700' },
   ]
   return (
     <div className="shrink-0 space-y-3 border-t border-gray-200 bg-gray-50/80 px-4 py-4">
@@ -33,7 +36,7 @@ export default function ApplicantDetailActionBar({
       </p>
       <div className="flex flex-col gap-2">
         {buttons.map(({ target, label, primaryClass }) => {
-          const isCurrent = currentStatus === target
+          const isCurrent = !isRoundDecision && currentStatus === target
           return (
             <button
               key={target}

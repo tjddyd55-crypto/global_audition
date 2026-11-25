@@ -107,6 +107,7 @@ export type ManageListFilters = {
 }
 
 export type ApplicationAgencyDetail = {
+  reviewRoundId?: string
   numberHistory?: NumberHistoryItem[]
   id: string
   auditionId: string

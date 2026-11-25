@@ -1,5 +1,6 @@
 'use client'
 
+import { adminAuditionRoundsApi } from '@/shared/api/adminAuditionRounds'
 import { shortlistCopy as sc } from './manage/shortlistCopy'
 import { useAuthStore } from '@/shared/auth/authStore'
 import { ApplicantStar, useApplicantShortlist } from './manage/useApplicantShortlist'
@@ -110,8 +111,8 @@ export function ApplicantManagementView({
   })
 
   const detailQuery = useQuery({
-    queryKey: ['application-agency-detail', panelAppId],
-    queryFn: () => auditionApi.getApplicationAgencyDetail(panelAppId!),
+    queryKey: ['application-agency-detail', panelAppId, actor, scope],
+    queryFn: () => auditionApi.getApplicationAgencyDetail(panelAppId!, scope || undefined),
     enabled: !!panelAppId,
   })
 
@@ -130,7 +131,7 @@ export function ApplicantManagementView({
   const maxRound = Math.max(1, payload?.maxRound ?? 1)
   const roundCounts = payload?.roundCounts ?? []
 
-  const detailQueryKey = (applicationId: string) => ['application-agency-detail', applicationId] as const
+  const detailQueryKey = (applicationId: string) => ['application-agency-detail', applicationId, actor, scope] as const
 
   const patchMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: AgencyBoardStatus }) =>
@@ -175,8 +176,25 @@ export function ApplicantManagementView({
     },
   })
 
+  const roundDecision = useMutation({
+    mutationFn: ({ id, roundId, status }: { id: string; roundId: string; status: AgencyBoardStatus }) => {
+      if (status === 'APPROVED') return adminAuditionRoundsApi.pass(id, roundId)
+      if (status === 'REJECTED') return adminAuditionRoundsApi.fail(id, roundId)
+      return adminAuditionRoundsApi.hold(id, roundId)
+    },
+    onSuccess: () => {
+      toast.success(t('saved'))
+      queryClient.invalidateQueries({ queryKey: [queryKeyPrefix, auditionId] })
+      queryClient.invalidateQueries({ queryKey: ['admin-round-applicants', auditionId] })
+      queryClient.invalidateQueries({ queryKey: ['admin-audition-rounds', auditionId] })
+      if (panelAppId) queryClient.invalidateQueries({ queryKey: detailQueryKey(panelAppId) })
+    },
+    onError: () => toast.error(t('statusFailed')),
+  })
   const runPatch = (id: string, status: AgencyBoardStatus) => {
-    patchMutation.mutate({ id, status })
+    const roundId = detailQuery.data?.reviewRoundId
+    if (roundId) roundDecision.mutate({ id, roundId, status })
+    else patchMutation.mutate({ id, status })
   }
 
   const displayTitle = (auditionHeader?.title?.trim() && auditionHeader.title) || auditionTitle
@@ -290,7 +308,8 @@ export function ApplicantManagementView({
           isLoading={detailQuery.isLoading}
           isError={detailQuery.isError}
           onClose={() => setPanelAppId(null)}
-          patchingId={patchingId}
+          patchingId={roundDecision.isPending ? roundDecision.variables?.id ?? null : patchingId}
+          canDecide={scope === 0 || auditionHeader?.processMode !== 'MULTI_ROUND' || !!detailQuery.data?.reviewRoundId}
           onPatch={runPatch}
         />
       ) : null}

@@ -177,20 +177,6 @@ public class ManageApplicationsQueryService {
         return dto;
     }
 
-    private static int resolveMaxRoundForManage(Audition audition, List<Application> apps, List<AuditionRound> definedRounds) {
-        int max = 1;
-        for (Application app : apps) {
-            max = Math.max(max, app.getCurrentRoundNumber());
-        }
-        if (audition.getMaxRoundNumber() != null && audition.getMaxRoundNumber() > 0) {
-            max = Math.max(max, audition.getMaxRoundNumber());
-        }
-        for (AuditionRound r : definedRounds) {
-            max = Math.max(max, r.getRoundNumber());
-        }
-        return Math.max(1, max);
-    }
-
     private Map<UUID, Long> snsCountsByApplicationIds(List<Application> apps) {
         if (apps.isEmpty()) {
             return Map.of();
@@ -205,88 +191,6 @@ public class ManageApplicationsQueryService {
             map.put((UUID) row[0], ((Number) row[1]).longValue());
         }
         return map;
-    }
-
-    private static List<AgencyApplicantItemDto> filterManageBoard(
-            List<AgencyApplicantItemDto> items,
-            Integer minAge,
-            Integer maxAge,
-            String nationalityFilter,
-            Boolean hasSns,
-            String boardStatus) {
-        return items.stream()
-                .filter(i -> minAge == null || (i.getAge() != null && i.getAge() >= minAge))
-                .filter(i -> maxAge == null || (i.getAge() != null && i.getAge() <= maxAge))
-                .filter(i -> {
-                    if (!StringUtils.hasText(nationalityFilter)) {
-                        return true;
-                    }
-                    String want = nationalityFilter.trim().toUpperCase(Locale.ROOT);
-                    String nat = i.getNationality() != null ? i.getNationality().toUpperCase(Locale.ROOT) : "";
-                    return want.equals(nat);
-                })
-                .filter(i -> {
-                    if (hasSns == null) {
-                        return true;
-                    }
-                    return hasSns ? i.getSnsCount() > 0 : i.getSnsCount() == 0;
-                })
-                .filter(i -> {
-                    if (!StringUtils.hasText(boardStatus)) {
-                        return true;
-                    }
-                    String want = boardStatus.trim().toUpperCase(Locale.ROOT);
-                    return want.equals(i.getStatus());
-                })
-                .collect(Collectors.toList());
-    }
-
-    private static List<AgencyApplicantItemDto> filterManageByCategory(List<AgencyApplicantItemDto> items, String categoryFilter) {
-        if (!StringUtils.hasText(categoryFilter) || "전체".equals(categoryFilter.trim())) {
-            return items;
-        }
-        String want = categoryFilter.trim();
-        return items.stream()
-                .filter(i -> want.equals((i.getCategory() != null ? i.getCategory() : "").trim()))
-                .collect(Collectors.toList());
-    }
-
-    private static ManageApplicationStatsDto buildManageStats(List<Application> apps) {
-        long sub = 0;
-        long rev = 0;
-        long acc = 0;
-        long rej = 0;
-        for (Application a : apps) {
-            String st = a.getStatus();
-            if ("SUBMITTED".equals(st)) {
-                sub++;
-            } else if ("REVIEWING".equals(st)) {
-                rev++;
-            } else if ("ACCEPTED".equals(st)) {
-                acc++;
-            } else if ("REJECTED".equals(st)) {
-                rej++;
-            }
-        }
-        ManageApplicationStatsDto s = new ManageApplicationStatsDto();
-        s.setTotal(apps.size());
-        s.setSubmitted(sub);
-        s.setReviewing(rev);
-        s.setAccepted(acc);
-        s.setRejected(rej);
-        return s;
-    }
-
-    private List<CategoryCountDto> buildManageCategoryTabs(List<AgencyApplicantItemDto> items) {
-        List<CategoryCountDto> tabs = new ArrayList<>();
-        tabs.add(new CategoryCountDto("전체", items.size()));
-        for (String c : STANDARD_MANAGE_CATEGORIES) {
-            long n = items.stream()
-                    .filter(i -> c.equals((i.getCategory() != null ? i.getCategory() : "").trim()))
-                    .count();
-            tabs.add(new CategoryCountDto(c, n));
-        }
-        return tabs;
     }
 
     private AgencyApplicantItemDto toAgencyItem(Application app, ApplicationScore score, long snsCount) {

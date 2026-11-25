@@ -126,8 +126,8 @@ public class ApplicationController {
     }
 
     @GetMapping("/applications/{id}/agency-detail")
-    public ApiEnvelope<ApplicationAgencyDetailDto> getAgencyApplicationDetail(@PathVariable UUID id) {
-        return ApiEnvelope.ok(agencyApplicationManageService.getApplicationAgencyDetail(id));
+    public ApiEnvelope<ApplicationAgencyDetailDto> getAgencyApplicationDetail(@PathVariable UUID id, @RequestParam(required = false) Integer reviewRound) {
+        return ApiEnvelope.ok(agencyApplicationManageService.getApplicationAgencyDetail(id, reviewRound));
     }
 
     @GetMapping("/applications/{id}")
