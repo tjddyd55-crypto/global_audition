@@ -121,18 +121,20 @@ export function SharedCandidateLanding({
         ) : null}
 
         <section className="mt-4 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-violet-100" data-testid="vote-shared-candidate" data-application-id={shared.applicationId}>
-          <VoteInlineVideo
-            videoUrl={shared.videoUrl}
-            thumbnailUrl={shared.thumbnailUrl}
-            title={t('applicantVideo', { name })}
-            playing={playing}
-            onPlay={() => setPlaying(true)}
-          />
-
           <div className="px-4 py-4">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
-                <h2 className="truncate text-lg font-extrabold leading-tight text-gray-900">{shared.candidateNumber ? <span className="mr-2 text-violet-700" data-testid="vote-candidate-number">{t('candidateNumber', { n: shared.candidateNumber })}</span> : null}{name}</h2>
+                <h2 className="break-words text-lg font-extrabold leading-tight text-gray-900">
+                  {shared.candidateNumber ? (
+                    <>
+                      <span className="text-violet-700" data-testid="vote-candidate-number">
+                        {t('candidateNumber', { n: shared.candidateNumber })}
+                      </span>
+                      <span className="mx-2 text-gray-400" aria-hidden="true">|</span>
+                    </>
+                  ) : null}
+                  {name}
+                </h2>
                 {shared.category ? (
                   <p className="mt-0.5 truncate text-sm font-medium text-gray-600">{recruitFieldLabel(shared.category, tField)}</p>
                 ) : null}
@@ -143,8 +145,16 @@ export function SharedCandidateLanding({
                 </p>
               ) : null}
             </div>
-
-            <div className="mt-4 grid grid-cols-2 gap-2">
+          </div>
+          <VoteInlineVideo
+            videoUrl={shared.videoUrl}
+            thumbnailUrl={shared.thumbnailUrl}
+            title={t('applicantVideo', { name })}
+            playing={playing}
+            onPlay={() => setPlaying(true)}
+          />
+          <div className="px-4 py-3">
+            <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 data-testid="vote-shared-cast"

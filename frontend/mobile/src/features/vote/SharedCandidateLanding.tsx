@@ -76,15 +76,9 @@ export function SharedCandidateLanding({
       {windowNotice ? <Text style={styles.notice}>{windowNotice}</Text> : null}
 
       <View style={styles.card} testID="vote-shared-candidate">
-        <VoteInlineVideo
-          videoUrl={shared.videoUrl}
-          thumbnailUrl={shared.thumbnailUrl}
-          playing={playing}
-          onPlay={() => setPlaying(true)}
-        />
         <View style={styles.metaRow}>
           <View style={styles.nameBlock}>
-            <Text style={styles.name} numberOfLines={1}>{shared.candidateNumber ? `${t('vote.candidateNumber', { n: shared.candidateNumber })} | ` : ''}{name}</Text>
+            <Text style={styles.name} numberOfLines={2}>{shared.candidateNumber ? `${t('vote.candidateNumber', { n: shared.candidateNumber })} | ` : ''}{name}</Text>
             {shared.category ? <Text style={styles.field} numberOfLines={1}>{shared.category}</Text> : null}
           </View>
           {showCount ? (
@@ -93,6 +87,12 @@ export function SharedCandidateLanding({
             </Text>
           ) : null}
         </View>
+        <VoteInlineVideo
+          videoUrl={shared.videoUrl}
+          thumbnailUrl={shared.thumbnailUrl}
+          playing={playing}
+          onPlay={() => setPlaying(true)}
+        />
         <View style={styles.actions}>
           <View style={styles.cell}>
             <Button fillHeight label={voteLabel} disabled={!page.votingEnabled || voteBusy || voted} onPress={onVote} />
@@ -132,6 +132,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     overflow: 'hidden',
+    paddingTop: 12,
     paddingBottom: 12,
     gap: 10,
   },

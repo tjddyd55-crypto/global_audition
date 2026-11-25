@@ -165,6 +165,15 @@ export default function VoteScreen() {
       ) : null}
       {(page && (page.votingEnabled || (page.voteStatus === 'CLOSED' && page.items.length > 0)) ? page.items : []).map((item) => (
         <View key={item.applicationId} style={[styles.card, item.isVoted ? styles.votedCard : null]}>
+          <View style={styles.metaRow}>
+            <View style={styles.nameBlock}>
+              <Text style={styles.name} numberOfLines={2}>{item.candidateNumber ? `${t('vote.candidateNumber', { n: item.candidateNumber })} | ` : ''}{item.userName || t('vote.applicantFallback')}</Text>
+              {item.category ? <Text style={styles.field} numberOfLines={1}>{item.category}</Text> : null}
+            </View>
+            {canShowPublicVoteCount(page?.voteStatus) ? (
+              <Text style={styles.votes}>{ownVotesText(item.voteCount)}</Text>
+            ) : null}
+          </View>
           <VoteInlineVideo
             videoUrl={item.videoUrl}
             thumbnailUrl={item.thumbnailUrl}
@@ -172,15 +181,6 @@ export default function VoteScreen() {
             onPlay={() => setPlayingId(item.applicationId)}
             compact
           />
-          <View style={styles.metaRow}>
-            <View style={styles.nameBlock}>
-              <Text style={styles.name} numberOfLines={1}>{item.candidateNumber ? `${t('vote.candidateNumber', { n: item.candidateNumber })} | ` : ''}{item.userName || t('vote.applicantFallback')}</Text>
-              {item.category ? <Text style={styles.field} numberOfLines={1}>{item.category}</Text> : null}
-            </View>
-            {canShowPublicVoteCount(page?.voteStatus) ? (
-              <Text style={styles.votes}>{ownVotesText(item.voteCount)}</Text>
-            ) : null}
-          </View>
           <View style={styles.actions}>
             {page?.votingEnabled ? (
               <View style={styles.cell}>
@@ -228,6 +228,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     overflow: 'hidden',
+    paddingTop: 12,
     paddingBottom: 12,
     gap: 10,
     marginBottom: 12,
