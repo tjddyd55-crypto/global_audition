@@ -8,6 +8,14 @@ describe('formatVoteDate', () => {
     }).format(new Date(date)))
     expect(formatVoteDate(date, locale)).toBe(formatVoteDate('2026-11-30T13:38:59Z', locale))
   })
+  it('uses an explicit fallback when browser locale data is missing', () => {
+    const supported = jest.spyOn(Intl.DateTimeFormat, 'supportedLocalesOf').mockReturnValue([])
+    try {
+      expect(formatVoteDate(date, 'km')).toBe(new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(date)))
+    } finally {
+      supported.mockRestore()
+    }
+  })
   it('handles missing dates and malformed locales without crashing', () => {
     expect(formatVoteDate(null, 'ko')).toBe('')
     expect(formatVoteDate('invalid', 'ko')).toBe('')

@@ -5,7 +5,9 @@ export function formatVoteDate(iso: string | null | undefined, locale: string): 
   if (Number.isNaN(date.getTime())) return ''
   const options: Intl.DateTimeFormatOptions = { dateStyle: 'medium', timeStyle: 'short' }
   try {
-    return new Intl.DateTimeFormat(locale, options).format(date)
+    // Some browsers omit Khmer/Mongolian ICU data; avoid silently using the device language.
+    const supported = Intl.DateTimeFormat.supportedLocalesOf([locale])[0]
+    return new Intl.DateTimeFormat(supported || 'en', options).format(date)
   } catch {
     return new Intl.DateTimeFormat('en', options).format(date)
   }
