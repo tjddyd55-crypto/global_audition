@@ -135,6 +135,8 @@ export type ApplicationDetail = {
 }
 
 export type CreateApplicationPayload = {
+  paymentMethod?: 'CREDIT' | 'POINT'
+  expectedPointCost?: number
   auditionId: string
   name?: string | null
   birthDate?: string | null

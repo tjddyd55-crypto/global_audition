@@ -1,5 +1,6 @@
 package com.audition.platform.application.me;
 
+import com.audition.platform.application.points.PointRewards;
 import com.audition.platform.api.dto.channel.PublicChannelListItemResponse;
 import com.audition.platform.api.dto.channel.PublicChannelResponse;
 import com.audition.platform.api.dto.me.*;
@@ -38,6 +39,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class MyChannelService {
+    private final PointRewards pointRewards;
 
     private final ChannelRepository channelRepository;
     private final ChannelVideoRepository channelVideoRepository;
@@ -63,7 +65,9 @@ public class MyChannelService {
                             CastingOfferEligibility castingEligibility,
                             ChannelVideoEvents videoEvents,
                             com.audition.platform.application.consent.PrivacySettingsService privacySettings,
-                            com.audition.platform.application.consent.MinorPolicyService minorPolicy) {
+                            com.audition.platform.application.consent.MinorPolicyService minorPolicy,
+            PointRewards pointRewards) {
+        this.pointRewards = pointRewards;
         this.privacySettings = privacySettings;
         this.minorPolicy = minorPolicy;
         this.discovery = discovery;
@@ -430,6 +434,7 @@ public class MyChannelService {
             v.setCategory(req.getCategory().trim());
         }
         v = channelVideoRepository.save(v);
+        pointRewards.recordVideo(ownerId, ytId);
         touch(ownerId);
         if (ChannelVideoVisibility.PUBLIC.equals(v.getVisibility())) {
             videoEvents.publishedNewPublicVideo(ownerId, v.getId(), v.getTitle());

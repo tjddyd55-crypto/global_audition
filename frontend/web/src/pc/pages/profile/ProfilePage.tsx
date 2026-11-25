@@ -17,6 +17,7 @@ import {
   TITLE_PAGE,
 } from '@/shared/ui/specClasses'
 import { useAuthStore } from '@/shared/auth/authStore'
+import { ProfilePointSummary } from '@/components/profile/ProfilePointSummary'
 import { ProfileManageForm } from '@/components/profile/ProfileManageForm'
 import { ChannelPublicSettings } from '@/components/channel/ChannelPublicSettings'
 import { VideoVisibilitySwitch } from '@/components/channel/VideoVisibilitySwitch'
@@ -74,6 +75,7 @@ export default function PcProfilePage() {
           </button>
         </div>
 
+        <ProfilePointSummary enabled={hasToken} />
         <ProfileManageForm />
 
         <div>

@@ -607,10 +607,24 @@ export function StatsScreen() {
     queryFn: () => orgAdminApi.usage(code, period),
     enabled: code.length === 2,
   })
+  const funding = useQuery({
+    queryKey: ['org','point-funding',code,period],
+    queryFn: async () => (await apiClient.get<{
+      applicationsInPeriod: number; pointApplications: number; paidCreditApplications: number; payableUsd: number | null
+      contractShares: { hqShareUsd: number; compensationUsd: number }[]
+    }>('/admin/org/stats/country', { params: { country: code, period } })).data,
+    enabled: code.length === 2 && /^\d{4}-\d{2}$/.test(period),
+  })
   return (
     <div>
       <h1 className="mb-4 text-xl font-semibold">{label(locale, 'stats')}</h1>
       <input className="mb-4 rounded border px-3 py-2" aria-label="통계 기간" value={period} onChange={(e) => setPeriod(e.target.value)} />
+      {funding.data ? <div className="mb-4 rounded-lg border bg-white p-3 text-sm">
+        <p>전체 지원 {formatCount(funding.data.applicationsInPeriod)} · 포인트 지원 {formatCount(funding.data.pointApplications)} · 유료 크레딧 지원 {formatCount(funding.data.paidCreditApplications)}</p>
+        {!staff && funding.data.payableUsd != null ? <p>
+          정산 대상액 {usd(funding.data.payableUsd)} · 본사 배분 {usd(funding.data.contractShares.reduce((sum,row)=>sum+row.hqShareUsd,0))} · 지사 배분 {usd(funding.data.contractShares.reduce((sum,row)=>sum+row.compensationUsd,0))}
+        </p> : null}
+      </div> : null}
       <StateLine loading={usage.isLoading} error={usage.error} empty={(usage.data ?? []).length === 0} />
       {(usage.data ?? []).length > 0 ? (
         <DataTable

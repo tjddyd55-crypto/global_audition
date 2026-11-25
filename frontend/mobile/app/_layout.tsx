@@ -73,6 +73,7 @@ function LocalizedStack() {
           name="agency/[applicationId]"
           options={{ headerRight: () => null }}
         />
+        <Stack.Screen name="points" />
         <Stack.Screen name="credits/index" />
         <Stack.Screen name="credits/checkout" />
         <Stack.Screen name="payments/success" />

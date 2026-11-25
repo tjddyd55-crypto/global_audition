@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { COUNTRY_CODES, timezones } from '../../../web/src/shared/utils/countries'
 import { authApi, isAgencyRole, profileApi } from '../../src/api/endpoints'
+import { pointsApi } from '../../src/api/points'
 import { ApiError } from '../../src/api/http'
 import { queryKeys } from '../../src/api/queryKeys'
 import { useAuth } from '../../src/auth/AuthProvider'
@@ -21,6 +22,7 @@ export default function ProfileScreen() {
   const router = useRouter()
   const { isAuthenticated, ready, session, logout } = useAuth()
   const query = useQuery({ queryKey: queryKeys.profile, queryFn: profileApi.get, enabled: isAuthenticated })
+  const points = useQuery({queryKey:['points','quote',session?.userId],queryFn:pointsApi.quote,enabled:isAuthenticated,retry:false})
   const [name, setName] = useState('')
   const [nickname, setNickname] = useState('')
   const [countryCode, setCountryCode] = useState('')
@@ -58,6 +60,10 @@ export default function ProfileScreen() {
   return (
     <Screen topInset={false} loading={query.isLoading}>
       <Text style={styles.heading}>{t('profile.title')}</Text>
+      {points.data ? <View style={styles.langRow}>
+        <Text style={styles.meta}>{t('points.credit')} {points.data.creditBalance} C</Text>
+        <Button variant="secondary" label={t('points.balance') + ' ' + points.data.pointBalance + ' P'} onPress={() => router.push('/points')} />
+      </View> : null}
       <View style={styles.langRow}>
         <Text style={styles.meta}>{t('profile.language')}</Text>
         <View style={styles.langBtns}>

@@ -1,5 +1,6 @@
 package com.audition.platform.application.me;
 
+import com.audition.platform.application.points.PointRewards;
 import com.audition.platform.api.dto.me.MeProfileResponse;
 import com.audition.platform.api.dto.me.MeUserSnsLinkDto;
 import com.audition.platform.api.dto.me.PatchMePasswordRequest;
@@ -31,6 +32,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class MeProfileService {
+    private final PointRewards pointRewards;
 
     private final UserRepository userRepository;
     private final UserNicknameService userNicknameService;
@@ -52,7 +54,9 @@ public class MeProfileService {
             PasswordEncoder passwordEncoder,
             ChannelVideoRepository channelVideoRepository,
             ChannelRepository channelRepository,
-            ApplicantSignupProfileService applicantSignupProfileService) {
+            ApplicantSignupProfileService applicantSignupProfileService,
+            PointRewards pointRewards) {
+        this.pointRewards = pointRewards;
         this.userRepository = userRepository;
         this.userNicknameService = userNicknameService;
         this.userSnsLinkRepository = userSnsLinkRepository;
@@ -161,6 +165,7 @@ public class MeProfileService {
 
         user.setUpdatedAt(Instant.now());
         User saved = userRepository.save(user);
+        pointRewards.recordProfile(saved);
         if (guardianService != null) {
             // 국적·거주국(적용 국가)이나 생년월일이 바뀌면 연령 정책을 다시 판정한다.
             guardianService.reconcile(userId);

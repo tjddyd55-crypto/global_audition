@@ -9,6 +9,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { z } from 'zod'
 import { authApi } from '@/shared/api/auth'
 import { buildAgencySignupPayload } from '@/shared/auth/buildAgencySignupPayload'
+import { parseInviteCode } from '@/shared/audition/points'
 import { buildApplicantSignupPayload } from '@/shared/auth/buildApplicantSignupPayload'
 import { EMPTY_SIGNUP_EXTRAS, SignupConsentFields, signupExtrasErrorKey, type SignupExtras } from '@/components/auth/SignupConsentFields'
 import { GENDER_CODES } from '@/shared/privacy/model'
@@ -235,6 +236,7 @@ export default function MobileRegisterPage() {
               consents: { ...extras.consents, privacyDisclosure: false },
             })
           : buildApplicantSignupPayload({
+              inviteCode: parseInviteCode(searchParams.get('invite')),
               email: submitData.email,
               password: submitData.password,
               nickname: submitData.nickname.trim(),

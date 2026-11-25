@@ -50,7 +50,7 @@ export default function RevenuePage() {
             <th>보상</th>
             <th>본사</th>
             <th>정산/미정산</th>
-          </tr>
+          <th className="p-2">포인트 지원</th><th className="p-2">유료 크레딧 지원</th><th className="p-2">유료 정산 대상액</th></tr>
         </thead>
         <tbody>
           {(stats.data?.slices ?? []).map((row) => (
@@ -68,6 +68,9 @@ export default function RevenuePage() {
               <td>
                 {formatCount(row.settledCount)}/{formatCount(row.unsettledCount)}
               </td>
+              <td>{formatCount(row.pointApplications ?? 0)}</td>
+              <td>{formatCount(row.paidCreditApplications ?? 0)}</td>
+              <td>{formatUsdAmount(row.payableUsd ?? 0)}</td>
             </tr>
           ))}
         </tbody>

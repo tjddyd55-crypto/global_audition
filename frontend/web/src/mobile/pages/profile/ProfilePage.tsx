@@ -8,6 +8,7 @@ import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useAuthStore } from '@/shared/auth/authStore'
+import { ProfilePointSummary } from '@/components/profile/ProfilePointSummary'
 import { ProfileManageForm } from '@/components/profile/ProfileManageForm'
 import { ChannelPublicSettings } from '@/components/channel/ChannelPublicSettings'
 import { VideoVisibilitySwitch } from '@/components/channel/VideoVisibilitySwitch'
@@ -65,6 +66,7 @@ export default function MobileProfilePage() {
           </button>
         </div>
 
+        <ProfilePointSummary enabled={hasToken} />
         <ProfileManageForm />
 
         {showApplicantVideos ? <ChannelPublicSettings /> : null}

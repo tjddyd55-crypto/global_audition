@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useParams } from 'next/navigation'
 import { useRouter } from '@/i18n.config'
@@ -15,6 +15,7 @@ import { useAuditionApplySubmitGate } from '@/shared/audition/useAuditionApplySu
 import ApplyPageShell from '@/components/application/ApplyPageShell'
 import ApplyPageGuardState from '@/components/application/ApplyPageGuardState'
 import ApplyPageHeader from '@/components/application/ApplyPageHeader'
+import { ApplyPaymentChoice, useApplyPayment } from '@/components/application/ApplyPaymentChoice'
 import ApplyCreditNotice from '@/components/application/ApplyCreditNotice'
 
 export default function PcAuditionApplyPage() {
@@ -23,6 +24,7 @@ export default function PcAuditionApplyPage() {
   const queryClient = useQueryClient()
   const t = useTranslations('common')
   const tApply = useTranslations('apply')
+  const tPoints = useTranslations('points')
   const tDetail = useTranslations('auditionDetail')
   const tErr = useTranslations('errors')
   const tUploader = useTranslations('uploader')
@@ -50,6 +52,8 @@ export default function PcAuditionApplyPage() {
     hasEnoughCredits,
     submitDisabled,
   } = useAuditionApplySubmitGate({ enabled: showCreditQueries })
+
+  const payment = useApplyPayment(showCreditQueries)
 
   if (isLoading || !audition) {
     return (
@@ -131,23 +135,29 @@ export default function PcAuditionApplyPage() {
         description={tApply('oneShotHint')}
       />
 
-      <ApplyCreditNotice
+      {payment.choosing && payment.quote.data ? (
+        <ApplyPaymentChoice quote={payment.quote.data} method={payment.method} onSelect={payment.select} />
+      ) : <ApplyCreditNotice
         applyPolicySnapshot={applyPolicySnapshot}
         applyPolicyError={applyPolicyError}
         creditBalanceAmount={creditBalanceAmount}
         creditGateReady={creditGateReady}
         hasEnoughCredits={hasEnoughCredits}
-      />
+      />}
 
       <AuditionApplyForm
         auditionId={auditionId}
-        disabled={submitDisabled}
+        disabled={payment.quote.isLoading || (payment.choosing ? payment.disabled : submitDisabled)}
         meProfile={meProfile}
         meProfileReady={showCreditQueries && meProfileFetched}
         onSubmit={async (payload) => {
           try {
-            await applicationApi.submit(payload)
+            await applicationApi.submit({ ...payload, ...payment.payload })
           } catch (err: unknown) {
+            if (payment.method === 'POINT' && (err as { response?: { status?: number } }).response?.status === 409) {
+              void payment.quote.refetch()
+              throw new Error(tPoints('priceChanged'))
+            }
             throw new Error(
               mapApplySubmitError(err, translateError, {
                 alreadyDone: tApply('alreadyDone'),
@@ -157,6 +167,7 @@ export default function PcAuditionApplyPage() {
           }
           queryClient.invalidateQueries({ queryKey: ['audition', auditionId] })
           queryClient.invalidateQueries({ queryKey: ['credits', 'balance'] })
+          queryClient.invalidateQueries({ queryKey: ['points'] })
           router.push('/my/applications')
         }}
       />

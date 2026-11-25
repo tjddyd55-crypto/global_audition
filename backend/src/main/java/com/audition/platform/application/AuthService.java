@@ -1,5 +1,6 @@
 package com.audition.platform.application;
 
+import com.audition.platform.application.points.PointsService;
 import com.audition.platform.api.dto.AuthMeDataDto;
 import com.audition.platform.api.dto.AuthResponse;
 import com.audition.platform.api.dto.LoginRequest;
@@ -32,6 +33,7 @@ import java.util.UUID;
 
 @Service
 public class AuthService {
+    private final PointsService points;
     private static final Set<String> ALLOWED_ROLES = Set.of("APPLICANT", "AGENCY");
 
     private final UserRepository userRepository;
@@ -54,7 +56,9 @@ public class AuthService {
                        AgencySignupService agencySignupService,
                        ApplicantSignupProfileService applicantSignupProfileService,
                        ConsentService consentService,
-                       MinorPolicyService minorPolicyService) {
+                       MinorPolicyService minorPolicyService,
+            PointsService points) {
+        this.points = points;
         this.consentService = consentService;
         this.minorPolicyService = minorPolicyService;
         this.userRepository = userRepository;
@@ -120,6 +124,7 @@ public class AuthService {
         // 동의 기록은 JDBC 로 쓰므로 회원 행을 먼저 반영한다(FK).
         userRepository.flush();
         consentService.recordSignup(user.getId(), signupConsents);
+        if (applicant && req.getInviteCode() != null) points.registerReferral(user.getId(), req.getInviteCode());
         agencySignupService.openApplication(user, requested, AgencySignupProfile.fromSignup(
                 req.getCountryCode(),
                 req.getCompanyName(),

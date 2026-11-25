@@ -5,6 +5,7 @@ import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, View } fro
 import { useAuth } from '../../src/auth/AuthProvider'
 import { ApiError } from '../../src/api/http'
 import { signupPasswordConfirmationError, validateSignupDraft } from '../../src/domain/signupRules'
+import { parseInviteCode } from '../../../web/src/shared/audition/points'
 import { buildApplicantSignupPayload } from '../../../web/src/shared/auth/buildApplicantSignupPayload'
 import { Button } from '../../src/ui/Button'
 import { RecoveryCodeNotice } from '../../src/ui/RecoveryCodeNotice'
@@ -26,7 +27,7 @@ import { useTranslation } from 'react-i18next'
 export default function RegisterScreen() {
   const { t } = useTranslation()
   const router = useRouter()
-  const { next } = useLocalSearchParams<{ next?: string }>()
+  const { next, invite } = useLocalSearchParams<{ next?: string; invite?: string }>()
   const nextPath = safeNextPath(typeof next === 'string' ? next : null)
   const { signup } = useAuth()
   const [email, setEmail] = useState('')
@@ -115,6 +116,7 @@ export default function RegisterScreen() {
             if (confirmationError) { setError(confirmationError); return }
             const applicant = role === 'APPLICANT'
               ? buildApplicantSignupPayload({
+                  inviteCode: parseInviteCode(invite),
                   email: email.trim(),
                   password,
                   nickname: nickname.trim(),
