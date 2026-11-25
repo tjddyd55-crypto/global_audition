@@ -24,6 +24,14 @@ it.each(['ko', 'en', 'mn', 'km', 'uz'])('keeps guest vote intent and the shared 
     isGuest: true, voteBusy: false, windowNotice: null, otherRound: false, onVote, onShare }
   const view = render(<NextIntlClientProvider locale={locale} messages={messages}><SharedCandidateLanding {...props} /></NextIntlClientProvider>)
   expect(screen.getByTestId('vote-candidate-number')).toHaveTextContent(messages.vote.candidateNumber.replace('{n}', '3'))
+  const name = screen.getByRole('heading', { name: /Candidate/ })
+  const count = screen.getByTestId('vote-own-count')
+  const video = screen.getByText('Video')
+  const cast = screen.getByTestId('vote-shared-cast')
+  const share = screen.getByTestId('vote-shared-share')
+  for (const [before, after] of [[name, count], [count, video], [video, cast], [cast, share]]) {
+    expect(before.compareDocumentPosition(after) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  }
   expect(screen.getByTestId('vote-shared-cast')).toHaveTextContent(messages.vote.voteAction)
   expect(onVote).not.toHaveBeenCalled()
   fireEvent.click(screen.getByTestId('vote-shared-cast'))

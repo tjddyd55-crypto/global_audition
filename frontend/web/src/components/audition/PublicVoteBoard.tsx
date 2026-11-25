@@ -279,18 +279,20 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback, shareRound,
                 className={`overflow-hidden rounded-xl border border-[#E5E7EB] bg-white shadow-sm${item.isVoted ? ' ring-2 ring-violet-400' : ''}`}
                 data-application-id={item.applicationId}
               >
-                <VoteInlineVideo
-                  videoUrl={item.videoUrl}
-                  thumbnailUrl={item.thumbnailUrl}
-                  title={t('applicantVideo', { name })}
-                  playing={playingId === item.applicationId}
-                  onPlay={() => openVideoWithViewBump(item)}
-                  compact
-                />
                 <div className="px-4 py-3">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
-                      <h2 className="truncate text-lg font-extrabold text-gray-900">{item.candidateNumber ? <span className="mr-2 text-violet-700" data-testid="vote-candidate-number">{t('candidateNumber', { n: item.candidateNumber })}</span> : null}{name}</h2>
+                      <h2 className="break-words text-lg font-extrabold text-gray-900">
+                        {item.candidateNumber ? (
+                          <>
+                            <span className="text-violet-700" data-testid="vote-candidate-number">
+                              {t('candidateNumber', { n: item.candidateNumber })}
+                            </span>
+                            <span className="mx-2 text-gray-400" aria-hidden="true">|</span>
+                          </>
+                        ) : null}
+                        {name}
+                      </h2>
                       {item.category ? (
                         <p className="mt-0.5 truncate text-xs font-medium text-gray-600">{recruitFieldLabel(item.category, tField)}</p>
                       ) : null}
@@ -301,7 +303,17 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback, shareRound,
                       </p>
                     ) : null}
                   </div>
-                  <div className={`mt-3 grid gap-2 ${canCast ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                </div>
+                <VoteInlineVideo
+                  videoUrl={item.videoUrl}
+                  thumbnailUrl={item.thumbnailUrl}
+                  title={t('applicantVideo', { name })}
+                  playing={playingId === item.applicationId}
+                  onPlay={() => openVideoWithViewBump(item)}
+                  compact
+                />
+                <div className="px-4 py-3">
+                  <div className={`grid gap-2 ${canCast ? 'grid-cols-2' : 'grid-cols-1'}`}>
                     {canCast && item.isVoted ? (
                       <button
                         type="button"
