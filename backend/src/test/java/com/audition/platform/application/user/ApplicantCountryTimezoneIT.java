@@ -64,6 +64,18 @@ class ApplicantCountryTimezoneIT {
     }
 
     @Test
+    void otherRealCountryIsRegisteredWithoutActivatingOperations() throws Exception {
+        boolean existed = jdbc.queryForObject("SELECT COUNT(*) FROM countries WHERE code = 'NP'", Integer.class) > 0;
+        assertPair("NP", "Asia/Kathmandu");
+        if (!existed) {
+            assertEquals("INACTIVE", jdbc.queryForObject("SELECT status FROM countries WHERE code = 'NP'", String.class));
+            assertEquals("NPR", jdbc.queryForObject("SELECT default_currency FROM countries WHERE code = 'NP'", String.class));
+        }
+        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM country_admin_appointments WHERE country_code = 'NP'", Integer.class));
+        mvc.perform(get("/api/auth/countries").param("locale", "ko")).andExpect(status().isOk());
+    }
+
+    @Test
     void invalidCountryAndTimezoneAreRejected() throws Exception {
         mvc.perform(post("/api/auth/signup").contentType(APPLICATION_JSON)
                         .content(body(nick(), "ZZ", "Asia/Seoul")))

@@ -1,6 +1,6 @@
 import i18n from '../i18n'
 import { DEFAULT_LOCALE } from '../i18n/runtime'
-import { validateSignupDraft } from './signupRules'
+import { signupPasswordConfirmationError, validateSignupDraft } from './signupRules'
 
 describe('validateSignupDraft', () => {
   beforeEach(async () => {
@@ -17,6 +17,18 @@ describe('validateSignupDraft', () => {
     nickname: '지원자닉',
     role: 'APPLICANT' as const,
   }
+
+  it.each(['ko', 'en', 'mn', 'km', 'uz'])('translates password mismatch in %s', async (lang) => {
+    await i18n.changeLanguage(lang)
+    expect(signupPasswordConfirmationError('secret1', 'secret2')).toBe(i18n.t('auth.passwordMismatch'))
+  })
+
+  it('requires matching password confirmation without trimming passwords', () => {
+    expect(signupPasswordConfirmationError('secret1', '')).not.toBeNull()
+    expect(signupPasswordConfirmationError('secret1', 'secret2')).toBe(i18n.t('auth.passwordMismatch'))
+    expect(signupPasswordConfirmationError('secret1', 'secret1 ')).not.toBeNull()
+    expect(signupPasswordConfirmationError('secret1', 'secret1')).toBeNull()
+  })
 
   it('uses the English catalog when no locale is saved', async () => {
     await i18n.changeLanguage(DEFAULT_LOCALE)

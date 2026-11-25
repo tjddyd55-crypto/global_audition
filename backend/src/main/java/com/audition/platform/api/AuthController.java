@@ -3,6 +3,10 @@ package com.audition.platform.api;
 import com.audition.platform.api.dto.ApiEnvelope;
 import com.audition.platform.api.dto.AuthMeDataDto;
 import com.audition.platform.api.dto.AuthResponse;
+import com.audition.platform.application.user.SignupCountries;
+import java.util.List;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import com.audition.platform.api.dto.LoginRequest;
 import com.audition.platform.api.dto.SignupRequest;
 import com.audition.platform.application.AuthService;
@@ -15,6 +19,13 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+
+    @GetMapping("/countries")
+    public List<SignupCountries.Option> signupCountries(
+            @RequestParam(defaultValue = "en") String locale) {
+        return SignupCountries.list(locale);
+    }
+
 
     private final AuthService authService;
     private final AuthSessionCookieWriter authSessionCookieWriter;
