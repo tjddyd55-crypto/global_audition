@@ -115,6 +115,8 @@ public class PublicVoteScheduleService {
                     "투표할 후보가 없습니다. 지원자를 심사·선발한 뒤 다시 시도하세요.");
         }
         candidates.deleteByAuditionIdAndRoundNumber(auditionId, round);
+        // Hibernate queues entity deletes after inserts; free ballot numbers before scheduled replacements.
+        candidates.flush();
         Instant confirmed = now;
         int candidateNumber = 1;
         for (Application app : chosen) {

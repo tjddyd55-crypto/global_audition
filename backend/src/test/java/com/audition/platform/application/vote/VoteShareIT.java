@@ -176,6 +176,22 @@ class VoteShareIT {
     }
 
     @Test
+    void scheduledCandidateReplacementCanReuseTheUnpublishedBallotNumber() {
+        UUID owner = user();
+        UUID audition = audition(owner, "SINGLE", 1, null);
+        UUID a = application(audition, user(), 1), b = application(audition, user(), 1);
+        Instant startAt = Instant.now().plus(1, ChronoUnit.HOURS), endAt = startAt.plus(1, ChronoUnit.HOURS);
+        start(owner, audition, startAt, endAt, List.of(a));
+        start(owner, audition, startAt, endAt, List.of(b));
+        SecurityContextHolder.clearContext();
+        var replaced = votes.getPublicVotes(audition, null, 1, b);
+        assertEquals("SCHEDULED", replaced.getVoteStatus());
+        assertEquals(1, replaced.getSharedCandidate().getCandidateNumber());
+        assertNull(votes.getPublicVotes(audition, null, 1, a).getSharedCandidate());
+        assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM audition_vote_candidates WHERE audition_id = ? AND round_number = 1", Integer.class, audition));
+    }
+
+    @Test
     void scheduledShowsSharedCandidateButCannotVote() {
         UUID owner = user();
         UUID audition = audition(owner, "SINGLE", 1, null);
