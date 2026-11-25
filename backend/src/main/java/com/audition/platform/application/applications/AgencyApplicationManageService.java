@@ -86,6 +86,10 @@ public class AgencyApplicationManageService {
                 auditionId, category, minAge, maxAge, nationality, hasSns, boardStatus, round, applicantNumber);
     }
 
+    public ManageApplicationsPageDataDto listManageApplications(UUID auditionId, String category, Integer minAge, Integer maxAge, String nationality, Boolean hasSns, String boardStatus, Integer round, Integer applicantNumber, boolean savedOnly, String name, String sort, int page, int size) {
+        return manageApplicationsQueryService.listManageApplications(auditionId, category, minAge, maxAge, nationality, hasSns, boardStatus, round, applicantNumber, savedOnly, name, sort, page, size);
+    }
+
     public ApplicationAgencyDetailDto getApplicationAgencyDetail(UUID id) {
         UUID currentUserId = SecurityUtils.getCurrentUserId();
         if (currentUserId == null) {

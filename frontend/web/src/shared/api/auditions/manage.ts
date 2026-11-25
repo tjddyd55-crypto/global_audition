@@ -60,6 +60,9 @@ export const listManageApplications = async (
   if (f.round != null && f.round >= 1) {
     params.round = f.round
   }
+  for (const key of ['savedOnly', 'name', 'sort', 'page', 'size'] as const) {
+    if (f[key] != null) params[key] = f[key]
+  }
   const { data } = await apiClient.get<unknown>(`/auditions/${auditionId}/applications/manage`, {
     params,
   })
@@ -93,6 +96,11 @@ export const listManageApplications = async (
       const x = c as Record<string, unknown>
       return { name: String(x.name ?? ''), count: Number(x.count ?? 0) || 0 }
     }),
+    shortlistCount: Number(body.shortlistCount ?? 0),
+    totalElements: Number(body.totalElements ?? items.length),
+    totalPages: Number(body.totalPages ?? 1),
+    page: Number(body.page ?? 0),
+    size: Number(body.size ?? 50),
     applicantTotalCount: Number(body.applicantTotalCount ?? 0) || 0,
     maxRound: Math.max(1, Number(body.maxRound ?? 1) || 1),
     roundCounts: roundCountsRaw.map((x) => {
@@ -107,6 +115,7 @@ export const listManageApplications = async (
       const name = String(r.name ?? r.userName ?? '')
       const st = String(r.status ?? 'PENDING')
       return {
+        shortlisted: r.shortlisted === true,
         numberScopeRound: parseEntryNumber(r.numberScopeRound) ?? 0,
         applicantNumber: parseEntryNumber(r.applicantNumber),
         applicationId: String(r.applicationId ?? ''),

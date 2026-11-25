@@ -62,6 +62,7 @@ export type ManageApplicationStats = {
 export type AgencyBoardStatus = 'PENDING' | 'REVIEWING' | 'APPROVED' | 'REJECTED'
 
 export type ManageApplicantItem = {
+  shortlisted?: boolean
   numberScopeRound?: number
   applicantNumber?: number
   applicationId: string
@@ -89,6 +90,11 @@ export type ManageApplicantItem = {
 }
 
 export type ManageListFilters = {
+  savedOnly?: boolean
+  name?: string
+  sort?: 'NEWEST' | 'NUMBER' | 'NAME' | 'SCORE'
+  page?: number
+  size?: number
   applicantNumber?: number | null
   category?: string | null
   minAge?: number | null
@@ -128,6 +134,11 @@ export type ManageAuditionHeader = {
 }
 
 export type ManageApplicationsPayload = {
+  shortlistCount?: number
+  totalElements?: number
+  totalPages?: number
+  page?: number
+  size?: number
   audition: ManageAuditionHeader
   stats: ManageApplicationStats
   categories: VotePageCategory[]

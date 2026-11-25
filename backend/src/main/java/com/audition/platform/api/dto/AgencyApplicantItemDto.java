@@ -6,6 +6,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * 기획사 지원자 관리 카드 (GET /api/auditions/{id}/applications/manage)
  */
 public class AgencyApplicantItemDto {
+    private boolean shortlisted;
+    public boolean isShortlisted() { return shortlisted; }
+    public void setShortlisted(boolean value) { shortlisted = value; }
 
     private int numberScopeRound;
     public int getNumberScopeRound() { return numberScopeRound; }

@@ -81,9 +81,14 @@ public class ApplicationController {
             @RequestParam(name = "hasSns", required = false) Boolean hasSns,
             @RequestParam(name = "status", required = false) String boardStatus,
             @RequestParam(name = "round", required = false) Integer round,
-            @RequestParam(name = "applicantNumber", required = false) Integer applicantNumber) {
+            @RequestParam(name = "applicantNumber", required = false) Integer applicantNumber,
+            @RequestParam(defaultValue="false") boolean savedOnly,
+            @RequestParam(required=false) String name,
+            @RequestParam(required=false) String sort,
+            @RequestParam(defaultValue="0") int page,
+            @RequestParam(defaultValue="50") int size) {
         return ApiEnvelope.ok(agencyApplicationManageService.listManageApplications(
-                auditionId, category, minAge, maxAge, nationality, hasSns, boardStatus, round, applicantNumber));
+                auditionId, category, minAge, maxAge, nationality, hasSns, boardStatus, round, applicantNumber, savedOnly, name, sort, page, size));
     }
 
     @PostMapping("/applications/{id}/decision")

@@ -26,9 +26,10 @@ function formatAppliedDate(createdAt: string | null | undefined, locale: string)
 type ApplicantListRowProps = {
   app: ManageApplicantItem
   onOpen: () => void
+  reviewControls?: React.ReactNode
 }
 
-export default function ApplicantListRow({ app, onOpen }: ApplicantListRowProps) {
+export default function ApplicantListRow({ app, onOpen, reviewControls }: ApplicantListRowProps) {
   const locale = useLocale()
   const tAgency = useTranslations('agency')
   const tApply = useTranslations('apply')
@@ -39,6 +40,8 @@ export default function ApplicantListRow({ app, onOpen }: ApplicantListRowProps)
   const applied = formatAppliedDate(app.createdAt, locale)
 
   return (
+    <div className="flex items-start gap-2" data-testid="applicant-row">
+      {reviewControls}
     <button
       type="button"
       onClick={onOpen}
@@ -78,5 +81,6 @@ export default function ApplicantListRow({ app, onOpen }: ApplicantListRowProps)
         <span className={`${BTN_SECONDARY} !w-auto !py-1.5 !text-xs`}>{tAgency('viewRow')}</span>
       </div>
     </button>
+    </div>
   )
 }
