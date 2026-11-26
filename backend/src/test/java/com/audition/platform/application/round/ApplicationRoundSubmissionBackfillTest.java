@@ -18,6 +18,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -110,6 +111,6 @@ class ApplicationRoundSubmissionBackfillTest {
         when(auditionRepository.findById(auditionId)).thenReturn(Optional.of(audition));
 
         assertEquals(0, service.backfillFirstRoundSubmissions(auditionId));
-        verify(roundRepository, never()).findByAuditionIdAndRoundNumber(any(), any());
+        verify(roundRepository, never()).findByAuditionIdAndRoundNumber(any(), anyInt());
     }
 }
