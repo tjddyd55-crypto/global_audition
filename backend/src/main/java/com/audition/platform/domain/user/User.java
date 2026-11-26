@@ -24,6 +24,13 @@ public class User {
     @Column(name = "password_hash", nullable = false, columnDefinition = "TEXT")
     private String passwordHash;
 
+    @Column(name = "bootstrap_credential_version")
+    private UUID bootstrapCredentialVersion;
+
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    public UUID getBootstrapCredentialVersion() { return bootstrapCredentialVersion; }
+    public void setBootstrapCredentialVersion(UUID value) { bootstrapCredentialVersion = value; }
+
     @Column(nullable = false, columnDefinition = "TEXT")
     /** APPLICANT | AGENCY | ADMIN | SUPER_ADMIN | USER. 기획사 운영 권한은 본사 승인 뒤에만 AGENCY. */
     private String role;

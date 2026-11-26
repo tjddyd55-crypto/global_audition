@@ -45,15 +45,20 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             return;
         }
         UUID userId;
+        Object tokenCredentialVersion;
         try {
-            userId = UUID.fromString(jwtService.parseToken(token).getSubject());
+            var claims = jwtService.parseToken(token);
+            userId = UUID.fromString(claims.getSubject());
+            tokenCredentialVersion = claims.get("bootstrapCredentialVersion");
         } catch (Exception ignored) {
             filterChain.doFilter(request, response);
             return;
         }
         User user = userRepository.findById(userId).orElse(null);
         String role = user == null || user.getRole() == null ? "" : user.getRole().trim();
-        if (user != null && "ACTIVE".equals(user.getAccountStatus()) && !role.isEmpty()) {
+        if (user != null && "ACTIVE".equals(user.getAccountStatus()) && !role.isEmpty()
+                && (user.getBootstrapCredentialVersion() == null
+                || user.getBootstrapCredentialVersion().toString().equals(tokenCredentialVersion))) {
             List<SimpleGrantedAuthority> authorities = Collections.singletonList(
                     new SimpleGrantedAuthority("ROLE_" + role));
             var auth = new UsernamePasswordAuthenticationToken(userId, null, authorities);
