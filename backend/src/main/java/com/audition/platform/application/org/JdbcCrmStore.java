@@ -83,6 +83,13 @@ public class JdbcCrmStore {
                 """, (rs, n) -> map(rs), staffUserId, countryCode, countryCode);
     }
 
+    public void updateContact(UUID id, String displayName, String contactName, String contactPhone) {
+        jdbc.update("""
+                UPDATE crm_agencies SET display_name = ?, contact_name = ?, contact_phone = ?, updated_at = NOW()
+                 WHERE id = ?
+                """, displayName, contactName, contactPhone, id);
+    }
+
     public void stageEvent(UUID id, UUID agencyId, String from, String to, UUID actor, String reason) {
         jdbc.update("""
                 INSERT INTO crm_stage_events (id, crm_agency_id, from_stage, to_stage, actor_id, reason)

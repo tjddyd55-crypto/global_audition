@@ -6,7 +6,7 @@ describe('admin page access', () => {
     expect(adminPageAllowed('/admin/super', null)).toBe(false)
     expect(adminPageAllowed('/admin/country', undefined)).toBe(false)
     expect(adminPageAllowed('/admin/super', 'COUNTRY_ADMIN')).toBe(false)
-    expect(adminPageAllowed('/admin/country', 'SUPER_ADMIN')).toBe(false)
+    expect(adminPageAllowed('/admin/country', 'SUPER_ADMIN')).toBe(true)
     expect(adminPageAllowed('/admin/country', 'AGENCY')).toBe(false)
     expect(adminPageAllowed('/en/login', null)).toBe(true)
   })
@@ -14,7 +14,7 @@ describe('admin page access', () => {
   it('keeps headquarters on SUPER_ADMIN and accepts the legacy alias', () => {
     expect(adminPageAllowed('/admin/super/settlements', 'SUPER_ADMIN')).toBe(true)
     expect(adminPageAllowed('/admin/super', 'GLOBAL_SUPER_ADMIN')).toBe(true)
-    expect(adminPageAllowed('/admin/country', 'GLOBAL_SUPER_ADMIN')).toBe(false)
+    expect(adminPageAllowed('/admin/country', 'GLOBAL_SUPER_ADMIN')).toBe(true)
   })
 
   it('blocks staff over-scope pages and still allows their menus', () => {

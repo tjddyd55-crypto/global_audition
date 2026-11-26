@@ -6,6 +6,14 @@
 const HEADQUARTERS = new Set(['SUPER_ADMIN', 'GLOBAL_SUPER_ADMIN'])
 const COUNTRY = new Set(['COUNTRY_ADMIN', 'COUNTRY_STAFF'])
 
+export function isHeadquartersRole(role: string | null | undefined): boolean {
+  return Boolean(role && HEADQUARTERS.has(role))
+}
+
+export function countryWorkspaceHref(path: string, country: string): string {
+  return country ? `${path}?country=${encodeURIComponent(country)}` : path
+}
+
 /** 국가 직원 메뉴에 없고, 직접 URL 도 막는다. */
 const STAFF_DENIED = [
   '/admin/country/approvals',
@@ -27,7 +35,7 @@ export function adminPageAllowed(pathname: string, role: string | null | undefin
     return HEADQUARTERS.has(role)
   }
   if (pathname === '/admin/country' || pathname.startsWith('/admin/country/')) {
-    if (!COUNTRY.has(role)) return false
+    if (!COUNTRY.has(role) && !isHeadquartersRole(role)) return false
     if (role === 'COUNTRY_STAFF' && STAFF_DENIED.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))) {
       return false
     }

@@ -1,5 +1,8 @@
 'use client'
 
+import Link from 'next/link'
+import { countryWorkspaceHref } from '@/shared/auth/adminPageAccess'
+
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { orgAdminApi, orgErrorMessage } from '@/shared/api/orgAdmin'
@@ -41,7 +44,7 @@ export default function CountryOpsPage() {
           <tbody>
             {(rows.data ?? []).map((row) => (
               <tr key={row.countryCode} className="border-b">
-                <td className="py-2">{row.countryName} {row.countryCode}</td>
+              <td className="py-2">{row.countryName} {row.countryCode} <Link href={countryWorkspaceHref('/admin/country', row.countryCode)} className="whitespace-nowrap text-violet-700 underline">관리자 접속</Link></td>
                 <td>{row.representativeName ?? '—'}</td>
                 <td>{formatCount(row.agenciesApproved)}/{formatCount(row.agenciesRegistered)}</td>
                 <td>{formatCount(row.pendingApprovals)}</td>
