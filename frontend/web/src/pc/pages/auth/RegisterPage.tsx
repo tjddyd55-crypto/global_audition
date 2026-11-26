@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { authApi } from '@/shared/api/auth'
 import { buildAgencySignupPayload } from '@/shared/auth/buildAgencySignupPayload'
+import { parseInviteCode } from '@/shared/audition/points'
 import { buildApplicantSignupPayload } from '@/shared/auth/buildApplicantSignupPayload'
 import { Link, useRouter } from '@/i18n.config'
 import { useSearchParams } from 'next/navigation'
@@ -186,6 +187,7 @@ export default function PcRegisterPage() {
               consents: { ...extras.consents, privacyDisclosure: false },
             })
           : buildApplicantSignupPayload({
+              inviteCode: parseInviteCode(searchParams?.get('invite')),
               email: data.email,
               password: data.password,
               nickname: data.nickname.trim(),

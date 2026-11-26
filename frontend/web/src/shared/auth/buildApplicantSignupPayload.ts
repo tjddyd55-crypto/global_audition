@@ -1,6 +1,7 @@
 import { signupConsentBody, type SignupConsentState } from '../privacy/model'
 
 export type ApplicantSignupFields = {
+  inviteCode?: string
   email: string
   password: string
   nickname: string
@@ -14,6 +15,7 @@ export type ApplicantSignupFields = {
 }
 
 export type ApplicantSignupPayload = {
+  inviteCode?: string
   email: string
   password: string
   role: 'APPLICANT'
@@ -34,6 +36,7 @@ export function buildApplicantSignupPayload(fields: ApplicantSignupFields): Appl
   const countryCode = fields.countryCode.trim().toUpperCase()
   const timezone = fields.timezone?.trim() ?? ''
   return {
+    ...(fields.inviteCode ? { inviteCode: fields.inviteCode } : {}),
     email: fields.email.trim(),
     password: fields.password,
     role: 'APPLICANT',

@@ -6,6 +6,7 @@ import { SuperAdminAuthGate } from '@/components/admin/SuperAdminAuthGate'
 
 const MENU = [
   { name: '오디션 태그', path: '/admin/super/tags' },
+  { name: '포인트 관리', path: '/admin/super/points' },
   { name: '크레딧 정책', path: '/admin/super/credit-policies' },
   { name: '전역 지원비', path: '/admin/super/application-fee' },
   { name: '번역 공급자', path: '/admin/super/translation-settings' },

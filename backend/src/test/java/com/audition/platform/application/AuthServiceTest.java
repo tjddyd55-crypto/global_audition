@@ -56,7 +56,8 @@ class AuthServiceTest {
                 userRepository, encoder, jwtService, userNicknameService, authRecoveryService, creditService, agencySignupService,
                 mock(com.audition.platform.application.user.ApplicantSignupProfileService.class),
                 consentService = mock(com.audition.platform.application.consent.ConsentService.class),
-                mock(com.audition.platform.application.consent.MinorPolicyService.class));
+                mock(com.audition.platform.application.consent.MinorPolicyService.class),
+                mock(com.audition.platform.application.points.PointsService.class));
         when(userRepository.existsByUsername(any())).thenReturn(false);
         when(userRepository.save(any(User.class))).thenAnswer(inv -> {
             User user = inv.getArgument(0);

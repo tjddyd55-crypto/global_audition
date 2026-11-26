@@ -1,5 +1,6 @@
 package com.audition.platform.application.channel;
 
+import com.audition.platform.application.points.PointRewards;
 import com.audition.platform.api.dto.channel.ChannelVideoCommentDto;
 import com.audition.platform.api.dto.channel.ChannelVideoReactionResponse;
 import com.audition.platform.api.dto.channel.ChannelVideoViewBumpResult;
@@ -26,6 +27,7 @@ import java.util.UUID;
 
 @Service
 public class ChannelVideoPublicService {
+    private final PointRewards pointRewards;
 
     private static final int BROWSE_PAGE_SIZE = 60;
     private static final int RECOMMEND_PAGE_SIZE = 24;
@@ -46,7 +48,9 @@ public class ChannelVideoPublicService {
                                      ChannelSubscriptionRepository channelSubscriptionRepository,
                                      ChannelVideoViewDedupRepository channelVideoViewDedupRepository,
                                      ChannelRepository channelRepository,
-                                     UserRepository userRepository) {
+                                     UserRepository userRepository,
+            PointRewards pointRewards) {
+        this.pointRewards = pointRewards;
         this.channelVideoRepository = channelVideoRepository;
         this.channelVideoCommentRepository = channelVideoCommentRepository;
         this.channelVideoReactionRepository = channelVideoReactionRepository;
@@ -124,7 +128,7 @@ public class ChannelVideoPublicService {
         if (authorId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
         }
-        loadPlayableVideoOrThrow(videoId, authorId);
+        ChannelVideo video = loadPlayableVideoOrThrow(videoId, authorId);
         String content = rawContent == null ? "" : rawContent.trim();
         if (content.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "댓글 내용이 필요합니다.");
@@ -137,6 +141,7 @@ public class ChannelVideoPublicService {
         row.setUserId(authorId);
         row.setBody(content);
         row = channelVideoCommentRepository.save(row);
+        pointRewards.recordComment(authorId, video.getOwnerId(), row.getId(), content);
         return toCommentDto(row);
     }
 
@@ -161,7 +166,8 @@ public class ChannelVideoPublicService {
             ChannelVideoReaction r = opt.orElseThrow();
             r.setReaction(ChannelVideoReaction.LIKE);
             r.setCreatedAt(Instant.now());
-            channelVideoReactionRepository.save(r);
+            channelVideoReactionRepository.saveAndFlush(r);
+            recordPointLike(video, userId);
             video.setDislikeCount(Math.max(0, video.getDislikeCount() - 1));
             video.setLikeCount(video.getLikeCount() + 1);
             channelVideoRepository.save(video);
@@ -171,10 +177,17 @@ public class ChannelVideoPublicService {
         created.setVideoId(videoId);
         created.setUserId(userId);
         created.setReaction(ChannelVideoReaction.LIKE);
-        channelVideoReactionRepository.save(created);
+        channelVideoReactionRepository.saveAndFlush(created);
+        recordPointLike(video, userId);
         video.setLikeCount(video.getLikeCount() + 1);
         channelVideoRepository.save(video);
         return reactionResponse(video, userId);
+    }
+
+    private void recordPointLike(ChannelVideo video, UUID userId) {
+        String youtubeId = video.getYoutubeVideoId();
+        if (youtubeId == null) youtubeId = YoutubeVideoRef.idOf(video.getVideoUrl());
+        pointRewards.recordLike(userId, video.getOwnerId(), video.getId(), youtubeId);
     }
 
     @Transactional

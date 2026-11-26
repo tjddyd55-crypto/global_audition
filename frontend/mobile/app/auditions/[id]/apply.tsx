@@ -1,8 +1,10 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useEffect, useMemo, useState } from 'react'
 import { KeyboardAvoidingView, StyleSheet, Text, View } from 'react-native'
 import { applicationApi, creditApi, profileApi } from '../../../src/api/endpoints'
+import { pointsApi } from '../../../src/api/points'
+import type { PointPayment } from '../../../../web/src/shared/audition/points'
 import { queryKeys } from '../../../src/api/queryKeys'
 import { RequireAuth } from '../../../src/auth/RequireAuth'
 import { useAuth } from '../../../src/auth/AuthProvider'
@@ -25,7 +27,10 @@ export default function ApplyScreen() {
   const { t } = useTranslation()
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, session } = useAuth()
+  const cache = useQueryClient()
+  const points = useQuery({queryKey:['points','quote',session?.userId],queryFn:pointsApi.quote,enabled:isAuthenticated,retry:false})
+  const [method,selectMethod] = useState<PointPayment | null>(null)
   const profileQuery = useQuery({ queryKey: queryKeys.profile, queryFn: profileApi.get, enabled: isAuthenticated })
   const runtimeQuery = useQuery({ queryKey: queryKeys.creditRuntime, queryFn: creditApi.runtime })
   const balanceQuery = useQuery({
@@ -67,10 +72,18 @@ export default function ApplyScreen() {
   const credits = runtime?.applicationFeeCredits ?? runtime?.applicationFeeUsd ?? 0
   const creditMode = runtime?.applicationPaymentMode === 'CREDIT' && credits > 0
   const balance = balanceQuery.data?.balance ?? 0
-  const insufficient = creditMode && balance < credits
+  const quote = points.data
+  const choosing = !!quote && (quote.pointAllowed || method !== null)
+  const pointShortfall = quote ? Math.max(0, quote.pointCost-quote.pointBalance) : 0
+  const insufficient = creditMode && balance < credits && method !== 'POINT'
+  const cannotSubmit = points.isLoading || choosing && (method===null || method==='POINT' && (!quote.pointAllowed || pointShortfall>0))
 
   const submit = async () => {
     setError(null)
+    if (method==='POINT' && (!quote || !quote.pointAllowed || pointShortfall>0)) {
+      setError(t('points.priceChanged'))
+      return
+    }
     if (!isValidAuditionVideoUrl(videoUrl)) {
       setError(videoUrlHint())
       return
@@ -79,6 +92,7 @@ export default function ApplyScreen() {
     try {
       await applicationApi.submit({
         auditionId: id,
+        ...(method === 'POINT' ? { paymentMethod: method, expectedPointCost: quote?.pointCost } : {}),
         name: name.trim() || null,
         birthDate: birthDate.trim() || null,
         age: birthDate.trim() ? age : null,
@@ -87,6 +101,8 @@ export default function ApplyScreen() {
         introText: introText.trim() || null,
         snsLinks: snsUrl.trim() ? [{ platform: snsPlatform, url: snsUrl.trim() }] : [],
       })
+      void cache.invalidateQueries({queryKey:['points']})
+      void cache.invalidateQueries({queryKey:queryKeys.creditBalance})
       router.replace('/(tabs)/applications')
     } catch (err) {
       if (err instanceof ApiError) {
@@ -102,6 +118,9 @@ export default function ApplyScreen() {
           )
         } else if (err.status === 403) {
           setError(t('uploader.forbidden'))
+        } else if (err.status === 409 && method === 'POINT') {
+          setError(t('points.priceChanged'))
+          void points.refetch()
         } else if (err.status === 409) {
           setError(t('apply.alreadyDone'))
         } else {
@@ -124,6 +143,7 @@ export default function ApplyScreen() {
           <Button
             label={t('apply.submit')}
             loading={loading}
+            disabled={cannotSubmit}
             onPress={() => {
               setError(null)
               if (!isValidAuditionVideoUrl(videoUrl)) {
@@ -134,7 +154,7 @@ export default function ApplyScreen() {
                 setError(t('apply.insufficientDetail', { usd, required: credits, current: balance, shortfall: credits - balance }))
                 return
               }
-              if (creditMode) {
+              if (creditMode || method === 'POINT') {
                 setConfirmOpen(true)
                 return
               }
@@ -146,7 +166,7 @@ export default function ApplyScreen() {
     >
       <ConfirmDialog
         visible={confirmOpen}
-        message={t('apply.creditConfirm', { usd, credits, balance })}
+        message={method==='POINT' ? t('points.pointConfirm',{n:quote?.pointCost ?? 0}) : t('apply.creditConfirm', { usd, credits, balance })}
         confirmLabel={t('apply.title')}
         loading={loading}
         onCancel={() => setConfirmOpen(false)}
@@ -154,11 +174,18 @@ export default function ApplyScreen() {
       />
       <KeyboardAvoidingView behavior="padding" style={styles.form}>
         <Text style={styles.lead}>{t('apply.urlOnlyHint')}</Text>
-        {runtime && !creditMode ? <Text style={styles.meta}>{t('apply.freeApply')}</Text> : null}
-        {creditMode && !insufficient ? (
+        {choosing && quote ? <View style={styles.warn}>
+          <Text style={styles.label}>{t('points.choose')}</Text>
+          <Text style={styles.meta}>{t('points.credit')} {quote.creditBalance} C · {t('points.balance')} {quote.pointBalance} P</Text>
+          <Button label={t('points.creditMethod',{n:quote.creditCost})} variant={method==='CREDIT'?'primary':'secondary'} onPress={()=>selectMethod('CREDIT')} />
+          <Button label={t('points.pointMethod',{n:quote.pointCost})} variant={method==='POINT'?'primary':'secondary'} disabled={!quote.pointAllowed} onPress={()=>selectMethod('POINT')} />
+          {pointShortfall>0 ? <Text style={styles.warnText}>{t('points.shortfall',{n:pointShortfall})}</Text> : null}
+        </View> : null}
+        {!choosing && runtime && !creditMode ? <Text style={styles.meta}>{t('apply.freeApply')}</Text> : null}
+        {!choosing && creditMode && !insufficient ? (
           <Text style={styles.meta}>{t('apply.creditMeta', { usd, credits, balance })}</Text>
         ) : null}
-        {insufficient ? (
+        {insufficient && (!choosing || method==='CREDIT') ? (
           <View style={styles.warn}>
             <Text style={styles.warnText}>
               {t('apply.insufficientDetail', { usd, required: credits, current: balance, shortfall: credits - balance })}

@@ -8,6 +8,11 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public class SignupRequest {
+    private java.util.UUID inviteCode;
+
+    public java.util.UUID getInviteCode() { return inviteCode; }
+    public void setInviteCode(java.util.UUID inviteCode) { this.inviteCode = inviteCode; }
+
 
     @NotBlank
     @Email

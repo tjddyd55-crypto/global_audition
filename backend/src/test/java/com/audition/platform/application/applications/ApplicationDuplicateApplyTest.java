@@ -56,7 +56,8 @@ class ApplicationDuplicateApplyTest {
                 mock(ApplicationRoundSubmissionService.class),
                 eligibility,
                 mock(ApplicationValidationService.class),
-                mock(com.audition.platform.application.consent.MinorPolicyService.class));
+                mock(com.audition.platform.application.consent.MinorPolicyService.class),
+                mock(com.audition.platform.application.points.PointsService.class));
 
         Audition audition = new Audition();
         audition.setId(auditionId);

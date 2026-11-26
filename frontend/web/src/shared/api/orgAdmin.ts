@@ -90,6 +90,9 @@ export type SettlementView = {
 }
 
 export type CountrySlice = {
+  pointApplications?: number
+  paidCreditApplications?: number
+  payableUsd?: number
   country: string
   auditions: number
   applications: number

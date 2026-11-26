@@ -53,7 +53,8 @@ class MainSecurityScopeTest {
                 mock(AuthRecoveryService.class), mock(CreditService.class), agencySignup,
                 mock(com.audition.platform.application.user.ApplicantSignupProfileService.class),
                 mock(com.audition.platform.application.consent.ConsentService.class),
-                mock(com.audition.platform.application.consent.MinorPolicyService.class));
+                mock(com.audition.platform.application.consent.MinorPolicyService.class),
+                mock(com.audition.platform.application.points.PointsService.class));
     }
 
     /**

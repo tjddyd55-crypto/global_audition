@@ -1,5 +1,6 @@
 package com.audition.platform.application.vote;
 
+import com.audition.platform.application.points.PointRewards;
 import com.audition.platform.application.round.ReasonCode;
 
 import com.audition.platform.application.i18n.AuditionLocalizationService;
@@ -42,6 +43,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class PublicVoteService {
+    private final PointRewards pointRewards;
 
     private static final List<String> LISTABLE_STATUSES = List.of("SUBMITTED", "REVIEWING", "ACCEPTED");
     private static final List<String> STANDARD_CATEGORIES = List.of("보컬", "댄스", "랩", "프로듀싱");
@@ -65,8 +67,10 @@ public class PublicVoteService {
             ApplicationScoreRepository applicationScoreRepository,
             ApplicationRankingService applicationRankingService,
             AuditionVoteCandidateRepository voteCandidates,
-            AuditionLocalizationService localization) {
+            AuditionLocalizationService localization,
+            PointRewards pointRewards) {
         this.localization = localization;
+        this.pointRewards = pointRewards;
         this.auditionRepository = auditionRepository;
         this.applicationRepository = applicationRepository;
         this.userRepository = userRepository;
@@ -348,6 +352,7 @@ public class PublicVoteService {
         row.setUserId(voterId);
         row.setRoundNumber(round);
         voteRepository.save(row);
+        pointRewards.recordVote(voterId, auditionId, round);
 
         applicationRankingService.recalculateScores(auditionId);
         return new VoteMutationResultDto(app.getId().toString(), replaced);

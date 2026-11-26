@@ -165,8 +165,10 @@ public class StatsService {
             payoutScheduled = 0;
             payoutDone = 0;
         }
+        Funding funding = funding(code, period, agencyId, auditionId);
         return new CountryDetail(
-                code, auditions, applications, registered, approved,
+                code, auditions, applications, funding.total(), funding.point(), funding.paid(),
+                OrgRoles.countryStaff(actor.role()) ? null : funding.payableUsd(), registered, approved,
                 registered == 0 ? null : approved + "/" + registered,
                 staff, trend, shares, payoutScheduled, payoutDone, "UNCONFIRMED");
     }
@@ -202,12 +204,12 @@ public class StatsService {
                 args.add(period);
             }
         }
-        return jdbc.query(sql, (rs, n) -> {
+        List<CountrySlice> base = jdbc.query(sql, (rs, n) -> {
             long snapshot = rs.getLong("sales_snapshot_usd");
             return new CountrySlice(
                     rs.getString("code").trim(),
                     rs.getLong("auditions"),
-                    rs.getLong("applications"),
+                    rs.getLong("applications"), 0, 0, 0,
                     rs.getLong("accounting_usd"),
                     rs.getLong("refunds_usd"),
                     snapshot,
@@ -218,6 +220,57 @@ public class StatsService {
                     rs.getLong("settled_count"),
                     rs.getLong("unsettled_count"));
         }, args.toArray());
+        var usage = fundingByCountry(country, period, null, null);
+        return base.stream().map(row -> {
+            Funding f = usage.getOrDefault(row.country(), new Funding(0,0,0,0));
+            return new CountrySlice(row.country(),row.auditions(),row.applications(),f.point(),f.paid(),f.payableUsd(),
+                    row.accountingRevenueUsd(),row.refundsUsd(),row.salesFeeSnapshotUsd(),row.salesCashUsd(),
+                    row.settlementBaseUsd(),row.compensationUsd(),row.hqShareUsd(),row.settledCount(),row.unsettledCount());
+        }).toList();
+    }
+
+    private record Funding(long total, long point, long paid, long payableUsd) {}
+
+    private Funding funding(String country, String period, UUID agency, UUID audition) {
+        return fundingByCountry(country, period, agency, audition).getOrDefault(country,new Funding(0,0,0,0));
+    }
+
+    private java.util.Map<String, Funding> fundingByCountry(String country, String period, UUID agency, UUID audition) {
+        String filters = "";
+        List<Object> params = new ArrayList<>();
+        if (country != null) { filters += " AND branch.country_code=?"; params.add(country); }
+        if (period != null && !period.isBlank()) {
+            filters += " AND to_char(p.created_at AT TIME ZONE 'UTC','YYYY-MM')=?";
+            params.add(period);
+        }
+        if (agency != null) { filters += " AND branch.id=?"; params.add(agency); }
+        if (audition != null) { filters += " AND u.id=?"; params.add(audition); }
+        String sql = """
+                WITH eligible AS (
+                    SELECT p.id,branch.country_code
+                    FROM applications p JOIN auditions u ON u.id=p.audition_id
+                    JOIN crm_agencies branch ON branch.id=u.posting_branch_id
+                    WHERE TRUE
+                """ + filters + """
+                ), paid AS (
+                    SELECT ra.application_id,SUM(a.payable_usd) AS payable
+                    FROM eligible e JOIN revenue_attributions ra ON ra.application_id=e.id
+                    JOIN credit_lot_allocations a ON a.usage_credit_transaction_id=ra.credit_transaction_id
+                    JOIN credit_lots l ON l.id=a.lot_id
+                    WHERE ra.recognition='SALES' AND ra.line_kind='REVENUE' AND ra.confirmation_state='ATTRIBUTED'
+                        AND a.status='ALLOCATED' AND a.bucket='PAID' AND a.payable_usd>0
+                        AND (l.ledger_environment IS NULL OR l.ledger_environment NOT IN ('MOCK','TEST'))
+                    GROUP BY ra.application_id
+                )
+                SELECT e.country_code,COUNT(*) total,COUNT(paid.application_id) paid,
+                    COUNT(*) FILTER (WHERE EXISTS(SELECT 1 FROM point_entries p WHERE p.reference_id=e.id AND p.kind='AUDITION_APPLY')) points,
+                    COALESCE(SUM(paid.payable),0) payable
+                FROM eligible e LEFT JOIN paid ON paid.application_id=e.id GROUP BY e.country_code
+                """;
+        var rows = new java.util.HashMap<String, Funding>();
+        jdbc.query(sql, (org.springframework.jdbc.core.RowCallbackHandler) rs -> rows.put(rs.getString("country_code").trim(),
+                new Funding(rs.getLong("total"),rs.getLong("points"),rs.getLong("paid"),rs.getLong("payable"))),params.toArray());
+        return rows;
     }
 
     private String scopedCountry(OrgAccess.Actor actor, String country) {
@@ -284,6 +337,9 @@ public class StatsService {
             String country,
             long auditions,
             long applications,
+            long pointApplications,
+            long paidCreditApplications,
+            long payableUsd,
             long accountingRevenueUsd,
             long refundsUsd,
             long salesFeeSnapshotUsd,
@@ -299,6 +355,10 @@ public class StatsService {
             String country,
             long auditions,
             long applications,
+            long applicationsInPeriod,
+            long pointApplications,
+            long paidCreditApplications,
+            Long payableUsd,
             long agenciesRegistered,
             long agenciesApproved,
             String approvalCount,

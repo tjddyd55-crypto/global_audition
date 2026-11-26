@@ -1,5 +1,6 @@
-﻿'use client'
+'use client'
 
+import { usePointQuote } from '@/shared/audition/usePointQuote'
 import { useQuery } from '@tanstack/react-query'
 import { CREDIT_POLICY_AUDITION_APPLY, creditsApi, resolveApplicationFeeCredits } from '@/shared/api/credits'
 
@@ -30,6 +31,7 @@ export function useAuditionApplyCreditGate({
     staleTime: 30_000,
   })
 
+  const points = usePointQuote(!!auditionId && showApplySubmitCta)
   const creditBalanceAmount = creditBalance?.balance ?? 0
   const applicationPaymentMode =
     applyPolicySnapshot?.applicationPaymentMode ??
@@ -41,6 +43,7 @@ export function useAuditionApplyCreditGate({
   const applyNavDisabledForCredits = Boolean(
     showApplySubmitCta &&
       !alreadyApplied &&
+      !points.data?.pointAllowed &&
       (applyPolicyLoading || applyPolicyError || !applyPolicySnapshot || !creditGateReady || !hasEnoughCredits)
   )
 

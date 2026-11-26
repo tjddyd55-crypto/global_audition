@@ -1,4 +1,4 @@
-﻿import { apiClient } from './client'
+import { apiClient } from './client'
 import { unwrapData } from './unwrap'
 
 export interface ApplicationResponse {
@@ -17,6 +17,8 @@ export interface ApplicationResponseWithAudition extends ApplicationResponse {
 }
 
 export type CreateApplicationPayload = {
+  paymentMethod?: 'CREDIT' | 'POINT'
+  expectedPointCost?: number
   auditionId: string
   /** 비우면 미저장 (영상만 제출 UX) */
   name?: string | null

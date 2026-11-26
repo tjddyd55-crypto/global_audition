@@ -1,8 +1,9 @@
-﻿import { apiClient } from './client'
+import { apiClient } from './client'
 import { unwrapData } from './unwrap'
 import { useAuthStore } from '@/shared/auth/authStore'
 
 export interface SignupRequest {
+  inviteCode?: string
   email: string
   password: string
   role: 'APPLICANT' | 'AGENCY'

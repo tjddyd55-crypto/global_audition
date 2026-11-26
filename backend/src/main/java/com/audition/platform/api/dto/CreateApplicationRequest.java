@@ -17,6 +17,18 @@ public class CreateApplicationRequest {
     @NotNull
     private UUID auditionId;
 
+    @Pattern(regexp = "CREDIT|POINT")
+    private String paymentMethod;
+
+    @Min(1)
+    private Long expectedPointCost;
+
+    public String getPaymentMethod() { return paymentMethod; }
+    public void setPaymentMethod(String value) { paymentMethod = value; }
+    public Long getExpectedPointCost() { return expectedPointCost; }
+    public void setExpectedPointCost(Long value) { expectedPointCost = value; }
+
+
     /** 지원서 스냅샷. 빈 값은 null로 저장 (프로필과 무관하게 요청 본문만 사용). */
     @Size(max = 120)
     private String name;

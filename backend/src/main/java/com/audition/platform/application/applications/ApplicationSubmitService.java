@@ -1,5 +1,6 @@
 package com.audition.platform.application.applications;
 
+import com.audition.platform.application.points.PointsService;
 import com.audition.platform.api.dto.ApplicationResponse;
 import com.audition.platform.api.dto.CreateApplicationRequest;
 import com.audition.platform.application.ApplicationService;
@@ -41,6 +42,7 @@ import java.util.UUID;
  */
 @Service
 public class ApplicationSubmitService {
+    private final PointsService points;
 
     /** 중복 지원. ko/en/mn `errors.ALREADY_APPLIED` 와 같은 키. */
     public static final String ALREADY_APPLIED = "ALREADY_APPLIED";
@@ -70,7 +72,9 @@ public class ApplicationSubmitService {
             ApplicationRoundSubmissionService applicationRoundSubmissionService,
             AuditionSeriesEligibilityService auditionSeriesEligibilityService,
             ApplicationValidationService applicationValidationService,
-            MinorPolicyService minorPolicy) {
+            MinorPolicyService minorPolicy,
+            PointsService points) {
+        this.points = points;
         this.minorPolicy = minorPolicy;
         this.applicationService = applicationService;
         this.applicationRepository = applicationRepository;
@@ -160,7 +164,11 @@ public class ApplicationSubmitService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, ALREADY_APPLIED);
         }
 
-        creditService.useCredits(applicantId, CreditPolicyKey.AUDITION_APPLY, auditionId.toString());
+        if ("POINT".equals(body.getPaymentMethod())) {
+            points.payForApplication(applicantId, app.getId(), body.getExpectedPointCost());
+        } else {
+            creditService.useCredits(applicantId, CreditPolicyKey.AUDITION_APPLY, auditionId.toString());
+        }
 
         ApplicationVideo video = new ApplicationVideo();
         video.setApplicationId(app.getId());

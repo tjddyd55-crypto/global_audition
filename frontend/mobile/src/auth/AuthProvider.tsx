@@ -6,6 +6,7 @@ import { ApiError } from '../api/http'
 import { clearSession, readSession, writeSession } from './secureSession'
 
 type SignupInput = {
+  inviteCode?: string
   email: string
   password: string
   nickname: string
