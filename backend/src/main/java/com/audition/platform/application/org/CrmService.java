@@ -16,6 +16,8 @@ public class CrmService {
 
     private static final Set<String> STAGES = Set.of(
             "LEAD", "CONTACTED", "MEETING", "REVIEW", "CONTRACTED", "ACTIVE", "STOPPED", "REJECTED", "DORMANT");
+    private static final Set<String> COUNTRY_DECISIONS = Set.of(
+            AgencyApproval.SUBMIT, AgencyApproval.SUPPLEMENT, AgencyApproval.RECOMMEND, AgencyApproval.COUNTRY_REJECT);
 
     private final JdbcCrmStore crm;
     private final JdbcOrgStore org;
@@ -65,8 +67,26 @@ public class CrmService {
     }
 
     @Transactional
-    public AgencyRow changeStage(UUID id, String stage, String reason) {
+    public AgencyRow updateContact(UUID id, String country, String name, String contactName, String contactPhone) {
         AgencyRow current = requireVisible(id);
+        verifyCountry(current, country);
+        OrgAccess.Actor actor = access.requireCountry(current.countryCode());
+        access.requireStaffPermission(actor, current.countryCode(), OrgRoles.PERM_CRM_WRITE);
+        crm.updateContact(id, name.trim(), contactName, contactPhone);
+        org.audit(UUID.randomUUID(), "CRM_AGENCY_CONTACT_UPDATED", actor.id(), current.countryCode(), "CRM_AGENCY",
+                id.toString(), current.displayName() + " → " + name.trim());
+        return crm.find(id).orElseThrow();
+    }
+
+    @Transactional
+    public AgencyRow changeStage(UUID id, String stage, String reason) {
+        return changeStage(id, stage, reason, null);
+    }
+
+    @Transactional
+    public AgencyRow changeStage(UUID id, String stage, String reason, String country) {
+        AgencyRow current = requireVisible(id);
+        verifyCountry(current, country);
         if (!STAGES.contains(stage)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "STAGE_INVALID");
         }
@@ -75,19 +95,30 @@ public class CrmService {
         access.requireAssignedAgency(actor, current.countryCode(), id);
         crm.updateState(id, stage, current.approvalState(), null);
         crm.stageEvent(UUID.randomUUID(), id, current.stage(), stage, actor.id(), reason);
+        org.audit(UUID.randomUUID(), "CRM_STAGE_UPDATED", actor.id(), current.countryCode(), "CRM_AGENCY", id.toString(),
+                current.stage() + " → " + stage + (reason == null ? "" : " · " + reason));
         return crm.find(id).orElseThrow();
     }
 
     @Transactional
     public AgencyRow decide(UUID id, String action, String reason, UUID linkedUserId) {
+        return decide(id, action, reason, linkedUserId, null);
+    }
+
+    @Transactional
+    public AgencyRow decide(UUID id, String action, String reason, UUID linkedUserId, String country) {
         AgencyRow current = requireVisible(id);
+        verifyCountry(current, country);
         OrgAccess.Actor actor = access.requireCountry(current.countryCode());
         boolean hq = OrgRoles.hq(actor.role());
+        if (country != null && (action == null || !COUNTRY_DECISIONS.contains(action) || linkedUserId != null)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "COUNTRY_WORKSPACE_DECISION_ONLY");
+        }
         if (!hq) {
             access.requireStaffPermission(actor, current.countryCode(), OrgRoles.PERM_AGENCY_REVIEW);
             access.requireAssignedAgency(actor, current.countryCode(), id);
         }
-        String next = AgencyApproval.next(current.approvalState(), action, hq);
+        String next = AgencyApproval.next(current.approvalState(), action, hq && country == null);
         String stage = current.stage();
         if (AgencyApproval.APPROVED.equals(next)) {
             stage = "ACTIVE";
@@ -105,7 +136,8 @@ public class CrmService {
         if (AgencyApproval.APPROVED.equals(next) && link != null && !OrgRoles.hq(org.roleOf(link))) {
             org.setRoleIfNotHq(link, OrgRoles.AGENCY);
         }
-        org.audit(UUID.randomUUID(), "CRM_APPROVAL_" + action, actor.id(), current.countryCode(), "CRM_AGENCY", id.toString(), reason);
+        org.audit(UUID.randomUUID(), "CRM_APPROVAL_" + action, actor.id(), current.countryCode(), "CRM_AGENCY", id.toString(),
+                current.approvalState() + " → " + next + (reason == null ? "" : " · " + reason));
         return crm.find(id).orElseThrow();
     }
 
@@ -116,24 +148,38 @@ public class CrmService {
 
     @Transactional
     public void logConsult(UUID id, String body, LocalDate followUpOn) {
+        logConsult(id, body, followUpOn, null);
+    }
+
+    @Transactional
+    public void logConsult(UUID id, String body, LocalDate followUpOn, String country) {
         AgencyRow current = requireVisible(id);
+        verifyCountry(current, country);
         OrgAccess.Actor actor = access.requireCountry(current.countryCode());
         access.requireStaffPermission(actor, current.countryCode(), OrgRoles.PERM_CONSULT_LOG);
         access.requireAssignedAgency(actor, current.countryCode(), id);
         if (body == null || body.isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "NOTE_REQUIRED");
         }
-        crm.activity(UUID.randomUUID(), id, current.countryCode(), actor.id(), "CONSULT", body.trim(), followUpOn);
+        UUID activityId = UUID.randomUUID();
+        crm.activity(activityId, id, current.countryCode(), actor.id(), "CONSULT", body.trim(), followUpOn);
+        org.audit(UUID.randomUUID(), "CRM_CONSULT_ADDED", actor.id(), current.countryCode(), "CRM_ACTIVITY", activityId.toString(), id.toString());
     }
 
     @Transactional
     public JdbcCrmStore.ActivityRow editConsult(UUID activityId, String body, LocalDate followUpOn) {
+        return editConsult(activityId, body, followUpOn, null);
+    }
+
+    @Transactional
+    public JdbcCrmStore.ActivityRow editConsult(UUID activityId, String body, LocalDate followUpOn, String country) {
         JdbcCrmStore.ActivityRow current = crm.findActivity(activityId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "CONSULT_NOT_FOUND"));
         if (!"CONSULT".equals(current.kind())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "CONSULT_ONLY");
         }
         AgencyRow agency = requireVisible(current.agencyId());
+        verifyCountry(agency, country);
         OrgAccess.Actor actor = access.requireCountry(agency.countryCode());
         access.requireStaffPermission(actor, agency.countryCode(), OrgRoles.PERM_CONSULT_LOG);
         access.requireAssignedAgency(actor, agency.countryCode(), agency.id());
@@ -218,6 +264,12 @@ public class CrmService {
         OrgAccess.Actor actor = access.requireCountry(row.countryCode());
         access.requireAssignedAgency(actor, row.countryCode(), id);
         return row;
+    }
+
+    private static void verifyCountry(AgencyRow row, String selectedCountry) {
+        if (selectedCountry != null && !row.countryCode().equals(CountryCodes.iso2(selectedCountry))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "COUNTRY_SCOPE_DENIED");
+        }
     }
 
     public record AgencySelf(UUID id, String countryCode, String displayName, String stage, String approvalState) {

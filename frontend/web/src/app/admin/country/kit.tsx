@@ -1,6 +1,8 @@
 'use client'
 
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
+import { countryWorkspaceHref, isHeadquartersRole } from '@/shared/auth/adminPageAccess'
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { orgCopy } from '@/app/admin/org/copy'
@@ -23,13 +25,21 @@ type Locale = 'ko' | 'ja' | 'en'
 type SortDir = 'asc' | 'desc'
 
 export function useCountrySession() {
+  const requested = useSearchParams().get('country')?.trim().toUpperCase()
   const me = useQuery({ queryKey: ['currentUser'], queryFn: () => userApi.getCurrentUser() })
-  const countries = useQuery({ queryKey: ['org', 'countries'], queryFn: () => orgAdminApi.countries() })
+  const headquarters = isHeadquartersRole(me.data?.role)
+  const countries = useQuery({
+    queryKey: ['org', 'country-workspace', 'countries', me.data?.userId, me.data?.role],
+    queryFn: () => orgAdminApi.countries(),
+    enabled: Boolean(me.data?.role),
+  })
   const account = useQuery({ queryKey: ['org', 'account'], queryFn: () => orgAdminApi.account() })
-  const code = countries.data?.[0]?.code?.trim() ?? ''
+  const country = headquarters ? countries.data?.find(row => row.code === requested) : countries.data?.[0]
+  const code = country?.code ?? ''
   const staff = me.data?.role === 'COUNTRY_STAFF'
-  const locale = (account.data?.locale ?? 'ko') as Locale
-  return { me, countries, account, code, staff, locale, country: countries.data?.[0] }
+  const locale = (headquarters ? 'ko' : account.data?.locale ?? 'ko') as Locale
+  const href = (path: string) => countryWorkspaceHref(path, headquarters ? code : '')
+  return { me, countries, account, code, staff, locale, country, headquarters, href }
 }
 
 export function label(locale: Locale, key: keyof typeof orgCopy.ko): string {
@@ -236,7 +246,7 @@ function MetricGrid({ metrics, staff, locale }: { metrics: CountryMetrics; staff
 }
 
 export function AgenciesScreen({ detailId }: { detailId?: string }) {
-  const { code, locale } = useCountrySession()
+  const { code, locale, href } = useCountrySession()
   const [query, setQuery] = useState('')
   const [status, setStatus] = useState('ALL')
   const agencies = useQuery({
@@ -255,7 +265,7 @@ export function AgenciesScreen({ detailId }: { detailId?: string }) {
     <div>
       <h1 className="mb-4 text-xl font-semibold">{label(locale, 'agencyMenu')}</h1>
       {detailId ? (
-        <Link href="/admin/country/agencies" className="mb-4 inline-block text-sm text-violet-700 underline">
+        <Link href={href('/admin/country/agencies')} className="mb-4 inline-block text-sm text-violet-700 underline">
           목록으로
         </Link>
       ) : null}
@@ -268,13 +278,13 @@ export function AgenciesScreen({ detailId }: { detailId?: string }) {
         </select>
       </div>
       <StateLine loading={agencies.isLoading} error={agencies.error} empty={!agencies.isLoading && rows.length === 0} />
-      {selected ? <AgencyDetail row={selected} /> : null}
+      {selected ? <AgencyDetail key={selected.id} row={selected} /> : null}
       {!detailId && rows.length > 0 ? (
         <DataTable
           rows={rows}
           columns={[
             { key: 'name', header: '기획사', value: (row) => row.displayName, render: (row) => (
-              <Link className="underline" href={`/admin/country/agencies/${row.id}`}>
+              <Link className="underline" href={href(`/admin/country/agencies/${row.id}`)}>
                 {row.displayName}{row.notes === 'SIGNUP' ? ' · 가입 신청' : ''}
               </Link>
             ) },
@@ -290,6 +300,21 @@ export function AgenciesScreen({ detailId }: { detailId?: string }) {
 }
 
 function AgencyDetail({ row }: { row: AgencyRow }) {
+  const { code, staff } = useCountrySession()
+  const queryClient = useQueryClient()
+  const [editing, setEditing] = useState(false)
+  const [contact, setContact] = useState({
+    displayName: row.displayName,
+    contactName: row.contactName ?? '',
+    contactPhone: row.contactPhone ?? '',
+  })
+  const save = useMutation({
+    mutationFn: () => orgAdminApi.updateAgencyContact(row.id, code, contact),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['org', 'agencies', code] })
+      setEditing(false)
+    },
+  })
   const auditions = useQuery({
     queryKey: ['org', 'auditions', row.countryCode],
     queryFn: () => orgAdminApi.auditions(row.countryCode),
@@ -304,6 +329,28 @@ function AgencyDetail({ row }: { row: AgencyRow }) {
         사업자등록번호 {row.businessRegistration ?? '—'} · 대표 {row.contactName ?? '—'} · 연락처 {row.contactPhone ?? '—'}
         {row.city ? ` · ${row.city}` : ''}
       </p>
+      {!staff && (editing ? (
+        <form className="mb-4 grid max-w-md gap-2" onSubmit={event => { event.preventDefault(); save.mutate() }}>
+          <label className="grid gap-1 text-sm">기획사명
+            <input className="rounded border p-2" value={contact.displayName} required maxLength={200} onChange={event => setContact({ ...contact, displayName: event.target.value })} />
+          </label>
+          <label className="grid gap-1 text-sm">담당자
+            <input className="rounded border p-2" value={contact.contactName} maxLength={120} onChange={event => setContact({ ...contact, contactName: event.target.value })} />
+          </label>
+          <label className="grid gap-1 text-sm">연락처
+            <input className="rounded border p-2" type="tel" value={contact.contactPhone} maxLength={80} onChange={event => setContact({ ...contact, contactPhone: event.target.value })} />
+          </label>
+          {save.error && <p role="alert" className="text-sm text-red-700">{orgErrorMessage(save.error)}</p>}
+          <div className="flex gap-2">
+            <button className="rounded bg-black px-3 py-2 text-sm text-white" disabled={save.isPending || !contact.displayName.trim()}>저장</button>
+            <button type="button" className="rounded border px-3 py-2 text-sm" onClick={() => setEditing(false)}>취소</button>
+          </div>
+        </form>
+      ) : <button type="button" className="mb-4 rounded border px-3 py-2 text-sm" onClick={() => {
+        setContact({ displayName: row.displayName, contactName: row.contactName ?? '', contactPhone: row.contactPhone ?? '' })
+        save.reset()
+        setEditing(true)
+      }}>기획사 정보 수정</button>)}
       <p className="mb-2 text-sm text-gray-600">이 기획사 오디션 {mine.length}건. 지원자 개인정보는 표시하지 않습니다.</p>
       <ul className="text-sm">
         {mine.map((item) => (
@@ -353,7 +400,7 @@ export function CrmScreen() {
     onError: (err) => setError(orgErrorMessage(err)),
   })
   const move = useMutation({
-    mutationFn: () => orgAdminApi.changeStage(agencyId, stage, '단계 변경'),
+    mutationFn: () => orgAdminApi.changeStage(agencyId, stage, '단계 변경', code),
     onSuccess: async () => {
       setError(null)
       await refresh()
@@ -362,7 +409,7 @@ export function CrmScreen() {
   })
   const [editId, setEditId] = useState('')
   const consult = useMutation({
-    mutationFn: () => orgAdminApi.consult(agencyId, note, followUp || undefined),
+    mutationFn: () => orgAdminApi.consult(agencyId, note, followUp || undefined, code),
     onSuccess: async () => {
       setError(null)
       setNote('')
@@ -371,7 +418,7 @@ export function CrmScreen() {
     onError: (err) => setError(orgErrorMessage(err)),
   })
   const editConsult = useMutation({
-    mutationFn: () => orgAdminApi.updateConsult(editId, note, followUp || undefined),
+    mutationFn: () => orgAdminApi.updateConsult(editId, note, followUp || undefined, code),
     onSuccess: async () => {
       setError(null)
       setEditId('')
@@ -462,7 +509,7 @@ export function ApprovalsScreen() {
   const agencies = useQuery({ queryKey: ['org', 'agencies', code], queryFn: () => orgAdminApi.agencies(code), enabled: code.length === 2 })
   const pending = (agencies.data ?? []).filter((row) => ['PENDING', 'COUNTRY_REVIEW', 'HQ_REVIEW'].includes(row.approvalState))
   const act = useMutation({
-    mutationFn: (action: string) => orgAdminApi.decide(agencyId, action, reason),
+    mutationFn: (action: string) => orgAdminApi.decide(agencyId, action, reason, code),
     onSuccess: async () => {
       setError(null)
       await qc.invalidateQueries({ queryKey: ['org', 'agencies', code] })

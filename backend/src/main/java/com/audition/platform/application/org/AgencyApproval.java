@@ -27,7 +27,7 @@ public final class AgencyApproval {
     }
 
     public static String next(String current, String action, boolean hq) {
-        if (HQ_APPROVE.equals(action) && !hq) {
+        if ((HQ_APPROVE.equals(action) || HQ_REJECT.equals(action)) && !hq) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "HQ_APPROVAL_REQUIRED");
         }
         if (SUSPEND.equals(action) && !hq) {

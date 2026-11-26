@@ -9,6 +9,7 @@ import { routing } from '@/i18n.config'
 import { authApi } from '@/shared/api/auth'
 import { userApi } from '@/shared/api/user'
 import { useAuthStore } from '@/shared/auth/authStore'
+import { isHeadquartersRole } from '@/shared/auth/adminPageAccess'
 
 const ALLOWED = new Set(['COUNTRY_ADMIN', 'COUNTRY_STAFF'])
 
@@ -41,7 +42,7 @@ export function CountryAdminAuthGate({ children }: { children: ReactNode }) {
       </div>
     )
   }
-  if (!ALLOWED.has(me.role)) {
+  if (!ALLOWED.has(me.role) && !isHeadquartersRole(me.role)) {
     return (
       <div className="mx-auto max-w-lg px-4 py-16 text-sm text-gray-700">
         국가 관리자 또는 국가 직원만 이 화면에 들어올 수 있습니다. 현재 역할: <strong>{me.role}</strong>

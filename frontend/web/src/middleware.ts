@@ -1,7 +1,7 @@
 import createIntlMiddleware from 'next-intl/middleware'
 import { NextResponse, type NextRequest } from 'next/server'
 import { routing } from './i18n.config'
-import { adminPageAllowed, countryAgencyDetailId, isAdminPagePath } from './shared/auth/adminPageAccess'
+import { adminPageAllowed, countryAgencyDetailId, isAdminPagePath, isHeadquartersRole } from './shared/auth/adminPageAccess'
 import {
   redirectPathForRetiredLocale,
   redirectPathForSavedLocale,
@@ -87,14 +87,15 @@ async function sessionRole(req: NextRequest): Promise<string | null> {
   }
 }
 
-async function agencyVisible(req: NextRequest, agencyId: string): Promise<boolean> {
+async function agencyVisible(req: NextRequest, agencyId: string, headquarters: boolean): Promise<boolean> {
   const headers = sessionHeaders(req)
   if (!headers) return false
   const origin = backendOrigin()
   const countriesRes = await fetch(`${origin}/api/admin/org/countries`, { headers, cache: 'no-store' })
   if (!countriesRes.ok) return false
   const countries = (await countriesRes.json()) as Array<{ code?: string }>
-  const code = countries[0]?.code
+  const requested = req.nextUrl.searchParams.get('country')?.trim().toUpperCase()
+  const code = headquarters ? countries.find(row => row.code === requested)?.code : countries[0]?.code
   if (!code) return false
   const listRes = await fetch(`${origin}/api/admin/org/crm/agencies?country=${encodeURIComponent(code)}`, {
     headers,
@@ -109,8 +110,18 @@ async function guardAdminPage(req: NextRequest) {
   const pathname = req.nextUrl.pathname
   const role = await sessionRole(req)
   if (!adminPageAllowed(pathname, role)) return forbiddenPage()
+  const headquarters = isHeadquartersRole(role)
+  const requested = req.nextUrl.searchParams.get('country')?.trim().toUpperCase()
+  if (!headquarters && requested && pathname.startsWith('/admin/country')) {
+    const headers = sessionHeaders(req)
+    if (!headers) return forbiddenPage()
+    const response = await fetch(`${backendOrigin()}/api/admin/org/countries`, { headers, cache: 'no-store' })
+    if (!response.ok || !(await response.json() as { code: string }[]).some(row => row.code === requested)) {
+      return forbiddenPage()
+    }
+  }
   const agencyId = countryAgencyDetailId(pathname)
-  if (agencyId && !(await agencyVisible(req, agencyId))) return forbiddenPage()
+  if (agencyId && !(await agencyVisible(req, agencyId, headquarters))) return forbiddenPage()
   return NextResponse.next()
 }
 

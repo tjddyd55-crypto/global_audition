@@ -154,9 +154,25 @@ class OrgScenarioIT {
         assertEquals(403, blocked.getStatusCode().value());
         assertEquals("HQ_APPROVAL_REQUIRED", blocked.getReason());
         asUser(otherRep);
-        crm.decide(otherBranch.id(), AgencyApproval.SUBMIT, "지점 접수", null);
-        crm.decide(otherBranch.id(), AgencyApproval.RECOMMEND, "타국 추천", null);
+        assertEquals(403, assertThrows(ResponseStatusException.class,
+                () -> crm.changeStage(homeAgency.id(), "CONTACTED", "범위 밖", HOME)).getStatusCode().value());
         asUser(hq);
+        crm.updateContact(otherBranch.id(), OTHER, "Other Branch Updated", null, null);
+        asUser(otherRep);
+        assertTrue(crm.list(OTHER).stream().anyMatch(row -> row.displayName().equals("Other Branch Updated")));
+        asUser(hq);
+        assertEquals(403, assertThrows(ResponseStatusException.class,
+                () -> crm.decide(otherBranch.id(), AgencyApproval.SUBMIT, "잘못된 국가", null, HOME)).getStatusCode().value());
+        crm.decide(otherBranch.id(), AgencyApproval.SUBMIT, "지점 접수", null, OTHER);
+        assertEquals(AgencyApproval.HQ_REVIEW,
+                crm.decide(otherBranch.id(), AgencyApproval.RECOMMEND, "국가 단계 승인", null, OTHER).approvalState());
+        assertEquals(403, assertThrows(ResponseStatusException.class,
+                () -> crm.decide(otherBranch.id(), AgencyApproval.HQ_APPROVE, "국가 화면에서 최종 승인", null, OTHER)).getStatusCode().value());
+        assertEquals(1L, jdbc.queryForObject("""
+                SELECT COUNT(*) FROM country_org_audit
+                 WHERE actor_id = ? AND actor_role = 'SUPER_ADMIN' AND country_code = ?
+                   AND action = 'CRM_APPROVAL_RECOMMEND' AND target_id = ?
+                """, Long.class, hq, OTHER, otherBranch.id().toString()));
         AgencyRow approved = crm.decide(homeAgency.id(), AgencyApproval.HQ_APPROVE, "본사 승인", agencyUser);
         crm.decide(otherBranch.id(), AgencyApproval.HQ_APPROVE, "본사 승인", agencyUser);
         assertEquals(AgencyApproval.APPROVED, approved.approvalState());

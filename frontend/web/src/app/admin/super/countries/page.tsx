@@ -1,5 +1,8 @@
 'use client'
 
+import Link from 'next/link'
+import { countryWorkspaceHref } from '@/shared/auth/adminPageAccess'
+
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { adminKo } from '@/app/admin/org/copy'
@@ -75,7 +78,7 @@ export default function CountriesPage() {
           {(countries.data ?? []).map((row) => (
             <tr key={row.code} className="border-b">
               <td className="py-2">{row.code}</td>
-              <td>{row.name}</td>
+              <td>{row.name} <Link href={countryWorkspaceHref('/admin/country', row.code)} className="whitespace-nowrap text-violet-700 underline">관리자 접속</Link></td>
               <td>{row.status}</td>
               <td>{row.currency}</td>
               <td>{row.representativeUserId ?? '없음'}</td>

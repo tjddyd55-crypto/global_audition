@@ -3,6 +3,9 @@ package com.audition.platform.api;
 import com.audition.platform.application.org.CrmService;
 import com.audition.platform.application.org.CrmService.AgencyDraft;
 import com.audition.platform.application.org.JdbcCrmStore.AgencyRow;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -54,13 +57,23 @@ public class CrmController {
     }
 
     @PostMapping("/{id}/stage")
-    public AgencyRow stage(@PathVariable UUID id, @RequestBody StageRequest request) {
-        return crm.changeStage(id, request.stage(), request.reason());
+    public AgencyRow stage(@PathVariable UUID id, @RequestBody StageRequest request, @RequestParam(required = false) String country) {
+        return crm.changeStage(id, request.stage(), request.reason(), country);
+    }
+
+    @PatchMapping("/{id}/contact")
+    public AgencyRow updateContact(@PathVariable UUID id, @RequestParam String country, @Valid @RequestBody ContactRequest request) {
+        return crm.updateContact(id, country, request.displayName(), request.contactName(), request.contactPhone());
+    }
+
+    public record ContactRequest(@NotBlank @Size(max = 200) String displayName,
+                                 @Size(max = 120) String contactName,
+                                 @Size(max = 80) String contactPhone) {
     }
 
     @PostMapping("/{id}/decision")
-    public AgencyRow decision(@PathVariable UUID id, @RequestBody DecisionRequest request) {
-        return crm.decide(id, request.action(), request.reason(), request.linkedUserId());
+    public AgencyRow decision(@PathVariable UUID id, @RequestBody DecisionRequest request, @RequestParam(required = false) String country) {
+        return crm.decide(id, request.action(), request.reason(), request.linkedUserId(), country);
     }
 
     @PostMapping("/{id}/auditions/{auditionId}")
@@ -69,14 +82,14 @@ public class CrmController {
     }
 
     @PostMapping("/{id}/consultations")
-    public void consult(@PathVariable UUID id, @RequestBody NoteRequest request) {
-        crm.logConsult(id, request.body(), request.followUpOn());
+    public void consult(@PathVariable UUID id, @RequestBody NoteRequest request, @RequestParam(required = false) String country) {
+        crm.logConsult(id, request.body(), request.followUpOn(), country);
     }
 
     @PatchMapping("/activity-log/{activityId}")
     public com.audition.platform.application.org.JdbcCrmStore.ActivityRow editConsult(
-            @PathVariable UUID activityId, @RequestBody NoteRequest request) {
-        return crm.editConsult(activityId, request.body(), request.followUpOn());
+            @PathVariable UUID activityId, @RequestBody NoteRequest request, @RequestParam(required = false) String country) {
+        return crm.editConsult(activityId, request.body(), request.followUpOn(), country);
     }
 
     public record StageRequest(String stage, String reason) {

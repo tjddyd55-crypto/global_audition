@@ -225,9 +225,9 @@ public class JdbcOrgStore implements OrgDirectory {
     public void audit(UUID id, String action, UUID actorId, String countryCode, String targetType, String targetId, String detail) {
         jdbc.update("""
                 INSERT INTO country_org_audit
-                    (id, action, actor_id, country_code, target_type, target_id, detail)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-                """, id, action, actorId, countryCode, targetType, targetId, detail);
+                    (id, action, actor_id, country_code, target_type, target_id, detail, actor_role)
+                VALUES (?, ?, ?, ?, ?, ?, ?, (SELECT role FROM users WHERE id = ?))
+                """, id, action, actorId, countryCode, targetType, targetId, detail, actorId);
     }
 
     private String one(String sql, UUID userId) {

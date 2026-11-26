@@ -145,21 +145,25 @@ export const orgAdminApi = {
     const { data } = await apiClient.get<AgencyRow[]>('/admin/org/crm/agencies', { params: { country } })
     return data
   },
-  async decide(id: string, action: string, reason: string) {
-    const { data } = await apiClient.post<AgencyRow>(`/admin/org/crm/agencies/${id}/decision`, { action, reason })
+  async updateAgencyContact(id: string, country: string, body: { displayName: string; contactName: string; contactPhone: string }) {
+    const { data } = await apiClient.patch<AgencyRow>(`/admin/org/crm/agencies/${id}/contact`, body, { params: { country } })
     return data
   },
-  async consult(id: string, body: string, followUpOn?: string) {
+  async decide(id: string, action: string, reason: string, country?: string) {
+    const { data } = await apiClient.post<AgencyRow>(`/admin/org/crm/agencies/${id}/decision`, { action, reason }, { params: { country } })
+    return data
+  },
+  async consult(id: string, body: string, followUpOn?: string, country?: string) {
     await apiClient.post(`/admin/org/crm/agencies/${id}/consultations`, {
       body,
       followUpOn: followUpOn || null,
-    })
+    }, { params: { country } })
   },
-  async updateConsult(activityId: string, body: string, followUpOn?: string) {
+  async updateConsult(activityId: string, body: string, followUpOn?: string, country?: string) {
     const { data } = await apiClient.patch<ActivityRow>(`/admin/org/crm/agencies/activity-log/${activityId}`, {
       body,
       followUpOn: followUpOn || null,
-    })
+    }, { params: { country } })
     return data
   },
   async contracts(country: string) {
@@ -244,8 +248,8 @@ export const orgAdminApi = {
     const { data } = await apiClient.post<AgencyRow>('/admin/org/crm/agencies', body)
     return data
   },
-  async changeStage(id: string, stage: string, reason: string) {
-    const { data } = await apiClient.post<AgencyRow>(`/admin/org/crm/agencies/${id}/stage`, { stage, reason })
+  async changeStage(id: string, stage: string, reason: string, country?: string) {
+    const { data } = await apiClient.post<AgencyRow>(`/admin/org/crm/agencies/${id}/stage`, { stage, reason }, { params: { country } })
     return data
   },
   async activityLog(country: string, agencyId?: string) {
