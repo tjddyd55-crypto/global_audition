@@ -1,5 +1,6 @@
 package com.audition.platform.infra;
 
+import com.audition.platform.application.org.OrgRoles;
 import com.audition.platform.domain.user.User;
 import com.audition.platform.domain.user.UserRepository;
 import org.slf4j.Logger;
@@ -19,12 +20,11 @@ import java.util.Locale;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
-/** Synchronizes the Railway Development administrator's login with its configured credentials. */
+/** Keeps the configured Railway Development login as the sole super administrator. */
 @Component
 public class SuperAdminBootstrapRunner implements ApplicationListener<ApplicationReadyEvent> {
     private static final Logger log = LoggerFactory.getLogger(SuperAdminBootstrapRunner.class);
     private static final Pattern EMAIL = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
-    private static final String ADMIN_ROLE = "SUPER_ADMIN";
 
     private final UserRepository users;
     private final PasswordEncoder passwords;
@@ -55,44 +55,52 @@ public class SuperAdminBootstrapRunner implements ApplicationListener<Applicatio
 
         // A rolling deployment can briefly start several replicas with the same configuration.
         jdbc.execute("SELECT pg_advisory_xact_lock(18679, 80)");
-        User target = users.findByEmail(email).orElse(null);
-        if (target != null && !ADMIN_ROLE.equals(target.getRole())) {
-            log.warn("[super-admin bootstrap] The configured email is already used by another account.");
+        User target = users.findByEmail(email)
+                .or(() -> users.findByBootstrapCredentialVersionIsNotNull()
+                        .filter(user -> OrgRoles.hq(user.getRole())))
+                .orElse(null);
+        if (target != null && !"ACTIVE".equals(target.getAccountStatus())) {
+            log.warn("[super-admin bootstrap] The configured administrator account is inactive. No roles were changed.");
             return;
         }
 
-        User current = users.findByBootstrapCredentialVersionIsNotNull().orElse(null);
-        if (current == null) {
-            current = target;
+        int revoked = revokeOtherSuperAdmins(target == null ? null : target.getId());
+        if (target == null) {
+            create(email, password);
+        } else {
+            update(target, email, password);
         }
-        if (current == null) {
-            var existing = users.findTop2ByRole(ADMIN_ROLE);
-            if (existing.isEmpty()) {
-                create(email, password);
-                return;
-            }
-            if (existing.size() > 1) {
-                log.warn("[super-admin bootstrap] For the initial setup, configure the email of an existing super administrator.");
-                return;
-            }
-            current = existing.get(0);
-        }
-        if (!ADMIN_ROLE.equals(current.getRole()) || !"ACTIVE".equals(current.getAccountStatus())) {
-            log.warn("[super-admin bootstrap] The selected login does not belong to an active super administrator.");
+        log.info("[super-admin bootstrap] Exclusive Development administrator configured. Other privileged assignments removed: {}.", revoked);
+    }
+
+    private int revokeOtherSuperAdmins(UUID targetId) {
+        // Clear the previous managed account's marker before assigning it to another account.
+        return jdbc.update("""
+                UPDATE users
+                   SET role = CASE WHEN role IN ('SUPER_ADMIN', 'GLOBAL_SUPER_ADMIN') THEN 'APPLICANT' ELSE role END,
+                       bootstrap_credential_version = NULL,
+                       updated_at = NOW()
+                 WHERE id IS DISTINCT FROM CAST(? AS uuid)
+                   AND (role IN ('SUPER_ADMIN', 'GLOBAL_SUPER_ADMIN') OR bootstrap_credential_version IS NOT NULL)
+                """, targetId);
+    }
+
+    private void update(User target, String email, String password) {
+        boolean samePassword = target.getPasswordHash() != null && passwords.matches(password, target.getPasswordHash());
+        if (OrgRoles.SUPER_ADMIN.equals(target.getRole()) && target.getBootstrapCredentialVersion() != null
+                && email.equals(target.getEmail()) && samePassword) {
             return;
         }
-        if (target != null && !target.getId().equals(current.getId())) {
-            log.warn("[super-admin bootstrap] The requested email already belongs to another account.");
-            return;
-        }
-        boolean sameEmail = current.getEmail().equals(email);
-        boolean samePassword = current.getPasswordHash() != null && passwords.matches(password, current.getPasswordHash());
-        if (sameEmail && samePassword && current.getBootstrapCredentialVersion() != null) return;
-        current.setEmail(email);
-        if (!samePassword) current.setPasswordHash(passwords.encode(password));
-        setNewVersion(current);
-        users.save(current);
-        log.info("[super-admin bootstrap] Existing administrator login updated. Prior sessions were revoked.");
+        target.setRole(OrgRoles.SUPER_ADMIN);
+        target.setEmail(email);
+        if (!samePassword) target.setPasswordHash(passwords.encode(password));
+        target.setRecoveryCodeHash(null);
+        target.setRecoveryCodeLookup(null);
+        target.setRecoveryCodeIssuedAt(null);
+        target.setRecoveryFailedAttempts(0);
+        target.setRecoveryLockedUntil(null);
+        setNewVersion(target);
+        users.save(target);
     }
 
     private void create(String email, String password) {
@@ -102,22 +110,17 @@ public class SuperAdminBootstrapRunner implements ApplicationListener<Applicatio
         } while (users.existsByUsername("superadmin_" + suffix) || users.existsByNicknameIgnoreCase("SuperAdmin_" + suffix));
         User admin = new User();
         admin.setEmail(email);
-        admin.setRole(ADMIN_ROLE);
+        admin.setRole(OrgRoles.SUPER_ADMIN);
         admin.setUsername("superadmin_" + suffix);
         admin.setNickname("SuperAdmin_" + suffix);
         admin.setPasswordHash(passwords.encode(password));
         setNewVersion(admin);
         users.save(admin);
-        log.info("[super-admin bootstrap] Development administrator login created.");
     }
 
     private static void setNewVersion(User admin) {
         admin.setBootstrapCredentialVersion(UUID.randomUUID());
         admin.setUpdatedAt(Instant.now());
-    }
-
-    private static String email(Environment env, String key) {
-        return env.getProperty(key, "").strip().toLowerCase(Locale.ROOT);
     }
 
     private static boolean validEmail(String value) {

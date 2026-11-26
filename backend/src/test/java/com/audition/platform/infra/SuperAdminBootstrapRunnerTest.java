@@ -8,7 +8,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.env.MockEnvironment;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -43,6 +42,7 @@ class SuperAdminBootstrapRunnerTest {
         assertEquals("SUPER_ADMIN", saved.getRole());
         assertNotNull(saved.getBootstrapCredentialVersion());
         assertTrue(encoder.matches(password, saved.getPasswordHash()));
+        verify(database).update(anyString(), (Object) isNull());
     }
 
     @Test
@@ -61,45 +61,44 @@ class SuperAdminBootstrapRunnerTest {
     }
 
     @Test
-    void adoptsSingleExistingAdminAndIgnoresUnchangedConfigurationOnRestart() {
-        User existing = account("seed@example.test", "SUPER_ADMIN");
-        existing.setBootstrapCredentialVersion(null);
-        when(users.findTop2ByRole("SUPER_ADMIN")).thenReturn(List.of(existing));
-
-        runner.applyConfiguration(config("dev-admin@example.test"));
+    void unchangedCredentialsKeepSessionVersionAndStillRemoveOtherAdmins() {
+        User existing = account("managed@example.test", "SUPER_ADMIN");
+        existing.setPasswordHash(encoder.encode(testPassword()));
         UUID version = existing.getBootstrapCredentialVersion();
-        assertNotNull(version);
-        when(users.findByBootstrapCredentialVersionIsNotNull()).thenReturn(Optional.of(existing));
         when(users.findByEmail(existing.getEmail())).thenReturn(Optional.of(existing));
-        runner.applyConfiguration(config("dev-admin@example.test"));
+        runner.applyConfiguration(config(existing.getEmail()));
 
-        verify(users).save(existing);
-        assertEquals("dev-admin@example.test", existing.getEmail());
+        verify(database).update(anyString(), eq(existing.getId()));
+        verify(users, never()).save(any());
         assertEquals(version, existing.getBootstrapCredentialVersion());
     }
 
     @Test
-    void neverOverwritesAnApplicantOrGuessesBetweenMultipleAdministrators() {
-        User applicant = account("member@example.test", "APPLICANT");
-        User first = account("first@example.test", "SUPER_ADMIN");
-        User second = account("second@example.test", "SUPER_ADMIN");
-        when(users.findByEmail(applicant.getEmail())).thenReturn(Optional.of(applicant));
-        when(users.findTop2ByRole("SUPER_ADMIN")).thenReturn(List.of(first, second));
-        runner.applyConfiguration(config(applicant.getEmail()));
-        runner.applyConfiguration(config("typo@example.test"));
-        verify(users, never()).save(any());
-        assertEquals("APPLICANT", applicant.getRole());
+    void configuredExistingAccountIsPromotedAfterRemovingOtherPrivilegedAssignments() {
+        User target = account("member@example.test", "APPLICANT");
+        target.setBootstrapCredentialVersion(null);
+        target.setRecoveryCodeLookup("old-lookup");
+        target.setRecoveryCodeHash("old-hash");
+        when(users.findByEmail(target.getEmail())).thenReturn(Optional.of(target));
+        runner.applyConfiguration(config(target.getEmail()));
+
+        var order = inOrder(database, users);
+        order.verify(database).update(anyString(), eq(target.getId()));
+        order.verify(users).save(target);
+        assertEquals("SUPER_ADMIN", target.getRole());
+        assertNotNull(target.getBootstrapCredentialVersion());
+        assertNull(target.getRecoveryCodeLookup());
+        assertNull(target.getRecoveryCodeHash());
+        assertTrue(encoder.matches(testPassword(), target.getPasswordHash()));
     }
 
     @Test
-    void refusesConflictingEmailOrInactiveManagedAccount() {
-        User existing = account("managed@example.test", "SUPER_ADMIN");
-        User other = account("other@example.test", "SUPER_ADMIN");
-        when(users.findByBootstrapCredentialVersionIsNotNull()).thenReturn(Optional.of(existing));
-        when(users.findByEmail(other.getEmail())).thenReturn(Optional.of(other));
-        runner.applyConfiguration(config(other.getEmail()));
+    void inactiveConfiguredAccountLeavesExistingRolesAlone() {
+        User existing = account("member@example.test", "APPLICANT");
         existing.setAccountStatus("SUSPENDED");
-        runner.applyConfiguration(config("new@example.test"));
+        when(users.findByEmail(existing.getEmail())).thenReturn(Optional.of(existing));
+        runner.applyConfiguration(config(existing.getEmail()));
+        verify(database, never()).update(anyString(), (Object) any());
         verify(users, never()).save(any());
     }
 
