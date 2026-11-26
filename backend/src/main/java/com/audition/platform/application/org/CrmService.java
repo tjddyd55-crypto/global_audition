@@ -85,7 +85,7 @@ public class CrmService {
 
     @Transactional
     public AgencyRow changeStage(UUID id, String stage, String reason, String country) {
-        AgencyRow current = requireVisible(id);
+        AgencyRow current = requireVisible(id, true);
         verifyCountry(current, country);
         if (!STAGES.contains(stage)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "STAGE_INVALID");
@@ -107,7 +107,7 @@ public class CrmService {
 
     @Transactional
     public AgencyRow decide(UUID id, String action, String reason, UUID linkedUserId, String country) {
-        AgencyRow current = requireVisible(id);
+        AgencyRow current = requireVisible(id, true);
         verifyCountry(current, country);
         OrgAccess.Actor actor = access.requireCountry(current.countryCode());
         boolean hq = OrgRoles.hq(actor.role());
@@ -119,6 +119,9 @@ public class CrmService {
             access.requireAssignedAgency(actor, current.countryCode(), id);
         }
         String next = AgencyApproval.next(current.approvalState(), action, hq && country == null);
+        if (linkedUserId != null && !(hq && AgencyApproval.HQ_APPROVE.equals(action))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "HQ_APPROVAL_REQUIRED");
+        }
         String stage = current.stage();
         if (AgencyApproval.APPROVED.equals(next)) {
             stage = "ACTIVE";
@@ -260,7 +263,12 @@ public class CrmService {
     }
 
     private AgencyRow requireVisible(UUID id) {
-        AgencyRow row = crm.find(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "AGENCY_NOT_FOUND"));
+        return requireVisible(id, false);
+    }
+
+    private AgencyRow requireVisible(UUID id, boolean lock) {
+        AgencyRow row = (lock ? crm.lock(id) : crm.find(id))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "AGENCY_NOT_FOUND"));
         OrgAccess.Actor actor = access.requireCountry(row.countryCode());
         access.requireAssignedAgency(actor, row.countryCode(), id);
         return row;

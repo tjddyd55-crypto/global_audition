@@ -147,6 +147,8 @@ class OrgScenarioIT {
                 () -> crm.logConsult(unassigned.id(), "범위 밖"));
         assertEquals("AGENCY_NOT_ASSIGNED", unassignedDenied.getReason());
         asUser(secondRep);
+        assertEquals(403, assertThrows(ResponseStatusException.class,
+                () -> crm.decide(homeAgency.id(), AgencyApproval.SUBMIT, "계정 연결 시도", agencyUser)).getStatusCode().value());
         crm.decide(homeAgency.id(), AgencyApproval.SUBMIT, "서류 접수", null);
         crm.decide(homeAgency.id(), AgencyApproval.RECOMMEND, "국가 추천", null);
         ResponseStatusException blocked = assertThrows(ResponseStatusException.class,

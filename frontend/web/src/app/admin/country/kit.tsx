@@ -61,6 +61,17 @@ function formatCell(value: unknown): string {
   return String(value)
 }
 
+function useCountryFunding(code: string, period: string) {
+  return useQuery({
+    queryKey: ['org', 'point-funding', code, period],
+    queryFn: async () => (await apiClient.get<{
+      applicationsInPeriod: number; pointApplications: number; paidCreditApplications: number; payableUsd: number | null
+      contractShares: { hqShareUsd: number; compensationUsd: number }[]
+    }>('/admin/org/stats/country', { params: { country: code, period } })).data,
+    enabled: code.length === 2 && /^\d{4}-\d{2}$/.test(period),
+  })
+}
+
 export function Panel({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="mb-6 rounded border bg-white p-4">
@@ -181,19 +192,39 @@ export function DashboardScreen() {
     queryFn: () => orgAdminApi.activityLog(code),
     enabled: code.length === 2,
   })
+  const funding = useCountryFunding(code, period)
+  const staffList = useQuery({
+    queryKey: ['org', 'staff', code],
+    queryFn: () => orgAdminApi.staff(code),
+    enabled: code.length === 2 && !staff,
+  })
+  const settlements = useQuery({
+    queryKey: ['org', 'settlements', code],
+    queryFn: () => orgAdminApi.settlements(code),
+    enabled: code.length === 2 && !staff,
+  })
+  const paid = settlements.data?.filter(row => row.period === period && row.status === 'PAID')
+  const paidAmount = paid?.every(row => row.compensationUsd != null)
+    ? paid.reduce((sum, row) => sum + Number(row.compensationUsd), 0)
+    : null
   const data = metrics.data
   return (
     <div>
       <h1 className="mb-1 text-xl font-semibold">{label(locale, 'dashboard')}</h1>
       <p className="mb-4 text-sm text-gray-600">
-        {country?.name ?? '국가 없음'} ({code || '—'}) · 담당 {data?.representativeName ?? '미지정'} · 로그인 {me.data?.displayName ?? me.data?.email}
+        {country?.name ?? '국가 없음'} ({code || '—'}) · {country?.status ?? '—'} · 담당 {data?.representativeName ?? '미지정'} · 로그인 {me.data?.displayName ?? me.data?.email}
       </p>
       <label className="mb-4 block text-sm">
         조회 기간 (UTC)
-        <input className="ml-2 rounded border px-3 py-2" aria-label="대시보드 기간" value={period} onChange={(e) => setPeriod(e.target.value)} />
+        <input type="month" className="ml-2 rounded border px-3 py-2" aria-label="대시보드 기간" value={period} onChange={(e) => { if (e.target.value) setPeriod(e.target.value) }} />
       </label>
       <StateLine loading={metrics.isLoading} error={metrics.error} empty={!metrics.isLoading && !data} />
       {data ? <MetricGrid metrics={data} staff={staff} locale={locale} /> : null}
+      <Panel title="선택 월 지원과 업무 현황">
+        {funding.data && <p className="text-sm">유료 크레딧 지원 {count(funding.data.paidCreditApplications, locale)} · 무료 포인트 지원 {count(funding.data.pointApplications, locale)}</p>}
+        {funding.error && <StateLine loading={false} error={funding.error} empty={false} />}
+        {!staff && <p className="mt-2 text-sm">등록 직원 {staffList.data ? count(staffList.data.length, locale) : '—'} · 지급 완료 정산금(USD 기준) {paidAmount == null ? '—' : usd(paidAmount, locale)}</p>}
+      </Panel>
       <Panel title="최근 영업 활동">
         <StateLine loading={log.isLoading} error={log.error} empty={(log.data ?? []).length === 0} />
         <ul className="space-y-2 text-sm">
@@ -214,8 +245,8 @@ function MetricGrid({ metrics, staff, locale }: { metrics: CountryMetrics; staff
     { label: '등록 기획사', value: count(metrics.agenciesRegistered, locale) },
     { label: '승인 기획사', value: count(metrics.agenciesApproved, locale) },
     { label: '진행 오디션', value: count(metrics.liveAuditions, locale) },
-    { label: '이번 달 지원', value: count(metrics.monthlyApplications, locale) },
-    { label: '이번 달 수수료 실적', value: usd(metrics.feePerformanceUsd, locale) },
+    { label: '선택 월 전체 지원', value: count(metrics.monthlyApplications, locale) },
+    { label: '선택 월 수수료 실적', value: usd(metrics.feePerformanceUsd, locale) },
     { label: '무료 사용', value: count(metrics.freeUsageCredits, locale) },
     { label: '유료 사용', value: count(metrics.paidUsageCredits, locale) },
     { label: '검토 필요', value: count(metrics.reviewCredits, locale) },
@@ -654,14 +685,7 @@ export function StatsScreen() {
     queryFn: () => orgAdminApi.usage(code, period),
     enabled: code.length === 2,
   })
-  const funding = useQuery({
-    queryKey: ['org','point-funding',code,period],
-    queryFn: async () => (await apiClient.get<{
-      applicationsInPeriod: number; pointApplications: number; paidCreditApplications: number; payableUsd: number | null
-      contractShares: { hqShareUsd: number; compensationUsd: number }[]
-    }>('/admin/org/stats/country', { params: { country: code, period } })).data,
-    enabled: code.length === 2 && /^\d{4}-\d{2}$/.test(period),
-  })
+  const funding = useCountryFunding(code, period)
   return (
     <div>
       <h1 className="mb-4 text-xl font-semibold">{label(locale, 'stats')}</h1>

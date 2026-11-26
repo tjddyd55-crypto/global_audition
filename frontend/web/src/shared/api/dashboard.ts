@@ -10,6 +10,9 @@ export interface AgencyDashboardResponse {
   accepted: number
   rejected: number
   pending: number
+  submitted: number
+  shortlisted: number
+  openPublicVotes: number
   recentAuditions: AuditionResponse[]
   recentApplications: ApplicationResponseWithAudition[]
 }

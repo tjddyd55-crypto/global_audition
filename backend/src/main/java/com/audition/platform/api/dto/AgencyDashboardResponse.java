@@ -9,6 +9,9 @@ public class AgencyDashboardResponse {
     private long accepted;
     private long rejected;
     private long pending;
+    private long submitted;
+    private long shortlisted;
+    private long openPublicVotes;
     private List<AuditionResponse> recentAuditions;
     private List<ApplicationResponse> recentApplications;
 
@@ -24,6 +27,12 @@ public class AgencyDashboardResponse {
     public void setRejected(long rejected) { this.rejected = rejected; }
     public long getPending() { return pending; }
     public void setPending(long pending) { this.pending = pending; }
+    public long getSubmitted() { return submitted; }
+    public void setSubmitted(long submitted) { this.submitted = submitted; }
+    public long getShortlisted() { return shortlisted; }
+    public void setShortlisted(long shortlisted) { this.shortlisted = shortlisted; }
+    public long getOpenPublicVotes() { return openPublicVotes; }
+    public void setOpenPublicVotes(long openPublicVotes) { this.openPublicVotes = openPublicVotes; }
     public List<AuditionResponse> getRecentAuditions() { return recentAuditions; }
     public void setRecentAuditions(List<AuditionResponse> recentAuditions) { this.recentAuditions = recentAuditions; }
     public List<ApplicationResponse> getRecentApplications() { return recentApplications; }

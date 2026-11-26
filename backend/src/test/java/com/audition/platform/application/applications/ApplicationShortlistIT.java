@@ -1,6 +1,7 @@
 package com.audition.platform.application.applications;
 
 import com.audition.platform.infra.TestDatabase;
+import com.audition.platform.application.DashboardService;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -23,6 +24,7 @@ class ApplicationShortlistIT {
     @Autowired ApplicationShortlistService shortlist;
     @Autowired ApplicationEntryNumbers numbers;
     @Autowired ManageApplicationsQueryService manage;
+    @Autowired DashboardService dashboard;
     @AfterEach void cleanup() {
         SecurityContextHolder.clearContext();
         jdbc.update("DELETE FROM application_scores WHERE application_id IN (SELECT id FROM applications WHERE audition_id IN (SELECT id FROM auditions WHERE title='shortlist-it'))");
@@ -40,6 +42,11 @@ class ApplicationShortlistIT {
         assertEquals(before,jdbc.queryForMap("SELECT status,final_status,current_round_number,vote_count FROM applications WHERE id=?",a)); assertEquals(original,numbers.forScope(audition,0));
         assertTrue(shortlist.list(audition,1).isEmpty()); shortlist.change(audition,1,List.of(a),true);
         jdbc.update("UPDATE applications SET current_round_number=5 WHERE id=?",a); assertEquals(1,shortlist.list(audition,1).size()); assertTrue(shortlist.list(audition,5).isEmpty()); shortlist.change(audition,5,List.of(a),true);
+        jdbc.update("UPDATE auditions SET vote_started_at=now(), vote_start_at=now()-interval '5 minutes', vote_end_at=now()+interval '5 minutes' WHERE id=?", audition);
+        var workload = dashboard.getAgencyDashboard();
+        assertEquals(2, workload.getShortlisted());
+        assertEquals(2, workload.getSubmitted());
+        assertEquals(1, workload.getOpenPublicVotes());
         actor(user(),"ADMIN"); assertEquals(2,shortlist.list(audition,0).size()); shortlist.memo(audition,0,a,"검토 완료");
         SecurityContextHolder.clearContext(); actor(owner,"AGENCY"); assertEquals("검토 완료",shortlist.list(audition,0).get(a).memo());
         var found=manage.listManageApplications(audition,null,null,null,null,null,null,1,1,true,null,"NUMBER",0,50);

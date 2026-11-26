@@ -5,6 +5,8 @@ import { useRouter, Link } from '../../../../i18n.config'
 import { useQuery } from '@tanstack/react-query'
 import { authApi } from '@/shared/api/auth'
 import { dashboardApi } from '@/shared/api/dashboard'
+import { agencyCastingApi } from '@/shared/api/casting'
+import { koStatus } from '@/components/casting/agencyKo'
 import { useLocale, useTranslations } from 'next-intl'
 import { useAuthStore } from '@/shared/auth/authStore'
 import {
@@ -64,6 +66,11 @@ export default function MyDashboardPage() {
   const tAgency = useTranslations('agency')
   const accessToken = useAuthStore((s) => s.accessToken)
   const role = useAuthStore((s) => s.role)
+  const castingOffers = useQuery({
+    queryKey: ['agency', 'offers', '', undefined],
+    queryFn: () => agencyCastingApi.offers(),
+    enabled: role === 'AGENCY',
+  })
   const [hydrated, setHydrated] = useState(false)
 
   const statusLabel = (status?: string) => {
@@ -166,6 +173,22 @@ export default function MyDashboardPage() {
         <div className={`${PAGE_CONTAINER} py-6 ${SECTION_GAP}`}>
           <h1 className={TITLE_PAGE}>{tAgency('dashboard')}</h1>
           <p className={`${TEXT_SUB} mt-2 max-w-2xl`}>{tDash('agencyHint')}</p>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            {[
+              { key: 'agencyTotalAuditions', count: data.totalAuditions, path: '/my/auditions' },
+              { key: 'agencyOpenAuditions', count: data.openAuditions, path: '/my/auditions' },
+              { key: 'agencySubmitted', count: data.submitted, path: '/my/applicants' },
+              { key: 'agencyTotalApplications', count: data.totalApplications, path: '/my/applicants' },
+              { key: 'agencyPending', count: data.pending, path: '/my/applicants' },
+              { key: 'agencyShortlisted', count: data.shortlisted, path: '/my/applicants' },
+              { key: 'agencyOpenVotes', count: data.openPublicVotes, path: '/my/auditions' },
+            ].map(({ key, count, path }) => (
+              <Link key={key} href={path} className="rounded-md border border-gray-200 bg-white p-3 text-sm hover:border-violet-400">
+                <span className="block text-gray-600">{tDash(key)}</span>
+                <strong className="block text-lg text-gray-900">{count == null ? '—' : new Intl.NumberFormat(locale).format(count)}</strong>
+              </Link>
+            ))}
+          </div>
           <div className="flex flex-col gap-3 md:flex-row md:flex-wrap">
             <Link href="/dashboard/auditions/create" className={BTN_PRIMARY}>
               {tDash('createPosting')}
@@ -183,6 +206,20 @@ export default function MyDashboardPage() {
               {t('credits')}
             </Link>
           </div>
+          {role === 'AGENCY' && <section>
+            <h2 className={`${TITLE_PAGE} mb-2`}><Link href="/my/casting">{tDash('agencyRecentCasting')}</Link></h2>
+            {castingOffers.isPending && <p className={TEXT_SUB}>{t('loading')}</p>}
+            {castingOffers.isError && <p role="alert" className={TEXT_SUB}>{tDash('loadFailed')}</p>}
+            {castingOffers.data?.length === 0 && <p className={TEXT_SUB}>{tDash('noData')}</p>}
+            {Boolean(castingOffers.data?.length) && <ul className="divide-y divide-gray-200 rounded-md border border-gray-200 bg-white">
+              {castingOffers.data?.slice(0, 5).map(offer => (
+                <li key={offer.id} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
+                  <Link href={`/my/casting/${offer.id}`} className="font-medium text-violet-700">{offer.title}</Link>
+                  <span>{koStatus(offer.status)}</span>
+                </li>
+              ))}
+            </ul>}
+          </section>}
           <div>
             <h2 className={`${TITLE_PAGE} mb-2`}>{tDash('recentApplications')}</h2>
             <ul className="divide-y divide-gray-200 border border-gray-200 bg-white">
