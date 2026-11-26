@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
@@ -52,7 +52,7 @@ function formToPayload(f: FormState) {
 
 export default function SuperAdminCreditPackagesPage() {
   const qc = useQueryClient()
-  const { data: packages, isLoading, error } = useQuery({
+  const { data: packages, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ['superAdmin', 'credit-packages'],
     queryFn: () => superAdminApi.listCreditPackages(),
   })
@@ -93,28 +93,28 @@ export default function SuperAdminCreditPackagesPage() {
   const columns: DataTableColumn<CreditPackageRow>[] = [
     {
       id: 'sort',
-      header: 'sort_order',
+      header: '표시 순서',
       cell: (r) => formatCreditsCount(r.sortOrder ?? 0),
     },
-    { id: 'name', header: 'name', cell: (r) => r.name },
+    { id: 'name', header: '패키지명', cell: (r) => r.name },
     {
       id: 'price',
-      header: 'price',
+      header: '판매 가격(USD)',
       cell: (r) => formatWholeUsd(Number(r.price)),
     },
     {
       id: 'credits',
-      header: 'credits',
+      header: '기본 크레딧',
       cell: (r) => `${formatCreditsCount(Number(r.credits))} 크레딧`,
     },
     {
       id: 'bonus',
-      header: 'bonus_credits',
+      header: '보너스 크레딧',
       cell: (r) => `${formatCreditsCount(Number(r.bonusCredits))} 크레딧`,
     },
     {
       id: 'active',
-      header: 'active',
+      header: '판매 활성화',
       cell: (r) => (r.active ? '예' : '아니오'),
     },
     {
@@ -147,14 +147,22 @@ export default function SuperAdminCreditPackagesPage() {
     <div style={{ padding: `0 ${LAYOUT.containerPaddingPx}px` }}>
       <AdminCard title="크레딧 패키지">
         {isLoading && <p>불러오는 중…</p>}
-        {error && <p style={{ color: '#b91c1c' }}>목록을 불러오지 못했습니다.</p>}
-        {packages && <DataTable columns={columns} rows={packages} getRowKey={(r) => r.id} />}
+        {error && (
+          <div role="alert" className="flex flex-wrap items-center gap-3 text-red-700">
+            목록을 불러오지 못했습니다.
+            <button type="button" disabled={isFetching} onClick={() => void refetch()} className="rounded border px-3 py-1">
+              다시 시도
+            </button>
+          </div>
+        )}
+        {deleteMut.isError && <p role="alert" className="text-red-700">패키지를 삭제하지 못했습니다.</p>}
+        {packages && <DataTable columns={columns} rows={packages} emptyMessage="등록된 크레딧 패키지가 없습니다." getRowKey={(r) => r.id} />}
       </AdminCard>
 
       <AdminCard title="패키지 추가">
         <div style={{ display: 'grid', gap: 12, maxWidth: 480 }}>
           <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 14 }}>
-            name
+            패키지명
             <input
               style={fieldStyle}
               value={createForm.name}
@@ -162,7 +170,7 @@ export default function SuperAdminCreditPackagesPage() {
             />
           </label>
           <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 14 }}>
-            price (USD, whole dollars: $1 / $5 / $10)
+            판매 가격(USD)
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <input
                 type="text"
@@ -176,7 +184,7 @@ export default function SuperAdminCreditPackagesPage() {
             </div>
           </label>
           <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 14 }}>
-            credits
+            기본 크레딧
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <input
                 type="text"
@@ -190,7 +198,7 @@ export default function SuperAdminCreditPackagesPage() {
             </div>
           </label>
           <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 14 }}>
-            bonus_credits
+            보너스 크레딧
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <input
                 type="text"
@@ -204,7 +212,7 @@ export default function SuperAdminCreditPackagesPage() {
             </div>
           </label>
           <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 14 }}>
-            sort_order
+            표시 순서
             <input
               type="text"
               inputMode="numeric"
@@ -220,7 +228,7 @@ export default function SuperAdminCreditPackagesPage() {
               checked={createForm.active}
               onChange={(e) => setCreateForm((f) => ({ ...f, active: e.target.checked }))}
             />
-            active
+            판매 활성화
           </label>
           <button
             type="button"
@@ -246,7 +254,7 @@ export default function SuperAdminCreditPackagesPage() {
         <AdminCard title="패키지 수정">
           <div style={{ display: 'grid', gap: 12, maxWidth: 480 }}>
             <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 14 }}>
-              name
+              패키지명
               <input
                 type="text"
                 style={fieldStyle}
@@ -255,7 +263,7 @@ export default function SuperAdminCreditPackagesPage() {
               />
             </label>
             <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 14 }}>
-              price (USD, whole dollars: $1 / $5 / $10)
+              판매 가격(USD)
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <input
                   type="text"
@@ -269,7 +277,7 @@ export default function SuperAdminCreditPackagesPage() {
               </div>
             </label>
             <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 14 }}>
-              credits
+              기본 크레딧
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <input
                   type="text"
@@ -283,7 +291,7 @@ export default function SuperAdminCreditPackagesPage() {
               </div>
             </label>
             <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 14 }}>
-              bonus_credits
+              보너스 크레딧
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <input
                   type="text"
@@ -297,7 +305,7 @@ export default function SuperAdminCreditPackagesPage() {
               </div>
             </label>
             <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 14 }}>
-              sort_order
+              표시 순서
               <input
                 type="text"
                 inputMode="numeric"
@@ -313,7 +321,7 @@ export default function SuperAdminCreditPackagesPage() {
                 checked={editForm.active}
                 onChange={(e) => setEditForm((f) => ({ ...f, active: e.target.checked }))}
               />
-              active
+              판매 활성화
             </label>
             <div style={{ display: 'flex', gap: 8 }}>
               <button

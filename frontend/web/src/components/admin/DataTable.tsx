@@ -1,7 +1,6 @@
 ﻿'use client'
 
 import type { ReactNode } from 'react'
-import { useTranslations } from 'next-intl'
 import { AUDITION_DETAIL } from '@/shared/design-tokens'
 
 export type DataTableColumn<T> = {
@@ -14,15 +13,12 @@ export type DataTableColumn<T> = {
 type DataTableProps<T> = {
   columns: DataTableColumn<T>[]
   rows: T[]
-  emptyMessage?: string
+  emptyMessage: string
   getRowKey: (row: T) => string
 }
 
 /** Admin list table. Horizontal scroll only; used inside a card. */
 export function DataTable<T>({ columns, rows, emptyMessage, getRowKey }: DataTableProps<T>) {
-  const t = useTranslations('common')
-  const resolvedEmptyMessage = emptyMessage ?? t('noData')
-
   return (
     <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
       <table
@@ -55,7 +51,7 @@ export function DataTable<T>({ columns, rows, emptyMessage, getRowKey }: DataTab
           {rows.length === 0 ? (
             <tr>
               <td colSpan={columns.length} style={{ padding: '24px 12px', textAlign: 'center', color: '#888' }}>
-                {resolvedEmptyMessage}
+                {emptyMessage}
               </td>
             </tr>
           ) : (

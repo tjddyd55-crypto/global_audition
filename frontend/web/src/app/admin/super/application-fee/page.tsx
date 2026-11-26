@@ -48,7 +48,7 @@ export default function ApplicationFeePage() {
 
   return (
     <div>
-      <h1 className="mb-2 text-xl font-semibold">전역 지원비</h1>
+      <h1 className="mb-2 text-xl font-semibold">오디션 지원비</h1>
       <p className="mb-4 text-sm text-gray-600">
         확정 정책: 1 USD = 1 Credit. 오디션별 가격은 없습니다. 현재{' '}
         {fee.data ? `${formatUsdAmount(fee.data.amountUsd)} (${formatCount(fee.data.creditQuantity)} credits)` : '-'}. 지원 화면과 차감은 서버가
@@ -61,7 +61,7 @@ export default function ApplicationFeePage() {
           className="w-32 rounded border px-3 py-2"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          aria-label="전역 지원비 USD"
+          aria-label="오디션 지원비 USD"
         />
         <span>USD</span>
         <button

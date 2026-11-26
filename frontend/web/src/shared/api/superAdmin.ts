@@ -230,6 +230,7 @@ export const superAdminApi = {
 
   listCreditPackages: async (): Promise<CreditPackageRow[]> => {
     const { data } = await apiClient.get<CreditPackageRow[]>('/admin/credit-packages')
+    if (!Array.isArray(data)) throw new Error('Invalid credit package list response')
     return data
   },
 

@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
@@ -114,7 +114,7 @@ export default function UsersPage() {
 
   return (
     <div>
-      <h1 className="mb-4 text-xl font-semibold">유저 관리</h1>
+      <h1 className="mb-4 text-xl font-semibold">회원 관리</h1>
 
       <div className="mb-4 rounded-lg border bg-white p-4">
         <p className="mb-3 text-xs text-gray-500">
