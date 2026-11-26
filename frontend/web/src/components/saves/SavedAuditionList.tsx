@@ -62,7 +62,7 @@ export default function SavedAuditionList() {
                 <span className="inline-block rounded-full bg-neutral-800 px-2 py-0.5 text-[11px] font-semibold text-white">
                   {statusLabel(item.recruitmentStatus, t)}
                 </span>
-                <h3 className="mt-1 line-clamp-2 break-words text-base font-semibold text-neutral-900">{item.title}</h3>
+                <h3 className="mt-1 line-clamp-2 break-keep break-words text-base font-semibold text-neutral-900">{item.title}</h3>
                 {item.agencyName ? <p className={`mt-1 truncate ${TEXT_SUB}`}>{item.agencyName}</p> : null}
                 {due ? <p className={`mt-0.5 ${TEXT_SUB}`}>{t('deadline', { date: due })}</p> : null}
               </div>

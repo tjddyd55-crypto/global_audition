@@ -59,7 +59,8 @@ class AuditionPreviewServiceTest {
                 mock(com.audition.platform.application.i18n.content.ContentTranslationService.class),
                 mock(com.audition.platform.application.org.JdbcCrmStore.class),
                 mock(com.audition.platform.application.audition.PostingBranchPolicy.class),
-                mock(com.audition.platform.application.vote.PublicVoteScheduleService.class));
+                mock(com.audition.platform.application.vote.PublicVoteScheduleService.class),
+                mock(com.audition.platform.application.round.ApplicationRoundSubmissionService.class));
     }
 
     @AfterEach

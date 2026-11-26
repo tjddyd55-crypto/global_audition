@@ -883,6 +883,7 @@
     "publishConfirm": "번역을 검토했고 미리보기를 확인했습니다. 이 공고를 게시합니다.",
     "publishConfirmRequired": "게시 전에 검토 확인이 필요합니다.",
     "openPreview": "PC·모바일 미리보기",
+    "openPreviewAfterSave": "임시 저장한 뒤에 PC·모바일 미리보기를 열 수 있습니다.",
     "backToEditor": "편집으로 돌아가기",
     "recruitFieldsOther": "기타 모집 분야 (직접 입력)",
     "postingBranch": "게시 지점",

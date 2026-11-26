@@ -26,6 +26,17 @@ export function useServiceWorker() {
       })
     }
     window.addEventListener('load', onLoad, { signal: controller.signal })
-    return () => controller.abort()
+
+    // Chrome 미니 인포바가 상단 헤더를 가리지 않도록 설치 프롬프트를 억제한다.
+    // 네이티브 앱이 있으므로 웹 설치 배너는 띄우지 않는다.
+    const onBeforeInstall = (event: Event) => {
+      event.preventDefault()
+    }
+    window.addEventListener('beforeinstallprompt', onBeforeInstall)
+
+    return () => {
+      controller.abort()
+      window.removeEventListener('beforeinstallprompt', onBeforeInstall)
+    }
   }, [])
 }

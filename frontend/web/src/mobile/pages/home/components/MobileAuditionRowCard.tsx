@@ -87,7 +87,7 @@ roundStatusLabel(status, audition.round, tStatus)
       </div>
       <div className="flex min-w-0 flex-1 items-center gap-1 py-3 pl-3 pr-2">
         <div className="min-w-0 flex-1">
-          <h3 className="line-clamp-2 break-words text-[15px] font-bold leading-snug text-neutral-900">{title}</h3>
+          <h3 className="line-clamp-2 break-keep break-words text-[15px] font-bold leading-snug text-neutral-900">{title}</h3>
           {agency ? <p className="mt-1 truncate text-xs text-neutral-500">{agency}</p> : null}
           {meta ? <p className="mt-0.5 truncate text-xs text-neutral-500">{meta}</p> : location ? <p className="mt-0.5 truncate text-xs text-neutral-500">{location}</p> : null}
           {dates ? <p className="mt-0.5 truncate text-xs text-neutral-500">{dates}</p> : null}

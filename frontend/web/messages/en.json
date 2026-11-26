@@ -883,6 +883,7 @@
     "publishConfirm": "I reviewed the translations and the preview. Publish this posting.",
     "publishConfirmRequired": "Confirm the review before publishing.",
     "openPreview": "PC and phone preview",
+    "openPreviewAfterSave": "Save a draft to open the PC and phone preview.",
     "backToEditor": "Back to editor",
     "recruitFieldsOther": "Other roles (free text)",
     "postingBranch": "Posting branch",

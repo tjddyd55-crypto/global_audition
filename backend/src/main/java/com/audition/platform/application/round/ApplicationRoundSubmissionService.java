@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -201,4 +202,40 @@ public class ApplicationRoundSubmissionService {
         }
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "알 수 없는 제출 유형입니다: " + type);
     }
+
+    /**
+     * SINGLE 공고를 MULTI_ROUND 로 전환한 뒤, 이미 접수된 지원에 1차 제출 행이 없으면 보완한다.
+     * 기존 지원의 currentRoundNumber 가 1 미만이면 1로 둔다. 이미 행이 있는 지원은 건드리지 않는다.
+     */
+    @Transactional
+    public int backfillFirstRoundSubmissions(UUID auditionId) {
+        Audition audition = auditionRepository.findById(auditionId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "오디션을 찾을 수 없습니다."));
+        if (!AuditionProcessModes.isMultiRound(audition.getProcessMode())) {
+            return 0;
+        }
+        AuditionRound round1 = roundRepository
+                .findByAuditionIdAndRoundNumber(auditionId, 1)
+                .orElse(null);
+        if (round1 == null) {
+            return 0;
+        }
+        int created = 0;
+        for (Application app : applicationRepository.findByAuditionIdOrderByCreatedAtDesc(auditionId)) {
+            if (submissionRepository.findByApplicationIdAndRoundId(app.getId(), round1.getId()).isPresent()) {
+                continue;
+            }
+            ApplicationRoundSubmission s = ensureSubmissionForRound(app, round1);
+            if (app.getCurrentRoundNumber() < 1) {
+                app.setCurrentRoundNumber(1);
+            }
+            if (app.getLatestRoundSubmissionId() == null) {
+                app.setLatestRoundSubmissionId(s.getId());
+            }
+            applicationRepository.save(app);
+            created++;
+        }
+        return created;
+    }
+
 }

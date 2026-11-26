@@ -977,13 +977,24 @@ export function AuditionEditorForm({ mode, auditionId, initialAudition, topSlot,
           />
           <span>{tEditor('publishConfirm')}</span>
         </label>
-        {effectiveId ? (
-          <div className="mt-3">
-            <Link href={`/auditions/${effectiveId}/preview`} className="text-sm font-semibold text-violet-700">
+        <div className="mt-3">
+          {effectiveId ? (
+            <Link
+              href={`/auditions/${effectiveId}/preview`}
+              data-testid="audition-open-preview"
+              className="inline-flex h-10 items-center rounded-lg border border-violet-200 bg-violet-50 px-4 text-sm font-semibold text-violet-700"
+            >
               {tEditor('openPreview')}
             </Link>
-          </div>
-        ) : null}
+          ) : (
+            <p className="text-sm text-gray-500" data-testid="audition-open-preview-hint">
+              <span className="inline-flex h-10 items-center rounded-lg border border-gray-200 bg-gray-50 px-4 font-semibold text-gray-400">
+                {tEditor('openPreview')}
+              </span>
+              <span className="mt-2 block">{tEditor('openPreviewAfterSave')}</span>
+            </p>
+          )}
+        </div>
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap" style={{ marginTop: AUDITION_DETAIL.mainGridGapPx }}>
           <button
             type="button"

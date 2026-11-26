@@ -883,6 +883,7 @@
     "publishConfirm": "Tarjimalar va oldindan koʻrishni tekshirdim. Bu eʼlonni chop eting.",
     "publishConfirmRequired": "Eʼlon qilishdan oldin tekshiruvni tasdiqlang.",
     "openPreview": "Kompyuter va telefonda oldindan koʻrish",
+    "openPreviewAfterSave": "Kompyuter va telefon koʻrinishini ochish uchun qoralamani saqlang.",
     "backToEditor": "Muharrirga qaytish",
     "recruitFieldsOther": "Boshqa rollar (erkin matn)",
     "postingBranch": "Eʼlon filiali",

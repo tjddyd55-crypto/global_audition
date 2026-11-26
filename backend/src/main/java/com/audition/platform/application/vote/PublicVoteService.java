@@ -114,6 +114,8 @@ public class PublicVoteService {
         boolean planEnabled = VotingRoundPlan.enabledFor(audition.getVotingRounds(), round);
         // 공개 투표는 기획사가 시작을 누르고, 시작·종료 시각 안에 있을 때만 받는다.
         boolean votingEnabled = planEnabled && phase == VoteWindow.Phase.OPEN;
+        // 종료 후에도 최종 득표·합계는 공개·주최자에게 그대로 보여 준다. 투표 가능 여부와 분리한다.
+        boolean countsVisible = planEnabled && VoteWindow.hasStarted(phase);
         boolean showItems = planEnabled && (phase == VoteWindow.Phase.OPEN || phase == VoteWindow.Phase.CLOSED);
 
         List<Application> apps = !showItems ? List.<Application>of() : loadVoteApplications(audition, round, phase);
@@ -123,7 +125,7 @@ public class PublicVoteService {
             shared = applicationRepository.findById(sharedCandidate).orElse(null);
         }
         // 득표는 현재 회차 기준(회차마다 새로 받는다). applications.vote_count 는 전 회차 누계로 남는다.
-        Map<UUID, Long> roundVotes = votingEnabled ? roundVoteCounts(auditionId, round) : Map.of();
+        Map<UUID, Long> roundVotes = countsVisible ? roundVoteCounts(auditionId, round) : Map.of();
 
         ensureScoresIfMissing(auditionId, apps);
 
@@ -137,7 +139,7 @@ public class PublicVoteService {
                         .map(v -> v.getApplicationId().toString())
                         .orElse(null);
 
-        long totalVotes = votingEnabled ? voteRepository.countByAuditionIdAndRoundNumber(auditionId, round) : 0L;
+        long totalVotes = countsVisible ? voteRepository.countByAuditionIdAndRoundNumber(auditionId, round) : 0L;
 
         Map<UUID, Integer> ballotNumbers = voteCandidates.findByAuditionIdAndRoundNumber(auditionId, round).stream()
                 .collect(Collectors.toMap(AuditionVoteCandidate::getApplicationId, AuditionVoteCandidate::getCandidateNumber));
@@ -154,7 +156,7 @@ public class PublicVoteService {
         if (shared != null) {
             final String sharedId = shared.getId().toString();
             sharedDto = allItems.stream().filter(i -> sharedId.equals(i.getApplicationId())).findFirst()
-                    .orElse(toVoteItem(shared, votingEnabled ? myVoteStr : null, scoreByApp.get(shared.getId()), 0L));
+                    .orElse(toVoteItem(shared, countsVisible ? myVoteStr : null, scoreByApp.get(shared.getId()), roundVotes.getOrDefault(shared.getId(), 0L)));
             sharedDto.setCandidateNumber(ballotNumbers.get(shared.getId()));
             // 공유 링크로 들어오면 해당 후보를 맨 위에 둔다. 순위(rank)·득표는 바꾸지 않는다.
             visible.removeIf(i -> sharedId.equals(i.getApplicationId()));
@@ -183,7 +185,7 @@ public class PublicVoteService {
         PublicVotePageDataDto out = new PublicVotePageDataDto();
         out.setAudition(auditionDto);
         out.setSummary(summary);
-        out.setMyVoteApplicationId(votingEnabled ? myVoteStr : null);
+        out.setMyVoteApplicationId(countsVisible ? myVoteStr : null);
         out.setVotingEnabled(votingEnabled);
         out.setVotingPlanEnabled(planEnabled);
         out.setRoundNumber(round);
