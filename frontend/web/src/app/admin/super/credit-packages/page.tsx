@@ -147,8 +147,15 @@ export default function SuperAdminCreditPackagesPage() {
     <div style={{ padding: `0 ${LAYOUT.containerPaddingPx}px` }}>
       <AdminCard title="크레딧 패키지">
         {isLoading && <p>불러오는 중…</p>}
-        {error && <div role='alert' className='flex flex-wrap items-center gap-3 text-red-700'>목록을 불러오지 못했습니다.<button type='button' disabled={isFetching} onClick={() => void refetch()} className='rounded border px-3 py-1'>다시 시도</button></div>}
-        {deleteMut.isError && <p role='alert' className='text-red-700'>패키지를 삭제하지 못했습니다.</p>
+        {error && (
+          <div role="alert" className="flex flex-wrap items-center gap-3 text-red-700">
+            목록을 불러오지 못했습니다.
+            <button type="button" disabled={isFetching} onClick={() => void refetch()} className="rounded border px-3 py-1">
+              다시 시도
+            </button>
+          </div>
+        )}
+        {deleteMut.isError && <p role="alert" className="text-red-700">패키지를 삭제하지 못했습니다.</p>}
         {packages && <DataTable columns={columns} rows={packages} getRowKey={(r) => r.id} />}
       </AdminCard>
 
