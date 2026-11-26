@@ -25,6 +25,7 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -207,6 +208,10 @@ public class GlobalExceptionHandler {
     private String formatFieldError(FieldError fieldError) {
         String field = fieldError.getField();
         String defaultMessage = fieldError.getDefaultMessage() == null ? "유효하지 않습니다." : fieldError.getDefaultMessage();
+        String fieldName = field.toLowerCase(Locale.ROOT);
+        if (fieldName.endsWith("password") || fieldName.endsWith("recoverycode")) {
+            return field + ": " + defaultMessage;
+        }
         Object rej = fieldError.getRejectedValue();
         if (rej != null && !(rej instanceof String s && s.isBlank())) {
             String snippet = String.valueOf(rej);
