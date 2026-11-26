@@ -205,7 +205,7 @@ public class ApplicationRoundSubmissionService {
 
     /**
      * SINGLE 공고를 MULTI_ROUND 로 전환한 뒤, 이미 접수된 지원에 1차 제출 행이 없으면 보완한다.
-     * 기존 지원의 currentRoundNumber 가 비어 있으면 1로 둔다. 이미 행이 있는 지원은 건드리지 않는다.
+     * 기존 지원의 currentRoundNumber 가 1 미만이면 1로 둔다. 이미 행이 있는 지원은 건드리지 않는다.
      */
     @Transactional
     public int backfillFirstRoundSubmissions(UUID auditionId) {
@@ -226,7 +226,7 @@ public class ApplicationRoundSubmissionService {
                 continue;
             }
             ApplicationRoundSubmission s = ensureSubmissionForRound(app, round1);
-            if (app.getCurrentRoundNumber() == null || app.getCurrentRoundNumber() < 1) {
+            if (app.getCurrentRoundNumber() < 1) {
                 app.setCurrentRoundNumber(1);
             }
             if (app.getLatestRoundSubmissionId() == null) {
