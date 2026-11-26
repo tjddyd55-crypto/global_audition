@@ -35,14 +35,20 @@ public class JwtService {
     }
 
     public String createToken(UUID userId, String email, String role) {
-        return Jwts.builder()
+        return createToken(userId, email, role, null);
+    }
+
+    public String createToken(UUID userId, String email, String role, UUID bootstrapCredentialVersion) {
+        var builder = Jwts.builder()
                 .subject(userId.toString())
                 .claim("email", email)
                 .claim("role", role)
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + expirationMs))
-                .signWith(key, algorithm)
-                .compact();
+                .expiration(new Date(System.currentTimeMillis() + expirationMs));
+        if (bootstrapCredentialVersion != null) {
+            builder.claim("bootstrapCredentialVersion", bootstrapCredentialVersion.toString());
+        }
+        return builder.signWith(key, algorithm).compact();
     }
 
     public Claims parseToken(String token) {

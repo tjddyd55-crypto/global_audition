@@ -105,6 +105,29 @@ class JwtAuthFilterTest {
         assertStatus(401);
     }
 
+    @Test
+    void onlyTokensWithTheCurrentAdministratorCredentialVersionAuthenticate() throws Exception {
+        User user = activeUser("SUPER_ADMIN");
+        when(users.findById(user.getId())).thenReturn(Optional.of(user));
+        String legacy = server.createToken(user.getId(), user.getEmail(), user.getRole());
+        UUID original = UUID.randomUUID();
+        user.setBootstrapCredentialVersion(original);
+        apply(legacy);
+        assertStatus(401);
+
+        String originalSession = server.createToken(user.getId(), user.getEmail(), user.getRole(), original);
+        apply(originalSession);
+        assertEquals("ROLE_SUPER_ADMIN", authority());
+
+        SecurityContextHolder.clearContext();
+        UUID rotated = UUID.randomUUID();
+        user.setBootstrapCredentialVersion(rotated);
+        apply(originalSession);
+        assertStatus(401);
+        apply(server.createToken(user.getId(), user.getEmail(), user.getRole(), rotated));
+        assertEquals("ROLE_SUPER_ADMIN", authority());
+    }
+
     private void assertStatus(int status) {
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, SuperAdminAuthHelper::requireSuperAdmin);
         assertEquals(status, ex.getStatusCode().value());

@@ -142,7 +142,7 @@ public class AuthService {
                 req.getBusinessLicenseDocumentUrl()));
         creditService.grantSignupRewardIfEnabled(user.getId());
         String recoveryCode = authRecoveryService.issueNewCode(user);
-        String token = jwtService.createToken(user.getId(), user.getEmail(), user.getRole());
+        String token = createSessionToken(user);
         AuthResponse res = authResponse(token, user);
         res.setRecoveryCode(recoveryCode);
         MinorPolicyService.Status minor = applicant ? minorPolicyService.status(user) : null;
@@ -160,8 +160,15 @@ public class AuthService {
         if (!"ACTIVE".equals(user.getAccountStatus())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "계정이 활성 상태가 아닙니다.");
         }
-        String token = jwtService.createToken(user.getId(), user.getEmail(), user.getRole());
+        String token = createSessionToken(user);
         return authResponse(token, user);
+    }
+
+    private String createSessionToken(User user) {
+        UUID version = user.getBootstrapCredentialVersion();
+        return version == null
+                ? jwtService.createToken(user.getId(), user.getEmail(), user.getRole())
+                : jwtService.createToken(user.getId(), user.getEmail(), user.getRole(), version);
     }
 
     /** 같은 로그인 세션에서 DB에 반영된 접근 역할로 토큰을 다시 발급한다. */
@@ -172,7 +179,7 @@ public class AuthService {
         }
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "사용자를 찾을 수 없습니다."));
-        String token = jwtService.createToken(user.getId(), user.getEmail(), user.getRole());
+        String token = createSessionToken(user);
         return authResponse(token, user);
     }
 
