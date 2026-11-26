@@ -815,11 +815,14 @@ export function SettingsScreen() {
         </div>
       </Panel>
       <Panel title="비밀번호">
-        <div className="grid max-w-md gap-2">
-          <input className="rounded border px-3 py-2" aria-label="현재 비밀번호" type="password" placeholder="현재 비밀번호" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
-          <input className="rounded border px-3 py-2" aria-label="새 비밀번호" type="password" placeholder="새 비밀번호" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
-          <button type="button" className="w-fit rounded border px-3 py-2" onClick={() => savePassword.mutate()}>변경</button>
-        </div>
+        <form className="grid max-w-md gap-2" onSubmit={(event) => {
+          event.preventDefault()
+          savePassword.mutate()
+        }}>
+          <input className="rounded border px-3 py-2" aria-label="현재 비밀번호" type="password" autoComplete="current-password" placeholder="현재 비밀번호" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} required />
+          <input className="rounded border px-3 py-2" aria-label="새 비밀번호" type="password" autoComplete="new-password" placeholder="새 비밀번호 (6자 이상)" minLength={6} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required />
+          <button type="submit" disabled={savePassword.isPending} className="w-fit rounded border px-3 py-2 disabled:opacity-50">변경</button>
+        </form>
       </Panel>
       <Panel title="알림·언어">
         <label className="mb-2 block text-sm">

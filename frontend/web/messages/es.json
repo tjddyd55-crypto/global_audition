@@ -88,7 +88,7 @@
   "validation": {
     "required": "Este campo es obligatorio",
     "emailInvalid": "Por favor ingresa un correo electrónico válido",
-    "passwordMin": "La contraseña debe tener al menos 8 caracteres",
+    "passwordMin": "La contraseña debe tener al menos 6 caracteres",
     "nameMin": "El nombre debe tener al menos 2 caracteres",
     "countryRequired": "Por favor selecciona un país",
     "cityRequired": "Por favor ingresa una ciudad",

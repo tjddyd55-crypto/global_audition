@@ -728,7 +728,7 @@
   "validation": {
     "required": "Заавал бөглөнө",
     "emailInvalid": "Зөв имэйл оруулна уу",
-    "passwordMin": "Нууц үг хамгийн багадаа 8 тэмдэгт",
+    "passwordMin": "Нууц үг хамгийн багадаа 6 тэмдэгт",
     "nameMin": "Нэр хамгийн багадаа 2 тэмдэгт",
     "countryRequired": "Улс сонгоно уу",
     "cityRequired": "Хот оруулна уу",

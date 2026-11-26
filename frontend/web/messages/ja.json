@@ -88,7 +88,7 @@
   "validation": {
     "required": "必須項目です",
     "emailInvalid": "有効なメールアドレスを入力してください",
-    "passwordMin": "パスワードは8文字以上である必要があります",
+    "passwordMin": "パスワードは6文字以上である必要があります",
     "nameMin": "名前は2文字以上である必要があります",
     "countryRequired": "国を選択してください",
     "cityRequired": "都市を入力してください",

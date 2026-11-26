@@ -9,7 +9,7 @@ public class PatchMePasswordRequest {
     private String currentPassword;
 
     @NotBlank
-    @Size(min = 8, max = 128)
+    @Size(min = 6, max = 128)
     private String newPassword;
 
     public String getCurrentPassword() {

@@ -728,7 +728,7 @@
   "validation": {
     "required": "This field is required",
     "emailInvalid": "Please enter a valid email",
-    "passwordMin": "Password must be at least 8 characters",
+    "passwordMin": "Password must be at least 6 characters",
     "nameMin": "Name must be at least 2 characters",
     "countryRequired": "Please select a country",
     "cityRequired": "Please enter a city",

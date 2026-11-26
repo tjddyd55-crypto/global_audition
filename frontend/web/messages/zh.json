@@ -88,7 +88,7 @@
   "validation": {
     "required": "此字段为必填项",
     "emailInvalid": "请输入有效的电子邮件",
-    "passwordMin": "密码必须至少8个字符",
+    "passwordMin": "密码必须至少6个字符",
     "nameMin": "姓名必须至少2个字符",
     "countryRequired": "请选择国家",
     "cityRequired": "请输入城市",

@@ -728,7 +728,7 @@
   "validation": {
     "required": "Bu maydon majburiy",
     "emailInvalid": "Toʻgʻri elektron pochta kiriting",
-    "passwordMin": "Parol kamida 8 ta belgidan iborat boʻlishi kerak",
+    "passwordMin": "Parol kamida 6 ta belgidan iborat boʻlishi kerak",
     "nameMin": "Ism kamida 2 ta belgidan iborat boʻlishi kerak",
     "countryRequired": "Mamlakatni tanlang",
     "cityRequired": "Shaharni kiriting",
