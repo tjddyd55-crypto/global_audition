@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
@@ -40,7 +40,7 @@ export default function TransactionsPage() {
 
   return (
     <div>
-      <h1 className="mb-4 text-xl font-semibold">거래 내역</h1>
+      <h1 className="mb-4 text-xl font-semibold">크레딧 거래 내역</h1>
 
       <p className="mb-3 text-xs text-gray-500">
         API: <code className="rounded bg-gray-100 px-1">GET /api/admin/credit-transactions</code> (Spring Page) · axios{' '}
