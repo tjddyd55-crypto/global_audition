@@ -187,7 +187,7 @@ export default function PcRegisterPage() {
               consents: { ...extras.consents, privacyDisclosure: false },
             })
           : buildApplicantSignupPayload({
-              inviteCode: parseInviteCode(searchParams.get('invite')),
+              inviteCode: parseInviteCode(searchParams?.get('invite')),
               email: data.email,
               password: data.password,
               nickname: data.nickname.trim(),

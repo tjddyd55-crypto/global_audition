@@ -80,7 +80,7 @@ public class PointRewards {
     @Transactional
     public void recordLike(UUID viewer, UUID owner, UUID video, String youtubeId) {
         if (viewer.equals(owner) || youtubeId == null) return;
-        Event given = new Event(viewer,Activity.LIKE_GIVEN,owner+":"+youtubeId,"",owner,video);
+        Event given = new Event(viewer,Activity.LIKE_GIVEN,youtubeId,"",owner,video);
         Event received = new Event(owner,Activity.LIKE_RECEIVED,youtubeId+":"+viewer,youtubeId,viewer,video);
         // Lock wallets consistently when two users like one another's videos concurrently.
         if (viewer.compareTo(owner)<0) {
@@ -127,7 +127,12 @@ public class PointRewards {
     private void reward(Event event, Rule rule, PointWallet.Wallet wallet, LocalDate day) {
         boolean eligible = rule != null && (rule.dailyEventLimit()==0
                 || dailyEvents(event.user(),rule,day)<rule.dailyEventLimit());
-        if (!remember(event,rule,day,eligible) || !eligible) return;
+        boolean inserted = remember(event,rule,day,eligible);
+        if (!eligible) return;
+        if (!inserted) {
+            if (event.activity()!=Activity.LIKE_RECEIVED || !sameRule(event,rule)) return;
+            // Re-liking can restore an active count, but the achieved milestone can only pay once.
+        }
 
         if (!rule.repeatable() && Boolean.TRUE.equals(jdbc.queryForObject("""
                 SELECT EXISTS(SELECT 1 FROM point_entries WHERE user_id=? AND activity=? AND kind='EARN')
@@ -161,6 +166,13 @@ public class PointRewards {
                 """,event.user(),event.activity().name(),event.key(),day,
                 eligible ? rule.id() : null,eligible ? rule.revision() : null,
                 event.scope(),event.sourceUser(),event.sourceId())>0;
+    }
+
+    private boolean sameRule(Event event, Rule rule) {
+        return Boolean.TRUE.equals(jdbc.queryForObject("""
+                SELECT EXISTS(SELECT 1 FROM point_activity_events
+                WHERE user_id=? AND activity=? AND event_key=? AND policy_id=? AND policy_revision=?)
+                """,Boolean.class,event.user(),event.activity().name(),event.key(),rule.id(),rule.revision()));
     }
 
     private long dailyEvents(UUID user, Rule rule, LocalDate day) {

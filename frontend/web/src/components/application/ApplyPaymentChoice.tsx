@@ -9,11 +9,11 @@ export function useApplyPayment(enabled: boolean) {
   const quote = usePointQuote(enabled)
   const [method, select] = useState<PointPayment | null>(null)
   const data = quote.data
-  const choosing = !!data && (data.pointAllowed || method !== null)
+  const choosing = data?.pointAllowed === true || method !== null
   const enoughPoints = !!data && data.pointBalance >= data.pointCost
-  const disabled = choosing && (method === null || (method === 'POINT' ? !data.pointAllowed || !enoughPoints : data.creditBalance < data.creditCost))
+  const disabled = choosing && (!data || method === null || (method === 'POINT' ? !data.pointAllowed || !enoughPoints : data.creditBalance < data.creditCost))
   return { quote, method, select, choosing, disabled,
-    payload: choosing && method === 'POINT' ? { paymentMethod: 'POINT' as const, expectedPointCost: data.pointCost } : {},
+    payload: method === 'POINT' && data ? { paymentMethod: 'POINT' as const, expectedPointCost: data.pointCost } : {},
   }
 }
 

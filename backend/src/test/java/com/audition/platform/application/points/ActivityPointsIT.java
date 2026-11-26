@@ -198,7 +198,8 @@ class ActivityPointsIT {
         channel.toggleLike(video,second);
         assertEquals(0,wallets.read(owner).balance());
         channel.toggleLike(video,first);
-        // A restored like remains the same event; reaching the goal on a new valid event is required.
+        assertEquals(50,wallets.read(owner).balance());
+        // Restoring the active count reaches the goal, but paying that same milestone twice is prohibited.
         UUID third=user("KR","APPLICANT");
         channel.toggleLike(video,first);
         channel.toggleLike(video,third);

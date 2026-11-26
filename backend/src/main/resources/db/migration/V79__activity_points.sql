@@ -72,6 +72,16 @@ CREATE TABLE point_activity_events (
 );
 CREATE INDEX point_events_progress ON point_activity_events(user_id,policy_id,policy_revision,event_day);
 
+-- Existing participation is remembered without earning under a future policy.
+INSERT INTO point_activity_events(user_id,activity,event_key,event_day)
+SELECT owner_id,'VIDEO',youtube_video_id,(created_at AT TIME ZONE 'UTC')::date
+FROM channel_videos WHERE youtube_video_id IS NOT NULL
+ON CONFLICT DO NOTHING;
+INSERT INTO point_activity_events(user_id,activity,event_key,event_day)
+SELECT user_id,'PUBLIC_VOTE',audition_id::text || ':' || round_number::text,(created_at AT TIME ZONE 'UTC')::date
+FROM votes
+ON CONFLICT DO NOTHING;
+
 CREATE TABLE point_entries (
     id UUID PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,

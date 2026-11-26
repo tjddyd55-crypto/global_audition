@@ -236,7 +236,7 @@ export default function MobileRegisterPage() {
               consents: { ...extras.consents, privacyDisclosure: false },
             })
           : buildApplicantSignupPayload({
-              inviteCode: parseInviteCode(searchParams.get('invite')),
+              inviteCode: parseInviteCode(searchParams?.get('invite')),
               email: submitData.email,
               password: submitData.password,
               nickname: submitData.nickname.trim(),
