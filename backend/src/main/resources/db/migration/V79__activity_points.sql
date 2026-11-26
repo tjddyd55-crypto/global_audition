@@ -79,7 +79,7 @@ FROM channel_videos WHERE youtube_video_id IS NOT NULL
 ON CONFLICT DO NOTHING;
 INSERT INTO point_activity_events(user_id,activity,event_key,event_day)
 SELECT user_id,'PUBLIC_VOTE',audition_id::text || ':' || round_number::text,(created_at AT TIME ZONE 'UTC')::date
-FROM votes
+FROM votes WHERE round_number IS NOT NULL
 ON CONFLICT DO NOTHING;
 
 CREATE TABLE point_entries (
