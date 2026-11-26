@@ -164,7 +164,8 @@ public class MeProfileService {
         }
 
         user.setUpdatedAt(Instant.now());
-        User saved = userRepository.save(user);
+        // The points wallet snapshots the committed-to-this-transaction country through JDBC.
+        User saved = userRepository.saveAndFlush(user);
         pointRewards.recordProfile(saved);
         if (guardianService != null) {
             // 국적·거주국(적용 국가)이나 생년월일이 바뀌면 연령 정책을 다시 판정한다.

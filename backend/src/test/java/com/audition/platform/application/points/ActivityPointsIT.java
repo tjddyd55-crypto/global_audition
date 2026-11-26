@@ -43,6 +43,7 @@ class ActivityPointsIT {
     @Autowired CreditService credits;
     @Autowired UserRepository users;
     @Autowired ApplicationSubmitService applications;
+    @Autowired com.audition.platform.application.me.MeProfileService profiles;
     @Autowired com.audition.platform.application.channel.ChannelVideoPublicService channel;
     @Autowired TransactionTemplate transaction;
 
@@ -74,7 +75,7 @@ class ActivityPointsIT {
         jdbc.update("DELETE FROM applications WHERE audition_id IN (SELECT id FROM auditions WHERE title='points-it')");
         jdbc.update("DELETE FROM auditions WHERE title='points-it'");
         jdbc.update("DELETE FROM users WHERE email LIKE '%@activity.points.it'");
-        jdbc.update("DELETE FROM point_policies WHERE country_code='MN' AND activity='DAILY_CHECK_IN'");
+        jdbc.update("DELETE FROM point_policies WHERE country_code='MN' AND activity IN ('DAILY_CHECK_IN','PROFILE')");
         SecurityContextHolder.clearContext();
     }
 
@@ -176,6 +177,22 @@ class ActivityPointsIT {
         points.adjust(new PointsService.Adjustment(member,UUID.randomUUID(),0,"retry",earn.id()));
         assertEquals(40,wallets.read(member).balance());
         assertEquals(1,wallets.entries(member,0).stream().filter(e->"REVOKE".equals(e.kind())).count());
+    }
+
+    @Test
+    void theFirstProfileRewardUsesTheCountrySavedInTheSameRequest() {
+        UUID member=user("KR","APPLICANT");
+        configure(Activity.PROFILE,1,10,false);
+        policies.updateSettings(new Settings(true,true,false,false,100));
+        policies.updateRule(new Rule(null,Activity.PROFILE,"MN","Mongolia profile",true,1,25,false,1,1,0,0,
+                false,List.of("nickname","birthDate","countryCode","introText"),0,null,null,0));
+        actor(member,"APPLICANT");
+        var patch=new com.audition.platform.api.dto.me.PatchMeProfileRequest();
+        patch.setCountryCode("MN");
+        patch.setIntroText("New profile");
+        profiles.patchProfile(patch);
+        assertEquals("MN",wallets.read(member).countryCode());
+        assertEquals(25,wallets.read(member).balance());
     }
 
     @Test
