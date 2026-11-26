@@ -38,7 +38,6 @@ export default function PcLoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const submitGuard = useLoginSubmitGuard()
-  const [socialMessage, setSocialMessage] = useState<string | null>(null)
 
   const {
     register,
@@ -51,7 +50,6 @@ export default function PcLoginPage() {
   const onSubmit = async (data: LoginFormData) => {
     if (!submitGuard.tryBegin()) return
     setIsLoading(true)
-    setSocialMessage(null)
     setError(null)
     try {
       const response = await authApi.login(data)
@@ -107,19 +105,10 @@ export default function PcLoginPage() {
     }
   }
 
-  const handleSocialClick = () => {
-    setSocialMessage(t('socialSoon'))
-  }
-
   return (
     <AuthCardLayout title={t('loginTitle')}>
       {error && (
         <div className="mb-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>
-      )}
-      {socialMessage && (
-        <div className="mb-3 rounded-md border border-yellow-200 bg-yellow-50 px-3 py-2 text-sm text-yellow-800">
-          {socialMessage}
-        </div>
       )}
 
       <form method="post" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -161,28 +150,6 @@ export default function PcLoginPage() {
           {isLoading ? t('processing') : t('loginButton')}
         </button>
       </form>
-
-      <div className="relative my-5">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-gray-200" />
-        </div>
-        <div className="relative flex justify-center">
-          <span className="bg-white px-2 text-sm text-gray-500">{t('or')}</span>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-2.5">
-        {['Google', t('kakao'), t('naver'), 'Facebook'].map((provider) => (
-          <button
-            key={provider}
-            type="button"
-            onClick={handleSocialClick}
-            className="inline-flex h-10 items-center justify-center rounded-md border border-gray-300 bg-white text-sm text-gray-700 hover:bg-gray-50"
-          >
-            {provider}
-          </button>
-        ))}
-      </div>
 
       <div className="mt-5 text-center text-sm">
         <p className="text-gray-600">

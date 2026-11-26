@@ -48,7 +48,7 @@ export default function StudioSettingsPage() {
         </label>
         <label className="text-sm font-medium">
           {t('newPassword')}
-          <input className={INPUT_BASE} type="password" minLength={8} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required />
+          <input className={INPUT_BASE} type="password" minLength={6} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required />
         </label>
         <button type="submit" disabled={save.isPending} className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
           {tCommon('save')}

@@ -18,7 +18,7 @@ Railway 배포: Root = `backend`, `docs/RAILWAY_RESET_RUNBOOK.md` 참고.
 Railway의 Development 백엔드 Variables에서 아래 두 값을 설정하고 재배포합니다.
 
 - `BOOTSTRAP_SUPER_ADMIN_EMAIL` — 로그인에 사용하는 이메일
-- `BOOTSTRAP_SUPER_ADMIN_PASSWORD` — 16자 이상, UTF-8 기준 최대 72바이트의 비밀번호
+- `BOOTSTRAP_SUPER_ADMIN_PASSWORD` — 6자 이상, UTF-8 기준 최대 72바이트의 비밀번호
 
 처음 배포할 때 기존 슈퍼 관리자가 한 명이면 해당 계정을 사용합니다. 여러 명이면 기존 슈퍼 관리자 이메일로 처음 설정합니다. 슈퍼 관리자가 없으면 계정을 생성합니다.
 이후 두 값을 변경해 재배포하면 같은 계정의 로그인 정보가 갱신되며 기존 세션이 종료됩니다.

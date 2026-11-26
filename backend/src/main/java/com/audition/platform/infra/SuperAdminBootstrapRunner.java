@@ -49,7 +49,7 @@ public class SuperAdminBootstrapRunner implements ApplicationListener<Applicatio
         String password = env.getProperty("BOOTSTRAP_SUPER_ADMIN_PASSWORD", "");
         if (email.isEmpty() && password.isEmpty()) return;
         if (!validEmail(email) || !validPassword(password)) {
-            log.warn("[super-admin bootstrap] Configure a valid email and a password with at least 16 characters and at most 72 UTF-8 bytes.");
+            log.warn("[super-admin bootstrap] Configure a valid email and a password with at least 6 characters and at most 72 UTF-8 bytes.");
             return;
         }
 
@@ -126,6 +126,6 @@ public class SuperAdminBootstrapRunner implements ApplicationListener<Applicatio
 
     private static boolean validPassword(String value) {
         int bytes = value.getBytes(StandardCharsets.UTF_8).length;
-        return value.codePointCount(0, value.length()) >= 16 && bytes <= 72 && !value.isBlank();
+        return value.codePointCount(0, value.length()) >= 6 && bytes <= 72 && !value.isBlank();
     }
 }

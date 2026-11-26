@@ -33,14 +33,16 @@ class SuperAdminBootstrapRunnerTest {
 
     @Test
     void createsOnlyWithAnExplicitEmailAndPreparesCredentialVersion() {
-        runner.applyConfiguration(config(" DEV-ADMIN@example.test "));
+        String password = "abc123";
+        runner.applyConfiguration(config(" DEV-ADMIN@example.test ")
+                .withProperty("BOOTSTRAP_SUPER_ADMIN_PASSWORD", password));
         var user = ArgumentCaptor.forClass(User.class);
         verify(users).save(user.capture());
         var saved = user.getValue();
         assertEquals("dev-admin@example.test", saved.getEmail());
         assertEquals("SUPER_ADMIN", saved.getRole());
         assertNotNull(saved.getBootstrapCredentialVersion());
-        assertTrue(encoder.matches(testPassword(), saved.getPasswordHash()));
+        assertTrue(encoder.matches(password, saved.getPasswordHash()));
     }
 
     @Test
