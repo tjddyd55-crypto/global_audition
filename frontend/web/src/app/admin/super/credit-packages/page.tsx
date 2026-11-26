@@ -156,7 +156,7 @@ export default function SuperAdminCreditPackagesPage() {
           </div>
         )}
         {deleteMut.isError && <p role="alert" className="text-red-700">패키지를 삭제하지 못했습니다.</p>}
-        {packages && <DataTable columns={columns} rows={packages} getRowKey={(r) => r.id} />}
+        {packages && <DataTable columns={columns} rows={packages} emptyMessage="등록된 크레딧 패키지가 없습니다." getRowKey={(r) => r.id} />}
       </AdminCard>
 
       <AdminCard title="패키지 추가">

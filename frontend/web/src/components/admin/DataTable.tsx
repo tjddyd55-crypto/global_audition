@@ -13,12 +13,12 @@ export type DataTableColumn<T> = {
 type DataTableProps<T> = {
   columns: DataTableColumn<T>[]
   rows: T[]
-  emptyMessage?: string
+  emptyMessage: string
   getRowKey: (row: T) => string
 }
 
 /** Admin list table. Horizontal scroll only; used inside a card. */
-export function DataTable<T>({ columns, rows, emptyMessage = '데이터가 없습니다.', getRowKey }: DataTableProps<T>) {
+export function DataTable<T>({ columns, rows, emptyMessage, getRowKey }: DataTableProps<T>) {
   return (
     <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
       <table
