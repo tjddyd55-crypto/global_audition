@@ -106,6 +106,11 @@ class VoteScheduleIT {
         assertEquals("CLOSED", closed.getVoteStatus());
         assertFalse(closed.isVotingEnabled());
         assertEquals(1, closed.getItems().size());
+        assertEquals(1L, closed.getSummary().getTotalVotes());
+        assertEquals(1L, closed.getAudition().getTotalVotes());
+        assertEquals(1L, closed.getItems().get(0).getVoteCount());
+        assertEquals(first.toString(), closed.getMyVoteApplicationId());
+        assertTrue(closed.getItems().get(0).isVoted());
         ResponseStatusException ended = assertThrows(ResponseStatusException.class, () -> votes.castVote(audition, first));
         assertEquals(HttpStatus.CONFLICT, ended.getStatusCode());
         assertTrue(ended.getReason() == null || ended.getReason().contains("종료") || ended.getMessage().contains("종료"));

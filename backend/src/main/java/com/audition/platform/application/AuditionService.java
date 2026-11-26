@@ -22,6 +22,7 @@ import com.audition.platform.application.i18n.content.ContentTypes;
 import com.audition.platform.api.dto.AuditionTagRefDto;
 import com.audition.platform.application.round.AuditionProcessModes;
 import com.audition.platform.application.round.AuditionRoundService;
+import com.audition.platform.application.round.ApplicationRoundSubmissionService;
 import com.audition.platform.domain.audition.Application;
 import com.audition.platform.domain.audition.ApplicationRepository;
 import com.audition.platform.domain.audition.Audition;
@@ -65,6 +66,7 @@ public class AuditionService {
     private final JdbcCrmStore crm;
     private final PostingBranchPolicy postingBranchPolicy;
     private final PublicVoteScheduleService publicVoteScheduleService;
+    private final ApplicationRoundSubmissionService applicationRoundSubmissionService;
 
     public AuditionService(AuditionRepository auditionRepository,
                            UserRepository userRepository,
@@ -76,7 +78,8 @@ public class AuditionService {
                            ContentTranslationService contentTranslations,
                            JdbcCrmStore crm,
                            PostingBranchPolicy postingBranchPolicy,
-                           PublicVoteScheduleService publicVoteScheduleService) {
+                           PublicVoteScheduleService publicVoteScheduleService,
+                           ApplicationRoundSubmissionService applicationRoundSubmissionService) {
         this.auditionRepository = auditionRepository;
         this.userRepository = userRepository;
         this.applicationRepository = applicationRepository;
@@ -88,6 +91,7 @@ public class AuditionService {
         this.crm = crm;
         this.postingBranchPolicy = postingBranchPolicy;
         this.publicVoteScheduleService = publicVoteScheduleService;
+        this.applicationRoundSubmissionService = applicationRoundSubmissionService;
     }
 
     /** 연결된 기획사 심사가 끝나기 전에는 게시·마감을 막는다. 심사 행이 없으면 기존 권한을 유지한다. */
@@ -750,15 +754,18 @@ public class AuditionService {
             if (changed) {
                 audition.setProcessMode(AuditionProcessModes.MULTI_ROUND);
             }
-            if (!auditionRoundService.listRounds(id).isEmpty()) {
-                return changed;
+            boolean bootstrapped = false;
+            if (auditionRoundService.listRounds(id).isEmpty()) {
+                audition.setCurrentRoundNumber(1);
+                audition.setMaxRoundNumber(1);
+                audition.setSelectionStatus("OPEN".equals(audition.getStatus()) ? "OPEN" : "DRAFT");
+                auditionRepository.save(audition);
+                auditionRoundService.bootstrapFirstRound(id, "OPEN".equals(audition.getStatus()));
+                bootstrapped = true;
             }
-            audition.setCurrentRoundNumber(1);
-            audition.setMaxRoundNumber(1);
-            audition.setSelectionStatus("OPEN".equals(audition.getStatus()) ? "OPEN" : "DRAFT");
-            auditionRepository.save(audition);
-            auditionRoundService.bootstrapFirstRound(id, "OPEN".equals(audition.getStatus()));
-            return true;
+            // SINGLE 로 이미 접수된 지원에 1차 제출 행이 없으면 보완한다(행이 없으면 제출·심사가 NO_SUBMISSION_ROW 가 된다).
+            int backfilled = applicationRoundSubmissionService.backfillFirstRoundSubmissions(id);
+            return changed || bootstrapped || backfilled > 0;
         }
         if (AuditionProcessModes.SINGLE.equals(audition.getProcessMode())) {
             return false;

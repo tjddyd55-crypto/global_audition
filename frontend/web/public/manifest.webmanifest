@@ -9,7 +9,11 @@
   "background_color": "#000000",
   "theme_color": "#000000",
   "lang": "ko",
-  "categories": ["entertainment", "social", "productivity"],
+  "categories": [
+    "entertainment",
+    "social",
+    "productivity"
+  ],
   "icons": [
     {
       "src": "/apple-icon",
@@ -28,6 +32,14 @@
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "maskable"
+    }
+  ],
+  "prefer_related_applications": true,
+  "related_applications": [
+    {
+      "platform": "play",
+      "id": "com.globalaudition.app",
+      "url": "https://play.google.com/store/apps/details?id=com.globalaudition.app"
     }
   ]
 }

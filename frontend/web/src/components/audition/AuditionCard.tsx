@@ -114,7 +114,7 @@ export default function AuditionCard({ audition, showSave = true }: AuditionCard
         </div>
 
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] bg-gradient-to-t from-black/70 via-black/40 to-transparent p-4 pt-16">
-          <h3 className="pointer-events-none line-clamp-2 text-balance text-lg font-bold leading-snug text-white">
+          <h3 className="pointer-events-none line-clamp-2 break-keep break-words text-balance text-lg font-bold leading-snug text-white">
             {title}
           </h3>
           <p className="pointer-events-none mt-1 text-sm text-white/80">{metaLine}</p>
