@@ -10,15 +10,18 @@ import com.audition.platform.domain.audition.ApplicationVideoRepository;
 import com.audition.platform.application.tag.AuditionTagService;
 import com.audition.platform.domain.audition.Audition;
 import com.audition.platform.application.audition.AuditionSeriesPresentation;
+import com.audition.platform.application.vote.VoteWindow;
 import com.audition.platform.domain.audition.AuditionRepository;
 import com.audition.platform.domain.user.User;
 import com.audition.platform.domain.user.UserRepository;
 import com.audition.platform.infra.SecurityUtils;
 import org.springframework.http.HttpStatus;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collections;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -31,17 +34,19 @@ public class DashboardService {
     private final ApplicationVideoRepository applicationVideoRepository;
     private final UserRepository userRepository;
     private final AuditionTagService auditionTagService;
+    private final NamedParameterJdbcTemplate jdbc;
 
     public DashboardService(AuditionRepository auditionRepository,
                             ApplicationRepository applicationRepository,
                             ApplicationVideoRepository applicationVideoRepository,
                             UserRepository userRepository,
-                            AuditionTagService auditionTagService) {
+                            AuditionTagService auditionTagService, NamedParameterJdbcTemplate jdbc) {
         this.auditionRepository = auditionRepository;
         this.applicationRepository = applicationRepository;
         this.applicationVideoRepository = applicationVideoRepository;
         this.userRepository = userRepository;
         this.auditionTagService = auditionTagService;
+        this.jdbc = jdbc;
     }
 
     private AuditionResponse toAuditionResponse(Audition a) {
@@ -118,6 +123,14 @@ public class DashboardService {
         response.setAccepted(accepted);
         response.setRejected(rejected);
         response.setPending(reviewed + submitted);
+        response.setSubmitted(submitted);
+        response.setShortlisted(auditionIds.isEmpty() ? 0 : jdbc.queryForObject("""
+                SELECT count(DISTINCT application_id)
+                  FROM application_shortlists
+                 WHERE audition_id IN (:ids)
+                """, Map.of("ids", auditionIds), Long.class));
+        Instant now = Instant.now();
+        response.setOpenPublicVotes(ownedAuditions.stream().filter(audition -> VoteWindow.isOpen(audition, now)).count());
         response.setRecentAuditions(ownedAuditions.stream().limit(5).map(this::toAuditionResponse).collect(Collectors.toList()));
         response.setRecentApplications(recentApplications.stream().map(app -> toApplicationResponse(app, auditionMap)).collect(Collectors.toList()));
         return response;
