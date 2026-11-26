@@ -39,6 +39,10 @@ public class JdbcCrmStore {
         return rows.stream().findFirst();
     }
 
+    public Optional<AgencyRow> lock(UUID id) {
+        return jdbc.query("SELECT * FROM crm_agencies WHERE id = ? FOR UPDATE", (rs, n) -> map(rs), id).stream().findFirst();
+    }
+
     /**
      * 게시 지점 국가가 이 사용자의 ACTIVE 임명 중 하나와 같은지.
      * 국가 관리자 오디션 목록과 같은 조인이고, 지점이 없으면 추정하지 않는다.
