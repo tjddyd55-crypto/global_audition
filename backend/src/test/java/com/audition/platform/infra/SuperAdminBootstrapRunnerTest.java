@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.env.MockEnvironment;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -23,7 +24,9 @@ class SuperAdminBootstrapRunnerTest {
     @Test
     void incompleteCredentialsOrProductionNeverWrite() {
         runner.applyConfiguration(new MockEnvironment());
+        runner.applyConfiguration(new MockEnvironment().withProperty("RAILWAY_ENVIRONMENT_NAME", "development"));
         runner.applyConfiguration(config("dev-admin@example.test").withProperty("RAILWAY_ENVIRONMENT_NAME", "production"));
+        runner.applyConfiguration(config("dev-admin@example.test").withProperty("BOOTSTRAP_SUPER_ADMIN_PASSWORD", ""));
         runner.applyConfiguration(config("dev-admin@example.test").withProperty("BOOTSTRAP_SUPER_ADMIN_PASSWORD", "short"));
         verifyNoInteractions(users, database);
     }
@@ -45,10 +48,8 @@ class SuperAdminBootstrapRunnerTest {
         User existing = account("old@example.test", "SUPER_ADMIN");
         UUID version = existing.getBootstrapCredentialVersion();
         UUID id = existing.getId();
-        when(users.findByEmail(existing.getEmail())).thenReturn(Optional.of(existing));
-        runner.applyConfiguration(config("new@example.test")
-                .withProperty("BOOTSTRAP_SUPER_ADMIN_PREVIOUS_EMAIL", "old@example.test")
-                .withProperty("BOOTSTRAP_SUPER_ADMIN_RESET_PASSWORD", "true"));
+        when(users.findByBootstrapCredentialVersionIsNotNull()).thenReturn(Optional.of(existing));
+        runner.applyConfiguration(config("new@example.test"));
         verify(users).save(existing);
         assertEquals(id, existing.getId());
         assertEquals("SUPER_ADMIN", existing.getRole());
@@ -58,13 +59,46 @@ class SuperAdminBootstrapRunnerTest {
     }
 
     @Test
-    void neverOverwritesAnApplicantOrCreatesAReplacementOnResetTypo() {
+    void adoptsSingleExistingAdminAndIgnoresUnchangedConfigurationOnRestart() {
+        User existing = account("seed@example.test", "SUPER_ADMIN");
+        existing.setBootstrapCredentialVersion(null);
+        when(users.findTop2ByRole("SUPER_ADMIN")).thenReturn(List.of(existing));
+
+        runner.applyConfiguration(config("dev-admin@example.test"));
+        UUID version = existing.getBootstrapCredentialVersion();
+        assertNotNull(version);
+        when(users.findByBootstrapCredentialVersionIsNotNull()).thenReturn(Optional.of(existing));
+        when(users.findByEmail(existing.getEmail())).thenReturn(Optional.of(existing));
+        runner.applyConfiguration(config("dev-admin@example.test"));
+
+        verify(users).save(existing);
+        assertEquals("dev-admin@example.test", existing.getEmail());
+        assertEquals(version, existing.getBootstrapCredentialVersion());
+    }
+
+    @Test
+    void neverOverwritesAnApplicantOrGuessesBetweenMultipleAdministrators() {
         User applicant = account("member@example.test", "APPLICANT");
+        User first = account("first@example.test", "SUPER_ADMIN");
+        User second = account("second@example.test", "SUPER_ADMIN");
         when(users.findByEmail(applicant.getEmail())).thenReturn(Optional.of(applicant));
-        runner.applyConfiguration(config(applicant.getEmail()).withProperty("BOOTSTRAP_SUPER_ADMIN_RESET_PASSWORD", "true"));
-        runner.applyConfiguration(config("typo@example.test").withProperty("BOOTSTRAP_SUPER_ADMIN_RESET_PASSWORD", "true"));
+        when(users.findTop2ByRole("SUPER_ADMIN")).thenReturn(List.of(first, second));
+        runner.applyConfiguration(config(applicant.getEmail()));
+        runner.applyConfiguration(config("typo@example.test"));
         verify(users, never()).save(any());
         assertEquals("APPLICANT", applicant.getRole());
+    }
+
+    @Test
+    void refusesConflictingEmailOrInactiveManagedAccount() {
+        User existing = account("managed@example.test", "SUPER_ADMIN");
+        User other = account("other@example.test", "SUPER_ADMIN");
+        when(users.findByBootstrapCredentialVersionIsNotNull()).thenReturn(Optional.of(existing));
+        when(users.findByEmail(other.getEmail())).thenReturn(Optional.of(other));
+        runner.applyConfiguration(config(other.getEmail()));
+        existing.setAccountStatus("SUSPENDED");
+        runner.applyConfiguration(config("new@example.test"));
+        verify(users, never()).save(any());
     }
 
     private static MockEnvironment config(String email) {

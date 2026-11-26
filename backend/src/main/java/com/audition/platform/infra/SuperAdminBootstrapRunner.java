@@ -4,7 +4,6 @@ import com.audition.platform.domain.user.User;
 import com.audition.platform.domain.user.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.env.Environment;
@@ -20,9 +19,8 @@ import java.util.Locale;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
-/** Explicit, one-deploy credential configuration for Development and local instances. */
+/** Synchronizes the Railway Development administrator's login with its configured credentials. */
 @Component
-@ConditionalOnProperty(prefix = "app.super-admin", name = "bootstrap-enabled", havingValue = "true")
 public class SuperAdminBootstrapRunner implements ApplicationListener<ApplicationReadyEvent> {
     private static final Logger log = LoggerFactory.getLogger(SuperAdminBootstrapRunner.class);
     private static final Pattern EMAIL = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
@@ -46,35 +44,38 @@ public class SuperAdminBootstrapRunner implements ApplicationListener<Applicatio
 
     void applyConfiguration(Environment env) {
         String railway = env.getProperty("RAILWAY_ENVIRONMENT_NAME", "").strip();
-        if (!railway.isEmpty() && !"development".equalsIgnoreCase(railway)) {
-            log.warn("[super-admin bootstrap] Credential changes are disabled in this Railway environment.");
-            return;
-        }
-        String email = email(env, "BOOTSTRAP_SUPER_ADMIN_EMAIL");
-        String previousEmail = email(env, "BOOTSTRAP_SUPER_ADMIN_PREVIOUS_EMAIL");
+        if (!"development".equalsIgnoreCase(railway)) return;
+        String email = env.getProperty("BOOTSTRAP_SUPER_ADMIN_EMAIL", "").strip().toLowerCase(Locale.ROOT);
         String password = env.getProperty("BOOTSTRAP_SUPER_ADMIN_PASSWORD", "");
-        boolean reset = Boolean.parseBoolean(env.getProperty("BOOTSTRAP_SUPER_ADMIN_RESET_PASSWORD", "false").strip());
-        if (!validEmail(email) || (!previousEmail.isEmpty() && !validEmail(previousEmail)) || !validPassword(password)) {
-            log.warn("[super-admin bootstrap] A valid email and a password of 16–72 UTF-8 bytes must be configured.");
-            return;
-        }
-        if (!previousEmail.isEmpty() && !reset) {
-            log.warn("[super-admin bootstrap] Renaming an existing login requires the explicit reset flag.");
+        if (email.isEmpty() && password.isEmpty()) return;
+        if (!validEmail(email) || !validPassword(password)) {
+            log.warn("[super-admin bootstrap] Configure a valid email and a password with at least 16 characters and at most 72 UTF-8 bytes.");
             return;
         }
 
         // A rolling deployment can briefly start several replicas with the same configuration.
         jdbc.execute("SELECT pg_advisory_xact_lock(18679, 80)");
         User target = users.findByEmail(email).orElse(null);
-        User current = previousEmail.isEmpty() || previousEmail.equals(email)
-                ? target : users.findByEmail(previousEmail).orElse(null);
+        if (target != null && !ADMIN_ROLE.equals(target.getRole())) {
+            log.warn("[super-admin bootstrap] The configured email is already used by another account.");
+            return;
+        }
+
+        User current = users.findByBootstrapCredentialVersionIsNotNull().orElse(null);
         if (current == null) {
-            if (reset || !previousEmail.isEmpty()) {
-                log.warn("[super-admin bootstrap] The requested existing administrator account was not found.");
+            current = target;
+        }
+        if (current == null) {
+            var existing = users.findTop2ByRole(ADMIN_ROLE);
+            if (existing.isEmpty()) {
+                create(email, password);
                 return;
             }
-            create(email, password);
-            return;
+            if (existing.size() > 1) {
+                log.warn("[super-admin bootstrap] For the initial setup, configure the email of an existing super administrator.");
+                return;
+            }
+            current = existing.get(0);
         }
         if (!ADMIN_ROLE.equals(current.getRole()) || !"ACTIVE".equals(current.getAccountStatus())) {
             log.warn("[super-admin bootstrap] The selected login does not belong to an active super administrator.");
@@ -84,12 +85,11 @@ public class SuperAdminBootstrapRunner implements ApplicationListener<Applicatio
             log.warn("[super-admin bootstrap] The requested email already belongs to another account.");
             return;
         }
-        if (!reset) return;
         boolean sameEmail = current.getEmail().equals(email);
-        boolean samePassword = passwords.matches(password, current.getPasswordHash());
-        if (sameEmail && samePassword) return;
+        boolean samePassword = current.getPasswordHash() != null && passwords.matches(password, current.getPasswordHash());
+        if (sameEmail && samePassword && current.getBootstrapCredentialVersion() != null) return;
         current.setEmail(email);
-        current.setPasswordHash(passwords.encode(password));
+        if (!samePassword) current.setPasswordHash(passwords.encode(password));
         setNewVersion(current);
         users.save(current);
         log.info("[super-admin bootstrap] Existing administrator login updated. Prior sessions were revoked.");

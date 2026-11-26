@@ -5,14 +5,14 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 public interface UserRepository extends JpaRepository<User, UUID>, JpaSpecificationExecutor<User> {
 
     Optional<User> findByEmail(String email);
+    Optional<User> findByBootstrapCredentialVersionIsNotNull();
+    List<User> findTop2ByRole(String role);
 
     boolean existsByEmail(String email);
 
