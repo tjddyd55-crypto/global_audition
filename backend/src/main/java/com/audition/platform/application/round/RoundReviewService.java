@@ -142,7 +142,7 @@ public class RoundReviewService {
             applyPassSideEffects(target.application(), target.audition(), target.round(), submission);
             notificationService.logPassNotice(target.application(), target.round());
         } else if ("FAILED".equals(nextStatus)) {
-            applyFailSideEffects(target.application(), target.round(), submission);
+            applyFailSideEffects(target.application(), target.audition(), target.round(), submission);
             notificationService.logFailNotice(target.application(), target.round());
         }
         return toResponse(target.application(), submission);
@@ -176,7 +176,7 @@ public class RoundReviewService {
             Application app, Audition audition, AuditionRound round, ApplicationRoundSubmission passedSubmission) {
         app.setLatestResultStatus("PASSED");
         app.setLatestRoundSubmissionId(passedSubmission.getId());
-        boolean last = isLastRoundInAudition(audition.getId(), round);
+        boolean last = isLastRound(audition, round);
         if (last) {
             app.setFinalStatus("FINAL_PASSED");
             app.setStatus("ACCEPTED");
@@ -195,10 +195,10 @@ public class RoundReviewService {
         applicationRepository.save(app);
     }
 
-    private void applyFailSideEffects(Application app, AuditionRound round, ApplicationRoundSubmission sub) {
+    private void applyFailSideEffects(Application app, Audition audition, AuditionRound round, ApplicationRoundSubmission sub) {
         app.setLatestResultStatus("FAILED");
         app.setLatestRoundSubmissionId(sub.getId());
-        boolean last = isLastRoundInAudition(round.getAuditionId(), round);
+        boolean last = isLastRound(audition, round);
         if (last) {
             app.setFinalStatus("FINAL_FAILED");
         } else {
@@ -209,8 +209,12 @@ public class RoundReviewService {
         applicationRepository.save(app);
     }
 
-    private boolean isLastRoundInAudition(UUID auditionId, AuditionRound round) {
-        List<AuditionRound> rs = roundRepository.findByAuditionIdOrderByRoundNumberAsc(auditionId);
+    private boolean isLastRound(Audition audition, AuditionRound round) {
+        int planned = AuditionRoundService.plannedLastRoundNumber(audition);
+        if (planned > 0) {
+            return round.getRoundNumber() >= planned;
+        }
+        List<AuditionRound> rs = roundRepository.findByAuditionIdOrderByRoundNumberAsc(audition.getId());
         if (rs.isEmpty()) {
             return true;
         }

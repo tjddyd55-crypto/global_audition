@@ -43,7 +43,7 @@ export default function SavedAuditionList() {
               <p className="font-medium text-neutral-800">{t('unavailable')}</p>
               <p className={`mt-1 ${TEXT_SUB}`}>{t('unavailableHint')}</p>
               <div className="mt-3">
-                <SaveAuditionButton auditionId={item.auditionId} className="!border-neutral-300 !bg-neutral-800" />
+                <SaveAuditionButton auditionId={item.auditionId} tone="onSurface" />
               </div>
             </li>
           )

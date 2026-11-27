@@ -123,7 +123,7 @@ export default function AuditionCard({ audition, showSave = true }: AuditionCard
     </Link>
     {showSave ? (
       <div className="absolute right-3 top-3 z-[3]">
-        <SaveAuditionButton auditionId={id} />
+        <SaveAuditionButton auditionId={id} tone="onImage" />
       </div>
     ) : null}
     </div>

@@ -238,4 +238,49 @@ public class ApplicationRoundSubmissionService {
         return created;
     }
 
+    /**
+     * 총 회차가 남아 있는데 1차만 있는 상태에서 합격해 FINAL_PASSED 가 된 지원을 다시 진행 중으로 되돌린다.
+     * 이미 마지막 계획 회차를 합격한 지원은 건드리지 않는다.
+     */
+    @Transactional
+    public int reopenPrematurelyFinalizedApplications(UUID auditionId) {
+        Audition audition = auditionRepository.findById(auditionId).orElse(null);
+        if (audition == null || !AuditionProcessModes.isMultiRound(audition.getProcessMode())) {
+            return 0;
+        }
+        int planned = AuditionRoundService.plannedLastRoundNumber(audition);
+        if (planned <= 1) {
+            return 0;
+        }
+        int repaired = 0;
+        for (Application app : applicationRepository.findByAuditionIdOrderByCreatedAtDesc(auditionId)) {
+            if (!"FINAL_PASSED".equals(app.getFinalStatus())) {
+                continue;
+            }
+            int passedMax = submissionRepository.findByApplicationIdOrderByRoundNumberAsc(app.getId()).stream()
+                    .filter(s -> "PASSED".equals(s.getSubmissionStatus()))
+                    .mapToInt(ApplicationRoundSubmission::getRoundNumber)
+                    .max()
+                    .orElse(0);
+            if (passedMax <= 0 || passedMax >= planned) {
+                continue;
+            }
+            int nextNum = passedMax + 1;
+            AuditionRound next = roundRepository
+                    .findByAuditionIdAndRoundNumber(auditionId, nextNum)
+                    .orElse(null);
+            if (next == null) {
+                continue;
+            }
+            app.setFinalStatus("IN_PROGRESS");
+            app.setStatus("SUBMITTED");
+            app.setCurrentRoundNumber(nextNum);
+            ApplicationRoundSubmission s = ensureSubmissionForRound(app, next);
+            app.setLatestRoundSubmissionId(s.getId());
+            applicationRepository.save(app);
+            repaired++;
+        }
+        return repaired;
+    }
+
 }

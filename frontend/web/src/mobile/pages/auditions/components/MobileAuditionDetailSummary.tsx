@@ -183,7 +183,7 @@ export default function MobileAuditionDetailSummary({
         )}
         {!readOnly ? (
           <div className="absolute right-3 top-3 z-[3]">
-            <SaveAuditionButton auditionId={String(audition.id)} />
+            <SaveAuditionButton auditionId={String(audition.id)} tone="onImage" />
           </div>
         ) : null}
       </div>

@@ -144,7 +144,7 @@ export function AuditionDetailHeroSection({
         </div>
         {!interactionsDisabled ? (
           <div className="absolute right-3 top-3 z-[3]">
-            <SaveAuditionButton auditionId={auditionId} />
+            <SaveAuditionButton auditionId={auditionId} tone="onImage" />
           </div>
         ) : null}
 

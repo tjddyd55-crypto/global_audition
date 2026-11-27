@@ -24,14 +24,17 @@ public class AuditionRoundService {
     private final AuditionRoundRepository roundRepository;
     private final ApplicationRoundSubmissionRepository submissionRepository;
     private final AuditionRepository auditionRepository;
+    private final ApplicationRoundSubmissionService submissionService;
 
     public AuditionRoundService(
             AuditionRoundRepository roundRepository,
             ApplicationRoundSubmissionRepository submissionRepository,
-            AuditionRepository auditionRepository) {
+            AuditionRepository auditionRepository,
+            ApplicationRoundSubmissionService submissionService) {
         this.roundRepository = roundRepository;
         this.submissionRepository = submissionRepository;
         this.auditionRepository = auditionRepository;
+        this.submissionService = submissionService;
     }
 
     /**
@@ -147,6 +150,9 @@ public class AuditionRoundService {
         r.setEndAt(endAt);
         r.setActive(false);
         AuditionRound saved = roundRepository.save(r);
+        // 회차를 만든 직후, maxRoundNumber 를 올리기 전에 복구한다.
+        // 이미 계획된 마지막 회차를 통과한 지원자가 추가 회차 생성만으로 다시 열리지 않게 한다.
+        submissionService.reopenPrematurelyFinalizedApplications(auditionId);
         Integer max = audition.getMaxRoundNumber();
         if (max == null || saved.getRoundNumber() > max) {
             audition.setMaxRoundNumber(saved.getRoundNumber());
@@ -234,6 +240,7 @@ public class AuditionRoundService {
     @Transactional
     public AuditionRound openRound(UUID auditionId, UUID roundId) {
         AuditionRound round = requireRoundBelongsToAudition(auditionId, roundId);
+        submissionService.reopenPrematurelyFinalizedApplications(auditionId);
         if (round.isActive()) {
             return round;
         }
@@ -258,12 +265,30 @@ public class AuditionRoundService {
                 .findFirst();
     }
 
+    /**
+     * 마지막 회차 여부는 이미 만들어진 회차만이 아니라, 공고에 적어 둔 총 회차(votingRoundCount)도 본다.
+     * 1차만 부트스트랩된 상태에서 합격하면 지원이 조기 최종 합격 처리되던 문제를 막는다.
+     */
     @Transactional(readOnly = true)
     public boolean isLastRound(Audition audition, AuditionRound round) {
-        Integer max = audition.getMaxRoundNumber();
-        if (max == null) {
+        int planned = plannedLastRoundNumber(audition);
+        if (planned <= 0) {
             return true;
         }
-        return round.getRoundNumber() >= max;
+        return round.getRoundNumber() >= planned;
+    }
+
+    /**
+     * @return 계획된 마지막 회차 번호. 총 회차와 maxRoundNumber 를 알 수 없으면 0.
+     */
+    public static int plannedLastRoundNumber(Audition audition) {
+        int planned = 0;
+        if (audition.getMaxRoundNumber() != null) {
+            planned = Math.max(planned, audition.getMaxRoundNumber());
+        }
+        if (audition.getVotingRoundCount() != null) {
+            planned = Math.max(planned, audition.getVotingRoundCount());
+        }
+        return planned;
     }
 }

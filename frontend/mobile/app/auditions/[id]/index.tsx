@@ -73,7 +73,7 @@ export default function AuditionDetailScreen() {
             <PosterImage uri={auditionDetailImageUrl(audition.images)} />
             {id ? (
               <View style={styles.heart}>
-                <SaveAuditionButton auditionId={String(Array.isArray(id) ? id[0] : id)} />
+                <SaveAuditionButton auditionId={String(Array.isArray(id) ? id[0] : id)} tone="onImage" />
               </View>
             ) : null}
           </View>
