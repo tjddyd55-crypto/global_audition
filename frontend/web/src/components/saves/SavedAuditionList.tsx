@@ -68,7 +68,7 @@ export default function SavedAuditionList() {
               </div>
             </Link>
             <div className="absolute right-3 top-3">
-              <SaveAuditionButton auditionId={item.auditionId} />
+              <SaveAuditionButton auditionId={item.auditionId} tone="onSurface" />
             </div>
           </li>
         )
