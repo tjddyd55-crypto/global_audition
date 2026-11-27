@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useQuery } from '@tanstack/react-query'
 import { useLocale, useTranslations } from 'next-intl'
@@ -47,14 +47,14 @@ export default function MyApplicationsPage() {
         </div>
         <div className="flex flex-col gap-4">
           {(data ?? []).map((app) => (
-            <div key={app.id} className={`${CARD_BASE} flex items-center justify-between gap-4`}>
+            <div key={app.id} className={`${CARD_BASE} flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between`}>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-gray-900">{app.auditionTitle ?? app.auditionId}</p>
+                <p className="text-sm font-semibold text-gray-900 [overflow-wrap:anywhere]">{app.auditionTitle ?? app.auditionId}</p>
                 <p className={TEXT_SUB}>{tMy('appliedOn', { date: formatLocaleDate(app.createdAt, locale) })}</p>
               </div>
-              <div className="flex shrink-0 items-center gap-2">
+              <div className="flex min-w-0 flex-wrap items-center gap-2 sm:shrink-0">
                 <span className={statusBadgeClass(app.status)}>{statusLabel(app.status)}</span>
-                <Link href={`/my/applications/${app.id}`} className={`${BTN_SECONDARY} shrink-0`}>
+                <Link href={`/my/applications/${app.id}`} className={`${BTN_SECONDARY} !w-auto max-w-full`}>
                   {tMy('detail')}
                 </Link>
               </div>
