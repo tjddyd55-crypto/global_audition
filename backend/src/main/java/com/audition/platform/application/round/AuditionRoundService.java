@@ -150,12 +150,14 @@ public class AuditionRoundService {
         r.setEndAt(endAt);
         r.setActive(false);
         AuditionRound saved = roundRepository.save(r);
+        // 회차를 만든 직후, maxRoundNumber 를 올리기 전에 복구한다.
+        // 이미 계획된 마지막 회차를 통과한 지원자가 추가 회차 생성만으로 다시 열리지 않게 한다.
+        submissionService.reopenPrematurelyFinalizedApplications(auditionId);
         Integer max = audition.getMaxRoundNumber();
         if (max == null || saved.getRoundNumber() > max) {
             audition.setMaxRoundNumber(saved.getRoundNumber());
             auditionRepository.save(audition);
         }
-        submissionService.reopenPrematurelyFinalizedApplications(auditionId);
         return saved;
     }
 
