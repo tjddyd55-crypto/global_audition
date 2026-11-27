@@ -41,7 +41,7 @@ export default function SavedAuditionsScreen() {
                 <Text style={styles.cardTitle}>{t('savedAuditions.unavailable')}</Text>
                 <Text style={styles.meta}>{t('savedAuditions.unavailableHint')}</Text>
                 <View style={styles.hiddenAction}>
-                  <SaveAuditionButton auditionId={item.auditionId} />
+                  <SaveAuditionButton auditionId={item.auditionId} tone="onSurface" />
                 </View>
               </View>
             )
@@ -61,7 +61,7 @@ export default function SavedAuditionsScreen() {
                 </View>
               </Pressable>
               <View style={styles.heart}>
-                <SaveAuditionButton auditionId={item.auditionId} />
+                <SaveAuditionButton auditionId={item.auditionId} tone="onSurface" />
               </View>
             </View>
           )

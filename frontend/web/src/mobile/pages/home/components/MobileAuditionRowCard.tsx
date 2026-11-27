@@ -100,7 +100,7 @@ roundStatusLabel(status, audition.round, tStatus)
     </Link>
     {showSave ? (
       <div className="absolute right-2 top-2 z-[3]">
-        <SaveAuditionButton auditionId={audition.id} />
+        <SaveAuditionButton auditionId={audition.id} tone="onSurface" />
       </div>
     ) : null}
     </div>

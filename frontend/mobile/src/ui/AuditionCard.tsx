@@ -74,7 +74,7 @@ export function AuditionCard({ audition, onPress, variant = 'list', reasons = []
         </View>
       </Pressable>
       <View style={styles.heart} pointerEvents="box-none">
-        <SaveAuditionButton auditionId={audition.id} />
+        <SaveAuditionButton auditionId={audition.id} tone="onImage" />
       </View>
     </View>
   )
