@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router'
 import * as Notifications from 'expo-notifications'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../auth/AuthProvider'
-import { androidPushAvailable, refreshAndroidPush } from './androidPush'
+import { androidPushAvailable, pushEnabledFor, refreshAndroidPush } from './androidPush'
 import { pushDestination } from './pushDestination'
 
 export function AndroidPushListener() {
@@ -21,6 +21,23 @@ export function AndroidPushListener() {
     const token = Notifications.addPushTokenListener(refresh)
     return () => { active.remove(); token.remove() }
   }, [ready, userId, i18n.language])
+
+  useEffect(() => {
+    if (!androidPushAvailable || !ready || !userId) return
+    let active = true
+    Notifications.setNotificationHandler({
+      handleNotification: async notification => {
+        const data = notification.request.content.data
+        const show = data.recipient === userId && Boolean(pushDestination(data.link))
+          && await pushEnabledFor(userId).catch(() => false) && active
+        return { shouldShowBanner: show, shouldShowList: show, shouldPlaySound: false, shouldSetBadge: false }
+      },
+    })
+    return () => {
+      active = false
+      Notifications.setNotificationHandler(null)
+    }
+  }, [ready, userId])
 
   useEffect(() => {
     if (!androidPushAvailable || !ready) return
