@@ -2,6 +2,7 @@
 
 import { useParams } from 'next/navigation'
 import { useRouter } from '@/i18n.config'
+import { withNext } from '@/shared/auth/safeNext'
 import { useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import { applicationApi } from '@/shared/api/applications'
@@ -78,7 +79,7 @@ export default function MobileAuditionApplyPage() {
     return (
       <ApplyPageGuardState
         message={tDetail('loginToApply')}
-        href="/login"
+        href={withNext('/login', `/auditions/${auditionId}/apply`)}
         linkLabel={t('login')}
         messageClassName="mb-4"
       />
