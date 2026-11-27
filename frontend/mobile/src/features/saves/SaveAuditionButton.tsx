@@ -1,10 +1,8 @@
-import { Pressable, StyleSheet } from 'react-native'
-import { Ionicons } from '@expo/vector-icons'
+import { Image, Pressable, StyleSheet } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useSavedAuditionIds, useToggleSavedAudition } from './useSavedAuditions'
 
 const HEART_RED = '#E11D48'
-const SIZE = 22
 
 type Tone = 'onImage' | 'onSurface'
 
@@ -30,11 +28,14 @@ export function SaveAuditionButton({
       onPress={() => toggle(auditionId, isSaved)}
       style={styles.btn}
     >
-      <Ionicons
-        name={isSaved ? 'heart' : 'heart-outline'}
-        size={SIZE}
-        color={isSaved ? HEART_RED : outline}
-        style={tone === 'onImage' ? styles.onImage : undefined}
+      <Image
+        source={isSaved ? require('./heart-filled.png') : require('./heart-outline.png')}
+        resizeMode="contain"
+        style={[
+          styles.icon,
+          { tintColor: isSaved ? HEART_RED : outline },
+          tone === 'onImage' ? styles.onImage : null,
+        ]}
       />
     </Pressable>
   )
@@ -48,9 +49,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: 'transparent',
   },
+  icon: {
+    width: 22,
+    height: 22,
+    aspectRatio: 1,
+  },
   onImage: {
-    textShadowColor: 'rgba(0,0,0,0.55)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    // Image has no textShadow; a 1px dark fringe is enough on posters.
+    shadowColor: '#000',
+    shadowOpacity: 0.45,
+    shadowRadius: 1.5,
+    shadowOffset: { width: 0, height: 1 },
   },
 })
