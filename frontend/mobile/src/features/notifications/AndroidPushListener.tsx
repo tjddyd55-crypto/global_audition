@@ -23,6 +23,23 @@ export function AndroidPushListener() {
   }, [ready, userId, i18n.language])
 
   useEffect(() => {
+    if (!androidPushAvailable || !ready || !userId) return
+    let active = true
+    Notifications.setNotificationHandler({
+      handleNotification: async notification => {
+        const data = notification.request.content.data
+        const show = data.recipient === userId && Boolean(pushDestination(data.link))
+          && await pushEnabledFor(userId).catch(() => false) && active
+        return { shouldShowBanner: show, shouldShowList: show, shouldPlaySound: false, shouldSetBadge: false }
+      },
+    })
+    return () => {
+      active = false
+      Notifications.setNotificationHandler(null)
+    }
+  }, [ready, userId])
+
+  useEffect(() => {
     if (!androidPushAvailable || !ready) return
     const open = (response: Notifications.NotificationResponse) => {
       const data = response.notification.request.content.data
