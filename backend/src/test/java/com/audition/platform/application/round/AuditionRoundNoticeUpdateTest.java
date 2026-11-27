@@ -17,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -45,7 +46,7 @@ class AuditionRoundNoticeUpdateTest {
         when(rounds.findById(roundId)).thenReturn(Optional.of(round));
         when(rounds.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        AuditionRound saved = new AuditionRoundService(rounds, submissions, auditions)
+        AuditionRound saved = new AuditionRoundService(rounds, submissions, auditions, mock(ApplicationRoundSubmissionService.class))
                 .updateNotices(auditionId, roundId, "제목", "본문", "제출", "안내", "ko");
 
         assertEquals("제목", saved.getAnnouncementTitle());
