@@ -9,8 +9,8 @@ describe('native translation resources', () => {
     const resources = nativeTranslationResources(english, english, partial)
     const merged = resources.mn.translation as { apply: { prevRoundBlocked: string } }
     expect(merged.apply.prevRoundBlocked).toBe('Only passers')
-    expect(resources).not.toHaveProperty('ja')
-    expect(Object.keys(resources)).toEqual(['ko', 'en', 'mn', 'km', 'uz', 'zh-CN', 'zh-TW'])
+    expect(resources).not.toHaveProperty('de')
+    expect(Object.keys(resources)).toEqual(['ko', 'en', 'mn', 'km', 'uz', 'zh-CN', 'zh-TW', 'ja'])
     const km = resources.km.translation as { apply: { prevRoundBlocked: string } }
     expect(km.apply.prevRoundBlocked).toBe('Only passers')
   })
@@ -25,8 +25,8 @@ describe('native translation resources', () => {
   })
 
   it('does not keep a retired UI locale as the native language', () => {
-    expect(normalizeLocale('ja')).toBe('en')
-    expect(normalizeLocale('ja-JP')).toBe('en')
+    expect(normalizeLocale('de')).toBe('en')
+    expect(normalizeLocale('ja-JP')).toBe('ja')
     expect(normalizeLocale('mn-MN')).toBe('mn')
     expect(normalizeLocale('km-KH')).toBe('km')
     expect(normalizeLocale('uz-Latn-UZ')).toBe('uz')

@@ -1,6 +1,6 @@
 import localesMeta from '../../../messages/locales.json'
 
-const OFFICIAL_UI_LOCALES = ['ko', 'en', 'mn', 'km', 'uz', 'zh-CN', 'zh-TW'] as const
+const OFFICIAL_UI_LOCALES = ['ko', 'en', 'mn', 'km', 'uz', 'zh-CN', 'zh-TW', 'ja'] as const
 
 function readUiLocales(primary: readonly string[]): typeof OFFICIAL_UI_LOCALES {
   const matches =
@@ -131,6 +131,7 @@ export const UI_LOCALE_NATIVE_NAMES: Record<UiLocale, string> = {
   uz: 'Oʻzbekcha',
   'zh-CN': '简体中文',
   'zh-TW': '繁體中文',
+  ja: '日本語',
 }
 
 /** Intl/number/date 포맷용 BCP-47 태그. */
@@ -142,6 +143,7 @@ export const UI_LOCALE_INTL_TAGS: Record<UiLocale, string> = {
   uz: 'uz-Latn-UZ',
   'zh-CN': 'zh-CN',
   'zh-TW': 'zh-TW',
+  ja: 'ja-JP',
 }
 
 /** 화면 로케일 → Intl 태그. 알 수 없으면 en-US. */

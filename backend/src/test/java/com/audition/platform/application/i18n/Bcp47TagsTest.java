@@ -33,8 +33,8 @@ class Bcp47TagsTest {
         assertTrue(registry.providerSupports("zh-Hant"));
         assertFalse(registry.providerSupports("pt-BR"));
         assertTrue(registry.uiLocale("mn"));
-        assertFalse(registry.uiLocale("ja"));
-        assertEquals(java.util.List.of("ko", "en", "mn", "km", "uz", "zh-CN", "zh-TW"), registry.publicSelector());
+        assertTrue(registry.uiLocale("ja"));
+        assertEquals(java.util.List.of("ko", "en", "mn", "km", "uz", "zh-CN", "zh-TW", "ja"), registry.publicSelector());
         assertTrue(registry.uiLocale("km"));
         assertTrue(registry.uiLocale("uz"));
         // 국가 코드(KH, UZ)는 언어 코드가 아니다.
@@ -42,14 +42,14 @@ class Bcp47TagsTest {
         assertFalse(registry.providerSupports("kh"));
         assertEquals("ko", registry.agencyUiLocale());
         assertEquals("ko", registry.superAdminUiLocale());
-        assertEquals(java.util.List.of("en", "ko", "mn", "km", "uz", "zh-CN", "zh-TW"), registry.activeTargets());
+        assertEquals(java.util.List.of("en", "ko", "mn", "km", "uz", "zh-CN", "zh-TW", "ja"), registry.activeTargets());
         assertTrue(registry.activeTarget("km"));
         assertTrue(registry.activeTarget("uz"));
         assertTrue(registry.activeTarget("uz-Latn"));
         assertTrue(registry.activeTarget("en"));
         assertTrue(registry.activeTarget("mn"));
-        assertFalse(registry.activeTarget("ja"));
-        assertThrows(IllegalArgumentException.class, () -> registry.rejectIncompleteUiActivation("ja"));
+        assertTrue(registry.activeTarget("ja"));
+        assertThrows(IllegalArgumentException.class, () -> registry.rejectIncompleteUiActivation("de"));
         assertThrows(IllegalArgumentException.class, () -> registry.rejectIncompleteUiActivation("th"));
     }
 

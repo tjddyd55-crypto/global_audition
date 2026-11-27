@@ -46,6 +46,7 @@ export const LOCALE_NATIVE_NAMES: Record<string, string> = {
   uz: 'Oʻzbekcha',
   'zh-CN': '简体中文',
   'zh-TW': '繁體中文',
+  ja: '日本語',
 }
 
 export function nativeLanguageName(code: string): string {

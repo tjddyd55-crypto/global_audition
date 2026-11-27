@@ -7,6 +7,7 @@ import km from '../../../web/messages/km.json'
 import uz from '../../../web/messages/uz.json'
 import simplifiedChinese from '../../../web/messages/zh-CN.json'
 import traditionalChinese from '../../../web/messages/zh-TW.json'
+import ja from '../../../web/messages/ja.json'
 import { nativeTranslationResources } from './catalogs'
 import { DEFAULT_LOCALE, DEVICE_FALLBACK, PRIMARY_LOCALES } from './runtime'
 
@@ -18,6 +19,7 @@ const resources = nativeTranslationResources(
   uz as Record<string, unknown>,
   simplifiedChinese,
   traditionalChinese,
+  ja,
 )
 
 void registerI18nPlugin.call(i18n, initReactI18next).init({

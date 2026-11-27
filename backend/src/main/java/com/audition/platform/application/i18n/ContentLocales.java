@@ -14,7 +14,7 @@ public final class ContentLocales {
     public static final String FALLBACK = "en";
     public static final Set<String> SUPPORTED = Set.of(
             "ko", "en", "mn", "km", "uz", "zh-CN", "zh-TW", "ja", "zh", "es", "fr", "de");
-    public static final Set<String> PRIMARY = Set.of("ko", "en", "mn", "km", "uz", "zh-CN", "zh-TW");
+    public static final Set<String> PRIMARY = Set.of("ko", "en", "mn", "km", "uz", "zh-CN", "zh-TW", "ja");
     public static final int AUTHORING_MAX_LENGTH = 16;
 
     private ContentLocales() {

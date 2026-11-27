@@ -167,6 +167,7 @@ public class AndroidPushDelivery {
             case "uz" -> "Yangi bildirishnoma keldi.";
             case "zh-CN" -> "您有一条新通知。";
             case "zh-TW" -> "您有一則新通知。";
+            case "ja" -> "新しいお知らせが届きました。";
             default -> "You have a new notification.";
         };
     }

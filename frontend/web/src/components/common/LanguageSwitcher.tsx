@@ -18,6 +18,7 @@ const FLAGS: Record<UiLocale, string> = {
   uz: '🇺🇿',
   'zh-CN': '',
   'zh-TW': '',
+  ja: '🇯🇵',
 }
 
 const LANGUAGE_OPTIONS = PUBLIC_SELECTOR.map((code) => ({ code, flag: FLAGS[code] }))

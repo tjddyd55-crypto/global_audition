@@ -5,7 +5,7 @@ const origin = 'https://frontend-develop-3d3e.up.railway.app'
 const audition = 'aaaa0000-1111-2222-3333-444444444444'
 const candidate = 'bbbb0000-1111-2222-3333-444444444444'
 
-it.each(['ko', 'en', 'mn', 'km', 'uz', 'zh-CN', 'zh-TW'])('keeps shared candidate, round, and locale %s', locale => {
+it.each(['ko', 'en', 'mn', 'km', 'uz', 'zh-CN', 'zh-TW', 'ja'])('keeps shared candidate, round, and locale %s', locale => {
   const route = publicAppLink(`${origin}/${locale}/auditions/${audition}/vote?round=3&candidate=${candidate}`, origin)
   expect(route).toBe(`/auditions/${audition}/vote?linkLocale=${locale}&round=3&candidate=${candidate}`)
 })

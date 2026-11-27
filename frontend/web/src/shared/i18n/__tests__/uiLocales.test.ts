@@ -29,8 +29,8 @@ function legacyPrefixedPath(pathname: string, nextLocale: string): string {
 
 describe('official UI locales', () => {
   it('exposes ko/en/mn/km/uz and retires the partial catalogs', () => {
-    expect([...UI_LOCALES]).toEqual(['ko', 'en', 'mn', 'km', 'uz', 'zh-CN', 'zh-TW'])
-    expect(RETIRED_UI_LOCALES).toEqual(['ja', 'zh', 'es', 'fr', 'de'])
+    expect([...UI_LOCALES]).toEqual(['ko', 'en', 'mn', 'km', 'uz', 'zh-CN', 'zh-TW', 'ja'])
+    expect(RETIRED_UI_LOCALES).toEqual(['zh', 'es', 'fr', 'de'])
     expect(fallbackUiLocale()).toBe('en')
   })
 
@@ -39,8 +39,8 @@ describe('official UI locales', () => {
     expect(redirectPathForRetiredLocale('/zh-hant/31')).toBe('/zh-TW/31')
     expect(redirectPathForRetiredLocale('/zh-TW/31')).toBeNull()
     expect(redirectPathForSavedLocale('/auditions/42', 'zh-TW')).toBe('/zh-TW/auditions/42')
-    expect(redirectPathForRetiredLocale('/ja')).toBe('/en')
-    expect(redirectPathForRetiredLocale('/ja/auditions/42')).toBe('/en/auditions/42')
+    expect(redirectPathForRetiredLocale('/de')).toBe('/en')
+    expect(redirectPathForRetiredLocale('/de/auditions/42')).toBe('/en/auditions/42')
     expect(redirectPathForRetiredLocale('/FR/videos')).toBe('/en/videos')
     expect(redirectPathForRetiredLocale('/ko/auditions')).toBeNull()
     expect(redirectPathForRetiredLocale('/auditions')).toBeNull()
@@ -62,15 +62,15 @@ describe('official UI locales', () => {
   })
 
   it('refuses a retired locale and falls back to en', () => {
-    expect(localeSwitchTarget('/auditions', 'ja').locale).toBe('en')
+    expect(localeSwitchTarget('/auditions', 'de').locale).toBe('en')
   })
 
-  it('offers seven public languages while admin screens stay Korean', () => {
-    expect([...UI_LOCALES]).toEqual(['ko', 'en', 'mn', 'km', 'uz', 'zh-CN', 'zh-TW'])
-    expect([...PUBLIC_SELECTOR]).toEqual(['ko', 'en', 'mn', 'km', 'uz', 'zh-CN', 'zh-TW'])
+  it('offers eight public languages while admin screens stay Korean', () => {
+    expect([...UI_LOCALES]).toEqual(['ko', 'en', 'mn', 'km', 'uz', 'zh-CN', 'zh-TW', 'ja'])
+    expect([...PUBLIC_SELECTOR]).toEqual(['ko', 'en', 'mn', 'km', 'uz', 'zh-CN', 'zh-TW', 'ja'])
     expect(AGENCY_UI_LOCALE).toBe('ko')
     expect(localesMeta.superAdminUiLocale).toBe('ko')
-    expect(localesMeta.activeTranslationTargets).toEqual(['en', 'ko', 'mn', 'km', 'uz', 'zh-CN', 'zh-TW'])
+    expect(localesMeta.activeTranslationTargets).toEqual(['en', 'ko', 'mn', 'km', 'uz', 'zh-CN', 'zh-TW', 'ja'])
   })
 
   it('names every public language in its own script', () => {
@@ -79,14 +79,14 @@ describe('official UI locales', () => {
       'English',
       'Монгол',
       'ខ្មែរ',
-      'Oʻzbekcha', '简体中文', '繁體中文',
+      'Oʻzbekcha', '简体中文', '繁體中文', '日本語',
     ])
   })
 
   it('maps km/uz to Intl tags (uz uses Latin script) and keeps language codes apart from country codes', () => {
     expect(intlTagForUiLocale('km')).toBe('km-KH')
     expect(intlTagForUiLocale('uz')).toBe('uz-Latn-UZ')
-    expect(intlTagForUiLocale('ja')).toBe('en-US')
+    expect(intlTagForUiLocale('ja')).toBe('ja-JP')
     // 국가 코드 KH/UZ 는 언어 코드가 아니다.
     expect(isUiLocale('KH')).toBe(false)
     expect(isUiLocale('kh')).toBe(false)
@@ -102,7 +102,7 @@ describe('official UI locales', () => {
     expect(redirectPathForSavedLocale('/auditions', 'km')).toBe('/km/auditions')
     expect(redirectPathForSavedLocale('/', 'uz')).toBe('/uz')
     expect(redirectPathForRetiredLocale('/km/auditions')).toBeNull()
-    expect(routing.locales).toEqual(['ko', 'en', 'mn', 'km', 'uz', 'zh-CN', 'zh-TW'])
+    expect(routing.locales).toEqual(['ko', 'en', 'mn', 'km', 'uz', 'zh-CN', 'zh-TW', 'ja'])
   })
 
   it('agency management screens follow the selected UI locale (no forced Korean)', () => {
@@ -121,7 +121,7 @@ describe('official UI locales', () => {
     expect(redirectPathForSavedLocale('/auditions/42', 'mn')).toBe('/mn/auditions/42')
     expect(redirectPathForSavedLocale('/', 'ko')).toBe('/ko')
     expect(redirectPathForSavedLocale('/', undefined)).toBeNull()
-    expect(redirectPathForSavedLocale('/auditions', 'ja')).toBeNull()
+    expect(redirectPathForSavedLocale('/auditions', 'ja')).toBe('/ja/auditions')
     expect(redirectPathForSavedLocale('/ja/auditions', 'mn')).toBeNull()
   })
 })

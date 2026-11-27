@@ -86,10 +86,10 @@ class ContentTranslationEngineTest {
         assertPair("mn", "en", "Улаанбаатар сонгон шалгаруулалт");
         source.snapshot = snapshot("ko", "대한민국 서울 오디션");
         UUID inactive = UUID.randomUUID();
-        ContentTranslationView mongolian = service.read(ContentTypes.APPLICATION_INTRO, inactive, "ja", false, viewer);
+        ContentTranslationView mongolian = service.read(ContentTypes.APPLICATION_INTRO, inactive, "de", false, viewer);
         assertTrue(mongolian.showingOriginal());
         assertEquals(ContentTypes.TARGET_INACTIVE, mongolian.errorCode());
-        assertTrue(store.findLatestJob(ContentTypes.APPLICATION_INTRO, inactive, "ja").isEmpty());
+        assertTrue(store.findLatestJob(ContentTypes.APPLICATION_INTRO, inactive, "de").isEmpty());
     }
 
     @Test
@@ -260,7 +260,7 @@ class ContentTranslationEngineTest {
         assertTrue(store.findActiveJob(ContentTypes.AUDITION_POSTING, contentId, "km").isPresent());
         assertTrue(store.findActiveJob(ContentTypes.AUDITION_POSTING, contentId, "uz").isPresent());
         assertTrue(store.findLatestJob(ContentTypes.AUDITION_POSTING, contentId, "ko").isEmpty());
-        assertTrue(store.findLatestJob(ContentTypes.AUDITION_POSTING, contentId, "ja").isEmpty());
+        assertTrue(store.findActiveJob(ContentTypes.AUDITION_POSTING, contentId, "ja").isPresent());
 
         UUID englishPosting = UUID.randomUUID();
         source.snapshot = snapshot("en", "Open call");
@@ -279,7 +279,7 @@ class ContentTranslationEngineTest {
             postings.add(posting);
             service.requestActiveTargets(ContentTypes.AUDITION_POSTING, posting, viewer);
         }
-        java.util.List<String> targets = java.util.List.of("en", "mn", "km", "uz", "zh-CN", "zh-TW");
+        java.util.List<String> targets = java.util.List.of("en", "mn", "km", "uz", "zh-CN", "zh-TW", "ja");
         int total = postings.size() * targets.size();
         assertEquals(total, store.jobs().size());
         for (UUID posting : postings) {
@@ -331,15 +331,15 @@ class ContentTranslationEngineTest {
         java.util.List<ContentTranslationRows.StoredJob> waiting = store.jobs().stream()
                 .filter(job -> ContentTypes.JOB_PENDING.equals(job.status()))
                 .toList();
-        assertEquals(4, waiting.size());
+        assertEquals(5, waiting.size());
         waiting.forEach(job -> {
             assertEquals(ContentTypes.RATE_LIMITED, job.errorCode());
             assertEquals(0, job.attemptCount());
         });
         properties.setWorkerAttemptsPerMinute(60);
         store.releaseDeferred();
-        assertEquals(4, drainAll());
-        assertEquals(6, store.translations().size());
+        assertEquals(5, drainAll());
+        assertEquals(7, store.translations().size());
     }
 
     @Test
@@ -348,7 +348,7 @@ class ContentTranslationEngineTest {
         source.type = ContentTypes.AUDITION_POSTING;
         source.snapshot = snapshot("ko", "예산 확인");
         service.requestActiveTargets(ContentTypes.AUDITION_POSTING, contentId, viewer);
-        assertEquals(6, store.jobs().size());
+        assertEquals(7, store.jobs().size());
         drainAll();
         assertEquals(1, provider.calls);
         long pending = store.jobs().stream()
@@ -356,12 +356,12 @@ class ContentTranslationEngineTest {
                         && ContentTypes.QUOTA_EXCEEDED.equals(job.errorCode())
                         && job.attemptCount() == 0)
                 .count();
-        assertEquals(5, pending);
+        assertEquals(6, pending);
         assertTrue(store.jobs().stream().noneMatch(job -> ContentTypes.JOB_FAILED.equals(job.status())));
         // 예산이 막힌 동안 다음 게시도 버리지 않고 미뤄 넣는다.
         UUID next = UUID.randomUUID();
         service.requestActiveTargets(ContentTypes.AUDITION_POSTING, next, viewer);
-        assertEquals(12, store.jobs().size());
+        assertEquals(14, store.jobs().size());
         assertTrue(store.findActiveJob(ContentTypes.AUDITION_POSTING, next, "en").isPresent());
     }
 
@@ -380,7 +380,7 @@ class ContentTranslationEngineTest {
         // 미룬 작업이 풀려도 요청자 예산이 소진된 동안에는 공급자를 부르지 않는다.
         assertEquals(1, provider.calls);
         assertTrue(store.jobs().stream().noneMatch(job -> ContentTypes.JOB_FAILED.equals(job.status())));
-        assertEquals(11, store.jobs().stream().filter(job -> ContentTypes.JOB_PENDING.equals(job.status())).count());
+        assertEquals(13, store.jobs().stream().filter(job -> ContentTypes.JOB_PENDING.equals(job.status())).count());
     }
 
     @Test
@@ -447,7 +447,7 @@ class ContentTranslationEngineTest {
     @Test
     void explicitRetryOfAnInactiveLocaleIsRejected() {
         ResponseStatusException ex = assertThrows(ResponseStatusException.class,
-                () -> service.retry(ContentTypes.APPLICATION_INTRO, contentId, "ja", false, viewer));
+                () -> service.retry(ContentTypes.APPLICATION_INTRO, contentId, "de", false, viewer));
         assertEquals(400, ex.getStatusCode().value());
         assertEquals(ContentTypes.TARGET_INACTIVE, ex.getReason());
     }
