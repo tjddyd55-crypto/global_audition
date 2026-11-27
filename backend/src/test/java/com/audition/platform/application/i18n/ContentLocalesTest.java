@@ -15,7 +15,12 @@ class ContentLocalesTest {
         assertEquals("en", ContentLocales.normalize("xx"));
         assertEquals(ContentLocales.DEFAULT, ContentLocales.normalize(null));
         assertEquals("ko", ContentLocales.DEFAULT);
-        assertEquals("zh", ContentLocales.normalize("zh-Hant"));
+        assertEquals("zh", ContentLocales.normalize("zh"));
+        assertEquals("zh-TW", ContentLocales.normalize("zh-Hant"));
+        assertEquals("zh-TW", ContentLocales.normalize("zh-hk"));
+        assertEquals("zh-CN", ContentLocales.normalize("zh-Hans"));
+        assertEquals("ja", ContentLocales.normalize("ja-JP"));
+        assertTrue(ContentLocales.PRIMARY.contains("ja"));
         assertEquals("en", ContentLocales.normalize("pt-BR"));
         assertTrue(ContentLocales.PRIMARY.contains("mn"));
         assertTrue(ContentLocales.PRIMARY.contains("km"));
