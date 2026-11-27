@@ -16,6 +16,9 @@ const FLAGS: Record<UiLocale, string> = {
   mn: '🇲🇳',
   km: '🇰🇭',
   uz: '🇺🇿',
+  'zh-CN': '',
+  'zh-TW': '',
+  ja: '🇯🇵',
 }
 
 const LANGUAGE_OPTIONS = PUBLIC_SELECTOR.map((code) => ({ code, flag: FLAGS[code] }))
@@ -29,7 +32,7 @@ export default function LanguageSwitcher() {
   const changeLanguage = (newLocale: string) => {
     const target = localeSwitchTarget(pathname, newLocale)
     if (target.locale !== locale) {
-      router.push(target.href, { locale: target.locale })
+      router.push(target.href + window.location.search + window.location.hash, { locale: target.locale })
     }
     setIsOpen(false)
   }

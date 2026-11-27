@@ -35,9 +35,9 @@ describe('native i18n catalogs', () => {
   it('uses the same active locale list as web', () => {
     expect([...PRIMARY_LOCALES]).toEqual(locales.primary)
     expect(locales.defaultLocale).toBe('en')
-    expect(locales.publicSelector).toEqual(['ko', 'en', 'mn', 'km', 'uz'])
+    expect(locales.publicSelector).toEqual(['ko', 'en', 'mn', 'km', 'uz', 'zh-CN', 'zh-TW', 'ja'])
     expect(locales.agencyUiLocale).toBe('ko')
-    expect(locales.activeTranslationTargets).toEqual(['en', 'ko', 'mn', 'km', 'uz'])
+    expect(locales.activeTranslationTargets).toEqual(['en', 'ko', 'mn', 'km', 'uz', 'zh-CN', 'zh-TW', 'ja'])
     expect(locales.contentLocales).toEqual(locales.providerLocales)
   })
 
@@ -62,6 +62,6 @@ describe('native i18n catalogs', () => {
     // 국가 코드가 저장값으로 들어와도 언어로 오인하지 않는다.
     expect(resolveInitialLocale('KH')).toBe('en')
     expect(resolveInitialLocale('UZ')).toBe('en')
-    expect(resolveInitialLocale('ja')).toBe('en')
+    expect(resolveInitialLocale('ja')).toBe('ja')
   })
 })

@@ -46,7 +46,7 @@ jobs:
           # 실행마다 새 테스트 전용 JWT 키. 출력하지 않는다.
           JWT_SECRET="$(openssl rand -base64 64 | tr -d '\n=')"
           export JWT_SECRET
-          bash ./mvnw -B verify
+          mvn -B verify
       - name: Test counts
         if: always()
         run: |

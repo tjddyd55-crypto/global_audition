@@ -5,6 +5,9 @@ import en from '../../../web/messages/en.json'
 import mn from '../../../web/messages/mn.json'
 import km from '../../../web/messages/km.json'
 import uz from '../../../web/messages/uz.json'
+import simplifiedChinese from '../../../web/messages/zh-CN.json'
+import traditionalChinese from '../../../web/messages/zh-TW.json'
+import ja from '../../../web/messages/ja.json'
 import { nativeTranslationResources } from './catalogs'
 import { DEFAULT_LOCALE, DEVICE_FALLBACK, PRIMARY_LOCALES } from './runtime'
 
@@ -14,6 +17,9 @@ const resources = nativeTranslationResources(
   mn as Record<string, unknown>,
   km as Record<string, unknown>,
   uz as Record<string, unknown>,
+  simplifiedChinese,
+  traditionalChinese,
+  ja,
 )
 
 void registerI18nPlugin.call(i18n, initReactI18next).init({
@@ -21,7 +27,7 @@ void registerI18nPlugin.call(i18n, initReactI18next).init({
   lng: DEFAULT_LOCALE,
   fallbackLng: DEVICE_FALLBACK,
   supportedLngs: [...PRIMARY_LOCALES],
-  nonExplicitSupportedLngs: true,
+  load: 'currentOnly',
   compatibilityJSON: 'v4',
   interpolation: { escapeValue: false, prefix: '{', suffix: '}' },
   returnNull: false,

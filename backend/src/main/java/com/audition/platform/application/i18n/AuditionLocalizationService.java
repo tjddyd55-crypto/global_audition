@@ -166,6 +166,8 @@ public class AuditionLocalizationService {
             describeRow(audition, response, row);
         } else if (!preview && overlayFromContentStore(audition, response, requested)) {
             response.setContentLocale(requested);
+        } else if ("zh-CN".equals(requested) && row == null && overlayLegacyChinese(audition, response, preview)) {
+            response.setContentLocale("zh");
         } else {
             response.setContentLocaleFallback(true);
             response.setShowingOriginal(true);
@@ -175,6 +177,16 @@ public class AuditionLocalizationService {
         }
         finishLabels(audition, response);
         publishTranslation(response);
+    }
+
+    private boolean overlayLegacyChinese(Audition audition, AuditionResponse response, boolean preview) {
+        AuditionTranslation legacy = translationRepository.findByAuditionIdAndLocale(audition.getId(), "zh").orElse(null);
+        if (canOverlay(legacy, preview)) {
+            overlay(response, legacy);
+            describeRow(audition, response, legacy);
+            return true;
+        }
+        return !preview && overlayFromContentStore(audition, response, "zh");
     }
 
     private void rememberOriginal(AuditionResponse response) {

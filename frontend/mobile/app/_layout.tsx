@@ -1,16 +1,17 @@
 import 'react-native-gesture-handler'
-import { Stack } from 'expo-router'
+import { Stack, useGlobalSearchParams } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { AuthProvider } from '../src/auth/AuthProvider'
-import { LocaleProvider } from '../src/i18n/LocaleProvider'
+import { LocaleProvider, persistLocale } from '../src/i18n/LocaleProvider'
 import { AudienceCountryProvider } from '../src/domain/AudienceCountryProvider'
 import { OtaUpdatePrompt } from '../src/components/OtaUpdatePrompt'
 import { useOtaWatcher } from '../src/services/updates'
 import { colors } from '../src/theme/tokens'
 import { LanguageMenu } from '../src/i18n/LanguageMenu'
+import { AndroidPushListener } from '../src/features/notifications/AndroidPushListener'
 
 export default function RootLayout() {
   useOtaWatcher()
@@ -33,6 +34,7 @@ export default function RootLayout() {
           <LocaleProvider>
             <AudienceCountryProvider>
               <LocalizedStack />
+              <AndroidPushListener />
               <OtaUpdatePrompt />
             </AudienceCountryProvider>
           </LocaleProvider>
@@ -43,6 +45,10 @@ export default function RootLayout() {
 }
 
 function LocalizedStack() {
+  const { linkLocale } = useGlobalSearchParams<{ linkLocale?: string }>()
+  useEffect(() => {
+    if (typeof linkLocale === 'string') void persistLocale(linkLocale)
+  }, [linkLocale])
   return (
     <>
       <StatusBar style="dark" />

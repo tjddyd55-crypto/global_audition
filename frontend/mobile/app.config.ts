@@ -1,4 +1,5 @@
 import type { ExpoConfig, ConfigContext } from 'expo/config'
+import locales from '../web/messages/locales.json'
 
 /**
  * 이 앱의 역할
@@ -35,13 +36,21 @@ export default ({ config }: ConfigContext): ExpoConfig => {
   const webUrl = resolveWebUrl(process.env)
   const apiUrl = process.env.EXPO_PUBLIC_API_URL?.trim() || `${webUrl.replace(/\/+$/, '')}/api`
   const allowedHosts = parseHosts(process.env.EXPO_PUBLIC_ALLOWED_HOSTS, webUrl)
+  const developmentLinks = process.env.EAS_BUILD_PROFILE === 'preview' && webUrl === PROFILE_WEB_URLS.preview
+  const googleServicesFile = developmentLinks ? process.env.GOOGLE_SERVICES_JSON?.trim() : undefined
+  const uuidPattern = '........-....-....-....-............'
+  const publicPaths = [...locales.publicSelector, 'zh'].flatMap(locale => [
+    `/${locale}/auditions/${uuidPattern}`,
+    `/${locale}/auditions/${uuidPattern}/vote`,
+    `/${locale}/channel/${uuidPattern}`,
+  ])
 
   return {
     ...config,
     name: 'Global Audition',
     slug: 'global-audition',
     scheme: 'globalaudition',
-    version: '1.0.0',
+    version: developmentLinks ? '1.1.0' : '1.0.0',
     orientation: 'portrait',
     icon: './assets/icon.png',
     userInterfaceStyle: 'light',
@@ -67,6 +76,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     },
     android: {
       package: 'com.globalaudition.app',
+      ...(googleServicesFile ? { googleServicesFile } : {}),
       adaptiveIcon: {
         foregroundImage: './assets/adaptive-icon.png',
         backgroundColor: '#ffffff',
@@ -82,6 +92,14 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         'android.permission.READ_MEDIA_VIDEO',
       ],
       intentFilters: [
+        ...(developmentLinks ? [{
+          action: 'VIEW',
+          autoVerify: true,
+          data: publicPaths.map(pathPattern => ({
+            scheme: 'https', host: new URL(PROFILE_WEB_URLS.preview).hostname, pathPattern,
+          })),
+          category: ['BROWSABLE', 'DEFAULT'],
+        }] : []),
         {
           action: 'VIEW',
           autoVerify: false,
@@ -121,6 +139,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       'expo-router',
       'expo-secure-store',
       'expo-localization',
+      ...(developmentLinks ? [['expo-notifications', { defaultChannel: 'activity' }] as [string, Record<string, string>]] : []),
       [
         'expo-image-picker',
         {
@@ -134,6 +153,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       webUrl,
       apiUrl,
       allowedHosts,
+      androidPushConfigured: Boolean(googleServicesFile),
       buildProfile: process.env.EAS_BUILD_PROFILE ?? 'local',
       // EAS 프로젝트 연결 식별자. `eas init` 결과를 동적 config(app.config.ts)에
       // 자동 주입할 수 없어 수동으로 박아둔다. 프로젝트를 다시 생성하거나

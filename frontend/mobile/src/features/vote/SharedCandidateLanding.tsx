@@ -33,7 +33,7 @@ export function SharedCandidateLanding({
   onViewAll,
 }: Props) {
   const { t, i18n } = useTranslation()
-  const lang = (i18n.language || 'ko').split('-')[0]
+  const lang = (i18n.language || 'ko')
   const [now, setNow] = useState(() => new Date())
   const [playing, setPlaying] = useState(false)
   const [shareOpen, setShareOpen] = useState(false)

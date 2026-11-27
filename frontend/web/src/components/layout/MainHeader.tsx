@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -89,7 +89,7 @@ export default function MainHeader() {
   const changeLocale = (nextLocale: string) => {
     const target = localeSwitchTarget(pathname, nextLocale)
     if (target.locale !== locale) {
-      router.push(target.href, { locale: target.locale })
+      router.push(target.href + window.location.search + window.location.hash, { locale: target.locale })
     }
     setIsLanguageOpen(false)
     setIsMobileOpen(false)

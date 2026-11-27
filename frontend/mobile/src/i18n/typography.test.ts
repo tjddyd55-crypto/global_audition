@@ -17,9 +17,9 @@ describe('script-aware typography', () => {
 })
 
 describe('language menu', () => {
-  it('lists five languages vertically in their own script', () => {
-    expect([...PUBLIC_SELECTOR]).toEqual(['ko', 'en', 'mn', 'km', 'uz'])
-    expect(PUBLIC_SELECTOR.map(nativeLanguageName)).toEqual(['한국어', 'English', 'Монгол', 'ខ្មែរ', 'Oʻzbekcha'])
-    expect(Object.keys(LOCALE_NATIVE_NAMES)).toEqual(['ko', 'en', 'mn', 'km', 'uz'])
+  it('lists eight languages vertically in their own script', () => {
+    expect([...PUBLIC_SELECTOR]).toEqual(['ko', 'en', 'mn', 'km', 'uz', 'zh-CN', 'zh-TW', 'ja'])
+    expect(PUBLIC_SELECTOR.map(nativeLanguageName)).toEqual(['한국어', 'English', 'Монгол', 'ខ្មែរ', 'Oʻzbekcha', '简体中文', '繁體中文', '日本語'])
+    expect(Object.keys(LOCALE_NATIVE_NAMES)).toEqual(['ko', 'en', 'mn', 'km', 'uz', 'zh-CN', 'zh-TW', 'ja'])
   })
 })

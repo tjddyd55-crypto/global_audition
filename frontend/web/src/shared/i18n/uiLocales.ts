@@ -1,13 +1,13 @@
 import localesMeta from '../../../messages/locales.json'
 
-const OFFICIAL_UI_LOCALES = ['ko', 'en', 'mn', 'km', 'uz'] as const
+const OFFICIAL_UI_LOCALES = ['ko', 'en', 'mn', 'km', 'uz', 'zh-CN', 'zh-TW', 'ja'] as const
 
 function readUiLocales(primary: readonly string[]): typeof OFFICIAL_UI_LOCALES {
   const matches =
     primary.length === OFFICIAL_UI_LOCALES.length &&
     primary.every((locale, index) => locale === OFFICIAL_UI_LOCALES[index])
   if (!matches) {
-    throw new Error('messages/locales.json primary must stay ko, en, mn, km, uz')
+    throw new Error('messages/locales.json primary does not match the compiled locale list')
   }
   return OFFICIAL_UI_LOCALES
 }
@@ -52,6 +52,14 @@ export function isUiLocale(value: string): value is UiLocale {
   return (UI_LOCALES as readonly string[]).includes(value)
 }
 
+export function normalizeUiLocale(raw?: string | null): UiLocale | undefined {
+  const tag = (raw ?? '').trim().replace(/_/g, '-').toLowerCase()
+  if (/^zh-hant(?:-|$)/.test(tag) || /^zh-(tw|hk|mo)(?:-|$)/.test(tag)) return 'zh-TW'
+  if (tag === 'zh' || tag.startsWith('zh-')) return 'zh-CN'
+  const language = tag.split('-')[0]
+  return isUiLocale(language) ? language : undefined
+}
+
 export function fallbackUiLocale(): UiLocale {
   return isUiLocale(localesMeta.deviceFallback) ? localesMeta.deviceFallback : 'en'
 }
@@ -65,7 +73,7 @@ export function localeSwitchTarget(
   pathname: string | null | undefined,
   nextLocale: string,
 ): { href: string; locale: UiLocale } {
-  const locale = isUiLocale(nextLocale) ? nextLocale : fallbackUiLocale()
+  const locale = normalizeUiLocale(nextLocale) ?? fallbackUiLocale()
   return { href: unprefixedPathname(pathname), locale }
 }
 
@@ -84,28 +92,31 @@ export function redirectPathForSavedLocale(
   pathname: string,
   cookieValue: string | null | undefined,
 ): string | null {
-  const head = (pathname.split('/')[1] ?? '').toLowerCase()
-  if (isUiLocale(head) || RETIRED_UI_LOCALES.includes(head)) return null
-  if (!cookieValue || !isUiLocale(cookieValue)) return null
+  const head = pathname.split('/')[1] ?? ''
+  if (isUiLocale(head) || RETIRED_UI_LOCALES.includes(head.toLowerCase())) return null
+  const saved = normalizeUiLocale(cookieValue)
+  if (!saved) return null
   const suffix = pathname === '/' ? '' : pathname
-  return `/${cookieValue}${suffix}`
+  return `/${saved}${suffix}`
 }
 
 /** 폐기 로케일 URL을 지원 로케일로 보낸다. 쿼리는 호출부가 유지한다. */
 export function redirectPathForRetiredLocale(pathname: string): string | null {
   const segments = pathname.split('/')
   const head = (segments[1] ?? '').toLowerCase()
-  if (!RETIRED_UI_LOCALES.includes(head)) return null
+  const chinese = head.startsWith('zh-') || head === 'zh' ? normalizeUiLocale(head) : undefined
+  if (chinese && segments[1] === chinese) return null
+  if (!chinese && !RETIRED_UI_LOCALES.includes(head)) return null
   const rest = segments.slice(2).filter((segment) => segment.length > 0).join('/')
-  const base = `/${fallbackUiLocale()}`
+  const base = `/${chinese ?? fallbackUiLocale()}`
   return rest ? `${base}/${rest}` : base
 }
 
 function unprefixedPathname(pathname: string | null | undefined): string {
   const raw = pathname && pathname.length > 0 ? pathname : '/'
   const href = raw.startsWith('/') ? raw : `/${raw}`
-  const head = (href.split('/')[1] ?? '').toLowerCase()
-  const prefixed = isUiLocale(head) || RETIRED_UI_LOCALES.includes(head)
+  const head = href.split('/')[1] ?? ''
+  const prefixed = isUiLocale(head) || RETIRED_UI_LOCALES.includes(head.toLowerCase())
   if (!prefixed) return href
   const rest = href.split('/').slice(2).filter((segment) => segment.length > 0).join('/')
   return rest ? `/${rest}` : '/'
@@ -118,6 +129,9 @@ export const UI_LOCALE_NATIVE_NAMES: Record<UiLocale, string> = {
   mn: 'Монгол',
   km: 'ខ្មែរ',
   uz: 'Oʻzbekcha',
+  'zh-CN': '简体中文',
+  'zh-TW': '繁體中文',
+  ja: '日本語',
 }
 
 /** Intl/number/date 포맷용 BCP-47 태그. */
@@ -127,10 +141,13 @@ export const UI_LOCALE_INTL_TAGS: Record<UiLocale, string> = {
   mn: 'mn-MN',
   km: 'km-KH',
   uz: 'uz-Latn-UZ',
+  'zh-CN': 'zh-CN',
+  'zh-TW': 'zh-TW',
+  ja: 'ja-JP',
 }
 
 /** 화면 로케일 → Intl 태그. 알 수 없으면 en-US. */
 export function intlTagForUiLocale(locale: string | null | undefined): string {
-  const language = (locale ?? '').trim().toLowerCase().split(/[-_]/)[0]
-  return isUiLocale(language) ? UI_LOCALE_INTL_TAGS[language] : 'en-US'
+  const language = normalizeUiLocale(locale)
+  return language ? UI_LOCALE_INTL_TAGS[language] : 'en-US'
 }

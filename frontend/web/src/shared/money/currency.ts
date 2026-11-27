@@ -12,6 +12,8 @@ const INTL_BY_APP_LOCALE: Record<string, string> = {
   uz: 'uz-Latn-UZ',
   ja: 'ja-JP',
   zh: 'zh-CN',
+  'zh-CN': 'zh-CN',
+  'zh-TW': 'zh-TW',
   es: 'es-ES',
   fr: 'fr-FR',
   de: 'de-DE',

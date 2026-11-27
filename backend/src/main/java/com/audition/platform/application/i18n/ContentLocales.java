@@ -13,8 +13,8 @@ public final class ContentLocales {
     public static final String DEFAULT = "ko";
     public static final String FALLBACK = "en";
     public static final Set<String> SUPPORTED = Set.of(
-            "ko", "en", "mn", "km", "uz", "ja", "zh", "es", "fr", "de");
-    public static final Set<String> PRIMARY = Set.of("ko", "en", "mn", "km", "uz");
+            "ko", "en", "mn", "km", "uz", "zh-CN", "zh-TW", "ja", "zh", "es", "fr", "de");
+    public static final Set<String> PRIMARY = Set.of("ko", "en", "mn", "km", "uz", "zh-CN", "zh-TW", "ja");
     public static final int AUTHORING_MAX_LENGTH = 16;
 
     private ContentLocales() {
@@ -46,6 +46,9 @@ public final class ContentLocales {
             return DEFAULT;
         }
         String tag = raw.trim().toLowerCase(Locale.ROOT).replace('_', '-');
+        if (tag.startsWith("zh-")) {
+            return tag.matches("zh-(tw|hk|mo|hant)(-.*)?") ? "zh-TW" : "zh-CN";
+        }
         int dash = tag.indexOf('-');
         String language = dash > 0 ? tag.substring(0, dash) : tag;
         if (SUPPORTED.contains(language)) {
