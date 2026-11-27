@@ -1,4 +1,4 @@
-import { Image, Pressable, StyleSheet } from 'react-native'
+import { Image, Pressable, StyleSheet, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useSavedAuditionIds, useToggleSavedAudition } from './useSavedAuditions'
 
@@ -28,23 +28,41 @@ export function SaveAuditionButton({
       onPress={() => toggle(auditionId, isSaved)}
       style={styles.btn}
     >
-      <Image
-        source={isSaved ? require('./heart-filled.png') : require('./heart-outline.png')}
-        resizeMode="contain"
-        style={[
-          styles.icon,
-          { tintColor: isSaved ? HEART_RED : outline },
-          tone === 'onImage' ? styles.onImage : null,
-        ]}
-      />
+      <View style={styles.glyph} pointerEvents="none">
+        {tone === 'onImage' ? (
+          <Image
+            source={require('./heart-outline.png')}
+            resizeMode="contain"
+            style={[styles.halo, { tintColor: '#111827' }]}
+          />
+        ) : null}
+        <Image
+          source={isSaved ? require('./heart-filled.png') : require('./heart-outline.png')}
+          resizeMode="contain"
+          style={[styles.icon, { tintColor: isSaved ? HEART_RED : outline }]}
+        />
+      </View>
     </Pressable>
   )
 }
 
 const styles = StyleSheet.create({
   btn: {
-    width: 36,
-    height: 36,
+    padding: 7,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'transparent',
+    borderWidth: 0,
+    elevation: 0,
+    shadowColor: 'transparent',
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    shadowOffset: { width: 0, height: 0 },
+    overflow: 'visible',
+  },
+  glyph: {
+    width: 22,
+    height: 22,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'transparent',
@@ -54,11 +72,10 @@ const styles = StyleSheet.create({
     height: 22,
     aspectRatio: 1,
   },
-  onImage: {
-    // Image has no textShadow; a 1px dark fringe is enough on posters.
-    shadowColor: '#000',
-    shadowOpacity: 0.45,
-    shadowRadius: 1.5,
-    shadowOffset: { width: 0, height: 1 },
+  halo: {
+    position: 'absolute',
+    width: 24,
+    height: 24,
+    aspectRatio: 1,
   },
 })
