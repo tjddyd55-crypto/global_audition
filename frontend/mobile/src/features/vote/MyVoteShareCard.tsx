@@ -23,7 +23,7 @@ function when(iso: string | null, lang: string): string {
 /** 지원자 본인 '내 투표 공유하기'. 공개 투표 확정 후보일 때만 보인다. */
 export function MyVoteShareCard({ applicationId }: { applicationId: string }) {
   const { t, i18n } = useTranslation()
-  const lang = (i18n.language || 'ko').split('-')[0]
+  const lang = (i18n.language || 'ko')
   const q = useQuery({
     queryKey: ['me', 'applications', applicationId, 'vote-share'],
     queryFn: () => voteApi.myShare(applicationId),

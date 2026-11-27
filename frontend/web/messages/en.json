@@ -1127,6 +1127,9 @@
     "backToDetail": "Application detail"
   },
   "notifications": {
+    "androidPushToggle": "Android push notifications",
+    "androidPushHint": "The notification categories above also apply to push.",
+    "androidPushUnavailable": "Could not update push notifications. Check system permissions and try again.",
     "title": "Notifications",
     "empty": "No notices yet.",
     "loadFailed": "Could not load notices.",

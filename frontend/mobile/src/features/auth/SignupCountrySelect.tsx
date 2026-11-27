@@ -16,7 +16,7 @@ export function SignupCountrySelect({ label, value, onChange }: { label: string;
   const [open, setOpen] = useState(false)
   const [other, setOther] = useState(false)
   const [query, setQuery] = useState('')
-  const locale = i18n.language.split('-')[0]
+  const locale = i18n.language
   const countries = useQuery({ queryKey: ['signup-countries', locale], queryFn: () => authApi.signupCountries(locale), enabled: other || Boolean(value && !COUNTRY_CODES.includes(value as typeof COUNTRY_CODES[number])), staleTime: Infinity })
   const options = countries.data ?? []
   const matches = matchingSignupCountries(options, query)

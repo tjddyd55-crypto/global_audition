@@ -1,5 +1,7 @@
 package com.audition.platform.application.user;
 
+import com.audition.platform.application.i18n.ContentLocales;
+
 import java.util.Currency;
 import java.util.List;
 import java.util.Locale;
@@ -16,7 +18,7 @@ public final class SignupCountries {
     public record Option(String code, String name, String englishName) {}
 
     public static List<Option> list(String language) {
-        Locale display = Locale.forLanguageTag(language != null && Set.of("ko", "en", "mn", "km", "uz").contains(language) ? language : "en");
+        Locale display = Locale.forLanguageTag(language != null && ContentLocales.PRIMARY.contains(language) ? language : "en");
         return ISO_CODES.stream().filter(code -> currency(code) != null).sorted()
                 .map(code -> {
                     Locale country = new Locale("", code);

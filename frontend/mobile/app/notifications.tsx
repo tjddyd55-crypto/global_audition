@@ -1,12 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Pressable, StyleSheet, Switch, Text, View } from 'react-native'
 import { useRouter } from 'expo-router'
+import { useAuth } from '../src/auth/AuthProvider'
 import { Button } from '../src/ui/Button'
 import { useTranslation } from 'react-i18next'
 import { notificationApi, type NotificationSettings } from '../src/api/endpoints'
 import { queryKeys } from '../src/api/queryKeys'
 import { notificationBadge, notificationCopy } from '../src/features/notifications/notificationCopy'
 import { nativeRouteForNotification } from '../src/features/notifications/notificationRoute'
+import { androidPushAvailable, disableAndroidPush, enableAndroidPush, pushEnabledFor } from '../src/features/notifications/androidPush'
 import { Screen } from '../src/ui/Screen'
 import { colors, radius } from '../src/theme/tokens'
 
@@ -14,6 +16,24 @@ export default function NotificationsScreen() {
   const { t, i18n } = useTranslation()
   const router = useRouter()
   const queryClient = useQueryClient()
+  const { session } = useAuth()
+  const userId = session?.userId
+  const pushQueryKey = [...queryKeys.notifications, 'android-push', userId]
+  const push = useQuery({
+    queryKey: pushQueryKey,
+    queryFn: () => pushEnabledFor(userId!),
+    enabled: androidPushAvailable && Boolean(userId),
+  })
+  const setPush = useMutation({
+    mutationFn: async (next: boolean) => {
+      if (next && userId) {
+        if (!await enableAndroidPush(userId)) throw new Error('PUSH_PERMISSION_REQUIRED')
+      } else {
+        await disableAndroidPush()
+      }
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: pushQueryKey }),
+  })
   const query = useQuery({ queryKey: queryKeys.notifications, queryFn: notificationApi.list })
   const settingsQuery = useQuery({ queryKey: [...queryKeys.notifications, 'settings'], queryFn: notificationApi.settings })
   const saveSettings = useMutation({
@@ -32,6 +52,17 @@ export default function NotificationsScreen() {
     <Screen loading={query.isLoading} onRefresh={() => query.refetch()}>
       <Text style={styles.title}>{t('notifications.title')}</Text>
       <Text style={styles.body}>{t('studio.notificationsHint')}</Text>
+      {androidPushAvailable && userId && (
+        <View style={styles.settings}>
+          <View style={styles.settingRow}>
+            <Text style={styles.settingLabel}>{t('notifications.androidPushToggle')}</Text>
+            <Switch value={push.data === true} disabled={push.isLoading || setPush.isPending}
+              accessibilityLabel={t('notifications.androidPushToggle')} onValueChange={value => setPush.mutate(value)} />
+          </View>
+          <Text style={styles.body}>{t('notifications.androidPushHint')}</Text>
+          {setPush.isError && <Text accessibilityRole="alert" style={styles.body}>{t('notifications.androidPushUnavailable')}</Text>}
+        </View>
+      )}
 
       <NotificationSettingsPanel
         value={settingsQuery.data}

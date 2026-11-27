@@ -1127,6 +1127,9 @@
     "backToDetail": "지원서 상세"
   },
   "notifications": {
+    "androidPushToggle": "Android 푸시 알림",
+    "androidPushHint": "위 알림 유형 설정은 푸시에도 적용됩니다.",
+    "androidPushUnavailable": "푸시 설정을 변경하지 못했습니다. 시스템 알림 권한을 확인한 후 다시 시도해 주세요.",
     "title": "알림",
     "empty": "아직 알림이 없습니다.",
     "loadFailed": "알림을 불러오지 못했습니다.",

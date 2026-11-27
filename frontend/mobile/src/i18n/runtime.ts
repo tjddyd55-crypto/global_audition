@@ -1,4 +1,5 @@
 import localesMeta from '../../../web/messages/locales.json'
+import { normalizeUiLocale } from '../../../web/src/shared/i18n/uiLocales'
 
 export const SUPPORTED_LOCALES = localesMeta.supported as readonly string[]
 export const PRIMARY_LOCALES = localesMeta.primary as readonly string[]
@@ -19,10 +20,7 @@ export function getRuntimeLocale(): string {
 
 /** 네이티브 UI는 1급 로케일만 유지한다. ja 등 부분 카탈로그는 en으로 내린다. */
 export function normalizeLocale(raw?: string | null): string {
-  if (!raw) return DEVICE_FALLBACK
-  const language = raw.trim().toLowerCase().replace('_', '-').split('-')[0]
-  if (PRIMARY_LOCALES.includes(language)) return language
-  return DEVICE_FALLBACK
+  return normalizeUiLocale(raw) ?? DEVICE_FALLBACK
 }
 
 /**
@@ -31,15 +29,12 @@ export function normalizeLocale(raw?: string | null): string {
  */
 export function resolveInitialLocale(stored?: string | null): string {
   if (stored && PRIMARY_LOCALES.includes(stored)) return stored
-  return DEFAULT_LOCALE
+  return stored && /^zh(?:[-_]|$)/i.test(stored) ? normalizeLocale(stored) : DEFAULT_LOCALE
 }
 
 /** 기기 언어는 1급 로케일(ko/en/mn/km/uz)만 채택. 그 외는 en. 첫 실행 기본값으로는 쓰지 않는다. */
 export function detectDeviceLocale(tag?: string | null): string {
-  if (!tag) return DEVICE_FALLBACK
-  const language = tag.trim().toLowerCase().replace('_', '-').split('-')[0]
-  if (PRIMARY_LOCALES.includes(language)) return language
-  return DEVICE_FALLBACK
+  return normalizeLocale(tag)
 }
 
 /** 언어 메뉴에 보이는 자국어 이름. 카탈로그 번역과 무관하게 항상 그 언어로 표시한다. */
@@ -49,6 +44,8 @@ export const LOCALE_NATIVE_NAMES: Record<string, string> = {
   mn: 'Монгол',
   km: 'ខ្មែរ',
   uz: 'Oʻzbekcha',
+  'zh-CN': '简体中文',
+  'zh-TW': '繁體中文',
 }
 
 export function nativeLanguageName(code: string): string {

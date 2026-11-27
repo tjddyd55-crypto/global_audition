@@ -20,6 +20,9 @@ class Bcp47TagsTest {
         assertEquals("zh-Hant-TW", Bcp47Tags.canonicalize("zh-hant-tw"));
         assertEquals("en", Bcp47Tags.canonicalize("EN"));
         assertEquals("", Bcp47Tags.canonicalize("not a locale"));
+        assertEquals("zh-CN", ContentLocales.normalize("zh-hans"));
+        assertEquals("zh-TW", ContentLocales.normalize("zh-Hant-TW"));
+        assertEquals("zh", ContentLocales.normalize("zh"));
     }
 
     @Test
@@ -31,7 +34,7 @@ class Bcp47TagsTest {
         assertFalse(registry.providerSupports("pt-BR"));
         assertTrue(registry.uiLocale("mn"));
         assertFalse(registry.uiLocale("ja"));
-        assertEquals(java.util.List.of("ko", "en", "mn", "km", "uz"), registry.publicSelector());
+        assertEquals(java.util.List.of("ko", "en", "mn", "km", "uz", "zh-CN", "zh-TW"), registry.publicSelector());
         assertTrue(registry.uiLocale("km"));
         assertTrue(registry.uiLocale("uz"));
         // 국가 코드(KH, UZ)는 언어 코드가 아니다.
@@ -39,7 +42,7 @@ class Bcp47TagsTest {
         assertFalse(registry.providerSupports("kh"));
         assertEquals("ko", registry.agencyUiLocale());
         assertEquals("ko", registry.superAdminUiLocale());
-        assertEquals(java.util.List.of("en", "ko", "mn", "km", "uz"), registry.activeTargets());
+        assertEquals(java.util.List.of("en", "ko", "mn", "km", "uz", "zh-CN", "zh-TW"), registry.activeTargets());
         assertTrue(registry.activeTarget("km"));
         assertTrue(registry.activeTarget("uz"));
         assertTrue(registry.activeTarget("uz-Latn"));

@@ -3,6 +3,9 @@ audition:
   voting-db-verify: true
 
 app:
+  android-push:
+    enabled: ${APP_ANDROID_PUSH_ENABLED:false}
+    access-token: ${APP_ANDROID_PUSH_ACCESS_TOKEN:}
   version: 1.0.0-SNAPSHOT
   buildId: ""
   public-base-url: "http://localhost:8080"

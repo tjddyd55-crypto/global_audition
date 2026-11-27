@@ -2,7 +2,7 @@ import { deepMergeMessages } from '../../../web/src/shared/i18n/mergeMessages'
 
 type MessageTree = Record<string, unknown>
 
-export type NativeLocaleCode = 'ko' | 'en' | 'mn' | 'km' | 'uz'
+export type NativeLocaleCode = 'ko' | 'en' | 'mn' | 'km' | 'uz' | 'zh-CN' | 'zh-TW'
 
 export type NativeCatalogResources = Record<NativeLocaleCode, { translation: MessageTree }>
 
@@ -13,6 +13,8 @@ export function nativeTranslationResources(
   mongolian: MessageTree,
   khmer: MessageTree = {},
   uzbek: MessageTree = {},
+  simplifiedChinese: MessageTree = {},
+  traditionalChinese: MessageTree = {},
 ): NativeCatalogResources {
   return {
     ko: { translation: deepMergeMessages(english, korean) },
@@ -20,5 +22,7 @@ export function nativeTranslationResources(
     mn: { translation: deepMergeMessages(english, mongolian) },
     km: { translation: deepMergeMessages(english, khmer) },
     uz: { translation: deepMergeMessages(english, uzbek) },
+    'zh-CN': { translation: deepMergeMessages(english, simplifiedChinese) },
+    'zh-TW': { translation: deepMergeMessages(english, traditionalChinese) },
   }
 }

@@ -166,7 +166,7 @@ describe('i18n catalogs', () => {
   })
 
   it('lists mn/km/uz as first-class locales', () => {
-    expect(locales.primary).toEqual(['ko', 'en', 'mn', 'km', 'uz'])
+    expect(locales.primary).toEqual(['ko', 'en', 'mn', 'km', 'uz', 'zh-CN', 'zh-TW'])
     expect(locales.supported).toEqual(expect.arrayContaining(['km', 'uz']))
     expect(locales.supported).toContain('mn')
     expect(locales.contentLocales).toEqual(locales.providerLocales)

@@ -4,6 +4,7 @@ import { authApi } from '../api/endpoints'
 import type { AuthMe, UserRole } from '../api/types'
 import { ApiError } from '../api/http'
 import { clearSession, readSession, writeSession } from './secureSession'
+import { disableAndroidPush } from '../features/notifications/androidPush'
 
 type SignupInput = {
   inviteCode?: string
@@ -108,6 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 
   const logout = useCallback(async () => {
+    await disableAndroidPush().catch(() => undefined)
     try {
       await authApi.logout()
     } catch {

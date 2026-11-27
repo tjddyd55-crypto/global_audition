@@ -1127,6 +1127,9 @@
     "backToDetail": "Ariza tafsilotlari"
   },
   "notifications": {
+    "androidPushToggle": "Android push bildirishnomalari",
+    "androidPushHint": "Yuqoridagi bildirishnoma turlari push uchun ham amal qiladi.",
+    "androidPushUnavailable": "Sozlamani yangilab boʻlmadi. Tizim ruxsatlarini tekshirib, qayta urining.",
     "title": "Bildirishnomalar",
     "empty": "Hozircha bildirishnomalar yoʻq.",
     "loadFailed": "Bildirishnomalarni yuklab boʻlmadi.",

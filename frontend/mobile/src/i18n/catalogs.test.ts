@@ -10,7 +10,7 @@ describe('native translation resources', () => {
     const merged = resources.mn.translation as { apply: { prevRoundBlocked: string } }
     expect(merged.apply.prevRoundBlocked).toBe('Only passers')
     expect(resources).not.toHaveProperty('ja')
-    expect(Object.keys(resources)).toEqual(['ko', 'en', 'mn', 'km', 'uz'])
+    expect(Object.keys(resources)).toEqual(['ko', 'en', 'mn', 'km', 'uz', 'zh-CN', 'zh-TW'])
     const km = resources.km.translation as { apply: { prevRoundBlocked: string } }
     expect(km.apply.prevRoundBlocked).toBe('Only passers')
   })

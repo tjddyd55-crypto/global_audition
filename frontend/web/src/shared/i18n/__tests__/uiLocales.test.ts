@@ -29,12 +29,16 @@ function legacyPrefixedPath(pathname: string, nextLocale: string): string {
 
 describe('official UI locales', () => {
   it('exposes ko/en/mn/km/uz and retires the partial catalogs', () => {
-    expect([...UI_LOCALES]).toEqual(['ko', 'en', 'mn', 'km', 'uz'])
+    expect([...UI_LOCALES]).toEqual(['ko', 'en', 'mn', 'km', 'uz', 'zh-CN', 'zh-TW'])
     expect(RETIRED_UI_LOCALES).toEqual(['ja', 'zh', 'es', 'fr', 'de'])
     expect(fallbackUiLocale()).toBe('en')
   })
 
   it('redirects retired locale URLs onto the fallback without dropping the rest of the path', () => {
+    expect(redirectPathForRetiredLocale('/zh/auditions/42')).toBe('/zh-CN/auditions/42')
+    expect(redirectPathForRetiredLocale('/zh-hant/31')).toBe('/zh-TW/31')
+    expect(redirectPathForRetiredLocale('/zh-TW/31')).toBeNull()
+    expect(redirectPathForSavedLocale('/auditions/42', 'zh-TW')).toBe('/zh-TW/auditions/42')
     expect(redirectPathForRetiredLocale('/ja')).toBe('/en')
     expect(redirectPathForRetiredLocale('/ja/auditions/42')).toBe('/en/auditions/42')
     expect(redirectPathForRetiredLocale('/FR/videos')).toBe('/en/videos')
@@ -61,12 +65,12 @@ describe('official UI locales', () => {
     expect(localeSwitchTarget('/auditions', 'ja').locale).toBe('en')
   })
 
-  it('offers five public languages while admin screens stay Korean', () => {
-    expect([...UI_LOCALES]).toEqual(['ko', 'en', 'mn', 'km', 'uz'])
-    expect([...PUBLIC_SELECTOR]).toEqual(['ko', 'en', 'mn', 'km', 'uz'])
+  it('offers seven public languages while admin screens stay Korean', () => {
+    expect([...UI_LOCALES]).toEqual(['ko', 'en', 'mn', 'km', 'uz', 'zh-CN', 'zh-TW'])
+    expect([...PUBLIC_SELECTOR]).toEqual(['ko', 'en', 'mn', 'km', 'uz', 'zh-CN', 'zh-TW'])
     expect(AGENCY_UI_LOCALE).toBe('ko')
     expect(localesMeta.superAdminUiLocale).toBe('ko')
-    expect(localesMeta.activeTranslationTargets).toEqual(['en', 'ko', 'mn', 'km', 'uz'])
+    expect(localesMeta.activeTranslationTargets).toEqual(['en', 'ko', 'mn', 'km', 'uz', 'zh-CN', 'zh-TW'])
   })
 
   it('names every public language in its own script', () => {
@@ -75,7 +79,7 @@ describe('official UI locales', () => {
       'English',
       'Монгол',
       'ខ្មែរ',
-      'Oʻzbekcha',
+      'Oʻzbekcha', '简体中文', '繁體中文',
     ])
   })
 
@@ -98,7 +102,7 @@ describe('official UI locales', () => {
     expect(redirectPathForSavedLocale('/auditions', 'km')).toBe('/km/auditions')
     expect(redirectPathForSavedLocale('/', 'uz')).toBe('/uz')
     expect(redirectPathForRetiredLocale('/km/auditions')).toBeNull()
-    expect(routing.locales).toEqual(['ko', 'en', 'mn', 'km', 'uz'])
+    expect(routing.locales).toEqual(['ko', 'en', 'mn', 'km', 'uz', 'zh-CN', 'zh-TW'])
   })
 
   it('agency management screens follow the selected UI locale (no forced Korean)', () => {
