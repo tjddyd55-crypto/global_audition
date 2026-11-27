@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router'
 import * as Notifications from 'expo-notifications'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../auth/AuthProvider'
-import { androidPushAvailable, refreshAndroidPush } from './androidPush'
+import { androidPushAvailable, pushEnabledFor, refreshAndroidPush } from './androidPush'
 import { pushDestination } from './pushDestination'
 
 export function AndroidPushListener() {
