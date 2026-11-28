@@ -7,6 +7,7 @@ import { pointActivityLabels, pointEntryLabels } from '../../web/src/shared/audi
 import { useAuth } from '../src/auth/AuthProvider'
 import { RequireAuth } from '../src/auth/RequireAuth'
 import { pointsApi } from '../src/api/points'
+import { normalizeLocale } from '../src/i18n/runtime'
 import { WEB_URL } from '../src/config/env'
 import { Screen } from '../src/ui/Screen'
 import { Button } from '../src/ui/Button'
@@ -32,7 +33,7 @@ export default function MemberPointsScreen() {
   const invite = useMutation({
     mutationFn: async () => {
       const code = await pointsApi.invite()
-      const locale = (i18n.language || 'ko').split('-')[0]
+      const locale = normalizeLocale(i18n.language)
       const url = new URL('/' + locale + '/register?invite=' + code, WEB_URL).toString()
       await Share.share({message:url,title:t('points.invitation')})
     },
