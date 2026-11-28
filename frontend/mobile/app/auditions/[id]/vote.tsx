@@ -7,6 +7,7 @@ import { voteApi } from '../../../src/api/endpoints'
 import { queryKeys } from '../../../src/api/queryKeys'
 import { useAuth } from '../../../src/auth/AuthProvider'
 import { ApiError } from '../../../src/api/http'
+import { normalizeLocale } from '../../../src/i18n/runtime'
 import { Button } from '../../../src/ui/Button'
 import { EmptyState, ErrorState } from '../../../src/ui/EmptyState'
 import { Screen } from '../../../src/ui/Screen'
@@ -23,7 +24,7 @@ import type { PublicVoteItem } from '../../../src/api/types'
 
 export default function VoteScreen() {
   const { t, i18n } = useTranslation()
-  const lang = (i18n.language || 'ko').split('-')[0]
+  const lang = normalizeLocale(i18n.language)
   const [playingId, setPlayingId] = useState<string | null>(null)
   const [shareOpenId, setShareOpenId] = useState<string | null>(null)
   const [votedName, setVotedName] = useState<string | null>(null)
