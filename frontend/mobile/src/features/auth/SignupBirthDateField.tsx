@@ -39,7 +39,7 @@ export function SignupBirthDateField({ value, onChange }: Props) {
 
   return (
     <View style={styles.field}>
-      <Text style={styles.label}>{t('consent.birthDate')} *</Text>
+      <Text style={styles.label}>{t('register.birthday')} *</Text>
       <Pressable accessibilityRole="button" accessibilityLabel={t('register.pickBirthDate')}
         accessibilityValue={{ text: value }} testID="signup-birth-date" style={styles.button} onPress={openCalendar}>
         <Text style={[styles.value, !value && styles.placeholder]}>{value || t('register.pickBirthDate')}</Text>

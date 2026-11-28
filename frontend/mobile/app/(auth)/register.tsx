@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { safeNextPath } from '../../../web/src/shared/auth/safeNext'
-import { useState } from 'react'
+import { useState, type ComponentProps } from 'react'
 import { Keyboard, Pressable, StyleSheet, Text, View } from 'react-native'
 import { useAuth } from '../../src/auth/AuthProvider'
 import { ApiError } from '../../src/api/http'
@@ -24,6 +24,10 @@ import {
 } from '../../../web/src/shared/privacy/model'
 import { colors, radius } from '../../src/theme/tokens'
 import { useTranslation } from 'react-i18next'
+
+function SignupTextField(props: ComponentProps<typeof TextField>) {
+  return <TextField {...props} allowSwipeWhenBlurred />
+}
 
 export default function RegisterScreen() {
   const { t } = useTranslation()
@@ -75,26 +79,26 @@ export default function RegisterScreen() {
           <RoleChip label={t('auth.applicant')} selected={role === 'APPLICANT'} onPress={() => changeRole('APPLICANT')} />
           <RoleChip label={t('auth.business')} selected={role === 'AGENCY'} onPress={() => changeRole('AGENCY')} />
         </View>
-        <TextField label={t('auth.nickname')} value={nickname} onChangeText={setNickname} />
-        <TextField label={t('auth.email')} value={email} onChangeText={setEmail} keyboardType="email-address" />
-        <TextField label={t('auth.passwordMin6')} value={password} onChangeText={setPassword} secureTextEntry />
-        <TextField label={t('auth.confirmPassword')} value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry error={confirmPassword && password !== confirmPassword ? t('auth.passwordMismatch') : undefined} />
+        <SignupTextField label={t('auth.nickname')} value={nickname} onChangeText={setNickname} />
+        <SignupTextField label={t('auth.email')} value={email} onChangeText={setEmail} keyboardType="email-address" />
+        <SignupTextField label={t('auth.passwordMin6')} value={password} onChangeText={setPassword} secureTextEntry />
+        <SignupTextField label={t('auth.confirmPassword')} value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry error={confirmPassword && password !== confirmPassword ? t('auth.passwordMismatch') : undefined} />
         {role === 'AGENCY' ? (
           <>
             <SignupCountrySelect label={t('auth.agencyCountry')} value={countryCode} onChange={setCountryCode} />
-            <TextField label={t('register.companyName')} value={companyName} onChangeText={setCompanyName} />
-            <TextField label={t('register.legalName')} value={legalName} onChangeText={setLegalName} />
-            <TextField label={t('register.representativeName')} value={representativeName} onChangeText={setRepresentativeName} />
-            <TextField label={t('register.businessRegistrationNumber')} value={businessRegistrationNumber} onChangeText={setBusinessRegistrationNumber} />
-            <TextField label={t('register.enterCity')} value={businessCity} onChangeText={setBusinessCity} />
-            <TextField label={t('register.contactPhone')} value={contactPhone} onChangeText={setContactPhone} keyboardType="phone-pad" />
+            <SignupTextField label={t('register.companyName')} value={companyName} onChangeText={setCompanyName} />
+            <SignupTextField label={t('register.legalName')} value={legalName} onChangeText={setLegalName} />
+            <SignupTextField label={t('register.representativeName')} value={representativeName} onChangeText={setRepresentativeName} />
+            <SignupTextField label={t('register.businessRegistrationNumber')} value={businessRegistrationNumber} onChangeText={setBusinessRegistrationNumber} />
+            <SignupTextField label={t('register.enterCity')} value={businessCity} onChangeText={setBusinessCity} />
+            <SignupTextField label={t('register.contactPhone')} value={contactPhone} onChangeText={setContactPhone} keyboardType="phone-pad" />
           </>
         ) : (
           <>
-            <TextField label={t('auth.legalNameOptional')} value={name} onChangeText={setName} autoCapitalize="words" />
+            <SignupTextField label={t('auth.legalNameOptional')} value={name} onChangeText={setName} autoCapitalize="words" />
             <SignupCountrySelect label={t('register.country')} value={countryCode} onChange={setCountryCode} />
             <SignupBirthDateField value={birthDate} onChange={setBirthDate} />
-            <Text style={styles.label}>{t('consent.gender')} *</Text>
+            <Text style={styles.label}>{t('register.gender')} *</Text>
             <View style={styles.roles} accessibilityRole="radiogroup">
               {APPLICANT_SIGNUP_GENDERS.map((option) => (
                 <RoleChip key={option} label={t(option === 'MALE' ? 'register.male' : 'register.female')}
