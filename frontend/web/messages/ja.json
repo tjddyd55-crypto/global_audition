@@ -173,6 +173,9 @@
     "checking": "確認中…"
   },
   "register": {
+    "pickGender": "性別を選択",
+    "submit": "登録する",
+    "pickBirthDate": "生年月日を選択",
     "title": "会員登録",
     "country": "国／地域",
     "city": "市区町村",
@@ -1963,6 +1966,7 @@
     "unread": "リリース"
   },
   "consent": {
+    "genderRequired": "性別を選択してください。",
     "title": "利用規約と同意",
     "agreeAll": "同意する(オプションを含む)",
     "terms": "[必須] サービスの利用規約に同意する",

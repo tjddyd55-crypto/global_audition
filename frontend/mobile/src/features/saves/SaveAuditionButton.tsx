@@ -1,81 +1,38 @@
-import { Image, Pressable, StyleSheet, View } from 'react-native'
+import { Pressable, StyleSheet, Text } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useSavedAuditionIds, useToggleSavedAudition } from './useSavedAuditions'
 
-const HEART_RED = '#E11D48'
-
-type Tone = 'onImage' | 'onSurface'
-
-export function SaveAuditionButton({
-  auditionId,
-  tone = 'onSurface',
-}: {
+export function SaveAuditionButton({ auditionId, tone = 'onSurface' }: {
   auditionId: string
-  tone?: Tone
+  tone?: 'onImage' | 'onSurface'
 }) {
   const { t } = useTranslation()
   const { saved } = useSavedAuditionIds()
   const { toggle, isPending } = useToggleSavedAudition()
   const isSaved = saved.has(auditionId)
-  const outline = tone === 'onImage' ? '#FFFFFF' : '#111827'
+  const onImage = tone === 'onImage'
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityState={{ selected: isSaved }}
-      accessibilityLabel={isSaved ? t('savedAuditions.unsaveAria') : t('savedAuditions.saveAria')}
+      accessibilityLabel={t(isSaved ? 'savedAuditions.unsaveAria' : 'savedAuditions.saveAria')}
       hitSlop={8}
       disabled={isPending}
       onPress={() => toggle(auditionId, isSaved)}
-      style={styles.btn}
+      style={styles.button}
     >
-      <View style={styles.glyph} pointerEvents="none">
-        {tone === 'onImage' ? (
-          <Image
-            source={require('./heart-outline.png')}
-            resizeMode="contain"
-            style={[styles.halo, { tintColor: '#111827' }]}
-          />
-        ) : null}
-        <Image
-          source={isSaved ? require('./heart-filled.png') : require('./heart-outline.png')}
-          resizeMode="contain"
-          style={[styles.icon, { tintColor: isSaved ? HEART_RED : outline }]}
-        />
-      </View>
+      <Text style={[
+        styles.star,
+        onImage && styles.imageStar,
+        isSaved && styles.selected,
+      ]}>{isSaved ? '★' : '☆'}</Text>
     </Pressable>
   )
 }
 
 const styles = StyleSheet.create({
-  btn: {
-    padding: 7,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'transparent',
-    borderWidth: 0,
-    elevation: 0,
-    shadowColor: 'transparent',
-    shadowOpacity: 0,
-    shadowRadius: 0,
-    shadowOffset: { width: 0, height: 0 },
-    overflow: 'visible',
-  },
-  glyph: {
-    width: 22,
-    height: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'transparent',
-  },
-  icon: {
-    width: 22,
-    height: 22,
-    aspectRatio: 1,
-  },
-  halo: {
-    position: 'absolute',
-    width: 24,
-    height: 24,
-    aspectRatio: 1,
-  },
+  button: { padding: 7, alignItems: 'center', justifyContent: 'center' },
+  star: { fontSize: 25, lineHeight: 26, color: '#111827', includeFontPadding: false },
+  imageStar: { color: '#FFFFFF', textShadowColor: '#111827', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3 },
+  selected: { color: '#F5B700' },
 })

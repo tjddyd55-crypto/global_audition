@@ -35,6 +35,18 @@ public final class ProfileCodes {
         return d;
     }
 
+    /** New applicants must select one of the signup options. */
+    public static String signupGender(String raw) {
+        String value = gender(raw);
+        if (value == null || value.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "GENDER_REQUIRED");
+        }
+        if (!"MALE".equals(value) && !"FEMALE".equals(value)) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "GENDER_INVALID");
+        }
+        return value;
+    }
+
     /** null = 변경 없음, "" = 지움. */
     public static String gender(String raw) {
         if (raw == null) {

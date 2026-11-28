@@ -3,7 +3,8 @@
 import { useTranslations } from 'next-intl'
 import {
   EMPTY_SIGNUP_CONSENTS,
-  GENDER_CODES,
+  APPLICANT_SIGNUP_GENDERS,
+  applicantSignupGenderValid,
   birthDateProblem,
   signupConsentMissing,
   type SignupConsentState,
@@ -13,10 +14,11 @@ export type SignupExtras = { birthDate: string; gender: string; consents: Signup
 export const EMPTY_SIGNUP_EXTRAS: SignupExtras = { birthDate: '', gender: '', consents: EMPTY_SIGNUP_CONSENTS }
 
 /** 가입 폼 공통 검증. 문제 없으면 null, 있으면 consent.* 메시지 키. */
-export function signupExtrasErrorKey(v: SignupExtras, applicant: boolean, checkBirthDate = applicant): string | null {
-  if (applicant && checkBirthDate) {
+export function signupExtrasErrorKey(v: SignupExtras, applicant: boolean): string | null {
+  if (applicant) {
     const p = birthDateProblem(v.birthDate)
     if (p) return p === 'required' ? 'birthDateRequired' : 'birthDateInvalid'
+    if (!applicantSignupGenderValid(v.gender)) return 'genderRequired'
   }
   if (signupConsentMissing(v.consents, applicant)) return 'required'
   return null
@@ -33,7 +35,7 @@ const inputStyle: React.CSSProperties = {
 }
 
 /**
- * PC·모바일 웹 가입 공통: 생년월일(지원자 필수)·성별(선택)·분리 동의.
+ * PC·모바일 웹 가입 공통: 생년월일·성별(지원자 필수)·분리 동의.
  * 보호자 동의는 여기서 받지 않는다(본인 체크 ≠ 보호자 동의). 네이티브 register.tsx 와 같은 항목·순서.
  */
 export function SignupConsentFields({
@@ -49,7 +51,7 @@ export function SignupConsentFields({
   askPersonal?: boolean
 }) {
   const t = useTranslations('consent')
-  const tp = useTranslations('privacy')
+  const tr = useTranslations('register')
   const keys: (keyof SignupConsentState)[] = applicant
     ? ['terms', 'privacyCollection', 'privacyDisclosure', 'marketing']
     : ['terms', 'privacyCollection', 'marketing']
@@ -64,6 +66,7 @@ export function SignupConsentFields({
             <input
               id="birthDate"
               type="date"
+              onClick={(event) => event.currentTarget.showPicker?.()}
               value={value.birthDate}
               max={new Date().toISOString().slice(0, 10)}
               onChange={(e) => onChange({ ...value, birthDate: e.target.value })}
@@ -72,12 +75,12 @@ export function SignupConsentFields({
             <span style={{ fontSize: 12, color: '#666', fontWeight: 400 }}>{t('birthDateHint')}</span>
           </label>
           <label style={{ display: 'grid', gap: 6, fontSize: 14, fontWeight: 500 }}>
-            {t('gender')}
-            <select id="gender" value={value.gender} onChange={(e) => onChange({ ...value, gender: e.target.value })} style={inputStyle}>
-              <option value="">{tp('genderNone')}</option>
-              {GENDER_CODES.map((g) => (
+            {t('gender')} *
+            <select id="gender" aria-required="true" value={value.gender} onChange={(e) => onChange({ ...value, gender: e.target.value })} style={inputStyle}>
+              <option value="" disabled>{tr('pickGender')}</option>
+              {APPLICANT_SIGNUP_GENDERS.map((g) => (
                 <option key={g} value={g}>
-                  {tp(`gender_${g}`)}
+                  {tr(g === 'MALE' ? 'male' : 'female')}
                 </option>
               ))}
             </select>

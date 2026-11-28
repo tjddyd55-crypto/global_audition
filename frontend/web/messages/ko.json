@@ -173,6 +173,9 @@
     "checking": "확인 중..."
   },
   "register": {
+    "pickGender": "성별 선택",
+    "submit": "가입하기",
+    "pickBirthDate": "생년월일 선택",
     "title": "회원가입",
     "country": "국가",
     "city": "도시",
@@ -182,8 +185,8 @@
     "timezone": "시차대",
     "languages": "사용 가능한 언어",
     "gender": "성별",
-    "male": "남성",
-    "female": "여성",
+    "male": "남자",
+    "female": "여자",
     "other": "기타",
     "companyName": "회사명",
     "legalName": "법인명",
@@ -1963,6 +1966,7 @@
     "unread": "안 읽음"
   },
   "consent": {
+    "genderRequired": "성별을 선택해 주세요.",
     "title": "약관 및 동의",
     "agreeAll": "전체 동의 (선택 항목 포함)",
     "terms": "[필수] 서비스 이용약관 동의",

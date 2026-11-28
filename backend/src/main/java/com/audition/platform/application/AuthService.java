@@ -94,7 +94,7 @@ public class AuthService {
             // 국가별 미성년자 정책 판정에 필요하다. 미성년자라는 이유로 가입을 막지는 않는다.
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "BIRTH_DATE_REQUIRED");
         }
-        String gender = ProfileCodes.gender(req.getGender());
+        String gender = applicant ? ProfileCodes.signupGender(req.getGender()) : ProfileCodes.gender(req.getGender());
         if (userRepository.existsByEmail(email)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already registered");
         }

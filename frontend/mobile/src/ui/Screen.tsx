@@ -7,6 +7,7 @@ type Props = {
   padded?: boolean
   topInset?: boolean
   bottomInset?: boolean
+  contentBottomPadding?: number
   scroll?: boolean
   refreshing?: boolean
   onRefresh?: RefreshControlProps['onRefresh']
@@ -19,6 +20,7 @@ export function Screen({
   padded = true,
   topInset = true,
   bottomInset = false,
+  contentBottomPadding = 32,
   scroll = true,
   loading,
   footer,
@@ -46,7 +48,7 @@ export function Screen({
           // 페이지 자체는 세로만 움직인다. 국가 칩의 가로 스크롤은 필터 줄이 맡는다.
           horizontal={false}
           nestedScrollEnabled
-          contentContainerStyle={[styles.content, padded && styles.padded]}
+          contentContainerStyle={[{ paddingBottom: contentBottomPadding }, padded && styles.padded]}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
           refreshControl={
@@ -66,7 +68,6 @@ export function Screen({
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
   flex: { flex: 1 },
-  content: { paddingBottom: 32 },
   padded: { paddingHorizontal: space.md, paddingTop: space.md },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 })

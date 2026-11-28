@@ -92,7 +92,7 @@ class AgencySignupIT {
         for (String role : new String[]{"AGENCY"}) {
             String nick = nick();
             String body = mvc.perform(post("/api/auth/signup").contentType(APPLICATION_JSON)
-                            .content("{\"email\":\"" + nick + "@local.test\",\"password\":\"Localtest1!\",\"agreeTerms\":true,\"agreePrivacyCollection\":true,\"agreePrivacyDisclosure\":true,\"birthDate\":\"1995-05-05\",\"role\":\"" + role
+                            .content("{\"email\":\"" + nick + "@local.test\",\"password\":\"Localtest1!\",\"agreeTerms\":true,\"agreePrivacyCollection\":true,\"agreePrivacyDisclosure\":true,\"gender\":\"MALE\",\"birthDate\":\"1995-05-05\",\"role\":\"" + role
                                     + "\",\"nickname\":\"" + nick + "\",\"countryCode\":\"ZQ\"}"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.role").value("APPLICANT"))
@@ -183,7 +183,7 @@ class AgencySignupIT {
         String body = mvc.perform(post("/api/auth/signup").contentType(APPLICATION_JSON)
                         .content("{"
                                 + "\"email\":\"" + nick + "@local.test\","
-                                + "\"password\":\"Localtest1!\",\"agreeTerms\":true,\"agreePrivacyCollection\":true,\"agreePrivacyDisclosure\":true,\"birthDate\":\"1995-05-05\","
+                                + "\"password\":\"Localtest1!\",\"agreeTerms\":true,\"agreePrivacyCollection\":true,\"agreePrivacyDisclosure\":true,\"gender\":\"MALE\",\"birthDate\":\"1995-05-05\","
                                 + "\"role\":\"AGENCY\","
                                 + "\"nickname\":\"" + nick + "\","
                                 + "\"countryCode\":\"ZR\","
@@ -223,7 +223,7 @@ class AgencySignupIT {
 
     private org.springframework.test.web.servlet.RequestBuilder signup(String nick, String role) {
         return post("/api/auth/signup").contentType(APPLICATION_JSON)
-                .content("{\"email\":\"" + nick + "@local.test\",\"password\":\"Localtest1!\",\"agreeTerms\":true,\"agreePrivacyCollection\":true,\"agreePrivacyDisclosure\":true,\"birthDate\":\"1995-05-05\",\"role\":\"" + role
+                .content("{\"email\":\"" + nick + "@local.test\",\"password\":\"Localtest1!\",\"agreeTerms\":true,\"agreePrivacyCollection\":true,\"agreePrivacyDisclosure\":true,\"gender\":\"MALE\",\"birthDate\":\"1995-05-05\",\"role\":\"" + role
                         + "\",\"nickname\":\"" + nick + "\"}");
     }
 
