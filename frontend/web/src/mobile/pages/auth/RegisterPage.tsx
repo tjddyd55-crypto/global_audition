@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { safeNextPath, withNext } from '@/shared/auth/safeNext'
+import { safeNextPath } from '@/shared/auth/safeNext'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQueryClient } from '@tanstack/react-query'
@@ -12,10 +12,10 @@ import { buildAgencySignupPayload } from '@/shared/auth/buildAgencySignupPayload
 import { parseInviteCode } from '@/shared/audition/points'
 import { buildApplicantSignupPayload } from '@/shared/auth/buildApplicantSignupPayload'
 import { EMPTY_SIGNUP_EXTRAS, SignupConsentFields, signupExtrasErrorKey, type SignupExtras } from '@/components/auth/SignupConsentFields'
-import { GENDER_CODES } from '@/shared/privacy/model'
+import { APPLICANT_SIGNUP_GENDERS } from '@/shared/privacy/model'
 import { SignupCountrySelect } from '@/components/auth/SignupCountrySelect'
 import { RecoveryCodeNotice } from '@/components/auth/RecoveryCodeNotice'
-import { languages, timezones } from '@/shared/utils/countries'
+import { languages } from '@/shared/utils/countries'
 import { createNicknameZodField } from '@/shared/user/nicknameZod'
 import { useLocale, useTranslations } from 'next-intl'
 
@@ -41,7 +41,6 @@ function createMobileRegisterSchema(
     birthday: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, tVal('birthdayFormat')),
     phone: z.string().optional(),
     address: z.string().optional(),
-    timezone: z.string().optional(),
     languages: z.array(z.string()).optional(),
     gender: z.string().optional(),
   })
@@ -89,7 +88,6 @@ export default function MobileRegisterPage() {
   const [extras, setExtras] = useState<SignupExtras>(EMPTY_SIGNUP_EXTRAS)
   const [guardianNext, setGuardianNext] = useState(false)
   const tConsent = useTranslations('consent')
-  const tPrivacy = useTranslations('privacy')
   const goHome = (role: string | null | undefined, needsGuardian: boolean) => {
     if (role === 'AGENCY') window.location.href = `/${locale}/my/studio/agency-application`
     else if (needsGuardian) window.location.href = `/${locale}/my/studio/privacy?guardian=1`
@@ -206,7 +204,9 @@ export default function MobileRegisterPage() {
         }
       }
 
-      const extrasError = signupExtrasErrorKey(extras, submitData.userType !== 'BUSINESS', false)
+      const extrasError = submitData.userType === 'APPLICANT'
+        ? signupExtrasErrorKey({ ...extras, birthDate: submitData.birthday, gender: submitData.gender ?? '' }, true)
+        : signupExtrasErrorKey(extras, false)
       if (extrasError) {
         setError(tConsent(extrasError))
         setIsLoading(false)
@@ -242,7 +242,6 @@ export default function MobileRegisterPage() {
               nickname: submitData.nickname.trim(),
               name: submitData.name,
               countryCode: submitData.country,
-              timezone: submitData.timezone,
               birthDate: submitData.birthday,
               gender: submitData.gender || undefined,
               consents: extras.consents,
@@ -412,9 +411,11 @@ export default function MobileRegisterPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">{tReg('birthday')} *</label>
+                <label htmlFor="signup-birthday" className="block text-sm font-medium mb-2">{tReg('birthday')} *</label>
                 <input
+                  id="signup-birthday"
                   type="date"
+                  onClick={(event) => event.currentTarget.showPicker?.()}
                   {...register('birthday')}
                   className="w-full px-4 py-2 border rounded-lg"
                   max={new Date().toISOString().split('T')[0]}
@@ -445,21 +446,6 @@ export default function MobileRegisterPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">{tReg('timezone')}</label>
-                <select
-                  {...register('timezone')}
-                  className="w-full px-4 py-2 border rounded-lg"
-                >
-                  <option value="">{tReg('selectTimezone')}</option>
-                  {timezones.map((tz) => (
-                    <option key={tz.value} value={tz.value}>
-                      {tz.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
                 <label className="block text-sm font-medium mb-2">{tReg('languages')}</label>
                 <div className="grid grid-cols-2 gap-2 mt-2">
                   {languages.map((lang) => (
@@ -477,15 +463,17 @@ export default function MobileRegisterPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">{tReg('gender')}</label>
+                <label htmlFor="signup-gender" className="block text-sm font-medium mb-2">{tReg('gender')} *</label>
                 <select
+                  id="signup-gender"
                   {...register('gender')}
+                  aria-required="true"
                   className="w-full px-4 py-2 border rounded-lg"
                 >
-                  <option value="">{tAuth('selectOptional')}</option>
-                  {GENDER_CODES.map((g) => (
+                  <option value="" disabled>{tReg('pickGender')}</option>
+                  {APPLICANT_SIGNUP_GENDERS.map((g) => (
                     <option key={g} value={g}>
-                      {tPrivacy(`gender_${g}`)}
+                      {tReg(g === 'MALE' ? 'male' : 'female')}
                     </option>
                   ))}
                 </select>
@@ -675,18 +663,10 @@ export default function MobileRegisterPage() {
             disabled={isLoading}
             className="w-full px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50"
           >
-            {isLoading ? tAuth('signingUp') : tAuth('registerButton')}
+            {isLoading ? tAuth('signingUp') : tReg('submit')}
           </button>
         </form>
 
-        <div className="mt-6 text-center">
-          <p className="text-gray-600">
-            {tAuth('alreadyHaveAccount')}{' '}
-            <a href={`/${locale}${withNext('/login', nextPath)}`} className="text-primary-600 hover:underline">
-              {tAuth('loginButton')}
-            </a>
-          </p>
-        </div>
       </div>
     </div>
   )

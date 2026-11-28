@@ -126,7 +126,7 @@ class ApplicantCountryTimezoneIT {
     private static String body(String nickname, String country, String timezone) {
         return "{"
                 + "\"email\":\"" + nickname + "@applicant.tz.test\","
-                + "\"password\":\"Localtest1!\",\"agreeTerms\":true,\"agreePrivacyCollection\":true,\"agreePrivacyDisclosure\":true,\"birthDate\":\"1995-05-05\","
+                + "\"password\":\"Localtest1!\",\"agreeTerms\":true,\"agreePrivacyCollection\":true,\"agreePrivacyDisclosure\":true,\"gender\":\"MALE\",\"birthDate\":\"1995-05-05\","
                 + "\"role\":\"APPLICANT\","
                 + "\"nickname\":\"" + nickname + "\","
                 + "\"countryCode\":\"" + country + "\","

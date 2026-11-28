@@ -76,6 +76,7 @@ class AuthServiceTest {
         req.setRole("APPLICANT");
         req.setNickname("새닉네임");
         req.setBirthDate("2000-01-15");
+        req.setGender("MALE");
         agreeAll(req);
         when(userRepository.existsByEmail("new@example.com")).thenReturn(false);
         when(userNicknameService.prepareNicknameOrThrow(eq("새닉네임"), isNull())).thenReturn("새닉네임");
@@ -162,6 +163,13 @@ class AuthServiceTest {
                 org.springframework.web.server.ResponseStatusException.class, () -> authService.signup(req));
         assertEquals("BIRTH_DATE_REQUIRED", noBirth.getReason());
         req.setBirthDate(java.time.LocalDate.now().minusYears(12).toString());
+        org.springframework.web.server.ResponseStatusException noGender = org.junit.jupiter.api.Assertions.assertThrows(
+                org.springframework.web.server.ResponseStatusException.class, () -> authService.signup(req));
+        assertEquals("GENDER_REQUIRED", noGender.getReason());
+        req.setGender("NON_BINARY");
+        org.springframework.web.server.ResponseStatusException invalidGender = org.junit.jupiter.api.Assertions.assertThrows(
+                org.springframework.web.server.ResponseStatusException.class, () -> authService.signup(req));
+        assertEquals("GENDER_INVALID", invalidGender.getReason());
         req.setGender("female");
         AuthResponse res = authService.signup(req);
         assertNotNull(res.getToken(), "미성년자도 가입할 수 있다");

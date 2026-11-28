@@ -87,6 +87,7 @@ class MainSecurityScopeTest {
         request.setRole("applicant");
         request.setNickname("hotfan");
         request.setBirthDate("1999-03-01");
+        request.setGender("MALE");
         request.setAgreeTerms(true);
         request.setAgreePrivacyCollection(true);
         request.setAgreePrivacyDisclosure(true);

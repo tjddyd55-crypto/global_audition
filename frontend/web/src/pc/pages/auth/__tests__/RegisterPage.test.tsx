@@ -36,26 +36,29 @@ describe('PcRegisterPage applicant signup', () => {
     fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'secret1' } })
     fireEvent.change(screen.getByLabelText('Confirm password'), { target: { value: 'secret1' } })
     fireEvent.change(screen.getByRole('combobox', { name: 'Country' }), { target: { value: 'MN' } })
-    fireEvent.change(screen.getByRole('combobox', { name: 'Timezone' }), { target: { value: 'Asia/Ulaanbaatar' } })
   }
 
-  it('blocks signup until birth date and the required consents are given', async () => {
+  it('blocks signup until birth date, gender and the required consents are given', async () => {
     fillBase()
-    fireEvent.click(screen.getByRole('button', { name: 'Register' }))
+    fireEvent.click(screen.getByRole('button', { name: en.register.submit }))
     expect(await screen.findByText(en.consent.birthDateRequired)).toBeTruthy()
     fireEvent.change(document.getElementById('birthDate')!, { target: { value: '2010-05-01' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Register' }))
+    fireEvent.click(screen.getByRole('button', { name: en.register.submit }))
+    expect(await screen.findByText(en.consent.genderRequired)).toBeTruthy()
+    fireEvent.change(document.getElementById('gender')!, { target: { value: 'FEMALE' } })
+    fireEvent.click(screen.getByRole('button', { name: en.register.submit }))
     expect(await screen.findByText(en.consent.required)).toBeTruthy()
     expect(signup).not.toHaveBeenCalled()
   })
 
-  it('sends ISO country, IANA timezone, birth date and separated consents with the applicant payload', async () => {
+  it('sends ISO country, birth date, gender and separated consents with the applicant payload', async () => {
     fillBase()
     fireEvent.change(document.getElementById('birthDate')!, { target: { value: '2010-05-01' } })
+    fireEvent.change(document.getElementById('gender')!, { target: { value: 'FEMALE' } })
     fireEvent.click(screen.getByTestId('consent-terms'))
     fireEvent.click(screen.getByTestId('consent-privacyCollection'))
     fireEvent.click(screen.getByTestId('consent-privacyDisclosure'))
-    fireEvent.click(screen.getByRole('button', { name: 'Register' }))
+    fireEvent.click(screen.getByRole('button', { name: en.register.submit }))
 
     await waitFor(() => expect(signup).toHaveBeenCalled())
     expect(signup.mock.calls[0][0]).toEqual({
@@ -65,9 +68,9 @@ describe('PcRegisterPage applicant signup', () => {
       nickname: 'singer',
       name: undefined,
       countryCode: 'MN',
-      timezone: 'Asia/Ulaanbaatar',
+      timezone: undefined,
       birthDate: '2010-05-01',
-      gender: undefined,
+      gender: 'FEMALE',
       agreeTerms: true,
       agreePrivacyCollection: true,
       agreePrivacyDisclosure: true,

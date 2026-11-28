@@ -5,9 +5,8 @@ import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n.config'
 import { useSavedAuditionIds, useToggleSavedAudition } from '@/shared/saves/useSavedAuditions'
 
-const HEART_RED = '#E11D48'
-const HEART_PATH =
-  'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'
+const STAR_GOLD = '#F5B700'
+const STAR_PATH = 'M12 2.5l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5-5.8-3.1-5.8 3.1 1.1-6.5-4.7-4.6 6.5-.9z'
 
 const CLEAR: CSSProperties = {
   background: 'transparent',
@@ -61,7 +60,7 @@ export default function SaveAuditionButton({ auditionId, className = '', tone = 
         style={CLEAR}
         className={`inline-flex appearance-none items-center justify-center border-0 bg-transparent p-2 shadow-none ring-0 outline-none backdrop-blur-none hover:bg-transparent hover:shadow-none focus:bg-transparent focus-visible:bg-transparent focus-visible:outline-none focus-visible:ring-0 active:bg-transparent disabled:bg-transparent ${className}`}
       >
-        <HeartIcon filled={isSaved} tone={tone} />
+        <StarIcon filled={isSaved} tone={tone} />
       </button>
       {loginOpen ? (
         <div
@@ -105,9 +104,9 @@ export default function SaveAuditionButton({ auditionId, className = '', tone = 
   )
 }
 
-function HeartIcon({ filled, tone }: { filled: boolean; tone: Tone }) {
+function StarIcon({ filled, tone }: { filled: boolean; tone: Tone }) {
   const outline = tone === 'onImage' ? '#FFFFFF' : '#111827'
-  const color = filled ? HEART_RED : outline
+  const color = filled ? STAR_GOLD : outline
   return (
     <svg
       viewBox="0 0 24 24"
@@ -119,7 +118,7 @@ function HeartIcon({ filled, tone }: { filled: boolean; tone: Tone }) {
     >
       {tone === 'onImage' ? (
         <path
-          d={HEART_PATH}
+          d={STAR_PATH}
           fill="none"
           stroke="#111827"
           strokeWidth="3.2"
@@ -128,8 +127,8 @@ function HeartIcon({ filled, tone }: { filled: boolean; tone: Tone }) {
         />
       ) : null}
       <path
-        d={HEART_PATH}
-        fill={filled ? HEART_RED : 'none'}
+        d={STAR_PATH}
+        fill={filled ? STAR_GOLD : 'none'}
         stroke={color}
         strokeWidth="1.7"
         strokeLinejoin="round"

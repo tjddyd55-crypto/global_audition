@@ -50,7 +50,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     name: 'Global Audition',
     slug: 'global-audition',
     scheme: 'globalaudition',
-    version: developmentLinks ? '1.1.1' : '1.0.0',
+    version: developmentLinks ? '1.1.2' : '1.0.0',
     orientation: 'portrait',
     icon: './assets/icon.png',
     userInterfaceStyle: 'light',

@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { safeNextPath } from '../../../web/src/shared/auth/safeNext'
 import { useState } from 'react'
-import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, View } from 'react-native'
+import { Keyboard, Pressable, StyleSheet, Text, View } from 'react-native'
 import { useAuth } from '../../src/auth/AuthProvider'
 import { ApiError } from '../../src/api/http'
 import { signupPasswordConfirmationError, validateSignupDraft } from '../../src/domain/signupRules'
@@ -12,10 +12,11 @@ import { RecoveryCodeNotice } from '../../src/ui/RecoveryCodeNotice'
 import { Screen } from '../../src/ui/Screen'
 import { SignupCountrySelect } from '../../src/features/auth/SignupCountrySelect'
 import { TextField } from '../../src/ui/TextField'
-import { ScrollChipRow } from '../../src/ui/ScrollChipRow'
+import { SignupBirthDateField } from '../../src/features/auth/SignupBirthDateField'
 import {
   EMPTY_SIGNUP_CONSENTS,
-  GENDER_CODES,
+  APPLICANT_SIGNUP_GENDERS,
+  applicantSignupGenderValid,
   birthDateProblem,
   signupConsentBody,
   signupConsentMissing,
@@ -36,7 +37,6 @@ export default function RegisterScreen() {
   const [nickname, setNickname] = useState('')
   const [name, setName] = useState('')
   const [countryCode, setCountryCode] = useState('')
-  const [timezone, setTimezone] = useState('')
   const [companyName, setCompanyName] = useState('')
   const [legalName, setLegalName] = useState('')
   const [businessRegistrationNumber, setBusinessRegistrationNumber] = useState('')
@@ -53,6 +53,12 @@ export default function RegisterScreen() {
   const [guardianNext, setGuardianNext] = useState(false)
   const afterSignup = (needsGuardian: boolean) => router.replace((needsGuardian ? '/privacy' : nextPath || '/(tabs)') as never)
 
+  const changeRole = (nextRole: typeof role) => {
+    Keyboard.dismiss()
+    setError(null)
+    setRole(nextRole)
+  }
+
   if (issuedCode) {
     return (
       <Screen>
@@ -62,13 +68,12 @@ export default function RegisterScreen() {
   }
 
   return (
-    <Screen>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'padding'} style={styles.box}>
+    <Screen bottomInset contentBottomPadding={12}>
+      <View style={styles.box}>
         <Text style={styles.title}>{t('auth.registerTitle')}</Text>
-        <Text style={styles.hint}>{t('auth.signupHint')}</Text>
         <View style={styles.roles}>
-          <RoleChip label={t('auth.applicant')} selected={role === 'APPLICANT'} onPress={() => setRole('APPLICANT')} />
-          <RoleChip label={t('auth.business')} selected={role === 'AGENCY'} onPress={() => setRole('AGENCY')} />
+          <RoleChip label={t('auth.applicant')} selected={role === 'APPLICANT'} onPress={() => changeRole('APPLICANT')} />
+          <RoleChip label={t('auth.business')} selected={role === 'AGENCY'} onPress={() => changeRole('AGENCY')} />
         </View>
         <TextField label={t('auth.nickname')} value={nickname} onChangeText={setNickname} />
         <TextField label={t('auth.email')} value={email} onChangeText={setEmail} keyboardType="email-address" />
@@ -88,28 +93,20 @@ export default function RegisterScreen() {
           <>
             <TextField label={t('auth.legalNameOptional')} value={name} onChangeText={setName} autoCapitalize="words" />
             <SignupCountrySelect label={t('register.country')} value={countryCode} onChange={setCountryCode} />
-            <TextField label={t('register.timezone')} value={timezone} onChangeText={setTimezone} autoCapitalize="none" />
-            <TextField
-              label={t('consent.birthDate')}
-              value={birthDate}
-              onChangeText={setBirthDate}
-              placeholder="2008-03-15"
-              keyboardType="numbers-and-punctuation"
-            />
-            <Text style={styles.small}>{t('consent.birthDateHint')}</Text>
-            <Text style={styles.label}>{t('consent.gender')}</Text>
-            <ScrollChipRow
-              options={['', ...GENDER_CODES]}
-              selected={gender}
-              onSelect={setGender}
-              labelOf={(g) => (g ? t(`privacy.gender_${g}`) : t('privacy.genderNone'))}
-            />
+            <SignupBirthDateField value={birthDate} onChange={setBirthDate} />
+            <Text style={styles.label}>{t('consent.gender')} *</Text>
+            <View style={styles.roles} accessibilityRole="radiogroup">
+              {APPLICANT_SIGNUP_GENDERS.map((option) => (
+                <RoleChip key={option} label={t(option === 'MALE' ? 'register.male' : 'register.female')}
+                  selected={gender === option} onPress={() => setGender(option)} radio />
+              ))}
+            </View>
           </>
         )}
         <SignupConsents value={consents} onChange={setConsents} applicant={role === 'APPLICANT'} />
         {error ? <Text style={styles.error}>{error}</Text> : null}
         <Button
-          label={t('auth.registerButton')}
+          label={t('register.submit')}
           loading={loading}
           onPress={async () => {
             const confirmationError = signupPasswordConfirmationError(password, confirmPassword)
@@ -122,7 +119,6 @@ export default function RegisterScreen() {
                   nickname: nickname.trim(),
                   name: name.trim() || undefined,
                   countryCode,
-                  timezone,
                   birthDate,
                   gender,
                   consents,
@@ -135,7 +131,6 @@ export default function RegisterScreen() {
               role,
               name: role === 'AGENCY' ? legalName.trim() || undefined : name.trim() || undefined,
               countryCode: role === 'AGENCY' ? countryCode.trim().toUpperCase() : applicant?.countryCode,
-              timezone: role === 'APPLICANT' ? applicant?.timezone : undefined,
               companyName: role === 'AGENCY' ? companyName.trim() || undefined : undefined,
               legalName: role === 'AGENCY' ? legalName.trim() || undefined : undefined,
               businessRegistrationNumber: role === 'AGENCY' ? businessRegistrationNumber.trim() || undefined : undefined,
@@ -153,6 +148,10 @@ export default function RegisterScreen() {
             }
             if (!/^[A-Z]{2}$/.test(countryCode)) { setError(t('register.selectCountry')); return }
             if (role === 'APPLICANT') {
+              if (!applicantSignupGenderValid(gender)) {
+                setError(t('consent.genderRequired'))
+                return
+              }
               const p = birthDateProblem(birthDate)
               if (p) {
                 setError(t(p === 'required' ? 'consent.birthDateRequired' : 'consent.birthDateInvalid'))
@@ -206,8 +205,7 @@ export default function RegisterScreen() {
             }
           }}
         />
-        <Button label={t('common.login')} variant="secondary" onPress={() => router.push({ pathname: '/(auth)/login', params: nextPath ? { next: nextPath } : {} })} />
-      </KeyboardAvoidingView>
+      </View>
     </Screen>
   )
 }
@@ -253,9 +251,9 @@ function Check({ label, on, onPress, strong }: { label: string; on: boolean; onP
   )
 }
 
-function RoleChip({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) {
+function RoleChip({ label, selected, onPress, radio }: { label: string; selected: boolean; onPress: () => void; radio?: boolean }) {
   return (
-    <Pressable onPress={onPress} style={[styles.chip, selected && styles.chipOn]} accessibilityRole="button">
+    <Pressable onPress={onPress} style={[styles.chip, selected && styles.chipOn]} accessibilityRole={radio ? "radio" : "button"} accessibilityState={radio ? { checked: selected } : { selected }}>
       <Text style={[styles.chipText, selected && styles.chipTextOn]}>{label}</Text>
     </Pressable>
   )
@@ -264,7 +262,6 @@ function RoleChip({ label, selected, onPress }: { label: string; selected: boole
 const styles = StyleSheet.create({
   box: { gap: 12 },
   title: { fontSize: 24, fontWeight: '800', marginBottom: 4, color: colors.text },
-  hint: { color: colors.muted, fontSize: 13, lineHeight: 20, marginBottom: 8 },
   roles: { flexDirection: 'row', gap: 8, marginBottom: 4 },
   chip: {
     flex: 1,

@@ -197,7 +197,7 @@ class SecurityCreditFlowIT {
     private String signupAndLogin(String email, String role, String nickname) throws Exception {
         mvc.perform(post("/api/auth/signup")
                         .contentType(APPLICATION_JSON)
-                        .content("{\"email\":\"" + email + "\",\"password\":\"Localtest1!\",\"agreeTerms\":true,\"agreePrivacyCollection\":true,\"agreePrivacyDisclosure\":true,\"birthDate\":\"1995-05-05\",\"role\":\"" + role
+                        .content("{\"email\":\"" + email + "\",\"password\":\"Localtest1!\",\"agreeTerms\":true,\"agreePrivacyCollection\":true,\"agreePrivacyDisclosure\":true,\"gender\":\"MALE\",\"birthDate\":\"1995-05-05\",\"role\":\"" + role
                                 + "\",\"nickname\":\"" + nickname + "\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.token").exists())

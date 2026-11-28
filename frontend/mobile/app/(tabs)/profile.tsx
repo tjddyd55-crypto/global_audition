@@ -9,7 +9,6 @@ import { ApiError } from '../../src/api/http'
 import { queryKeys } from '../../src/api/queryKeys'
 import { useAuth } from '../../src/auth/AuthProvider'
 import { Button } from '../../src/ui/Button'
-import { EmptyState } from '../../src/ui/EmptyState'
 import { Screen } from '../../src/ui/Screen'
 import { TextField } from '../../src/ui/TextField'
 import { persistLocale } from '../../src/i18n/LocaleProvider'
@@ -50,9 +49,11 @@ export default function ProfileScreen() {
   if (ready && !isAuthenticated) {
     return (
       <Screen topInset={false}>
-        <EmptyState title={t('auth.recoverLoginRequired')} actionLabel={t('common.login')} onAction={() => router.push('/(auth)/login')} />
-        <View style={{ height: 12 }} />
-        <Button label={t('common.register')} variant="secondary" onPress={() => router.push('/(auth)/register')} />
+        <View style={styles.guestActions}>
+          <Text style={styles.heading}>{t('profile.title')}</Text>
+          <Button label={t('common.login')} onPress={() => router.push('/(auth)/login')} />
+          <Button label={t('common.register')} variant="secondary" onPress={() => router.push('/(auth)/register')} />
+        </View>
       </Screen>
     )
   }
@@ -202,6 +203,7 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
+  guestActions: { gap: 8 },
   heading: { fontSize: 22, fontWeight: '800', color: colors.text },
   meta: { color: colors.muted, marginTop: 4 },
   picked: { color: colors.purple, fontWeight: '700', marginTop: 4 },

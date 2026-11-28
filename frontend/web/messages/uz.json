@@ -173,6 +173,9 @@
     "checking": "Tekshirilmoqda..."
   },
   "register": {
+    "pickGender": "Jinsni tanlang",
+    "submit": "Roʻyxatdan oʻtish",
+    "pickBirthDate": "Tugʻilgan sanani tanlang",
     "title": "Roʻyxatdan oʻtish",
     "country": "Mamlakat",
     "city": "Shahar",
@@ -1963,6 +1966,7 @@
     "unread": "Oʻqilmagan"
   },
   "consent": {
+    "genderRequired": "Jinsingizni tanlang.",
     "title": "Shartlar va rozilik",
     "agreeAll": "Hammasiga roziman (ixtiyoriy bilan)",
     "terms": "[Majburiy] Xizmat shartlariga roziman",

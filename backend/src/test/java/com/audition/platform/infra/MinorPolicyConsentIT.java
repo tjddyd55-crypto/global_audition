@@ -188,7 +188,7 @@ class MinorPolicyConsentIT {
         String n = nick();
         var r = mvc.perform(post("/api/auth/signup").contentType(APPLICATION_JSON).content(
                 "{\"email\":\"" + n + DOMAIN + "\",\"password\":\"Localtest1!\",\"role\":\"APPLICANT\",\"nickname\":\"" + n
-                        + "\",\"countryCode\":\"KR\",\"birthDate\":\"2000-01-01\",\"agreeTerms\":true,"
+                        + "\",\"countryCode\":\"KR\",\"gender\":\"MALE\",\"birthDate\":\"2000-01-01\",\"agreeTerms\":true,"
                         + "\"agreePrivacyCollection\":true,\"agreePrivacyDisclosure\":false,\"agreeMarketing\":false}"))
                 .andReturn().getResponse();
         assertEquals(200, r.getStatus(), "선택 동의 거부로 가입을 막지 않는다");
@@ -229,6 +229,7 @@ class MinorPolicyConsentIT {
     private static String body(String nick, String birth, String country, boolean consents) {
         return "{\"email\":\"" + nick + DOMAIN + "\",\"password\":\"Localtest1!\",\"role\":\"APPLICANT\","
                 + "\"nickname\":\"" + nick + "\",\"countryCode\":\"" + country + "\",\"timezone\":\"Asia/Seoul\","
+                + "\"gender\":\"FEMALE\","
                 + (birth == null ? "" : "\"birthDate\":\"" + birth + "\",")
                 + "\"agreeTerms\":" + consents + ",\"agreePrivacyCollection\":" + consents
                 + ",\"agreePrivacyDisclosure\":" + consents + "}";

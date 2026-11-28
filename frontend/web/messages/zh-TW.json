@@ -173,6 +173,9 @@
     "checking": "檢查中..."
   },
   "register": {
+    "pickGender": "選擇性別",
+    "submit": "註冊",
+    "pickBirthDate": "選擇出生日期",
     "title": "註冊",
     "country": "國家",
     "city": "城市",
@@ -1963,6 +1966,7 @@
     "unread": "未讀"
   },
   "consent": {
+    "genderRequired": "請選擇性別。",
     "title": "條款和同意",
     "agreeAll": "同意所有國家(包括任擇)",
     "terms": "[需要]我同意《服務條件》",

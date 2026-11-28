@@ -18,6 +18,13 @@ export const PRIVACY_TOGGLES = [
 export type PrivacyToggle = (typeof PRIVACY_TOGGLES)[number]
 
 export const GENDER_CODES = ['FEMALE', 'MALE', 'NON_BINARY', 'UNDISCLOSED'] as const
+
+export const APPLICANT_SIGNUP_GENDERS = ['MALE', 'FEMALE'] as const
+
+export function applicantSignupGenderValid(value?: string): boolean {
+  return APPLICANT_SIGNUP_GENDERS.some((gender) => value === gender)
+}
+
 export const GUARDIAN_RELATIONSHIPS = ['PARENT', 'LEGAL_GUARDIAN', 'OTHER'] as const
 export const CONSENT_TYPES = [
   'TERMS_OF_SERVICE',
