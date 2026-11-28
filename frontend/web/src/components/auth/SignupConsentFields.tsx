@@ -62,7 +62,7 @@ export function SignupConsentFields({
       {askPersonal ? (
         <>
           <label style={{ display: 'grid', gap: 6, fontSize: 14, fontWeight: 500 }}>
-            {t('birthDate')} *
+            {tr('birthday')} *
             <input
               id="birthDate"
               type="date"
@@ -75,7 +75,7 @@ export function SignupConsentFields({
             <span style={{ fontSize: 12, color: '#666', fontWeight: 400 }}>{t('birthDateHint')}</span>
           </label>
           <label style={{ display: 'grid', gap: 6, fontSize: 14, fontWeight: 500 }}>
-            {t('gender')} *
+            {tr('gender')} *
             <select id="gender" aria-required="true" value={value.gender} onChange={(e) => onChange({ ...value, gender: e.target.value })} style={inputStyle}>
               <option value="" disabled>{tr('pickGender')}</option>
               {APPLICANT_SIGNUP_GENDERS.map((g) => (
