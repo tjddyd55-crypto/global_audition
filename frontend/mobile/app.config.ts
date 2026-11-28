@@ -50,7 +50,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     name: 'Global Audition',
     slug: 'global-audition',
     scheme: 'globalaudition',
-    version: developmentLinks ? '1.1.0' : '1.0.0',
+    version: developmentLinks ? '1.1.1' : '1.0.0',
     orientation: 'portrait',
     icon: './assets/icon.png',
     userInterfaceStyle: 'light',
@@ -139,6 +139,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       'expo-router',
       'expo-secure-store',
       'expo-localization',
+      ...(developmentLinks ? ['./plugins/withAndroidPendingIntent'] : []),
       ...(developmentLinks ? [['expo-notifications', { defaultChannel: 'activity' }] as [string, Record<string, string>]] : []),
       [
         'expo-image-picker',
