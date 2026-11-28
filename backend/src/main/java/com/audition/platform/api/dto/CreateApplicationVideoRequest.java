@@ -1,7 +1,6 @@
 package com.audition.platform.api.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public class CreateApplicationVideoRequest {
@@ -10,10 +9,7 @@ public class CreateApplicationVideoRequest {
     private String title;
 
     @NotBlank
-    @Pattern(
-            regexp = "^(https?://).+",
-            message = "videoUrl must be a valid URL"
-    )
+    @jakarta.validation.constraints.Size(max = 4000)
     private String videoUrl;
 
     public String getTitle() {

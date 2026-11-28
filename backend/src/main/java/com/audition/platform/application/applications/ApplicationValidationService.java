@@ -2,7 +2,7 @@ package com.audition.platform.application.applications;
 
 import com.audition.platform.api.dto.CreateApplicationRequest;
 import com.audition.platform.domain.util.ApplicationBirthdates;
-import com.audition.platform.domain.util.SocialVideoUrls;
+import com.audition.platform.application.media.VideoLinks;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -70,12 +70,7 @@ public class ApplicationValidationService {
     }
 
     public String validateAuditionVideoUrl(String rawVideoUrl) {
-        String videoUrl = rawVideoUrl != null ? rawVideoUrl.trim() : "";
-        if (!SocialVideoUrls.isValidAuditionVideoUrl(videoUrl)) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
-                    "영상 링크는 YouTube, TikTok, Instagram 영상 주소만 입력할 수 있습니다.");
-        }
-        return videoUrl;
+        return VideoLinks.audition(rawVideoUrl);
     }
 
     public List<NormalizedSnsLink> normalizeSnsPayload(List<CreateApplicationRequest.SnsLinkItem> raw) {

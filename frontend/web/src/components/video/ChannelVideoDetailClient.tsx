@@ -1,5 +1,7 @@
-﻿'use client'
+'use client'
 
+import { BilibiliOriginalLink } from './BilibiliOriginalLink'
+import { EmbeddedVideoFrame } from '@/components/video/EmbeddedVideoFrame'
 import Image from 'next/image'
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { Link } from '@/i18n.config'
@@ -320,7 +322,7 @@ export function ChannelVideoDetailClient({ videoId, initialDetail }: Props) {
         <div className="min-w-0 flex-1">
           <div className="w-full bg-black aspect-video">
             {embedSrc ? (
-              <iframe
+              <EmbeddedVideoFrame
             referrerPolicy="strict-origin-when-cross-origin"
                 title={titleText}
                 src={embedSrc}
@@ -335,6 +337,7 @@ export function ChannelVideoDetailClient({ videoId, initialDetail }: Props) {
             )}
           </div>
 
+          <BilibiliOriginalLink url={detail.videoUrl} className="mx-4 inline-block py-2 text-sm underline" />
           {detail.category ? (
             <div className="px-4 pt-2">
               <span className="text-xs font-semibold" style={{ color: ACCENT }}>

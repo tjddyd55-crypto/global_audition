@@ -1046,6 +1046,9 @@
     "navCasting": "鋳造オファー"
   },
   "errors": {
+    "BILIBILI_SHORT_LINK_UNAVAILABLE": "短縮リンクを確認できませんでした。Bilibiliの元の動画URLを入力してください。",
+    "EMBEDDABLE_VIDEO_URL_REQUIRED": "YouTubeまたはBilibiliの動画リンクを入力してください。",
+    "VIDEO_URL_UNSUPPORTED": "YouTube、Bilibili、TikTok、Instagramの動画リンクを入力してください。",
     "INSUFFICIENT_CREDITS": "十分なクレジットがない場合",
     "GENERIC": "リクエストが完了できません。",
     "NETWORK": "ネットワークエラーが発生しました",
@@ -1534,6 +1537,15 @@
     "monthsAgo": "{n} 昨日"
   },
   "video": {
+    "linkLabel": "動画リンク",
+    "bilibiliDetected": "Bilibiliリンクを検出しました",
+    "bilibiliPublic": "公開され、外部サイトで再生できる動画を使用してください。",
+    "tryPreview": "動画をプレビュー",
+    "openBilibili": "Bilibiliで開く",
+    "retry": "再試行",
+    "shortUnavailable": "短縮リンクを確認できませんでした。Bilibiliの元の動画URLを入力してください。",
+    "embeddableLinkRequired": "YouTubeまたはBilibiliの動画リンクを入力してください。",
+    "supportedLink": "YouTube、Bilibili、TikTok、Instagramの動画リンクを入力してください。",
     "viewsCount": "{n} 新着情報",
     "notFound": "動画が見つかりません。",
     "loading": "ローディング...",

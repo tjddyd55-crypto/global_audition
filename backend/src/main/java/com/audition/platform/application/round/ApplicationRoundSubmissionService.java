@@ -9,7 +9,7 @@ import com.audition.platform.domain.audition.Audition;
 import com.audition.platform.domain.audition.AuditionRepository;
 import com.audition.platform.domain.audition.AuditionRound;
 import com.audition.platform.domain.audition.AuditionRoundRepository;
-import com.audition.platform.domain.util.YoutubeUrls;
+import com.audition.platform.application.media.VideoLinks;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -150,7 +150,7 @@ public class ApplicationRoundSubmissionService {
 
     private static void applyRequestToSubmission(ApplicationRoundSubmission sub, MeRoundSubmitRequest req) {
         if (req.getVideoUrl() != null) {
-            sub.setVideoUrl(blankToNull(req.getVideoUrl().trim()));
+            sub.setVideoUrl(req.getVideoUrl().isBlank() ? null : VideoLinks.embeddable(req.getVideoUrl()));
         }
         if (req.getFileUrl() != null) {
             sub.setFileUrl(blankToNull(req.getFileUrl().trim()));
@@ -173,9 +173,6 @@ public class ApplicationRoundSubmissionService {
             if (v.isEmpty()) {
                 throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "영상 링크(videoUrl)가 필요합니다.");
             }
-            if (!YoutubeUrls.isBlankOrValidYoutube(v)) {
-                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "영상 링크는 YouTube URL만 입력할 수 있습니다.");
-            }
             return;
         }
         if ("FILE".equals(type)) {
@@ -194,9 +191,6 @@ public class ApplicationRoundSubmissionService {
             if (v.isEmpty() && f.isEmpty() && t.isEmpty()) {
                 throw new ResponseStatusException(
                         HttpStatus.UNPROCESSABLE_ENTITY, "제출물 중 최소 한 항목(videoUrl, fileUrl, textAnswer)이 필요합니다.");
-            }
-            if (!v.isEmpty() && !YoutubeUrls.isBlankOrValidYoutube(v)) {
-                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "영상 링크는 YouTube URL만 입력할 수 있습니다.");
             }
             return;
         }

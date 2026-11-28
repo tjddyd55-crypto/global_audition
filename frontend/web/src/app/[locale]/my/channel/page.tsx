@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter as useNextRouter } from 'next/navigation'
@@ -21,6 +21,8 @@ import {
 import { ChannelSettingsPanel } from '@/components/channel/ChannelSettingsPanel'
 import { invalidateAfterChannelVideoMutation } from '@/shared/query/channelVideoQuery'
 import { Link } from '@/i18n.config'
+import { BilibiliPreview } from '@/components/video/BilibiliPreview'
+import { isEmbeddableVideoLink } from '@/shared/audition/videoLinks'
 import { ChannelMyVideoList } from '@/components/channel/ChannelMyVideoList'
 
 const BTN_PRIMARY =
@@ -32,7 +34,7 @@ function createVideoSchema(titleRequired: string, youtubeInvalid: string) {
   return z.object({
     title: z.string().min(1, titleRequired),
     description: z.string().optional(),
-    videoUrl: z.string().url(youtubeInvalid),
+    videoUrl: z.string().refine(isEmbeddableVideoLink, youtubeInvalid),
     category: z.string().optional(),
     status: z.enum(['PUBLISHED', 'DRAFT', 'PRIVATE']),
   })
@@ -44,6 +46,7 @@ export default function MyChannelStudioPage() {
   const router = useRouter()
   const nextRouter = useNextRouter()
   const t = useTranslations('common')
+  const tVideo = useTranslations('video')
   const tCh = useTranslations('myChannel')
   const tStudio = useTranslations('studio')
   const tEditor = useTranslations('editor')
@@ -55,11 +58,12 @@ export default function MyChannelStudioPage() {
 
   const {
     register,
+    watch,
     handleSubmit,
     reset,
     formState: { errors },
   } = useForm<VideoFormData>({
-    resolver: zodResolver(createVideoSchema(tCh('titleRequiredMsg'), tCh('youtubeInvalid'))),
+    resolver: zodResolver(createVideoSchema(tCh('titleRequiredMsg'), tVideo('embeddableLinkRequired'))),
     defaultValues: {
       status: 'PRIVATE',
     },
@@ -213,15 +217,16 @@ export default function MyChannelStudioPage() {
                 <textarea {...register('description')} rows={4} className={INPUT_BASE} placeholder={tCh('descriptionPlaceholder')} />
               </div>
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-900">{tCh('youtubeRequired')}</label>
+                <label className="mb-2 block text-sm font-medium text-gray-900">{tVideo('linkLabel')}</label>
                 <input
-                  type="url"
+                  type="text"
                   {...register('videoUrl')}
                   className={INPUT_BASE}
                   placeholder="https://www.youtube.com/watch?v=..."
                 />
                 {errors.videoUrl && <p className="mt-1 text-sm text-red-600">{errors.videoUrl.message}</p>}
-                <p className={`${TEXT_SUB} mt-1`}>{tCh('youtubeHint')}</p>
+                <p className={`${TEXT_SUB} mt-1`}>{tVideo('embeddableLinkRequired')}</p>
+                <BilibiliPreview value={watch('videoUrl') ?? ''} />
               </div>
               <div>
                 <label className="mb-2 block text-sm font-medium text-gray-900">{tCh('category')}</label>

@@ -7,7 +7,8 @@ import { applicationApi, roundApi } from '../../src/api/endpoints'
 import { queryKeys } from '../../src/api/queryKeys'
 import { ApiError } from '../../src/api/http'
 import { applicationResultCopy, applicationStatusLabel, nationalityLabel, roundSubmissionLabel, snsPlatformLabel } from '../../src/domain/statusLabels'
-import { videoUrlHint, isValidAuditionVideoUrl } from '../../src/domain/videoUrl'
+import { BilibiliPreview } from '../../src/features/media/BilibiliPreview'
+import { isEmbeddableVideoLink } from '../../../web/src/shared/audition/videoLinks'
 import { Button } from '../../src/ui/Button'
 import { ErrorState } from '../../src/ui/EmptyState'
 import { Screen } from '../../src/ui/Screen'
@@ -99,14 +100,15 @@ export default function ApplicationDetailScreen() {
                 <>
                   <Text style={styles.copy}>{t('application.nextRoundOpen')}</Text>
                   <TextField label={t('apply.videoUrl')} value={videoUrl} onChangeText={setVideoUrl} keyboardType="url" />
+                  <BilibiliPreview value={videoUrl} />
                   <TextField label={t('application.fileUrl')} value={fileUrl} onChangeText={setFileUrl} keyboardType="url" />
                   <TextField label={t('application.textAnswer')} value={textAnswer} onChangeText={setTextAnswer} multiline />
                   <Button
                     label={t('application.submitRound')}
                     loading={submitRound.isPending}
                     onPress={() => {
-                      if (videoUrl.trim() && !isValidAuditionVideoUrl(videoUrl) && !fileUrl.trim() && !textAnswer.trim()) {
-                        setMessage(videoUrlHint())
+                      if (videoUrl.trim() && !isEmbeddableVideoLink(videoUrl)) {
+                        setMessage(t('video.embeddableLinkRequired'))
                         return
                       }
                       submitRound.mutate()

@@ -1,11 +1,13 @@
 'use client'
 
+import { EmbeddedVideoFrame } from '@/components/video/EmbeddedVideoFrame'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import type { MyChannelVideoRow } from '@/shared/api/videos'
 import { bumpChannelVideoView } from '@/shared/api/channelVideoPublic'
 import { resolveVideoThumbnailUrl } from '@/shared/audition/videoThumbnail'
 import { formatCount } from '@/shared/money/currency'
+import { BilibiliOriginalLink } from '@/components/video/BilibiliOriginalLink'
 import { getVideoEmbedSrc, isYoutubeShortsLikeUrl } from '@/shared/utils/videoEmbed'
 
 type Props = {
@@ -81,7 +83,7 @@ export function ChannelVideoTheater({ videos, featuredId, loading, error }: Prop
               <p>{t(blocked)}</p>
             </div>
           ) : playing && embed ? (
-            <iframe
+            <EmbeddedVideoFrame
               key={selected.videoId}
               title={selected.title}
               src={embed}
@@ -108,6 +110,7 @@ export function ChannelVideoTheater({ videos, featuredId, loading, error }: Prop
             </button>
           )}
         </div>
+        <BilibiliOriginalLink url={selected.videoUrl} className="mx-3 inline-block pt-2 text-sm underline" />
         <div className="flex min-w-0 flex-wrap items-start justify-between gap-2 px-3 py-3">
           <div className="min-w-0 flex-1">
             <h2 className="break-words text-base font-bold text-neutral-900">{selected.title}</h2>

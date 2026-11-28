@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -16,6 +16,7 @@ import {
   TEXT_SUB,
   TITLE_PAGE,
 } from '@/shared/ui/specClasses'
+import { BilibiliPreview } from '@/components/video/BilibiliPreview'
 import { VideoEmbedOverlay } from '@/components/video/VideoEmbedOverlay'
 import Image from 'next/image'
 import { resolveVideoThumbnailUrl } from '@/shared/audition/videoThumbnail'
@@ -23,6 +24,7 @@ import { isYoutubeShortsLikeUrl } from '@/shared/utils/videoEmbed'
 
 export default function MyApplicationEditPage() {
   const t = useTranslations('common')
+  const tVideo = useTranslations('video')
   const tMy = useTranslations('myApplications')
   const params = useParams()
   const id = params.id as string
@@ -90,7 +92,7 @@ export default function MyApplicationEditPage() {
             <p className="text-sm text-amber-800">{tMy('lockedVideos')}</p>
           ) : (
             <>
-              <p className={`${TEXT_SUB} mb-2`}>{tMy('addYoutube')}</p>
+              <p className={`${TEXT_SUB} mb-2`}>{tVideo('supportedLink')}</p>
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-3">
                 <input
                   value={videoUrl}
@@ -107,6 +109,7 @@ export default function MyApplicationEditPage() {
                   {createVideoMutation.isPending ? tMy('adding') : tMy('addPlus')}
                 </button>
               </div>
+              <BilibiliPreview value={videoUrl} />
               {errorMessage && <p className="mt-2 text-sm text-red-600">{errorMessage}</p>}
             </>
           )}

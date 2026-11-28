@@ -7,6 +7,8 @@ import { Link } from '@/i18n.config'
 import { channelApi } from '@/shared/api/channel'
 import { videoApi, type VideoContent } from '@/shared/api/videos'
 import { extractYoutubeVideoId, getYoutubeId } from '@/shared/audition/youtubeEmbed'
+import { bilibiliLink } from '@/shared/audition/bilibili'
+import { BilibiliPreview } from '@/components/video/BilibiliPreview'
 import { RECRUIT_FIELD_CODES } from '@/shared/audition/recruitFields'
 import { apiErrorCode } from '@/shared/channel/apiErrorCode'
 import { formatCount } from '@/shared/money/currency'
@@ -31,6 +33,7 @@ const EMPTY: Draft = { title: '', videoUrl: '', description: '', category: '', s
 /** 내 채널 영상: YouTube 링크 등록만 지원(파일 업로드·자체 저장 없음). */
 export default function StudioContentPage() {
   const t = useTranslations('studio')
+  const tVideo = useTranslations('video')
   const tCommon = useTranslations('common')
   const tField = useTranslations('recruitField')
   const locale = useLocale()
@@ -47,8 +50,10 @@ export default function StudioContentPage() {
     await queryClient.invalidateQueries({ queryKey: ['studio', 'channel'] })
   }
   const fail = (e: unknown) => {
-    const key = ERROR_KEY[apiErrorCode(e)]
-    setMessage(key ? t(key) : t('saveFailed'))
+    const code = apiErrorCode(e)
+    const key = ERROR_KEY[code]
+    setMessage(code === 'BILIBILI_SHORT_LINK_UNAVAILABLE' ? tVideo('shortUnavailable')
+      : code === 'EMBEDDABLE_VIDEO_URL_REQUIRED' ? tVideo('embeddableLinkRequired') : key ? t(key) : t('saveFailed'))
   }
 
   const create = useMutation({
@@ -123,7 +128,7 @@ export default function StudioContentPage() {
   return (
     <div className="flex flex-col gap-4">
       <h2 className={TITLE_PAGE}>{t('content')}</h2>
-      <p className={TEXT_SUB}>{t('youtubeHint')}</p>
+      <p className={TEXT_SUB}>{tVideo('embeddableLinkRequired')}</p>
       <p className={TEXT_SUB}>{t('unlistedNote')}</p>
       <form
         className="flex max-w-2xl flex-col gap-3"
@@ -131,18 +136,18 @@ export default function StudioContentPage() {
         onSubmit={(event) => {
           event.preventDefault()
           setMessage(null)
-          if (!previewId) {
-            setMessage(t('errYoutube'))
+          if (!previewId && !bilibiliLink(draft.videoUrl)) {
+            setMessage(tVideo('embeddableLinkRequired'))
             return
           }
           create.mutate()
         }}
       >
         <label className="text-sm font-medium">
-          {t('youtubeUrl')}
+          {tVideo('linkLabel')}
           <input
             className={INPUT_BASE}
-            type="url"
+            type="text"
             inputMode="url"
             placeholder="https://www.youtube.com/watch?v=…"
             value={draft.videoUrl}
@@ -156,7 +161,8 @@ export default function StudioContentPage() {
             // eslint-disable-next-line @next/next/no-img-element
             <img src={`https://i.ytimg.com/vi/${previewId}/hqdefault.jpg`} alt="" className="aspect-video w-full max-w-xs rounded-lg object-cover" />
           ) : (
-            <p className="text-sm text-red-600">{t('errYoutube')}</p>
+            bilibiliLink(draft.videoUrl) ? <BilibiliPreview value={draft.videoUrl} />
+              : <p className="text-sm text-red-600">{tVideo('embeddableLinkRequired')}</p>
           )
         ) : null}
         <label className="text-sm font-medium">
@@ -237,14 +243,14 @@ export default function StudioContentPage() {
                 className="flex flex-col gap-2"
                 onSubmit={(event) => {
                   event.preventDefault()
-                  if (!youtubeIdOf(edit.videoUrl)) {
-                    setMessage(t('errYoutube'))
+                  if (!youtubeIdOf(edit.videoUrl) && !bilibiliLink(edit.videoUrl)) {
+                    setMessage(tVideo('embeddableLinkRequired'))
                     return
                   }
                   update.mutate()
                 }}
               >
-                <input className={INPUT_BASE} value={edit.videoUrl} onChange={(e) => setEdit({ ...edit, videoUrl: e.target.value })} required aria-label={t('youtubeUrl')} />
+                <input className={INPUT_BASE} value={edit.videoUrl} onChange={(e) => setEdit({ ...edit, videoUrl: e.target.value })} required aria-label={tVideo('linkLabel')} />
                 <input className={INPUT_BASE} value={edit.title} onChange={(e) => setEdit({ ...edit, title: e.target.value })} required aria-label={t('title')} />
                 <textarea className={INPUT_BASE} rows={2} value={edit.description} onChange={(e) => setEdit({ ...edit, description: e.target.value })} aria-label={t('videoDescription')} />
                 <select className={INPUT_BASE} value={edit.category} onChange={(e) => setEdit({ ...edit, category: e.target.value })} aria-label={t('videoCategory')}>
@@ -295,7 +301,7 @@ export default function StudioContentPage() {
                 >
                   {t('editVideo')}
                 </button>
-                {video.embedStatus !== 'OK' ? (
+                {video.embedStatus !== 'OK' && !bilibiliLink(video.videoUrl) ? (
                   <button type="button" className="h-8 rounded-full border px-3" disabled={recheck.isPending} onClick={() => recheck.mutate(video.id)}>
                     {t('recheck')}
                   </button>

@@ -171,7 +171,7 @@ public class MeApplicationService {
         assertCanEditVideos(app);
         ApplicationVideo video = new ApplicationVideo();
         video.setApplicationId(applicationId);
-        video.setVideoUrl(req.getVideoUrl().trim());
+        video.setVideoUrl(com.audition.platform.application.media.VideoLinks.audition(req.getVideoUrl()));
         String title = req.getTitle();
         video.setTitle(title != null && !title.isBlank() ? title.trim() : "Audition Video");
         video = applicationVideoRepository.save(video);

@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl'
 import type { UseFormReturn } from 'react-hook-form'
 import type { AuditionApplyFormValues } from '../AuditionApplyForm'
+import { BilibiliPreview } from '@/components/video/BilibiliPreview'
 
 type ApplyVideoSectionProps = {
   form: UseFormReturn<AuditionApplyFormValues>
@@ -11,13 +12,14 @@ type ApplyVideoSectionProps = {
 
 export default function ApplyVideoSection({ form, blocked }: ApplyVideoSectionProps) {
   const t = useTranslations('apply')
+  const tVideo = useTranslations('video')
   return (
     <section className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
       <h2 className="mb-4 text-lg font-bold text-neutral-900">{t('sectionVideo')}</h2>
       <label className="flex flex-col gap-1">
         <span className="text-sm font-medium text-neutral-700">{t('videoRequired')}</span>
         <input
-          type="url"
+          type="text"
           inputMode="url"
           {...form.register('videoUrl')}
           disabled={blocked}
@@ -28,6 +30,8 @@ export default function ApplyVideoSection({ form, blocked }: ApplyVideoSectionPr
           <span className="text-xs text-red-600">{form.formState.errors.videoUrl.message}</span>
         ) : null}
       </label>
+      <p className="my-2 text-xs text-neutral-600">{tVideo('supportedLink')}</p>
+      <BilibiliPreview value={form.watch('videoUrl') ?? ''} />
     </section>
   )
 }

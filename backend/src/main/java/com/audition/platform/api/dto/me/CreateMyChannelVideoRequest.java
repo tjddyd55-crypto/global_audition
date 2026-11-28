@@ -14,7 +14,7 @@ public class CreateMyChannelVideoRequest {
     private String description;
 
     @NotBlank
-    @Pattern(regexp = "^(https?://).+", message = "videoUrl must be a valid URL")
+    @jakarta.validation.constraints.Size(max = 2048)
     private String videoUrl;
 
     @Size(max = 100)

@@ -1,6 +1,7 @@
 package com.audition.platform.domain.util;
 
 import java.net.URI;
+import java.util.Locale;
 
 /**
  * 오디션 지원 영상 URL — YouTube, TikTok, Instagram(릴/게시물) 등 허용.
@@ -25,10 +26,10 @@ public final class SocialVideoUrls {
         try {
             URI u = URI.create(s);
             String host = u.getHost();
-            if (host == null) {
+            if (host == null || u.getRawUserInfo() != null || u.getPort() != -1) {
                 return false;
             }
-            host = host.toLowerCase();
+            host = host.toLowerCase(Locale.ROOT);
             if (host.startsWith("www.")) {
                 host = host.substring(4);
             }

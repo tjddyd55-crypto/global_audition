@@ -1046,6 +1046,9 @@
     "navCasting": "铸造出价"
   },
   "errors": {
+    "BILIBILI_SHORT_LINK_UNAVAILABLE": "无法解析短链接，请输入 Bilibili 原视频链接。",
+    "EMBEDDABLE_VIDEO_URL_REQUIRED": "请输入 YouTube 或 Bilibili 视频链接。",
+    "VIDEO_URL_UNSUPPORTED": "请输入 YouTube、Bilibili、TikTok 或 Instagram 视频链接。",
     "INSUFFICIENT_CREDITS": "付费点数不足。",
     "GENERIC": "操作失败，请重试。",
     "NETWORK": "网络连接异常。",
@@ -1534,6 +1537,15 @@
     "monthsAgo": "{n} 刚才"
   },
   "video": {
+    "linkLabel": "视频链接",
+    "bilibiliDetected": "已识别 Bilibili 链接",
+    "bilibiliPublic": "请使用公开且允许在外部网站播放的视频。",
+    "tryPreview": "预览视频",
+    "openBilibili": "在 Bilibili 打开",
+    "retry": "重试",
+    "shortUnavailable": "无法解析短链接，请输入 Bilibili 原视频链接。",
+    "embeddableLinkRequired": "请输入 YouTube 或 Bilibili 视频链接。",
+    "supportedLink": "请输入 YouTube、Bilibili、TikTok 或 Instagram 视频链接。",
     "viewsCount": "{n} 视图",
     "notFound": "视频未找到 。",
     "loading": "正在装入...",

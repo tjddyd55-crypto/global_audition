@@ -1,7 +1,9 @@
 import { extractYoutubeVideoId } from '../../domain/videoUrl'
+import { bilibiliEmbed, bilibiliLink } from '../../../../web/src/shared/audition/bilibili'
 
 export type VideoPlaybackPlan =
   | { kind: 'youtube'; videoId: string; embedUrl: string }
+  | { kind: 'bilibili'; embedUrl: string; originalUrl: string }
   | { kind: 'unsupported' }
 
 /** 'https://host/path' → 'https://host'. 잘못된 값이면 null. */
@@ -18,6 +20,10 @@ export function planVideoPlayback(
   raw: string | null | undefined,
   options?: { autoplay?: boolean; origin?: string | null },
 ): VideoPlaybackPlan {
+  const bilibili = bilibiliLink(raw ?? '')
+  if (bilibili?.kind === 'video') {
+    return { kind: 'bilibili', embedUrl: bilibiliEmbed(bilibili, options?.autoplay), originalUrl: bilibili.url }
+  }
   const id = extractYoutubeVideoId(raw ?? '')
   if (!id) return { kind: 'unsupported' }
   const params = new URLSearchParams({

@@ -1,3 +1,4 @@
+import { bilibiliLink } from '../../../../web/src/shared/audition/bilibili'
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { youtubeThumbnailUrl } from '../../domain/videoUrl'
@@ -38,7 +39,9 @@ export function VoteInlineVideo({ videoUrl, thumbnailUrl, playing, onPlay, compa
       accessibilityLabel={t('vote.playVideo')}
       testID="vote-inline-play"
     >
-      {thumb ? <Image source={{ uri: thumb }} style={StyleSheet.absoluteFillObject} resizeMode="cover" /> : <View style={styles.blank} />}
+      {thumb ? <Image source={{ uri: thumb }} style={StyleSheet.absoluteFillObject} resizeMode="cover" /> : (
+        <View style={styles.blank}>{bilibiliLink(url)?.kind === 'video' ? <Text style={{ color: '#fff', padding: 8 }}>Bilibili</Text> : null}</View>
+      )}
       {url ? (
         <View style={styles.play} pointerEvents="none">
           <Text style={styles.playIcon}>▶</Text>

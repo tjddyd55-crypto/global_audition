@@ -1,7 +1,10 @@
 'use client'
 
+import { EmbeddedVideoFrame } from '@/components/video/EmbeddedVideoFrame'
 import { resolveVideoThumbnailUrl } from '@/shared/audition/videoThumbnail'
 import { getVideoEmbedSrc, isYoutubeShortsLikeUrl } from '@/shared/utils/videoEmbed'
+import { bilibiliLink } from '@/shared/audition/bilibili'
+import { BilibiliOriginalLink } from '@/components/video/BilibiliOriginalLink'
 
 type Props = {
   videoUrl?: string | null
@@ -21,6 +24,7 @@ export function VoteInlineVideo({ videoUrl, thumbnailUrl, title, playing, onPlay
   const embed = getVideoEmbedSrc(videoUrl ?? '', playing ? { autoplay: true } : undefined)
   const shorts = isYoutubeShortsLikeUrl(videoUrl ?? '')
   const thumb = resolveVideoThumbnailUrl(videoUrl ?? '', thumbnailUrl)
+  const bilibili = bilibiliLink(videoUrl ?? '')?.kind === 'video'
   const frame = shorts
     ? compact
       ? 'mx-auto aspect-[9/16] max-h-[22rem] w-full max-w-[16rem]'
@@ -29,8 +33,9 @@ export function VoteInlineVideo({ videoUrl, thumbnailUrl, title, playing, onPlay
 
   if (playing && embed) {
     return (
+      <>
       <div className={`relative bg-black ${frame}`} data-testid="vote-inline-video">
-        <iframe
+        <EmbeddedVideoFrame
           src={embed}
           title={title}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
@@ -38,6 +43,8 @@ export function VoteInlineVideo({ videoUrl, thumbnailUrl, title, playing, onPlay
           className="absolute inset-0 h-full w-full border-0"
         />
       </div>
+      {bilibili ? <BilibiliOriginalLink url={videoUrl} /> : null}
+      </>
     )
   }
 
@@ -48,7 +55,7 @@ export function VoteInlineVideo({ videoUrl, thumbnailUrl, title, playing, onPlay
         // eslint-disable-next-line @next/next/no-img-element
         <img src={thumb} alt="" className="absolute inset-0 h-full w-full object-cover" />
       ) : (
-        <div className="absolute inset-0 bg-gray-800" />
+        <div className="absolute inset-0 bg-gray-800 p-2 text-xs text-white">{bilibili ? 'Bilibili' : null}</div>
       )}
       {canPlay ? (
         <button

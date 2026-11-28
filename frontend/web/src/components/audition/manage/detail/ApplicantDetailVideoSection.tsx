@@ -1,5 +1,7 @@
-﻿'use client'
+'use client'
 
+import { EmbeddedVideoFrame } from '@/components/video/EmbeddedVideoFrame'
+import { BilibiliOriginalLink } from '@/components/video/BilibiliOriginalLink'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
 
@@ -23,7 +25,7 @@ export default function ApplicantDetailVideoSection({
       <div className="overflow-hidden rounded-xl bg-black">
         {embedUrl ? (
           <div className="relative aspect-video w-full">
-            <iframe
+            <EmbeddedVideoFrame
             referrerPolicy="strict-origin-when-cross-origin"
               title="application-video"
               src={embedUrl}
@@ -49,6 +51,7 @@ export default function ApplicantDetailVideoSection({
           </div>
         )}
       </div>
+      <BilibiliOriginalLink url={videoUrl} />
     </section>
   )
 }

@@ -1046,6 +1046,9 @@
     "navCasting": "鑄造出價"
   },
   "errors": {
+    "BILIBILI_SHORT_LINK_UNAVAILABLE": "無法解析短連結，請輸入 Bilibili 原始影片連結。",
+    "EMBEDDABLE_VIDEO_URL_REQUIRED": "請輸入 YouTube 或 Bilibili 影片連結。",
+    "VIDEO_URL_UNSUPPORTED": "請輸入 YouTube、Bilibili、TikTok 或 Instagram 影片連結。",
     "INSUFFICIENT_CREDITS": "付費點數不足。",
     "GENERIC": "操作失敗，請重試。",
     "NETWORK": "網路連線異常。",
@@ -1534,6 +1537,15 @@
     "monthsAgo": "{n} 剛才"
   },
   "video": {
+    "linkLabel": "影片連結",
+    "bilibiliDetected": "已辨識 Bilibili 連結",
+    "bilibiliPublic": "請使用公開且允許在外部網站播放的影片。",
+    "tryPreview": "預覽影片",
+    "openBilibili": "在 Bilibili 開啟",
+    "retry": "重試",
+    "shortUnavailable": "無法解析短連結，請輸入 Bilibili 原始影片連結。",
+    "embeddableLinkRequired": "請輸入 YouTube 或 Bilibili 影片連結。",
+    "supportedLink": "請輸入 YouTube、Bilibili、TikTok 或 Instagram 影片連結。",
     "viewsCount": "{n} 檢視",
     "notFound": "影片未找到 。",
     "loading": "正在裝入...",

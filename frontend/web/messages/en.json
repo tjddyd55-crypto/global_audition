@@ -1046,6 +1046,9 @@
     "navCasting": "Casting offers"
   },
   "errors": {
+    "BILIBILI_SHORT_LINK_UNAVAILABLE": "The short link could not be resolved. Enter the original Bilibili video URL.",
+    "EMBEDDABLE_VIDEO_URL_REQUIRED": "Enter a YouTube or Bilibili video link.",
+    "VIDEO_URL_UNSUPPORTED": "Enter a YouTube, Bilibili, TikTok or Instagram video link.",
     "INSUFFICIENT_CREDITS": "Not enough credits",
     "GENERIC": "The request could not be completed",
     "NETWORK": "A network error occurred",
@@ -1534,6 +1537,15 @@
     "monthsAgo": "{n} mo ago"
   },
   "video": {
+    "linkLabel": "Video link",
+    "bilibiliDetected": "Bilibili link detected",
+    "bilibiliPublic": "Use a public video that can play on other sites.",
+    "tryPreview": "Preview video",
+    "openBilibili": "Open on Bilibili",
+    "retry": "Try again",
+    "shortUnavailable": "The short link could not be resolved. Enter the original Bilibili video URL.",
+    "embeddableLinkRequired": "Enter a YouTube or Bilibili video link.",
+    "supportedLink": "Enter a YouTube, Bilibili, TikTok or Instagram video link.",
     "viewsCount": "{n} views",
     "notFound": "Video not found.",
     "loading": "Loading…",

@@ -22,6 +22,17 @@ describe('native video playback', () => {
     expect(planVideoPlayback('').kind).toBe('unsupported')
     expect(planVideoPlayback(null).kind).toBe('unsupported')
   })
+
+  it('uses the Bilibili player and keeps the selected part', () => {
+    const plan = planVideoPlayback('https://m.bilibili.com/video/BV1B7411m7LV?p=2&share=1')
+    expect(plan).toEqual({
+      kind: 'bilibili',
+      embedUrl: 'https://player.bilibili.com/player.html?bvid=BV1B7411m7LV&p=2&autoplay=0&danmaku=0',
+      originalUrl: 'https://www.bilibili.com/video/BV1B7411m7LV?p=2',
+    })
+    expect(planVideoPlayback('https://b23.tv/Example')).toEqual({ kind: 'unsupported' })
+    expect(planVideoPlayback('https://www.bilibili.com.example.com/video/BV1B7411m7LV')).toEqual({ kind: 'unsupported' })
+  })
 })
 
 describe('planVideoPlayback autoplay', () => {

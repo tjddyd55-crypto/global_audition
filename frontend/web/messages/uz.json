@@ -1046,6 +1046,9 @@
     "navCasting": "Kasting takliflari"
   },
   "errors": {
+    "BILIBILI_SHORT_LINK_UNAVAILABLE": "Qisqa havolani tekshirib boʻlmadi. Bilibili videosining asl havolasini kiriting.",
+    "EMBEDDABLE_VIDEO_URL_REQUIRED": "YouTube yoki Bilibili video havolasini kiriting.",
+    "VIDEO_URL_UNSUPPORTED": "YouTube, Bilibili, TikTok yoki Instagram video havolasini kiriting.",
     "INSUFFICIENT_CREDITS": "Kredit yetarli emas",
     "GENERIC": "Soʻrovni bajarib boʻlmadi",
     "NETWORK": "Tarmoq xatoligi yuz berdi",
@@ -1534,6 +1537,15 @@
     "monthsAgo": "{n} oy oldin"
   },
   "video": {
+    "linkLabel": "Video havolasi",
+    "bilibiliDetected": "Bilibili havolasi aniqlandi",
+    "bilibiliPublic": "Ochiq va boshqa saytlarda ijro etishga ruxsat berilgan videodan foydalaning.",
+    "tryPreview": "Videoni oldindan koʻrish",
+    "openBilibili": "Bilibili saytida ochish",
+    "retry": "Qayta urinib koʻrish",
+    "shortUnavailable": "Qisqa havolani tekshirib boʻlmadi. Bilibili videosining asl havolasini kiriting.",
+    "embeddableLinkRequired": "YouTube yoki Bilibili video havolasini kiriting.",
+    "supportedLink": "YouTube, Bilibili, TikTok yoki Instagram video havolasini kiriting.",
     "viewsCount": "{n} marta koʻrilgan",
     "notFound": "Video topilmadi.",
     "loading": "Yuklanmoqda…",

@@ -11,6 +11,7 @@ import com.audition.platform.application.channel.ChannelPortfolioRules;
 import com.audition.platform.application.channel.PublicChannelDiscoveryService;
 import com.audition.platform.application.channel.YoutubeEmbedChecker;
 import com.audition.platform.application.channel.YoutubeVideoRef;
+import com.audition.platform.application.media.VideoLinks;
 import com.audition.platform.domain.channel.Channel;
 import com.audition.platform.domain.channel.ChannelRepository;
 import com.audition.platform.domain.channel.ChannelSubscriptionRepository;
@@ -390,30 +391,20 @@ public class MyChannelService {
     public MyChannelVideoDto createVideo(CreateMyChannelVideoRequest req) {
         UUID ownerId = requireApplicant();
         Channel ch = getOrCreateChannel(ownerId);
-        String ytId = YoutubeVideoRef.idOf(req.getVideoUrl());
-        if (ytId == null) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "YOUTUBE_URL_REQUIRED");
-        }
+        String url = VideoLinks.embeddable(req.getVideoUrl());
+        String ytId = YoutubeVideoRef.idOf(url);
         List<ChannelVideo> existing = channelVideoRepository.findByOwnerIdOrderByCreatedAtDesc(ownerId);
         if (existing.size() >= ChannelPortfolioRules.MAX_CHANNEL_VIDEOS) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "CHANNEL_VIDEO_LIMIT");
         }
-        for (ChannelVideo e : existing) {
-            if (ytId.equals(e.getYoutubeVideoId() != null ? e.getYoutubeVideoId() : YoutubeVideoRef.idOf(e.getVideoUrl()))) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "CHANNEL_VIDEO_DUPLICATE");
-            }
-        }
+        assertUniqueVideo(existing, null, url, ytId);
         ChannelVideo v = new ChannelVideo();
         v.setOwnerId(ownerId);
-        v.setYoutubeVideoId(ytId);
-        YoutubeEmbedChecker.Result check = embedChecker.check(ytId);
-        v.setEmbedStatus(check.status());
-        v.setEmbedCheckedAt(Instant.now());
+        setVideoLink(v, url, ytId);
         v.setChannelId(ch.getId());
         v.setTitle(req.getTitle().trim());
         v.setDescription(req.getDescription() != null ? req.getDescription().trim() : null);
         v.setCategory(req.getCategory() != null ? req.getCategory().trim() : null);
-        v.setVideoUrl(req.getVideoUrl().trim());
         String vis = req.getVisibility();
         if (vis == null || vis.isBlank()) {
             vis = "PRIVATE";
@@ -434,7 +425,7 @@ public class MyChannelService {
             v.setCategory(req.getCategory().trim());
         }
         v = channelVideoRepository.save(v);
-        pointRewards.recordVideo(ownerId, ytId);
+        if (ytId != null) pointRewards.recordVideo(ownerId, ytId);
         touch(ownerId);
         if (ChannelVideoVisibility.PUBLIC.equals(v.getVisibility())) {
             videoEvents.publishedNewPublicVideo(ownerId, v.getId(), v.getTitle());
@@ -469,27 +460,11 @@ public class MyChannelService {
             v.setVisibility(vis);
         }
         if (req.getVideoUrl() != null && !req.getVideoUrl().isBlank()) {
-            String url = req.getVideoUrl().trim();
-            if (!url.startsWith("http://") && !url.startsWith("https://")) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "videoUrl must be a valid URL");
-            }
+            String url = VideoLinks.embeddable(req.getVideoUrl());
             String ytId = YoutubeVideoRef.idOf(url);
-            if (ytId == null) {
-                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "YOUTUBE_URL_REQUIRED");
-            }
-            if (!ytId.equals(v.getYoutubeVideoId())) {
-                for (ChannelVideo e : channelVideoRepository.findByOwnerIdOrderByCreatedAtDesc(ownerId)) {
-                    if (!e.getId().equals(v.getId()) && ytId.equals(e.getYoutubeVideoId() != null
-                            ? e.getYoutubeVideoId() : YoutubeVideoRef.idOf(e.getVideoUrl()))) {
-                        throw new ResponseStatusException(HttpStatus.CONFLICT, "CHANNEL_VIDEO_DUPLICATE");
-                    }
-                }
-                v.setYoutubeVideoId(ytId);
-                YoutubeEmbedChecker.Result check = embedChecker.check(ytId);
-                v.setEmbedStatus(check.status());
-                v.setEmbedCheckedAt(Instant.now());
-            }
-            v.setVideoUrl(url);
+            assertUniqueVideo(channelVideoRepository.findByOwnerIdOrderByCreatedAtDesc(ownerId), v.getId(), url, ytId);
+            if (ytId == null || !ytId.equals(v.getYoutubeVideoId())) setVideoLink(v, url, ytId);
+            else v.setVideoUrl(url);
         }
         boolean becamePublic = !ChannelVideoVisibility.PUBLIC.equals(wasVisibility)
                 && ChannelVideoVisibility.PUBLIC.equals(v.getVisibility());
@@ -500,6 +475,24 @@ public class MyChannelService {
             videoEvents.publishedNewPublicVideo(ownerId, saved.getId(), saved.getTitle());
         }
         return toVideoDto(saved);
+    }
+
+    private static void assertUniqueVideo(List<ChannelVideo> existing, UUID excluded, String url, String ytId) {
+        for (ChannelVideo other : existing) {
+            if (other.getId().equals(excluded)) continue;
+            String otherYoutube = other.getYoutubeVideoId() != null ? other.getYoutubeVideoId()
+                    : YoutubeVideoRef.idOf(other.getVideoUrl());
+            if (ytId != null ? ytId.equals(otherYoutube) : url.equals(other.getVideoUrl())) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "CHANNEL_VIDEO_DUPLICATE");
+            }
+        }
+    }
+
+    private void setVideoLink(ChannelVideo video, String url, String ytId) {
+        video.setVideoUrl(url);
+        video.setYoutubeVideoId(ytId);
+        video.setEmbedStatus(ytId == null ? "UNKNOWN" : embedChecker.check(ytId).status());
+        video.setEmbedCheckedAt(ytId == null ? null : Instant.now());
     }
 
     @Transactional
