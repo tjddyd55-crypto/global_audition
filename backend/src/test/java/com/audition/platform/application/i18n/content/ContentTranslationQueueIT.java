@@ -17,7 +17,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.TestPropertySource;
 
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -132,16 +132,17 @@ class ContentTranslationQueueIT {
         UUID contentId = UUID.randomUUID();
         UUID deferred = store.insertPendingJob(new NewJob(
                 UUID.randomUUID(), FIXTURE, contentId, "km", "hash", null, null, 3, false,
-                Instant.now().plusSeconds(600), ContentTypes.RATE_LIMITED)).orElseThrow();
+                deferredRunAfter(), ContentTypes.RATE_LIMITED)).orElseThrow();
         assertTrue(store.claim("it", 120).isEmpty());
         StoredJob row = store.findActiveJob(FIXTURE, contentId, "km").orElseThrow();
         assertEquals(deferred, row.id());
+        assertEquals(ContentTypes.JOB_PENDING, row.status());
         assertEquals(ContentTypes.RATE_LIMITED, row.errorCode());
         // 같은 키의 두 번째 작업은 들어가지 않는다.
         assertTrue(pending(contentId, "km").isEmpty());
         jdbc.update("UPDATE content_translation_jobs SET run_after = NOW() - INTERVAL '1 second' WHERE id = ?", deferred);
         assertEquals(deferred, store.claim("it", 120).orElseThrow().id());
-        assertEquals(0, store.countAttemptsSince(Instant.now().minusSeconds(60)));
+        assertTrue(store.latestAttempt(FIXTURE, contentId, "km").isEmpty());
     }
 
     @Test
@@ -160,7 +161,7 @@ class ContentTranslationQueueIT {
         store.finishJob(busyFail, ContentTypes.JOB_FAILED, "HTTP_ERROR", "down");
         store.insertPendingJob(new NewJob(
                 UUID.randomUUID(), FIXTURE, busyContent, "km", "hash", null, null, 3, false,
-                Instant.now().plusSeconds(600), ContentTypes.QUOTA_EXCEEDED));
+                deferredRunAfter(), ContentTypes.QUOTA_EXCEEDED));
 
         Map<String, Object> status = adminQuery.queueStatus();
         @SuppressWarnings("unchecked")
@@ -178,6 +179,10 @@ class ContentTranslationQueueIT {
                 "SELECT force FROM content_translation_jobs WHERE id = ?", Boolean.class, newFail));
         assertEquals(ContentTypes.JOB_FAILED, store.findActiveJob(FIXTURE, busyContent, "km")
                 .map(job -> job.id().equals(busyFail) ? "WRONG" : ContentTypes.JOB_FAILED).orElseThrow());
+    }
+
+    private java.time.Instant deferredRunAfter() {
+        return jdbc.queryForObject("SELECT NOW() + INTERVAL '10 minutes'", OffsetDateTime.class).toInstant();
     }
 
     private Optional<UUID> pending(UUID contentId, String locale) {

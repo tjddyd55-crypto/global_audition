@@ -23,6 +23,9 @@ app:
     region: ap-northeast-2
   translation:
     allowed-hosts: api.openai.com,translate.googleapis.com,oauth2.googleapis.com
+    queue:
+      # Test contexts share PostgreSQL. Only explicit test calls should drain jobs.
+      enabled: false
   jwt:
     secret: test-only-jwt-secret-not-for-production-use-32b
     expiration-ms: 86400000
