@@ -3,6 +3,18 @@ export function canShowPublicVoteCount(status?: string | null): boolean {
   return status === 'OPEN' || status === 'CLOSED'
 }
 
+/** Refresh visible scheduled/open votes near the boundary while the server remains authoritative. */
+export function voteRefreshInterval(
+  page?: { voteStatus?: string | null; voteStartAt?: string | null; voteEndAt?: string | null },
+  now = Date.now(),
+): number | false {
+  if (page?.voteStatus !== 'OPEN' && page?.voteStatus !== 'SCHEDULED') return false
+  const boundary = Date.parse((page.voteStatus === 'OPEN' ? page.voteEndAt : page.voteStartAt) ?? '')
+  if (!Number.isFinite(boundary)) return 30_000
+  const remaining = boundary - now
+  return remaining > 0 ? Math.min(30_000, Math.max(1000, remaining + 250)) : 5000
+}
+
 export type VoteRemaining =
   | { kind: 'none' }
   | { kind: 'ended' }

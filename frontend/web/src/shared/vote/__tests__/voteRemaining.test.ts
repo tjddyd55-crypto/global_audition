@@ -1,4 +1,13 @@
-import { canShowPublicVoteCount, voteRemaining } from '../voteRemaining'
+import { canShowPublicVoteCount, voteRefreshInterval, voteRemaining } from '../voteRemaining'
+
+test('refreshes around the scheduled start and current end without polling closed votes', () => {
+  const now = Date.parse('2026-11-24T00:00:00Z')
+  const close = '2026-11-24T00:00:02Z'
+  expect(voteRefreshInterval({ voteStatus: 'SCHEDULED', voteStartAt: close }, now)).toBe(2250)
+  expect(voteRefreshInterval({ voteStatus: 'OPEN', voteEndAt: close }, now)).toBe(2250)
+  expect(voteRefreshInterval({ voteStatus: 'OPEN', voteEndAt: close }, now + 3000)).toBe(5000)
+  expect(voteRefreshInterval({ voteStatus: 'CLOSED', voteEndAt: close }, now + 3000)).toBe(false)
+})
 
 describe('canShowPublicVoteCount', () => {
   it('follows the public ranking policy: visible only after start', () => {

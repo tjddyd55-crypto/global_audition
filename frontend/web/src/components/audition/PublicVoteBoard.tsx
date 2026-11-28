@@ -14,7 +14,7 @@ import { VoteShareSheet } from '@/components/vote/VoteShareSheet'
 import { SharedCandidateLanding } from '@/components/vote/SharedCandidateLanding'
 import { VoteInlineVideo } from '@/components/vote/VoteInlineVideo'
 import { voteSharePath } from '@/shared/vote/voteShare'
-import { canShowPublicVoteCount, remainingMessage, voteRemaining } from '@/shared/vote/voteRemaining'
+import { canShowPublicVoteCount, remainingMessage, voteRefreshInterval, voteRemaining } from '@/shared/vote/voteRemaining'
 import { formatVoteDate } from '@/shared/vote/voteDate'
 import { voteLabelKey } from '@/shared/vote/voteLabels'
 
@@ -50,6 +50,7 @@ export function PublicVoteBoard({ auditionId, auditionTitleFallback, shareRound,
     queryKey: qk,
     queryFn: () => auditionApi.listVotes(auditionId, undefined, { round: shareRound, candidate: shareCandidate, locale }),
     enabled: !!auditionId,
+    refetchInterval: (query) => voteRefreshInterval(query.state.data),
   })
 
   const invalidate = useCallback(() => {

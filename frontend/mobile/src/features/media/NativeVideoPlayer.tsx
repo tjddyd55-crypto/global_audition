@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useIsFocused } from '@react-navigation/native'
-import { Linking, StyleSheet, Text, View } from 'react-native'
+import { ActivityIndicator, Linking, StyleSheet, Text, View, useWindowDimensions } from 'react-native'
 import { WebView } from 'react-native-webview'
 import { useTranslation } from 'react-i18next'
 import { colors, radius } from '../../theme/tokens'
@@ -20,6 +20,9 @@ export function NativeVideoPlayer({ videoUrl, autoplay, portrait }: { videoUrl: 
   const origin = webOrigin(WEB_URL)
   const plan = planVideoPlayback(videoUrl, { autoplay, origin })
   const [failed, setFailed] = useState(false)
+  const [inViewport, setInViewport] = useState(false)
+  const stage = useRef<View>(null)
+  const { height: windowHeight } = useWindowDimensions()
   const embedUrl = plan.kind !== 'unsupported' ? plan.embedUrl : ''
   const title = t('video.playAria')
   // source 객체가 렌더마다 바뀌면 WebView 가 다시 로드하므로 문자열 기준으로 고정한다.
@@ -28,6 +31,20 @@ export function NativeVideoPlayer({ videoUrl, autoplay, portrait }: { videoUrl: 
     [embedUrl, title, origin],
   )
   const bilibili = plan.kind === 'bilibili' ? plan : null
+  const trackVisibility = Boolean(bilibili) && !failed && focused
+  useEffect(() => {
+    if (!trackVisibility) return
+    let active = true
+    const measure = () => stage.current?.measureInWindow((_, top, width, height) => {
+      if (active) setInViewport(width > 0 && height > 0 && top < windowHeight && top + height > 0)
+    })
+    measure()
+    const timer = setInterval(measure, 500)
+    return () => {
+      active = false
+      clearInterval(timer)
+    }
+  }, [trackVisibility, windowHeight, embedUrl])
   if (bilibili && !focused) return null
   const openOriginal = () => {
     if (bilibili) void Linking.openURL(bilibili.originalUrl).catch(() => setFailed(true))
@@ -35,7 +52,8 @@ export function NativeVideoPlayer({ videoUrl, autoplay, portrait }: { videoUrl: 
   if (embedUrl && origin && !failed) {
     return (
       <View style={styles.wrap}>
-        <View style={[styles.stage, portrait && styles.portrait]} accessibilityLabel={t('video.playAria')}>
+        <View ref={stage} collapsable={false} style={[styles.stage, portrait && styles.portrait]} accessibilityLabel={t('video.playAria')}>
+          {!bilibili || inViewport ? (
           <WebView
             source={source}
             style={styles.web}
@@ -44,6 +62,8 @@ export function NativeVideoPlayer({ videoUrl, autoplay, portrait }: { videoUrl: 
             domStorageEnabled
             allowsFullscreenVideo
             allowsInlineMediaPlayback
+            startInLoadingState={Boolean(bilibili)}
+            renderLoading={() => <ActivityIndicator style={StyleSheet.absoluteFill} accessibilityLabel={t('video.preparing')} />}
             mediaPlaybackRequiresUserAction={false}
             setSupportMultipleWindows={false}
             onShouldStartLoadWithRequest={(req) => {
@@ -57,6 +77,7 @@ export function NativeVideoPlayer({ videoUrl, autoplay, portrait }: { videoUrl: 
                   (e.nativeEvent.url === embedUrl || (plan.kind === 'youtube' && e.nativeEvent.url?.includes('youtube')))) setFailed(true)
             }}
           />
+          ) : null}
         </View>
         {bilibili ? <Text accessibilityRole="link" style={styles.original} onPress={openOriginal}>{t('video.openBilibili')}</Text> : null}
       </View>
