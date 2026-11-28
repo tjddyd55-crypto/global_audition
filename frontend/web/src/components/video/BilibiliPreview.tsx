@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { apiClient } from '@/shared/api/client'
 import { bilibiliEmbed, bilibiliLink } from '@/shared/audition/bilibili'
+import { EmbeddedVideoFrame } from './EmbeddedVideoFrame'
 
 export function BilibiliPreview({ value }: { value: string }) {
   const link = bilibiliLink(value)
@@ -20,7 +21,7 @@ function Preview({ url }: { url: string }) {
     <div className="space-y-2 text-sm text-neutral-600">
       <p>{t('bilibiliDetected')} · {t('bilibiliPublic')}</p>
       {video?.kind === 'video' ? (
-        <iframe className="aspect-video w-full max-w-lg rounded border-0" title={t('bilibiliDetected')}
+        <EmbeddedVideoFrame className="aspect-video w-full max-w-lg rounded border-0 bg-black" title={t('bilibiliDetected')}
           src={bilibiliEmbed(video)} allow="fullscreen" allowFullScreen />
       ) : (
         <button type="button" className="underline" disabled={busy} onClick={async () => {

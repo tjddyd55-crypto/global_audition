@@ -17,7 +17,7 @@ import { WEB_URL } from '../../../src/config/env'
 import { VoteShareActions } from '../../../src/features/vote/VoteShareActions'
 import { SharedCandidateLanding } from '../../../src/features/vote/SharedCandidateLanding'
 import { parseShareParams, voteSharePath, voteShareUrl } from '../../../../web/src/shared/vote/voteShare'
-import { canShowPublicVoteCount, remainingMessage, voteRemaining } from '../../../../web/src/shared/vote/voteRemaining'
+import { canShowPublicVoteCount, remainingMessage, voteRefreshInterval, voteRemaining } from '../../../../web/src/shared/vote/voteRemaining'
 import { formatVoteDate } from '../../../../web/src/shared/vote/voteDate'
 import { voteLabelKey } from '../../../../web/src/shared/vote/voteLabels'
 import type { PublicVoteItem } from '../../../src/api/types'
@@ -40,6 +40,7 @@ export default function VoteScreen() {
     queryKey: [...queryKeys.votes(id), share.round, share.candidate, lang],
     queryFn: () => voteApi.list(id, undefined, { ...share, locale: lang }),
     enabled: Boolean(id),
+    refetchInterval: (query) => voteRefreshInterval(query.state.data),
   })
   const castInFlight = useRef(false)
   const voteMutation = useMutation({
