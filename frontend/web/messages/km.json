@@ -1046,6 +1046,9 @@
     "navCasting": "សំណើ Casting"
   },
   "errors": {
+    "BILIBILI_SHORT_LINK_UNAVAILABLE": "មិនអាចពិនិត្យតំណខ្លីបាន។ សូមបញ្ចូលតំណវីដេអូដើមពី Bilibili។",
+    "EMBEDDABLE_VIDEO_URL_REQUIRED": "សូមបញ្ចូលតំណវីដេអូ YouTube ឬ Bilibili។",
+    "VIDEO_URL_UNSUPPORTED": "សូមបញ្ចូលតំណវីដេអូ YouTube, Bilibili, TikTok ឬ Instagram។",
     "INSUFFICIENT_CREDITS": "ក្រេឌីតមិនគ្រប់គ្រាន់",
     "GENERIC": "មិនអាចបញ្ចប់សំណើបានទេ",
     "NETWORK": "មានបញ្ហាបណ្តាញ",
@@ -1534,6 +1537,15 @@
     "monthsAgo": "{n} ខែមុន"
   },
   "video": {
+    "linkLabel": "តំណវីដេអូ",
+    "bilibiliDetected": "បានស្គាល់តំណ Bilibili",
+    "bilibiliPublic": "សូមប្រើវីដេអូសាធារណៈ ដែលអនុញ្ញាតឱ្យចាក់នៅលើគេហទំព័រផ្សេង។",
+    "tryPreview": "មើលវីដេអូជាមុន",
+    "openBilibili": "បើកនៅលើ Bilibili",
+    "retry": "ព្យាយាមម្ដងទៀត",
+    "shortUnavailable": "មិនអាចពិនិត្យតំណខ្លីបាន។ សូមបញ្ចូលតំណវីដេអូដើមពី Bilibili។",
+    "embeddableLinkRequired": "សូមបញ្ចូលតំណវីដេអូ YouTube ឬ Bilibili។",
+    "supportedLink": "សូមបញ្ចូលតំណវីដេអូ YouTube, Bilibili, TikTok ឬ Instagram។",
     "viewsCount": "ការមើល {n}",
     "notFound": "រកមិនឃើញវីដេអូ។",
     "loading": "កំពុងផ្ទុក…",

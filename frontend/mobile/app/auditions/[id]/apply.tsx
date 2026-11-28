@@ -1,3 +1,4 @@
+import { BilibiliPreview } from '../../../src/features/media/BilibiliPreview'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useEffect, useMemo, useState } from 'react'
@@ -203,6 +204,8 @@ export default function ApplyScreen() {
           ))}
         </View>
         <TextField label={t('apply.videoUrl')} value={videoUrl} onChangeText={setVideoUrl} keyboardType="url" placeholder="https://youtu.be/..." />
+        <Text>{videoUrlHint()}</Text>
+        <BilibiliPreview value={videoUrl} />
         <Button
           label={t('apply.pickLocal')}
           variant="secondary"

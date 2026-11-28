@@ -73,7 +73,7 @@ public class ApplicationVideoService {
 
         ApplicationVideo video = new ApplicationVideo();
         video.setApplicationId(applicationId);
-        video.setVideoUrl(request.getVideoUrl().trim());
+        video.setVideoUrl(com.audition.platform.application.media.VideoLinks.audition(request.getVideoUrl()));
         String t = request.getTitle();
         video.setTitle(t != null && !t.isBlank() ? t.trim() : "Audition Video");
         return toResponse(applicationVideoRepository.save(video));

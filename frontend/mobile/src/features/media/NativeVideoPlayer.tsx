@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import { useIsFocused } from '@react-navigation/native'
+import { Linking, StyleSheet, Text, View } from 'react-native'
 import { WebView } from 'react-native-webview'
 import { useTranslation } from 'react-i18next'
 import { colors, radius } from '../../theme/tokens'
@@ -15,17 +16,23 @@ import { isAllowedTopFrameUrl, planVideoPlayback, webOrigin, youtubeEmbedHtml } 
  */
 export function NativeVideoPlayer({ videoUrl, autoplay, portrait }: { videoUrl: string; autoplay?: boolean; portrait?: boolean }) {
   const { t } = useTranslation()
+  const focused = useIsFocused()
   const origin = webOrigin(WEB_URL)
   const plan = planVideoPlayback(videoUrl, { autoplay, origin })
   const [failed, setFailed] = useState(false)
-  const embedUrl = plan.kind === 'youtube' ? plan.embedUrl : ''
+  const embedUrl = plan.kind !== 'unsupported' ? plan.embedUrl : ''
   const title = t('video.playAria')
   // source 객체가 렌더마다 바뀌면 WebView 가 다시 로드하므로 문자열 기준으로 고정한다.
   const source = useMemo(
     () => ({ html: embedUrl ? youtubeEmbedHtml(embedUrl, title) : '', baseUrl: `${origin ?? ''}/` }),
     [embedUrl, title, origin],
   )
-  if (plan.kind === 'youtube' && origin && !failed) {
+  const bilibili = plan.kind === 'bilibili' ? plan : null
+  if (bilibili && !focused) return null
+  const openOriginal = () => {
+    if (bilibili) void Linking.openURL(bilibili.originalUrl).catch(() => setFailed(true))
+  }
+  if (embedUrl && origin && !failed) {
     return (
       <View style={styles.wrap}>
         <View style={[styles.stage, portrait && styles.portrait]} accessibilityLabel={t('video.playAria')}>
@@ -46,16 +53,24 @@ export function NativeVideoPlayer({ videoUrl, autoplay, portrait }: { videoUrl: 
             }}
             onError={() => setFailed(true)}
             onHttpError={(e) => {
-              if (e.nativeEvent.statusCode >= 400 && (e.nativeEvent.url || '').includes('youtube')) setFailed(true)
+              if (e.nativeEvent.statusCode >= 400 &&
+                  (e.nativeEvent.url === embedUrl || (plan.kind === 'youtube' && e.nativeEvent.url?.includes('youtube')))) setFailed(true)
             }}
           />
         </View>
+        {bilibili ? <Text accessibilityRole="link" style={styles.original} onPress={openOriginal}>{t('video.openBilibili')}</Text> : null}
       </View>
     )
   }
   return (
     <View style={styles.fallback}>
       <Text style={styles.message}>{t('video.cannotEmbed')}</Text>
+      {bilibili ? (
+        <>
+          <Text accessibilityRole="button" style={styles.original} onPress={() => setFailed(false)}>{t('video.retry')}</Text>
+          <Text accessibilityRole="link" style={styles.original} onPress={openOriginal}>{t('video.openBilibili')}</Text>
+        </>
+      ) : null}
     </View>
   )
 }
@@ -74,4 +89,5 @@ const styles = StyleSheet.create({
   web: { flex: 1, backgroundColor: '#111111' },
   fallback: { gap: 8, marginBottom: 12 },
   message: { color: colors.muted, fontSize: 14, lineHeight: 20 },
+  original: { color: colors.purple, paddingVertical: 10 },
 })

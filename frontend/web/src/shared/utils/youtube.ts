@@ -1,6 +1,4 @@
-﻿/**
- * YouTube URL 관련 유틸리티 함수
- */
+import { extractYoutubeVideoId } from '@/shared/audition/youtubeEmbed'
 
 /**
  * YouTube URL에서 영상 ID 추출
@@ -27,8 +25,7 @@ export function extractYouTubeId(url: string): string | null {
  * YouTube URL이 유효한지 검증
  */
 export function isValidYouTubeUrl(url: string): boolean {
-  if (!url) return false
-  return /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)/.test(url)
+  return extractYoutubeVideoId(url) !== null
 }
 
 /**

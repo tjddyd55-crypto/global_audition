@@ -1,4 +1,5 @@
-﻿import { extractYoutubeVideoId, getYoutubeId } from '@/shared/audition/youtubeEmbed'
+import { bilibiliEmbed, bilibiliLink } from '@/shared/audition/bilibili'
+import { extractYoutubeVideoId } from '@/shared/audition/youtubeEmbed'
 
 /**
  * videoUrl → iframe embed src (YouTube).
@@ -37,7 +38,7 @@ export function isYoutubeShortsLikeUrl(url: string): boolean {
     const normalized = /^https?:\/\//i.test(u) ? u : `https://${u}`
     const parsed = new URL(normalized)
     const host = parsed.hostname.replace(/^www\./, '')
-    if (host !== 'youtu.be' && !host.includes('youtube.com')) return false
+    if (host !== 'youtu.be' && !['youtube.com','m.youtube.com','music.youtube.com'].includes(host)) return false
     return /\/shorts\//i.test(parsed.pathname)
   } catch {
     return false
@@ -47,7 +48,9 @@ export function isYoutubeShortsLikeUrl(url: string): boolean {
 export function getVideoEmbedSrc(url: string, options?: VideoEmbedOptions): string | null {
   const u = (url ?? '').trim()
   if (!u) return null
-  const id = getYoutubeId(u) ?? extractYoutubeVideoId(u)
+  const bilibili = bilibiliLink(u)
+  if (bilibili?.kind === 'video') return bilibiliEmbed(bilibili, options?.autoplay)
+  const id = extractYoutubeVideoId(u)
   if (!id) return null
   return buildYoutubeEmbedPath(id, options)
 }

@@ -1046,6 +1046,9 @@
     "navCasting": "Кастингийн санал"
   },
   "errors": {
+    "BILIBILI_SHORT_LINK_UNAVAILABLE": "Богино холбоосыг шалгаж чадсангүй. Bilibili бичлэгийн эх холбоосыг оруулна уу.",
+    "EMBEDDABLE_VIDEO_URL_REQUIRED": "YouTube эсвэл Bilibili бичлэгийн холбоосыг оруулна уу.",
+    "VIDEO_URL_UNSUPPORTED": "YouTube, Bilibili, TikTok эсвэл Instagram бичлэгийн холбоосыг оруулна уу.",
     "INSUFFICIENT_CREDITS": "Кредит хүрэлцэхгүй байна",
     "GENERIC": "Хүсэлтийг гүйцэтгэж чадсангүй",
     "NETWORK": "Сүлжээний алдаа гарлаа",
@@ -1534,6 +1537,15 @@
     "monthsAgo": "{n} сарын өмнө"
   },
   "video": {
+    "linkLabel": "Бичлэгийн холбоос",
+    "bilibiliDetected": "Bilibili холбоос танигдлаа",
+    "bilibiliPublic": "Олон нийтэд нээлттэй, бусад сайтад тоглуулах боломжтой бичлэг ашиглана уу.",
+    "tryPreview": "Бичлэгийг урьдчилан үзэх",
+    "openBilibili": "Bilibili дээр нээх",
+    "retry": "Дахин оролдох",
+    "shortUnavailable": "Богино холбоосыг шалгаж чадсангүй. Bilibili бичлэгийн эх холбоосыг оруулна уу.",
+    "embeddableLinkRequired": "YouTube эсвэл Bilibili бичлэгийн холбоосыг оруулна уу.",
+    "supportedLink": "YouTube, Bilibili, TikTok эсвэл Instagram бичлэгийн холбоосыг оруулна уу.",
     "viewsCount": "{n} үзэлт",
     "notFound": "Видео олдсонгүй.",
     "loading": "Ачааллаж байна…",

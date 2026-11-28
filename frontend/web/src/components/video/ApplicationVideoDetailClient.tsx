@@ -1,5 +1,7 @@
-﻿'use client'
+'use client'
 
+import { BilibiliOriginalLink } from './BilibiliOriginalLink'
+import { EmbeddedVideoFrame } from '@/components/video/EmbeddedVideoFrame'
 import Image from 'next/image'
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { useParams } from 'next/navigation'
@@ -280,7 +282,7 @@ export function ApplicationVideoDetailClient() {
         <div className="min-w-0 flex-1">
           <div className="aspect-video w-full bg-black">
             {embedSrc ? (
-              <iframe
+              <EmbeddedVideoFrame
             referrerPolicy="strict-origin-when-cross-origin"
                 title={titleText}
                 src={embedSrc}
@@ -304,6 +306,7 @@ export function ApplicationVideoDetailClient() {
           ) : null}
 
           <div className="px-4 py-3">
+            <BilibiliOriginalLink url={detail.videoUrl} />
             <h1 className="text-base font-semibold leading-snug">{titleText}</h1>
             <TranslationNotice view={copy.view} showOriginal={copy.showOriginal} onToggle={copy.setShowOriginal} />
             <div className="mt-1 text-sm text-neutral-500">

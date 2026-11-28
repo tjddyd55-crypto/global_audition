@@ -1,9 +1,10 @@
-﻿'use client'
+'use client'
 
 import { Suspense, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useParams, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
+import { BilibiliPreview } from '@/components/video/BilibiliPreview'
 import { useTranslations } from 'next-intl'
 import { Link, useRouter } from '@/i18n.config'
 import {
@@ -27,6 +28,7 @@ function MyRoundSubmitContent() {
   const router = useRouter()
   const queryClient = useQueryClient()
   const t = useTranslations('common')
+  const tVideo = useTranslations('video')
   const tApp = useTranslations('application')
   const tMy = useTranslations('myApplications')
   const tErrors = useTranslations('errors')
@@ -91,7 +93,7 @@ function MyRoundSubmitContent() {
 
           <div className="mt-6 flex flex-col gap-4">
             <label className="flex flex-col gap-1">
-              <span className="text-sm font-medium text-gray-700">{tApp('videoUrlYoutube')}</span>
+              <span className="text-sm font-medium text-gray-700">{tVideo('linkLabel')}</span>
               <input
                 value={videoUrl}
                 onChange={(e) => setVideoUrl(e.target.value)}
@@ -99,6 +101,7 @@ function MyRoundSubmitContent() {
                 placeholder="https://www.youtube.com/watch?v=..."
               />
             </label>
+            <BilibiliPreview value={videoUrl} />
             <label className="flex flex-col gap-1">
               <span className="text-sm font-medium text-gray-700">{tApp('fileUrl')}</span>
               <input value={fileUrl} onChange={(e) => setFileUrl(e.target.value)} className={INPUT_BASE} placeholder="https://..." />

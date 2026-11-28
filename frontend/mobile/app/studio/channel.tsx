@@ -1,3 +1,5 @@
+import { BilibiliPreview } from '../../src/features/media/BilibiliPreview'
+import { bilibiliLink } from '../../../web/src/shared/audition/bilibili'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { Alert, Image, Pressable, StyleSheet, Text, View } from 'react-native'
@@ -46,6 +48,8 @@ const ERROR_KEY: Record<string, string> = {
   CASTING_GUARDIAN_REQUIRED: 'studio.castingMinor',
   SEARCH_GUARDIAN_REQUIRED: 'privacy.errors.SEARCH_GUARDIAN_REQUIRED',
   YOUTUBE_URL_REQUIRED: 'studio.errYoutube',
+  EMBEDDABLE_VIDEO_URL_REQUIRED: 'video.embeddableLinkRequired',
+  BILIBILI_SHORT_LINK_UNAVAILABLE: 'video.shortUnavailable',
   CHANNEL_VIDEO_DUPLICATE: 'studio.errDuplicate',
   CHANNEL_VIDEO_LIMIT: 'studio.errLimit',
 }
@@ -309,8 +313,9 @@ function VideoManager({
   return (
     <View style={styles.box}>
       <Text style={styles.section}>{t('studio.content')}</Text>
-      <Text style={styles.hintSmall}>{t('studio.youtubeHint')}</Text>
-      <TextField label={t('studio.youtubeUrl')} value={url} onChangeText={setUrl} placeholder="https://youtu.be/…" keyboardType="url" />
+      <Text style={styles.hintSmall}>{t('video.embeddableLinkRequired')}</Text>
+      <TextField label={t('video.linkLabel')} value={url} onChangeText={setUrl} placeholder="https://youtu.be/…" keyboardType="url" />
+      <BilibiliPreview value={url} />
       <TextField label={t('studio.title')} value={title} onChangeText={setTitle} />
       <Toggle label={pub ? t('studio.visibilityPublic') : t('studio.visibilityPrivate')} on={pub} onToggle={() => setPub((v) => !v)} />
       <Text style={styles.hintSmall}>
@@ -351,7 +356,7 @@ function VideoManager({
             {v.videoId !== featuredId ? (
               <SmallBtn label={t('studio.setFeatured')} onPress={() => void run(() => channelApi.patch({ featuredVideoId: v.videoId }))} />
             ) : null}
-            {v.embedStatus !== 'OK' ? <SmallBtn label={t('studio.recheck')} onPress={() => void run(() => channelApi.recheckVideo(v.videoId))} /> : null}
+            {v.embedStatus !== 'OK' && !bilibiliLink(v.videoUrl) ? <SmallBtn label={t('studio.recheck')} onPress={() => void run(() => channelApi.recheckVideo(v.videoId))} /> : null}
             <SmallBtn
               danger
               label={t('studio.deleteVideo')}

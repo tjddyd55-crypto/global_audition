@@ -1,9 +1,11 @@
-﻿'use client'
+'use client'
 
+import { EmbeddedVideoFrame } from '@/components/video/EmbeddedVideoFrame'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
 import { resolveVideoThumbnailUrl } from '@/shared/audition/videoThumbnail'
+import { BilibiliOriginalLink } from './BilibiliOriginalLink'
 import { getVideoEmbedSrc, isYoutubeShortsLikeUrl } from '@/shared/utils/videoEmbed'
 
 /** 플레이리스트·추천 영상 등 확장용 — url 필수, 나머지 선택 */
@@ -266,7 +268,7 @@ export function VideoEmbedOverlay({ videoUrl, play, onClose }: VideoEmbedOverlay
           >
             ✕
           </button>
-          {!iframeLoaded ? (
+          {!iframeLoaded && !embedSrc.startsWith('https://player.bilibili.com/') ? (
             <div
               className="absolute inset-0 z-[2] flex flex-col items-center justify-center gap-2 bg-black/45 text-white"
               aria-live="polite"
@@ -279,17 +281,18 @@ export function VideoEmbedOverlay({ videoUrl, play, onClose }: VideoEmbedOverlay
               <p className="text-sm opacity-80">{tVideo('preparing')}</p>
             </div>
           ) : null}
-          <iframe
+          <EmbeddedVideoFrame
             referrerPolicy="strict-origin-when-cross-origin"
             title={iframeTitle}
             src={embedSrc}
-            className={`absolute inset-0 z-[1] h-full w-full border-0 transition-opacity duration-200 ${iframeLoaded ? 'opacity-100' : 'opacity-0'}`}
+            className={`absolute inset-0 z-[1] h-full w-full border-0 transition-opacity duration-200 ${(iframeLoaded || embedSrc.startsWith('https://player.bilibili.com/')) ? 'opacity-100' : 'opacity-0'}`}
             allow={IFRAME_ALLOW}
             allowFullScreen
             onLoad={() => setIframeLoaded(true)}
           />
         </div>
 
+        <BilibiliOriginalLink url={openUrl} className="mt-2 inline-block text-sm text-white underline" />
         {hasPrev || hasNext ? (
           <div className="mt-2 flex justify-center gap-2 sm:hidden">
             {hasPrev ? (
